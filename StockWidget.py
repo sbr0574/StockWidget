@@ -244,7 +244,6 @@ class KLineDelegate(QStyledItemDelegate):
 
         o, c, h, l, p = k
         if h < l: h, l = l, h
-        if h == l: h += 1e-6
 
         cell = option.rect
         rect = cell.adjusted(2, 2, -2, -2)
@@ -276,10 +275,6 @@ class KLineDelegate(QStyledItemDelegate):
         painter.setPen(QPen(dash_col, 1, Qt.DashLine))
         painter.drawLine(x - body_w, y_p, x + body_w, y_p)
 
-        # 实体
-        top, bot = min(y_o, y_c), max(y_o, y_c)
-        body_h = max(2, bot - top)
-        body_x = x - body_w // 2
         kcolor = self.fg
         if self.colorful:
             if c>o:
@@ -288,16 +283,24 @@ class KLineDelegate(QStyledItemDelegate):
                 kcolor = self.down_color
             else:
                 kcolor = self.neutral_color
-            painter.fillRect(body_x, top, body_w, body_h, QBrush(kcolor))
-            painter.setPen(QPen(kcolor, 1))
+
+        top, bot = min(y_o, y_c), max(y_o, y_c)
+        body_h = max(2, bot - top)
+        body_x = x - body_w // 2
+
+        painter.setPen(QPen(kcolor, 1))
+        if c != o:
+            # 实体
             painter.drawRect(body_x, top, body_w, body_h)
         else:
-            painter.setPen(QPen(kcolor, 1))
-            if c>o: painter.fillRect(body_x, top, body_w, body_h, QBrush(kcolor))
-            painter.drawRect(body_x, top, body_w, body_h)
-        # 影线
-        painter.setPen(QPen(kcolor, 1))
-        painter.drawLine(x, y_h, x, y_l)
+            # 一字实体
+            painter.drawLine(body_x, y_c, body_x+body_w, y_c)
+        if h > l:
+            # 有长影线
+            painter.drawLine(x, y_h, x, y_l)
+        if c>o or (self.colorful and c<o): 
+            # 单色下跌不填充
+            painter.fillRect(body_x, top, body_w, body_h, QBrush(kcolor))
 
         painter.restore()
 
