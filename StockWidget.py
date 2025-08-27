@@ -298,8 +298,8 @@ class KLineDelegate(QStyledItemDelegate):
         if h > l:
             # 有长影线
             painter.drawLine(x, y_h, x, y_l)
-        if c>o or (self.colorful and c<o): 
-            # 单色下跌不填充
+        if c < o: 
+            # 空阳实阴
             painter.fillRect(body_x, top, body_w, body_h, QBrush(kcolor))
 
         painter.restore()
@@ -433,19 +433,25 @@ class FloatLabel(QWidget):
                 border-radius: 5px;
             }}
             QTableView {{
-                background: transparent; border: none; 
+                background: transparent; 
+                border: none; 
                 {"" if self.colorful_mode else f"color: {self.fg.name()};"}
-                gridline-color: transparent; outline: none;
+                gridline-color: transparent; 
+                outline: none;
+            }}
+            QHeaderView {{
+                background-color: transparent;
             }}
             QHeaderView::section {{
-                background: transparent; border: none;
+                background: transparent; 
+                border: none;
+                font-weight: 600;
                 {"" if self.colorful_mode else f"color: {self.fg.name()};"}
                 padding: 2px 4px;
             }}
         """)
         self.table.setFont(self.font)
         self.table.horizontalHeader().setFont(self.font)
-        self._apply_row_heights()
         self._defer_fit()
 
     def _apply_row_heights(self):
