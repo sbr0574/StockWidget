@@ -70,9 +70,13 @@ def get_price(codes:list) -> list[list]:
     for line in r.text.split('\n'):
         if not line or '"' not in line:
             continue
+        heads = line.split('"')[0].split('_')
         parts = line.split('"')[1].split(',')
         if len(parts) < 30:
             continue
+        is_etf = False
+        if heads[2][2] in ('1','5'):
+            is_etf = True
         name          = parts[0]
         opening_price = float(parts[1] or 0)   # 开盘
         prev_close    = float(parts[2] or 0)   # 昨收
@@ -93,6 +97,7 @@ def get_price(codes:list) -> list[list]:
             if current_price == 0:
                 raise Exception("暂无数据")
             opening_price = current_price
+        if high_price == 0 or low_price == 0:
             high_price = current_price
             low_price = current_price
 
@@ -119,15 +124,26 @@ def get_price(codes:list) -> list[list]:
 
         k_payload = {"k": (opening_price, current_price, high_price, low_price, prev_close)}
 
-        rows.append([
-            name,
-            f"{current_price:.2f}{arrow}",
-            f"{change:+.2f}",
-            f"{change_pct:+.2f}%",
-            f"{seal}" if 0 < seal < 10000 else (f"{(seal/10000):.1f}w" if seal >=10000 else (f"{avg:.2f}" if avg > 0 else "")),
-            f"{committee:+.2f}%",
-            k_payload
-        ])
+        if not is_etf:
+            rows.append([
+                name,
+                f"{current_price:.2f}{arrow}",
+                f"{change:+.2f}",
+                f"{change_pct:+.2f}%",
+                f"{seal}" if 0 < seal < 10000 else (f"{(seal/10000):.1f}w" if seal >=10000 else (f"{avg:.2f}" if avg > 0 else "")),
+                f"{committee:+.2f}%",
+                k_payload
+            ])
+        else:
+            rows.append([
+                name,
+                f"{current_price:.3f}{arrow}",
+                f"{change:+.3f}",
+                f"{change_pct:+.2f}%",
+                f"{seal}" if 0 < seal < 10000 else (f"{(seal/10000):.1f}w" if seal >=10000 else (f"{avg:.3f}" if avg > 0 else "")),
+                f"{committee:+.2f}%",
+                k_payload
+            ])
     return rows
 
 # ----- 功能函数 -----
@@ -296,10 +312,10 @@ class KLineDelegate(QStyledItemDelegate):
             # 一字实体
             painter.drawLine(body_x, y_c, body_x+body_w, y_c)
         if h > l:
-            # 有长影线
+            # 影线
             painter.drawLine(x, y_h, x, y_l)
         if c < o: 
-            # 空阳实阴
+            # 填充实体（空阳线）
             painter.fillRect(body_x, top, body_w, body_h, QBrush(kcolor))
 
         painter.restore()
@@ -729,7 +745,7 @@ class SettingsDialog(QDialog):
         main = QHBoxLayout(self)
         main.setContentsMargins(8, 8, 8, 8)
         main.setSpacing(8)
-        self.setFixedSize(500,320)
+        self.setFixedSize(500,330)
         self.setModal(False)
 
         # ---- 第一列 ----
@@ -910,9 +926,9 @@ class SettingsDialog(QDialog):
         if not s: return None
         if self._re_full.match(s): return s
         if self._re_6.match(s):
-            if s[0] == '6' or s[0:2] == '90':
+            if s[0] == '6' or s[0:2] == '90' or s[0] == '5':
                 return 'sh' + s
-            elif s[0] == '0' or s[0] == '3' or s[0] == '2':
+            elif s[0] == '0' or s[0] == '3' or s[0] == '2' or s[0] == '1':
                 return 'sz' + s
             elif s[0] == '8' or s[0] == '4' or s[0:2] == '92':
                 return 'bj' + s
