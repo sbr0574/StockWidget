@@ -2,7 +2,7 @@
 
 由GPT5协助开发，一个在 **Windows** 上运行的极简透明盯盘Widget浮窗，按指定股票代码实时显示行情表格，可选展示迷你 **K 线**（当天），支持沪深京三市股票。支持拖拽、右键菜单、设置面板、自动保存配置。
 
-> 适合贴在屏幕一角，随时查看你最关心的标的 👀
+> 适合贴在屏幕一角随时查看 👀
 
 ---
 
@@ -30,7 +30,8 @@
 * 设置页面
 > <img width="782" height="488" alt="image" src="https://github.com/user-attachments/assets/e0a97961-045a-4e6f-bac8-357756a0c018" />
 * 显示全部指标+默认颜色
-> <img width="480" height="178" alt="image" src="https://github.com/user-attachments/assets/9148cdcb-9107-4c08-a282-3c3a76dfc3a7" />
+> <img width="385" height="117" alt="image" src="https://github.com/user-attachments/assets/e82c38e2-1fe6-4b97-b915-4f2240d2a7bd" />
+
 
 * 浮窗**背景可透明**，且可单独设置**整体不透明度**。
 
@@ -38,6 +39,9 @@
 
 ## 🧰 运行环境
 
+右侧Releases已有打包好的程序，**可直接下载使用**
+
+若要通过代码脚本形式运行，则需要：
 * Windows 10/11
 * Python **3.13**（其他 3.x 通常也可）
 * 依赖：
@@ -82,8 +86,8 @@ python3 -m PyInstaller -F -w .\StockWidget.py --name StockWidget --icon .\StockW
   编辑规则（自动规格化并去重）：
 
   * `sh|sz|bj` + 数字 → 直接接受（例：`sh600000`）
-  * `6`、`90` 开头 → `sh`（例：`600000`→`sh600000`）
-  * `0`、`2`、`3` 开头 → `sz`
+  * `6`、`90`、`5` 开头 → `sh`（例：`600000`→`sh600000`）
+  * `0`、`1`、`2`、`3` 开头 → `sz`
   * `4`、`8`、`92` 开头 → `bj`
   * 不符合规则的输入会回退到上次有效值
 * **刷新间隔**：1–60 秒预设值，不建议小于1秒
