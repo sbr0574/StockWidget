@@ -311,9 +311,12 @@ class KLineDelegate(QStyledItemDelegate):
         else:
             # 一字实体
             painter.drawLine(body_x, y_c, body_x+body_w, y_c)
-        if h > l:
-            # 影线
-            painter.drawLine(x, y_h, x, y_l)
+        if y_h < top:
+            # 上影线
+            painter.drawLine(x, y_h, x, top)
+        if y_l > bot:
+            # 下影线
+            painter.drawLine(x, bot, x, y_l)
         if c < o: 
             # 填充实体（空阳线）
             painter.fillRect(body_x, top, body_w, body_h, QBrush(kcolor))
