@@ -1,20 +1,19 @@
 # filename: StockWidget.py
 # python3 -m PyInstaller -F -w .\StockWidget.py --name StockWidget --icon .\StockWidget.ico --add-data ".\StockWidget.ico;."
-import sys, os, json, ctypes, re, requests
+import sys, os, json, ctypes, re, requests, keyboard
 from functools import partial
 
 from PySide6.QtCore import (
-    Qt, QEvent, QTimer, QRect, QPoint, QAbstractTableModel, QModelIndex, QSize
+    Qt, QEvent, QTimer, QRect, QPoint, QAbstractTableModel, QModelIndex, Signal
 )
 from PySide6.QtGui import (
     QFont, QAction, QIcon, QColor, QFontDatabase, QPainter, QPen, QBrush
 )
 from PySide6.QtWidgets import (
-    QApplication, QWidget, QSystemTrayIcon, QMenu, QStyle,
-    QDialog, QVBoxLayout, QGridLayout, QPushButton, QLineEdit, QSlider,
-    QDialogButtonBox, QGroupBox, QLabel as QLabelW, QColorDialog,
-    QComboBox, QTableView, QHeaderView, QAbstractItemView, QFrame,
-    QStyledItemDelegate, QCheckBox, QListWidget, QListWidgetItem, QHBoxLayout
+    QApplication, QWidget, QSystemTrayIcon, QMenu, QStyle, 
+    QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QTabWidget, QPushButton, QLineEdit, QSlider,
+    QDialogButtonBox, QGroupBox, QLabel as QLabelW, QColorDialog, QComboBox, QTableView, QHeaderView, QAbstractItemView, QFrame,
+    QStyledItemDelegate, QCheckBox, QListWidget, QListWidgetItem
 )
 
 # ----- 程序与资源 -----
@@ -146,7 +145,7 @@ def get_price(codes:list) -> list[list]:
             ])
     return rows
 
-# ----- 功能函数 -----
+# ----- 放置函数 -----
 def place_dialog_away(dlg, anchor_widget, margin=16):
     screen = anchor_widget.screen() or QApplication.primaryScreen()
     sg = screen.availableGeometry()
@@ -165,7 +164,7 @@ def place_dialog_away(dlg, anchor_widget, margin=16):
     cx = sg.left() + (sg.width() - dw)//2; cy = sg.top() + (sg.height() - dh)//2
     dlg.move(QPoint(cx, cy))
 
-# ===================== 模型 =====================
+# ===================== 表格 =====================
 class SimpleTableModel(QAbstractTableModel):
     def __init__(self, rows=None, headers=None, align_right_cols=None, parent=None):
         super().__init__(parent)
@@ -233,7 +232,7 @@ class SimpleTableModel(QAbstractTableModel):
 
     def set_align_right_cols(self, cols_idx): self._align_right = set(cols_idx or [])
 
-# ===================== 迷你 K 线委托 =====================
+# ===================== 迷你 K 线 =====================
 class KLineDelegate(QStyledItemDelegate):
     def __init__(self, parent=None, base_pt=12):
         super().__init__(parent)
@@ -342,7 +341,7 @@ class FloatLabel(QWidget):
         self.font_family = cfg.get("font_family", "Microsoft YaHei")
         font_size = int(cfg.get("font_size", 10))
         self.font = QFont(self.font_family, max(8, min(15, font_size)))
-        self.line_extra_px = int(cfg.get("line_extra_px", 3))
+        self.line_extra_px = int(cfg.get("line_extra_px", 1))
         self.fg = QColor(cfg.get("fg", "#FFFFFF"))
         bg = cfg.get("bg", {"r":0,"g":0,"b":0,"a":191})
         self.bg = QColor(bg["r"],bg["g"],bg["b"],bg["a"])
@@ -551,7 +550,6 @@ class FloatLabel(QWidget):
         self._fit_to_contents()
 
     def _refresh_from_function(self):
-        '''刷新显示数据'''
         try:
             full_rows = get_price(self.codes)
         except Exception as e:
@@ -1041,6 +1039,8 @@ class SettingsDialog(QDialog):
 
 # ===================== 应用 =====================
 class App(QApplication):
+    hotkey_triggered = Signal()
+
     def __init__(self, argv):
         super().__init__(argv)
         self.setQuitOnLastWindowClosed(False)
@@ -1064,6 +1064,10 @@ class App(QApplication):
         self.tray.activated.connect(self.on_tray_activated)
         self.tray.show()
 
+        self.hotkey = cfg.get("hotkey", "alt+z")
+        self.hotkey_triggered.connect(self.toggle_win)
+        self._register_hotkey()
+
         self.settings_dlg = None
         self.win.show()
         self.win.raise_()
@@ -1071,11 +1075,24 @@ class App(QApplication):
         self.win.setFocus(Qt.ActiveWindowFocusReason)
         self.save_now()
 
+    def _register_hotkey(self):
+        try:
+            keyboard.remove_all_hotkeys()
+        except Exception:
+            pass
+        keyboard.add_hotkey(self.hotkey, lambda: self.hotkey_triggered.emit())
+
+    def update_hotkey(self, new_hotkey: str):
+        self.hotkey = new_hotkey.strip().lower()
+        self._register_hotkey()
+        self.save_now()
+
     def on_tray_activated(self, reason):
         if reason in (QSystemTrayIcon.Trigger, QSystemTrayIcon.DoubleClick): self.toggle_win()
 
     def toggle_win(self):
-        if self.win.isVisible(): self.win.hide()
+        if self.win.isVisible():
+            self.win.hide()
         else:
             self.win.show()
             self.win.raise_()
@@ -1097,10 +1114,13 @@ class App(QApplication):
     def quit_app(self):
         self.tray.hide()
         self.save_now()
+        keyboard.unhook_all_hotkeys()
         sys.exit(0)
 
-    def save_now(self): 
-        save_config(self.win.current_config())
+    def save_now(self):
+        cfg = self.win.current_config()
+        cfg["hotkey"] = self.hotkey
+        save_config(cfg)
 
 if __name__ == "__main__":
     set_windows_app_user_model_id(f"{APP_NAME}.1")
