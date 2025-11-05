@@ -4,7 +4,7 @@ import sys, os, json, ctypes, re, requests, keyboard
 from functools import partial
 
 from PySide6.QtCore import (
-    Qt, QEvent, QTimer, QRect, QPoint, QAbstractTableModel, QModelIndex, Signal
+    Qt, QEvent, QTimer, QRect, QPoint, QAbstractTableModel, QModelIndex, Signal, QSize, QPropertyAnimation
 )
 from PySide6.QtGui import (
     QFont, QAction, QIcon, QColor, QFontDatabase, QPainter, QPen, QBrush, QKeySequence
@@ -104,7 +104,7 @@ class SimpleTableModel(QAbstractTableModel):
                 sign = int(meta.get("delta", 0))
             elif header == "委比":
                 sign = int(meta.get("commi", 0))
-            elif header == "均值":
+            elif header == "均价":
                 sign = int(meta.get("avg", 0))
             else:
                 return self.fg_color
@@ -233,13 +233,13 @@ class FloatLabel(QWidget):
 
         # 加载配置
         codes_cfg               = cfg.get("codes",["sh000001"])             # 自选列表
-        visible_codes_cfg       = cfg.get("visible_codes",[])               # 在浮窗中显示的股票
+        visible_codes_cfg       = cfg.get("visible_codes",codes_cfg)               # 在浮窗中显示的股票
 
         self.refresh_seconds    = int(cfg.get("refresh_seconds", 2))        # 刷新间隔
         flags                   = cfg.get("flags", [False, False, True, False, True, False, False, False, False, False, False]) # 指标开关
-        self.code_pure_num      = cfg.get("code_pure_num", False)
-        self.name_length        = cfg.get("name_length",0)
-        self.simplified_order   = cfg.get("simplified_order", False)
+        self.short_code         = bool(cfg.get("short_code", False))
+        self.name_length        = int(cfg.get("name_length",0))
+        self.b1s1_price         = bool(cfg.get("b1s1_price", False))
 
         self.header_visible     = bool(cfg.get("header_visible", False))    # 表头可见
         self.grid_visible       = bool(cfg.get("grid_visible", False))      # 网格可见
@@ -342,9 +342,9 @@ class FloatLabel(QWidget):
             "codes": self.codes,
             "visible_codes": self.visible_codes,
             "flags": self.flags,
-            "code_pure_num": self.code_pure_num,
+            "short_code": self.short_code,
             "name_length": self.name_length,
-            "simplified_oorder": self.simplified_order,
+            "b1s1_price": self.b1s1_price,
             "header_visible": self.header_visible,
             "grid_visible": self.grid_visible,
             "refresh_seconds": self.refresh_seconds,
@@ -434,7 +434,7 @@ class FloatLabel(QWidget):
     def _get_price(self, codes:list):
         label = ",".join([str(c).strip() for c in codes if str(c).strip()])
         if not label:
-            return [],[]
+            raise Exception("暂无数据，请添加自选")
 
         price_data = []
         sign_data = []
@@ -461,26 +461,46 @@ class FloatLabel(QWidget):
             first_sell    = float(parts[7] or 0)   # 卖一
             deals_vol     = float(parts[8] or 0)   # 成交量
             deals_amt     = float(parts[9] or 0)   # 成交额
-            purchaser     = [float(x or 0) for x in parts[10:19:2]]  # 买盘，股数
+            purchaser     = [int(x or 0) for x in parts[10:19:2]]  # 买盘，股数
             pur_price     = [float(x or 0) for x in parts[11:20:2]]  # 买盘，价格
-            seller        = [float(x or 0) for x in parts[20:29:2]]  # 卖盘，股数
+            seller        = [int(x or 0) for x in parts[20:29:2]]  # 卖盘，股数
             sel_price     = [float(x or 0) for x in parts[21:30:2]]  # 卖盘，价格
-            update_date   = parts[30]              # 日期
-            update_time   = parts[31]              # 时间
+            update_date   = [int(x or 0) for x in parts[30].split('-')]  # 日期
+            update_time   = [int(x or 0) for x in parts[31].split(':')]  # 时间
 
-            if pur_price.count(0)>2 and sel_price.count(0)>2 and first_pur == first_sell:
-                if first_sell > 0:
-                    current_price = first_sell # 9:15 ~ 9:25; 14:57 ~ 15:00 竞价
+            b1s1_label = ""
+            etf = code[2] in ('1','5')
+            if first_pur == first_sell > 0:
+                # 集合竞价
+                current_price = first_sell # 9:15 ~ 9:25; 14:57 ~ 15:00 竞价
+                paired = seller[0]
+                unpaired = -seller[1] if seller[1] > 0 else purchaser[1]
+                b1s1_label = f"{int(paired/100):d} /{int(unpaired/100):+d}"
+            else:
+                # 连续竞价
+                if first_pur > 0:
+                    b1s1_label = f"{int(purchaser[0]/100)}" + ((f"({first_pur:.2f})" if not etf else f"({first_pur:.3f})") if self.b1s1_price else "")
                 else:
-                    current_price = prev_close # 9:00 ~ 9:15 无数据
-                if opening_price == 0: 
-                    opening_price = current_price
-                    high_price = current_price
-                    low_price = current_price
+                    b1s1_label = "-"
+                if current_price == first_pur > 0:
+                    b1s1_label += "</ "
+                elif current_price == first_sell > 0:
+                    b1s1_label += " />"
+                else:
+                    b1s1_label += " / "
+                if first_sell > 0:
+                    b1s1_label += f"{int(seller[0]/100)}" + ((f"({first_sell:.2f})" if not etf else f"({first_sell:.3f})") if self.b1s1_price else "")
+                else:
+                    b1s1_label += "-"
+            if current_price == 0:
+                current_price = prev_close # 9:00 ~ 9:15 无数据
+            if opening_price == 0: 
+                opening_price = current_price
+                high_price = current_price
+                low_price = current_price
 
             change = current_price - prev_close if prev_close else 0.0
             change_pct = (current_price / prev_close - 1) * 100 if prev_close else 0.0
-
             avg = (deals_amt / deals_vol) if deals_vol > 0 else prev_close # 均价
             p_sum, s_sum = sum(purchaser), sum(seller)
             committee = (100 * (p_sum - s_sum) / (p_sum + s_sum)) if (p_sum + s_sum) > 0 else 0.0 # 委比
@@ -496,27 +516,26 @@ class FloatLabel(QWidget):
             # "代码", "名称", "现价", "涨跌值", "涨跌幅", "买一/卖一", "委比", "成交量", "成交额", "均价",  "K线"
             if code[2] not in ('1','5'):
                 price_data.append([
-                    code,
-                    name,
+                    code[2:] if self.short_code else code,
+                    name if self.name_length == 0 else name[:self.name_length],
                     f"{current_price:.2f}{arrow}",
                     f"{change:+.2f}",
                     f"{change_pct:+.2f}%",
-                    f"({first_pur:.2f}){int(purchaser[0]/100)}/{int(seller[0]/100)}({first_sell:.2f})",
+                    b1s1_label,
                     f"{committee:+.2f}%",
                     f"{deals_vol}" if deals_vol<1e4 else (f"{deals_vol/1e4:.2f}万" if deals_vol<1e8 else f"{deals_vol/1e8:.2f}亿"),
                     f"{deals_amt/1e4:.2f}万" if deals_amt<1e8 else (f"{deals_amt/1e8:.2f}亿" if deals_amt<1e12 else f"{deals_amt/1e12:.2f}万亿"),
                     f"{avg:.2f}",
                     k_payload
-                ])    
+                ])
             else:
                 price_data.append([
-                    code,
-                    name,
+                    code[2:] if self.short_code else code,
+                    name if self.name_length == 0 else name[:self.name_length],
                     f"{current_price:.3f}{arrow}",
                     f"{change:+.3f}",
                     f"{change_pct:+.2f}%",
-                    f"({first_pur:.3f}){int(purchaser[0]/100)}/{int(seller[0]/100)}({first_sell:.3f})",
-                    f"{committee:+.2f}%",
+                    b1s1_label,
                     f"{deals_vol}" if deals_vol<1e4 else (f"{deals_vol/1e4:.2f}万" if deals_vol<1e8 else f"{deals_vol/1e8:.2f}亿"),
                     f"{deals_amt/1e4:.2f}万" if deals_amt<1e8 else (f"{deals_amt/1e8:.2f}亿" if deals_amt<1e12 else f"{deals_amt/1e12:.2f}万亿"),
                     f"{avg:.3f}",
@@ -525,7 +544,7 @@ class FloatLabel(QWidget):
             sign_data.append({
                 "delta": 0 if change==0 else (1 if change>0 else -1), 
                 "commi": 0 if committee==0 else (1 if committee>0 else -1),
-                "avg": 0 if avg==0 else (1 if avg>0 else -1),
+                "avg": 0 if avg==0 else (1 if avg>prev_close else -1),
             })
         
         return price_data, sign_data
@@ -559,12 +578,11 @@ class FloatLabel(QWidget):
         self._fit_to_contents()
 
     def _refresh_from_function(self):
-        full_rows, sign = self._get_price(self.visible_codes)
-        # try:
-        #     full_rows, sign = self._get_price(self.visible_codes)
-        # except Exception as e:
-        #     self._show_error(str(e))
-        #     return
+        try:
+            full_rows, sign = self._get_price(self.visible_codes)
+        except Exception as e:
+            self._show_error(str(e))
+            return
         
         self._project_columns(full_rows, sign)
 
@@ -604,7 +622,7 @@ class FloatLabel(QWidget):
             self._refresh_from_function()
 
     def set_code_type(self, pure_num: bool):
-        self.code_pure_num = bool(pure_num)
+        self.short_code = bool(pure_num)
         self._notify_change()
         self._refresh_from_function()
 
@@ -614,8 +632,8 @@ class FloatLabel(QWidget):
             self._notify_change()
             self._refresh_from_function()
 
-    def set_simplified_order(self, simple_order: bool):
-        self.simplified_order = bool(simple_order)
+    def set_b1s1_price(self, simple_order: bool):
+        self.b1s1_price = bool(simple_order)
         self._notify_change()
         self._refresh_from_function()
 
@@ -696,8 +714,7 @@ class FloatLabel(QWidget):
     def contextMenuEvent(self, event):
         menu = QMenu(self)
         sub_cols = QMenu("显示指标", menu)
-        headers = ["名称", "现价", "涨跌值", "涨跌幅", "均价", "五档委比", "K线"]
-        for i, name in enumerate(headers):
+        for i, name in enumerate(self.ALL_HEADERS):
             act = QAction(name, sub_cols, checkable=True)
             act.setChecked(bool(self.flags[i]))
             act.toggled.connect(partial(self.set_flag, i))
@@ -834,8 +851,16 @@ class SettingsDialog(QDialog):
         main = QHBoxLayout(self)
         main.setContentsMargins(8, 8, 8, 8)
         main.setSpacing(8)
-        tabs = QTabWidget()
-        main.addWidget(tabs)
+        self.tabs = QTabWidget()
+        main.addWidget(self.tabs)
+
+        self.tab_sizes = {
+            0: QSize(300, 300),
+            1: QSize(480, 420),
+            2: QSize(360, 340),
+            3: QSize(300, 120),
+        }
+        self._apply_tab_size(0)
 
         # ---- 第一页 ----
         tab_0 = QWidget()
@@ -875,7 +900,7 @@ class SettingsDialog(QDialog):
         lay_codes.addLayout(btn_col)
         code_settings.addWidget(g_codes)
 
-        tabs.addTab(tab_0, "自选列表")
+        self.tabs.addTab(tab_0, "自选列表")
 
         # ---- 第二页 ----
         tab_1 = QWidget()
@@ -900,20 +925,88 @@ class SettingsDialog(QDialog):
         g_flags = QGroupBox("显示指标")
         g_flags.setContentsMargins(3,12,3,6)
         gl_flags = QGridLayout(g_flags)
-        gl_flags.setHorizontalSpacing(6)
-        gl_flags.setVerticalSpacing(6)
         self.cbs: list[QCheckBox] = []
-        cb_texts = ["代码", "名称", "现价", "涨跌值", "涨跌幅", "买一/卖一", "五档委比", "成交量", "成交额", "均价",  "K线"]
-        for i in range(len(cb_texts)):
+        cb_texts = self.win.ALL_HEADERS
+
+        g_flag_name = QGroupBox("名称")
+        gl_flag_name = QGridLayout(g_flag_name)
+        gl_flag_name.setHorizontalSpacing(6)
+        gl_flag_name.setVerticalSpacing(6)
+        for i in range(0,2):
             cb = QCheckBox(cb_texts[i])
             cb.setChecked(bool(self.win.flags[i]))
-            cb.stateChanged.connect(partial(self.win.set_flag, i))
+            cb.stateChanged.connect(partial(self._on_cb_changed, i))
             self.cbs.append(cb)
-            row, col = divmod(i, 4)
-            gl_flags.addWidget(cb, row, col)
+            gl_flag_name.addWidget(cb, i, 0)
+        self.cb_short_code = QCheckBox("仅显示数字")
+        self.cb_short_code.setChecked(bool(self.win.short_code))
+        self.cb_short_code.setEnabled(self.win.flags[0])
+        gl_flag_name.addWidget(self.cb_short_code, 0, 1)
+        self.cmb_namelength = QComboBox()
+        self.cmb_namelength.setFixedWidth(80)
+        for l in [0, 1, 2, 3, 4]:
+            self.cmb_namelength.addItem(f"前{l}个字" if l>0 else "完整显示", userData=l)
+        idx_name = self.cmb_namelength.findData(self.win.name_length)
+        self.cmb_namelength.setCurrentIndex(idx_name if idx_name>=0 else 1)
+        self.cmb_namelength.setEnabled(self.win.flags[1])
+        gl_flag_name.addWidget(self.cmb_namelength, 1, 1)
+        gl_flags.addWidget(g_flag_name, 0, 0)
+
+        g_flag_price = QGroupBox("价格")
+        gl_flag_price = QGridLayout(g_flag_price)
+        gl_flag_price.setHorizontalSpacing(6)
+        gl_flag_price.setVerticalSpacing(6)
+        for i in range(2,5):
+            cb = QCheckBox(cb_texts[i])
+            cb.setChecked(bool(self.win.flags[i]))
+            cb.stateChanged.connect(partial(self._on_cb_changed, i))
+            self.cbs.append(cb)
+            gl_flag_price.addWidget(cb, i-2, 0)
+        gl_flags.addWidget(g_flag_price, 1, 0)
+
+        g_flag_order = QGroupBox("盘口")
+        gl_flag_order = QGridLayout(g_flag_order)
+        gl_flag_order.setHorizontalSpacing(6)
+        gl_flag_order.setVerticalSpacing(6)
+        for i in range(5,7):
+            cb = QCheckBox(cb_texts[i])
+            cb.setChecked(bool(self.win.flags[i]))
+            cb.stateChanged.connect(partial(self._on_cb_changed, i))
+            self.cbs.append(cb)
+            gl_flag_order.addWidget(cb, i-5, 0)
+        self.cb_b1s1_price = QCheckBox("显示价格")
+        self.cb_b1s1_price.setChecked(bool(self.win.b1s1_price))
+        self.cb_b1s1_price.setEnabled(self.win.flags[5])
+        gl_flag_order.addWidget(self.cb_b1s1_price, 0, 1)
+        gl_flags.addWidget(g_flag_order, 0, 1)
+
+        g_flag_deal = QGroupBox("成交")
+        gl_flag_deal = QGridLayout(g_flag_deal)
+        gl_flag_deal.setHorizontalSpacing(6)
+        gl_flag_deal.setVerticalSpacing(6)
+        for i in range(7,10):
+            cb = QCheckBox(cb_texts[i])
+            cb.setChecked(bool(self.win.flags[i]))
+            cb.stateChanged.connect(partial(self._on_cb_changed, i))
+            self.cbs.append(cb)
+            gl_flag_deal.addWidget(cb, i-7, 0)
+        gl_flags.addWidget(g_flag_deal, 1, 1)
+
+        g_flag_other = QGroupBox("其他")
+        gl_flag_other = QGridLayout(g_flag_other)
+        gl_flag_other.setHorizontalSpacing(6)
+        gl_flag_other.setVerticalSpacing(6)
+        for i in range(10,11):
+            cb = QCheckBox(cb_texts[i])
+            cb.setChecked(bool(self.win.flags[i]))
+            cb.stateChanged.connect(partial(self._on_cb_changed, i))
+            self.cbs.append(cb)
+            gl_flag_other.addWidget(cb, i-10, 0)
+        gl_flags.addWidget(g_flag_other, 2, 0)
+
         data_settings.addWidget(g_flags)
 
-        tabs.addTab(tab_1, "显示数据")
+        self.tabs.addTab(tab_1, "显示数据")
 
         # ---- 第三页 ----
         tab_2 = QWidget()
@@ -1011,7 +1104,7 @@ class SettingsDialog(QDialog):
         gl_font.addWidget(self.lbl_line,2,5,1,1)
         appearance_settings.addWidget(g_font)
 
-        tabs.addTab(tab_2, "外观")
+        self.tabs.addTab(tab_2, "外观")
 
         # ---- 第四页 ----
         tab_3 = QWidget()
@@ -1029,7 +1122,7 @@ class SettingsDialog(QDialog):
         gl_hotkey.addWidget(self.edit_hotkey,0,1)
         other_settings.addWidget(g_hotkey)
 
-        tabs.addTab(tab_3, "快捷键")
+        self.tabs.addTab(tab_3, "快捷键")
 
         # ---- 连接 ----
         # 连接：代码列表
@@ -1040,6 +1133,7 @@ class SettingsDialog(QDialog):
         self.btn_dn.clicked.connect(self._move_down)
         # 连接：其它设置
         self.cmb_interval.currentIndexChanged.connect(self._on_interval_changed)
+        self.cmb_namelength.currentIndexChanged.connect(self._on_name_length_changed)
         self.chk_default_color.toggled.connect(self._on_default_color_toggled)
         self.btn_fg.clicked.connect(self.pick_fg)
         self.btn_bg.clicked.connect(self.pick_bg)
@@ -1051,6 +1145,9 @@ class SettingsDialog(QDialog):
         self.edit_hotkey.editingFinished.connect(self._on_hotkey_changed)
         self.chk_table_header.toggled.connect(self._on_header_toggled)
         self.chk_table_grid.toggled.connect(self._on_grid_toggled)
+        self.tabs.currentChanged.connect(self._apply_tab_size)
+        self.cb_b1s1_price.stateChanged.connect(self._on_b1s1_price_toggled)
+        self.cb_short_code.stateChanged.connect(self._on_short_code_toggled)
 
     # —— 代码规格化 —— #
     _re_full = re.compile(r'^(sh|sz|bj)\d+$')
@@ -1115,7 +1212,8 @@ class SettingsDialog(QDialog):
 
     def _add_code(self):
         it = QListWidgetItem("sh000001")
-        it.setFlags(it.flags() | Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+        it.setFlags(it.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+        it.setCheckState(Qt.Unchecked)
         it.setData(Qt.UserRole, "sh000001")
         self.list_codes.addItem(it)
         self.list_codes.setCurrentItem(it)
@@ -1160,8 +1258,27 @@ class SettingsDialog(QDialog):
     def _on_header_toggled(self, checked: bool):
         self.win.set_header_visible(bool(checked))
 
-    def _on_cb_changed(self, idx: int, state: int):
-        self.win.set_flag(idx, state == Qt.Checked)
+    def _on_cb_changed(self, idx: int, state: bool):
+        self.win.set_flag(idx, state)
+        if idx == 0:
+            self.cb_short_code.setEnabled(state)
+        elif idx == 1:
+            self.cmb_namelength.setEnabled(state)
+        elif idx == 5:
+            self.cb_b1s1_price.setEnabled(state)
+    
+    def _on_short_code_toggled(self, checked: bool):
+        self.win.set_code_type(checked)
+
+    def _on_name_length_changed(self, length: int):
+        self.win.set_name_length(length)
+
+    def _on_b1s1_price_toggled(self, checked:bool):
+        self.win.set_b1s1_price(checked)
+
+    def _apply_tab_size(self, index: int):
+        size = self.tab_sizes.get(index, QSize(400, 400))
+        self.setFixedSize(size)
 
     def pick_fg(self):
         c = QColorDialog.getColor(self.win.fg, self, "选择文字颜色")
