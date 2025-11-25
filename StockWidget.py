@@ -1,6 +1,6 @@
 # filename: StockWidget.py
 # python3 -m PyInstaller -F -w .\StockWidget.py --name StockWidget --icon .\StockWidget.ico --add-data ".\StockWidget.ico;."
-import sys, os, json, ctypes, re, requests, keyboard
+import sys, os, json, ctypes, re, requests, keyboard, winreg
 from functools import partial
 
 from PySide6.QtCore import (
@@ -11,7 +11,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import (
     QApplication, QWidget, QSystemTrayIcon, QMenu, QStyle, 
-    QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QTabWidget, QPushButton, QLineEdit, QSlider,
+    QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QTabWidget, QPushButton, QSlider,
     QDialogButtonBox, QGroupBox, QLabel as QLabelW, QColorDialog, QComboBox, QTableView, QHeaderView, QAbstractItemView, QFrame,
     QStyledItemDelegate, QCheckBox, QListWidget, QListWidgetItem, QKeySequenceEdit
 )
@@ -20,10 +20,9 @@ from PySide6.QtWidgets import (
 APP_NAME = "StockWidget"
 APP_ICON_FILE = "StockWidget.ico"
 
-def resource_path(rel_path: str) -> str:
-    base = getattr(sys, "_MEIPASS", os.path.abspath("."))
-    p = os.path.join(base, rel_path)
-    return p if os.path.exists(p) else rel_path
+def resource_path(rel_path):
+    base = getattr(sys, "_MEIPASS", "")
+    return os.path.join(base, rel_path)
 
 def set_windows_app_user_model_id(appid: str):
     try:
@@ -61,7 +60,7 @@ class SimpleTableModel(QAbstractTableModel):
         super().__init__(parent)
         self._rows = rows or []
         self._headers = headers or []
-        self._align_right = set(align_right_cols or [])
+        self._align_right = align_right_cols or []
         self.default_color = False
         self.fg_color = QColor("#FFFFFF")
         self._row_meta = []
@@ -253,6 +252,7 @@ class FloatLabel(QWidget):
         self.default_color      = bool(cfg.get("default_color", False))     # 默认颜色模式
 
         self.hotkey             = cfg.get("hotkey", "Ctrl+Alt+F")           # 快捷键
+        self.start_on_boot      = bool(cfg.get("start_on_boot", False))
 
         # 设置初值
         self.codes = [str(c).strip() for c in codes_cfg if str(c).strip()]
@@ -326,6 +326,11 @@ class FloatLabel(QWidget):
         self._refresh_from_function()
         self._defer_fit()
 
+        self._keep_top_timer = QTimer(self)
+        self._keep_top_timer.setInterval(1000)  # 每 1000ms 检查一次
+        self._keep_top_timer.timeout.connect(self._ensure_on_top)
+        self._keep_top_timer.start()
+
     # 与 App 连接
     def set_open_settings_callback(self, fn): 
         self._open_settings_cb = fn
@@ -357,6 +362,7 @@ class FloatLabel(QWidget):
             "default_color": self.default_color,
             "pos": {"x": self.x(), "y": self.y()},
             "hotkey": self.hotkey,
+            "start_on_boot": bool(self.start_on_boot),
         }
 
     # ----- 外观/尺寸 -----
@@ -542,9 +548,9 @@ class FloatLabel(QWidget):
                     k_payload
                 ])
             sign_data.append({
-                "delta": 0 if change==0 else (1 if change>0 else -1), 
-                "commi": 0 if committee==0 else (1 if committee>0 else -1),
-                "avg": 0 if avg==0 else (1 if avg>prev_close else -1),
+                "delta": (change > 0) - (change < 0), 
+                "commi": (committee > 0) - (committee < 0),
+                "avg": (avg > prev_close) - (avg < prev_close),
             })
         
         return price_data, sign_data
@@ -559,7 +565,6 @@ class FloatLabel(QWidget):
             proj_meta.append(sign_data[r])
 
         right_cols = [i for i, h in enumerate(headers) if h not in ("名称","K线")]
-        centre_cols = [i for i, h in enumerate(headers) if h in ("买一/卖一")]
         self.model.set_align_right_cols(right_cols)
         self.model.set_rows_headers(proj_rows, headers, meta=proj_meta)
         self.model.set_color_scheme(self.default_color, self.fg)
@@ -709,6 +714,10 @@ class FloatLabel(QWidget):
         self.apply_style()
         self._notify_change()
         self._defer_fit()
+
+    def set_start_on_boot(self, enabled: bool):
+        self.start_on_boot = bool(enabled)
+        self._notify_change()
     
     # ----- 交互 -----
     def contextMenuEvent(self, event):
@@ -760,10 +769,12 @@ class FloatLabel(QWidget):
     def mouseMoveEvent(self, e):
         if getattr(self, "_drag_pos", None) and (e.buttons() & Qt.LeftButton):
             self.move(e.globalPosition().toPoint() - self._drag_pos)
+            self._ensure_on_top()
 
     def mouseReleaseEvent(self, e):
         if e.button() == Qt.LeftButton:
             self._drag_pos = None
+            self._ensure_on_top()
             self._notify_change()
 
     def mouseDoubleClickEvent(self, e):
@@ -797,12 +808,21 @@ class FloatLabel(QWidget):
         super().showEvent(event)
         if self.timer and not self.timer.isActive(): 
             self.timer.start()
+        if self._keep_top_timer and not self._keep_top_timer.isActive():
+            self._keep_top_timer.start()
         self._defer_fit()
 
     def hideEvent(self, event):
         super().hideEvent(event)
         if self.timer and self.timer.isActive(): 
             self.timer.stop()
+        if self._keep_top_timer and self._keep_top_timer.isActive():
+            self._keep_top_timer.stop()
+
+    def _ensure_on_top(self):
+        """保持浮窗始终在最前"""
+        if self.isVisible():
+            self.raise_()
 
     def _register_hotkey(self):
         try:
@@ -842,10 +862,11 @@ class FloatLabel(QWidget):
 
 # ===================== 设置面板 =====================
 class SettingsDialog(QDialog):
-    def __init__(self, win: FloatLabel, parent: QWidget):
+    def __init__(self, win: FloatLabel, parent: QWidget, app=None):
         super().__init__(parent)
         self.setWindowTitle("设置")
         self.win = win
+        self.app = app
         self.setModal(False)
 
         main = QHBoxLayout(self)
@@ -858,7 +879,7 @@ class SettingsDialog(QDialog):
             0: QSize(300, 300),
             1: QSize(480, 420),
             2: QSize(360, 340),
-            3: QSize(300, 120),
+            3: QSize(300, 160),
         }
         self._apply_tab_size(0)
 
@@ -1120,9 +1141,13 @@ class SettingsDialog(QDialog):
         self.edit_hotkey = QKeySequenceEdit()
         self.edit_hotkey.setKeySequence(QKeySequence(self.win.hotkey))
         gl_hotkey.addWidget(self.edit_hotkey,0,1)
+        # 开机启动复选框（与快捷键同页）
+        self.chk_start_on_boot = QCheckBox("开机启动")
+        self.chk_start_on_boot.setChecked(bool(self.win.start_on_boot))
+        other_settings.addWidget(self.chk_start_on_boot)
         other_settings.addWidget(g_hotkey)
 
-        self.tabs.addTab(tab_3, "快捷键")
+        self.tabs.addTab(tab_3, "常规")
 
         # ---- 连接 ----
         # 连接：代码列表
@@ -1143,16 +1168,27 @@ class SettingsDialog(QDialog):
         self.slider_font.valueChanged.connect(self.apply_font_size)
         self.slider_line.valueChanged.connect(self._on_line_changed)
         self.edit_hotkey.editingFinished.connect(self._on_hotkey_changed)
+        self.chk_start_on_boot.toggled.connect(self._on_start_on_boot_toggled)
         self.chk_table_header.toggled.connect(self._on_header_toggled)
         self.chk_table_grid.toggled.connect(self._on_grid_toggled)
         self.tabs.currentChanged.connect(self._apply_tab_size)
         self.cb_b1s1_price.stateChanged.connect(self._on_b1s1_price_toggled)
         self.cb_short_code.stateChanged.connect(self._on_short_code_toggled)
 
+    def _on_start_on_boot_toggled(self, checked: bool):
+        try:
+            self.win.set_start_on_boot(bool(checked))
+            if hasattr(self, 'app') and self.app is not None:
+                try:
+                    self.app.set_start_on_boot(bool(checked))
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
     # —— 代码规格化 —— #
     _re_full = re.compile(r'^(sh|sz|bj)\d+$')
     _re_6 = re.compile(r'^\d{6}$')
-    # _re_5 = re.compile(r'^\d{5}$')  # 港股
 
     def _normalize_code_or_none(self, s: str):
         s = (s or "").strip().lower()
@@ -1166,8 +1202,6 @@ class SettingsDialog(QDialog):
                 return 'sz' + s
             elif s[0] == '8' or s[0] == '4' or s[0:2] == '92':
                 return 'bj' + s
-        # if self._re_5.match(s):
-        #     return 'hk' + s
         return None
 
     def _collect_codes_from_list(self):
@@ -1320,6 +1354,11 @@ class App(QApplication):
 
         cfg = load_config()
         self.win = FloatLabel(cfg)
+        # Apply start-on-boot setting from config
+        try:
+            self.set_start_on_boot(bool(cfg.get("start_on_boot", False)))
+        except Exception:
+            pass
         self.win.set_on_change(self.save_now)
         self.win.set_open_settings_callback(self.open_settings)
 
@@ -1359,7 +1398,7 @@ class App(QApplication):
             self.settings_dlg.raise_()
             self.settings_dlg.activateWindow()
             return
-        self.settings_dlg = SettingsDialog(self.win, self.win)
+        self.settings_dlg = SettingsDialog(self.win, self.win, app=self)
         self.win.place_dialog_away(self.settings_dlg, self.win, margin=16)
         self.settings_dlg.show()
         self.settings_dlg.raise_()
@@ -1374,6 +1413,28 @@ class App(QApplication):
     def save_now(self):
         cfg = self.win.current_config()
         save_config(cfg)
+
+    def set_start_on_boot(self, enabled: bool):
+        """Enable or disable Windows startup by writing/removing Run key in HKCU."""
+        try:
+            key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
+            name = APP_NAME
+            if enabled:
+                if getattr(sys, 'frozen', False):
+                    cmd = f'"{sys.executable}"'
+                else:
+                    cmd = f'"{sys.executable}" "{os.path.abspath(sys.argv[0])}"'
+                with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as key:
+                    winreg.SetValueEx(key, name, 0, winreg.REG_SZ, cmd)
+            else:
+                try:
+                    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as key:
+                        winreg.DeleteValue(key, name)
+                except OSError:
+                    # value not present
+                    pass
+        except Exception:
+            pass
 
 if __name__ == "__main__":
     set_windows_app_user_model_id(f"{APP_NAME}.1")
