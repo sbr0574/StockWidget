@@ -1,10 +1,14 @@
-import sys, os, json, keyboard, winreg
+import os
+import sys
+import keyboard
+import winreg
 
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QStyle
 from WidgetPanel import FloatLabel
 from SettingPanel import SettingsDialog
+from config_store import load_config, save_config
 
 # ----- 程序与资源 -----
 APP_NAME = "StockWidget"
@@ -14,32 +18,13 @@ def resource_path(rel_path):
     base = getattr(sys, "_MEIPASS", "")
     return os.path.join(base, rel_path)
 
-# ----- 配置存档 -----
-CONFIG_DIR = os.path.join(os.getenv("APPDATA") or os.path.expanduser("~"), APP_NAME)
-CONFIG_FILE = os.path.join(CONFIG_DIR, "SW_config.json")
-
-def load_config():
-    try:
-        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
-
-def save_config(cfg: dict):
-    if not os.path.exists(CONFIG_DIR):
-        os.makedirs(CONFIG_DIR, exist_ok=True)
-    tmp = CONFIG_FILE + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(cfg, f, ensure_ascii=False, indent=2)
-    os.replace(tmp, CONFIG_FILE)
-
 class App(QApplication):
     def __init__(self, argv):
         super().__init__(argv)
         self.setQuitOnLastWindowClosed(False)
         icon_path = resource_path(APP_ICON_FILE)
         # load saved icon choice from config
-        cfg = load_config()
+        cfg = load_config(APP_NAME)
         icon_choice = cfg.get('app_icon')
         self._app_icon_choice = icon_choice
         def _resolve_icon(choice):
@@ -72,7 +57,7 @@ class App(QApplication):
         app_icon = _resolve_icon(icon_choice)
         self.setWindowIcon(app_icon)
 
-        cfg = load_config()
+        cfg = load_config(APP_NAME)
         self.win = FloatLabel(cfg)
         # Apply start-on-boot setting from config
         try:
@@ -142,7 +127,7 @@ class App(QApplication):
             cfg['app_icon'] = getattr(self, '_app_icon_choice', None)
         except Exception:
             pass
-        save_config(cfg)
+        save_config(APP_NAME, cfg)
 
     def set_app_icon(self, choice):
         """Set application and tray icon. `choice` can be None/'default', 'std:KEY' or a file path."""
