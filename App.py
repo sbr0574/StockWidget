@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QStyle
 from WidgetPanel import FloatLabel
 from SettingPanel import SettingsDialog
 from config_store import load_config, save_config
+from code_index import refresh_once_per_day
 
 # ----- 程序与资源 -----
 APP_NAME = "StockWidget"
@@ -25,6 +26,7 @@ class App(QApplication):
         icon_path = resource_path(APP_ICON_FILE)
         # load saved icon choice from config
         cfg = load_config(APP_NAME)
+        self.code_index, cfg = refresh_once_per_day(APP_NAME, cfg)
         icon_choice = cfg.get('app_icon')
         self._app_icon_choice = icon_choice
         def _resolve_icon(choice):
@@ -57,7 +59,6 @@ class App(QApplication):
         app_icon = _resolve_icon(icon_choice)
         self.setWindowIcon(app_icon)
 
-        cfg = load_config(APP_NAME)
         self.win = FloatLabel(cfg)
         # Apply start-on-boot setting from config
         try:

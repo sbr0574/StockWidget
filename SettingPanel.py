@@ -1,14 +1,32 @@
 import os, re
 from functools import partial
 
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt, QSize, QStringListModel
 from PySide6.QtGui import QColor, QFontDatabase, QKeySequence
 from PySide6.QtWidgets import (
     QWidget, QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QTabWidget, QPushButton, QSlider,
     QGroupBox, QLabel, QColorDialog, QComboBox, QAbstractItemView,
-    QCheckBox, QListWidget, QListWidgetItem, QKeySequenceEdit, QFileDialog
+    QCheckBox, QListWidget, QListWidgetItem, QKeySequenceEdit, QFileDialog, QStyledItemDelegate,
+    QLineEdit, QCompleter
 )
 from WidgetPanel import FloatLabel
+from code_index import find_suggestions
+
+
+class CodeCompleterDelegate(QStyledItemDelegate):
+    def __init__(self, owner):
+        super().__init__(owner)
+        self.owner = owner
+
+    def createEditor(self, parent, option, index):
+        editor = QLineEdit(parent)
+        completer = QCompleter(self.owner.suggestion_model, editor)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
+        completer.setFilterMode(Qt.MatchContains)
+        completer.activated.connect(lambda text: self.owner._apply_suggestion(editor, text))
+        editor.textEdited.connect(self.owner._update_suggestions)
+        editor.setCompleter(completer)
+        return editor
 
 class SettingsDialog(QDialog):
     def __init__(self, win: FloatLabel, parent: QWidget, app=None):
@@ -17,6 +35,9 @@ class SettingsDialog(QDialog):
         self.win = win
         self.app = app
         self.setModal(False)
+        self.code_index = list(getattr(app, "code_index", []) or [])
+        self.suggestion_model = QStringListModel(self)
+        self._suggestion_map = {}
 
         main = QHBoxLayout(self)
         main.setContentsMargins(8, 8, 8, 8)
@@ -44,7 +65,8 @@ class SettingsDialog(QDialog):
         # 1.1 代码列表
         self.list_codes = QListWidget()
         self.list_codes.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.SelectedClicked | QAbstractItemView.EditKeyPressed)
-        self.list_codes.setFixedWidth(150)
+        self.list_codes.setFixedWidth(220)
+        self.list_codes.setItemDelegate(CodeCompleterDelegate(self))
         for c in self.win.codes:
             it = QListWidgetItem(c)
             it.setFlags(it.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled)
@@ -392,43 +414,70 @@ class SettingsDialog(QDialog):
         except Exception:
             pass
 
-    # —— 代码规格化 —— #
-    _re_full = re.compile(r'^(sh|sz|bj)\d+$')
+    _re_full = re.compile(r'^(sh|sz|bj)\d{6}$')
     _re_6 = re.compile(r'^\d{6}$')
 
-    def _normalize_code_or_none(self, s: str):
-        s = (s or "").strip().lower()
-        s = re.sub(r'[^a-z0-9]', '', s)
-        if not s: return None
-        if self._re_full.match(s): return s
+    def _to_prefixed_code(self, text: str) -> str | None:
+        s = str(text or "").strip().lower()
+        if not s:
+            return None
+        if self._re_full.match(s):
+            return s
         if self._re_6.match(s):
-            if s[0] == '6' or s[0:2] == '90' or s[0] == '5':
-                return 'sh' + s
-            elif s[0] == '0' or s[0] == '3' or s[0] == '2' or s[0] == '1':
-                return 'sz' + s
-            elif s[0] == '8' or s[0] == '4' or s[0:2] == '92':
-                return 'bj' + s
+            if s[0] in ("6", "5", "9"):
+                return f"sh{s}"
+            if s[0] in ("0", "1", "2", "3"):
+                return f"sz{s}"
+            if s[0] in ("4", "8"):
+                return f"bj{s}"
         return None
+
+    def _display_text(self, item: dict) -> str:
+        return f"{item.get('code', '')} {item.get('name', '')}".strip()
+
+    def _apply_suggestion(self, editor: QLineEdit, text: str):
+        code = self._suggestion_map.get(text)
+        if code:
+            editor.setText(code)
+            editor.selectAll()
+
+    def _update_suggestions(self, text: str):
+        query = str(text or "").strip()
+        candidates = find_suggestions(self.code_index, query, limit=20)
+        labels = []
+        self._suggestion_map = {}
+        for item in candidates:
+            label = self._display_text(item)
+            labels.append(label)
+            self._suggestion_map[label] = item.get("code", "")
+        self.suggestion_model.setStringList(labels)
+
+    def _code_from_input(self, text: str) -> str | None:
+        s = str(text or "").strip()
+        if not s:
+            return None
+        if s in self._suggestion_map:
+            return self._suggestion_map[s]
+        token = s.split()[0]
+        return self._to_prefixed_code(token)
 
     def _collect_codes_from_list(self):
         codes = []
         seen = set()
         for i in range(self.list_codes.count()):
             txt = self.list_codes.item(i).text()
-            norm = self._normalize_code_or_none(txt)
-            if norm:
-                if norm not in seen:
-                    seen.add(norm)
-                    codes.append(norm)
-                # 写回规范化文本
+            code = self._code_from_input(txt)
+            if code:
+                if code not in seen:
+                    seen.add(code)
+                    codes.append(code)
                 it = self.list_codes.item(i)
-                if it.text() != norm:
+                if it.text() != code:
                     self.list_codes.blockSignals(True)
-                    it.setText(norm)
-                    it.setData(Qt.UserRole, norm)
+                    it.setText(code)
+                    it.setData(Qt.UserRole, code)
                     self.list_codes.blockSignals(False)
             else:
-                # 回退到上次有效值
                 it = self.list_codes.item(i)
                 prev = it.data(Qt.UserRole)
                 if prev:
@@ -436,7 +485,6 @@ class SettingsDialog(QDialog):
                     it.setText(prev)
                     self.list_codes.blockSignals(False)
                 else:
-                    # 没有上次有效值则删除
                     self.list_codes.takeItem(i)
                     return self._collect_codes_from_list()
         return codes
