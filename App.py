@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QStyle
 from WidgetPanel import FloatLabel
 from SettingPanel import SettingsDialog
 from config_store import load_config, save_config
-from code_index import refresh_once_per_day
+from code_index import refresh_in_background_if_needed
 
 # ----- 程序与资源 -----
 APP_NAME = "StockWidget"
@@ -26,7 +26,7 @@ class App(QApplication):
         icon_path = resource_path(APP_ICON_FILE)
         # load saved icon choice from config
         cfg = load_config(APP_NAME)
-        self.code_index, cfg = refresh_once_per_day(APP_NAME, cfg)
+        self.code_index = []
         icon_choice = cfg.get('app_icon')
         self._app_icon_choice = icon_choice
         def _resolve_icon(choice):
@@ -84,7 +84,12 @@ class App(QApplication):
         self.win.raise_()
         self.win.activateWindow()
         self.win.setFocus(Qt.ActiveWindowFocusReason)
+        refresh_in_background_if_needed(APP_NAME, on_ready=self._on_code_index_ready)
         self.save_now()
+
+
+    def _on_code_index_ready(self, entries):
+        self.code_index = list(entries or [])
 
     def on_tray_activated(self, reason):
         if reason in (QSystemTrayIcon.Trigger, QSystemTrayIcon.DoubleClick): self.toggle_win()
@@ -97,6 +102,7 @@ class App(QApplication):
             self.win.raise_()
             self.win.activateWindow()
             self.win.setFocus(Qt.ActiveWindowFocusReason)
+        refresh_in_background_if_needed(APP_NAME, on_ready=self._on_code_index_ready)
         self.save_now()
 
     def open_settings(self):

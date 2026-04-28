@@ -433,7 +433,9 @@ class SettingsDialog(QDialog):
         return None
 
     def _display_text(self, item: dict) -> str:
-        return f"{item.get('code', '')} {item.get('name', '')}".strip()
+        cat = str(item.get('category', '')).strip()
+        cat_text = f" [{cat}]" if cat else ""
+        return f"{item.get('code', '')} {item.get('name', '')}{cat_text}".strip()
 
     def _apply_suggestion(self, editor: QLineEdit, text: str):
         code = self._suggestion_map.get(text)
@@ -458,8 +460,15 @@ class SettingsDialog(QDialog):
             return None
         if s in self._suggestion_map:
             return self._suggestion_map[s]
-        token = s.split()[0]
-        return self._to_prefixed_code(token)
+
+        # 仅允许从代码列表候选中选择，不接受任意手工输入
+        code_map = {str(item.get('code', '')): item for item in (self.code_index or [])}
+        if s in code_map:
+            return s
+        token = s.split()[0].lower()
+        if token in code_map:
+            return token
+        return None
 
     def _collect_codes_from_list(self):
         codes = []
@@ -493,17 +502,17 @@ class SettingsDialog(QDialog):
         codes = self._collect_codes_from_list()
         self.win.set_codes(codes)
         checked_codes = [
-            self.list_codes.item(i).text().split()[0]
+            (self._code_from_input(self.list_codes.item(i).text()) or "")
             for i in range(self.list_codes.count())
             if self.list_codes.item(i).checkState() == Qt.Checked
         ]
         self.win.set_checked_codes(checked_codes)
 
     def _add_code(self):
-        it = QListWidgetItem("sh000001")
+        it = QListWidgetItem("")
         it.setFlags(it.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled)
         it.setCheckState(Qt.Unchecked)
-        it.setData(Qt.UserRole, "sh000001")
+        it.setData(Qt.UserRole, "")
         self.list_codes.addItem(it)
         self.list_codes.setCurrentItem(it)
         self.list_codes.editItem(it)
