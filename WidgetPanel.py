@@ -1,4 +1,4 @@
-import requests, keyboard
+import keyboard
 from functools import partial
 
 from PySide6.QtCore import Qt, QEvent, QTimer, Signal
@@ -6,9 +6,26 @@ from PySide6.QtGui import QFont, QAction, QColor
 from PySide6.QtWidgets import QApplication, QWidget, QMenu, QVBoxLayout, QLabel, QTableView, QHeaderView, QAbstractItemView, QFrame, QStyledItemDelegate
 
 from Display import SimpleTableModel, KLineDelegate
+from stock_data import fetch_stock_rows
 
 class FloatLabel(QWidget):
     hotkey_triggered = Signal()
+    ALL_HEADERS = ["代码", "名称", "现价", "涨跌值", "涨跌幅", "买一", "卖一", "委比", "成交量", "成交额", "均价", "K线"]
+    HEADER_ATTR_MAP = {
+        "代码": "code_visible",
+        "名称": "name_visible",
+        "现价": "price_visible",
+        "涨跌值": "change_visible",
+        "涨跌幅": "change_pct_visible",
+        "买一": "b1s1_visible",
+        "卖一": "b1s1_visible",
+        "委比": "commi_visible",
+        "成交量": "vol_visible",
+        "成交额": "amount_visible",
+        "均价": "avg_visible",
+        "K线": "kline_visible",
+    }
+
     def __init__(self, cfg: dict):
         super().__init__()
         self._on_change = (lambda: None)
@@ -18,69 +35,37 @@ class FloatLabel(QWidget):
         self.setAttribute(Qt.WA_TranslucentBackground, True)
         self.setFocusPolicy(Qt.StrongFocus)
 
-        # 加载配置
-        codes_cfg               = cfg.get("codes",["sh000001"])             # 自选列表
-        checked_codes_cfg       = cfg.get("checked_codes", cfg.get("visible_codes", codes_cfg))  # 在浮窗中显示的股票（新名 checked_codes，兼容 visible_codes）
-        self.refresh_seconds    = int(cfg.get("refresh_seconds", 2))        # 刷新间隔
-        flags_cfg               = cfg.get("flags", {})                      # 指标开关（字典格式）
+        codes_cfg               = cfg.get("codes",["sh000001"])
+        checked_codes_cfg       = cfg.get("checked_codes", codes_cfg)
+        self.refresh_seconds    = int(cfg.get("refresh_seconds", 2))
         self.short_code         = bool(cfg.get("short_code", False))
         self.name_length        = int(cfg.get("name_length",0))
-        # b1s1_display: 'qty'|'price'|'both'。兼容旧配置键 b1s1_price (bool)
-        b1s1_display_cfg = cfg.get("b1s1_display", None)
-        if isinstance(b1s1_display_cfg, str) and b1s1_display_cfg in ("qty", "price", "both"):
-            self.b1s1_display = b1s1_display_cfg
-        else:
-            # 旧配置兼容：若 b1s1_price 为 True 则默认显示价格，否则显示数量
-            self.b1s1_display = "price" if bool(cfg.get("b1s1_price", False)) else "qty"
-        
-        # 防止买一/卖一同步时触发重复处理
-        self._syncing_b1s1 = False
-
-        self.header_visible     = bool(cfg.get("header_visible", False))    # 表头可见
-        self.grid_visible       = bool(cfg.get("grid_visible", False))      # 网格可见
-
-        font_family             = cfg.get("font_family", "Microsoft YaHei") # 字体类型
-        font_size               = int(cfg.get("font_size", 10))             # 字体大小
-        self.line_extra_px      = int(cfg.get("line_extra_px", 1))          # 行间距
-        self.fg                 = QColor(cfg.get("fg", "#FFFFFF"))        # 前景色
-        bg                      = cfg.get("bg", {"r":0,"g":0,"b":0,"a":191})# 背景色
-        self.opacity_pct        = int(cfg.get("opacity_pct", 90))           # 透明度
-        self.default_color      = bool(cfg.get("default_color", False))     # 默认颜色模式
-
-        self.hotkey             = cfg.get("hotkey", "Ctrl+Alt+F")           # 快捷键
+        self.b1s1_display       = cfg.get("b1s1_display", "qty") if cfg.get("b1s1_display", "qty") in ("qty", "price", "both") else "qty"
+        self.header_visible     = bool(cfg.get("header_visible", False))
+        self.grid_visible       = bool(cfg.get("grid_visible", False))
+        font_family             = cfg.get("font_family", "Microsoft YaHei")
+        font_size               = int(cfg.get("font_size", 10))
+        self.line_extra_px      = int(cfg.get("line_extra_px", 1))
+        self.fg                 = QColor(cfg.get("fg", "#FFFFFF"))
+        bg                      = cfg.get("bg", {"r":0,"g":0,"b":0,"a":191})
+        self.opacity_pct        = int(cfg.get("opacity_pct", 90))
+        self.default_color      = bool(cfg.get("default_color", False))
+        self.hotkey             = cfg.get("hotkey", "Ctrl+Alt+F")
         self.start_on_boot      = bool(cfg.get("start_on_boot", False))
 
-        # 设置初值
         self.codes = [str(c).strip() for c in codes_cfg if str(c).strip()]
-        # 列标题列表（提前定义，供后续旧配置解析使用）
-        self.ALL_HEADERS = ["代码", "名称", "现价", "涨跌值", "涨跌幅", "买一", "卖一", "委比", "成交量", "成交额", "均价", "K线"]
+        self.code_visible = bool(cfg.get("code_visible", False))
+        self.name_visible = bool(cfg.get("name_visible", False))
+        self.price_visible = bool(cfg.get("price_visible", False))
+        self.change_visible = bool(cfg.get("change_visible", False))
+        self.change_pct_visible = bool(cfg.get("change_pct_visible", False))
+        self.b1s1_visible = bool(cfg.get("b1s1_visible", False))
+        self.commi_visible = bool(cfg.get("commi_visible", False))
+        self.vol_visible = bool(cfg.get("vol_visible", False))
+        self.amount_visible = bool(cfg.get("amount_visible", False))
+        self.avg_visible = bool(cfg.get("avg_visible", False))
+        self.kline_visible = bool(cfg.get("kline_visible", False))
 
-        # 列显示标志（独立属性）
-        # 解析旧 flags 配置以做回退
-        old_flags = {}
-        if isinstance(flags_cfg, list):
-            for i, h in enumerate(self.ALL_HEADERS):
-                old_flags[h] = bool(flags_cfg[i]) if i < len(flags_cfg) else False
-        elif isinstance(flags_cfg, dict):
-            for h in self.ALL_HEADERS:
-                old_flags[h] = bool(flags_cfg.get(h, False))
-
-        # 新：为每一列创建独立的 bool 属性（优先读取新配置，否则回退到 old_flags）
-        self.code_visible = bool(cfg.get("code_visible", old_flags.get("代码", False)))
-        self.name_visible = bool(cfg.get("name_visible", old_flags.get("名称", False)))
-        self.price_visible = bool(cfg.get("price_visible", old_flags.get("现价", False)))
-        self.change_visible = bool(cfg.get("change_visible", old_flags.get("涨跌值", False)))
-        self.change_pct_visible = bool(cfg.get("change_pct_visible", old_flags.get("涨跌幅", False)))
-        # 买一/卖一 使用单一开关 b1s1_visible（用户要求不要拆分控制）
-        self.b1s1_visible = bool(cfg.get("b1s1_visible", (old_flags.get("买一", False) or old_flags.get("卖一", False))))
-        self.commi_visible = bool(cfg.get("commi_visible", old_flags.get("委比", False)))
-        self.vol_visible = bool(cfg.get("vol_visible", old_flags.get("成交量", False)))
-        self.amount_visible = bool(cfg.get("amount_visible", old_flags.get("成交额", False)))
-        self.avg_visible = bool(cfg.get("avg_visible", old_flags.get("均价", False)))
-        self.kline_visible = bool(cfg.get("kline_visible", old_flags.get("K线", False)))
-
-        # 设置自选显示股票（新名 checked_codes）
-        self.codes = [str(c).strip() for c in codes_cfg if str(c).strip()]
         self.checked_codes = [str(c).strip() for c in checked_codes_cfg if (str(c).strip() and str(c).strip() in self.codes)]
         self.font = QFont(font_family, max(8, min(15, font_size)))
         self.bg = QColor(bg["r"],bg["g"],bg["b"],bg["a"])
@@ -186,7 +171,6 @@ class FloatLabel(QWidget):
             "kline_visible": bool(getattr(self, 'kline_visible', False)),
             "short_code": self.short_code,
             "name_length": self.name_length,
-            "b1s1_price": (getattr(self, 'b1s1_display', 'qty') == 'price'),
             "b1s1_display": getattr(self, 'b1s1_display', 'qty'),
             "header_visible": self.header_visible,
             "grid_visible": self.grid_visible,
@@ -204,33 +188,8 @@ class FloatLabel(QWidget):
         }
 
     def header_is_visible(self, header: str) -> bool:
-        """返回指定列标题对应的独立可见属性值（替代旧的 flags 字典）。"""
-        try:
-            if header == "代码":
-                return bool(getattr(self, 'code_visible', False))
-            if header == "名称":
-                return bool(getattr(self, 'name_visible', False))
-            if header == "现价":
-                return bool(getattr(self, 'price_visible', False))
-            if header == "涨跌值":
-                return bool(getattr(self, 'change_visible', False))
-            if header == "涨跌幅":
-                return bool(getattr(self, 'change_pct_visible', False))
-            if header in ("买一", "卖一"):
-                return bool(getattr(self, 'b1s1_visible', False))
-            if header == "委比":
-                return bool(getattr(self, 'commi_visible', False))
-            if header == "成交量":
-                return bool(getattr(self, 'vol_visible', False))
-            if header == "成交额":
-                return bool(getattr(self, 'amount_visible', False))
-            if header == "均价":
-                return bool(getattr(self, 'avg_visible', False))
-            if header == "K线":
-                return bool(getattr(self, 'kline_visible', False))
-        except Exception:
-            pass
-        return False
+        attr = self.HEADER_ATTR_MAP.get(header)
+        return bool(getattr(self, attr, False)) if attr else False
 
     # ----- 外观/尺寸 -----
     def apply_style(self):
@@ -329,194 +288,6 @@ class FloatLabel(QWidget):
             except Exception:
                 pass
 
-    # ----- 数据来源：新浪财经 -----
-    def _get_price(self, codes:list):
-        label = ",".join([str(c).strip() for c in codes if str(c).strip()])
-        if not label:
-            raise Exception("暂无数据，请添加自选")
-
-        price_data = []
-        sign_data = []
-        url = 'https://hq.sinajs.cn/list=' + label
-        headers = {'Referer': 'https://finance.sina.com.cn', 'User-Agent': 'Mozilla/5.0'}
-        r = requests.get(url, headers=headers, timeout=3)
-        r.encoding = 'gbk'
-        for line in r.text.split('\n'):
-            if not line or '"' not in line:
-                continue
-            heads = line.split('="')[0].split('_')
-            parts = line.split('="')[1].split(',')
-            if len(parts) < 30:
-                continue
-
-            code          = heads[2]
-            name          = parts[0]
-            opening_price = float(parts[1] or 0)   # 开盘
-            prev_close    = float(parts[2] or 0)   # 昨收
-            current_price = float(parts[3] or 0)   # 现价
-            high_price    = float(parts[4] or 0)   # 当日最高
-            low_price     = float(parts[5] or 0)   # 当日最低
-            first_pur     = float(parts[6] or 0)   # 买一
-            first_sell    = float(parts[7] or 0)   # 卖一
-            deals_vol     = float(parts[8] or 0)   # 成交量
-            deals_amt     = float(parts[9] or 0)   # 成交额
-            purchaser     = [int(x or 0) for x in parts[10:19:2]]  # 买盘，股数
-            pur_price     = [float(x or 0) for x in parts[11:20:2]]  # 买盘，价格
-            seller        = [int(x or 0) for x in parts[20:29:2]]  # 卖盘，股数
-            sel_price     = [float(x or 0) for x in parts[21:30:2]]  # 卖盘，价格
-            update_date   = [int(x or 0) for x in parts[30].split('-')]  # 日期
-            update_time   = [int(x or 0) for x in parts[31].split(':')]  # 时间
-
-            etf = code[2] in ('1','5')
-
-            # 构建买一/卖一数据及其颜色信息，并添加位置箭头
-            b1_label = ""
-            s1_label = ""
-            b1_color_sign = 0  # 买一颜色：1红 0中性 -1绿
-            s1_color_sign = 0  # 卖一颜色：1红 0中性 -1绿
-
-            # 决定小数精度用于比较是否相等（避免浮点微小误差）
-            dec = 3 if etf else 2
-            def almost_eq(a, b):
-                try:
-                    return round(float(a), dec) == round(float(b), dec)
-                except Exception:
-                    return False
-
-            # 标记：买一箭头位于右侧 '<'，卖一箭头位于左侧 '>'
-            buy_marker = " "
-            sell_marker = " "
-            if first_pur > 0 and almost_eq(current_price, first_pur):
-                buy_marker = "<"
-            if first_sell > 0 and almost_eq(current_price, first_sell):
-                sell_marker = ">"
-
-            if first_pur == first_sell > 0:
-                # 集合竞价：配对量 / 未配对量
-                # 此处不显示成交方向箭头（竞价阶段无 <> 指示），且配对量和未配对量使用统一颜色规则
-                current_price = first_sell  # 9:15 ~ 9:25; 14:57 ~ 15:00 竞价
-                paired = seller[0]
-                # unpaired_sign: >0 表示买方优势，<0 表示卖方优势
-                unpaired_sign = -seller[1] if seller[1] > 0 else purchaser[1]
-                # 显示数量（手）或价格或数量和价格（手数(价格)）
-                paired_cnt = int(paired/100)
-                unpaired_cnt = int(unpaired_sign/100)
-                b_price = f"{first_pur:.3f}" if etf else f"{first_pur:.2f}"
-                s_price = f"{first_sell:.3f}" if etf else f"{first_sell:.2f}"
-                mode = getattr(self, 'b1s1_display', 'qty')
-                if mode == 'price':
-                    b1_label = f"{b_price}"
-                    s1_label = f"{s_price}"
-                elif mode == 'both':
-                    b1_label = f"{paired_cnt:d}({b_price})"
-                    s1_label = f"{unpaired_cnt:+d}({s_price})"
-                else:
-                    b1_label = f"{paired_cnt:d}"
-                    s1_label = f"{unpaired_cnt:+d}"
-                # 竞价颜色：根据未配对量的方向
-                if unpaired_sign > 0:
-                    b1_color_sign = 1
-                    s1_color_sign = 1
-                elif unpaired_sign < 0:
-                    b1_color_sign = -1
-                    s1_color_sign = -1
-                else:
-                    b1_color_sign = 0
-                    s1_color_sign = 0
-            else:
-                # 连续竞价：买一数量/卖一数量
-                if first_pur > 0:
-                    cnt = f"{int(purchaser[0]/100)}"
-                    b_price = f"{first_pur:.3f}" if etf else f"{first_pur:.2f}"
-                    mode = getattr(self, 'b1s1_display', 'qty')
-                    if mode == 'price':
-                        b1_label = f"{b_price}{buy_marker}"
-                    elif mode == 'both':
-                        b1_label = f"{cnt}({b_price}){buy_marker}"
-                    else:
-                        b1_label = f"{cnt}{buy_marker}"
-                else:
-                    b1_label = f"-{buy_marker}"
-
-                if first_sell > 0:
-                    cnt = f"{int(seller[0]/100)}"
-                    s_price = f"{first_sell:.3f}" if etf else f"{first_sell:.2f}"
-                    mode = getattr(self, 'b1s1_display', 'qty')
-                    if mode == 'price':
-                        s1_label = f"{sell_marker}{s_price}"
-                    elif mode == 'both':
-                        s1_label = f"{sell_marker}{cnt}({s_price})"
-                    else:
-                        s1_label = f"{sell_marker}{cnt}"
-                else:
-                    s1_label = f"{sell_marker}-"
-
-                # 连续竞价时：买一固定红色，卖一固定绿色
-                b1_color_sign = 1
-                s1_color_sign = -1
-            
-            if current_price == 0:
-                current_price = prev_close # 9:00 ~ 9:15 无数据
-            if opening_price == 0: 
-                opening_price = current_price
-                high_price = current_price
-                low_price = current_price
-
-            change = current_price - prev_close if prev_close else 0.0
-            change_pct = (current_price / prev_close - 1) * 100 if prev_close else 0.0
-            avg = (deals_amt / deals_vol) if deals_vol > 0 else prev_close # 均价
-            p_sum, s_sum = sum(purchaser), sum(seller)
-            committee = (100 * (p_sum - s_sum) / (p_sum + s_sum)) if (p_sum + s_sum) > 0 else 0.0 # 委比
-
-            # 触及日高/低显示箭头
-            arrow = " "
-            if high_price > low_price:
-                if current_price == high_price: arrow = "↑"
-                elif current_price == low_price: arrow = "↓"
-
-            k_payload = {"k": (opening_price, current_price, high_price, low_price, prev_close)}
-
-            # "代码", "名称", "现价", "涨跌值", "涨跌幅", "买一", "卖一", "委比", "成交量", "成交额", "均价",  "K线"
-            if code[2] not in ('1','5'):
-                price_data.append([
-                    code[2:] if self.short_code else code,
-                    name if self.name_length == 0 else name[:self.name_length],
-                    f"{current_price:.2f}{arrow}",
-                    f"{change:+.2f}",
-                    f"{change_pct:+.2f}%",
-                    b1_label,
-                    s1_label,
-                    f"{committee:+.2f}%",
-                    f"{deals_vol}" if deals_vol<1e4 else (f"{deals_vol/1e4:.2f}万" if deals_vol<1e8 else f"{deals_vol/1e8:.2f}亿"),
-                    f"{deals_amt/1e4:.2f}万" if deals_amt<1e8 else (f"{deals_amt/1e8:.2f}亿" if deals_amt<1e12 else f"{deals_amt/1e12:.2f}万亿"),
-                    f"{avg:.2f}",
-                    k_payload
-                ])
-            else:
-                price_data.append([
-                    code[2:] if self.short_code else code,
-                    name if self.name_length == 0 else name[:self.name_length],
-                    f"{current_price:.3f}{arrow}",
-                    f"{change:+.3f}",
-                    f"{change_pct:+.2f}%",
-                    b1_label,
-                    s1_label,
-                    f"{committee:+.2f}%",
-                    f"{deals_vol}" if deals_vol<1e4 else (f"{deals_vol/1e4:.2f}万" if deals_vol<1e8 else f"{deals_vol/1e8:.2f}亿"),
-                    f"{deals_amt/1e4:.2f}万" if deals_amt<1e8 else (f"{deals_amt/1e8:.2f}亿" if deals_amt<1e12 else f"{deals_amt/1e12:.2f}万亿"),
-                    f"{avg:.3f}",
-                    k_payload
-                ])
-            sign_data.append({
-                "delta": (change > 0) - (change < 0), 
-                "commi": (committee > 0) - (committee < 0),
-                "avg": (avg > prev_close) - (avg < prev_close),
-                "b1": b1_color_sign,
-                "s1": s1_color_sign,
-            })
-        
-        return price_data, sign_data
-
     def _project_columns(self, full_rows, sign_data):
         # 从 ALL_HEADERS 中按显示顺序筛选已启用的列
         cols = [i for i, h in enumerate(self.ALL_HEADERS) if self.header_is_visible(h)]
@@ -548,7 +319,12 @@ class FloatLabel(QWidget):
 
     def _refresh_from_function(self):
         try:
-            full_rows, sign = self._get_price(self.checked_codes)
+            full_rows, sign = fetch_stock_rows(
+                self.checked_codes,
+                short_code=self.short_code,
+                name_length=self.name_length,
+                b1s1_display=self.b1s1_display,
+            )
         except Exception as e:
             try:
                 import requests as _req
@@ -560,10 +336,7 @@ class FloatLabel(QWidget):
                 self._show_error(str(e))
             return
 
-        try:
-            self._clear_error()
-        except Exception:
-            pass
+        self._clear_error()
         self._project_columns(full_rows, sign)
 
     # ----- 应用设置 -----
@@ -595,51 +368,21 @@ class FloatLabel(QWidget):
         self._notify_change()
         self._refresh_from_function()
 
-    def set_flag(self, idx, checked: bool):
-        """设置指标显示标志。idx 可以是整数索引（向后兼容）或列标题字符串"""
-        # 兼容老版本：若传整数索引，转为列标题
-        if isinstance(idx, int):
-            if 0 <= idx < len(self.ALL_HEADERS):
-                header = self.ALL_HEADERS[idx]
+    def set_flag(self, header, checked: bool):
+        if isinstance(header, int):
+            if 0 <= header < len(self.ALL_HEADERS):
+                header = self.ALL_HEADERS[header]
             else:
                 return
-        else:
-            header = str(idx)
-            if header not in self.ALL_HEADERS:
-                return
-        
-        checked = bool(checked)
-        prev = None
-        try:
-            if header == "代码":
-                prev = bool(getattr(self, 'code_visible', False)); self.code_visible = checked
-            elif header == "名称":
-                prev = bool(getattr(self, 'name_visible', False)); self.name_visible = checked
-            elif header == "现价":
-                prev = bool(getattr(self, 'price_visible', False)); self.price_visible = checked
-            elif header == "涨跌值":
-                prev = bool(getattr(self, 'change_visible', False)); self.change_visible = checked
-            elif header == "涨跌幅":
-                prev = bool(getattr(self, 'change_pct_visible', False)); self.change_pct_visible = checked
-            elif header in ("买一", "卖一"):
-                prev = bool(getattr(self, 'b1s1_visible', False)); self.b1s1_visible = checked
-            elif header == "委比":
-                prev = bool(getattr(self, 'commi_visible', False)); self.commi_visible = checked
-            elif header == "成交量":
-                prev = bool(getattr(self, 'vol_visible', False)); self.vol_visible = checked
-            elif header == "成交额":
-                prev = bool(getattr(self, 'amount_visible', False)); self.amount_visible = checked
-            elif header == "均价":
-                prev = bool(getattr(self, 'avg_visible', False)); self.avg_visible = checked
-            elif header == "K线":
-                prev = bool(getattr(self, 'kline_visible', False)); self.kline_visible = checked
-        except Exception:
-            prev = None
+        header = str(header)
+        attr = self.HEADER_ATTR_MAP.get(header)
+        if not attr:
+            return
 
-        if prev is None or prev == checked:
-            # 如果状态没有变化仍然返回（避免额外刷新）
-            if prev == checked:
-                return
+        checked = bool(checked)
+        if bool(getattr(self, attr, False)) == checked:
+            return
+        setattr(self, attr, checked)
         self._notify_change()
         self._refresh_from_function()
 
