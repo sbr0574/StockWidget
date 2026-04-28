@@ -463,6 +463,16 @@ class SettingsDialog(QDialog):
 
         # 仅允许从代码列表候选中选择，不接受任意手工输入
         code_map = {str(item.get('code', '')): item for item in (self.code_index or [])}
+        # 索引暂不可用时，允许保留已存在的规范代码，避免误清空自选
+        if not code_map:
+            token = s.split()[0].lower()
+            if (
+                re.match(r"^(sh|sz|bj)\d{6}$", token)
+                or re.match(r"^hk\d{5}$", token)
+                or re.match(r"^us[a-z0-9\.\-]+$", token)
+            ):
+                return token
+            return None
         if s in code_map:
             return s
         token = s.split()[0].lower()
@@ -490,8 +500,13 @@ class SettingsDialog(QDialog):
                 it = self.list_codes.item(i)
                 prev = it.data(Qt.UserRole)
                 if prev:
+                    prev_code = self._code_from_input(prev) or str(prev).strip().lower()
+                    if prev_code and prev_code not in seen:
+                        seen.add(prev_code)
+                        codes.append(prev_code)
                     self.list_codes.blockSignals(True)
-                    it.setText(prev)
+                    it.setText(prev_code if prev_code else prev)
+                    it.setData(Qt.UserRole, prev_code if prev_code else prev)
                     self.list_codes.blockSignals(False)
                 else:
                     self.list_codes.takeItem(i)
@@ -501,11 +516,19 @@ class SettingsDialog(QDialog):
     def _on_codes_changed(self, _item):
         codes = self._collect_codes_from_list()
         self.win.set_codes(codes)
-        checked_codes = [
-            (self._code_from_input(self.list_codes.item(i).text()) or "")
-            for i in range(self.list_codes.count())
-            if self.list_codes.item(i).checkState() == Qt.Checked
-        ]
+        checked_codes = []
+        for i in range(self.list_codes.count()):
+            it = self.list_codes.item(i)
+            if it.checkState() != Qt.Checked:
+                continue
+            code = self._code_from_input(it.text())
+            if not code:
+                prev = it.data(Qt.UserRole)
+                code = self._code_from_input(prev) if prev else None
+                if not code and prev:
+                    code = str(prev).strip().lower()
+            if code:
+                checked_codes.append(code)
         self.win.set_checked_codes(checked_codes)
 
     def _add_code(self):
