@@ -1,7 +1,10 @@
-import os
-import sys
-import keyboard
-import winreg
+import sys, os, platform
+
+SYSTEM = platform.system()
+if SYSTEM== "win32":
+    import winreg, keyboard
+elif SYSTEM == "darwin":
+    import keyboardMac as keyboard
 
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QAction, QIcon
@@ -9,7 +12,7 @@ from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QStyle
 from WidgetPanel import FloatLabel
 from SettingPanel import SettingsDialog
 from config_store import load_config, save_config
-from code_index import refresh_once_per_day
+from code_index import refresh_index_from_akshare
 
 # ----- 程序与资源 -----
 APP_NAME = "StockWidget"
@@ -22,11 +25,11 @@ def resource_path(rel_path):
 class App(QApplication):
     def __init__(self, argv):
         super().__init__(argv)
+        self.system = SYSTEM
         self.setQuitOnLastWindowClosed(False)
         icon_path = resource_path(APP_ICON_FILE)
-        # load saved icon choice from config
         cfg = load_config(APP_NAME)
-        self.code_index, cfg = refresh_once_per_day(APP_NAME, cfg)
+        self.code_index = refresh_index_from_akshare(APP_NAME)
         icon_choice = cfg.get('app_icon')
         self._app_icon_choice = icon_choice
         def _resolve_icon(choice):
@@ -171,7 +174,11 @@ class App(QApplication):
             pass
 
     def set_start_on_boot(self, enabled: bool):
-        """Enable or disable Windows startup by writing/removing Run key in HKCU."""
+        """Enable or disable Windows startup by writing/removing Run key in HKCU.
+        On macOS/Linux this is ignored gracefully.
+        """
+        if self.system != "win32":
+            return
         try:
             key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
             name = APP_NAME
@@ -187,7 +194,6 @@ class App(QApplication):
                     with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as key:
                         winreg.DeleteValue(key, name)
                 except OSError:
-                    # value not present
                     pass
         except Exception:
             pass

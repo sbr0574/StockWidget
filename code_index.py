@@ -4,17 +4,8 @@ from datetime import datetime
 
 from config_store import config_paths
 
-try:
-    import akshare as ak
-except Exception:
-    ak = None
-
-try:
-    from pypinyin import Style, pinyin
-except Exception:
-    pinyin = None
-    Style = None
-
+import akshare as ak
+from pypinyin import Style, pinyin
 
 def _to_prefixed_code(code: str) -> str:
     code = str(code or "").strip().lower()
@@ -34,8 +25,7 @@ def _name_pinyin(name: str) -> tuple[str, str]:
     text = str(name or "").strip()
     if not text:
         return "", ""
-    if pinyin is None:
-        return "", ""
+    text = text.replace(" ", "")
     py_full = "".join(x[0] for x in pinyin(text, style=Style.NORMAL, strict=False))
     py_abbr = "".join(x[0] for x in pinyin(text, style=Style.FIRST_LETTER, strict=False))
     return py_full.lower(), py_abbr.lower()
@@ -47,36 +37,39 @@ def _cache_file(app_name: str) -> str:
     return os.path.join(cache_dir, "stock_codes_cache.json")
 
 
-def load_cached_index(app_name: str) -> list[dict]:
+def load_cached_index(app_name: str) -> dict:
     path = _cache_file(app_name)
     try:
         with open(path, "r", encoding="utf-8") as file:
             data = json.load(file)
-            return data if isinstance(data, list) else []
+            return data if isinstance(data, dict) else {}
     except Exception:
-        return []
+        return {"last_update": "", "codes": []}
 
 
 def _save_cached_index(app_name: str, entries: list[dict]):
     path = _cache_file(app_name)
     tmp = f"{path}.tmp"
     with open(tmp, "w", encoding="utf-8") as file:
-        json.dump(entries, file, ensure_ascii=False)
+        json.dump(entries, file, ensure_ascii=False, indent=2)
     os.replace(tmp, path)
 
 
 def refresh_index_from_akshare(app_name: str) -> list[dict]:
-    if ak is None:
-        raise RuntimeError("akshare unavailable")
+    today = datetime.now().strftime("%Y-%m-%d")
+    entries = load_cached_index(app_name)
+    last_update = str(entries.get("last_update", ""))
+    if last_update == today:
+        return entries.get("codes", [])
 
     df = ak.stock_info_a_code_name()
-    entries = []
+    entries = {"last_update": datetime.now().strftime("%Y-%m-%d"), "codes":[]}
     for _, row in df.iterrows():
         code_raw = str(row.get("code", "")).strip()
-        name = str(row.get("name", "")).strip()
+        name = str(row.get("name", "")).strip().replace("Ａ","A")
         code = _to_prefixed_code(code_raw)
         py_full, py_abbr = _name_pinyin(name)
-        entries.append({
+        entries["codes"].append({
             "code": code,
             "code_num": code_raw,
             "name": name,
@@ -84,25 +77,9 @@ def refresh_index_from_akshare(app_name: str) -> list[dict]:
             "abbr": py_abbr,
         })
 
-    entries.sort(key=lambda item: item["code"])
+    entries["codes"].sort(key=lambda item: item["code"])
     _save_cached_index(app_name, entries)
     return entries
-
-
-def refresh_once_per_day(app_name: str, cfg: dict) -> tuple[list[dict], dict]:
-    today = datetime.now().strftime("%Y-%m-%d")
-    last_day = str(cfg.get("code_index_updated", ""))
-    entries = load_cached_index(app_name)
-    if last_day == today and entries:
-        return entries, cfg
-
-    try:
-        entries = refresh_index_from_akshare(app_name)
-        cfg["code_index_updated"] = today
-    except Exception:
-        if not entries:
-            entries = []
-    return entries, cfg
 
 
 def find_suggestions(entries: list[dict], text: str, limit: int = 20) -> list[dict]:

@@ -1,5 +1,11 @@
-import keyboard
+import requests
 from functools import partial
+import platform
+
+if platform.system() == "win32":
+    import keyboard
+elif platform.system() == "darwin":
+    import keyboardMac as keyboard
 
 from PySide6.QtCore import Qt, QEvent, QTimer, Signal
 from PySide6.QtGui import QFont, QAction, QColor
