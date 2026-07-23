@@ -1,7 +1,7 @@
 import sys, os, platform
 
 SYSTEM = platform.system()
-if SYSTEM== "win32":
+if SYSTEM== "Windows":
     import winreg, keyboard
 elif SYSTEM == "darwin":
     import keyboardMac as keyboard

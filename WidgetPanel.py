@@ -2,7 +2,7 @@ import requests
 from functools import partial
 import platform
 
-if platform.system() == "win32":
+if platform.system() == "Windows":
     import keyboard
 elif platform.system() == "darwin":
     import keyboardMac as keyboard
