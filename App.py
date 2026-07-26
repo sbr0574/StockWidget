@@ -1,10 +1,14 @@
+import importlib
 import sys, os, platform
 
 SYSTEM = platform.system()
-if SYSTEM== "Windows":
-    import winreg, keyboard
-elif SYSTEM == "darwin":
-    import keyboardMac as keyboard
+if SYSTEM == "Windows":
+    import winreg
+    keyboard = importlib.import_module("keyboard")
+elif SYSTEM == "Darwin":
+    keyboard = None
+else:
+    keyboard = None
 
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QAction, QIcon
@@ -107,7 +111,12 @@ class App(QApplication):
             self.settings_dlg.raise_()
             self.settings_dlg.activateWindow()
             return
-        self.settings_dlg = SettingsDialog(self.win, self.win, app=self)
+        try:
+            self.settings_dlg = SettingsDialog(self.win, self.win, app=self)
+        except Exception as exc:
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.critical(None, "设置窗口错误", f"无法打开设置窗口：\n{exc}")
+            return
         # 将设置窗口放在屏幕正中
         screen = QApplication.primaryScreen().availableGeometry()
         self.settings_dlg.adjustSize()
@@ -121,7 +130,11 @@ class App(QApplication):
     def quit_app(self):
         self.tray.hide()
         self.save_now()
-        keyboard.unhook_all_hotkeys()
+        if keyboard is not None and hasattr(keyboard, "unhook_all_hotkeys"):
+            try:
+                keyboard.unhook_all_hotkeys()
+            except Exception:
+                pass
         sys.exit(0)
 
     def save_now(self):

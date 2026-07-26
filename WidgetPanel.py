@@ -1,18 +1,24 @@
+import importlib
 import requests
 from functools import partial
 import platform
 
-if platform.system() == "Windows":
-    import keyboard
-elif platform.system() == "darwin":
-    import keyboardMac as keyboard
+try:
+    if platform.system() == "Windows":
+        keyboard = importlib.import_module("keyboard")
+    elif platform.system() == "Darwin":
+        keyboard = importlib.import_module("keyboardMac")
+    else:
+        keyboard = None
+except Exception:
+    keyboard = None
 
 from PySide6.QtCore import Qt, QEvent, QTimer, Signal
 from PySide6.QtGui import QFont, QAction, QColor
 from PySide6.QtWidgets import QApplication, QWidget, QMenu, QVBoxLayout, QLabel, QTableView, QHeaderView, QAbstractItemView, QFrame, QStyledItemDelegate
 
 from Display import SimpleTableModel, KLineDelegate
-from stock_data import fetch_stock_rows
+from stock_data import request_sina, fetch_stock_rows
 
 class FloatLabel(QWidget):
     hotkey_triggered = Signal()
@@ -49,7 +55,8 @@ class FloatLabel(QWidget):
         self.b1s1_display       = cfg.get("b1s1_display", "qty") if cfg.get("b1s1_display", "qty") in ("qty", "price", "both") else "qty"
         self.header_visible     = bool(cfg.get("header_visible", False))
         self.grid_visible       = bool(cfg.get("grid_visible", False))
-        font_family             = cfg.get("font_family", "Microsoft YaHei")
+        default_font_family     = "PingFang SC" if platform.system() == "Darwin" else "Microsoft YaHei"
+        font_family             = cfg.get("font_family") or default_font_family
         font_size               = int(cfg.get("font_size", 10))
         self.line_extra_px      = int(cfg.get("line_extra_px", 1))
         self.fg                 = QColor(cfg.get("fg", "#FFFFFF"))
@@ -325,21 +332,14 @@ class FloatLabel(QWidget):
 
     def _refresh_from_function(self):
         try:
+            ret, data = request_sina(self.checked_codes)
             full_rows, sign = fetch_stock_rows(
-                self.checked_codes,
-                short_code=self.short_code,
+                data,
                 name_length=self.name_length,
                 b1s1_display=self.b1s1_display,
             )
         except Exception as e:
-            try:
-                import requests as _req
-                if isinstance(e, _req.exceptions.RequestException):
-                    self._show_error(_req.exceptions.RequestException())
-                else:
-                    self._show_error(str(e))
-            except Exception:
-                self._show_error(str(e))
+            self._show_error(str(e))
             return
 
         self._clear_error()
@@ -373,6 +373,14 @@ class FloatLabel(QWidget):
         self.checked_codes = new
         self._notify_change()
         self._refresh_from_function()
+
+    def set_code_names(self, code_names: dict):
+        self.code_names = {str(k).strip().lower(): str(v).strip() for k, v in (code_names or {}).items() if str(k).strip()}
+        self._notify_change()
+
+    def set_type_visible(self, visible: bool):
+        self.type_visible = bool(visible)
+        self._notify_change()
 
     def set_flag(self, header, checked: bool):
         if isinstance(header, int):
@@ -423,10 +431,14 @@ class FloatLabel(QWidget):
         self._notify_change()
 
     def set_refresh_interval(self, seconds: int):
-        if seconds in {1,2,3,5,10,15,30,60}:
-            self.refresh_seconds = seconds
-            self.timer.setInterval(seconds*1000)
-            self._notify_change()
+        try:
+            seconds = max(1, int(seconds))
+        except Exception:
+            return
+        self.refresh_seconds = seconds
+        if self.timer is not None:
+            self.timer.setInterval(seconds * 1000)
+        self._notify_change()
 
     def set_fg_color(self, c: QColor):
         if isinstance(c, QColor) and c.isValid():
@@ -523,7 +535,10 @@ class FloatLabel(QWidget):
 
         menu.addSeparator()
         act_open_settings = QAction("设置…", menu)
-        act_open_settings.triggered.connect(self._open_settings_cb)
+        if callable(self._open_settings_cb):
+            act_open_settings.triggered.connect(self._open_settings_cb)
+        else:
+            act_open_settings.setEnabled(False)
         menu.addAction(act_open_settings)
 
         menu.addSeparator()
@@ -603,11 +618,16 @@ class FloatLabel(QWidget):
         self.raise_()
 
     def _register_hotkey(self):
+        if platform.system() == "Darwin" or keyboard is None:
+            return
         try:
             keyboard.remove_all_hotkeys()
         except Exception:
             pass
-        keyboard.add_hotkey(self.hotkey.lower(), lambda: self.hotkey_triggered.emit())
+        try:
+            keyboard.add_hotkey(self.hotkey.lower(), lambda: self.hotkey_triggered.emit())
+        except Exception:
+            pass
 
     def update_hotkey(self, new_hotkey: str):
         self.hotkey = new_hotkey.strip()

@@ -1,5 +1,5 @@
 import requests
-
+from typing import Tuple
 
 def _format_volume(value: float) -> str:
     if value < 1e4:
@@ -16,27 +16,38 @@ def _format_amount(value: float) -> str:
         return f"{value / 1e8:.2f}亿"
     return f"{value / 1e12:.2f}万亿"
 
+def almost_eq(a, b, dec):
+    try:
+        return round(float(a), dec) == round(float(b), dec)
+    except Exception:
+        return False
 
-def fetch_stock_rows(codes: list[str], short_code: bool, name_length: int, b1s1_display: str):
-    label = ",".join([str(c).strip() for c in codes if str(c).strip()])
-    if not label:
-        raise Exception("暂无数据，请添加自选")
 
-    price_data = []
-    sign_data = []
+def request_sina(req_codes: list[str]) -> Tuple[list, dict]:
+    data = {}
+    if len(req_codes) == 0:
+        return [], {}
+    label = ",".join([str(c).strip() for c in req_codes if str(c).strip()])
     url = "https://hq.sinajs.cn/list=" + label
     headers = {"Referer": "https://finance.sina.com.cn", "User-Agent": "Mozilla/5.0"}
     response = requests.get(url, headers=headers, timeout=3)
     response.encoding = "gbk"
-    for line in response.text.split("\n"):
+    for index, line in enumerate(response.text.split("\n")):
         if not line or '"' not in line:
             continue
         heads = line.split('="')[0].split("_")
         parts = line.split('="')[1].split(",")
-        if len(parts) < 30:
+        if len(parts) < 3:
             continue
-
         code = heads[2]
+        data[code] = parts
+    return [(code in data) for code in req_codes], data
+
+
+def fetch_stock_rows(data: dict, name_length: int, b1s1_display: str):
+    price_data = []
+    sign_data = []
+    for code, parts in data.items():
         name = parts[0]
         opening_price = float(parts[1] or 0)
         prev_close = float(parts[2] or 0)
@@ -58,14 +69,8 @@ def fetch_stock_rows(codes: list[str], short_code: bool, name_length: int, b1s1_
 
         dec = 3 if etf else 2
 
-        def almost_eq(a, b):
-            try:
-                return round(float(a), dec) == round(float(b), dec)
-            except Exception:
-                return False
-
-        buy_marker = "<" if first_pur > 0 and almost_eq(current_price, first_pur) else " "
-        sell_marker = ">" if first_sell > 0 and almost_eq(current_price, first_sell) else " "
+        buy_marker = "<" if first_pur > 0 and almost_eq(current_price, first_pur, dec) else " "
+        sell_marker = ">" if first_sell > 0 and almost_eq(current_price, first_sell, dec) else " "
 
         if first_pur == first_sell > 0:
             current_price = first_sell
@@ -135,7 +140,7 @@ def fetch_stock_rows(codes: list[str], short_code: bool, name_length: int, b1s1_
 
         k_payload = {"k": (opening_price, current_price, high_price, low_price, prev_close)}
         precision = 3 if etf else 2
-        value_prefix = code[2:] if short_code else code
+        value_prefix = code[2:] if code[:2] in ("sh","sz","bj") else code
         name_prefix = name if name_length == 0 else name[:name_length]
         price_data.append([
             value_prefix,
