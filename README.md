@@ -127,8 +127,11 @@ python3 -m PyInstaller -F -w .\StockWidget.py --name StockWidget --icon .\StockW
 
 ---
 
-## 📜 许可
+## 📜 License
 
-* 个人/学习用途自由使用；涉及第三方数据源时请遵守其使用条款。
+This project is licensed under the Apache License 2.0. See the LICENSE file for details.
 
+本项目代码采用 Apache License 2.0 开源。
+
+行情数据来源于新浪财经等第三方接口，使用数据时请遵守对应数据提供方的服务条款。
 ---
