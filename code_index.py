@@ -1,11 +1,9 @@
 import json
-import os
 from datetime import datetime
 import pandas as pd
 import requests
 
-from config_store import config_paths
-
+from resource import load_file, save_file
 import akshare as ak
 from pypinyin import Style, pinyin
 
@@ -20,75 +18,41 @@ def _name_pinyin(name: str) -> tuple[str, str]:
     return py_full.lower(), py_abbr.lower()
 
 
-def _cache_file(app_name: str) -> str:
-    cache_dir, _ = config_paths(app_name)
-    os.makedirs(cache_dir, exist_ok=True)
-    return os.path.join(cache_dir, "stock_codes_cache.json")
-
-
-def load_cached_index(app_name: str) -> dict:
-    path = _cache_file(app_name)
-    try:
-        with open(path, "r", encoding="utf-8") as file:
-            data = json.load(file)
-            return data if isinstance(data, dict) else {}
-    except Exception:
-        return {"last_update": "", "codes": []}
-
-
-def _save_cached_index(app_name: str, entries: list[dict]):
-    path = _cache_file(app_name)
-    tmp = f"{path}.tmp"
-    with open(tmp, "w", encoding="utf-8") as file:
-        json.dump(entries, file, ensure_ascii=False, indent=2)
-    os.replace(tmp, path)
-
-
-def refresh_index_from_akshare(app_name: str) -> list[dict]:
-    today = datetime.now().strftime("%Y-%m-%d")
-    entries = load_cached_index(app_name)
-    last_update = str(entries.get("last_update", ""))
-    if last_update == today:
-        return entries.get("codes", [])
+def refresh_index_from_akshare() -> list[dict]:
 
     df = stock_info_all()
-    entries = {"last_update": datetime.now().strftime("%Y-%m-%d"), "codes":[]}
+    codes = {}
     for _, row in df.iterrows():
         code = str(row.get("code", "")).strip()
         name = str(row.get("name", "")).strip().replace("Ａ","A").replace("Ｂ","B")
         market = str(row.get("market", "")).strip()
         mtype = str(row.get("type", "")).strip()
         py_full, py_abbr = _name_pinyin(name)
-        entries["codes"].append({
-            "code": code,
+        codes[code] = {
             "type": mtype,
             "market": market,
             "name": name,
             "py": py_full,
             "abbr": py_abbr,
-        })
-
-    entries["codes"].sort(key=lambda item: item["code"])
-    _save_cached_index(app_name, entries)
-    return entries
+        }
+    
+    return {"last_update": datetime.now().strftime("%Y-%m-%d"), "codes": codes}
 
 
-def find_suggestions(entries: list[dict], text: str, limit: int = 20) -> list[dict]:
+def find_suggestions(codes: dict, text: str, limit: int = 20) -> list[dict]:
     q = str(text or "").strip().lower()
     if not q:
-        return entries[:limit]
+        return []
 
     scored = []
-    for item in entries:
-        code = item.get("code", "")
-        code_num = item.get("code_num", "")
+    for code, item in codes.items():
         name = str(item.get("name", ""))
         py = str(item.get("py", ""))
         abbr = str(item.get("abbr", ""))
         score = 0
-        if code.startswith(q) or code_num.startswith(q):
+        if code.startswith(q):
             score = 100
-        elif q in code or q in code_num:
+        elif q in code:
             score = 85
         elif name.startswith(q):
             score = 70

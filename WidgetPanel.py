@@ -1,5 +1,4 @@
 import importlib
-import requests
 from functools import partial
 import platform
 
@@ -18,17 +17,32 @@ from PySide6.QtGui import QFont, QAction, QColor
 from PySide6.QtWidgets import QApplication, QWidget, QMenu, QVBoxLayout, QLabel, QTableView, QHeaderView, QAbstractItemView, QFrame, QStyledItemDelegate
 
 from Display import SimpleTableModel, KLineDelegate
-from stock_data import request_sina, fetch_stock_rows
+from stock_data import request_sina
+
+def _format_volume(value: int) -> str:
+    value = int(value/100)
+    if value < 1e4:
+        return f"{value}"
+    if value < 1e8:
+        return f"{value / 1e4:.2f}万"
+    return f"{value / 1e8:.2f}亿"
+
+def _format_amount(value: float) -> str:
+    if value < 1e8:
+        return f"{value / 1e4:.2f}万"
+    if value < 1e12:
+        return f"{value / 1e8:.2f}亿"
+    return f"{value / 1e12:.2f}万亿"
+
 
 class FloatLabel(QWidget):
     hotkey_triggered = Signal()
-    ALL_HEADERS = ["代码", "名称", "现价", "涨跌值", "涨跌幅", "买一", "卖一", "委比", "成交量", "成交额", "均价", "K线"]
+    ALL_HEADERS = ["名称", "现价", "涨跌", "涨幅", "买一", "卖一", "委比", "成交量", "成交额", "均价", "K线"]
     HEADER_ATTR_MAP = {
-        "代码": "code_visible",
         "名称": "name_visible",
         "现价": "price_visible",
-        "涨跌值": "change_visible",
-        "涨跌幅": "change_pct_visible",
+        "涨跌": "change_visible",
+        "涨幅": "change_pct_visible",
         "买一": "b1s1_visible",
         "卖一": "b1s1_visible",
         "委比": "commi_visible",
@@ -38,7 +52,7 @@ class FloatLabel(QWidget):
         "K线": "kline_visible",
     }
 
-    def __init__(self, cfg: dict):
+    def __init__(self, cfg: dict, code_list: dict):
         super().__init__()
         self._on_change = (lambda: None)
         self._open_settings_cb = None
@@ -47,43 +61,44 @@ class FloatLabel(QWidget):
         self.setAttribute(Qt.WA_TranslucentBackground, True)
         self.setFocusPolicy(Qt.StrongFocus)
 
-        codes_cfg               = cfg.get("codes",["sh000001"])
-        checked_codes_cfg       = cfg.get("checked_codes", codes_cfg)
-        self.refresh_seconds    = int(cfg.get("refresh_seconds", 2))
-        self.short_code         = bool(cfg.get("short_code", False))
+        self.code_list_last_update = code_list["last_update"]
+        self.code_list: dict = code_list["codes"]
+        # 加载自选标的配置
+        self.codes              = [str(c).strip() for c in cfg.get("codes",["sh000001"]) if str(c).strip()]
+        self.checked_codes      = [str(c).strip() for c in cfg.get("checked_codes", self.codes) if (str(c).strip() and str(c).strip() in self.codes)]
+        self.info               = [self.code_list.get(c[2:] if c[:2] in ('sh','sz','bj') else c, {}) for c in self.codes]
+        # 加载面板配置
+        self.name_visible       = bool(cfg.get("name_visible", False))
+        self.market_visible     = bool(cfg.get("market_visible", False))
+        self.code_visible       = bool(cfg.get("code_visible", False))
         self.name_length        = int(cfg.get("name_length",0))
-        self.b1s1_display       = cfg.get("b1s1_display", "qty") if cfg.get("b1s1_display", "qty") in ("qty", "price", "both") else "qty"
+        self.price_visible      = bool(cfg.get("price_visible", False))
+        self.change_visible     = bool(cfg.get("change_visible", False))
+        self.change_pct_visible = bool(cfg.get("change_pct_visible", False))
+        self.b1s1_visible       = bool(cfg.get("b1s1_visible", False))
+        self.commi_visible      = bool(cfg.get("commi_visible", False))
+        self.vol_visible        = bool(cfg.get("vol_visible", False))
+        self.amount_visible     = bool(cfg.get("amount_visible", False))
+        self.avg_visible        = bool(cfg.get("avg_visible", False))
+        self.kline_visible      = bool(cfg.get("kline_visible", False))
+        # 加载外观配置
         self.header_visible     = bool(cfg.get("header_visible", False))
         self.grid_visible       = bool(cfg.get("grid_visible", False))
-        default_font_family     = "PingFang SC" if platform.system() == "Darwin" else "Microsoft YaHei"
-        font_family             = cfg.get("font_family") or default_font_family
+        font_family             = cfg.get("font_family", "PingFang SC" if platform.system() == "Darwin" else "Microsoft YaHei")
         font_size               = int(cfg.get("font_size", 10))
+        self.font               = QFont(font_family, max(8, min(15, font_size)))
         self.line_extra_px      = int(cfg.get("line_extra_px", 1))
         self.fg                 = QColor(cfg.get("fg", "#FFFFFF"))
         bg                      = cfg.get("bg", {"r":0,"g":0,"b":0,"a":191})
+        self.bg                 = QColor(bg["r"],bg["g"],bg["b"],bg["a"])
         self.opacity_pct        = int(cfg.get("opacity_pct", 90))
         self.default_color      = bool(cfg.get("default_color", False))
+        # 加载其他配置
+        self.refresh_seconds    = int(cfg.get("refresh_seconds", 2))
+        self.hotkey_enabled     = bool(cfg.get("hotkey_enabled", False))
         self.hotkey             = cfg.get("hotkey", "Ctrl+Alt+F")
         self.start_on_boot      = bool(cfg.get("start_on_boot", False))
 
-        self.codes = [str(c).strip() for c in codes_cfg if str(c).strip()]
-        self.code_visible = bool(cfg.get("code_visible", False))
-        self.name_visible = bool(cfg.get("name_visible", False))
-        self.price_visible = bool(cfg.get("price_visible", False))
-        self.change_visible = bool(cfg.get("change_visible", False))
-        self.change_pct_visible = bool(cfg.get("change_pct_visible", False))
-        self.b1s1_visible = bool(cfg.get("b1s1_visible", False))
-        self.commi_visible = bool(cfg.get("commi_visible", False))
-        self.vol_visible = bool(cfg.get("vol_visible", False))
-        self.amount_visible = bool(cfg.get("amount_visible", False))
-        self.avg_visible = bool(cfg.get("avg_visible", False))
-        self.kline_visible = bool(cfg.get("kline_visible", False))
-
-        self.checked_codes = [str(c).strip() for c in checked_codes_cfg if (str(c).strip() and str(c).strip() in self.codes)]
-        self.font = QFont(font_family, max(8, min(15, font_size)))
-        self.bg = QColor(bg["r"],bg["g"],bg["b"],bg["a"])
-        
-        
         self.hotkey_triggered.connect(self.toggle_win)
         self._register_hotkey()
 
@@ -169,35 +184,38 @@ class FloatLabel(QWidget):
 
     def current_config(self):
         return {
-            "codes": self.codes,
-            "checked_codes": self.checked_codes,
-            "code_visible": bool(getattr(self, 'code_visible', False)),
-            "name_visible": bool(getattr(self, 'name_visible', False)),
-            "price_visible": bool(getattr(self, 'price_visible', False)),
-            "change_visible": bool(getattr(self, 'change_visible', False)),
-            "change_pct_visible": bool(getattr(self, 'change_pct_visible', False)),
-            "b1s1_visible": bool(getattr(self, 'b1s1_visible', False)),
-            "commi_visible": bool(getattr(self, 'commi_visible', False)),
-            "vol_visible": bool(getattr(self, 'vol_visible', False)),
-            "amount_visible": bool(getattr(self, 'amount_visible', False)),
-            "avg_visible": bool(getattr(self, 'avg_visible', False)),
-            "kline_visible": bool(getattr(self, 'kline_visible', False)),
-            "short_code": self.short_code,
-            "name_length": self.name_length,
-            "b1s1_display": getattr(self, 'b1s1_display', 'qty'),
-            "header_visible": self.header_visible,
-            "grid_visible": self.grid_visible,
-            "refresh_seconds": self.refresh_seconds,
-            "fg": self.fg.name(QColor.HexRgb),
-            "bg": {"r": self.bg.red(), "g": self.bg.green(), "b": self.bg.blue(), "a": self.bg.alpha()},
-            "opacity_pct": int(round(self.windowOpacity()*100)),
-            "font_family": self.font.family(),
-            "font_size": self.font.pointSize(),
-            "line_extra_px": self.line_extra_px,
-            "default_color": self.default_color,
-            "pos": {"x": self.x(), "y": self.y()},
-            "hotkey": self.hotkey,
-            "start_on_boot": bool(self.start_on_boot),
+            "codes":                self.codes,
+            "checked_codes":        self.checked_codes,
+
+            "name_visible":         self.name_visible,
+            "market_visible":       self.market_visible,
+            "code_visible":         self.code_visible,
+            "name_length":          self.name_length,
+            "price_visible":        self.price_visible,
+            "change_visible":       self.change_visible,
+            "change_pct_visible":   self.change_pct_visible,
+            "b1s1_visible":         self.b1s1_visible,
+            "commi_visible":        self.commi_visible,
+            "vol_visible":          self.vol_visible,
+            "amount_visible":       self.amount_visible,
+            "avg_visible":          self.avg_visible,
+            "kline_visible":        self.kline_visible,
+            
+            "header_visible":   self.header_visible,
+            "grid_visible":     self.grid_visible,
+            "font_family":      self.font.family(),
+            "font_size":        self.font.pointSize(),
+            "line_extra_px":    self.line_extra_px,
+            "fg":               self.fg.name(QColor.HexRgb),
+            "bg":               {"r": self.bg.red(), "g": self.bg.green(), "b": self.bg.blue(), "a": self.bg.alpha()},
+            "opacity_pct":      int(round(self.windowOpacity()*100)),
+            "default_color":    self.default_color,
+
+            "refresh_seconds":  self.refresh_seconds,
+            "hotkey_enabled":   self.hotkey_enabled,
+            "hotkey":           self.hotkey,
+            "start_on_boot":    self.start_on_boot,
+            "pos":              {"x": self.x(), "y": self.y()},
         }
 
     def header_is_visible(self, header: str) -> bool:
@@ -271,44 +289,29 @@ class FloatLabel(QWidget):
 
     # ----- 数据 & 投影 -----
     def _show_error(self, msg: str):
-        try:
-            if self.k_column_visible_index is not None:
-                self.table.setItemDelegateForColumn(self.k_column_visible_index, QStyledItemDelegate(self.table))
-                self.k_column_visible_index = None
-        except Exception:
-            pass
-        try:
-            text = str(msg) if msg is not None else ""
-            # 若是 requests 抛出的网络错误，显示更友好的中文提示
-            if isinstance(msg, Exception):
-                import requests as _req
-                if isinstance(msg, _req.exceptions.RequestException):
-                    text = "无网络连接"
-        except Exception:
-            text = str(msg)
+        """显示错误内容"""
+        if self.k_column_visible_index is not None:
+            self.table.setItemDelegateForColumn(self.k_column_visible_index, QStyledItemDelegate(self.table))
+            self.k_column_visible_index = None
 
-        if hasattr(self, 'error_label'):
-            self.error_label.setText(text)
-            self.error_label.setVisible(True)
+        text = str(msg) if msg is not None else ""
+        self.error_label.setText(text)
+        self.error_label.setVisible(True)
         self._defer_fit()
 
     def _clear_error(self):
-        # 清除顶部错误提示
-        if hasattr(self, 'error_label'):
-            try:
-                self.error_label.setVisible(False)
-                self.error_label.setText("")
-            except Exception:
-                pass
+        """清除顶部错误提示"""
+        self.error_label.setVisible(False)
+        self.error_label.setText("")
 
-    def _project_columns(self, full_rows, sign_data):
+    def _project_columns(self, full_rows: list[dict], sign_data: list[dict]):
         # 从 ALL_HEADERS 中按显示顺序筛选已启用的列
         cols = [i for i, h in enumerate(self.ALL_HEADERS) if self.header_is_visible(h)]
         headers = [self.ALL_HEADERS[i] for i in cols]
 
         proj_rows, proj_meta = [], []
         for r, row in enumerate(full_rows):
-            proj_rows.append([row[i] for i in cols])
+            proj_rows.append([row[i] for i in headers])
             proj_meta.append(sign_data[r])
 
         # 右对齐：除了名称、K线、卖一外的所有列都右对齐
@@ -330,14 +333,89 @@ class FloatLabel(QWidget):
 
         self._fit_to_contents()
 
+    def _format_data(self, code: str, data: dict, type: str):
+        # 名称显示
+        name = f"({type})" if type is not None and self.type_visible else ""
+        name += f"{code} " if self.code_visible else ""
+        name += data["name"] if self.name_length == 0 else data["name"][:self.name_length]
+
+        # 一档盘口数据
+        b1_label = ""
+        s1_label = ""
+        b1_color_sign = 0
+        s1_color_sign = 0
+        pur_1 = data["purchaser_price"][0]
+        sell_1 = data["seller_price"][0]
+        if pur_1 == sell_1 > 0:
+            # 集合竞价阶段
+            data["current_price"] = sell_1
+            paired = int(data["seller_vol"][0] / 100)
+            unpaired = int((data["purchaser_vol"][1] or (-data["seller_vol"][1])) / 100)
+            b1_label = f"{paired:d}"
+            s1_label = f"{unpaired:+d}"
+            b1_color_sign = (unpaired > 0) - (unpaired < 0)
+            s1_color_sign = b1_color_sign
+        else:
+            # 连续交易阶段
+            buy_marker = "<" if pur_1 and data["current_price"]==pur_1 else " "
+            sell_marker = ">" if sell_1 and data["current_price"]==sell_1 else " "
+            b1_label = f"{int(data["purchaser_vol"][0] / 100)}{buy_marker}" if pur_1 else "-"
+            s1_label = f"{sell_marker}{int(data["seller_vol"][0] / 100)}" if sell_1 else "-"
+            b1_color_sign = 1
+            s1_color_sign = -1
+
+        # 盘前数据填充
+        if data["current_price"] == 0:
+            data["current_price"] = data["prev_close"]
+        if data["opening_price"] == 0:
+            data["opening_price"] = data["current_price"]
+            data["high_price"] = data["current_price"]
+            data["low_price"] = data["current_price"]
+
+        # 指标计算
+        change = data["current_price"] - data["prev_close"] if data["prev_close"] else 0.0
+        change_pct = (data["current_price"] / data["prev_close"] - 1) * 100 if data["prev_close"] else 0.0
+        avg = (data["deals_amt"] / data["deals_vol"]) if data["deals_vol"] > 0 else data["prev_close"]
+        p_sum, s_sum = sum(data["purchaser_vol"]), sum(data["seller_vol"])
+        committee = (100 * (p_sum - s_sum) / (p_sum + s_sum)) if (p_sum + s_sum) > 0 else 0.0
+        arrow = " "
+        if data["high_price"] > data["low_price"]:
+            if data["current_price"] == data["high_price"]: arrow = "↑"
+            elif data["current_price"] == data["low_price"]: arrow = "↓"
+        k_payload = {"k": (data["opening_price"], data["current_price"], data["high_price"], data["low_price"], data["prev_close"])}
+
+        # 数据返回
+        precision = 3 if type == "基" else 2
+        format_data = {
+            self.ALL_HEADERS[0]: name, 
+            self.ALL_HEADERS[1]: f"{data["current_price"]:.{precision}f}{arrow}", 
+            self.ALL_HEADERS[2]: f"{change:+.{precision}f}",
+            self.ALL_HEADERS[3]: f"{change_pct:+.2f}%",
+            self.ALL_HEADERS[4]: b1_label,
+            self.ALL_HEADERS[5]: s1_label,
+            self.ALL_HEADERS[6]: f"{committee:+.2f}%",
+            self.ALL_HEADERS[7]: _format_volume(data["deals_vol"]),
+            self.ALL_HEADERS[8]: _format_amount(data["deals_amt"]),
+            self.ALL_HEADERS[9]: f"{avg:.{precision}f}",
+            self.ALL_HEADERS[10]: k_payload}
+        sign = {
+            self.ALL_HEADERS[0]: 0, 
+            self.ALL_HEADERS[1]: (change > 0) - (change < 0),
+            self.ALL_HEADERS[2]: (change > 0) - (change < 0),
+            self.ALL_HEADERS[3]: (change > 0) - (change < 0),
+            self.ALL_HEADERS[4]: b1_color_sign,
+            self.ALL_HEADERS[5]: s1_color_sign,
+            self.ALL_HEADERS[6]: (committee > 0) - (committee < 0),
+            self.ALL_HEADERS[7]: 0,
+            self.ALL_HEADERS[8]: 0,
+            self.ALL_HEADERS[9]: (avg > data["prev_close"]) - (avg < data["prev_close"]),
+            self.ALL_HEADERS[10]: 0}
+        return format_data, sign
+
     def _refresh_from_function(self):
         try:
             ret, data = request_sina(self.checked_codes)
-            full_rows, sign = fetch_stock_rows(
-                data,
-                name_length=self.name_length,
-                b1s1_display=self.b1s1_display,
-            )
+            full_rows = [self._format_data()]
         except Exception as e:
             self._show_error(str(e))
             return
@@ -494,10 +572,6 @@ class FloatLabel(QWidget):
         self.apply_style()
         self._notify_change()
         self._defer_fit()
-
-    def set_start_on_boot(self, enabled: bool):
-        self.start_on_boot = bool(enabled)
-        self._notify_change()
     
     # ----- 交互 -----
     def contextMenuEvent(self, event):

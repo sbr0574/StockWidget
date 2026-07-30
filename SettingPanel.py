@@ -499,15 +499,7 @@ class SettingsDialog(QDialog):
             pass
 
     def _on_start_on_boot_toggled(self, checked: bool):
-        try:
-            self.win.set_start_on_boot(bool(checked))
-            if hasattr(self, 'app') and self.app is not None:
-                try:
-                    self.app.set_start_on_boot(bool(checked))
-                except Exception:
-                    pass
-        except Exception:
-            pass
+        self.app.set_start_on_boot(bool(checked))
 
     def pick_fg(self):
         c = QColorDialog.getColor(self.win.fg, self, "选择文字颜色")

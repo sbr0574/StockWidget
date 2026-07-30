@@ -1,11 +1,10 @@
 import importlib
 import sys, os, platform
 
-SYSTEM = platform.system()
-if SYSTEM == "Windows":
+if platform.system() == "Windows":
     import winreg
     keyboard = importlib.import_module("keyboard")
-elif SYSTEM == "Darwin":
+elif platform.system() == "Darwin":
     keyboard = None
 else:
     keyboard = None
@@ -15,66 +14,31 @@ from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QStyle
 from WidgetPanel import FloatLabel
 from SettingPanel import SettingsDialog
-from config_store import load_config, save_config
-from code_index import refresh_index_from_akshare
+from resource import APP_NAME,  load_file, save_file
 
-# ----- 程序与资源 -----
-APP_NAME = "StockWidget"
-APP_ICON_FILE = "StockWidget.ico"
-
-def resource_path(rel_path):
-    base = getattr(sys, "_MEIPASS", "")
-    return os.path.join(base, rel_path)
+CONFIG_FILE = "stock_widget_config.json"
+CACHE_FILE = "stock_codes_cache.json"
 
 class App(QApplication):
     def __init__(self, argv):
         super().__init__(argv)
-        self.system = SYSTEM
         self.setQuitOnLastWindowClosed(False)
-        icon_path = resource_path(APP_ICON_FILE)
-        cfg = load_config(APP_NAME)
-        self.code_index = refresh_index_from_akshare(APP_NAME)
-        icon_choice = cfg.get('app_icon')
-        self._app_icon_choice = icon_choice
-        def _resolve_icon(choice):
-            # choice can be None, 'default', 'std:NAME' or a file path
-            if not choice or choice == 'default':
-                p = resource_path(APP_ICON_FILE)
-                if os.path.exists(p):
-                    return QIcon(p)
-                return self.style().standardIcon(QStyle.SP_ComputerIcon)
-            if isinstance(choice, str) and choice.startswith('std:'):
-                key = choice.split(':',1)[1]
-                mapping = {
-                    'computer': QStyle.SP_ComputerIcon,
-                    'network': QStyle.SP_DriveNetIcon,
-                    'folder': QStyle.SP_DirIcon,
-                    'file': QStyle.SP_FileIcon,
-                    'trash': QStyle.SP_TrashIcon,
-                    'desktop': QStyle.SP_DesktopIcon,
-                }
-                sp = mapping.get(key, QStyle.SP_ComputerIcon)
-                return self.style().standardIcon(sp)
-            # assume it's a file path
-            try:
-                if os.path.exists(choice):
-                    return QIcon(choice)
-            except Exception:
-                pass
-            return self.style().standardIcon(QStyle.SP_ComputerIcon)
+        cfg = load_file(CONFIG_FILE)
+        code_list = load_file(CACHE_FILE, {"last_update": "", "codes": []})
 
-        app_icon = _resolve_icon(icon_choice)
+        # 加载图标
+        self._icon_choice = cfg.get('app_icon')
+        app_icon = self.find_icon(self._icon_choice)
         self.setWindowIcon(app_icon)
 
-        self.win = FloatLabel(cfg)
-        # Apply start-on-boot setting from config
-        try:
-            self.set_start_on_boot(bool(cfg.get("start_on_boot", False)))
-        except Exception:
-            pass
+        # 初始化浮窗
+        self.win = FloatLabel(cfg, code_list)
+        self._start_on_boot = bool(cfg.get("start_on_boot", False))
+        self.set_start_on_boot(self._start_on_boot) # Apply start-on-boot setting from config
         self.win.set_on_change(self.save_now)
         self.win.set_open_settings_callback(self.open_settings)
 
+        # 初始化托盘
         self.tray = QSystemTrayIcon(app_icon, self)
         self.tray.setToolTip(APP_NAME)
         menu = QMenu()
@@ -86,12 +50,35 @@ class App(QApplication):
         self.tray.activated.connect(self.on_tray_activated)
         self.tray.show()
 
+        # 启动浮窗
         self.settings_dlg = None
         self.win.show()
         self.win.raise_()
         self.win.activateWindow()
         self.win.setFocus(Qt.ActiveWindowFocusReason)
         self.save_now()
+
+    def find_icon(self, choice: str) -> QIcon:
+        default = os.path.join(getattr(sys, "_MEIPASS", ""), "StockWidget.ico")
+        if not choice or choice == 'default':
+            return QIcon(default)
+        if isinstance(choice, str) and choice.startswith('std:'):
+            key = choice.split(':',1)[1]
+            mapping = {
+                'computer': QStyle.SP_ComputerIcon,
+                'network': QStyle.SP_DriveNetIcon,
+                'folder': QStyle.SP_DirIcon,
+                'file': QStyle.SP_FileIcon,
+                'trash': QStyle.SP_TrashIcon,
+                'desktop': QStyle.SP_DesktopIcon,
+            }
+            sp = mapping.get(key, QStyle.SP_ComputerIcon)
+            return self.style().standardIcon(sp)
+        try:
+            if os.path.exists(choice):
+                return QIcon(choice)
+        except Exception:
+            return QIcon(default)
 
     def on_tray_activated(self, reason):
         if reason in (QSystemTrayIcon.Trigger, QSystemTrayIcon.DoubleClick): self.toggle_win()
@@ -139,58 +126,23 @@ class App(QApplication):
 
     def save_now(self):
         cfg = self.win.current_config()
-        # persist selected app icon
-        try:
-            cfg['app_icon'] = getattr(self, '_app_icon_choice', None)
-        except Exception:
-            pass
-        save_config(APP_NAME, cfg)
+        cfg['app_icon'] = self._icon_choice
+        cfg['start_on_boot'] = self._start_on_boot
+        save_file(cfg, CONFIG_FILE)
 
     def set_app_icon(self, choice):
         """Set application and tray icon. `choice` can be None/'default', 'std:KEY' or a file path."""
-        self._app_icon_choice = choice
-        # resolve to QIcon
-        def _resolve_icon(choice):
-            if not choice or choice == 'default':
-                p = resource_path(APP_ICON_FILE)
-                if os.path.exists(p):
-                    return QIcon(p)
-                return self.style().standardIcon(QStyle.SP_ComputerIcon)
-            if isinstance(choice, str) and choice.startswith('std:'):
-                key = choice.split(':',1)[1]
-                mapping = {
-                    'computer': QStyle.SP_ComputerIcon,
-                    'network': QStyle.SP_DriveNetIcon,
-                    'folder': QStyle.SP_DirIcon,
-                    'file': QStyle.SP_FileIcon,
-                    'trash': QStyle.SP_TrashIcon,
-                    'desktop': QStyle.SP_DesktopIcon,
-                }
-                sp = mapping.get(key, QStyle.SP_ComputerIcon)
-                return self.style().standardIcon(sp)
-            try:
-                if os.path.exists(choice):
-                    return QIcon(choice)
-            except Exception:
-                pass
-            return self.style().standardIcon(QStyle.SP_ComputerIcon)
-
-        icon = _resolve_icon(choice)
-        try:
-            self.setWindowIcon(icon)
-        except Exception:
-            pass
-        try:
-            if hasattr(self, 'tray') and self.tray is not None:
-                self.tray.setIcon(icon)
-        except Exception:
-            pass
+        self._icon_choice = choice
+        app_icon = self.find_icon(self._icon_choice)
+        self.setWindowIcon(app_icon)
+        self.tray.setIcon(app_icon)
 
     def set_start_on_boot(self, enabled: bool):
         """Enable or disable Windows startup by writing/removing Run key in HKCU.
         On macOS/Linux this is ignored gracefully.
         """
-        if self.system != "win32":
+        self._start_on_boot = enabled
+        if platform.system() != "Windows":
             return
         try:
             key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
@@ -203,10 +155,7 @@ class App(QApplication):
                 with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as key:
                     winreg.SetValueEx(key, name, 0, winreg.REG_SZ, cmd)
             else:
-                try:
-                    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as key:
-                        winreg.DeleteValue(key, name)
-                except OSError:
-                    pass
+                with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as key:
+                    winreg.DeleteValue(key, name)
         except Exception:
             pass
