@@ -24,7 +24,7 @@ class App(QApplication):
         super().__init__(argv)
         self.setQuitOnLastWindowClosed(False)
         cfg = load_file(CONFIG_FILE)
-        code_list = load_file(CACHE_FILE, {"last_update": "", "codes": []})
+        code_list = load_file(CACHE_FILE, {"last_update": "", "codes": {}})
 
         # 加载图标
         self._icon_choice = cfg.get('app_icon')

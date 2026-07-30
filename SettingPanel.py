@@ -180,8 +180,7 @@ class SettingsDialog(QDialog):
         if self._is_macos():
             self.cmb_icon.setEnabled(False)
             self.btn_pick_icon.setEnabled(False)
-        else:
-            self.btn_pick_icon.clicked.connect(self._pick_custom_icon)
+        
 
         if self._is_macos():
             self.keyseq_hide.setEnabled(False)

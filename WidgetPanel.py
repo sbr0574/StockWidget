@@ -66,7 +66,6 @@ class FloatLabel(QWidget):
         # 加载自选标的配置
         self.codes              = [str(c).strip() for c in cfg.get("codes",["sh000001"]) if str(c).strip()]
         self.checked_codes      = [str(c).strip() for c in cfg.get("checked_codes", self.codes) if (str(c).strip() and str(c).strip() in self.codes)]
-        self.info               = [self.code_list.get(c[2:] if c[:2] in ('sh','sz','bj') else c, {}) for c in self.codes]
         # 加载面板配置
         self.name_visible       = bool(cfg.get("name_visible", False))
         self.market_visible     = bool(cfg.get("market_visible", False))
@@ -306,13 +305,12 @@ class FloatLabel(QWidget):
 
     def _project_columns(self, full_rows: list[dict], sign_data: list[dict]):
         # 从 ALL_HEADERS 中按显示顺序筛选已启用的列
-        cols = [i for i, h in enumerate(self.ALL_HEADERS) if self.header_is_visible(h)]
-        headers = [self.ALL_HEADERS[i] for i in cols]
+        headers = [h for h in self.ALL_HEADERS if self.header_is_visible(h)]
 
         proj_rows, proj_meta = [], []
         for r, row in enumerate(full_rows):
-            proj_rows.append([row[i] for i in headers])
-            proj_meta.append(sign_data[r])
+            proj_rows.append([row[h] for h in headers])
+            proj_meta.append([sign_data[r][h] for h in headers])
 
         # 右对齐：除了名称、K线、卖一外的所有列都右对齐
         right_cols = [i for i, h in enumerate(headers) if h not in ("名称", "K线", "卖一")]
@@ -336,7 +334,7 @@ class FloatLabel(QWidget):
     def _format_data(self, code: str, data: dict, type: str):
         # 名称显示
         name = f"({type})" if type is not None and self.type_visible else ""
-        name += f"{code} " if self.code_visible else ""
+        name += f"{code[2:] if code[:2] in ('sh','sz','bj') else code} " if self.code_visible else ""
         name += data["name"] if self.name_length == 0 else data["name"][:self.name_length]
 
         # 一档盘口数据
@@ -412,16 +410,25 @@ class FloatLabel(QWidget):
             self.ALL_HEADERS[10]: 0}
         return format_data, sign
 
+    def _get_code_info(self, c: str) -> dict:
+        return self.code_list.get(c, {})
+
     def _refresh_from_function(self):
         try:
             ret, data = request_sina(self.checked_codes)
-            full_rows = [self._format_data()]
         except Exception as e:
             self._show_error(str(e))
             return
+        
+        full_rows = []
+        full_sign = []
+        for c, d in data.items():
+            row, sign = self._format_data(c, d, self._get_code_info(c).get("type"))
+            full_rows.append(row)
+            full_sign.append(sign)
 
         self._clear_error()
-        self._project_columns(full_rows, sign)
+        self._project_columns(full_rows, full_sign)
 
     # ----- 应用设置 -----
     def set_codes(self, codes_list):

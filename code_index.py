@@ -137,7 +137,7 @@ def stock_info_all() -> pd.DataFrame:
     df = pd.concat(objs=[df, stock_lof], ignore_index=True)
     df = pd.concat(objs=[df, stock_closefund], ignore_index=True)
     df = pd.concat(objs=[df, index_stock], ignore_index=True)
-    df.columns = ["code", "name", "market", "type"]
+    df.columns = ["code", "name", "type", "market"]
 
     return df
 
