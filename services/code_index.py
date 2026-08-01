@@ -3,7 +3,7 @@ from datetime import datetime
 import pandas as pd
 import requests
 
-from resource import load_file, save_file
+from src.utils import load_file, save_file
 import akshare as ak
 from pypinyin import Style, pinyin
 
@@ -45,10 +45,10 @@ def find_suggestions(codes: dict, text: str, limit: int = 20) -> list[dict]:
         return []
 
     scored = []
-    for code, item in codes.items():
-        name = str(item.get("name", ""))
-        py = str(item.get("py", ""))
-        abbr = str(item.get("abbr", ""))
+    for code, info in codes.items():
+        name = str(info.get("name", ""))
+        py = str(info.get("py", ""))
+        abbr = str(info.get("abbr", ""))
         score = 0
         if code.startswith(q):
             score = 100
@@ -68,10 +68,10 @@ def find_suggestions(codes: dict, text: str, limit: int = 20) -> list[dict]:
             score = 20
 
         if score > 0:
-            scored.append((score, item))
+            scored.append((score, code))
 
     scored.sort(key=lambda pair: (-pair[0], pair[1].get("code", "")))
-    return [item for _, item in scored[:limit]]
+    return [code for _, code in scored[:limit]]
 
 
 def stock_info_all() -> pd.DataFrame:

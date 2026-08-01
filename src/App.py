@@ -12,9 +12,11 @@ else:
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QStyle
-from WidgetPanel import FloatLabel
-from SettingPanel import SettingsDialog
-from resource import APP_NAME,  load_file, save_file
+import resources.resources_rc
+from src.WidgetPanel import FloatLabel
+from src.SettingPanel import SettingsDialog
+from services.code_index import refresh_index_from_akshare
+from src.utils import APP_NAME, load_file, save_file
 
 CONFIG_FILE = "stock_widget_config.json"
 CACHE_FILE = "stock_codes_cache.json"
@@ -24,7 +26,13 @@ class App(QApplication):
         super().__init__(argv)
         self.setQuitOnLastWindowClosed(False)
         cfg = load_file(CONFIG_FILE)
-        code_list = load_file(CACHE_FILE, {"last_update": "", "codes": {}})
+        list_file = load_file(CACHE_FILE)
+        list_last_update = list_file.get("last_update", "2026-01-01")
+        codes_list = list_file.get("codes")
+        if not isinstance(codes_list, dict):
+            list_file = refresh_index_from_akshare()
+            save_file(list_file, CACHE_FILE)
+            codes_list = list_file.get("codes")
 
         # 加载图标
         self._icon_choice = cfg.get('app_icon')
@@ -32,7 +40,7 @@ class App(QApplication):
         self.setWindowIcon(app_icon)
 
         # 初始化浮窗
-        self.win = FloatLabel(cfg, code_list)
+        self.win = FloatLabel(cfg, codes_list)
         self._start_on_boot = bool(cfg.get("start_on_boot", False))
         self.set_start_on_boot(self._start_on_boot) # Apply start-on-boot setting from config
         self.win.set_on_change(self.save_now)
@@ -59,9 +67,8 @@ class App(QApplication):
         self.save_now()
 
     def find_icon(self, choice: str) -> QIcon:
-        default = os.path.join(getattr(sys, "_MEIPASS", ""), "StockWidget.ico")
         if not choice or choice == 'default':
-            return QIcon(default)
+            return QIcon(":/StockWidget.ico")
         if isinstance(choice, str) and choice.startswith('std:'):
             key = choice.split(':',1)[1]
             mapping = {
@@ -78,7 +85,7 @@ class App(QApplication):
             if os.path.exists(choice):
                 return QIcon(choice)
         except Exception:
-            return QIcon(default)
+            return QIcon(":/StockWidget.ico")
 
     def on_tray_activated(self, reason):
         if reason in (QSystemTrayIcon.Trigger, QSystemTrayIcon.DoubleClick): self.toggle_win()

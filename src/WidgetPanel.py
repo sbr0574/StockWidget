@@ -16,8 +16,8 @@ from PySide6.QtCore import Qt, QEvent, QTimer, Signal
 from PySide6.QtGui import QFont, QAction, QColor
 from PySide6.QtWidgets import QApplication, QWidget, QMenu, QVBoxLayout, QLabel, QTableView, QHeaderView, QAbstractItemView, QFrame, QStyledItemDelegate
 
-from Display import SimpleTableModel, KLineDelegate
-from stock_data import request_sina
+from src.Display import SimpleTableModel, KLineDelegate
+from services.stock_data import request_sina
 
 def _format_volume(value: int) -> str:
     value = int(value/100)
@@ -52,7 +52,7 @@ class FloatLabel(QWidget):
         "K线": "kline_visible",
     }
 
-    def __init__(self, cfg: dict, code_list: dict):
+    def __init__(self, cfg: dict, codes_list: dict):
         super().__init__()
         self._on_change = (lambda: None)
         self._open_settings_cb = None
@@ -61,8 +61,7 @@ class FloatLabel(QWidget):
         self.setAttribute(Qt.WA_TranslucentBackground, True)
         self.setFocusPolicy(Qt.StrongFocus)
 
-        self.code_list_last_update = code_list["last_update"]
-        self.code_list: dict = code_list["codes"]
+        self.code_list: dict = codes_list
         # 加载自选标的配置
         self.codes              = [str(c).strip() for c in cfg.get("codes",["sh000001"]) if str(c).strip()]
         self.checked_codes      = [str(c).strip() for c in cfg.get("checked_codes", self.codes) if (str(c).strip() and str(c).strip() in self.codes)]

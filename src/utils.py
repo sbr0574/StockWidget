@@ -14,10 +14,10 @@ def load_file(file_name: str, except_ret: dict = {}) -> dict:
     except Exception:
         return except_ret
 
-def save_file(cfg: dict, file_name: str):
+def save_file(data: dict, file_name: str):
     os.makedirs(config_paths(), exist_ok=True)
     config_file = os.path.join(config_paths(), file_name)
     tmp_file = config_file + ".tmp"
     with open(tmp_file, "w", encoding="utf-8") as file:
-        json.dump(cfg, file, ensure_ascii=False, indent=2)
+        json.dump(data, file, ensure_ascii=False, indent=2)
     os.replace(tmp_file, config_file)

@@ -11,11 +11,10 @@ from PySide6.QtWidgets import (
     QKeySequenceEdit, QFileDialog, QStyledItemDelegate, QLineEdit, QCompleter,
     QFontComboBox, QHeaderView
 )
-from PySide6.QtUiTools import QUiLoader
+from ui.ui_settings import Ui_SettingDialog
 
-from WidgetPanel import FloatLabel
-from code_index import find_suggestions, refresh_index_from_akshare
-from stock_data import request_sina
+from src.WidgetPanel import FloatLabel
+from services.stock_data import request_sina
 
 
 class CodeCompleterDelegate(QStyledItemDelegate):
@@ -41,12 +40,10 @@ class SettingsDialog(QDialog):
         super().__init__(parent)
         self.win = win
         self.app = app
+        self.ui = Ui_SettingDialog()
+        self.ui.setupUi(self)
         self.setModal(False)
-        self.code_index = list(getattr(app, "code_index", []) or [])
-        self.suggestion_model = QStringListModel(self)
-        self._suggestion_map = {}
 
-        self._load_ui()
         self._init_code_table()
         self._bind_widgets()
         self._load_settings()
@@ -54,28 +51,38 @@ class SettingsDialog(QDialog):
     def _is_macos(self) -> bool:
         return platform.system() == "Darwin"
 
+    def _get_suggestions(self, query: str, limit: int = 20) -> list[dict]:
+        if self._find_suggestions_fn is None:
+            return []
+        try:
+            return self._find_suggestions_fn(self.code_index, query, limit=limit)
+        except Exception:
+            return []
+
+    def _refresh_code_index(self) -> dict:
+        if self._refresh_index_fn is None:
+            return self.code_index
+        try:
+            result = self._refresh_index_fn()
+        except TypeError:
+            result = self._refresh_index_fn(self.APP_NAME)
+        if isinstance(result, dict):
+            codes = result.get("codes", result)
+            if isinstance(codes, dict):
+                self.code_index = codes
+                return codes
+        return self.code_index
+
     def _display_code_for_ui(self, code: str) -> str:
         value = str(code or "").strip().lower()
         if len(value) == 8 and value[:2] in {"sh", "sz", "bj"}:
             return value[2:]
         return value
 
-    def _load_ui(self):
-        ui_path = os.path.join(os.path.dirname(__file__), "settings.ui")
-        ui_file = QFile(ui_path)
-        if not ui_file.open(QFile.ReadOnly):
-            raise RuntimeError(f"Cannot open settings UI file: {ui_path}")
-        loader = QUiLoader()
-        self.root = loader.load(ui_file, self)
-        ui_file.close()
-        self.setLayout(QVBoxLayout(self))
-        self.layout().setContentsMargins(0, 0, 0, 0)
-        self.layout().addWidget(self.root)
-
     def _find(self, widget_type, name):
-        widget = self.root.findChild(widget_type, name)
+        widget = getattr(self.ui, name, None)
         if widget is None:
-            raise AttributeError(f"Missing widget '{name}' in settings.ui")
+            raise AttributeError(f"Missing widget '{name}' in ui_settings.py")
         return widget
 
     def _init_code_table(self):
@@ -302,7 +309,7 @@ class SettingsDialog(QDialog):
             query = str(query or "").strip()
             if not query:
                 continue
-            for entry in find_suggestions(self.code_index, query, limit=3):
+            for entry in self._get_suggestions(query, limit=3):
                 entry_code = str(entry.get("code", "") or "").strip().lower()
                 entry_num = str(entry.get("code_num", "") or "").strip().lower()
                 entry_name = str(entry.get("name", "") or "").strip().lower()
@@ -563,7 +570,7 @@ class SettingsDialog(QDialog):
 
     def _update_suggestions(self, text: str):
         query = str(text or "").strip()
-        candidates = find_suggestions(self.code_index, query, limit=20)
+        candidates = self._get_suggestions(query, limit=20)
         labels = []
         self._suggestion_map = {}
         for item in candidates:
@@ -577,9 +584,9 @@ class SettingsDialog(QDialog):
         original_text = self.btn_update.text()
         self.btn_update.setText("更新中...")
         try:
-            self.code_index = refresh_index_from_akshare(self.APP_NAME)
+            self.code_index = self._refresh_code_index()
         except Exception:
-            pass
+            self.code_index = {}
         finally:
             self.btn_update.setEnabled(True)
             self.btn_update.setText(original_text)

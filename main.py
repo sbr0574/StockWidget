@@ -2,7 +2,7 @@
 # python3 -m PyInstaller -F -w .\StockWidget.py --name StockWidget --icon .\StockWidget.ico --add-data ".\StockWidget.ico;."
 import sys
 import platform
-from App import App, APP_NAME
+from src.App import App, APP_NAME
 
 if __name__ == "__main__":
     system = platform.system()
