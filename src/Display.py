@@ -13,28 +13,26 @@ class SimpleTableModel(QAbstractTableModel):
     """
     def __init__(self, rows=None, headers=None, align_right_cols=None, parent=None):
         super().__init__(parent)
+        self.default_color = False
+        self.fg_color = QColor("#FFFFFF")
         self._rows = rows or []
         self._headers = headers or []
         self._align_right = align_right_cols or []
-        self.default_color = False
-        self.fg_color = QColor("#FFFFFF")
         self._row_meta = []
 
-    def set_color_scheme(self, default: bool, fg: QColor):
-        self.default_color = bool(default)
+    def set_color_scheme(self, use_default: bool, fg: QColor):
+        self.default_color = bool(use_default)
         self.fg_color = QColor(fg)
 
     def rowCount(self, parent=QModelIndex()):
         return len(self._rows)
     
     def columnCount(self, parent=QModelIndex()):
-        return len(self._rows[0]) if self._rows else len(self._headers)
+        return len(self._headers)
 
     def data(self, index, role=Qt.DisplayRole):
-        if not index.isValid():
-            return None
         r, c = index.row(), index.column()
-        cell = "" if c >= len(self._rows[r]) else self._rows[r][c]
+        cell = self._rows[r][c]
 
         if role == Qt.UserRole:
             if isinstance(cell, dict) and "k" in cell:
@@ -51,22 +49,7 @@ class SimpleTableModel(QAbstractTableModel):
             if not self.default_color:
                 return self.fg_color
 
-            meta = self._row_meta[r] if 0 <= r < len(self._row_meta) else {}
-            header = self._headers[c] if 0 <= c < len(self._headers) else ""
-            sign = 0
-            if header in ("涨跌值", "涨跌幅", "现价"):
-                sign = int(meta.get("delta", 0))
-            elif header == "委比":
-                sign = int(meta.get("commi", 0))
-            elif header == "均价":
-                sign = int(meta.get("avg", 0))
-            elif header == "买一":
-                sign = int(meta.get("b1", 0))
-            elif header == "卖一":
-                sign = int(meta.get("s1", 0))
-            else:
-                return self.fg_color
-
+            sign = self._row_meta[r][c]
             if sign > 0:
                 return UP_COLOR
             if sign < 0:
@@ -80,11 +63,11 @@ class SimpleTableModel(QAbstractTableModel):
             return self._headers[section]
         return None
 
-    def set_rows_headers(self, rows, headers, meta=None):
+    def set_rows_headers(self, rows, headers, meta):
         self.beginResetModel()
-        self._rows = rows or []
-        self._headers = headers or []
-        self._row_meta = list(meta or [{} for _ in self._rows])
+        self._rows = rows
+        self._headers = headers
+        self._row_meta = meta
         self.endResetModel()
 
     def set_align_right_cols(self, cols_idx):

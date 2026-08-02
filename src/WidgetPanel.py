@@ -61,7 +61,7 @@ class FloatLabel(QWidget):
         self.setAttribute(Qt.WA_TranslucentBackground, True)
         self.setFocusPolicy(Qt.StrongFocus)
 
-        self.code_list: dict = codes_list
+        self.codes_list: dict    = codes_list
         # 加载自选标的配置
         self.codes              = [str(c).strip() for c in cfg.get("codes",["sh000001"]) if str(c).strip()]
         self.checked_codes      = [str(c).strip() for c in cfg.get("checked_codes", self.codes) if (str(c).strip() and str(c).strip() in self.codes)]
@@ -314,7 +314,7 @@ class FloatLabel(QWidget):
         # 右对齐：除了名称、K线、卖一外的所有列都右对齐
         right_cols = [i for i, h in enumerate(headers) if h not in ("名称", "K线", "卖一")]
         self.model.set_align_right_cols(right_cols)
-        self.model.set_rows_headers(proj_rows, headers, meta=proj_meta)
+        self.model.set_rows_headers(proj_rows, headers, proj_meta)
         self.model.set_color_scheme(self.default_color, self.fg)
 
         if "K线" in headers:
@@ -410,7 +410,7 @@ class FloatLabel(QWidget):
         return format_data, sign
 
     def _get_code_info(self, c: str) -> dict:
-        return self.code_list.get(c, {})
+        return self.codes_list.get(c, {})
 
     def _refresh_from_function(self):
         try:
@@ -426,7 +426,10 @@ class FloatLabel(QWidget):
             full_rows.append(row)
             full_sign.append(sign)
 
-        self._clear_error()
+        if sum(ret) > 0:
+            self._clear_error()
+        else:
+            self._show_error("请添加自选股")
         self._project_columns(full_rows, full_sign)
 
     # ----- 应用设置 -----

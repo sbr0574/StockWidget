@@ -3,10 +3,11 @@ from datetime import datetime
 import pandas as pd
 import requests
 
-from src.utils import load_file, save_file
+from src.utils import save_file
 import akshare as ak
 from pypinyin import Style, pinyin
 
+LIST_FILE = "stock_codes_list.json"
 
 def _name_pinyin(name: str) -> tuple[str, str]:
     text = str(name or "").strip()
@@ -28,50 +29,18 @@ def refresh_index_from_akshare() -> list[dict]:
         market = str(row.get("market", "")).strip()
         mtype = str(row.get("type", "")).strip()
         py_full, py_abbr = _name_pinyin(name)
-        codes[code] = {
+        codes[market+code] = {
+            "code": code,
             "type": mtype,
             "market": market,
             "name": name,
             "py": py_full,
             "abbr": py_abbr,
         }
-    
-    return {"last_update": datetime.now().strftime("%Y-%m-%d"), "codes": codes}
 
-
-def find_suggestions(codes: dict, text: str, limit: int = 20) -> list[dict]:
-    q = str(text or "").strip().lower()
-    if not q:
-        return []
-
-    scored = []
-    for code, info in codes.items():
-        name = str(info.get("name", ""))
-        py = str(info.get("py", ""))
-        abbr = str(info.get("abbr", ""))
-        score = 0
-        if code.startswith(q):
-            score = 100
-        elif q in code:
-            score = 85
-        elif name.startswith(q):
-            score = 70
-        elif q in name:
-            score = 60
-        elif py.startswith(q):
-            score = 50
-        elif q in py:
-            score = 40
-        elif abbr.startswith(q):
-            score = 30
-        elif q in abbr:
-            score = 20
-
-        if score > 0:
-            scored.append((score, code))
-
-    scored.sort(key=lambda pair: (-pair[0], pair[1].get("code", "")))
-    return [code for _, code in scored[:limit]]
+    list_file = {"last_update": datetime.now().strftime("%Y-%m-%d"), "codes": codes}
+    save_file(list_file, )
+    return list_file
 
 
 def stock_info_all() -> pd.DataFrame:

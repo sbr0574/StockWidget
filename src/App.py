@@ -15,23 +15,21 @@ from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QStyle
 import resources.resources_rc
 from src.WidgetPanel import FloatLabel
 from src.SettingPanel import SettingsDialog
-from services.code_index import refresh_index_from_akshare
+from services.code_index import refresh_index_from_akshare, LIST_FILE
 from src.utils import APP_NAME, load_file, save_file
 
 CONFIG_FILE = "stock_widget_config.json"
-CACHE_FILE = "stock_codes_cache.json"
 
 class App(QApplication):
     def __init__(self, argv):
         super().__init__(argv)
         self.setQuitOnLastWindowClosed(False)
         cfg = load_file(CONFIG_FILE)
-        list_file = load_file(CACHE_FILE)
+        list_file = load_file(LIST_FILE)
         list_last_update = list_file.get("last_update", "2026-01-01")
         codes_list = list_file.get("codes")
         if not isinstance(codes_list, dict):
             list_file = refresh_index_from_akshare()
-            save_file(list_file, CACHE_FILE)
             codes_list = list_file.get("codes")
 
         # 加载图标

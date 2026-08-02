@@ -37,5 +37,5 @@ def request_sina(req_codes: list[str]) -> Tuple[list, dict]:
             "time": parts[32],
         }
         
-    return [data[code]["name"] for code in req_codes if (code in data)], data
+    return [code in data for code in req_codes], data
 

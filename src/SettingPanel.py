@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QFontComboBox, QHeaderView
 )
 from ui.ui_settings import Ui_SettingDialog
-
+from src.utils import find_suggestions
 from src.WidgetPanel import FloatLabel
 from services.stock_data import request_sina
 
@@ -24,13 +24,20 @@ class CodeCompleterDelegate(QStyledItemDelegate):
 
     def createEditor(self, parent, option, index):
         editor = QLineEdit(parent)
+        editor.setProperty("_row", index.row())
+        editor.setProperty("_column", index.column())
         completer = QCompleter(self.owner.suggestion_model, editor)
         completer.setCaseSensitivity(Qt.CaseInsensitive)
         completer.setFilterMode(Qt.MatchContains)
+        completer.setCompletionMode(QCompleter.PopupCompletion)
         completer.activated.connect(lambda text: self.owner._apply_suggestion(editor, text))
-        editor.textEdited.connect(self.owner._update_suggestions)
+        editor.textEdited.connect(lambda text: self.owner._update_suggestions(editor, text))
+        editor.editingFinished.connect(lambda: self.owner._commit_code_editor(editor))
         editor.setCompleter(completer)
         return editor
+
+    def setEditorData(self, editor, index):
+        editor.setText(index.data(Qt.DisplayRole) or "")
 
 
 class SettingsDialog(QDialog):
@@ -43,6 +50,8 @@ class SettingsDialog(QDialog):
         self.ui = Ui_SettingDialog()
         self.ui.setupUi(self)
         self.setModal(False)
+        self.suggestion_model = QStringListModel(self)
+        self._suggestion_map = {}
 
         self._init_code_table()
         self._bind_widgets()
@@ -50,14 +59,6 @@ class SettingsDialog(QDialog):
 
     def _is_macos(self) -> bool:
         return platform.system() == "Darwin"
-
-    def _get_suggestions(self, query: str, limit: int = 20) -> list[dict]:
-        if self._find_suggestions_fn is None:
-            return []
-        try:
-            return self._find_suggestions_fn(self.code_index, query, limit=limit)
-        except Exception:
-            return []
 
     def _refresh_code_index(self) -> dict:
         if self._refresh_index_fn is None:
@@ -79,16 +80,10 @@ class SettingsDialog(QDialog):
             return value[2:]
         return value
 
-    def _find(self, widget_type, name):
-        widget = getattr(self.ui, name, None)
-        if widget is None:
-            raise AttributeError(f"Missing widget '{name}' in ui_settings.py")
-        return widget
-
     def _init_code_table(self):
-        self.list_codes = self._find(QTableWidget, "list_codes")
+        self.list_codes = self.ui.list_codes
         self.list_codes.setColumnCount(3)
-        self.list_codes.setHorizontalHeaderLabels(["启用", "代码", "名称"])
+        self.list_codes.setHorizontalHeaderLabels(["显示", "代码", "名称"])
         self.list_codes.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.list_codes.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.list_codes.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
@@ -105,43 +100,43 @@ class SettingsDialog(QDialog):
             self._append_code_row(code, name, checked)
 
     def _bind_widgets(self):
-        self.slider_interval = self._find(QSlider, "slider_interval")
-        self.label_interval = self._find(QLabel, "label_interval")
-        self.cb_code = self._find(QCheckBox, "cb_code")
-        self.cb_name = self._find(QCheckBox, "cb_name")
-        self.cb_type = self._find(QCheckBox, "cb_type")
-        self.cb_price = self._find(QCheckBox, "cb_price")
-        self.cb_diff = self._find(QCheckBox, "cb_diff")
-        self.cb_pct = self._find(QCheckBox, "cb_pct")
-        self.cb_vol = self._find(QCheckBox, "cb_vol")
-        self.cb_amount = self._find(QCheckBox, "cb_amount")
-        self.cb_avg = self._find(QCheckBox, "cb_avg")
-        self.cb_b1s1 = self._find(QCheckBox, "cb_b1s1")
-        self.cb_commi = self._find(QCheckBox, "cb_commi")
-        self.cb_kline = self._find(QCheckBox, "cb_kline")
-        self.cmb_namelen = self._find(QComboBox, "cmb_namelen")
-        self.btn_update = self._find(QPushButton, "btn_update")
+        self.slider_interval = self.ui.slider_interval
+        self.label_interval = self.ui.label_interval
+        self.cb_code = self.ui.cb_code
+        self.cb_name = self.ui.cb_name
+        self.cb_type = self.ui.cb_type
+        self.cb_price = self.ui.cb_price
+        self.cb_diff = self.ui.cb_diff
+        self.cb_pct = self.ui.cb_pct
+        self.cb_vol = self.ui.cb_vol
+        self.cb_amount = self.ui.cb_amount
+        self.cb_avg = self.ui.cb_avg
+        self.cb_b1s1 = self.ui.cb_b1s1
+        self.cb_commi = self.ui.cb_commi
+        self.cb_kline = self.ui.cb_kline
+        self.cmb_namelen = self.ui.cmb_namelen
+        self.btn_update = self.ui.btn_update
 
-        self.cb_default_color = self._find(QCheckBox, "cb_default_color")
-        self.btn_fg = self._find(QPushButton, "btn_fg_color")
-        self.btn_bg = self._find(QPushButton, "btn_bg_color")
-        self.slider_bg_alpha = self._find(QSlider, "slider_bg_alpha")
-        self.slider_all_alpha = self._find(QSlider, "slider_all_alpha")
-        self.label_bg_alpha = self._find(QLabel, "label_bg_alpha")
-        self.label_all_alpha = self._find(QLabel, "label_all_alpha")
+        self.cb_default_color = self.ui.cb_default_color
+        self.btn_fg = self.ui.btn_fg_color
+        self.btn_bg = self.ui.btn_bg_color
+        self.slider_bg_alpha = self.ui.slider_bg_alpha
+        self.slider_all_alpha = self.ui.slider_all_alpha
+        self.label_bg_alpha = self.ui.label_bg_alpha
+        self.label_all_alpha = self.ui.label_all_alpha
 
-        self.cmb_family = self._find(QFontComboBox, "cmb_font")
-        self.slider_font = self._find(QSlider, "slider_font_size")
-        self.slider_line = self._find(QSlider, "slider_line_interval")
-        self.label_font = self._find(QLabel, "label_current_font_size")
-        self.label_line = self._find(QLabel, "label_current_line_interval")
+        self.cmb_family = self.ui.cmb_font
+        self.slider_font = self.ui.slider_font_size
+        self.slider_line = self.ui.slider_line_interval
+        self.label_font = self.ui.label_current_font_size
+        self.label_line = self.ui.label_current_line_interval
 
-        self.cmb_icon = self._find(QComboBox, "cmb_icon")
-        self.btn_pick_icon = self._find(QPushButton, "btn_icon")
-        self.keyseq_hide = self._find(QKeySequenceEdit, "keyseq_hide")
-        self.cb_auto_start = self._find(QCheckBox, "cb_auto_start")
-        self.cb_head = self._find(QCheckBox, "cb_head")
-        self.cb_grid = self._find(QCheckBox, "cb_grid")
+        self.cmb_icon = self.ui.cmb_icon
+        self.btn_pick_icon = self.ui.btn_icon
+        self.keyseq_hide = self.ui.keyseq_hide
+        self.cb_auto_start = self.ui.cb_auto_start
+        self.cb_head = self.ui.cb_head
+        self.cb_grid = self.ui.cb_grid
 
         self.slider_interval.valueChanged.connect(self._on_interval_changed)
         self.btn_update.clicked.connect(self._refresh_stock_index)
@@ -160,10 +155,10 @@ class SettingsDialog(QDialog):
         self.cb_commi.toggled.connect(partial(self._on_flag_toggled, "委比"))
         self.cb_kline.toggled.connect(partial(self._on_flag_toggled, "K线"))
 
-        self.btn_add = self._find(QPushButton, "btn_add")
-        self.btn_del = self._find(QPushButton, "btn_del")
-        self.btn_up = self._find(QPushButton, "btn_up")
-        self.btn_down = self._find(QPushButton, "btn_down")
+        self.btn_add = self.ui.btn_add
+        self.btn_del = self.ui.btn_del
+        self.btn_up = self.ui.btn_up
+        self.btn_down = self.ui.btn_down
         self.btn_add.clicked.connect(self._add_code)
         self.btn_del.clicked.connect(self._del_code)
         self.btn_up.clicked.connect(self._move_up)
@@ -188,7 +183,6 @@ class SettingsDialog(QDialog):
             self.cmb_icon.setEnabled(False)
             self.btn_pick_icon.setEnabled(False)
         
-
         if self._is_macos():
             self.keyseq_hide.setEnabled(False)
 
@@ -260,7 +254,7 @@ class SettingsDialog(QDialog):
         if obj is self.list_codes.viewport() and ev.type() == QEvent.MouseButtonDblClick:
             pos = ev.position().toPoint() if hasattr(ev, 'position') else ev.pos()
             if self.list_codes.itemAt(pos) is None:
-                self._append_code_row("", "", False)
+                self._append_code_row("", "", True)
                 row = self.list_codes.rowCount() - 1
                 self.list_codes.setCurrentCell(row, 1)
                 self.list_codes.editItem(self.list_codes.item(row, 1))
@@ -271,61 +265,75 @@ class SettingsDialog(QDialog):
         self.list_codes.blockSignals(True)
         row = self.list_codes.rowCount()
         self.list_codes.insertRow(row)
-
-        check_item = QTableWidgetItem("")
-        check_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-        check_item.setCheckState(Qt.Checked if checked else Qt.Unchecked)
-        self.list_codes.setItem(row, 0, check_item)
-
-        display_code = self._display_code_for_ui(code)
-        code_item = QTableWidgetItem(display_code)
-        code_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsEnabled)
-        code_item.setData(Qt.UserRole, str(code or "").strip().lower())
-        self.list_codes.setItem(row, 1, code_item)
-
-        name_item = QTableWidgetItem(name)
-        name_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsEnabled)
-        name_item.setData(Qt.UserRole, name)
-        self.list_codes.setItem(row, 2, name_item)
+        self._set_code_row(row, code, code, name, checked)
         self.list_codes.blockSignals(False)
 
-    def _cleanup_empty_rows(self):
-        row = 0
-        while row < self.list_codes.rowCount():
+    def _resolve_name_for_code(self, value_key: str, display_code: str = "") -> str:
+        codes_list = getattr(self.win, "codes_list", None) or {}
+        if not isinstance(codes_list, dict):
+            return ""
+        values = [str(value_key or "").strip().lower(), str(display_code or "").strip().lower()]
+        for entry_key, info in codes_list.items():
+            entry_key = str(entry_key or "").strip().lower()
+            if entry_key in values:
+                return str(info.get("name", "") or "")
+            entry_code = str(info.get("code", "") or "").strip().lower()
+            if entry_code in values:
+                return str(info.get("name", "") or "")
+        return ""
+
+    def _set_code_row(self, row: int, value_key: str, display_code: str = "", name: str = "", checked: bool = False):
+        self.list_codes.blockSignals(True)
+        value_key = str(value_key or "").strip().lower()
+        display_code = str(display_code or "").strip()
+        resolved_name = str(name or "").strip() or self._resolve_name_for_code(value_key, display_code)
+
+        check_item = self.list_codes.item(row, 0)
+        if check_item is None:
+            check_item = QTableWidgetItem("")
+            check_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+            self.list_codes.setItem(row, 0, check_item)
+        check_item.setCheckState(Qt.Checked if checked else Qt.Unchecked)
+
+        code_item = self.list_codes.item(row, 1)
+        if code_item is None:
+            code_item = QTableWidgetItem("")
+            code_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsEnabled)
+            self.list_codes.setItem(row, 1, code_item)
+        code_item.setText(self._display_code_for_ui(display_code or value_key))
+        code_item.setData(Qt.UserRole, value_key)
+
+        name_item = self.list_codes.item(row, 2)
+        if name_item is None:
+            name_item = QTableWidgetItem("")
+            name_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+            self.list_codes.setItem(row, 2, name_item)
+        name_item.setText(resolved_name)
+        name_item.setData(Qt.UserRole, resolved_name)
+        self.list_codes.blockSignals(False)
+
+    def _cleanup_code_rows(self):
+        self.list_codes.blockSignals(True)
+        seen = set()
+        remove_rows = []
+        for row in range(self.list_codes.rowCount() - 1, -1, -1):
             code_item = self.list_codes.item(row, 1)
-            name_item = self.list_codes.item(row, 2)
-            if code_item is None or name_item is None:
-                self.list_codes.removeRow(row)
+            if code_item is None:
+                remove_rows.append(row)
                 continue
-            code = str(code_item.text()).strip()
-            prev_code = str(code_item.data(Qt.UserRole) or "").strip()
-            if not code and not prev_code:
-                self.list_codes.removeRow(row)
+            value = str(code_item.data(Qt.UserRole) or "").strip().lower()
+            text = str(code_item.text() or "").strip()
+            if not text and not value:
+                remove_rows.append(row)
                 continue
-            row += 1
-
-    def _find_matching_entry(self, raw_code: str, raw_name: str):
-        for query in [raw_code, raw_name]:
-            query = str(query or "").strip()
-            if not query:
+            if value and value in seen:
+                remove_rows.append(row)
                 continue
-            for entry in self._get_suggestions(query, limit=3):
-                entry_code = str(entry.get("code", "") or "").strip().lower()
-                entry_num = str(entry.get("code_num", "") or "").strip().lower()
-                entry_name = str(entry.get("name", "") or "").strip().lower()
-                query_norm = query.strip().lower()
-                if query_norm in {entry_code, entry_num, entry_name}:
-                    return entry
-        return None
-
-    def _validate_code(self, code: str) -> bool:
-        if not code:
-            return False
-        try:
-            result, _ = request_sina([code])
-            return bool(result and result[0])
-        except Exception:
-            return False
+            if value:
+                seen.add(value)
+        for row in remove_rows:
+            self.list_codes.removeRow(row)
+        self.list_codes.blockSignals(False)
 
     def _collect_codes_from_list(self):
         codes = []
@@ -337,61 +345,23 @@ class SettingsDialog(QDialog):
             code_item = self.list_codes.item(row, 1)
             name_item = self.list_codes.item(row, 2)
             check_item = self.list_codes.item(row, 0)
-            if code_item is None or name_item is None:
+            if code_item is None:
                 continue
-            raw_code = str(code_item.text() or "").strip()
-            raw_name = str(name_item.text() or "").strip()
-            prev_code = str(code_item.data(Qt.UserRole) or "").strip().lower()
-            prev_name = str(name_item.data(Qt.UserRole) or "").strip()
 
-            resolved_code = None
-            matched_entry = None
-            display_name = raw_name or prev_name
-            if raw_code:
-                matched_entry = self._find_matching_entry(raw_code, raw_name)
-                if matched_entry is not None:
-                    resolved_code = str(matched_entry.get("code", "") or "").strip().lower()
-                    display_name = str(matched_entry.get("name", "") or "")
-                else:
-                    resolved_code = self._to_prefixed_code(raw_code)
-                    if resolved_code and not self._validate_code(resolved_code):
-                        resolved_code = None
-                        display_name = "无效代码"
-            elif raw_name:
-                matched_entry = self._find_matching_entry("", raw_name)
-                if matched_entry is not None:
-                    resolved_code = str(matched_entry.get("code", "") or "").strip().lower()
-                    display_name = str(matched_entry.get("name", "") or "")
-
-            if resolved_code:
-                if resolved_code not in seen:
-                    seen.add(resolved_code)
-                    codes.append(resolved_code)
-                if display_name:
-                    code_names[resolved_code] = display_name
-                if check_item is not None and check_item.checkState() == Qt.Checked:
-                    checked_codes.append(resolved_code)
-                self.list_codes.blockSignals(True)
-                code_item.setText(self._display_code_for_ui(resolved_code))
-                code_item.setData(Qt.UserRole, resolved_code)
-                if name_item.text() != display_name:
-                    name_item.setText(display_name)
-                    name_item.setData(Qt.UserRole, display_name)
-                self.list_codes.blockSignals(False)
-            else:
-                if prev_code:
-                    self.list_codes.blockSignals(True)
-                    code_item.setText(self._display_code_for_ui(prev_code))
-                    code_item.setData(Qt.UserRole, prev_code)
-                    self.list_codes.blockSignals(False)
-                if raw_name == "" and prev_name:
-                    self.list_codes.blockSignals(True)
-                    name_item.setText(prev_name)
-                    self.list_codes.blockSignals(False)
-                elif display_name == "无效代码":
-                    self.list_codes.blockSignals(True)
-                    name_item.setText("无效代码")
-                    self.list_codes.blockSignals(False)
+            value = str(code_item.data(Qt.UserRole) or "").strip().lower()
+            if not value:
+                value = str(code_item.text() or "").strip().lower()
+            if not value:
+                continue
+            if value not in seen:
+                seen.add(value)
+                codes.append(value)
+            if name_item is not None:
+                name = str(name_item.text() or "").strip()
+                if name:
+                    code_names[value] = name
+            if check_item is not None and check_item.checkState() == Qt.Checked:
+                checked_codes.append(value)
 
         if hasattr(self.win, 'set_code_names') and callable(getattr(self.win, 'set_code_names')):
             self.win.set_code_names(code_names)
@@ -400,12 +370,13 @@ class SettingsDialog(QDialog):
         return codes, checked_codes
 
     def _on_codes_changed(self, _item):
+        self._cleanup_code_rows()
         codes, checked_codes = self._collect_codes_from_list()
         self.win.set_codes(codes)
         self.win.set_checked_codes(checked_codes)
 
     def _add_code(self):
-        self._append_code_row("", "", False)
+        self._append_code_row("", "", True)
         row = self.list_codes.rowCount() - 1
         self.list_codes.setCurrentCell(row, 1)
         self.list_codes.editItem(self.list_codes.item(row, 1))
@@ -535,49 +506,43 @@ class SettingsDialog(QDialog):
         self.label_line.setText(f"+{v} px")
         self.win.set_line_extra(v)
 
-    def _code_from_input(self, text: str) -> str | None:
-        s = str(text or "").strip()
-        if not s:
-            return None
-        if s in self._suggestion_map:
-            return self._suggestion_map[s]
-        token = s.split()[0]
-        return self._to_prefixed_code(token)
-
-    def _to_prefixed_code(self, text: str) -> str | None:
-        s = str(text or "").strip().lower()
-        if not s:
-            return None
-        if re.match(r'^(sh|sz|bj)\d{6}$', s):
-            return s
-        if re.match(r'^\d{6}$', s):
-            if s[0] in ("6", "5", "9"):
-                return f"sh{s}"
-            if s[0] in ("0", "1", "2", "3"):
-                return f"sz{s}"
-            if s[0] in ("4", "8"):
-                return f"bj{s}"
-        return None
-
     def _display_text(self, item: dict) -> str:
-        return f"{item.get('code', '')} {item.get('name', '')}".strip()
+        parts = [str(item.get("type", "") or "").strip(), str(item.get("code", "") or "").strip(), str(item.get("name", "") or "").strip()]
+        return " / ".join([p for p in parts if p])
 
     def _apply_suggestion(self, editor: QLineEdit, text: str):
-        code = self._suggestion_map.get(text)
-        if code:
+        entry = self._suggestion_map.get(text)
+        if isinstance(entry, dict):
+            editor.setProperty("_selected_entry", entry)
+            code = str(entry.get("code", "") or "").strip() or str(entry.get("key", "") or "").strip()
             editor.setText(code)
             editor.selectAll()
+        else:
+            editor.setProperty("_selected_entry", None)
 
-    def _update_suggestions(self, text: str):
+    def _update_suggestions(self, editor: QLineEdit, text: str):
         query = str(text or "").strip()
-        candidates = self._get_suggestions(query, limit=20)
+        candidates = find_suggestions(self.win.codes_list, query, limit=10)
         labels = []
         self._suggestion_map = {}
         for item in candidates:
             label = self._display_text(item)
             labels.append(label)
-            self._suggestion_map[label] = item.get("code", "")
+            self._suggestion_map[label] = item
         self.suggestion_model.setStringList(labels)
+        editor.setProperty("_selected_entry", None)
+
+    def _commit_code_editor(self, editor: QLineEdit):
+        row = int(editor.property("_row") or -1)
+        if row < 0:
+            return
+        entry = editor.property("_selected_entry")
+        text = str(editor.text() or "").strip()
+        if isinstance(entry, dict):
+            self._set_code_row(row, entry.get("key", text), entry.get("code", text), entry.get("name", ""), True)
+        else:
+            self._set_code_row(row, text, text, "", bool(text))
+        self._on_codes_changed(None)
 
     def _refresh_stock_index(self):
         self.btn_update.setEnabled(False)
@@ -592,6 +557,6 @@ class SettingsDialog(QDialog):
             self.btn_update.setText(original_text)
 
     def closeEvent(self, event):
-        self._cleanup_empty_rows()
+        self._cleanup_code_rows()
         self._on_codes_changed(None)
         super().closeEvent(event)
