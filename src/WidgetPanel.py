@@ -65,10 +65,12 @@ class FloatLabel(QWidget):
         # 加载自选标的配置
         self.codes              = [str(c).strip() for c in cfg.get("codes",["sh000001"]) if str(c).strip()]
         self.checked_codes      = [str(c).strip() for c in cfg.get("checked_codes", self.codes) if (str(c).strip() and str(c).strip() in self.codes)]
+        self.code_names         = {str(k).strip().lower(): str(v).strip() for k, v in cfg.get("code_names", {}).items() if str(k).strip()}
         # 加载面板配置
         self.name_visible       = bool(cfg.get("name_visible", False))
         self.market_visible     = bool(cfg.get("market_visible", False))
         self.code_visible       = bool(cfg.get("code_visible", False))
+        self.type_visible       = bool(cfg.get("type_visible", False))
         self.name_length        = int(cfg.get("name_length",0))
         self.price_visible      = bool(cfg.get("price_visible", False))
         self.change_visible     = bool(cfg.get("change_visible", False))
@@ -184,10 +186,12 @@ class FloatLabel(QWidget):
         return {
             "codes":                self.codes,
             "checked_codes":        self.checked_codes,
+            "code_names":           self.code_names,
 
             "name_visible":         self.name_visible,
             "market_visible":       self.market_visible,
             "code_visible":         self.code_visible,
+            "type_visible":         self.type_visible,
             "name_length":          self.name_length,
             "price_visible":        self.price_visible,
             "change_visible":       self.change_visible,
@@ -455,9 +459,7 @@ class FloatLabel(QWidget):
             if s and s not in seen:
                 seen.add(s)
                 new.append(s)
-        if not new: 
-            new = ["sh000001"]
-        self.checked_codes = new
+        self.checked_codes = [c for c in new if c in self.codes]
         self._notify_change()
         self._refresh_from_function()
 
@@ -468,6 +470,12 @@ class FloatLabel(QWidget):
     def set_type_visible(self, visible: bool):
         self.type_visible = bool(visible)
         self._notify_change()
+        self._refresh_from_function()
+
+    def set_code_visible(self, visible: bool):
+        self.code_visible = bool(visible)
+        self._notify_change()
+        self._refresh_from_function()
 
     def set_flag(self, header, checked: bool):
         if isinstance(header, int):

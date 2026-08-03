@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'settings.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.11.1
+## Created by: Qt User Interface Compiler version 6.10.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -46,6 +46,11 @@ class Ui_SettingDialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.list_codes.sizePolicy().hasHeightForWidth())
         self.list_codes.setSizePolicy(sizePolicy)
+        self.list_codes.setAcceptDrops(True)
+        self.list_codes.setDragEnabled(True)
+        self.list_codes.setDragDropOverwriteMode(False)
+        self.list_codes.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+        self.list_codes.setDefaultDropAction(Qt.DropAction.MoveAction)
         self.list_codes.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.list_codes.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.list_codes.setShowGrid(True)
@@ -258,7 +263,7 @@ class Ui_SettingDialog(object):
 
         self.retranslateUi(SettingDialog)
 
-        self.tab_widget.setCurrentIndex(1)
+        self.tab_widget.setCurrentIndex(0)
         self.cmb_icon.setCurrentIndex(-1)
 
 

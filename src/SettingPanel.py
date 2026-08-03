@@ -1,20 +1,17 @@
 import os
 import platform
-import re
 from functools import partial
 
-from PySide6.QtCore import Qt, QSize, QStringListModel, QFile, QEvent
-from PySide6.QtGui import QColor, QFontDatabase, QKeySequence
+from PySide6.QtCore import Qt, QStringListModel, QEvent, QTimer
+from PySide6.QtGui import QColor, QKeySequence
 from PySide6.QtWidgets import (
-    QWidget, QDialog, QVBoxLayout, QPushButton, QSlider, QLabel, QColorDialog,
-    QComboBox, QAbstractItemView, QCheckBox, QTableWidget, QTableWidgetItem,
-    QKeySequenceEdit, QFileDialog, QStyledItemDelegate, QLineEdit, QCompleter,
-    QFontComboBox, QHeaderView
+    QWidget, QDialog, QColorDialog, QAbstractItemView, QTableWidgetItem,
+    QStyledItemDelegate, QLineEdit, QCompleter, QHeaderView
 )
 from ui.ui_settings import Ui_SettingDialog
-from src.utils import find_suggestions
+from src.utils import code_without_market, find_suggestions
 from src.WidgetPanel import FloatLabel
-from services.stock_data import request_sina
+from services.code_index import refresh_index_from_akshare
 
 
 class CodeCompleterDelegate(QStyledItemDelegate):
@@ -29,7 +26,7 @@ class CodeCompleterDelegate(QStyledItemDelegate):
         completer = QCompleter(self.owner.suggestion_model, editor)
         completer.setCaseSensitivity(Qt.CaseInsensitive)
         completer.setFilterMode(Qt.MatchContains)
-        completer.setCompletionMode(QCompleter.PopupCompletion)
+        completer.setCompletionMode(QCompleter.UnfilteredPopupCompletion)
         completer.activated.connect(lambda text: self.owner._apply_suggestion(editor, text))
         editor.textEdited.connect(lambda text: self.owner._update_suggestions(editor, text))
         editor.editingFinished.connect(lambda: self.owner._commit_code_editor(editor))
@@ -38,6 +35,7 @@ class CodeCompleterDelegate(QStyledItemDelegate):
 
     def setEditorData(self, editor, index):
         editor.setText(index.data(Qt.DisplayRole) or "")
+        self.owner._remember_editor_value(editor, index)
 
 
 class SettingsDialog(QDialog):
@@ -52,6 +50,7 @@ class SettingsDialog(QDialog):
         self.setModal(False)
         self.suggestion_model = QStringListModel(self)
         self._suggestion_map = {}
+        self._previous_editor_values = {}
 
         self._init_code_table()
         self._bind_widgets()
@@ -61,24 +60,15 @@ class SettingsDialog(QDialog):
         return platform.system() == "Darwin"
 
     def _refresh_code_index(self) -> dict:
-        if self._refresh_index_fn is None:
-            return self.code_index
-        try:
-            result = self._refresh_index_fn()
-        except TypeError:
-            result = self._refresh_index_fn(self.APP_NAME)
-        if isinstance(result, dict):
-            codes = result.get("codes", result)
-            if isinstance(codes, dict):
-                self.code_index = codes
-                return codes
-        return self.code_index
+        result = refresh_index_from_akshare()
+        codes = result.get("codes", {})
+        return codes if isinstance(codes, dict) else {}
 
     def _display_code_for_ui(self, code: str) -> str:
         value = str(code or "").strip().lower()
         if len(value) == 8 and value[:2] in {"sh", "sz", "bj"}:
             return value[2:]
-        return value
+        return code_without_market(value)
 
     def _init_code_table(self):
         self.list_codes = self.ui.list_codes
@@ -90,6 +80,12 @@ class SettingsDialog(QDialog):
         self.list_codes.verticalHeader().setVisible(False)
         self.list_codes.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.list_codes.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.list_codes.setDragEnabled(True)
+        self.list_codes.setAcceptDrops(True)
+        self.list_codes.setDropIndicatorShown(True)
+        self.list_codes.setDragDropOverwriteMode(False)
+        self.list_codes.setDefaultDropAction(Qt.MoveAction)
+        self.list_codes.setDragDropMode(QAbstractItemView.InternalMove)
         self.list_codes.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.SelectedClicked | QAbstractItemView.EditKeyPressed)
         self.list_codes.viewport().installEventFilter(self)
         self.list_codes.setItemDelegateForColumn(1, CodeCompleterDelegate(self))
@@ -146,8 +142,8 @@ class SettingsDialog(QDialog):
         self.cb_name.toggled.connect(self._on_name_toggled)
         self.cb_type.toggled.connect(self._on_type_toggled)
         self.cb_price.toggled.connect(partial(self._on_flag_toggled, "现价"))
-        self.cb_diff.toggled.connect(partial(self._on_flag_toggled, "涨跌值"))
-        self.cb_pct.toggled.connect(partial(self._on_flag_toggled, "涨跌幅"))
+        self.cb_diff.toggled.connect(partial(self._on_flag_toggled, "涨跌"))
+        self.cb_pct.toggled.connect(partial(self._on_flag_toggled, "涨幅"))
         self.cb_vol.toggled.connect(partial(self._on_flag_toggled, "成交量"))
         self.cb_amount.toggled.connect(partial(self._on_flag_toggled, "成交额"))
         self.cb_avg.toggled.connect(partial(self._on_flag_toggled, "均价"))
@@ -191,10 +187,10 @@ class SettingsDialog(QDialog):
         self.label_interval.setText(f"{self.win.refresh_seconds}s")
         self.cb_code.setChecked(self.win.header_is_visible("代码"))
         self.cb_name.setChecked(self.win.header_is_visible("名称"))
-        self.cb_type.setChecked(bool(getattr(self.win, "type_visible", False)))
+        self.cb_type.setChecked(self.win.type_visible)
         self.cb_price.setChecked(self.win.header_is_visible("现价"))
-        self.cb_diff.setChecked(self.win.header_is_visible("涨跌值"))
-        self.cb_pct.setChecked(self.win.header_is_visible("涨跌幅"))
+        self.cb_diff.setChecked(self.win.header_is_visible("涨跌"))
+        self.cb_pct.setChecked(self.win.header_is_visible("涨幅"))
         self.cb_vol.setChecked(self.win.header_is_visible("成交量"))
         self.cb_amount.setChecked(self.win.header_is_visible("成交额"))
         self.cb_avg.setChecked(self.win.header_is_visible("均价"))
@@ -241,7 +237,7 @@ class SettingsDialog(QDialog):
         for label, val in icon_items:
             self.cmb_icon.addItem(label, userData=val)
 
-        cur_choice = getattr(self.app, '_app_icon_choice', None) if self.app is not None else None
+        cur_choice = self.app._icon_choice if self.app is not None else None
         if cur_choice is None:
             cur_choice = 'default'
         idx = self.cmb_icon.findData(cur_choice)
@@ -259,6 +255,8 @@ class SettingsDialog(QDialog):
                 self.list_codes.setCurrentCell(row, 1)
                 self.list_codes.editItem(self.list_codes.item(row, 1))
                 return True
+        if obj is self.list_codes.viewport() and ev.type() == QEvent.Drop:
+            QTimer.singleShot(0, lambda: self._on_codes_changed(None))
         return super().eventFilter(obj, ev)
 
     def _append_code_row(self, code: str = "", name: str = "", checked: bool = False):
@@ -268,19 +266,13 @@ class SettingsDialog(QDialog):
         self._set_code_row(row, code, code, name, checked)
         self.list_codes.blockSignals(False)
 
+    def _entry_for_text(self, text: str) -> dict | None:
+        suggestions = find_suggestions(self.win.codes_list, text, limit=1)
+        return suggestions[0] if suggestions else None
+
     def _resolve_name_for_code(self, value_key: str, display_code: str = "") -> str:
-        codes_list = getattr(self.win, "codes_list", None) or {}
-        if not isinstance(codes_list, dict):
-            return ""
-        values = [str(value_key or "").strip().lower(), str(display_code or "").strip().lower()]
-        for entry_key, info in codes_list.items():
-            entry_key = str(entry_key or "").strip().lower()
-            if entry_key in values:
-                return str(info.get("name", "") or "")
-            entry_code = str(info.get("code", "") or "").strip().lower()
-            if entry_code in values:
-                return str(info.get("name", "") or "")
-        return ""
+        entry = self._entry_for_text(value_key) or self._entry_for_text(display_code)
+        return entry["name"] if entry else ""
 
     def _set_code_row(self, row: int, value_key: str, display_code: str = "", name: str = "", checked: bool = False):
         self.list_codes.blockSignals(True)
@@ -363,10 +355,7 @@ class SettingsDialog(QDialog):
             if check_item is not None and check_item.checkState() == Qt.Checked:
                 checked_codes.append(value)
 
-        if hasattr(self.win, 'set_code_names') and callable(getattr(self.win, 'set_code_names')):
-            self.win.set_code_names(code_names)
-        else:
-            setattr(self.win, 'code_names', code_names)
+        self.win.set_code_names(code_names)
         return codes, checked_codes
 
     def _on_codes_changed(self, _item):
@@ -402,30 +391,26 @@ class SettingsDialog(QDialog):
             self._on_codes_changed(None)
 
     def _swap_rows(self, row_a: int, row_b: int):
+        self.list_codes.blockSignals(True)
         for col in range(self.list_codes.columnCount()):
             item_a = self.list_codes.takeItem(row_a, col)
             item_b = self.list_codes.takeItem(row_b, col)
             self.list_codes.setItem(row_a, col, item_b)
             self.list_codes.setItem(row_b, col, item_a)
+        self.list_codes.blockSignals(False)
 
     def _on_interval_changed(self, value: int):
         self.label_interval.setText(f"{value}s")
         self.win.set_refresh_interval(value)
 
     def _on_code_toggled(self, checked: bool):
-        self.win.set_flag("代码", checked)
-        self.win.set_code_type(checked)
+        self.win.set_code_visible(checked)
 
     def _on_name_toggled(self, checked: bool):
         self.win.set_flag("名称", checked)
 
     def _on_type_toggled(self, checked: bool):
-        if hasattr(self.win, 'set_type_visible'):
-            self.win.set_type_visible(checked)
-        else:
-            setattr(self.win, 'type_visible', bool(checked))
-            if hasattr(self.win, '_notify_change'):
-                self.win._notify_change()
+        self.win.set_type_visible(checked)
 
     def _on_flag_toggled(self, header: str, checked: bool):
         self.win.set_flag(header, checked)
@@ -459,21 +444,10 @@ class SettingsDialog(QDialog):
         self.win.set_grid_visible(bool(checked))
 
     def _on_icon_changed(self, idx: int):
-        try:
-            val = self.cmb_icon.itemData(idx)
-            if not val:
-                return
-            if hasattr(self, 'app') and self.app is not None:
-                try:
-                    self.app.set_app_icon(val)
-                    try:
-                        self.app.save_now()
-                    except Exception:
-                        pass
-                except Exception:
-                    pass
-        except Exception:
-            pass
+        val = self.cmb_icon.itemData(idx)
+        if val and self.app is not None:
+            self.app.set_app_icon(val)
+            self.app.save_now()
 
     def _on_start_on_boot_toggled(self, checked: bool):
         self.app.set_start_on_boot(bool(checked))
@@ -531,6 +505,22 @@ class SettingsDialog(QDialog):
             self._suggestion_map[label] = item
         self.suggestion_model.setStringList(labels)
         editor.setProperty("_selected_entry", None)
+        self._show_suggestions_for_editor(editor, bool(labels))
+
+
+    def _show_suggestions_for_editor(self, editor: QLineEdit, has_items: bool):
+        completer = editor.completer()
+        if completer is None:
+            return
+        popup_width = max(self.list_codes.viewport().width(), editor.width())
+        completer.popup().setMinimumWidth(popup_width)
+        completer.popup().setMaximumWidth(popup_width)
+        if not has_items:
+            completer.popup().hide()
+            return
+        rect = editor.rect()
+        rect.setWidth(popup_width)
+        completer.complete(rect)
 
     def _commit_code_editor(self, editor: QLineEdit):
         row = int(editor.property("_row") or -1)
@@ -539,19 +529,43 @@ class SettingsDialog(QDialog):
         entry = editor.property("_selected_entry")
         text = str(editor.text() or "").strip()
         if isinstance(entry, dict):
-            self._set_code_row(row, entry.get("key", text), entry.get("code", text), entry.get("name", ""), True)
+            self._set_code_row(row, entry["key"], entry["code"], entry["name"], True)
         else:
-            self._set_code_row(row, text, text, "", bool(text))
+            entry = self._entry_for_text(text)
+            if entry:
+                self._set_code_row(row, entry["key"], entry["code"], entry["name"], True)
+            else:
+                self._restore_or_remove_row(row)
         self._on_codes_changed(None)
+
+
+    def _remember_editor_value(self, editor: QLineEdit, index):
+        row = index.row()
+        code_item = self.list_codes.item(row, 1)
+        name_item = self.list_codes.item(row, 2)
+        check_item = self.list_codes.item(row, 0)
+        self._previous_editor_values[row] = {
+            "key": str(code_item.data(Qt.UserRole) or "") if code_item else "",
+            "code": str(code_item.text() or "") if code_item else "",
+            "name": str(name_item.text() or "") if name_item else "",
+            "checked": check_item.checkState() == Qt.Checked if check_item else True,
+        }
+
+    def _restore_or_remove_row(self, row: int):
+        previous = self._previous_editor_values.get(row)
+        if previous and (previous["key"] or previous["code"]):
+            self._set_code_row(row, previous["key"], previous["code"], previous["name"], previous["checked"])
+        elif 0 <= row < self.list_codes.rowCount():
+            self.list_codes.removeRow(row)
 
     def _refresh_stock_index(self):
         self.btn_update.setEnabled(False)
         original_text = self.btn_update.text()
         self.btn_update.setText("更新中...")
         try:
-            self.code_index = self._refresh_code_index()
+            self.win.codes_list = self._refresh_code_index()
         except Exception:
-            self.code_index = {}
+            self.win.codes_list = {}
         finally:
             self.btn_update.setEnabled(True)
             self.btn_update.setText(original_text)

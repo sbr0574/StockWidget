@@ -39,7 +39,7 @@ def refresh_index_from_akshare() -> list[dict]:
         }
 
     list_file = {"last_update": datetime.now().strftime("%Y-%m-%d"), "codes": codes}
-    save_file(list_file, )
+    save_file(list_file, LIST_FILE)
     return list_file
 
 
