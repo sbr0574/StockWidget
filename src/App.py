@@ -9,18 +9,21 @@ elif platform.system() == "Darwin":
 else:
     keyboard = None
 
-from PySide6.QtCore import Qt, QPoint
+from PySide6.QtCore import Qt, QPoint, Signal
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QStyle
 import resources.resources_rc
 from src.WidgetPanel import FloatLabel
 from src.SettingPanel import SettingsDialog
 from services.code_index import refresh_index_from_akshare, LIST_FILE
+from services.update_check import check_for_update
 from src.utils import APP_NAME, load_file, save_file
 
 CONFIG_FILE = "stock_widget_config.json"
 
 class App(QApplication):
+    update_checked = Signal(bool)
+
     def __init__(self, argv):
         super().__init__(argv)
         self.setQuitOnLastWindowClosed(False)
@@ -49,9 +52,14 @@ class App(QApplication):
         self.tray.setToolTip(APP_NAME)
         menu = QMenu()
         menu.addAction(QAction("显示/隐藏 浮窗", self, triggered=self.toggle_win))
+        self.act_click_through = QAction("鼠标穿透", self, checkable=True)
+        self.act_click_through.setChecked(self.win.click_through)
+        self.act_click_through.toggled.connect(self.win.set_click_through)
+        menu.addAction(self.act_click_through)
         menu.addAction(QAction("设置…", self, triggered=self.open_settings))
         menu.addSeparator()
         menu.addAction(QAction("退出", self, triggered=self.quit_app))
+        menu.aboutToShow.connect(self._sync_tray_click_through)
         self.tray.setContextMenu(menu)
         self.tray.activated.connect(self.on_tray_activated)
         self.tray.show()
@@ -63,6 +71,11 @@ class App(QApplication):
         self.win.activateWindow()
         self.win.setFocus(Qt.ActiveWindowFocusReason)
         self.save_now()
+
+        # 启动时后台检查更新
+        self._has_update = False
+        self.update_checked.connect(self._on_update_checked)
+        self._start_update_check()
 
     def find_icon(self, choice: str) -> QIcon:
         if not choice or choice == 'default':
@@ -118,6 +131,30 @@ class App(QApplication):
         self.settings_dlg.show()
         self.settings_dlg.raise_()
         self.settings_dlg.activateWindow()
+
+    def _sync_tray_click_through(self):
+        if hasattr(self, "act_click_through") and hasattr(self, "win"):
+            self.act_click_through.setChecked(self.win.click_through)
+
+    def _start_update_check(self):
+        import threading
+
+        def _worker():
+            try:
+                has_update = check_for_update()
+            except Exception:
+                has_update = False
+            self.update_checked.emit(bool(has_update))
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    def _on_update_checked(self, has_update: bool):
+        self._has_update = has_update
+        if self.settings_dlg is not None and self.settings_dlg.isVisible():
+            try:
+                self.settings_dlg.refresh_about()
+            except Exception:
+                pass
 
     def quit_app(self):
         self.tray.hide()

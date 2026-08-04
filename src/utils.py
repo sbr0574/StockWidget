@@ -3,6 +3,7 @@ import os
 import re
 
 APP_NAME = "StockWidget"
+APP_VERSION = "1.3.0"
 MARKET_PREFIXES = {"sh", "sz", "bj"}
 
 

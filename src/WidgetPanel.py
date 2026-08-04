@@ -1,3 +1,4 @@
+import ctypes
 import importlib
 from functools import partial
 import platform
@@ -37,6 +38,7 @@ def _format_amount(value: float) -> str:
 
 class FloatLabel(QWidget):
     hotkey_triggered = Signal()
+    click_through_hotkey_triggered = Signal()
     ALL_HEADERS = ["名称", "现价", "涨跌", "涨幅", "买一", "卖一", "委比", "成交量", "成交额", "均价", "K线"]
     HEADER_ATTR_MAP = {
         "名称": "name_visible",
@@ -68,10 +70,10 @@ class FloatLabel(QWidget):
         self.code_names         = {str(k).strip().lower(): str(v).strip() for k, v in cfg.get("code_names", {}).items() if str(k).strip()}
         # 加载面板配置
         self.name_visible       = bool(cfg.get("name_visible", False))
-        self.market_visible     = bool(cfg.get("market_visible", False))
         self.code_visible       = bool(cfg.get("code_visible", False))
         self.type_visible       = bool(cfg.get("type_visible", False))
-        self.name_length        = int(cfg.get("name_length",0))
+        # 名称长度: -1 全部显示, 0 不显示, >0 显示前 N 个字
+        self.name_length        = int(cfg.get("name_length", -1))
         self.price_visible      = bool(cfg.get("price_visible", False))
         self.change_visible     = bool(cfg.get("change_visible", False))
         self.change_pct_visible = bool(cfg.get("change_pct_visible", False))
@@ -95,11 +97,16 @@ class FloatLabel(QWidget):
         self.default_color      = bool(cfg.get("default_color", False))
         # 加载其他配置
         self.refresh_seconds    = int(cfg.get("refresh_seconds", 2))
+        self.force_top          = bool(cfg.get("force_top", True))
+        self.click_through      = bool(cfg.get("click_through", False))
         self.hotkey_enabled     = bool(cfg.get("hotkey_enabled", False))
         self.hotkey             = cfg.get("hotkey", "Ctrl+Alt+F")
+        self.hotkey_click_through_enabled = bool(cfg.get("hotkey_click_through_enabled", False))
+        self.hotkey_click_through = cfg.get("hotkey_click_through", "Ctrl+Alt+C")
         self.start_on_boot      = bool(cfg.get("start_on_boot", False))
 
         self.hotkey_triggered.connect(self.toggle_win)
+        self.click_through_hotkey_triggered.connect(self.toggle_click_through)
         self._register_hotkey()
 
         # UI
@@ -169,7 +176,10 @@ class FloatLabel(QWidget):
         self._keep_top_timer = QTimer(self)
         self._keep_top_timer.setInterval(1000)  # 每 1000ms 检查一次
         self._keep_top_timer.timeout.connect(self._ensure_on_top)
-        self._keep_top_timer.start()
+        if self.force_top:
+            self._keep_top_timer.start()
+
+        self.set_click_through(self.click_through)
 
     # 与 App 连接
     def set_open_settings_callback(self, fn): 
@@ -189,7 +199,6 @@ class FloatLabel(QWidget):
             "code_names":           self.code_names,
 
             "name_visible":         self.name_visible,
-            "market_visible":       self.market_visible,
             "code_visible":         self.code_visible,
             "type_visible":         self.type_visible,
             "name_length":          self.name_length,
@@ -214,8 +223,12 @@ class FloatLabel(QWidget):
             "default_color":    self.default_color,
 
             "refresh_seconds":  self.refresh_seconds,
+            "force_top":        self.force_top,
+            "click_through":    self.click_through,
             "hotkey_enabled":   self.hotkey_enabled,
             "hotkey":           self.hotkey,
+            "hotkey_click_through_enabled": self.hotkey_click_through_enabled,
+            "hotkey_click_through": self.hotkey_click_through,
             "start_on_boot":    self.start_on_boot,
             "pos":              {"x": self.x(), "y": self.y()},
         }
@@ -338,7 +351,11 @@ class FloatLabel(QWidget):
         # 名称显示
         name = f"({type})" if type is not None and self.type_visible else ""
         name += f"{code[2:] if code[:2] in ('sh','sz','bj') else code} " if self.code_visible else ""
-        name += data["name"] if self.name_length == 0 else data["name"][:self.name_length]
+        if self.name_length == -1:
+            name += data["name"]
+        elif self.name_length > 0:
+            name += data["name"][:self.name_length]
+        # name_length == 0 时仅显示代码/类型，不显示中文名
 
         # 一档盘口数据
         b1_label = ""
@@ -501,7 +518,8 @@ class FloatLabel(QWidget):
         self._refresh_from_function()
 
     def set_name_length(self, name_len: int):
-        if name_len >=0:
+        # -1 全部显示, 0 不显示, >0 显示前 N 个字
+        if name_len == -1 or name_len >= 0:
             self.name_length = name_len
             self._notify_change()
             self._refresh_from_function()
@@ -589,7 +607,89 @@ class FloatLabel(QWidget):
         self.apply_style()
         self._notify_change()
         self._defer_fit()
-    
+
+    # ----- 鼠标穿透 / 强制置顶 / 快捷键开关 -----
+    def _apply_click_through(self, enable: bool):
+        """Windows 下通过 WS_EX_TRANSPARENT 实现鼠标穿透。"""
+        if platform.system() != "Windows":
+            return
+        try:
+            GWL_EXSTYLE = -20
+            WS_EX_LAYERED = 0x00080000
+            WS_EX_TRANSPARENT = 0x00000020
+            SWP_NOSIZE = 0x0001
+            SWP_NOMOVE = 0x0002
+            SWP_NOZORDER = 0x0004
+            SWP_FRAMECHANGED = 0x0020
+
+            hwnd = int(self.winId())
+            user32 = ctypes.windll.user32
+            exstyle = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+            if enable:
+                exstyle |= WS_EX_LAYERED | WS_EX_TRANSPARENT
+            else:
+                exstyle &= ~WS_EX_TRANSPARENT
+            user32.SetWindowLongW(hwnd, GWL_EXSTYLE, exstyle)
+            user32.SetWindowPos(hwnd, 0, 0, 0, 0, 0,
+                                SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED)
+        except Exception:
+            pass
+
+    def set_click_through(self, enable: bool):
+        enable = bool(enable)
+        if self.click_through == enable:
+            return
+        self.click_through = enable
+        self._apply_click_through(self.click_through)
+        self._notify_change()
+
+    def toggle_click_through(self):
+        self.set_click_through(not self.click_through)
+
+    def set_force_top(self, enabled: bool):
+        enabled = bool(enabled)
+        if self.force_top == enabled:
+            return
+        self.force_top = enabled
+        was_visible = self.isVisible()
+        flags = self.windowFlags()
+        if self.force_top:
+            flags |= Qt.WindowStaysOnTopHint
+        else:
+            flags &= ~Qt.WindowStaysOnTopHint
+        self.setWindowFlags(flags)
+        if self.force_top:
+            if was_visible and self._keep_top_timer and not self._keep_top_timer.isActive():
+                self._keep_top_timer.start()
+            self._ensure_on_top()
+        else:
+            if self._keep_top_timer and self._keep_top_timer.isActive():
+                self._keep_top_timer.stop()
+        if was_visible:
+            self.show()
+            self._apply_click_through(self.click_through)
+        self._notify_change()
+
+    def set_hotkey_enabled(self, enabled: bool):
+        enabled = bool(enabled)
+        if self.hotkey_enabled == enabled:
+            return
+        self.hotkey_enabled = enabled
+        self._register_hotkey()
+        self._notify_change()
+
+    def set_click_through_hotkey_enabled(self, enabled: bool):
+        enabled = bool(enabled)
+        if self.hotkey_click_through_enabled == enabled:
+            return
+        self.hotkey_click_through_enabled = enabled
+        self._register_hotkey()
+        self._notify_change()
+
+    def update_click_through_hotkey(self, new_hotkey: str):
+        self.hotkey_click_through = new_hotkey.strip()
+        self._register_hotkey()
+
     # ----- 交互 -----
     def contextMenuEvent(self, event):
         menu = QMenu(self)
@@ -683,8 +783,9 @@ class FloatLabel(QWidget):
         super().showEvent(event)
         if self.timer and not self.timer.isActive(): 
             self.timer.start()
-        if self._keep_top_timer and not self._keep_top_timer.isActive():
+        if self.force_top and self._keep_top_timer and not self._keep_top_timer.isActive():
             self._keep_top_timer.start()
+        self._apply_click_through(self.click_through)
         self._defer_fit()
 
     def hideEvent(self, event):
@@ -695,7 +796,9 @@ class FloatLabel(QWidget):
             self._keep_top_timer.stop()
 
     def _ensure_on_top(self):
-        if not self.isVisible():
+        if not self.force_top or not self.isVisible():
+            return
+        if self.click_through:
             return
         try:
             aw = QApplication.activeWindow()
@@ -715,10 +818,19 @@ class FloatLabel(QWidget):
             keyboard.remove_all_hotkeys()
         except Exception:
             pass
-        try:
-            keyboard.add_hotkey(self.hotkey.lower(), lambda: self.hotkey_triggered.emit())
-        except Exception:
-            pass
+        if self.hotkey_enabled:
+            try:
+                keyboard.add_hotkey(self.hotkey.lower(), lambda: self.hotkey_triggered.emit())
+            except Exception:
+                pass
+        if self.hotkey_click_through_enabled:
+            try:
+                keyboard.add_hotkey(
+                    self.hotkey_click_through.lower(),
+                    lambda: self.click_through_hotkey_triggered.emit(),
+                )
+            except Exception:
+                pass
 
     def update_hotkey(self, new_hotkey: str):
         self.hotkey = new_hotkey.strip()

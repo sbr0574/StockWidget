@@ -9,9 +9,9 @@ from PySide6.QtWidgets import (
     QStyledItemDelegate, QLineEdit, QCompleter, QHeaderView
 )
 from ui.ui_settings import Ui_SettingDialog
-from src.utils import code_without_market, find_suggestions
+from src.utils import code_without_market, find_suggestions, APP_VERSION
 from src.WidgetPanel import FloatLabel
-from services.code_index import refresh_index_from_akshare
+from services.update_check import PROJECT_URL
 
 
 class CodeCompleterDelegate(QStyledItemDelegate):
@@ -59,11 +59,6 @@ class SettingsDialog(QDialog):
     def _is_macos(self) -> bool:
         return platform.system() == "Darwin"
 
-    def _refresh_code_index(self) -> dict:
-        result = refresh_index_from_akshare()
-        codes = result.get("codes", {})
-        return codes if isinstance(codes, dict) else {}
-
     def _display_code_for_ui(self, code: str) -> str:
         value = str(code or "").strip().lower()
         if len(value) == 8 and value[:2] in {"sh", "sz", "bj"}:
@@ -72,21 +67,10 @@ class SettingsDialog(QDialog):
 
     def _init_code_table(self):
         self.list_codes = self.ui.list_codes
-        self.list_codes.setColumnCount(3)
         self.list_codes.setHorizontalHeaderLabels(["显示", "代码", "名称"])
         self.list_codes.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.list_codes.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.list_codes.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
-        self.list_codes.verticalHeader().setVisible(False)
-        self.list_codes.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.list_codes.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.list_codes.setDragEnabled(True)
-        self.list_codes.setAcceptDrops(True)
-        self.list_codes.setDropIndicatorShown(True)
-        self.list_codes.setDragDropOverwriteMode(False)
-        self.list_codes.setDefaultDropAction(Qt.MoveAction)
-        self.list_codes.setDragDropMode(QAbstractItemView.InternalMove)
-        self.list_codes.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.SelectedClicked | QAbstractItemView.EditKeyPressed)
         self.list_codes.viewport().installEventFilter(self)
         self.list_codes.setItemDelegateForColumn(1, CodeCompleterDelegate(self))
 
@@ -98,8 +82,8 @@ class SettingsDialog(QDialog):
     def _bind_widgets(self):
         self.slider_interval = self.ui.slider_interval
         self.label_interval = self.ui.label_interval
+        self.gb_name = self.ui.gb_name
         self.cb_code = self.ui.cb_code
-        self.cb_name = self.ui.cb_name
         self.cb_type = self.ui.cb_type
         self.cb_price = self.ui.cb_price
         self.cb_diff = self.ui.cb_diff
@@ -111,7 +95,6 @@ class SettingsDialog(QDialog):
         self.cb_commi = self.ui.cb_commi
         self.cb_kline = self.ui.cb_kline
         self.cmb_namelen = self.ui.cmb_namelen
-        self.btn_update = self.ui.btn_update
 
         self.cb_default_color = self.ui.cb_default_color
         self.btn_fg = self.ui.btn_fg_color
@@ -129,17 +112,22 @@ class SettingsDialog(QDialog):
 
         self.cmb_icon = self.ui.cmb_icon
         self.btn_pick_icon = self.ui.btn_icon
-        self.keyseq_hide = self.ui.keyseq_hide
         self.cb_auto_start = self.ui.cb_auto_start
+        self.cb_force_top = self.ui.cb_force_top
+        self.cb_click_through = self.ui.cb_click_through
         self.cb_head = self.ui.cb_head
         self.cb_grid = self.ui.cb_grid
 
+        self.cb_hotkey_hide = self.ui.cb_hotkey_hide
+        self.cb_hotkey_click_through = self.ui.cb_hotkey_click_through
+        self.keyseq_hide = self.ui.keyseq_hide
+        self.keyseq_click_through = self.ui.keyseq_click_through
+
         self.slider_interval.valueChanged.connect(self._on_interval_changed)
-        self.btn_update.clicked.connect(self._refresh_stock_index)
         self.list_codes.itemChanged.connect(self._on_codes_changed)
 
+        self.gb_name.toggled.connect(self._on_name_toggled)
         self.cb_code.toggled.connect(self._on_code_toggled)
-        self.cb_name.toggled.connect(self._on_name_toggled)
         self.cb_type.toggled.connect(self._on_type_toggled)
         self.cb_price.toggled.connect(partial(self._on_flag_toggled, "现价"))
         self.cb_diff.toggled.connect(partial(self._on_flag_toggled, "涨跌"))
@@ -171,7 +159,12 @@ class SettingsDialog(QDialog):
         self.slider_font.valueChanged.connect(self.apply_font_size)
         self.slider_line.valueChanged.connect(self._on_line_changed)
         self.keyseq_hide.editingFinished.connect(self._on_hotkey_changed)
+        self.keyseq_click_through.editingFinished.connect(self._on_click_through_hotkey_changed)
         self.cb_auto_start.toggled.connect(self._on_start_on_boot_toggled)
+        self.cb_force_top.toggled.connect(self._on_force_top_toggled)
+        self.cb_click_through.toggled.connect(self._on_click_through_toggled)
+        self.cb_hotkey_hide.toggled.connect(self._on_hotkey_hide_enabled_toggled)
+        self.cb_hotkey_click_through.toggled.connect(self._on_click_through_hotkey_enabled_toggled)
         self.cb_head.toggled.connect(self._on_header_toggled)
         self.cb_grid.toggled.connect(self._on_grid_toggled)
         self.cmb_icon.currentIndexChanged.connect(self._on_icon_changed)
@@ -181,12 +174,13 @@ class SettingsDialog(QDialog):
         
         if self._is_macos():
             self.keyseq_hide.setEnabled(False)
+            self.keyseq_click_through.setEnabled(False)
 
     def _load_settings(self):
         self.slider_interval.setValue(self.win.refresh_seconds)
         self.label_interval.setText(f"{self.win.refresh_seconds}s")
-        self.cb_code.setChecked(self.win.header_is_visible("代码"))
-        self.cb_name.setChecked(self.win.header_is_visible("名称"))
+        self.cb_code.setChecked(self.win.code_visible)
+        self.gb_name.setChecked(self.win.name_visible)
         self.cb_type.setChecked(self.win.type_visible)
         self.cb_price.setChecked(self.win.header_is_visible("现价"))
         self.cb_diff.setChecked(self.win.header_is_visible("涨跌"))
@@ -198,11 +192,17 @@ class SettingsDialog(QDialog):
         self.cb_commi.setChecked(self.win.header_is_visible("委比"))
         self.cb_kline.setChecked(self.win.header_is_visible("K线"))
 
+        # 名称显示字数: 0=不显示, -1=全部显示, 1-4=前 N 个字
+        # 填充选项时会触发 currentIndexChanged，需屏蔽信号避免意外修改配置
+        self.cmb_namelen.blockSignals(True)
         self.cmb_namelen.clear()
-        for length in [0, 1, 2, 3, 4]:
-            self.cmb_namelen.addItem(f"{length}个字" if length > 0 else "完整", userData=length)
+        self.cmb_namelen.addItem("不显示", userData=0)
+        self.cmb_namelen.addItem("全部显示", userData=-1)
+        for length in [1, 2, 3, 4]:
+            self.cmb_namelen.addItem(f"{length}个字", userData=length)
         idx_name = self.cmb_namelen.findData(self.win.name_length)
-        self.cmb_namelen.setCurrentIndex(idx_name if idx_name >= 0 else 0)
+        self.cmb_namelen.setCurrentIndex(idx_name if idx_name >= 0 else 1)
+        self.cmb_namelen.blockSignals(False)
 
         self.cb_default_color.setChecked(self.win.default_color)
         self.btn_fg.setEnabled(not self.win.default_color)
@@ -218,11 +218,23 @@ class SettingsDialog(QDialog):
         self.label_line.setText(f"+{self.slider_line.value()} px")
 
         self.keyseq_hide.setKeySequence(QKeySequence(self.win.hotkey))
+        self.keyseq_hide.setEnabled(self.win.hotkey_enabled)
+        self.keyseq_click_through.setKeySequence(QKeySequence(self.win.hotkey_click_through))
+        self.keyseq_click_through.setEnabled(self.win.hotkey_click_through_enabled)
+        self.cb_hotkey_hide.setChecked(self.win.hotkey_enabled)
+        self.cb_hotkey_click_through.setChecked(self.win.hotkey_click_through_enabled)
         self.cb_auto_start.setChecked(bool(self.win.start_on_boot))
+        self.cb_force_top.setChecked(self.win.force_top)
+        self.cb_click_through.setChecked(self.win.click_through)
         self.cb_head.setChecked(self.win.header_visible)
         self.cb_grid.setChecked(self.win.grid_visible)
 
+        if self._is_macos():
+            self.keyseq_hide.setEnabled(False)
+            self.keyseq_click_through.setEnabled(False)
+
         self._setup_icon_choices()
+        self._setup_about()
 
     def _setup_icon_choices(self):
         self.cmb_icon.clear()
@@ -558,17 +570,50 @@ class SettingsDialog(QDialog):
         elif 0 <= row < self.list_codes.rowCount():
             self.list_codes.removeRow(row)
 
-    def _refresh_stock_index(self):
-        self.btn_update.setEnabled(False)
-        original_text = self.btn_update.text()
-        self.btn_update.setText("更新中...")
+    def _on_click_through_toggled(self, checked: bool):
+        self.win.set_click_through(bool(checked))
+
+    def _on_force_top_toggled(self, checked: bool):
+        self.win.set_force_top(bool(checked))
+
+    def _on_hotkey_hide_enabled_toggled(self, checked: bool):
+        self.keyseq_hide.setEnabled(bool(checked))
+        self.win.set_hotkey_enabled(bool(checked))
+
+    def _on_click_through_hotkey_enabled_toggled(self, checked: bool):
+        self.keyseq_click_through.setEnabled(bool(checked))
+        self.win.set_click_through_hotkey_enabled(bool(checked))
+
+    def _on_click_through_hotkey_changed(self):
+        new_hotkey = self.keyseq_click_through.keySequence().toString()
         try:
-            self.win.codes_list = self._refresh_code_index()
+            self.win.update_click_through_hotkey(new_hotkey)
         except Exception:
-            self.win.codes_list = {}
-        finally:
-            self.btn_update.setEnabled(True)
-            self.btn_update.setText(original_text)
+            pass
+
+    def _setup_about(self):
+        label = self.ui.label_about_info
+        box = self.ui.gb_about
+        # 适当加宽以容纳“（有新版本）”，避免第一行被截断
+        box.setGeometry(box.x(), box.y(), 201, box.height())
+        label.setGeometry(10, 25, 181, 35)
+        label.setWordWrap(True)
+        has_update = bool(self.app is not None and getattr(self.app, "_has_update", False))
+        first_line = f"StockWidget v{APP_VERSION}"
+        if has_update:
+            first_line += "（有新版本）"
+        html = (
+            f'<a href="{PROJECT_URL}" style="text-decoration:none; color:#4a90d9;">'
+            f"{first_line}<br>Copyright 2026 sbr0574</a>"
+        )
+        label.setTextFormat(Qt.RichText)
+        label.setText(html)
+        label.setOpenExternalLinks(True)
+        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        label.setCursor(Qt.PointingHandCursor)
+
+    def refresh_about(self):
+        self._setup_about()
 
     def closeEvent(self, event):
         self._cleanup_code_rows()
