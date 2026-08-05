@@ -1,15 +1,17 @@
 import os
 import platform
+import shutil
 from functools import partial
 
 from PySide6.QtCore import Qt, QStringListModel, QEvent, QTimer
 from PySide6.QtGui import QColor, QKeySequence
 from PySide6.QtWidgets import (
     QWidget, QDialog, QColorDialog, QAbstractItemView, QTableWidgetItem,
-    QStyledItemDelegate, QLineEdit, QCompleter, QHeaderView
+    QStyledItemDelegate, QLineEdit, QCompleter, QHeaderView, QFileDialog,
+    QMessageBox
 )
 from ui.ui_settings import Ui_SettingDialog
-from src.utils import code_without_market, find_suggestions, APP_VERSION
+from src.utils import code_without_market, find_suggestions, APP_VERSION, config_paths
 from src.WidgetPanel import FloatLabel
 from services.update_check import PROJECT_URL
 
@@ -67,17 +69,24 @@ class SettingsDialog(QDialog):
 
     def _init_code_table(self):
         self.list_codes = self.ui.list_codes
-        self.list_codes.setHorizontalHeaderLabels(["显示", "代码", "名称"])
+        self.list_codes.setHorizontalHeaderLabels(["显示", "代码", "成本"])
         self.list_codes.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.list_codes.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
-        self.list_codes.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
+        self.list_codes.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        # 单击不进入编辑，便于整行拖动排序
+        self.list_codes.setEditTriggers(
+            QAbstractItemView.EditTrigger.DoubleClicked
+            | QAbstractItemView.EditTrigger.AnyKeyPressed
+            | QAbstractItemView.EditTrigger.EditKeyPressed
+        )
+        self.list_codes.setDropIndicatorShown(True)
         self.list_codes.viewport().installEventFilter(self)
         self.list_codes.setItemDelegateForColumn(1, CodeCompleterDelegate(self))
 
         for code in self.win.codes:
-            name = getattr(self.win, "code_names", {}).get(code, "")
-            checked = code in getattr(self.win, "checked_codes", [])
-            self._append_code_row(code, name, checked)
+            checked = code in self.win.checked_codes
+            cost = self.win.costs.get(code)
+            self._append_code_row(code, "", checked, cost)
 
     def _bind_widgets(self):
         self.slider_interval = self.ui.slider_interval
@@ -94,6 +103,7 @@ class SettingsDialog(QDialog):
         self.cb_b1s1 = self.ui.cb_b1s1
         self.cb_commi = self.ui.cb_commi
         self.cb_kline = self.ui.cb_kline
+        self.cb_profit = self.ui.cb_profit
         self.cmb_namelen = self.ui.cmb_namelen
 
         self.cb_default_color = self.ui.cb_default_color
@@ -138,15 +148,18 @@ class SettingsDialog(QDialog):
         self.cb_b1s1.toggled.connect(self._on_b1s1_toggled)
         self.cb_commi.toggled.connect(partial(self._on_flag_toggled, "委比"))
         self.cb_kline.toggled.connect(partial(self._on_flag_toggled, "K线"))
+        self.cb_profit.toggled.connect(partial(self._on_flag_toggled, "浮盈"))
 
         self.btn_add = self.ui.btn_add
         self.btn_del = self.ui.btn_del
         self.btn_up = self.ui.btn_up
         self.btn_down = self.ui.btn_down
+        self.btn_top = self.ui.btn_top
         self.btn_add.clicked.connect(self._add_code)
         self.btn_del.clicked.connect(self._del_code)
         self.btn_up.clicked.connect(self._move_up)
         self.btn_down.clicked.connect(self._move_down)
+        self.btn_top.clicked.connect(self._top_code)
 
         self.cmb_namelen.currentIndexChanged.connect(self._on_name_length_changed)
         self.cb_default_color.toggled.connect(self._on_default_color_toggled)
@@ -168,6 +181,7 @@ class SettingsDialog(QDialog):
         self.cb_head.toggled.connect(self._on_header_toggled)
         self.cb_grid.toggled.connect(self._on_grid_toggled)
         self.cmb_icon.currentIndexChanged.connect(self._on_icon_changed)
+        self.btn_pick_icon.clicked.connect(self._pick_custom_icon)
         if self._is_macos():
             self.cmb_icon.setEnabled(False)
             self.btn_pick_icon.setEnabled(False)
@@ -191,6 +205,7 @@ class SettingsDialog(QDialog):
         self.cb_b1s1.setChecked(self.win.b1s1_visible)
         self.cb_commi.setChecked(self.win.header_is_visible("委比"))
         self.cb_kline.setChecked(self.win.header_is_visible("K线"))
+        self.cb_profit.setChecked(self.win.profit_visible)
 
         # 名称显示字数: 0=不显示, -1=全部显示, 1-4=前 N 个字
         # 填充选项时会触发 currentIndexChanged，需屏蔽信号避免意外修改配置
@@ -237,6 +252,8 @@ class SettingsDialog(QDialog):
         self._setup_about()
 
     def _setup_icon_choices(self):
+        # 填充期间屏蔽信号，避免 setCurrentIndex 触发 _on_icon_changed 重复/重置图标
+        self.cmb_icon.blockSignals(True)
         self.cmb_icon.clear()
         icon_items = [
             ("默认", 'default'),
@@ -257,6 +274,7 @@ class SettingsDialog(QDialog):
             self.cmb_icon.addItem('自定义', userData=cur_choice)
             idx = self.cmb_icon.count() - 1
         self.cmb_icon.setCurrentIndex(idx if idx >= 0 else 0)
+        self.cmb_icon.blockSignals(False)
 
     def eventFilter(self, obj, ev):
         if obj is self.list_codes.viewport() and ev.type() == QEvent.MouseButtonDblClick:
@@ -268,14 +286,28 @@ class SettingsDialog(QDialog):
                 self.list_codes.editItem(self.list_codes.item(row, 1))
                 return True
         if obj is self.list_codes.viewport() and ev.type() == QEvent.Drop:
-            QTimer.singleShot(0, lambda: self._on_codes_changed(None))
+            self._handle_drop(ev)
+            return True
         return super().eventFilter(obj, ev)
 
-    def _append_code_row(self, code: str = "", name: str = "", checked: bool = False):
+    def _handle_drop(self, ev):
+        """拖动调整顺序：将拖动的行移动到目标位置"""
+        src_row = self.list_codes.currentRow()
+        pos = ev.position().toPoint()
+        target_row = self.list_codes.rowAt(pos.y())
+        if ev.source() is self.list_codes and src_row >= 0:
+            if target_row < 0:
+                target_row = self.list_codes.rowCount() - 1
+            if target_row != src_row:
+                self._move_row(src_row, target_row)
+        ev.acceptProposedAction()
+        QTimer.singleShot(0, lambda: self._on_codes_changed(None))
+
+    def _append_code_row(self, code: str = "", name: str = "", checked: bool = False, cost=None):
         self.list_codes.blockSignals(True)
         row = self.list_codes.rowCount()
         self.list_codes.insertRow(row)
-        self._set_code_row(row, code, code, name, checked)
+        self._set_code_row(row, code, code, name, checked, cost)
         self.list_codes.blockSignals(False)
 
     def _entry_for_text(self, text: str) -> dict | None:
@@ -286,7 +318,22 @@ class SettingsDialog(QDialog):
         entry = self._entry_for_text(value_key) or self._entry_for_text(display_code)
         return entry["name"] if entry else ""
 
-    def _set_code_row(self, row: int, value_key: str, display_code: str = "", name: str = "", checked: bool = False):
+    def _code_display_for_row(self, value_key: str, display_code: str = "", name: str = "") -> str:
+        """生成“类型/代码/名称”格式的合并显示文本"""
+        entry = self._entry_for_text(value_key) or self._entry_for_text(display_code)
+        if entry:
+            type_ = str(entry.get("type", "") or "").strip()
+            code = str(entry.get("code", "") or "").strip()
+            name = str(name or "").strip() or str(entry.get("name", "") or "").strip()
+        else:
+            type_ = ""
+            code = str(display_code or value_key or "").strip()
+            name = str(name or "").strip()
+        code = self._display_code_for_ui(code)
+        return "/".join([p for p in [type_, code, name] if p])
+
+    def _set_code_row(self, row: int, value_key: str, display_code: str = "", name: str = "",
+                      checked: bool = False, cost=None):
         self.list_codes.blockSignals(True)
         value_key = str(value_key or "").strip().lower()
         display_code = str(display_code or "").strip()
@@ -304,16 +351,16 @@ class SettingsDialog(QDialog):
             code_item = QTableWidgetItem("")
             code_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsEnabled)
             self.list_codes.setItem(row, 1, code_item)
-        code_item.setText(self._display_code_for_ui(display_code or value_key))
+        code_item.setText(self._code_display_for_row(value_key, display_code, resolved_name))
         code_item.setData(Qt.UserRole, value_key)
 
-        name_item = self.list_codes.item(row, 2)
-        if name_item is None:
-            name_item = QTableWidgetItem("")
-            name_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
-            self.list_codes.setItem(row, 2, name_item)
-        name_item.setText(resolved_name)
-        name_item.setData(Qt.UserRole, resolved_name)
+        cost_item = self.list_codes.item(row, 2)
+        if cost_item is None:
+            cost_item = QTableWidgetItem("")
+            cost_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsEnabled)
+            self.list_codes.setItem(row, 2, cost_item)
+        cost_item.setText("" if cost is None else f"{cost:g}")
+        cost_item.setData(Qt.UserRole, cost)
         self.list_codes.blockSignals(False)
 
     def _cleanup_code_rows(self):
@@ -342,13 +389,13 @@ class SettingsDialog(QDialog):
     def _collect_codes_from_list(self):
         codes = []
         checked_codes = []
-        code_names = {}
+        costs = {}
         seen = set()
 
         for row in range(self.list_codes.rowCount()):
-            code_item = self.list_codes.item(row, 1)
-            name_item = self.list_codes.item(row, 2)
             check_item = self.list_codes.item(row, 0)
+            code_item = self.list_codes.item(row, 1)
+            cost_item = self.list_codes.item(row, 2)
             if code_item is None:
                 continue
 
@@ -360,14 +407,23 @@ class SettingsDialog(QDialog):
             if value not in seen:
                 seen.add(value)
                 codes.append(value)
-            if name_item is not None:
-                name = str(name_item.text() or "").strip()
-                if name:
-                    code_names[value] = name
+
+            cost = None
+            if cost_item is not None:
+                cost_text = str(cost_item.text() or "").strip()
+                try:
+                    cost_val = float(cost_text)
+                    if cost_val > 0:
+                        cost = cost_val
+                except ValueError:
+                    cost = None
+            if cost is not None:
+                costs[value] = cost
+
             if check_item is not None and check_item.checkState() == Qt.Checked:
                 checked_codes.append(value)
 
-        self.win.set_code_names(code_names)
+        self.win.set_costs(costs)
         return codes, checked_codes
 
     def _on_codes_changed(self, _item):
@@ -388,28 +444,41 @@ class SettingsDialog(QDialog):
             self.list_codes.removeRow(row)
             self._on_codes_changed(None)
 
+    def _move_row(self, src: int, dst: int):
+        """将 src 行移动到 dst 位置"""
+        row_count = self.list_codes.rowCount()
+        if not (0 <= src < row_count and 0 <= dst < row_count):
+            return
+        if src == dst:
+            return
+        self.list_codes.blockSignals(True)
+        items = [self.list_codes.takeItem(src, c) for c in range(self.list_codes.columnCount())]
+        self.list_codes.removeRow(src)
+        self.list_codes.insertRow(dst)
+        for c, item in enumerate(items):
+            if item is not None:
+                self.list_codes.setItem(dst, c, item)
+        self.list_codes.blockSignals(False)
+        self.list_codes.setCurrentCell(dst, 1)
+
     def _move_up(self):
         row = self.list_codes.currentRow()
         if row > 0:
-            self._swap_rows(row, row - 1)
-            self.list_codes.setCurrentCell(row - 1, 1)
+            self._move_row(row, row - 1)
             self._on_codes_changed(None)
 
     def _move_down(self):
         row = self.list_codes.currentRow()
         if 0 <= row < self.list_codes.rowCount() - 1:
-            self._swap_rows(row, row + 1)
-            self.list_codes.setCurrentCell(row + 1, 1)
+            self._move_row(row, row + 1)
             self._on_codes_changed(None)
 
-    def _swap_rows(self, row_a: int, row_b: int):
-        self.list_codes.blockSignals(True)
-        for col in range(self.list_codes.columnCount()):
-            item_a = self.list_codes.takeItem(row_a, col)
-            item_b = self.list_codes.takeItem(row_b, col)
-            self.list_codes.setItem(row_a, col, item_b)
-            self.list_codes.setItem(row_b, col, item_a)
-        self.list_codes.blockSignals(False)
+    def _top_code(self):
+        """将选中个股移到列表第一位"""
+        row = self.list_codes.currentRow()
+        if row > 0:
+            self._move_row(row, 0)
+            self._on_codes_changed(None)
 
     def _on_interval_changed(self, value: int):
         self.label_interval.setText(f"{value}s")
@@ -461,6 +530,26 @@ class SettingsDialog(QDialog):
             self.app.set_app_icon(val)
             self.app.save_now()
 
+    def _pick_custom_icon(self):
+        """选择自定义图标并保存到配置文件同目录，立即应用"""
+        path, _ = QFileDialog.getOpenFileName(
+            self, "选择自定义图标", "", "图标文件 (*.ico *.png *.jpg *.jpeg);;所有文件 (*)"
+        )
+        if not path:
+            return
+        try:
+            dest_dir = config_paths()
+            os.makedirs(dest_dir, exist_ok=True)
+            dest = os.path.join(dest_dir, "custom_icon.ico")
+            shutil.copyfile(path, dest)
+        except Exception as exc:
+            QMessageBox.warning(self, "图标错误", f"无法保存自定义图标：\n{exc}")
+            return
+        if self.app is not None:
+            self.app.set_app_icon(dest)
+            self.app.save_now()
+        self._setup_icon_choices()
+
     def _on_start_on_boot_toggled(self, checked: bool):
         self.app.set_start_on_boot(bool(checked))
 
@@ -494,7 +583,7 @@ class SettingsDialog(QDialog):
 
     def _display_text(self, item: dict) -> str:
         parts = [str(item.get("type", "") or "").strip(), str(item.get("code", "") or "").strip(), str(item.get("name", "") or "").strip()]
-        return " / ".join([p for p in parts if p])
+        return "/".join([p for p in parts if p])
 
     def _apply_suggestion(self, editor: QLineEdit, text: str):
         entry = self._suggestion_map.get(text)
@@ -535,17 +624,28 @@ class SettingsDialog(QDialog):
         completer.complete(rect)
 
     def _commit_code_editor(self, editor: QLineEdit):
-        row = int(editor.property("_row") or -1)
+        row = editor.property("_row")
+        row = int(row) if row is not None else -1
         if row < 0:
             return
+        cost_item = self.list_codes.item(row, 2)
+        cost = None
+        if cost_item is not None:
+            cost_text = str(cost_item.text() or "").strip()
+            try:
+                cost_val = float(cost_text)
+                if cost_val > 0:
+                    cost = cost_val
+            except ValueError:
+                cost = None
         entry = editor.property("_selected_entry")
         text = str(editor.text() or "").strip()
         if isinstance(entry, dict):
-            self._set_code_row(row, entry["key"], entry["code"], entry["name"], True)
+            self._set_code_row(row, entry["key"], entry["code"], entry["name"], True, cost)
         else:
             entry = self._entry_for_text(text)
             if entry:
-                self._set_code_row(row, entry["key"], entry["code"], entry["name"], True)
+                self._set_code_row(row, entry["key"], entry["code"], entry["name"], True, cost)
             else:
                 self._restore_or_remove_row(row)
         self._on_codes_changed(None)
@@ -554,19 +654,19 @@ class SettingsDialog(QDialog):
     def _remember_editor_value(self, editor: QLineEdit, index):
         row = index.row()
         code_item = self.list_codes.item(row, 1)
-        name_item = self.list_codes.item(row, 2)
+        cost_item = self.list_codes.item(row, 2)
         check_item = self.list_codes.item(row, 0)
         self._previous_editor_values[row] = {
             "key": str(code_item.data(Qt.UserRole) or "") if code_item else "",
             "code": str(code_item.text() or "") if code_item else "",
-            "name": str(name_item.text() or "") if name_item else "",
+            "cost": str(cost_item.text() or "") if cost_item else "",
             "checked": check_item.checkState() == Qt.Checked if check_item else True,
         }
 
     def _restore_or_remove_row(self, row: int):
         previous = self._previous_editor_values.get(row)
         if previous and (previous["key"] or previous["code"]):
-            self._set_code_row(row, previous["key"], previous["code"], previous["name"], previous["checked"])
+            self._set_code_row(row, previous["key"], previous["code"], "", previous["checked"], previous.get("cost"))
         elif 0 <= row < self.list_codes.rowCount():
             self.list_codes.removeRow(row)
 
@@ -595,7 +695,7 @@ class SettingsDialog(QDialog):
         label = self.ui.label_about_info
         label.setWordWrap(True)
         has_update = bool(self.app is not None and getattr(self.app, "_has_update", False))
-        first_line = f"StockWidget v{APP_VERSION}"
+        first_line = f"当前版本 v{APP_VERSION}"
         if has_update:
             first_line += "（有新版本）"
         html = (

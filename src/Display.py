@@ -19,6 +19,7 @@ class SimpleTableModel(QAbstractTableModel):
         self._headers = headers or []
         self._align_right = align_right_cols or []
         self._row_meta = []
+        self._row_labels = []
 
     def set_color_scheme(self, use_default: bool, fg: QColor):
         self.default_color = bool(use_default)
@@ -59,15 +60,20 @@ class SimpleTableModel(QAbstractTableModel):
         return None
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole and orientation == Qt.Horizontal and 0 <= section < len(self._headers):
+        if role != Qt.DisplayRole:
+            return None
+        if orientation == Qt.Horizontal and 0 <= section < len(self._headers):
             return self._headers[section]
+        if orientation == Qt.Vertical and 0 <= section < len(self._row_labels):
+            return self._row_labels[section]
         return None
 
-    def set_rows_headers(self, rows, headers, meta):
+    def set_rows_headers(self, rows, headers, meta, row_labels=None):
         self.beginResetModel()
         self._rows = rows
         self._headers = headers
         self._row_meta = meta
+        self._row_labels = row_labels or []
         self.endResetModel()
 
     def set_align_right_cols(self, cols_idx):

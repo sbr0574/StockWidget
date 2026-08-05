@@ -58,8 +58,8 @@
        <rect>
         <x>15</x>
         <y>25</y>
-        <width>195</width>
-        <height>250</height>
+        <width>200</width>
+        <height>251</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -217,8 +217,8 @@
      <widget class="QCheckBox" name="cb_diff">
       <property name="geometry">
        <rect>
-        <x>70</x>
-        <y>25</y>
+        <x>10</x>
+        <y>55</y>
         <width>51</width>
         <height>24</height>
        </rect>
@@ -230,8 +230,8 @@
      <widget class="QCheckBox" name="cb_pct">
       <property name="geometry">
        <rect>
-        <x>130</x>
-        <y>25</y>
+        <x>10</x>
+        <y>85</y>
         <width>61</width>
         <height>24</height>
        </rect>
@@ -243,8 +243,8 @@
      <widget class="QCheckBox" name="cb_vol">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>85</y>
+        <x>70</x>
+        <y>25</y>
         <width>51</width>
         <height>24</height>
        </rect>
@@ -257,7 +257,7 @@
       <property name="geometry">
        <rect>
         <x>70</x>
-        <y>85</y>
+        <y>55</y>
         <width>51</width>
         <height>24</height>
        </rect>
@@ -270,7 +270,7 @@
       <property name="geometry">
        <rect>
         <x>130</x>
-        <y>85</y>
+        <y>25</y>
         <width>51</width>
         <height>24</height>
        </rect>
@@ -283,7 +283,7 @@
       <property name="geometry">
        <rect>
         <x>70</x>
-        <y>55</y>
+        <y>115</y>
         <width>88</width>
         <height>24</height>
        </rect>
@@ -295,8 +295,8 @@
      <widget class="QCheckBox" name="cb_commi">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>55</y>
+        <x>70</x>
+        <y>85</y>
         <width>51</width>
         <height>24</height>
        </rect>
@@ -308,14 +308,27 @@
      <widget class="QCheckBox" name="cb_kline">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>115</y>
+        <x>130</x>
+        <y>55</y>
         <width>71</width>
         <height>24</height>
        </rect>
       </property>
       <property name="text">
        <string>日K线</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="cb_profit">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>115</y>
+        <width>61</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>浮盈</string>
       </property>
      </widget>
     </widget>
@@ -985,7 +998,7 @@
       </rect>
      </property>
      <property name="title">
-      <string>关于</string>
+      <string>关于 StockWidget </string>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -1003,7 +1016,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>StockWidget v1.3.0 
+       <string>当前版本 v1.3.0 
 Copyright 2026 sbr0574</string>
       </property>
      </widget>
