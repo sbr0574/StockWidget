@@ -1,6 +1,4 @@
-import re
-
-import requests
+import re, requests
 
 from src.utils import APP_VERSION
 

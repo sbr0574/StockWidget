@@ -1,17 +1,14 @@
 import ctypes
-import importlib
 from functools import partial
 import platform
+import requests
 
-try:
-    if platform.system() == "Windows":
-        keyboard = importlib.import_module("keyboard")
-    elif platform.system() == "Darwin":
-        keyboard = importlib.import_module("keyboardMac")
-    else:
-        keyboard = None
-except Exception:
-    keyboard = None
+if platform.system() == "Windows":
+    import keyboard
+elif platform.system() == "Darwin":
+    pass
+else:
+    pass
 
 from PySide6.QtCore import Qt, QEvent, QTimer, Signal
 from PySide6.QtGui import QFont, QAction, QColor
@@ -305,10 +302,6 @@ class FloatLabel(QWidget):
     # ----- 数据 & 投影 -----
     def _show_error(self, msg: str):
         """显示错误内容"""
-        if self.k_column_visible_index is not None:
-            self.table.setItemDelegateForColumn(self.k_column_visible_index, QStyledItemDelegate(self.table))
-            self.k_column_visible_index = None
-
         text = str(msg) if msg is not None else ""
         self.error_label.setText(text)
         self.error_label.setVisible(True)
@@ -353,9 +346,8 @@ class FloatLabel(QWidget):
         name += f"{code[2:] if code[:2] in ('sh','sz','bj') else code} " if self.code_visible else ""
         if self.name_length == -1:
             name += data["name"]
-        elif self.name_length > 0:
+        else:
             name += data["name"][:self.name_length]
-        # name_length == 0 时仅显示代码/类型，不显示中文名
 
         # 一档盘口数据
         b1_label = ""
@@ -436,8 +428,8 @@ class FloatLabel(QWidget):
     def _refresh_from_function(self):
         try:
             ret, data = request_sina(self.checked_codes)
-        except Exception as e:
-            self._show_error(str(e))
+        except requests.exceptions.RequestException:
+            self._show_error("网络请求失败")
             return
         
         full_rows = []

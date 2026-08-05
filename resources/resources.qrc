@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>StockWidget.ico</file>
-        <file>stock_codes_cache.json</file>
+        <file>stock_codes_list.json</file>
     </qresource>
 </RCC>

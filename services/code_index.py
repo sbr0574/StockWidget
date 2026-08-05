@@ -19,9 +19,12 @@ def _name_pinyin(name: str) -> tuple[str, str]:
     return py_full.lower(), py_abbr.lower()
 
 
-def refresh_index_from_akshare() -> list[dict]:
+def refresh_index_from_akshare() -> list[dict] | None:
 
-    df = stock_info_all()
+    try: 
+        df = stock_info_all()
+    except:
+        return None
     codes = {}
     for _, row in df.iterrows():
         code = str(row.get("code", "")).strip()

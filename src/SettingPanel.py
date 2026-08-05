@@ -593,10 +593,6 @@ class SettingsDialog(QDialog):
 
     def _setup_about(self):
         label = self.ui.label_about_info
-        box = self.ui.gb_about
-        # 适当加宽以容纳“（有新版本）”，避免第一行被截断
-        box.setGeometry(box.x(), box.y(), 201, box.height())
-        label.setGeometry(10, 25, 181, 35)
         label.setWordWrap(True)
         has_update = bool(self.app is not None and getattr(self.app, "_has_update", False))
         first_line = f"StockWidget v{APP_VERSION}"

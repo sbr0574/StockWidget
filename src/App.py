@@ -1,13 +1,12 @@
-import importlib
 import sys, os, platform
+from datetime import datetime
 
 if platform.system() == "Windows":
-    import winreg
-    keyboard = importlib.import_module("keyboard")
+    import keyboard, winreg
 elif platform.system() == "Darwin":
-    keyboard = None
+    pass
 else:
-    keyboard = None
+    pass
 
 from PySide6.QtCore import Qt, QPoint, Signal
 from PySide6.QtGui import QAction, QIcon
@@ -17,7 +16,7 @@ from src.WidgetPanel import FloatLabel
 from src.SettingPanel import SettingsDialog
 from services.code_index import refresh_index_from_akshare, LIST_FILE
 from services.update_check import check_for_update
-from src.utils import APP_NAME, load_file, save_file
+from src.utils import APP_NAME, load_file, save_file, load_json_from_resource
 
 CONFIG_FILE = "stock_widget_config.json"
 
@@ -29,11 +28,12 @@ class App(QApplication):
         self.setQuitOnLastWindowClosed(False)
         cfg = load_file(CONFIG_FILE)
         list_file = load_file(LIST_FILE)
-        list_last_update = list_file.get("last_update", "2026-01-01")
-        codes_list = list_file.get("codes")
-        if not isinstance(codes_list, dict):
+        list_last_update = list_file.get("last_update")
+        if list_last_update is None or (datetime.now().date() > datetime.strptime(list_last_update, "%Y-%m-%d").date()):
             list_file = refresh_index_from_akshare()
-            codes_list = list_file.get("codes")
+        if list_file is None:
+            list_file = load_json_from_resource(":/stock_codes_list.json")
+        codes_list = list_file.get("codes")
 
         # 加载图标
         self._icon_choice = cfg.get('app_icon')

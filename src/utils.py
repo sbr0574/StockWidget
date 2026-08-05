@@ -2,6 +2,8 @@ import json
 import os
 import re
 
+from PySide6.QtCore import QFile, QIODevice
+
 APP_NAME = "StockWidget"
 APP_VERSION = "1.3.0"
 MARKET_PREFIXES = {"sh", "sz", "bj"}
@@ -21,6 +23,24 @@ def load_file(file_name: str, except_ret: dict | None = None) -> dict:
             return json.load(file)
     except (OSError, json.JSONDecodeError):
         return fallback
+
+
+def load_json_from_resource(path: str) -> dict:
+    """
+    从 Qt 资源系统读取 JSON 文件
+    Args:
+        path(str): 文件路径如':/settings.json'
+    Returns:
+        dict: JSON 数据
+    """
+    file = QFile(path)
+    if not file.open(QIODevice.ReadOnly | QIODevice.Text):
+        raise FileNotFoundError(f"无法打开资源文件: {path}")
+    content = file.readAll()
+    file.close()
+    
+    text = bytes(content).decode('utf-8')
+    return json.loads(text)
 
 
 def save_file(data: dict, file_name: str) -> None:
