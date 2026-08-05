@@ -1,11 +1,12 @@
+import uuid
 import requests, keyboard
 from functools import partial
 
 from PySide6.QtCore import Qt, QEvent, QTimer, Signal
 from PySide6.QtGui import QFont, QAction, QColor
-from PySide6.QtWidgets import QApplication, QWidget, QMenu, QVBoxLayout, QLabel, QTableView, QHeaderView, QAbstractItemView, QFrame, QStyledItemDelegate
+from PySide6.QtWidgets import QApplication, QWidget, QMenu, QVBoxLayout, QLabel, QTableView, QHeaderView, QAbstractItemView, QFrame
 
-from Display import SimpleTableModel, KLineDelegate
+from Display import SimpleTableModel, KLineDelegate, FlashAwareDelegate
 
 class FloatLabel(QWidget):
     hotkey_triggered = Signal()
@@ -49,6 +50,10 @@ class FloatLabel(QWidget):
 
         self.hotkey             = cfg.get("hotkey", "Ctrl+Alt+F")           # 快捷键
         self.start_on_boot      = bool(cfg.get("start_on_boot", False))
+        self.alarms             = self._normalize_alarms(cfg.get("alarms", []))
+        self._active_alerts     = {}   # code -> alarm_id，正在闪烁待确认
+        self._flash_on          = False
+        self._display_row_codes = []   # 当前表格各行对应的完整代码
 
         # 设置初值
         self.codes = [str(c).strip() for c in codes_cfg if str(c).strip()]
@@ -119,6 +124,7 @@ class FloatLabel(QWidget):
         self.model = SimpleTableModel(headers=self.ALL_HEADERS, align_right_cols=[1,2,3,4,5])
         self.model.set_color_scheme(self.default_color, self.fg)
         self.table.setModel(self.model)
+        self.table.setItemDelegate(FlashAwareDelegate(self.table))
 
         self.k_delegate = KLineDelegate(self.table, base_pt=12)
         self.k_delegate.update_scheme(self.default_color, self.fg)
@@ -157,6 +163,10 @@ class FloatLabel(QWidget):
         self._keep_top_timer.setInterval(1000)  # 每 1000ms 检查一次
         self._keep_top_timer.timeout.connect(self._ensure_on_top)
         self._keep_top_timer.start()
+
+        self._flash_timer = QTimer(self)
+        self._flash_timer.setInterval(450)
+        self._flash_timer.timeout.connect(self._on_flash_tick)
 
     # 与 App 连接
     def set_open_settings_callback(self, fn): 
@@ -201,6 +211,10 @@ class FloatLabel(QWidget):
             "pos": {"x": self.x(), "y": self.y()},
             "hotkey": self.hotkey,
             "start_on_boot": bool(self.start_on_boot),
+            "alarms": [
+                {"id": a["id"], "code": a["code"], "price": a["price"], "direction": a["direction"]}
+                for a in self.alarms
+            ],
         }
 
     def header_is_visible(self, header: str) -> bool:
@@ -301,7 +315,7 @@ class FloatLabel(QWidget):
     def _show_error(self, msg: str):
         try:
             if self.k_column_visible_index is not None:
-                self.table.setItemDelegateForColumn(self.k_column_visible_index, QStyledItemDelegate(self.table))
+                self.table.setItemDelegateForColumn(self.k_column_visible_index, FlashAwareDelegate(self.table))
                 self.k_column_visible_index = None
         except Exception:
             pass
@@ -337,6 +351,8 @@ class FloatLabel(QWidget):
 
         price_data = []
         sign_data = []
+        row_codes = []
+        prices_by_code = {}
         url = 'https://hq.sinajs.cn/list=' + label
         headers = {'Referer': 'https://finance.sina.com.cn', 'User-Agent': 'Mozilla/5.0'}
         r = requests.get(url, headers=headers, timeout=3)
@@ -476,6 +492,10 @@ class FloatLabel(QWidget):
 
             k_payload = {"k": (opening_price, current_price, high_price, low_price, prev_close)}
 
+            code_key = str(code).strip().lower()
+            prices_by_code[code_key] = current_price
+            row_codes.append(code_key)
+
             # "代码", "名称", "现价", "涨跌值", "涨跌幅", "买一", "卖一", "委比", "成交量", "成交额", "均价",  "K线"
             if code[2] not in ('1','5'):
                 price_data.append([
@@ -515,7 +535,7 @@ class FloatLabel(QWidget):
                 "s1": s1_color_sign,
             })
         
-        return price_data, sign_data
+        return price_data, sign_data, row_codes, prices_by_code
 
     def _project_columns(self, full_rows, sign_data):
         # 从 ALL_HEADERS 中按显示顺序筛选已启用的列
@@ -541,14 +561,173 @@ class FloatLabel(QWidget):
             self.table.setItemDelegateForColumn(col, self.k_delegate)
         else:
             if self.k_column_visible_index is not None:
-                self.table.setItemDelegateForColumn(self.k_column_visible_index, QStyledItemDelegate(self.table))
+                self.table.setItemDelegateForColumn(self.k_column_visible_index, FlashAwareDelegate(self.table))
                 self.k_column_visible_index = None
 
         self._fit_to_contents()
 
+    def _codes_for_fetch(self):
+        seen = set()
+        out = []
+        for c in list(self.checked_codes) + [a["code"] for a in self.alarms]:
+            s = str(c).strip().lower()
+            if s and s not in seen:
+                seen.add(s)
+                out.append(s)
+        return out
+
+    def _normalize_alarms(self, raw):
+        out = []
+        seen = set()
+        for a in raw or []:
+            if not isinstance(a, dict):
+                continue
+            code = str(a.get("code", "")).strip().lower()
+            direction = str(a.get("direction", "")).strip().lower()
+            if direction not in ("above", "below"):
+                continue
+            try:
+                price = float(a.get("price"))
+            except (TypeError, ValueError):
+                continue
+            if not code or price <= 0:
+                continue
+            key = (code, direction, round(price, 4))
+            if key in seen:
+                continue
+            seen.add(key)
+            aid = str(a.get("id") or uuid.uuid4())
+            out.append({"id": aid, "code": code, "price": price, "direction": direction})
+        return out
+
+    def list_alarms(self):
+        return [dict(a) for a in self.alarms]
+
+    def add_alarm(self, code: str, price: float, direction: str):
+        code = str(code).strip().lower()
+        direction = str(direction).strip().lower()
+        if direction not in ("above", "below"):
+            return False
+        try:
+            price = float(price)
+        except (TypeError, ValueError):
+            return False
+        if not code or price <= 0:
+            return False
+        for a in self.alarms:
+            if a["code"] == code and a["direction"] == direction and abs(a["price"] - price) < 1e-9:
+                return False
+        self.alarms.append({
+            "id": str(uuid.uuid4()),
+            "code": code,
+            "price": price,
+            "direction": direction,
+        })
+        self._notify_change()
+        # 隐藏时若有闹钟需继续刷新
+        if not self.isVisible() and self.timer and not self.timer.isActive():
+            self.timer.start()
+        self._refresh_from_function()
+        return True
+
+    def remove_alarm(self, alarm_id: str):
+        alarm_id = str(alarm_id)
+        before = len(self.alarms)
+        self.alarms = [a for a in self.alarms if a["id"] != alarm_id]
+        # 若删掉的是正在闪烁的，同步清掉
+        drop_codes = [c for c, aid in self._active_alerts.items() if aid == alarm_id]
+        for c in drop_codes:
+            self._active_alerts.pop(c, None)
+        if not self._active_alerts:
+            self._stop_flash()
+        if len(self.alarms) != before:
+            self._notify_change()
+            self._maybe_pause_timer_when_hidden()
+            return True
+        return False
+
+    def _evaluate_alarms(self, prices_by_code: dict):
+        newly = False
+        for alarm in list(self.alarms):
+            code = alarm["code"]
+            if code in self._active_alerts:
+                continue
+            if code not in prices_by_code:
+                continue
+            cur = float(prices_by_code[code])
+            etf = len(code) > 2 and code[2] in ("1", "5")
+            dec = 3 if etf else 2
+            cur_r = round(cur, dec)
+            target = round(float(alarm["price"]), dec)
+            hit = False
+            if alarm["direction"] == "above" and cur_r >= target:
+                hit = True
+            elif alarm["direction"] == "below" and cur_r <= target:
+                hit = True
+            if not hit:
+                continue
+            self._active_alerts[code] = alarm["id"]
+            newly = True
+            if code not in self.checked_codes:
+                self.checked_codes.append(code)
+        if newly:
+            if not self.isVisible():
+                self.show()
+                self.raise_()
+                self.activateWindow()
+            self._start_flash()
+            self._notify_change()
+
+    def _start_flash(self):
+        if not self._active_alerts:
+            return
+        self._flash_on = True
+        if not self._flash_timer.isActive():
+            self._flash_timer.start()
+        self._sync_flash_rows()
+
+    def _stop_flash(self):
+        if self._flash_timer.isActive():
+            self._flash_timer.stop()
+        self._flash_on = False
+        self.model.set_flash_state([], False)
+
+    def _on_flash_tick(self):
+        if not self._active_alerts:
+            self._stop_flash()
+            return
+        self._flash_on = not self._flash_on
+        self._sync_flash_rows()
+
+    def _sync_flash_rows(self):
+        rows = [i for i, c in enumerate(self._display_row_codes) if c in self._active_alerts]
+        self.model.set_flash_state(rows, self._flash_on and bool(rows))
+
+    def _dismiss_active_alerts(self) -> bool:
+        if not self._active_alerts:
+            return False
+        ids = set(self._active_alerts.values())
+        self.alarms = [a for a in self.alarms if a["id"] not in ids]
+        self._active_alerts.clear()
+        self._stop_flash()
+        self._notify_change()
+        self._maybe_pause_timer_when_hidden()
+        return True
+
+    def _maybe_pause_timer_when_hidden(self):
+        if self.isVisible():
+            return
+        if self.alarms:
+            if self.timer and not self.timer.isActive():
+                self.timer.start()
+            return
+        if self.timer and self.timer.isActive():
+            self.timer.stop()
+
     def _refresh_from_function(self):
         try:
-            full_rows, sign = self._get_price(self.checked_codes)
+            fetch_codes = self._codes_for_fetch()
+            full_rows, sign, row_codes, prices = self._get_price(fetch_codes)
         except Exception as e:
             try:
                 import requests as _req
@@ -564,7 +743,21 @@ class FloatLabel(QWidget):
             self._clear_error()
         except Exception:
             pass
-        self._project_columns(full_rows, sign)
+
+        self._evaluate_alarms(prices)
+
+        code_to_idx = {c: i for i, c in enumerate(row_codes)}
+        disp_rows, disp_sign, disp_codes = [], [], []
+        for c in self.checked_codes:
+            s = str(c).strip().lower()
+            if s in code_to_idx:
+                i = code_to_idx[s]
+                disp_rows.append(full_rows[i])
+                disp_sign.append(sign[i])
+                disp_codes.append(s)
+        self._display_row_codes = disp_codes
+        self._project_columns(disp_rows, disp_sign)
+        self._sync_flash_rows()
 
     # ----- 应用设置 -----
     def set_codes(self, codes_list):
@@ -774,8 +967,11 @@ class FloatLabel(QWidget):
 
         menu.addSeparator()
         act_open_settings = QAction("设置…", menu)
-        act_open_settings.triggered.connect(self._open_settings_cb)
+        act_open_settings.triggered.connect(lambda: self._open_settings_cb() if self._open_settings_cb else None)
         menu.addAction(act_open_settings)
+        act_alarms = QAction("闹钟…", menu)
+        act_alarms.triggered.connect(lambda: self._open_settings_cb(4) if self._open_settings_cb else None)
+        menu.addAction(act_alarms)
 
         menu.addSeparator()
         menu.addAction(QAction("隐藏浮窗", menu, triggered=self.hide))
@@ -783,6 +979,8 @@ class FloatLabel(QWidget):
 
     def mousePressEvent(self, e):
         if e.button() == Qt.LeftButton:
+            if self._dismiss_active_alerts():
+                return
             self._drag_pos = e.globalPosition().toPoint() - self.frameGeometry().topLeft()
             self.setFocus(Qt.MouseFocusReason)
 
@@ -808,6 +1006,8 @@ class FloatLabel(QWidget):
             self.hide()
             return True
         if ev.type() == QEvent.MouseButtonPress and hasattr(ev, "button") and ev.button() == Qt.LeftButton:
+            if self._dismiss_active_alerts():
+                return True
             self._drag_pos = ev.globalPosition().toPoint() - self.frameGeometry().topLeft()
             self.setFocus(Qt.MouseFocusReason)
             return True
@@ -834,8 +1034,7 @@ class FloatLabel(QWidget):
 
     def hideEvent(self, event):
         super().hideEvent(event)
-        if self.timer and self.timer.isActive(): 
-            self.timer.stop()
+        self._maybe_pause_timer_when_hidden()
         if self._keep_top_timer and self._keep_top_timer.isActive():
             self._keep_top_timer.stop()
 
