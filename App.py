@@ -113,14 +113,27 @@ class App(QApplication):
             self.win.setFocus(Qt.ActiveWindowFocusReason)
         self.save_now()
 
-    def open_settings(self):
+    def open_settings(self, tab_index=None):
+        # QAction.triggered 会传入 bool，忽略之
+        if isinstance(tab_index, bool):
+            tab_index = None
         if self.settings_dlg and self.settings_dlg.isVisible():
             self.settings_dlg.raise_()
             self.settings_dlg.activateWindow()
+            if tab_index is not None:
+                try:
+                    self.settings_dlg.tabs.setCurrentIndex(int(tab_index))
+                except Exception:
+                    pass
             return
         self.settings_dlg = SettingsDialog(self.win, self.win, app=self)
         # 将设置窗口放在屏幕正中
         screen = QApplication.primaryScreen().availableGeometry()
+        if tab_index is not None:
+            try:
+                self.settings_dlg.tabs.setCurrentIndex(int(tab_index))
+            except Exception:
+                pass
         self.settings_dlg.adjustSize()
         cx = screen.left() + (screen.width() - self.settings_dlg.width()) // 2
         cy = screen.top() + (screen.height() - self.settings_dlg.height()) // 2

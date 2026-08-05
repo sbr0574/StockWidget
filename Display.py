@@ -7,6 +7,17 @@ UP_COLOR = QColor("#dd2100")
 DOWN_COLOR = QColor("#019933")
 NEUTRAL_COLOR = QColor("#494949")
 
+FLASH_BG_COLOR = QColor(255, 160, 0, 160)
+
+class FlashAwareDelegate(QStyledItemDelegate):
+    """在样式表覆盖 BackgroundRole 时，仍绘制行闪烁背景。"""
+    def paint(self, painter: QPainter, option, index):
+        model = index.model()
+        if model is not None and getattr(model, "_flash_on", False) and index.row() in getattr(model, "_flash_rows", set()):
+            painter.fillRect(option.rect, FLASH_BG_COLOR)
+        super().paint(painter, option, index)
+
+
 class SimpleTableModel(QAbstractTableModel):
     """
     主浮窗表格数据与格式
@@ -19,10 +30,26 @@ class SimpleTableModel(QAbstractTableModel):
         self.default_color = False
         self.fg_color = QColor("#FFFFFF")
         self._row_meta = []
+        self._flash_rows = set()
+        self._flash_on = False
 
     def set_color_scheme(self, default: bool, fg: QColor):
         self.default_color = bool(default)
         self.fg_color = QColor(fg)
+
+    def set_flash_state(self, rows, on: bool):
+        """更新闪烁行集合与开关；rows 为行索引可迭代对象。"""
+        new_rows = set(int(r) for r in (rows or []) if int(r) >= 0)
+        changed = (new_rows != self._flash_rows) or (bool(on) != self._flash_on)
+        self._flash_rows = new_rows
+        self._flash_on = bool(on)
+        if changed and self._rows:
+            top_left = self.index(0, 0)
+            bottom_right = self.index(self.rowCount() - 1, max(0, self.columnCount() - 1))
+            self.dataChanged.emit(top_left, bottom_right, [Qt.BackgroundRole])
+        elif changed:
+            # 无行时也要触发视图刷新（清闪烁）
+            self.layoutChanged.emit()
 
     def rowCount(self, parent=QModelIndex()):
         return len(self._rows)
@@ -91,7 +118,7 @@ class SimpleTableModel(QAbstractTableModel):
         self._align_right = set(cols_idx or [])
 
 
-class KLineDelegate(QStyledItemDelegate):
+class KLineDelegate(FlashAwareDelegate):
     """
     当日K线图，基于昨收，今开，最高，最低，实时价
     """
@@ -110,9 +137,14 @@ class KLineDelegate(QStyledItemDelegate):
         self.scale = max(0.5, min(1.5, float(pt) / float(self.base_pt)))
 
     def paint(self, painter: QPainter, option, index):
+        # 先画闪烁底，再画 K 线（不走文字 delegate）
+        model = index.model()
+        if model is not None and getattr(model, "_flash_on", False) and index.row() in getattr(model, "_flash_rows", set()):
+            painter.fillRect(option.rect, FLASH_BG_COLOR)
+
         k = index.data(Qt.UserRole)
         if not k or not isinstance(k, tuple) or len(k) != 5:
-            super().paint(painter, option, index)
+            QStyledItemDelegate.paint(self, painter, option, index)
             return
 
         o, c, h, l, p = k

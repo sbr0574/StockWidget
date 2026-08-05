@@ -6,7 +6,7 @@ from PySide6.QtGui import QColor, QFontDatabase, QKeySequence
 from PySide6.QtWidgets import (
     QWidget, QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QTabWidget, QPushButton, QSlider,
     QGroupBox, QLabel, QColorDialog, QComboBox, QAbstractItemView,
-    QCheckBox, QListWidget, QListWidgetItem, QKeySequenceEdit, QFileDialog
+    QCheckBox, QListWidget, QListWidgetItem, QKeySequenceEdit, QFileDialog, QDoubleSpinBox
 )
 from WidgetPanel import FloatLabel
 
@@ -29,6 +29,7 @@ class SettingsDialog(QDialog):
             1: QSize(440, 420),
             2: QSize(360, 350),
             3: QSize(300, 220),
+            4: QSize(420, 360),
         }
         self._apply_tab_size(0)
 
@@ -336,6 +337,56 @@ class SettingsDialog(QDialog):
 
         self.tabs.addTab(tab_3, "常规")
 
+        # ---- 第五页：闹钟 ----
+        tab_4 = QWidget()
+        alarm_settings = QVBoxLayout(tab_4)
+
+        g_alarms = QGroupBox("价格闹钟")
+        g_alarms.setContentsMargins(3, 12, 3, 6)
+        lay_alarms = QVBoxLayout(g_alarms)
+        lay_alarms.setSpacing(6)
+
+        self.list_alarms = QListWidget()
+        self.list_alarms.setMinimumHeight(160)
+        lay_alarms.addWidget(self.list_alarms)
+
+        add_row = QHBoxLayout()
+        add_row.setSpacing(4)
+        self.cmb_alarm_code = QComboBox()
+        self.cmb_alarm_code.setMinimumWidth(110)
+        for c in self.win.codes:
+            self.cmb_alarm_code.addItem(c)
+        self.cmb_alarm_dir = QComboBox()
+        self.cmb_alarm_dir.setFixedWidth(90)
+        self.cmb_alarm_dir.addItem("上涨 ≥", userData="above")
+        self.cmb_alarm_dir.addItem("下跌 ≤", userData="below")
+        self.spin_alarm_price = QDoubleSpinBox()
+        self.spin_alarm_price.setDecimals(3)
+        self.spin_alarm_price.setRange(0.001, 999999.0)
+        self.spin_alarm_price.setSingleStep(0.01)
+        self.spin_alarm_price.setValue(10.0)
+        self.spin_alarm_price.setFixedWidth(90)
+        self.btn_alarm_add = QPushButton("添加")
+        self.btn_alarm_add.setFixedWidth(50)
+        self.btn_alarm_del = QPushButton("删除")
+        self.btn_alarm_del.setFixedWidth(50)
+        add_row.addWidget(self.cmb_alarm_code)
+        add_row.addWidget(self.cmb_alarm_dir)
+        add_row.addWidget(self.spin_alarm_price)
+        add_row.addWidget(self.btn_alarm_add)
+        add_row.addWidget(self.btn_alarm_del)
+        lay_alarms.addLayout(add_row)
+
+        tip = QLabel("触发后对应行闪烁，点击浮窗确认并移除该闹钟。")
+        tip.setWordWrap(True)
+        tip.setStyleSheet("color: #666; font-size: 11px;")
+        lay_alarms.addWidget(tip)
+
+        alarm_settings.addWidget(g_alarms)
+        alarm_settings.addStretch(1)
+        self.tabs.addTab(tab_4, "闹钟")
+        self._reload_alarm_list()
+
         # ---- 连接 ----
         # 连接：代码列表
         self.list_codes.itemChanged.connect(self._on_codes_changed)
@@ -380,6 +431,8 @@ class SettingsDialog(QDialog):
         self.tabs.currentChanged.connect(self._apply_tab_size)
         self.cmb_b1s1_display.currentIndexChanged.connect(self._on_b1s1_display_changed)
         self.cb_short_code.stateChanged.connect(self._on_short_code_toggled)
+        self.btn_alarm_add.clicked.connect(self._on_alarm_add)
+        self.btn_alarm_del.clicked.connect(self._on_alarm_del)
 
     def _on_start_on_boot_toggled(self, checked: bool):
         try:
@@ -450,6 +503,7 @@ class SettingsDialog(QDialog):
             if self.list_codes.item(i).checkState() == Qt.Checked
         ]
         self.win.set_checked_codes(checked_codes)
+        self._sync_alarm_code_combo()
 
     def _add_code(self):
         it = QListWidgetItem("sh000001")
@@ -528,6 +582,9 @@ class SettingsDialog(QDialog):
     def _apply_tab_size(self, index: int):
         size = self.tab_sizes.get(index, QSize(400, 400))
         self.setFixedSize(size)
+        if index == 4:
+            self._reload_alarm_list()
+            self._sync_alarm_code_combo()
 
     def pick_fg(self):
         c = QColorDialog.getColor(self.win.fg, self, "选择文字颜色")
@@ -589,3 +646,44 @@ class SettingsDialog(QDialog):
                 # trigger change handler will call app.set_app_icon
         except Exception:
             pass
+
+    def _alarm_label(self, alarm: dict) -> str:
+        arrow = "≥" if alarm.get("direction") == "above" else "≤"
+        price = float(alarm.get("price", 0))
+        return f"{alarm.get('code', '')}  {arrow}  {price:g}"
+
+    def _reload_alarm_list(self):
+        self.list_alarms.clear()
+        for a in self.win.list_alarms():
+            it = QListWidgetItem(self._alarm_label(a))
+            it.setData(Qt.UserRole, a.get("id"))
+            self.list_alarms.addItem(it)
+
+    def _sync_alarm_code_combo(self):
+        cur = self.cmb_alarm_code.currentText()
+        self.cmb_alarm_code.blockSignals(True)
+        self.cmb_alarm_code.clear()
+        for c in self.win.codes:
+            self.cmb_alarm_code.addItem(c)
+        idx = self.cmb_alarm_code.findText(cur)
+        if idx >= 0:
+            self.cmb_alarm_code.setCurrentIndex(idx)
+        self.cmb_alarm_code.blockSignals(False)
+
+    def _on_alarm_add(self):
+        code = self.cmb_alarm_code.currentText().strip()
+        direction = self.cmb_alarm_dir.currentData()
+        price = float(self.spin_alarm_price.value())
+        if not code:
+            return
+        ok = self.win.add_alarm(code, price, direction)
+        if ok:
+            self._reload_alarm_list()
+
+    def _on_alarm_del(self):
+        it = self.list_alarms.currentItem()
+        if not it:
+            return
+        aid = it.data(Qt.UserRole)
+        if aid and self.win.remove_alarm(aid):
+            self._reload_alarm_list()
