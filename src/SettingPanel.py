@@ -41,7 +41,6 @@ class CodeCompleterDelegate(QStyledItemDelegate):
 
 
 class SettingsDialog(QDialog):
-    APP_NAME = "StockWidget"
 
     def __init__(self, win: FloatLabel, parent: QWidget, app=None):
         super().__init__(parent)
@@ -83,10 +82,10 @@ class SettingsDialog(QDialog):
         self.list_codes.viewport().installEventFilter(self)
         self.list_codes.setItemDelegateForColumn(1, CodeCompleterDelegate(self))
 
-        for code in self.win.codes:
-            checked = code in self.win.checked_codes
-            cost = self.win.costs.get(code)
-            self._append_code_row(code, "", checked, cost)
+        for code, entry in self.win.watchlist.items():
+            checked = bool(entry.get("checked", True))
+            cost = entry.get("cost")
+            self._append_code_row(code, entry.get("name", ""), checked, cost)
 
     def _bind_widgets(self):
         self.slider_interval = self.ui.slider_interval
@@ -176,6 +175,7 @@ class SettingsDialog(QDialog):
         self.cb_auto_start.toggled.connect(self._on_start_on_boot_toggled)
         self.cb_force_top.toggled.connect(self._on_force_top_toggled)
         self.cb_click_through.toggled.connect(self._on_click_through_toggled)
+        self.win.click_through_changed.connect(self._sync_click_through_from_win)
         self.cb_hotkey_hide.toggled.connect(self._on_hotkey_hide_enabled_toggled)
         self.cb_hotkey_click_through.toggled.connect(self._on_click_through_hotkey_enabled_toggled)
         self.cb_head.toggled.connect(self._on_header_toggled)
@@ -318,6 +318,11 @@ class SettingsDialog(QDialog):
         entry = self._entry_for_text(value_key) or self._entry_for_text(display_code)
         return entry["name"] if entry else ""
 
+    def _row_type(self, value_key: str, display_code: str = "") -> str:
+        """解析代码对应的市场类型（如 沪/深/创/科/京/基/指）"""
+        entry = self._entry_for_text(value_key) or self._entry_for_text(display_code)
+        return str(entry.get("type", "") or "") if entry else ""
+
     def _code_display_for_row(self, value_key: str, display_code: str = "", name: str = "") -> str:
         """生成“类型/代码/名称”格式的合并显示文本"""
         entry = self._entry_for_text(value_key) or self._entry_for_text(display_code)
@@ -357,10 +362,16 @@ class SettingsDialog(QDialog):
         cost_item = self.list_codes.item(row, 2)
         if cost_item is None:
             cost_item = QTableWidgetItem("")
-            cost_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsEnabled)
             self.list_codes.setItem(row, 2, cost_item)
-        cost_item.setText("" if cost is None else f"{cost:g}")
-        cost_item.setData(Qt.UserRole, cost)
+        if self._row_type(value_key, display_code) == "指":
+            # 指数不允许设置成本
+            cost_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+            cost_item.setText("")
+            cost_item.setData(Qt.UserRole, None)
+        else:
+            cost_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsEnabled)
+            cost_item.setText("" if cost is None else f"{cost:g}")
+            cost_item.setData(Qt.UserRole, cost)
         self.list_codes.blockSignals(False)
 
     def _cleanup_code_rows(self):
@@ -386,12 +397,9 @@ class SettingsDialog(QDialog):
             self.list_codes.removeRow(row)
         self.list_codes.blockSignals(False)
 
-    def _collect_codes_from_list(self):
-        codes = []
-        checked_codes = []
-        costs = {}
-        seen = set()
-
+    def _collect_watchlist_from_list(self):
+        """从表格行收集自选列表（代码 -> {checked, cost, name, type}）"""
+        watchlist = {}
         for row in range(self.list_codes.rowCount()):
             check_item = self.list_codes.item(row, 0)
             code_item = self.list_codes.item(row, 1)
@@ -404,33 +412,30 @@ class SettingsDialog(QDialog):
                 value = str(code_item.text() or "").strip().lower()
             if not value:
                 continue
-            if value not in seen:
-                seen.add(value)
-                codes.append(value)
 
-            cost = None
-            if cost_item is not None:
+            resolved = self._entry_for_text(value)
+            type_ = str(resolved.get("type", "") or "") if resolved else ""
+            entry = {"checked": False, "cost": None, "name": "", "type": type_}
+            if check_item is not None and check_item.checkState() == Qt.Checked:
+                entry["checked"] = True
+            # 指数不允许设置成本
+            if type_ != "指" and cost_item is not None:
                 cost_text = str(cost_item.text() or "").strip()
                 try:
                     cost_val = float(cost_text)
                     if cost_val > 0:
-                        cost = cost_val
+                        entry["cost"] = cost_val
                 except ValueError:
-                    cost = None
-            if cost is not None:
-                costs[value] = cost
-
-            if check_item is not None and check_item.checkState() == Qt.Checked:
-                checked_codes.append(value)
-
-        self.win.set_costs(costs)
-        return codes, checked_codes
+                    entry["cost"] = None
+            if resolved:
+                entry["name"] = str(resolved.get("name", "") or "")
+            watchlist[value] = entry
+        return watchlist
 
     def _on_codes_changed(self, _item):
         self._cleanup_code_rows()
-        codes, checked_codes = self._collect_codes_from_list()
-        self.win.set_codes(codes)
-        self.win.set_checked_codes(checked_codes)
+        watchlist = self._collect_watchlist_from_list()
+        self.win.set_watchlist(watchlist)
 
     def _add_code(self):
         self._append_code_row("", "", True)
@@ -669,6 +674,12 @@ class SettingsDialog(QDialog):
             self._set_code_row(row, previous["key"], previous["code"], "", previous["checked"], previous.get("cost"))
         elif 0 <= row < self.list_codes.rowCount():
             self.list_codes.removeRow(row)
+
+    def _sync_click_through_from_win(self, checked: bool):
+        """浮窗鼠标穿透状态变化（如快捷键触发）时同步设置窗口复选框"""
+        self.cb_click_through.blockSignals(True)
+        self.cb_click_through.setChecked(bool(checked))
+        self.cb_click_through.blockSignals(False)
 
     def _on_click_through_toggled(self, checked: bool):
         self.win.set_click_through(bool(checked))

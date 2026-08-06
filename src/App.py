@@ -1,4 +1,4 @@
-import sys, os, platform
+import sys, os, platform, threading
 from datetime import datetime
 
 if platform.system() == "Windows":
@@ -10,7 +10,7 @@ else:
 
 from PySide6.QtCore import Qt, QPoint, Signal
 from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QStyle
+from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QStyle, QMessageBox
 import resources.resources_rc
 from src.WidgetPanel import FloatLabel
 from src.SettingPanel import SettingsDialog
@@ -22,18 +22,30 @@ CONFIG_FILE = "stock_widget_config.json"
 
 class App(QApplication):
     update_checked = Signal(bool)
+    index_progress = Signal(int)
+    index_finished = Signal(dict)
 
     def __init__(self, argv):
         super().__init__(argv)
         self.setQuitOnLastWindowClosed(False)
         cfg = load_file(CONFIG_FILE)
+
+        # 加载市场代码列表：更新日期为今天则直接读取，否则先用资源缓存启动，后台再更新
+        self._need_background_refresh = False
+        codes_list = None
         list_file = load_file(LIST_FILE)
         list_last_update = list_file.get("last_update")
-        if list_last_update is None or (datetime.now().date() > datetime.strptime(list_last_update, "%Y-%m-%d").date()):
-            list_file = refresh_index_from_akshare()
-        if list_file is None:
-            list_file = load_json_from_resource(":/stock_codes_list.json")
-        codes_list = list_file.get("codes")
+        if list_last_update:
+            try:
+                stale = datetime.now().date() > datetime.strptime(list_last_update, "%Y-%m-%d").date()
+            except (ValueError, TypeError):
+                stale = True
+            if not stale:
+                codes_list = list_file.get("codes")
+        if not codes_list:
+            resource_list = load_json_from_resource(":/stock_codes_list.json")
+            codes_list = (resource_list or {}).get("codes")
+            self._need_background_refresh = True
 
         # 加载图标
         self._icon_choice = cfg.get('app_icon')
@@ -77,6 +89,10 @@ class App(QApplication):
         self.update_checked.connect(self._on_update_checked)
         self._start_update_check()
 
+        # 启动时后台更新市场代码列表（不阻塞启动）
+        if self._need_background_refresh:
+            self._start_refresh_index()
+
     def find_icon(self, choice: str) -> QIcon:
         if not choice or choice == 'default':
             return QIcon(":/StockWidget.ico")
@@ -119,7 +135,6 @@ class App(QApplication):
         try:
             self.settings_dlg = SettingsDialog(self.win, self.win, app=self)
         except Exception as exc:
-            from PySide6.QtWidgets import QMessageBox
             QMessageBox.critical(None, "设置窗口错误", f"无法打开设置窗口：\n{exc}")
             return
         # 将设置窗口放在屏幕正中
@@ -137,8 +152,7 @@ class App(QApplication):
             self.act_click_through.setChecked(self.win.click_through)
 
     def _start_update_check(self):
-        import threading
-
+        """后台线程检查更新，结果通过信号回传到主线程显示"""
         def _worker():
             try:
                 has_update = check_for_update()
@@ -147,6 +161,32 @@ class App(QApplication):
             self.update_checked.emit(bool(has_update))
 
         threading.Thread(target=_worker, daemon=True).start()
+
+    def _start_refresh_index(self):
+        """后台线程拉取市场代码，进度通过信号回传到主线程显示"""
+        self.index_progress.connect(self._on_index_progress)
+        self.index_finished.connect(self._on_index_finished)
+        self.win.set_index_updating(True)
+        self.win._show_message("正在更新市场代码数据 ( 0% )")
+
+        def _worker():
+            try:
+                result = refresh_index_from_akshare(progress_cb=self.index_progress.emit)
+            except Exception:
+                result = None
+            codes = result.get("codes") if result is not None else None
+            self.index_finished.emit(codes or {})
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    def _on_index_progress(self, percent: int):
+        self.win._show_message(f"正在更新市场代码数据 ( {percent}% )")
+
+    def _on_index_finished(self, codes: dict):
+        self.win.set_index_updating(False)
+        if codes:
+            self.win.codes_list = codes
+        self.win._clear_message()
 
     def _on_update_checked(self, has_update: bool):
         self._has_update = has_update
@@ -159,7 +199,7 @@ class App(QApplication):
     def quit_app(self):
         self.tray.hide()
         self.save_now()
-        if keyboard is not None and hasattr(keyboard, "unhook_all_hotkeys"):
+        if platform.system() == "Windows":
             try:
                 keyboard.unhook_all_hotkeys()
             except Exception:

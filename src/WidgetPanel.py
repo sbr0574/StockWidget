@@ -36,6 +36,7 @@ def _format_amount(value: float) -> str:
 class FloatLabel(QWidget):
     hotkey_triggered = Signal()
     click_through_hotkey_triggered = Signal()
+    click_through_changed = Signal(bool)
     ALL_HEADERS = ["名称", "现价", "涨跌", "涨幅", "浮盈", "买一", "卖一", "委比", "成交量", "成交额", "均价", "K线"]
     HEADER_ATTR_MAP = {
         "名称": "name_visible",
@@ -61,28 +62,18 @@ class FloatLabel(QWidget):
         self.setAttribute(Qt.WA_TranslucentBackground, True)
         self.setFocusPolicy(Qt.StrongFocus)
 
-        self.codes_list: dict    = codes_list
-        # 加载自选标的配置
-        self.codes              = [str(c).strip() for c in cfg.get("codes",["sh000001"]) if str(c).strip()]
-        self.checked_codes      = [str(c).strip() for c in cfg.get("checked_codes", self.codes) if (str(c).strip() and str(c).strip() in self.codes)]
-        self.costs              = {}
-        for k, v in (cfg.get("costs", {}) or {}).items():
-            key = str(k).strip().lower()
-            try:
-                val = float(v)
-            except (TypeError, ValueError):
-                continue
-            if key and val > 0:
-                self.costs[key] = val
+        self.codes_list: dict = codes_list
+        # 加载自选标的配置（代码 -> {checked, cost, name, type}）
+        watchlist_cfg           = cfg.get("watchlist", {})
+        self.watchlist: dict    = self._normalize_watchlist(watchlist_cfg)
         # 加载面板配置
-        self.name_visible       = bool(cfg.get("name_visible", False))
+        self.name_visible       = bool(cfg.get("name_visible", True))
         self.code_visible       = bool(cfg.get("code_visible", False))
         self.type_visible       = bool(cfg.get("type_visible", False))
-        # 名称长度: -1 全部显示, 0 不显示, >0 显示前 N 个字
         self.name_length        = int(cfg.get("name_length", -1))
-        self.price_visible      = bool(cfg.get("price_visible", False))
+        self.price_visible      = bool(cfg.get("price_visible", True))
         self.change_visible     = bool(cfg.get("change_visible", False))
-        self.change_pct_visible = bool(cfg.get("change_pct_visible", False))
+        self.change_pct_visible = bool(cfg.get("change_pct_visible", True))
         self.profit_visible     = bool(cfg.get("profit_visible", False))
         self.b1s1_visible       = bool(cfg.get("b1s1_visible", False))
         self.commi_visible      = bool(cfg.get("commi_visible", False))
@@ -95,7 +86,7 @@ class FloatLabel(QWidget):
         self.grid_visible       = bool(cfg.get("grid_visible", False))
         font_family             = cfg.get("font_family", "PingFang SC" if platform.system() == "Darwin" else "Microsoft YaHei")
         font_size               = int(cfg.get("font_size", 10))
-        self.font               = QFont(font_family, max(8, min(15, font_size)))
+        self.font               = QFont(font_family, max(5, min(15, font_size)))
         self.line_extra_px      = int(cfg.get("line_extra_px", 1))
         self.fg                 = QColor(cfg.get("fg", "#FFFFFF"))
         bg                      = cfg.get("bg", {"r":0,"g":0,"b":0,"a":191})
@@ -104,7 +95,7 @@ class FloatLabel(QWidget):
         self.default_color      = bool(cfg.get("default_color", False))
         # 加载其他配置
         self.refresh_seconds    = int(cfg.get("refresh_seconds", 2))
-        self.force_top          = bool(cfg.get("force_top", True))
+        self.force_top          = bool(cfg.get("force_top", False))
         self.click_through      = bool(cfg.get("click_through", False))
         self.hotkey_enabled     = bool(cfg.get("hotkey_enabled", False))
         self.hotkey             = cfg.get("hotkey", "Ctrl+Alt+F")
@@ -128,35 +119,21 @@ class FloatLabel(QWidget):
         self.table.setShowGrid(False)
         self.table.setSelectionMode(QAbstractItemView.NoSelection)
         self.table.setFocusPolicy(Qt.NoFocus)
-        # 名称显示即行表头显示
-        self.table.verticalHeader().setVisible(self.name_visible)
+        self.table.verticalHeader().setVisible(False)
+        self.table.verticalHeader().setMinimumSectionSize(1)
+        self.table.verticalHeader().setDefaultSectionSize(1)
         self.table.horizontalHeader().setVisible(self.header_visible)
         self.table.horizontalHeader().setStretchLastSection(False)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.table.setFont(self.font)
         self.table.horizontalHeader().setFont(self.font)
-        self.table.verticalHeader().setFont(self.font)
-        self.table.verticalHeader().setMinimumSectionSize(1)
-        self.table.verticalHeader().setDefaultSectionSize(1)
-        # 行表头仅用于显示个股名称：
-        # 1) 禁止拖拽调整行距（Fixed 模式 + 不可点击/高亮）
-        # 2) 鼠标事件穿透到视图区，使拖拽行表头区域可以移动浮窗
-        self.table.verticalHeader().setObjectName("rowHeader")
-        self.table.verticalHeader().setSectionsClickable(False)
-        self.table.verticalHeader().setHighlightSections(False)
-        self.table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
-        self.table.verticalHeader().setAttribute(Qt.WA_TransparentForMouseEvents, True)
         self.table.horizontalHeader().setAttribute(Qt.WA_TransparentForMouseEvents, True)
-        # 列表头与行表头相交的左上角区域：透明角控件 + 事件过滤器，使其可拖拽移动浮窗
-        self.table_corner = QWidget()
-        self.table_corner.setObjectName("tableCorner")
-        self.table_corner.installEventFilter(self)
-        self.table.setCornerWidget(self.table_corner)
         self.table.setTextElideMode(Qt.ElideNone)
-        self.error_label = QLabel("", self.panel)
-        self.error_label.setStyleSheet("color: #ff6666; padding: 2px 4px;")
-        self.error_label.setVisible(False)
-        self.vbox.addWidget(self.error_label)
+        self.message_label = QLabel("", self.panel)
+        self.message_label.setStyleSheet("padding: 2px 4px;")
+        self.message_label.setVisible(False)
+        self.vbox.addWidget(self.message_label)
+        self._index_updating = False # 市场代码列表后台更新标志
 
         self.model = SimpleTableModel(headers=self.ALL_HEADERS, align_right_cols=[1,2,3,4,5])
         self.model.set_color_scheme(self.default_color, self.fg)
@@ -169,7 +146,7 @@ class FloatLabel(QWidget):
 
         self.vbox.addWidget(self.table)
 
-        for w in (self.panel, self.table, self.table.viewport(), self.table.horizontalHeader(), self.table.verticalHeader()):
+        for w in (self.panel, self.table, self.table.viewport(), self.table.horizontalHeader()):
             w.installEventFilter(self)
 
         self.apply_style()
@@ -188,6 +165,7 @@ class FloatLabel(QWidget):
 
         self._drag_pos = None
 
+        # 定时刷新数据
         self.timer = QTimer(self)
         self.timer.setInterval(max(1, self.refresh_seconds)*1000)
         self.timer.timeout.connect(self._refresh_from_function)
@@ -195,6 +173,7 @@ class FloatLabel(QWidget):
         self._refresh_from_function()
         self._defer_fit()
 
+        # 强制置顶定时
         self._keep_top_timer = QTimer(self)
         self._keep_top_timer.setInterval(1000)  # 每 1000ms 检查一次
         self._keep_top_timer.timeout.connect(self._ensure_on_top)
@@ -202,6 +181,41 @@ class FloatLabel(QWidget):
             self._keep_top_timer.start()
 
         self.set_click_through(self.click_through)
+
+    # ----- 自选标的派生属性（由 watchlist 生成） -----
+    @staticmethod
+    def _normalize_watchlist(watchlist: dict) -> dict:
+        """规范化自选列表：代码小写，cost 转数值（整数值保持 int），name/type 转字符串"""
+        result = {}
+        for key, info in (watchlist or {}).items():
+            key = str(key).strip().lower()
+            if not key:
+                continue
+            entry = dict(info or {})
+            entry["checked"] = bool(entry.get("checked", True))
+            try:
+                val = float(entry["cost"]) if entry.get("cost") not in (None, "") else None
+            except (TypeError, ValueError):
+                val = None
+            if val is not None and val.is_integer():
+                val = int(val)
+            entry["cost"] = val
+            entry["name"] = str(entry.get("name", "") or "").strip()
+            entry["type"] = str(entry.get("type", "") or "").strip()
+            result[key] = entry
+        return result
+
+    @property
+    def codes(self) -> list:
+        return list(self.watchlist.keys())
+
+    @property
+    def checked_codes(self) -> list:
+        return [c for c, e in self.watchlist.items() if e.get("checked")]
+
+    @property
+    def costs(self) -> dict:
+        return {c: e["cost"] for c, e in self.watchlist.items() if e.get("cost")}
 
     # 与 App 连接
     def set_open_settings_callback(self, fn): 
@@ -216,9 +230,7 @@ class FloatLabel(QWidget):
 
     def current_config(self):
         return {
-            "codes":                self.codes,
-            "checked_codes":        self.checked_codes,
-            "costs":                {k: v for k, v in self.costs.items()},
+            "watchlist":            {c: dict(e) for c, e in self.watchlist.items()},
 
             "name_visible":         self.name_visible,
             "code_visible":         self.code_visible,
@@ -292,12 +304,6 @@ class FloatLabel(QWidget):
                 {"" if self.default_color else f"color: {self.fg.name()};"}
                 padding: 2px 4px;
             }}
-            QHeaderView#rowHeader::section {{
-                border-bottom: none;
-            }}
-            QWidget#tableCorner {{
-                background: transparent;
-            }}
         """)
         self.table.setFont(self.font)
         self.table.horizontalHeader().setFont(self.font)
@@ -317,15 +323,9 @@ class FloatLabel(QWidget):
 
         cols = self.model.columnCount()
         rows = self.model.rowCount()
-        # 行表头（个股名称）宽度自适应最长内容
-        if self.name_visible and rows:
-            fm = self.table.fontMetrics()
-            labels = [str(self.model.headerData(r, Qt.Vertical) or "") for r in range(rows)]
-            vh_w = max([fm.horizontalAdvance(t) for t in labels] or [0]) + 12
-            self.table.verticalHeader().setFixedWidth(max(vh_w, 1))
-        else:
-            self.table.verticalHeader().setFixedWidth(0)
-        total_w = self.table.verticalHeader().width() + 2*self.table.frameWidth()
+        # 名称等数据列宽度自适应，行表头宽度固定为 0
+        self.table.verticalHeader().setFixedWidth(0)
+        total_w = 2*self.table.frameWidth()
         for c in range(cols): 
             total_w += self.table.columnWidth(c)
         hh = self.table.horizontalHeader().height() if self.table.horizontalHeader().isVisible() else 0
@@ -340,31 +340,37 @@ class FloatLabel(QWidget):
         QTimer.singleShot(0, self._fit_to_contents)
 
     # ----- 数据 & 投影 -----
-    def _show_error(self, msg: str):
-        """显示错误内容"""
+    def _show_message(self, msg: str, is_error: bool = False):
+        """显示顶部提示；is_error=True 时用红色字体，否则用前景色"""
         text = str(msg) if msg is not None else ""
-        self.error_label.setText(text)
-        self.error_label.setVisible(True)
+        color = "#ff6666" if is_error else self.fg.name(QColor.HexRgb)
+        self.message_label.setStyleSheet(f"color: {color}; padding: 2px 4px;")
+        self.message_label.setText(text)
+        self.message_label.setVisible(True)
         self._defer_fit()
 
-    def _clear_error(self):
-        """清除顶部错误提示"""
-        self.error_label.setVisible(False)
-        self.error_label.setText("")
+    def _clear_message(self):
+        """清除顶部提示"""
+        self.message_label.setVisible(False)
+        self.message_label.setText("")
+
+    def set_index_updating(self, updating: bool):
+        """标记市场代码列表是否正在后台更新（期间保持进度提示不被清除）"""
+        self._index_updating = bool(updating)
 
     def _project_columns(self, full_rows: list[dict], sign_data: list[dict]):
-        # 名称作为行表头显示，不进入数据列；其余按显示顺序筛选已启用的列
-        headers = [h for h in self.ALL_HEADERS if h != "名称" and self.header_is_visible(h)]
+        # 名称作为数据列显示；其余按显示顺序筛选已启用的列
+        headers = [h for h in self.ALL_HEADERS if self.header_is_visible(h)]
 
         proj_rows, proj_meta = [], []
         for r, row in enumerate(full_rows):
             proj_rows.append([row[h] for h in headers])
             proj_meta.append([sign_data[r][h] for h in headers])
 
-        # 右对齐：除了K线、卖一外的所有列都右对齐
-        right_cols = [i for i, h in enumerate(headers) if h not in ("K线", "卖一")]
+        # 右对齐：名称、K线、卖一除外
+        right_cols = [i for i, h in enumerate(headers) if h not in ("名称", "K线", "卖一")]
         self.model.set_align_right_cols(right_cols)
-        self.model.set_rows_headers(proj_rows, headers, proj_meta, [row["名称"] for row in full_rows])
+        self.model.set_rows_headers(proj_rows, headers, proj_meta)
         self.model.set_color_scheme(self.default_color, self.fg)
 
         if "K线" in headers:
@@ -473,6 +479,11 @@ class FloatLabel(QWidget):
             "成交额": 0,
             "均价": (avg > data["prev_close"]) - (avg < data["prev_close"]),
             "K线": 0}
+        # 指数不显示浮盈/买一卖一/委比/均价（均置为"-"）
+        if type == "指":
+            for key in ("浮盈", "买一", "卖一", "委比", "均价"):
+                format_data[key] = "-"
+                sign[key] = 0
         return format_data, sign
 
     def _get_code_info(self, c: str) -> dict:
@@ -482,48 +493,34 @@ class FloatLabel(QWidget):
         try:
             ret, data = request_sina(self.checked_codes)
         except requests.exceptions.RequestException:
-            self._show_error("网络请求失败")
+            self._show_message("网络请求失败", is_error=True)
             return
         except Exception as e:
-            self._show_error(str(e))
+            self._show_message(str(e), is_error=True)
             return
         
         full_rows = []
         full_sign = []
         for c, d in data.items():
-            row, sign = self._format_data(c, d, self._get_code_info(c).get("type"))
+            # 优先使用自选列表中的类型，其次使用市场代码列表
+            entry = self.watchlist.get(c) or {}
+            type_ = entry.get("type") or self._get_code_info(c).get("type")
+            row, sign = self._format_data(c, d, type_)
             full_rows.append(row)
             full_sign.append(sign)
 
-        if sum(ret) > 0:
-            self._clear_error()
-        else:
-            self._show_error("请添加自选股")
+        # 市场代码列表更新期间保持进度提示，不被数据刷新清除
+        if not self._index_updating:
+            if sum(ret) > 0:
+                self._clear_message()
+            else:
+                self._show_message("请在设置面板中添加自选股", is_error=True)
         self._project_columns(full_rows, full_sign)
 
     # ----- 应用设置 -----
-    def set_codes(self, codes_list):
-        codes = [str(c).strip().lower() for c in codes_list if str(c).strip()]
-        self.codes = codes
-        self._notify_change()
-        self._refresh_from_function()
-
-    def set_checked_codes(self, codes_list):
-        self.checked_codes = [c for c in codes_list if c in self.codes]
-        self._notify_change()
-        self._refresh_from_function()
-
-    def set_costs(self, costs: dict):
-        new_costs = {}
-        for k, v in (costs or {}).items():
-            key = str(k).strip().lower()
-            try:
-                val = float(v)
-            except (TypeError, ValueError):
-                continue
-            if key and val > 0:
-                new_costs[key] = val
-        self.costs = new_costs
+    def set_watchlist(self, watchlist: dict):
+        """整体替换自选列表（代码 -> {checked, cost, name, type}）"""
+        self.watchlist = self._normalize_watchlist(watchlist)
         self._notify_change()
         self._refresh_from_function()
 
@@ -552,9 +549,6 @@ class FloatLabel(QWidget):
         if bool(getattr(self, attr, False)) == checked:
             return
         setattr(self, attr, checked)
-        if header == "名称":
-            # 名称显示 = 行表头显示
-            self.table.verticalHeader().setVisible(checked)
         self._notify_change()
         self._refresh_from_function()
 
@@ -626,7 +620,7 @@ class FloatLabel(QWidget):
         self._notify_change()
 
     def set_font_size(self, pt: int):
-        pt = max(8, min(15, int(pt)))
+        pt = max(5, min(15, int(pt)))
         self.font.setPointSize(pt)
         self.k_delegate.set_point_size(pt)
         self.apply_style()
@@ -687,6 +681,7 @@ class FloatLabel(QWidget):
             return
         self.click_through = enable
         self._apply_click_through(self.click_through)
+        self.click_through_changed.emit(self.click_through)
         self._notify_change()
 
     def toggle_click_through(self):
@@ -848,7 +843,7 @@ class FloatLabel(QWidget):
         self.raise_()
 
     def _register_hotkey(self):
-        if platform.system() == "Darwin" or keyboard is None:
+        if platform.system() != "Windows":
             return
         try:
             keyboard.remove_all_hotkeys()
