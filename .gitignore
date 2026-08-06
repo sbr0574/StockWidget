@@ -1,0 +1,6 @@
+*.ipynb
+dist/
+build/
+*.pyc
+.vscode
+__pycache__/

@@ -1,0 +1,6 @@
+akshare==1.18.81
+PySide6==6.11.1
+pyinstaller==6.21.0
+pypinyin==0.55.0
+requests==2.34.2
+pandas
