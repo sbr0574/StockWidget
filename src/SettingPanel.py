@@ -16,11 +16,23 @@ from src.WidgetPanel import FloatLabel
 from services.update_check import PROJECT_URL
 
 
+def _hotkey_error_message(result) -> str:
+    """把 HotkeyResult 转成用户可读的中文提示。"""
+    if result.reason == "conflict":
+        return "该快捷键已被其他程序占用,请更换后重试。"
+    if result.reason == "reserved":
+        return "该快捷键为系统或通用快捷键(如复制、粘贴、保存等),为避免影响其他应用,请更换为 Ctrl+Alt+某键 之类的组合。"
+    if result.reason == "invalid":
+        return "快捷键无效,需包含至少一个修饰键(Ctrl/Alt/Shift/Win)和一个主键。"
+    if result.reason == "unsupported":
+        return "当前平台暂不支持全局快捷键。"
+    return "快捷键注册失败,请更换后重试。"
+
+
 class CodeCompleterDelegate(QStyledItemDelegate):
     def __init__(self, owner):
         super().__init__(owner)
         self.owner = owner
-
     def createEditor(self, parent, option, index):
         editor = QLineEdit(parent)
         editor.setProperty("_row", index.row())
@@ -185,10 +197,6 @@ class SettingsDialog(QDialog):
         if self._is_macos():
             self.cmb_icon.setEnabled(False)
             self.btn_pick_icon.setEnabled(False)
-        
-        if self._is_macos():
-            self.keyseq_hide.setEnabled(False)
-            self.keyseq_click_through.setEnabled(False)
 
     def _load_settings(self):
         self.slider_interval.setValue(self.win.refresh_seconds)
@@ -243,10 +251,6 @@ class SettingsDialog(QDialog):
         self.cb_click_through.setChecked(self.win.click_through)
         self.cb_head.setChecked(self.win.header_visible)
         self.cb_grid.setChecked(self.win.grid_visible)
-
-        if self._is_macos():
-            self.keyseq_hide.setEnabled(False)
-            self.keyseq_click_through.setEnabled(False)
 
         self._setup_icon_choices()
         self._setup_about()
@@ -518,10 +522,10 @@ class SettingsDialog(QDialog):
 
     def _on_hotkey_changed(self):
         new_hotkey = self.keyseq_hide.keySequence().toString()
-        try:
-            self.win.update_hotkey(new_hotkey)
-        except Exception:
-            pass
+        result = self.win.update_hotkey(new_hotkey)
+        if not result:
+            self.keyseq_hide.setKeySequence(QKeySequence(self.win.hotkey))
+            QMessageBox.warning(self, "快捷键无效", _hotkey_error_message(result))
 
     def _on_header_toggled(self, checked: bool):
         self.win.set_header_visible(bool(checked))
@@ -689,18 +693,33 @@ class SettingsDialog(QDialog):
 
     def _on_hotkey_hide_enabled_toggled(self, checked: bool):
         self.keyseq_hide.setEnabled(bool(checked))
-        self.win.set_hotkey_enabled(bool(checked))
+        result = self.win.set_hotkey_enabled(bool(checked))
+        if not result:
+            # 启用失败(如冲突):回滚复选框与输入框状态,并提示用户
+            self.keyseq_hide.setEnabled(False)
+            self.cb_hotkey_hide.blockSignals(True)
+            self.cb_hotkey_hide.setChecked(False)
+            self.cb_hotkey_hide.blockSignals(False)
+            QMessageBox.warning(self, "快捷键无效", _hotkey_error_message(result))
 
     def _on_click_through_hotkey_enabled_toggled(self, checked: bool):
         self.keyseq_click_through.setEnabled(bool(checked))
-        self.win.set_click_through_hotkey_enabled(bool(checked))
+        result = self.win.set_click_through_hotkey_enabled(bool(checked))
+        if not result:
+            # 启用失败(如冲突):回滚复选框与输入框状态,并提示用户
+            self.keyseq_click_through.setEnabled(False)
+            self.cb_hotkey_click_through.blockSignals(True)
+            self.cb_hotkey_click_through.setChecked(False)
+            self.cb_hotkey_click_through.blockSignals(False)
+            QMessageBox.warning(self, "快捷键无效", _hotkey_error_message(result))
 
     def _on_click_through_hotkey_changed(self):
         new_hotkey = self.keyseq_click_through.keySequence().toString()
-        try:
-            self.win.update_click_through_hotkey(new_hotkey)
-        except Exception:
-            pass
+        result = self.win.update_click_through_hotkey(new_hotkey)
+        if not result:
+            # 冲突/无效:回滚输入框显示,并提示用户
+            self.keyseq_click_through.setKeySequence(QKeySequence(self.win.hotkey_click_through))
+            QMessageBox.warning(self, "快捷键无效", _hotkey_error_message(result))
 
     def _setup_about(self):
         label = self.ui.label_about_info

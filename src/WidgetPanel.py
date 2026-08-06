@@ -3,18 +3,12 @@ from functools import partial
 import platform
 import requests
 
-if platform.system() == "Windows":
-    import keyboard
-elif platform.system() == "Darwin":
-    pass
-else:
-    pass
-
 from PySide6.QtCore import Qt, QEvent, QTimer, Signal
 from PySide6.QtGui import QFont, QAction, QColor
 from PySide6.QtWidgets import QApplication, QWidget, QMenu, QVBoxLayout, QLabel, QTableView, QHeaderView, QAbstractItemView, QFrame, QStyledItemDelegate
 
 from src.Display import SimpleTableModel, KLineDelegate
+from src.hotkeys import GlobalHotkeyManager, HotkeyResult
 from services.stock_data import request_sina
 
 def _format_volume(value: int) -> str:
@@ -105,6 +99,8 @@ class FloatLabel(QWidget):
 
         self.hotkey_triggered.connect(self.toggle_win)
         self.click_through_hotkey_triggered.connect(self.toggle_click_through)
+        # 全局快捷键管理器:Windows 用官方 RegisterHotKey,macOS 暂未实现(预留)
+        self._hotkeys = GlobalHotkeyManager(self)
         self._register_hotkey()
 
         # UI
@@ -323,7 +319,6 @@ class FloatLabel(QWidget):
 
         cols = self.model.columnCount()
         rows = self.model.rowCount()
-        # 名称等数据列宽度自适应，行表头宽度固定为 0
         self.table.verticalHeader().setFixedWidth(0)
         total_w = 2*self.table.frameWidth()
         for c in range(cols): 
@@ -502,14 +497,12 @@ class FloatLabel(QWidget):
         full_rows = []
         full_sign = []
         for c, d in data.items():
-            # 优先使用自选列表中的类型，其次使用市场代码列表
             entry = self.watchlist.get(c) or {}
             type_ = entry.get("type") or self._get_code_info(c).get("type")
             row, sign = self._format_data(c, d, type_)
             full_rows.append(row)
             full_sign.append(sign)
 
-        # 市场代码列表更新期间保持进度提示，不被数据刷新清除
         if not self._index_updating:
             if sum(ret) > 0:
                 self._clear_message()
@@ -701,25 +694,55 @@ class FloatLabel(QWidget):
                 self._keep_top_timer.stop()
         self._notify_change()
 
-    def set_hotkey_enabled(self, enabled: bool):
+    def set_hotkey_enabled(self, enabled: bool) -> HotkeyResult:
+        """启用/停用"显示/隐藏"快捷键。启用失败(如冲突)时回滚状态并返回失败原因。"""
         enabled = bool(enabled)
         if self.hotkey_enabled == enabled:
-            return
+            return HotkeyResult(True)
+        old = self.hotkey_enabled
         self.hotkey_enabled = enabled
-        self._register_hotkey()
+        result = self._register_current()
+        if not result:
+            self.hotkey_enabled = old
+            self._register_current()
+            return result
         self._notify_change()
+        return result
 
-    def set_click_through_hotkey_enabled(self, enabled: bool):
+    def set_click_through_hotkey_enabled(self, enabled: bool) -> HotkeyResult:
+        """启用/停用"鼠标穿透"快捷键。启用失败(如冲突)时回滚状态并返回失败原因。"""
         enabled = bool(enabled)
         if self.hotkey_click_through_enabled == enabled:
-            return
+            return HotkeyResult(True)
+        old = self.hotkey_click_through_enabled
         self.hotkey_click_through_enabled = enabled
-        self._register_hotkey()
+        result = self._register_current()
+        if not result:
+            self.hotkey_click_through_enabled = old
+            self._register_current()
+            return result
         self._notify_change()
+        return result
 
-    def update_click_through_hotkey(self, new_hotkey: str):
-        self.hotkey_click_through = new_hotkey.strip()
-        self._register_hotkey()
+    def update_click_through_hotkey(self, new_hotkey: str) -> HotkeyResult:
+        """更新"鼠标穿透"快捷键。冲突/无效时不生效并回滚,返回失败原因。"""
+        new_hotkey = new_hotkey.strip()
+        if new_hotkey == self.hotkey_click_through:
+            return HotkeyResult(True)
+        if not self.hotkey_click_through_enabled:
+            # 未启用时直接保存,启用时再校验
+            self.hotkey_click_through = new_hotkey
+            self._notify_change()
+            return HotkeyResult(True)
+        old = self.hotkey_click_through
+        self.hotkey_click_through = new_hotkey
+        result = self._register_current()
+        if not result:
+            self.hotkey_click_through = old
+            self._register_current()
+            return result
+        self._notify_change()
+        return result
 
     # ----- 交互 -----
     def contextMenuEvent(self, event):
@@ -842,30 +865,45 @@ class FloatLabel(QWidget):
             pass
         self.raise_()
 
-    def _register_hotkey(self):
-        if platform.system() != "Windows":
-            return
-        try:
-            keyboard.remove_all_hotkeys()
-        except Exception:
-            pass
+    def _register_current(self) -> HotkeyResult:
+        """按当前 self.* 状态全量注册全局快捷键,返回第一个失败结果。"""
+        self._hotkeys.unregister_all()
         if self.hotkey_enabled:
-            try:
-                keyboard.add_hotkey(self.hotkey.lower(), lambda: self.hotkey_triggered.emit())
-            except Exception:
-                pass
+            result = self._hotkeys.register(self.hotkey, lambda: self.hotkey_triggered.emit())
+            if not result:
+                return result
         if self.hotkey_click_through_enabled:
-            try:
-                keyboard.add_hotkey(
-                    self.hotkey_click_through.lower(),
-                    lambda: self.click_through_hotkey_triggered.emit(),
-                )
-            except Exception:
-                pass
+            result = self._hotkeys.register(
+                self.hotkey_click_through,
+                lambda: self.click_through_hotkey_triggered.emit(),
+            )
+            if not result:
+                return result
+        return HotkeyResult(True)
 
-    def update_hotkey(self, new_hotkey: str):
-        self.hotkey = new_hotkey.strip()
-        self._register_hotkey()
+    def _register_hotkey(self):
+        """按当前状态注册全局快捷键(启动/切换时调用)。失败静默,不影响运行。"""
+        self._register_current()
+
+    def update_hotkey(self, new_hotkey: str) -> HotkeyResult:
+        """更新"显示/隐藏"快捷键。冲突/无效时不生效并回滚,返回失败原因。"""
+        new_hotkey = new_hotkey.strip()
+        if new_hotkey == self.hotkey:
+            return HotkeyResult(True)
+        if not self.hotkey_enabled:
+            # 未启用时直接保存,启用时再校验
+            self.hotkey = new_hotkey
+            self._notify_change()
+            return HotkeyResult(True)
+        old = self.hotkey
+        self.hotkey = new_hotkey
+        result = self._register_current()
+        if not result:
+            self.hotkey = old
+            self._register_current()
+            return result
+        self._notify_change()
+        return result
 
     def toggle_win(self):
         if self.isVisible():

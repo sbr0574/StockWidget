@@ -2,7 +2,7 @@ import sys, os, platform, threading
 from datetime import datetime
 
 if platform.system() == "Windows":
-    import keyboard, winreg
+    import winreg
 elif platform.system() == "Darwin":
     pass
 else:
@@ -199,11 +199,6 @@ class App(QApplication):
     def quit_app(self):
         self.tray.hide()
         self.save_now()
-        if platform.system() == "Windows":
-            try:
-                keyboard.unhook_all_hotkeys()
-            except Exception:
-                pass
         sys.exit(0)
 
     def save_now(self):
