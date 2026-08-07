@@ -5,7 +5,7 @@ set -euo pipefail
 if [[ "${GITHUB_REF_NAME}" == v* ]]; then
   VER="${GITHUB_REF_NAME#v}"
 else
-  VER="dev-$(date +%Y%m%d)"
+  VER="0.0.0-$(date +%Y%m%d)"
 fi
 
 ARCH="$(dpkg --print-architecture)"
