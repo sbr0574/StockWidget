@@ -6,9 +6,6 @@ on:
       - 'v*'
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   build-linux:
     runs-on: ubuntu-latest
@@ -36,19 +33,18 @@ jobs:
         run: |
           pyinstaller --clean --noconfirm StockWidget.spec
 
-      - name: Create zip
+      - name: Create zip (portable)
         run: |
           cd dist && zip -r ../StockWidget-linux.zip StockWidget
 
-      - name: Upload artifact
+      - name: Package .deb
+        run: |
+          bash .github/scripts/package-deb.sh
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
           name: StockWidget-Linux
-          path: StockWidget-linux.zip
-
-      - name: Upload to draft release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          draft: true
-          files: StockWidget-linux.zip
+          path: |
+            StockWidget-linux.zip
+            StockWidget-linux_*.deb

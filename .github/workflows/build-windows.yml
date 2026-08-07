@@ -6,9 +6,6 @@ on:
       - 'v*'
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -40,10 +37,3 @@ jobs:
         with:
           name: StockWidget-Windows
           path: StockWidget-windows.zip
-
-      - name: Upload to draft release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          draft: true
-          files: StockWidget-windows.zip
