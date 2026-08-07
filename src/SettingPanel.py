@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QMessageBox
 )
 from ui.ui_settings import Ui_SettingDialog
-from src.utils import code_without_market, find_suggestions, APP_VERSION, config_paths
+from src.utils import code_without_market, find_suggestions, config_paths
 from src.WidgetPanel import FloatLabel
 from services.update_check import PROJECT_URL
 
@@ -256,7 +256,6 @@ class SettingsDialog(QDialog):
         self._setup_about()
 
     def _setup_icon_choices(self):
-        # 填充期间屏蔽信号，避免 setCurrentIndex 触发 _on_icon_changed 重复/重置图标
         self.cmb_icon.blockSignals(True)
         self.cmb_icon.clear()
         icon_items = [
@@ -547,7 +546,7 @@ class SettingsDialog(QDialog):
         if not path:
             return
         try:
-            dest_dir = config_paths()
+            dest_dir = config_paths(self.app.app_name)
             os.makedirs(dest_dir, exist_ok=True)
             dest = os.path.join(dest_dir, "custom_icon.ico")
             shutil.copyfile(path, dest)
@@ -725,7 +724,7 @@ class SettingsDialog(QDialog):
         label = self.ui.label_about_info
         label.setWordWrap(True)
         has_update = bool(self.app is not None and getattr(self.app, "_has_update", False))
-        first_line = f"当前版本 v{APP_VERSION}"
+        first_line = f"当前版本 v{self.app.app_version}"
         if has_update:
             first_line += "（有新版本）"
         html = (

@@ -4,18 +4,15 @@ import re
 
 from PySide6.QtCore import QFile, QIODevice
 
-APP_NAME = "StockWidget"
-APP_VERSION = "1.3.0"
 MARKET_PREFIXES = {"sh", "sz", "bj"}
 
+def config_paths(app_name: str) -> str:
+    return os.path.join(os.getenv("APPDATA") or os.path.expanduser("~"), app_name)
 
-def config_paths() -> str:
-    return os.path.join(os.getenv("APPDATA") or os.path.expanduser("~"), APP_NAME)
 
-
-def load_file(file_name: str, except_ret: dict | None = None) -> dict:
+def load_file(app_name: str, file_name: str, except_ret: dict | None = None) -> dict:
     fallback = {} if except_ret is None else except_ret
-    path = os.path.join(config_paths(), file_name)
+    path = os.path.join(config_paths(app_name), file_name)
     if not os.path.exists(path):
         return fallback
     try:
@@ -43,9 +40,9 @@ def load_json_from_resource(path: str) -> dict:
     return json.loads(text)
 
 
-def save_file(data: dict, file_name: str) -> None:
-    os.makedirs(config_paths(), exist_ok=True)
-    config_file = os.path.join(config_paths(), file_name)
+def save_file(data: dict, app_name: str, file_name: str) -> None:
+    os.makedirs(config_paths(app_name), exist_ok=True)
+    config_file = os.path.join(config_paths(app_name), file_name)
     tmp_file = config_file + ".tmp"
     with open(tmp_file, "w", encoding="utf-8") as file:
         json.dump(data, file, ensure_ascii=False, indent=2)

@@ -3,11 +3,9 @@ from datetime import datetime
 import pandas as pd
 import requests
 
-from src.utils import save_file
 import akshare as ak
 from pypinyin import Style, pinyin
 
-LIST_FILE = "stock_codes_list.json"
 
 def _name_pinyin(name: str) -> tuple[str, str]:
     text = str(name or "").strip()
@@ -42,7 +40,6 @@ def refresh_index_from_akshare(progress_cb=None) -> list[dict] | None:
         }
 
     list_file = {"last_update": datetime.now().strftime("%Y-%m-%d"), "codes": codes}
-    save_file(list_file, LIST_FILE)
     return list_file
 
 

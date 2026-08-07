@@ -14,11 +14,14 @@ from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QStyle, QMes
 import resources.resources_rc
 from src.WidgetPanel import FloatLabel
 from src.SettingPanel import SettingsDialog
-from services.code_index import refresh_index_from_akshare, LIST_FILE
+from services.code_index import refresh_index_from_akshare
 from services.update_check import check_for_update
-from src.utils import APP_NAME, load_file, save_file, load_json_from_resource
+from src.utils import load_file, save_file, load_json_from_resource
 
+APP_NAME = "StockWidget"
+APP_VERSION = "1.3.0"
 CONFIG_FILE = "stock_widget_config.json"
+LIST_FILE = "stock_codes_list.json"
 
 class App(QApplication):
     update_checked = Signal(bool)
@@ -27,13 +30,16 @@ class App(QApplication):
 
     def __init__(self, argv):
         super().__init__(argv)
+        self.app_name = APP_NAME
+        self.app_version = APP_VERSION
+
         self.setQuitOnLastWindowClosed(False)
-        cfg = load_file(CONFIG_FILE)
+        cfg = load_file(self.app_name, CONFIG_FILE)
 
         # 加载市场代码列表：更新日期为今天则直接读取，否则先用资源缓存启动，后台再更新
         self._need_background_refresh = False
         codes_list = None
-        list_file = load_file(LIST_FILE)
+        list_file = load_file(self.app_name, LIST_FILE)
         list_last_update = list_file.get("last_update")
         if list_last_update:
             try:
@@ -155,7 +161,7 @@ class App(QApplication):
         """后台线程检查更新，结果通过信号回传到主线程显示"""
         def _worker():
             try:
-                has_update = check_for_update()
+                has_update = check_for_update(self.app_version)
             except Exception:
                 has_update = False
             self.update_checked.emit(bool(has_update))
@@ -172,6 +178,7 @@ class App(QApplication):
         def _worker():
             try:
                 result = refresh_index_from_akshare(progress_cb=self.index_progress.emit)
+                save_file(result, self.app_name, LIST_FILE)
             except Exception:
                 result = None
             codes = result.get("codes") if result is not None else None
@@ -205,7 +212,7 @@ class App(QApplication):
         cfg = self.win.current_config()
         cfg['app_icon'] = self._icon_choice
         cfg['start_on_boot'] = self._start_on_boot
-        save_file(cfg, CONFIG_FILE)
+        save_file(cfg, self.app_name, CONFIG_FILE)
 
     def set_app_icon(self, choice):
         """Set application and tray icon. `choice` can be None/'default', 'std:KEY' or a file path."""
