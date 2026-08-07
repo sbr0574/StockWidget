@@ -1,4 +1,4 @@
-name: Build Windows
+name: Build macOS
 
 on:
   push:
@@ -10,8 +10,8 @@ permissions:
   contents: write
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  build-macos:
+    runs-on: macos-latest
 
     steps:
       - name: Checkout
@@ -31,19 +31,23 @@ jobs:
         run: |
           pyinstaller --clean --noconfirm StockWidget.spec
 
+      - name: Ad-hoc codesign (Apple Silicon)
+        run: |
+          codesign --force --deep -s - dist/StockWidget/StockWidget.app
+
       - name: Create zip
         run: |
-          Compress-Archive -Path dist\StockWidget -DestinationPath StockWidget-windows.zip
+          ditto -c -k --sequesterRsrc --keepParent dist/StockWidget StockWidget-macos.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: StockWidget-Windows
-          path: StockWidget-windows.zip
+          name: StockWidget-MacOS
+          path: StockWidget-macos.zip
 
       - name: Upload to draft release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          files: StockWidget-windows.zip
+          files: StockWidget-macos.zip

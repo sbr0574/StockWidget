@@ -24,7 +24,11 @@
 
 import ctypes
 import platform
-from ctypes import wintypes
+
+if platform.system() == "Windows":
+    from ctypes import wintypes
+else:
+    wintypes = None
 
 from PySide6.QtCore import QAbstractNativeEventFilter, QCoreApplication, QObject
 

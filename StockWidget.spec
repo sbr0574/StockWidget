@@ -1,4 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
+import sys
 from PyInstaller.utils.hooks import collect_data_files
 
 datas = []
@@ -36,7 +37,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['resources\\StockWidget.ico'],
+    icon=(['resources/StockWidget.ico'] if sys.platform == 'win32' else []),
 )
 coll = COLLECT(
     exe,
