@@ -43,6 +43,7 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon=(['resources/StockWidget.ico'] if sys.platform == 'win32' else []),
+    version=('version_info.txt' if sys.platform == 'win32' else None),
 )
 coll = COLLECT(
     exe,
