@@ -8,7 +8,7 @@ def request_sina(req_codes: list[str]) -> Tuple[list, dict]:
     label = ",".join([str(c).strip() for c in req_codes if str(c).strip()])
     url = "https://hq.sinajs.cn/list=" + label
     headers = {"Referer": "https://finance.sina.com.cn", "User-Agent": "Mozilla/5.0"}
-    response = requests.get(url, headers=headers, timeout=3)
+    response = requests.get(url, headers=headers, timeout=1)
     response.encoding = "gbk"
     for line in response.text.split("\n"):
         if not line or '"' not in line:

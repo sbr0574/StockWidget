@@ -19,7 +19,7 @@ from services.update_check import check_for_update
 from src.utils import load_file, save_file, load_json_from_resource
 
 APP_NAME = "StockWidget"
-APP_VERSION = "1.3.0"
+APP_VERSION = "1.3.1"
 CONFIG_FILE = "stock_widget_config.json"
 LIST_FILE = "stock_codes_list.json"
 

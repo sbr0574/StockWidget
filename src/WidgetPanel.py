@@ -2,6 +2,7 @@ import ctypes
 from functools import partial
 import platform
 import requests
+import threading
 
 from PySide6.QtCore import Qt, QEvent, QTimer, Signal
 from PySide6.QtGui import QFont, QAction, QColor
@@ -31,6 +32,7 @@ class FloatLabel(QWidget):
     hotkey_triggered = Signal()
     click_through_hotkey_triggered = Signal()
     click_through_changed = Signal(bool)
+    data_ready = Signal(object)  # 后台线程请求完成后发回主线程: (ok, ret, data, error)
     ALL_HEADERS = ["名称", "现价", "涨跌", "涨幅", "浮盈", "买一", "卖一", "委比", "成交量", "成交额", "均价", "K线"]
     HEADER_ATTR_MAP = {
         "名称": "name_visible",
@@ -130,6 +132,7 @@ class FloatLabel(QWidget):
         self.message_label.setVisible(False)
         self.vbox.addWidget(self.message_label)
         self._index_updating = False # 市场代码列表后台更新标志
+        self._refresh_thread = None  # 后台刷新线程（避免网络请求阻塞 UI）
 
         self.model = SimpleTableModel(headers=self.ALL_HEADERS, align_right_cols=[1,2,3,4,5])
         self.model.set_color_scheme(self.default_color, self.fg)
@@ -162,6 +165,7 @@ class FloatLabel(QWidget):
         self._drag_pos = None
 
         # 定时刷新数据
+        self.data_ready.connect(self._process_data)
         self.timer = QTimer(self)
         self.timer.setInterval(max(1, self.refresh_seconds)*1000)
         self.timer.timeout.connect(self._refresh_from_function)
@@ -485,15 +489,35 @@ class FloatLabel(QWidget):
         return self.codes_list.get(c, {})
 
     def _refresh_from_function(self):
+        """定时入口：将网络请求丢到后台线程执行，避免阻塞 UI。
+        若上一轮请求尚未完成则跳过本次刷新，防止请求重叠。"""
+        if self._refresh_thread is not None and self._refresh_thread.is_alive():
+            return
+        self._refresh_thread = threading.Thread(
+            target=self._fetch_data_worker,
+            args=(self.checked_codes,),
+            daemon=True,
+        )
+        self._refresh_thread.start()
+
+    def _fetch_data_worker(self, codes: list):
+        """后台线程：执行网络请求，结果经 data_ready 信号回到主线程。"""
         try:
-            ret, data = request_sina(self.checked_codes)
+            ret, data = request_sina(codes)
+            payload = (True, ret, data, None)
         except requests.exceptions.RequestException:
-            self._show_message("网络请求失败", is_error=True)
-            return
+            payload = (False, None, None, "网络请求失败")
         except Exception as e:
-            self._show_message(str(e), is_error=True)
+            payload = (False, None, None, str(e))
+        self.data_ready.emit(payload)
+
+    def _process_data(self, payload):
+        """主线程：处理请求结果并更新表格。payload = (ok, ret, data, error)"""
+        ok, ret, data, error = payload
+        if not ok:
+            self._show_message(error or "请求失败", is_error=True)
             return
-        
+
         full_rows = []
         full_sign = []
         for c, d in data.items():
