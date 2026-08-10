@@ -17,6 +17,10 @@ mkdir -p "$PKG/DEBIAN" "$PKG/opt/StockWidget" "$PKG/usr/bin" "$PKG/usr/share/app
 # 把 PyInstaller 产物装进 /opt/StockWidget
 cp -a dist/StockWidget/. "$PKG/opt/StockWidget/"
 
+# 文档：README / LICENSE / NOTICE（README/LICENSE/NOTICE 已由 spec 打进 dist/StockWidget）
+mkdir -p "$PKG/usr/share/doc/stockwidget"
+cp -a README.md LICENSE NOTICE "$PKG/usr/share/doc/stockwidget/"
+
 # 应用菜单入口
 cat > "$PKG/usr/share/applications/stockwidget.desktop" <<'EOF'
 [Desktop Entry]

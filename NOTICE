@@ -1,0 +1,29 @@
+StockWidget
+Copyright 2026 sbr0574
+Official repository: https://github.com/sbr0574/StockWidget
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Attribution requirement for redistribution:
+Any redistribution of this software, in whole or in part, in Source or
+Object form, must retain the copyright notice above, this NOTICE file,
+and clearly indicate the original author (sbr0574) and the official
+repository URL (https://github.com/sbr0574/StockWidget) in a reasonably
+prominent location, in accordance with Section 4 of the Apache License
+Version 2.0.
+
+再分发要求（中文说明）：
+对本软件的全部或部分（含源码、编译产物、打包发布）进行再分发时，
+必须保留本 NOTICE 文件、上述版权信息，并在显著位置注明原始作者
+（sbr0574）与官方仓库地址（https://github.com/sbr0574/StockWidget）。
+该要求依据 Apache License 2.0 第 4 节（Redistribution）制定。

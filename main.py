@@ -1,13 +1,19 @@
 
 # -*- coding: utf-8 -*-
 """
-StockWidget (Project by @sbr0574)
+StockWidget
 极简透明盯盘 Widget 浮窗, 按指定股票代码实时显示行情表格
 
-Repository: https://github.com/sbr0574/StockWidget
-Update  : 2026-08-06
-Version : 1.3.0
-License : Apache-2.0 license
+Copyright © 2026 sbr0574
+
+官方仓库地址 Official website:
+https://github.com/sbr0574/StockWidget
+
+邮箱 Email:
+sbr0574@qq.com
+
+本项目基于 Apache License 2.0 开源协议发布, 请遵守相关协议
+Licensed under Apache License 2.0
 """
 
 import sys

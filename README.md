@@ -8,6 +8,20 @@
 
 ---
 
+## 声明
+
+* **作者**：`sbr0574`
+* **官方仓库**：https://github.com/sbr0574/StockWidget
+* 本项目的**唯一官方发布渠道**为上方 GitHub 仓库的 [Releases](https://github.com/sbr0574/StockWidget/releases)，其它网站提供的下载链接均非官方，请谨慎使用。
+* 本项目基于 **Apache License 2.0** 开源。任何人对本项目进行**再分发**（转载源码、镜像下载、打包发布等）时，**必须**：
+
+  * 保留 `LICENSE` 与 `NOTICE` 文件；
+  * 保留版权与署名信息（详见 `NOTICE`）；
+  * 在显著位置注明原始作者与仓库地址：https://github.com/sbr0574/StockWidget
+* 如发现第三方网站转载时未注明上述信息，可先联系对方补充；若对方拒绝，其行为已违反 Apache 2.0 第 4 节（Redistribution）的条款，作者有权要求其停止分发。
+
+---
+
 ## ✨ 功能概览
 
 * **透明无框浮窗**：
@@ -91,4 +105,8 @@ python main.py
 
 ## 📜 许可
 
+本项目基于 **Apache License 2.0** 发布，完整文本见 [LICENSE](LICENSE)，署名要求见 [NOTICE](NOTICE)。
+
 * 个人/学习用途自由使用；涉及第三方数据源时请遵守其使用条款。
+* **再分发（转载/镜像/打包发布）必须保留 `LICENSE` 与 `NOTICE` 文件，并注明原始作者与仓库地址**（https://github.com/sbr0574/StockWidget），否则视为违反 Apache 2.0 第 4 节的再分发条款。
+* 官方唯一发布渠道：https://github.com/sbr0574/StockWidget
