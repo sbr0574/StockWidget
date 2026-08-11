@@ -227,7 +227,7 @@ class App(QApplication):
         """Enable or disable auto-start on login.
         - Windows: 写/删 HKCU Run 注册表键。
         - Linux:   写/删 XDG autostart .desktop 文件(桌面环境通用)。
-        - macOS:   暂未实现,忽略。
+        - macOS:   写/删 ~/Library/LaunchAgents 下的 LaunchAgent plist。
         """
         self._start_on_boot = enabled
         system = sys.platform
@@ -235,7 +235,8 @@ class App(QApplication):
             self._set_start_on_boot_windows(enabled)
         elif system == "linux":
             self._set_start_on_boot_linux(enabled)
-        # macOS 暂未实现
+        elif system == "darwin":
+            self._set_start_on_boot_macos(enabled)
 
     def _set_start_on_boot_windows(self, enabled: bool):
         """Windows:通过 HKCU Run 注册表键实现开机自启。"""
@@ -282,5 +283,49 @@ class App(QApplication):
             os.makedirs(autostart_dir, exist_ok=True)
             with open(desktop_file, "w", encoding="utf-8") as f:
                 f.write(content)
+        except Exception:
+            pass
+
+    def _set_start_on_boot_macos(self, enabled: bool):
+        """macOS:通过 LaunchAgent(~/Library/LaunchAgents)实现开机自启。
+
+        写入 com.sbr0574.StockWidget.plist(RunAtLoad = true),登录时由 launchd
+        在用户图形会话中自动拉起;并调用 launchctl 立即加载/卸载。
+        """
+        try:
+            import plistlib
+            import subprocess
+            label = "com.sbr0574.StockWidget"
+            launch_dir = os.path.join(os.path.expanduser("~"), "Library", "LaunchAgents")
+            plist_path = os.path.join(launch_dir, f"{label}.plist")
+            uid = str(os.getuid())
+            if not enabled:
+                if os.path.exists(plist_path):
+                    os.remove(plist_path)
+                # 立即卸载(失败忽略,注销后也会自然消失)
+                subprocess.run(
+                    ["launchctl", "bootout", f"gui/{uid}", plist_path],
+                    capture_output=True, timeout=10,
+                )
+                return
+            if getattr(sys, 'frozen', False):
+                args = [sys.executable]
+            else:
+                args = [sys.executable, os.path.abspath(sys.argv[0])]
+            payload = {
+                "Label": label,
+                "ProgramArguments": args,
+                "WorkingDirectory": os.path.dirname(os.path.abspath(sys.argv[0])),
+                "RunAtLoad": True,
+                "ProcessType": "Interactive",
+            }
+            os.makedirs(launch_dir, exist_ok=True)
+            with open(plist_path, "wb") as f:
+                plistlib.dump(payload, f)
+            # 立即加载(若已在运行,launchctl 会报错,忽略即可)
+            subprocess.run(
+                ["launchctl", "bootstrap", f"gui/{uid}", plist_path],
+                capture_output=True, timeout=10,
+            )
         except Exception:
             pass

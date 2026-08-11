@@ -14,6 +14,7 @@ from src.platform_support import (
     is_wayland, is_x11,
     hotkeys_supported, click_through_supported,
     opacity_supported, force_top_supported,
+    mac_set_window_level, mac_get_window_level, MAC_LEVEL_STATUS,
 )
 from services.stock_data import request_sina
 
@@ -183,6 +184,7 @@ class FloatLabel(QWidget):
 
         self._drag_pos = None
         self._system_moving = False
+        self._mac_orig_level = None  # macOS 强制置顶前的原始窗口层级
 
         # 定时刷新数据
         self.data_ready.connect(self._process_data)
@@ -787,19 +789,47 @@ class FloatLabel(QWidget):
     def set_force_top(self, enabled: bool):
         enabled = bool(enabled)
         if not force_top_supported():
-            # 仅 Windows 支持强制置顶,其余平台忽略该开关
+            # 仅 Windows / macOS 支持强制置顶,其余平台忽略该开关
             enabled = False
         if self.force_top == enabled:
             return
         self.force_top = enabled
         if self.force_top:
-            if self.isVisible() and self._keep_top_timer and not self._keep_top_timer.isActive():
+            self._apply_mac_force_top(True)
+            # macOS 由原生窗口层级保证置顶,无需轮询 raise_(轮询会抢焦点)
+            if (sys.platform != "darwin" and self.isVisible()
+                    and self._keep_top_timer and not self._keep_top_timer.isActive()):
                 self._keep_top_timer.start()
             self._ensure_on_top()
         else:
+            self._apply_mac_force_top(False)
             if self._keep_top_timer and self._keep_top_timer.isActive():
                 self._keep_top_timer.stop()
         self._notify_change()
+
+    def _apply_mac_force_top(self, enabled: bool):
+        """macOS:通过原生 NSWindow 层级实现置顶。
+        - 启用:抬升到 kCGStatusWindowLevel(25),高于所有普通/浮动窗口,
+          并记住开启前的原始层级。
+        - 关闭:还原到开启前的原始层级(即 Qt 默认的置顶层级)。
+        非 macOS 平台直接忽略。
+        """
+        if sys.platform != "darwin":
+            return
+        try:
+            hwnd = int(self.winId())
+            if not hwnd:
+                return
+            if enabled:
+                if self._mac_orig_level is None:
+                    self._mac_orig_level = mac_get_window_level(hwnd)
+                mac_set_window_level(hwnd, MAC_LEVEL_STATUS)
+            else:
+                if self._mac_orig_level is not None:
+                    mac_set_window_level(hwnd, self._mac_orig_level)
+                    self._mac_orig_level = None
+        except Exception:
+            pass
 
     def set_hotkey_enabled(self, enabled: bool) -> HotkeyResult:
         """启用/停用"显示/隐藏"快捷键。启用失败(如冲突)时回滚状态并返回失败原因。"""
@@ -975,9 +1005,15 @@ class FloatLabel(QWidget):
 
     def showEvent(self, event):
         super().showEvent(event)
+        # macOS:每次显示都重新断言原生窗口层级(置顶/强制置顶),
+        # 防止被全屏应用或系统(如 hide/show 或睡眠唤醒)重置后掉出置顶。
+        if sys.platform == "darwin":
+            self._apply_mac_force_top(self.force_top)
         if self.timer and not self.timer.isActive(): 
             self.timer.start()
-        if self.force_top and self._keep_top_timer and not self._keep_top_timer.isActive():
+        # macOS 无需轮询 raise_(原生层级已保证置顶,轮询会抢焦点)
+        if (sys.platform != "darwin" and self.force_top
+                and self._keep_top_timer and not self._keep_top_timer.isActive()):
             self._keep_top_timer.start()
         self._apply_click_through(self.click_through)
         self._defer_fit()
@@ -993,6 +1029,10 @@ class FloatLabel(QWidget):
         if not self.force_top or not self.isVisible():
             return
         if self.click_through:
+            return
+        if sys.platform == "darwin":
+            # macOS:原生 NSWindow 层级(25)已保证置顶,无需轮询 raise_;
+            # 周期性 raise_ 会把本程序不断激活,抢夺其他正在使用程序的焦点。
             return
         try:
             aw = QApplication.activeWindow()

@@ -6,9 +6,12 @@
            相比第三方 keyboard 库,零额外依赖、更稳定、不易被杀毒软件误报。
            注册失败时可区分"被其他程序占用"(ERROR_HOTKEY_ALREADY_REGISTERED),
            冲突时 RegisterHotKey 不会抢占,不会影响其他应用。
-- macOS:   基于 Carbon RegisterEventHotKey API(通过 ctypes 直接调用,零额外依赖)。
-           Carbon 框架虽已废弃,但 RegisterEventHotKey 在 macOS 上持续可用,
-           是获取系统级全局热键的标准手段。
+- macOS:   基于 Quartz CGEventTap(通过 ctypes 直接调用,零额外依赖)。
+           事件截获经 CFRunLoop 源挂到 Qt 主循环,回调在主线程执行,可靠触发。
+           (注:Carbon RegisterEventHotKey 在 Qt/Cocoa 应用中虽能注册成功,
+            但事件不会派发,故改用 CGEventTap。)
+           首次使用需在"系统设置 → 隐私与安全性 → 辅助功能"中授权本程序,
+           未授权时注册返回 reason='permission' 并自动弹出授权对话框。
 - 其他:    静默返回不支持(unsupported),不影响程序运行。
 - 保护:    `register()` 前先经 `is_reserved()` 黑名单拦截系统/通用快捷键
            (如 Ctrl+C/V/A、Alt+Tab、Ctrl+Alt+Del、Win 组合等),返回
@@ -45,6 +48,7 @@ class HotkeyResult:
     - 'invalid'     : 快捷键无法解析(缺修饰键 / 键不支持)
     - 'reserved'    : 系统/通用快捷键,为避免影响其他应用而禁止注册
     - 'unsupported' : 当前平台暂未实现
+    - 'permission'  : 缺少系统权限(如 macOS 辅助功能授权),需用户手动授权
     - 'failed'      : 其他系统错误
     """
 
@@ -89,21 +93,28 @@ _VK_MAP = {
 }
 
 # ---------------------------------------------------------------------------
-# macOS: Carbon RegisterEventHotKey
+# macOS: Quartz CGEventTap
 # ---------------------------------------------------------------------------
 
-# Carbon 事件常量(4 字符码)
-K_EVENT_CLASS_HOT_KEY = 0x686B6869       # 'hkhi'
-K_EVENT_HOT_KEY_PRESSED = 1
-K_EVENT_PARAM_DIRECT_OBJECT = 0x2D2D2D2D  # '----'
-TYPE_EVENT_HOT_KEY_ID = 0x686B6964        # 'hkid'
-EVENT_HOT_KEY_EXISTS_ERR = -9878          # 热键已存在(冲突)
+# CGEvent 事件类型
+CG_KEY_DOWN = 10                 # kCGEventKeyDown
+CG_FLAGS_CHANGED = 12            # kCGEventFlagsChanged
+CG_TAP_DISABLED_TIMEOUT = 0xFFFFFFFE  # kCGEventTapDisabledByTimeout
+CG_TAP_DISABLED_USER = 0xFFFFFFFF     # kCGEventTapDisabledByUserInput
 
-# Carbon 修饰键(EventModifiers)
-MAC_CMD = 0x0100
-MAC_SHIFT = 0x0200
-MAC_OPTION = 0x0800
-MAC_CONTROL = 0x1000
+# CGEvent 修饰键掩码
+CG_CMD = 0x00100000              # Command(⌘)
+CG_OPT = 0x00080000              # Option(⌥)
+CG_CTRL = 0x00040000             # Control(⌃)
+CG_SHIFT = 0x00020000            # Shift(⇧)
+_CG_MOD_MASK = CG_CMD | CG_OPT | CG_CTRL | CG_SHIFT
+
+# 事件截获相关常量
+CG_TAP_PLACE_HID = 0             # kCGHIDEventTap:全局 HID 事件
+CG_TAP_POINT_HEAD = 0            # kCGHeadInsertEventTap
+CG_TAP_LISTEN_ONLY = 1           # 只监听不拦截,不影响其他应用
+CG_FIELD_KEYCODE = 9             # kCGKeyboardEventKeycode
+CG_FIELD_AUTOREPEAT = 8          # kCGKeyboardEventAutorepeat
 
 # macOS 硬件键码(keycode,US 布局)
 _MAC_KEYCODES = {
@@ -122,20 +133,75 @@ _MAC_KEYCODES = {
 }
 
 
-def _load_carbon():
-    """加载 macOS Carbon framework(仅 Darwin 平台)。"""
+def _load_cg():
+    """加载 macOS CoreGraphics 并设置函数签名(仅 Darwin 平台)。"""
     if sys.platform != "darwin":
         return None
     try:
-        return ctypes.cdll.LoadLibrary("/System/Library/Frameworks/Carbon.framework/Carbon")
+        cg = ctypes.cdll.LoadLibrary(
+            "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics")
+        cg.CGEventTapCreate.restype = ctypes.c_void_p
+        cg.CGEventTapEnable.argtypes = [ctypes.c_void_p, ctypes.c_bool]
+        cg.CGEventTapIsEnabled.restype = ctypes.c_bool
+        cg.CGEventTapIsEnabled.argtypes = [ctypes.c_void_p]
+        cg.CGEventGetFlags.restype = ctypes.c_uint64
+        cg.CGEventGetFlags.argtypes = [ctypes.c_void_p]
+        cg.CGEventGetIntegerValueField.restype = ctypes.c_int64
+        cg.CGEventGetIntegerValueField.argtypes = [ctypes.c_void_p, ctypes.c_int32]
+        cg.CGPreflightListenEventAccess.restype = ctypes.c_bool
+        cg.CGRequestListenEventAccess.restype = ctypes.c_bool
+        return cg
     except Exception:
         return None
 
 
-# 模块级持有:避免回调被 GC 回收;mac 只可能有单个 manager 实例
-_mac_carbon = _load_carbon()
+def _load_cf():
+    """加载 macOS CoreFoundation(用于把事件截获挂到主 RunLoop)。"""
+    if sys.platform != "darwin":
+        return None
+    try:
+        cf = ctypes.cdll.LoadLibrary(
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation")
+        cf.CFMachPortCreateRunLoopSource.restype = ctypes.c_void_p
+        cf.CFMachPortCreateRunLoopSource.argtypes = [
+            ctypes.c_void_p, ctypes.c_void_p, ctypes.c_long,
+        ]
+        cf.CFRunLoopGetMain.restype = ctypes.c_void_p
+        cf.CFRunLoopAddSource.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
+        cf.CFRunLoopRemoveSource.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
+        cf.CFRelease.argtypes = [ctypes.c_void_p]
+        return cf
+    except Exception:
+        return None
+
+
+def _kCFRunLoopCommonModes(cf):
+    """取 kCFRunLoopCommonModes 常量(CFStringRef)。"""
+    try:
+        return ctypes.c_void_p.in_dll(cf, "kCFRunLoopCommonModes").value
+    except Exception:
+        return None
+
+
+def _mac_is_trusted() -> bool:
+    """当前进程是否已获 macOS 辅助功能(监听键盘输入)权限。"""
+    try:
+        ax = ctypes.cdll.LoadLibrary(
+            "/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices")
+        ax.AXIsProcessTrusted.restype = ctypes.c_bool
+        ax.AXIsProcessTrusted.argtypes = []
+        return bool(ax.AXIsProcessTrusted())
+    except Exception:
+        return False
+
+
+# 模块级持有:事件截获(CFMachPortRef)、RunLoop 源、回调引用(防 GC)、当前 manager
+_mac_cg = _load_cg()
+_mac_cf = _load_cf()
+_mac_tap = None
+_mac_source = None
+_mac_cb_ref = None
 _mac_manager = None
-_mac_handler_ref = None
 
 
 # ---------------------------------------------------------------------------
@@ -206,28 +272,28 @@ def _parse_hotkey(hotkey: str):
 
 
 def _mods_macos(mods: set) -> int:
-    """Qt 修饰键名 → Carbon 修饰键位。
+    """Qt 修饰键名 → CGEvent 修饰键掩码。
 
     Qt 在 macOS 的键盘映射:
-        "ctrl" → Command 键(⌘)   -> cmdKey
-        "alt"  → Option 键(⌥)    -> optionKey
-        "shift"→ Shift 键(⇧)     -> shiftKey
-        "meta" → Control 键(⌃)   -> controlKey
+        "ctrl" → Command 键(⌘)   -> kCGEventFlagMaskCommand
+        "alt"  → Option 键(⌥)    -> kCGEventFlagMaskAlternate
+        "shift"→ Shift 键(⇧)     -> kCGEventFlagMaskShift
+        "meta" → Control 键(⌃)   -> kCGEventFlagMaskControl
     """
     value = 0
     if "ctrl" in mods:
-        value |= MAC_CMD
+        value |= CG_CMD
     if "alt" in mods:
-        value |= MAC_OPTION
+        value |= CG_OPT
     if "shift" in mods:
-        value |= MAC_SHIFT
+        value |= CG_SHIFT
     if "meta" in mods:
-        value |= MAC_CONTROL
+        value |= CG_CTRL
     return value
 
 
 def _parse_hotkey_macos(hotkey: str):
-    """macOS 用解析:返回 (carbon_modifiers, keycode);无效返回 None。"""
+    """macOS 用解析:返回 (cg_modmask, keycode);无效返回 None。"""
     parts = _split_hotkey(hotkey)
     if parts is None:
         return None
@@ -307,49 +373,83 @@ class _WindowsHotkeyEventFilter(QAbstractNativeEventFilter):
 
 
 # ---------------------------------------------------------------------------
-# macOS Carbon 事件处理器(模块级单例)
+# macOS: CGEventTap 事件处理器(模块级单例)
 # ---------------------------------------------------------------------------
 
 if sys.platform == "darwin":
-    class _EventHotKeyID(ctypes.Structure):
-        _fields_ = [
-            ("signature", ctypes.c_uint32),
-            ("id", ctypes.c_uint32),
-        ]
-
-    class _EventTypeSpec(ctypes.Structure):
-        _fields_ = [
-            ("eventClass", ctypes.c_uint32),
-            ("eventKind", ctypes.c_uint32),
-        ]
-
-    _mac_carbon.GetApplicationEventTarget.restype = ctypes.c_void_p
-
-    _EventHandlerUPP = ctypes.CFUNCTYPE(
-        ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p
+    _CGEventTapCallback = ctypes.CFUNCTYPE(
+        ctypes.c_void_p,   # CGEventRef 返回值
+        ctypes.c_void_p,   # CGEventTapProxy
+        ctypes.c_uint32,   # CGEventType
+        ctypes.c_void_p,   # CGEventRef
+        ctypes.c_void_p,   # void* userInfo
     )
 
-    @_EventHandlerUPP
-    def _mac_event_handler(call_ref, event_ref, user_data):
-        """Carbon 热键事件回调:从 EventRef 提取 EventHotKeyID 并分发。"""
+    _mac_cg.CGEventTapCreate.argtypes = [
+        ctypes.c_uint32, ctypes.c_uint32, ctypes.c_uint32,
+        ctypes.c_uint64, _CGEventTapCallback, ctypes.c_void_p,
+    ]
+
+    @_CGEventTapCallback
+    def _mac_tap_callback(proxy, event_type, event, user_info):
+        """CGEventTap 回调:命中已注册的全局快捷键时分发。
+        只监听不拦截(透传事件),不影响其他应用;经主 RunLoop 在主线程执行。
+        """
         try:
-            if _mac_carbon is None or _mac_manager is None:
-                return 0
-            hkid = _EventHotKeyID()
-            size = ctypes.c_size_t()
-            err = _mac_carbon.GetEventParameter(
-                event_ref, K_EVENT_PARAM_DIRECT_OBJECT, TYPE_EVENT_HOT_KEY_ID,
-                None, ctypes.sizeof(hkid), ctypes.byref(size), ctypes.byref(hkid),
-            )
-            if err != 0:
-                return 0
-            _mac_manager._dispatch(int(hkid.id))
-            return 0
+            if event_type == CG_KEY_DOWN:
+                # 自动重复的按键不重复触发,避免按住时反复切换
+                if _mac_cg.CGEventGetIntegerValueField(event, CG_FIELD_AUTOREPEAT):
+                    return event
+                keycode = _mac_cg.CGEventGetIntegerValueField(event, CG_FIELD_KEYCODE)
+                flags = _mac_cg.CGEventGetFlags(event) & _CG_MOD_MASK
+                mgr = _mac_manager
+                if mgr is not None:
+                    hid = mgr._mac_grabs.get((int(keycode), int(flags)))
+                    if hid is not None:
+                        mgr._dispatch(hid)
+            elif event_type in (CG_TAP_DISABLED_TIMEOUT, CG_TAP_DISABLED_USER):
+                # 被系统停用时重新启用
+                if _mac_tap is not None:
+                    _mac_cg.CGEventTapEnable(_mac_tap, True)
         except Exception:
-            return 0
+            pass
+        return event
+
+    def _mac_ensure_tap() -> bool:
+        """首次注册时创建 CGEventTap 并挂到主 RunLoop。已创建则直接返回 True。"""
+        global _mac_tap, _mac_source, _mac_cb_ref
+        if _mac_tap is not None:
+            return True
+        if _mac_cg is None:
+            return False
+        try:
+            events = (1 << CG_KEY_DOWN) | (1 << CG_FLAGS_CHANGED)
+            cb = _CGEventTapCallback(_mac_tap_callback)
+            _mac_cb_ref = cb  # 持有引用,防止回调被 GC 回收
+            tap = _mac_cg.CGEventTapCreate(
+                CG_TAP_PLACE_HID, CG_TAP_POINT_HEAD, CG_TAP_LISTEN_ONLY,
+                events, cb, None,
+            )
+            if not tap:
+                return False
+            _mac_tap = tap
+            _mac_cg.CGEventTapEnable(tap, True)
+            # 挂到主 RunLoop(Qt 的 NSApplication 驱动主 RunLoop,回调在主线程)
+            if _mac_cf is not None:
+                source = _mac_cf.CFMachPortCreateRunLoopSource(None, tap, 0)
+                if source:
+                    _mac_source = source
+                    rl = _mac_cf.CFRunLoopGetMain()
+                    mode = _kCFRunLoopCommonModes(_mac_cf)
+                    if rl and mode:
+                        _mac_cf.CFRunLoopAddSource(rl, source, mode)
+            return True
+        except Exception:
+            return False
 else:
-    _EventHandlerUPP = None
-    _mac_event_handler = None
+    _CGEventTapCallback = None
+    _mac_tap_callback = None
+    _mac_ensure_tap = None
 
 
 # ---------------------------------------------------------------------------
@@ -458,8 +558,7 @@ class GlobalHotkeyManager(QObject):
         self._next_id = 1
         self._filter = None
         # macOS 专用状态
-        self._mac_refs = {}       # 热键 id -> EventHotKeyRef
-        self._mac_target = None
+        self._mac_grabs = {}      # (keycode, modmask) -> hotkey_id
         # Linux/X11 专用状态
         self._x11_lib = None
         self._x11_display = None
@@ -647,56 +746,44 @@ class GlobalHotkeyManager(QObject):
                 matched = True
         return matched
 
-    # ----- macOS 实现 -----
+    # ----- macOS 实现(CGEventTap)-----
     def _register_macos(self, hotkey: str, callback) -> HotkeyResult:
         parsed = _parse_hotkey_macos(hotkey)
         if parsed is None:
             return HotkeyResult(False, "invalid")
         mods, keycode = parsed
-        if _mac_carbon is None:
+        if _mac_cg is None:
             return HotkeyResult(False, "failed")
         try:
-            global _mac_manager, _mac_handler_ref
-            if self._mac_target is None:
-                self._mac_target = _mac_carbon.GetApplicationEventTarget()
-            # 首次使用时安装一次事件处理器
-            if _mac_handler_ref is None:
-                spec = _EventTypeSpec(K_EVENT_CLASS_HOT_KEY, K_EVENT_HOT_KEY_PRESSED)
-                ref = ctypes.c_void_p()
-                err = _mac_carbon.InstallEventHandler(
-                    self._mac_target, _mac_event_handler, 1,
-                    ctypes.byref(spec), None, ctypes.byref(ref),
-                )
-                if err != 0:
-                    return HotkeyResult(False, "failed")
-                _mac_handler_ref = ref
-                _mac_manager = self
-            hotkey_id = self._next_id
-            hkid = _EventHotKeyID(0x53545747, hotkey_id)  # signature 'STWG'
-            ref = ctypes.c_void_p()
-            err = _mac_carbon.RegisterEventHotKey(
-                keycode, mods, ctypes.byref(hkid),
-                self._mac_target, 0, ctypes.byref(ref),
-            )
-            if err != 0:
-                if err == EVENT_HOT_KEY_EXISTS_ERR:
-                    return HotkeyResult(False, "conflict")
+            # 全局键盘事件截获需要"辅助功能/输入监听"权限
+            if not _mac_is_trusted():
+                try:
+                    _mac_cg.CGRequestListenEventAccess()  # 触发系统授权对话框
+                except Exception:
+                    pass
+                return HotkeyResult(False, "permission")
+            if not _mac_ensure_tap():
                 return HotkeyResult(False, "failed")
+            global _mac_manager
+            _mac_manager = self
+            if (keycode, mods) in self._mac_grabs:
+                return HotkeyResult(False, "conflict")
+            hotkey_id = self._next_id
+            self._mac_grabs[(keycode, mods)] = hotkey_id
             self._callbacks[hotkey_id] = callback
-            self._mac_refs[hotkey_id] = ref  # 保持引用,防止被回收
             self._next_id += 1
             return HotkeyResult(True)
         except Exception:
             return HotkeyResult(False, "failed")
 
     def _unregister_all_macos(self):
+        global _mac_manager
         try:
-            for ref in self._mac_refs.values():
-                if ref and ref.value:
-                    _mac_carbon.UnregisterEventHotKey(ref)
-            self._mac_refs.clear()
+            if _mac_manager is self:
+                _mac_manager = None
         except Exception:
             pass
+        self._mac_grabs.clear()
 
     # ----- 分发 -----
     def _dispatch(self, hotkey_id: int) -> bool:

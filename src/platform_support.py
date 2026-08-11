@@ -9,10 +9,11 @@ Linux 下的关键差异在于 X11 与 Wayland:
 - 开机自启:  两者皆可用(XDG autostart .desktop,桌面环境层面实现)。
 - 窗口拖动:  Wayland 需用 QWindow.startSystemMove() 由合成器接管;
              X11 可直接 move()。
-- 强制置顶:  仅 Windows 支持;Linux / macOS 上 raise_() 受窗口管理器/合成器限制,
-             效果不可靠,故禁用该选项。
+- 强制置顶:  Windows / macOS 支持。macOS 通过原生 NSWindow 层级(CGWindowLevel)实现,
+             高于普通 App 的窗口;Linux 上 raise_() 受窗口管理器/合成器限制,效果不可靠。
 """
 
+import ctypes
 import os
 import sys
 
@@ -82,16 +83,95 @@ def opacity_supported() -> bool:
 
 
 def force_top_supported() -> bool:
-    """强制置顶是否可用:仅 Windows 支持;Linux / macOS 上 raise_() 不可靠,禁用该选项。"""
-    return sys.platform == "win32"
+    """强制置顶是否可用:Windows / macOS 支持(macOS 用原生 NSWindow 层级);Linux 不可靠。"""
+    return sys.platform in ("win32", "darwin")
 
 
 def start_on_boot_supported() -> bool:
-    """开机自启是否可用:Windows / Linux 支持;macOS 暂未实现。"""
-    system = sys.platform
-    if system in ("win32", "linux"):
-        return True
-    return False
+    """开机自启是否可用:Windows / Linux / macOS 均支持。
+    macOS 通过 ~/Library/LaunchAgents 下的 LaunchAgent plist 实现。
+    """
+    return sys.platform in ("win32", "linux", "darwin")
+
+
+# ---------------------------------------------------------------------------
+# macOS 原生窗口层级(通过 Objective-C 运行时设置 NSWindow level)
+# ---------------------------------------------------------------------------
+
+# CGWindowLevel 常量
+MAC_LEVEL_FLOATING = 3    # NSFloatingWindowLevel:Qt.WindowStaysOnTopHint 默认值
+MAC_LEVEL_STATUS = 25     # kCGStatusWindowLevel:高于普通/浮动窗口,用于"强制置顶"
+
+_mac_objc_runtime = None
+
+
+def _mac_load_objc():
+    """懒加载 Objective-C 运行时(libobjc)。失败返回 None。"""
+    global _mac_objc_runtime
+    if _mac_objc_runtime is not None:
+        return _mac_objc_runtime
+    try:
+        if sys.platform != "darwin":
+            return None
+        objc = ctypes.cdll.LoadLibrary("/usr/lib/libobjc.dylib")
+        objc.objc_getClass.restype = ctypes.c_void_p
+        objc.objc_getClass.argtypes = [ctypes.c_char_p]
+        objc.sel_registerName.restype = ctypes.c_void_p
+        objc.sel_registerName.argtypes = [ctypes.c_char_p]
+        _mac_objc_runtime = objc
+        return objc
+    except Exception:
+        _mac_objc_runtime = None
+        return None
+
+
+def _mac_msg(restype, *argtypes):
+    """构造带精确签名的 objc_msgSend 调用器(arm64 上 variadic 必须显式签名)。"""
+    objc = _mac_load_objc()
+    if objc is None:
+        return None
+    fn_type = ctypes.CFUNCTYPE(restype, ctypes.c_void_p, ctypes.c_void_p, *argtypes)
+    return fn_type(ctypes.cast(objc.objc_msgSend, ctypes.c_void_p).value)
+
+
+def mac_get_window_level(nsview) -> int | None:
+    """读取 NSView 对应 NSWindow 的当前层级;失败返回 None。nsview 传 winId()。"""
+    try:
+        objc = _mac_load_objc()
+        if objc is None or not nsview:
+            return None
+        sel_window = objc.sel_registerName(b"window")
+        sel_level = objc.sel_registerName(b"level")
+        ns_window = _mac_msg(ctypes.c_void_p)
+        get_level = _mac_msg(ctypes.c_long)
+        if ns_window is None or get_level is None:
+            return None
+        win = ns_window(ctypes.c_void_p(int(nsview)), sel_window)
+        if not win:
+            return None
+        return int(get_level(win, sel_level))
+    except Exception:
+        return None
+
+
+def mac_set_window_level(nsview, level: int) -> None:
+    """把 NSView 对应 NSWindow 的层级设为 level(CGWindowLevel)。"""
+    try:
+        objc = _mac_load_objc()
+        if objc is None or not nsview:
+            return
+        sel_window = objc.sel_registerName(b"window")
+        sel_set_level = objc.sel_registerName(b"setLevel:")
+        ns_window = _mac_msg(ctypes.c_void_p)
+        set_level = _mac_msg(None, ctypes.c_long)
+        if ns_window is None or set_level is None:
+            return
+        win = ns_window(ctypes.c_void_p(int(nsview)), sel_window)
+        if not win:
+            return
+        set_level(win, sel_set_level, ctypes.c_long(int(level)))
+    except Exception:
+        pass
 
 
 def unsupported_tooltip(feature: str, suggest_x11: bool = True) -> str:

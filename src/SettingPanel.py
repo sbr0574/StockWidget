@@ -34,6 +34,10 @@ def _hotkey_error_message(result) -> str:
         return "快捷键无效,需包含至少一个修饰键(Ctrl/Alt/Shift/Win)和一个主键。"
     if result.reason == "unsupported":
         return "当前平台暂不支持全局快捷键。"
+    if result.reason == "permission":
+        return ("macOS 需要「辅助功能/输入监听」权限才能使用全局快捷键。\n"
+                "请前往 系统设置 → 隐私与安全性 → 辅助功能(或输入监控),"
+                "勾选本程序后,重新勾选「启用快捷键」即可。")
     return "快捷键注册失败,请更换后重试。"
 
 
