@@ -1,12 +1,9 @@
-import sys, os, platform, threading
+import sys, os, threading
 from datetime import datetime
 
-if platform.system() == "Windows":
+# 先判断系统类型,再按需 import 平台相关模块
+if sys.platform == "win32":
     import winreg
-elif platform.system() == "Darwin":
-    pass
-else:
-    pass
 
 from PySide6.QtCore import Qt, QPoint, Signal
 from PySide6.QtGui import QAction, QIcon
@@ -17,6 +14,7 @@ from src.SettingPanel import SettingsDialog
 from services.code_index import refresh_index_from_akshare
 from services.update_check import check_for_update
 from src.utils import load_file, save_file, load_json_from_resource
+from src.platform_support import click_through_supported, start_on_boot_supported
 
 APP_NAME = "StockWidget"
 APP_VERSION = "1.3.1"
@@ -73,6 +71,10 @@ class App(QApplication):
         self.act_click_through = QAction("鼠标穿透", self, checkable=True)
         self.act_click_through.setChecked(self.win.click_through)
         self.act_click_through.toggled.connect(self.win.set_click_through)
+        if not click_through_supported():
+            # 当前平台(如 Wayland)不支持鼠标穿透,置为不可点按
+            self.act_click_through.setEnabled(False)
+            self.act_click_through.setToolTip("当前会话不支持鼠标穿透")
         menu.addAction(self.act_click_through)
         menu.addAction(QAction("设置…", self, triggered=self.open_settings))
         menu.addSeparator()
@@ -222,12 +224,21 @@ class App(QApplication):
         self.tray.setIcon(app_icon)
 
     def set_start_on_boot(self, enabled: bool):
-        """Enable or disable Windows startup by writing/removing Run key in HKCU.
-        On macOS/Linux this is ignored gracefully.
+        """Enable or disable auto-start on login.
+        - Windows: 写/删 HKCU Run 注册表键。
+        - Linux:   写/删 XDG autostart .desktop 文件(桌面环境通用)。
+        - macOS:   暂未实现,忽略。
         """
         self._start_on_boot = enabled
-        if platform.system() != "Windows":
-            return
+        system = sys.platform
+        if system == "win32":
+            self._set_start_on_boot_windows(enabled)
+        elif system == "linux":
+            self._set_start_on_boot_linux(enabled)
+        # macOS 暂未实现
+
+    def _set_start_on_boot_windows(self, enabled: bool):
+        """Windows:通过 HKCU Run 注册表键实现开机自启。"""
         try:
             key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
             name = APP_NAME
@@ -241,5 +252,35 @@ class App(QApplication):
             else:
                 with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as key:
                     winreg.DeleteValue(key, name)
+        except Exception:
+            pass
+
+    def _set_start_on_boot_linux(self, enabled: bool):
+        """Linux:通过 XDG autostart 目录(~/.config/autostart)下的 .desktop 文件实现开机自启。
+        GNOME/KDE/XFCE 等主流桌面环境均支持该机制。
+        """
+        try:
+            autostart_dir = os.path.join(os.path.expanduser("~"), ".config", "autostart")
+            desktop_file = os.path.join(autostart_dir, f"{APP_NAME}.desktop")
+            if not enabled:
+                if os.path.exists(desktop_file):
+                    os.remove(desktop_file)
+                return
+            if getattr(sys, 'frozen', False):
+                exec_cmd = f'"{sys.executable}"'
+            else:
+                exec_cmd = f'"{sys.executable}" "{os.path.abspath(sys.argv[0])}"'
+            content = (
+                "[Desktop Entry]\n"
+                "Type=Application\n"
+                f"Name={APP_NAME}\n"
+                f"Comment={APP_NAME} 透明盯盘浮窗\n"
+                f"Exec={exec_cmd}\n"
+                "Terminal=false\n"
+                "X-GNOME-Autostart-enabled=true\n"
+            )
+            os.makedirs(autostart_dir, exist_ok=True)
+            with open(desktop_file, "w", encoding="utf-8") as f:
+                f.write(content)
         except Exception:
             pass

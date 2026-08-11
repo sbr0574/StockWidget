@@ -1,6 +1,6 @@
 import ctypes
 from functools import partial
-import platform
+import sys
 import requests
 import threading
 
@@ -10,6 +10,11 @@ from PySide6.QtWidgets import QApplication, QWidget, QMenu, QVBoxLayout, QLabel,
 
 from src.Display import SimpleTableModel, KLineDelegate
 from src.hotkeys import GlobalHotkeyManager, HotkeyResult
+from src.platform_support import (
+    is_wayland, is_x11,
+    hotkeys_supported, click_through_supported,
+    opacity_supported, force_top_supported,
+)
 from services.stock_data import request_sina
 
 def _format_volume(value: int) -> str:
@@ -80,7 +85,7 @@ class FloatLabel(QWidget):
         # 加载外观配置
         self.header_visible     = bool(cfg.get("header_visible", False))
         self.grid_visible       = bool(cfg.get("grid_visible", False))
-        font_family             = cfg.get("font_family", "PingFang SC" if platform.system() == "Darwin" else "Microsoft YaHei")
+        font_family             = cfg.get("font_family", "PingFang SC" if sys.platform == "darwin" else "Microsoft YaHei")
         font_size               = int(cfg.get("font_size", 10))
         self.font               = QFont(font_family, max(5, min(15, font_size)))
         self.line_extra_px      = int(cfg.get("line_extra_px", 1))
@@ -99,9 +104,23 @@ class FloatLabel(QWidget):
         self.hotkey_click_through = cfg.get("hotkey_click_through", "Ctrl+Alt+C")
         self.start_on_boot      = bool(cfg.get("start_on_boot", False))
 
+        # 平台能力限制:当前平台不支持时强制关闭对应功能
+        # (如 Wayland 下无法实现全局快捷键/鼠标穿透,Linux/macOS 下强制置顶不可靠),
+        # 并交由设置面板/托盘菜单将相关控件置为不可点按。
+        if not hotkeys_supported():
+            self.hotkey_enabled = False
+            self.hotkey_click_through_enabled = False
+        if not click_through_supported():
+            self.click_through = False
+        if not force_top_supported():
+            self.force_top = False
+
+        # Wayland 会话下窗口位置由合成器接管,须用系统级拖动(startSystemMove)
+        self._wayland_drag = is_wayland()
+
         self.hotkey_triggered.connect(self.toggle_win)
         self.click_through_hotkey_triggered.connect(self.toggle_click_through)
-        # 全局快捷键管理器:Windows 用官方 RegisterHotKey,macOS 暂未实现(预留)
+        # 全局快捷键管理器:Windows 用官方 RegisterHotKey,Linux/X11 用 XGrabKey,Wayland 不支持
         self._hotkeys = GlobalHotkeyManager(self)
         self._register_hotkey()
 
@@ -163,6 +182,7 @@ class FloatLabel(QWidget):
             self.move(scr.right()-self.width()-40, scr.bottom()-self.height()-80)
 
         self._drag_pos = None
+        self._system_moving = False
 
         # 定时刷新数据
         self.data_ready.connect(self._process_data)
@@ -254,7 +274,7 @@ class FloatLabel(QWidget):
             "line_extra_px":    self.line_extra_px,
             "fg":               self.fg.name(QColor.HexRgb),
             "bg":               {"r": self.bg.red(), "g": self.bg.green(), "b": self.bg.blue(), "a": self.bg.alpha()},
-            "opacity_pct":      int(round(self.windowOpacity()*100)),
+            "opacity_pct":      int(round(getattr(self, "opacity_pct", 90))),
             "default_color":    self.default_color,
 
             "refresh_seconds":  self.refresh_seconds,
@@ -632,7 +652,10 @@ class FloatLabel(QWidget):
 
     def set_window_opacity_percent(self, percent_20_100: int):
         p = max(20, min(100, int(percent_20_100)))
-        self.setWindowOpacity(p/100.0)
+        self.opacity_pct = p
+        if opacity_supported():
+            # Wayland 平台插件不支持设置窗口透明度,跳过以避免终端告警
+            self.setWindowOpacity(p / 100.0)
         self._defer_fit()
         self._notify_change()
 
@@ -666,10 +689,25 @@ class FloatLabel(QWidget):
         self._defer_fit()
 
     # ----- 鼠标穿透 / 强制置顶 / 快捷键开关 -----
+    # Linux/X11 鼠标穿透用到的缓存(延迟初始化)
+    _x11_xlib = None
+    _x11_xext = None
+    _x11_shape_display = None
+
     def _apply_click_through(self, enable: bool):
-        """Windows 下通过 WS_EX_TRANSPARENT 实现鼠标穿透。"""
-        if platform.system() != "Windows":
-            return
+        """实现鼠标穿透:
+        - Windows:  通过 WS_EX_TRANSPARENT 扩展样式。
+        - Linux/X11:通过 XShape 清空输入区域(libXext)。
+        - 其他(Wayland / macOS):不支持,直接忽略(UI 已禁用对应开关)。
+        """
+        system = sys.platform
+        if system == "win32":
+            self._apply_click_through_windows(enable)
+        elif system == "linux" and is_x11():
+            self._apply_click_through_x11(enable)
+
+    def _apply_click_through_windows(self, enable: bool):
+        """Windows:通过 WS_EX_TRANSPARENT 实现鼠标穿透。"""
         try:
             GWL_EXSTYLE = -20
             WS_EX_LAYERED = 0x00080000
@@ -692,6 +730,48 @@ class FloatLabel(QWidget):
         except Exception:
             pass
 
+    def _apply_click_through_x11(self, enable: bool):
+        """Linux/X11:通过 XShape 扩展设置输入区域。
+        启用 = 清空输入区域(窗口不接收鼠标事件,实现穿透);
+        关闭 = 恢复默认输入区域(整个窗口)。
+        """
+        try:
+            if self._x11_xext is None:
+                self._x11_xlib = ctypes.CDLL("libX11.so.6")
+                self._x11_xext = ctypes.CDLL("libXext.so.6")
+                xlib = self._x11_xlib
+                xext = self._x11_xext
+                xlib.XOpenDisplay.restype = ctypes.c_void_p
+                xlib.XOpenDisplay.argtypes = [ctypes.c_char_p]
+                self._x11_shape_display = xlib.XOpenDisplay(None)  # 使用 $DISPLAY
+                if not self._x11_shape_display:
+                    return
+                xext.XShapeCombineRectangles.argtypes = [
+                    ctypes.c_void_p, ctypes.c_ulong, ctypes.c_int,
+                    ctypes.c_int, ctypes.c_int, ctypes.c_void_p,
+                    ctypes.c_int, ctypes.c_int]
+                xext.XShapeCombineMask.argtypes = [
+                    ctypes.c_void_p, ctypes.c_ulong, ctypes.c_int,
+                    ctypes.c_int, ctypes.c_int, ctypes.c_ulong, ctypes.c_int]
+                xlib.XSync.argtypes = [ctypes.c_void_p, ctypes.c_int]
+            if self._x11_shape_display is None:
+                return
+            dpy = self._x11_shape_display
+            win = ctypes.c_ulong(int(self.winId()))
+            ShapeInput = 2  # XInputShape
+            ShapeSet = 0
+            if enable:
+                # 0 个矩形 + ShapeSet -> 输入区域为空 -> 鼠标穿透
+                self._x11_xext.XShapeCombineRectangles(
+                    dpy, win, ShapeInput, 0, 0, None, 0, ShapeSet)
+            else:
+                # mask 为 None + ShapeSet -> 恢复默认输入区域(整个窗口)
+                self._x11_xext.XShapeCombineMask(
+                    dpy, win, ShapeInput, 0, 0, None, ShapeSet)
+            self._x11_xlib.XSync(dpy, False)
+        except Exception:
+            pass
+
     def set_click_through(self, enable: bool):
         enable = bool(enable)
         if self.click_through == enable:
@@ -706,6 +786,9 @@ class FloatLabel(QWidget):
 
     def set_force_top(self, enabled: bool):
         enabled = bool(enabled)
+        if not force_top_supported():
+            # 仅 Windows 支持强制置顶,其余平台忽略该开关
+            enabled = False
         if self.force_top == enabled:
             return
         self.force_top = enabled
@@ -814,42 +897,75 @@ class FloatLabel(QWidget):
         menu.addAction(QAction("隐藏浮窗", menu, triggered=self.hide))
         menu.exec(event.globalPos())
 
+    # ----- 窗口拖动 -----
+    def _drag_press(self, e):
+        """按下左键:记录拖动起点。
+        Wayland 下先记全局坐标,待移动超过阈值后再交给合成器(startSystemMove),
+        这样普通单击/双击(隐藏浮窗)不受影响。
+        """
+        if self._wayland_drag:
+            self._drag_pos = e.globalPosition().toPoint()
+            self._system_moving = False
+        else:
+            self._drag_pos = e.globalPosition().toPoint() - self.frameGeometry().topLeft()
+        self.setFocus(Qt.MouseFocusReason)
+
+    def _drag_move(self, e):
+        """按住左键移动:Wayland 用系统级拖动,其余平台(X11/Windows)手动 move。"""
+        if getattr(self, "_drag_pos", None) is None or not (e.buttons() & Qt.LeftButton):
+            return
+        if self._wayland_drag:
+            if self._system_moving:
+                return
+            # 移动超过阈值才触发系统级拖动,避免把单击误判为拖动
+            pos = e.globalPosition().toPoint()
+            if (pos - self._drag_pos).manhattanLength() <= 4:
+                return
+            self._system_moving = True
+            win = self.windowHandle()
+            if win is not None and hasattr(win, "startSystemMove"):
+                win.startSystemMove()
+            return
+        self.move(e.globalPosition().toPoint() - self._drag_pos)
+        self._ensure_on_top()
+
+    def _drag_release(self):
+        self._drag_pos = None
+        self._system_moving = False
+        self._ensure_on_top()
+        self._notify_change()
+
     def mousePressEvent(self, e):
         if e.button() == Qt.LeftButton:
-            self._drag_pos = e.globalPosition().toPoint() - self.frameGeometry().topLeft()
-            self.setFocus(Qt.MouseFocusReason)
+            self._drag_press(e)
 
     def mouseMoveEvent(self, e):
-        if getattr(self, "_drag_pos", None) and (e.buttons() & Qt.LeftButton):
-            self.move(e.globalPosition().toPoint() - self._drag_pos)
-            self._ensure_on_top()
+        self._drag_move(e)
 
     def mouseReleaseEvent(self, e):
         if e.button() == Qt.LeftButton:
-            self._drag_pos = None
-            self._ensure_on_top()
-            self._notify_change()
+            self._drag_release()
 
     def mouseDoubleClickEvent(self, e):
         if e.button() == Qt.LeftButton:
             self._drag_pos = None
+            self._system_moving = False
             self.hide()
 
     def eventFilter(self, obj, ev):
         if ev.type() == QEvent.MouseButtonDblClick and hasattr(ev, "button") and ev.button() == Qt.LeftButton:
             self._drag_pos = None
+            self._system_moving = False
             self.hide()
             return True
         if ev.type() == QEvent.MouseButtonPress and hasattr(ev, "button") and ev.button() == Qt.LeftButton:
-            self._drag_pos = ev.globalPosition().toPoint() - self.frameGeometry().topLeft()
-            self.setFocus(Qt.MouseFocusReason)
+            self._drag_press(ev)
             return True
         if ev.type() == QEvent.MouseMove and hasattr(ev, "buttons") and (ev.buttons() & Qt.LeftButton) and getattr(self, "_drag_pos", None):
-            self.move(ev.globalPosition().toPoint() - self._drag_pos)
+            self._drag_move(ev)
             return True
         if ev.type() == QEvent.MouseButtonRelease and hasattr(ev, "button") and ev.button() == Qt.LeftButton:
-            self._drag_pos = None
-            self._notify_change()
+            self._drag_release()
             return True
         return QWidget.eventFilter(self, obj, ev)
 
