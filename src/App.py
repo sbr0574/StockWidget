@@ -14,14 +14,17 @@ from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QStyle, QMes
 import resources.resources_rc
 from src.WidgetPanel import FloatLabel
 from src.SettingPanel import SettingsDialog
-from services.code_index import refresh_index_from_akshare
+from services.code_index import write_codes_groups
 from services.update_check import check_for_update
-from src.utils import load_file, save_file, load_json_from_resource
+from src.utils import load_file, save_file, load_json_from_resource, config_paths, fetch_json_from_url
 
 APP_NAME = "StockWidget"
 APP_VERSION = "1.3.1"
 CONFIG_FILE = "stock_widget_config.json"
-LIST_FILE = "stock_codes_list.json"
+# 全市场代码列表：三个独立 JSON（GitHub Action 每日更新后由程序下载）
+LIST_FILES = ("stock_codes_list.json", "stock_codes_global.json", "stock_codes_futures.json")
+CODES_RAW_URL = "https://raw.githubusercontent.com/sbr0574/StockWidget/{branch}/resources/{name}"
+CODES_BRANCHES = ("main", "master")
 
 class App(QApplication):
     update_checked = Signal(bool)
@@ -38,19 +41,12 @@ class App(QApplication):
 
         # 加载市场代码列表：更新日期为今天则直接读取，否则先用资源缓存启动，后台再更新
         self._need_background_refresh = False
-        codes_list = None
-        list_file = load_file(self.app_name, LIST_FILE)
-        list_last_update = list_file.get("last_update")
-        if list_last_update:
-            try:
-                stale = datetime.now().date() > datetime.strptime(list_last_update, "%Y-%m-%d").date()
-            except (ValueError, TypeError):
-                stale = True
-            if not stale:
-                codes_list = list_file.get("codes")
-        if not codes_list:
-            resource_list = load_json_from_resource(":/stock_codes_list.json")
-            codes_list = (resource_list or {}).get("codes")
+        local_codes = self._load_local_codes()
+        if local_codes and self._all_codes_fresh():
+            codes_list = local_codes
+        else:
+            # 本地缺失/过期：先用资源内嵌兜底显示，启动后后台从 GitHub 下载（或本地拉取）
+            codes_list = self._load_resource_codes() or local_codes
             self._need_background_refresh = True
 
         # 加载图标
@@ -169,7 +165,7 @@ class App(QApplication):
         threading.Thread(target=_worker, daemon=True).start()
 
     def _start_refresh_index(self):
-        """后台线程拉取市场代码，进度通过信号回传到主线程显示"""
+        """后台线程更新市场代码：优先从 GitHub 下载三文件，失败再本地拉取；进度/结果经信号回传"""
         self.index_progress.connect(self._on_index_progress)
         self.index_finished.connect(self._on_index_finished)
         self.win.set_index_updating(True)
@@ -177,14 +173,61 @@ class App(QApplication):
 
         def _worker():
             try:
-                result = refresh_index_from_akshare(progress_cb=self.index_progress.emit)
-                save_file(result, self.app_name, LIST_FILE)
+                codes = self._download_codes()
+                if codes is None:
+                    groups = write_codes_groups(config_paths(self.app_name), progress_cb=self.index_progress.emit)
+                    codes = {}
+                    for data in (groups or {}).values():
+                        codes.update((data or {}).get("codes", {}) or {})
             except Exception:
-                result = None
-            codes = result.get("codes") if result is not None else None
-            self.index_finished.emit(codes or {})
+                codes = {}
+            self.index_finished.emit(codes)
 
         threading.Thread(target=_worker, daemon=True).start()
+
+    def _download_codes(self) -> dict | None:
+        """从 GitHub 下载三个代码 json 到本地；全部成功返回合并 codes，否则返回 None。"""
+        merged = {}
+        for fname in LIST_FILES:
+            data = None
+            for branch in CODES_BRANCHES:
+                url = CODES_RAW_URL.format(branch=branch, name=fname)
+                data = fetch_json_from_url(url, timeout=15)
+                if data and data.get("codes"):
+                    break
+            if not data or not data.get("codes"):
+                return None
+            save_file(data, self.app_name, fname)
+            merged.update(data["codes"])
+        return merged
+
+    def _load_local_codes(self) -> dict:
+        """合并本地三个代码 json。"""
+        merged = {}
+        for fname in LIST_FILES:
+            f = load_file(self.app_name, fname)
+            merged.update((f or {}).get("codes", {}) or {})
+        return merged
+
+    def _load_resource_codes(self) -> dict:
+        """从 Qt 资源内嵌的代码 json 合并。"""
+        merged = {}
+        for fname in LIST_FILES:
+            try:
+                res = load_json_from_resource(f":/{fname}")
+            except FileNotFoundError:
+                res = {}
+            merged.update((res or {}).get("codes", {}) or {})
+        return merged
+
+    def _all_codes_fresh(self) -> bool:
+        """三个本地代码 json 是否都是今天生成。"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        for fname in LIST_FILES:
+            f = load_file(self.app_name, fname)
+            if (f or {}).get("last_update") != today or not f.get("codes"):
+                return False
+        return True
 
     def _on_index_progress(self, percent: int):
         self.win._show_message(f"正在更新市场代码数据 ( {percent}% )")

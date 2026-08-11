@@ -1,0 +1,41 @@
+name: Update Stock Codes
+
+# 每周一至周五 UTC 01:05（北京时间 09:05）拉取全市场代码并提交到仓库 resources/ 下三个 JSON。
+# 频率依据：股票/期货代码列表为低频变化（期货仅在新合约挂牌、到期退市、主力换月时变化，约每月），
+# 周末不运行。程序运行时从本仓库 raw 地址下载这三个 JSON，无需在用户本地爬取。
+on:
+  schedule:
+    - cron: "5 1 * * 1-5"
+  workflow_dispatch:
+
+jobs:
+  update-codes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 配置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 安装依赖
+        run: pip install akshare pandas pypinyin requests
+
+      - name: 拉取市场代码
+        run: python .github/scripts/update_codes.py
+
+      - name: 提交代码列表
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add resources/stock_codes_list.json resources/stock_codes_global.json resources/stock_codes_futures.json
+          if git diff --cached --quiet; then
+            echo "代码列表无变更，跳过提交"
+          else
+            git commit -m "chore: 更新市场代码列表"
+            git push
+          fi

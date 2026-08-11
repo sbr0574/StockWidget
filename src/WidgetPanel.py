@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QApplication, QWidget, QMenu, QVBoxLayout, QLabel,
 
 from src.Display import SimpleTableModel, KLineDelegate
 from src.hotkeys import GlobalHotkeyManager, HotkeyResult
-from services.stock_data import request_sina
+from services.stock_data import request_quote, strip_market
 
 def _format_volume(value: int) -> str:
     value = int(value/100)
@@ -388,7 +388,7 @@ class FloatLabel(QWidget):
     def _format_data(self, code: str, data: dict, type: str):
         # 名称显示
         name = f"({type})" if type is not None and self.type_visible else ""
-        name += f"{code[2:] if code[:2] in ('sh','sz','bj') else code} " if self.code_visible else ""
+        name += f"{strip_market(code)} " if self.code_visible else ""
         if self.name_length == -1:
             name += data["name"]
         else:
@@ -503,17 +503,17 @@ class FloatLabel(QWidget):
     def _fetch_data_worker(self, codes: list):
         """后台线程：执行网络请求，结果经 data_ready 信号回到主线程。"""
         try:
-            ret, data = request_sina(codes)
-            payload = (True, ret, data, None)
+            data = request_quote(codes)
+            payload = (True, data, None)
         except requests.exceptions.RequestException:
-            payload = (False, None, None, "网络请求失败")
+            payload = (False, None, "网络请求失败")
         except Exception as e:
-            payload = (False, None, None, str(e))
+            payload = (False, None, str(e))
         self.data_ready.emit(payload)
 
     def _process_data(self, payload):
-        """主线程：处理请求结果并更新表格。payload = (ok, ret, data, error)"""
-        ok, ret, data, error = payload
+        """主线程：处理请求结果并更新表格。payload = (ok, data, error)"""
+        ok, data, error = payload
         if not ok:
             self._show_message(error or "请求失败", is_error=True)
             return
@@ -528,7 +528,7 @@ class FloatLabel(QWidget):
             full_sign.append(sign)
 
         if not self._index_updating:
-            if sum(ret) > 0:
+            if len(data) > 0:
                 self._clear_message()
             else:
                 self._show_message("请在设置面板中添加自选股", is_error=True)
