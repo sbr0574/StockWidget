@@ -132,9 +132,30 @@ def _em_secid(code: str) -> str:
 
 # ---------------- 新浪解析 ----------------
 
-def _parse_sina_a(parts: list) -> dict:
+def _is_index_sina(sname: str) -> bool:
+    """新浪返回 key（hq_str_ 之后）是否为指数。"""
+    if sname.startswith("rt_hk"):
+        return not sname[5:].isdigit()                          # 港股指数：字母代码
+    if sname.startswith("gb_"):
+        return sname[3:].lower() in ("ixic", "dji", "inx", "ndx")  # 美股指数
+    if sname.startswith(("sh", "sz")):
+        return sname.startswith("sh000") or sname.startswith("sz399")  # A股指数
+    return False
+
+
+def _parse_sina_a(parts: list, is_index: bool = False) -> dict:
     """A股: 0名称 1今开 2昨收 3最新 4最高 5最低 6买一 7卖一 8量 9额
-    10~29 五档(量,价...) 30日期 31时间"""
+    10~29 五档(量,价...) 30日期 31时间；指数无五档且量单位为手(×100转股)。"""
+    if is_index:
+        return _new_entry(
+            name=parts[0],
+            opening=parts[1], prev_close=parts[2], current=parts[3],
+            high=parts[4], low=parts[5],
+            vol=int(parts[8] or 0) * 100, amt=parts[9],
+            pur_vol=_Z5, pur_price=_Z5, sell_vol=_Z5, sell_price=_Z5,
+            date=parts[30] if len(parts) > 30 else "",
+            time=parts[31] if len(parts) > 31 else "",
+        )
     return _new_entry(
         name=parts[0],
         opening=parts[1], prev_close=parts[2], current=parts[3],
@@ -149,9 +170,21 @@ def _parse_sina_a(parts: list) -> dict:
     )
 
 
-def _parse_sina_hk(parts: list) -> dict:
+def _parse_sina_hk(parts: list, is_index: bool = False) -> dict:
     """港股: 0英文名 1中文名 2今开 3昨收 4最高 5最低 6最新
-    7涨跌额 8涨跌幅 9买一价 10卖一价 11成交额 12成交量 ... 17日期 18时间"""
+    7涨跌额 8涨跌幅 9买一价 10卖一价 11成交额 12成交量 ... 17日期 18时间
+    港股指数无盘口、量单位为手(×100)、额为千元(×1000)。"""
+    if is_index:
+        return _new_entry(
+            name=parts[1],
+            opening=parts[2], prev_close=parts[3], current=parts[6],
+            high=parts[4], low=parts[5],
+            vol=int(parts[12] or 0) * 100,
+            amt=float(parts[11] or 0) * 1000,
+            pur_vol=_Z5, pur_price=_Z5, sell_vol=_Z5, sell_price=_Z5,
+            date=parts[17] if len(parts) > 17 else "",
+            time=parts[18] if len(parts) > 18 else "",
+        )
     return _new_entry(
         name=parts[1],
         opening=parts[2], prev_close=parts[3], current=parts[6],
@@ -164,10 +197,20 @@ def _parse_sina_hk(parts: list) -> dict:
     )
 
 
-def _parse_sina_us(parts: list) -> dict:
+def _parse_sina_us(parts: list, is_index: bool = False) -> dict:
     """美股: 0名称 1最新 2涨跌幅 3时间 4涨跌额 5今开 6最高 7最低
-    10成交量 ... 26昨收 ... 30成交额"""
+    10成交量 ... 26昨收 ... 30成交额；美股指数量单位为手(×100)、无成交额。"""
     t = (parts[3].split() + ["", ""])[:2] if len(parts) > 3 else ["", ""]
+    if is_index:
+        return _new_entry(
+            name=parts[0],
+            opening=parts[5], prev_close=parts[26] if len(parts) > 26 else 0,
+            current=parts[1], high=parts[6], low=parts[7],
+            vol=int(parts[10] or 0) * 100,
+            amt=0,   # 美股指数无成交额
+            pur_vol=_Z5, pur_price=_Z5, sell_vol=_Z5, sell_price=_Z5,
+            date=t[0], time=t[1],
+        )
     return _new_entry(
         name=parts[0],
         opening=parts[5], prev_close=parts[26] if len(parts) > 26 else 0,
@@ -211,7 +254,7 @@ def _parse_sina_global(parts: list) -> dict:
     )
 
 
-def request_sina(req_codes: list[str]) -> Tuple[list, dict]:
+def request_sina(req_codes: list[str]) -> dict:
     """新浪财经实时行情（A股/港股/美股/上期所期货）。
     返回 (ret, data)；ret[i] 表示 req_codes[i] 是否成功。"""
     data = {}
@@ -233,19 +276,19 @@ def request_sina(req_codes: list[str]) -> Tuple[list, dict]:
             continue
         sname = key.split("hq_str_", 1)[1].strip()
         if sname.startswith("rt_"):
-            entry = _parse_sina_hk(parts)      # 港股股票 + 港股指数(恒生/国企/科技等)
+            entry = _parse_sina_hk(parts, is_index=_is_index_sina(sname))      # 港股股票 + 港股指数
         elif sname.startswith("gb_"):
-            entry = _parse_sina_us(parts)      # 美股 + 美股指数(纳斯达克/标普/道指)
+            entry = _parse_sina_us(parts, is_index=_is_index_sina(sname))      # 美股 + 美股指数
         elif sname.startswith("nf_"):
             entry = _parse_sina_futures(parts)
         elif sname.startswith("b_"):
             entry = _parse_sina_global(parts)  # 全球指数(日经/KOSPI/DAX等)
         elif sname.startswith(("sh", "sz", "bj")):
-            entry = _parse_sina_a(parts)
+            entry = _parse_sina_a(parts, is_index=_is_index_sina(sname))
         else:
             continue
         data[_canonical_from_sina(sname)] = entry
-    return [c in data for c in req_codes], data
+    return data
 
 
 # ---------------- 东财解析 ----------------

@@ -411,13 +411,15 @@ class FloatLabel(QWidget):
             b1_color_sign = (unpaired > 0) - (unpaired < 0)
             s1_color_sign = b1_color_sign
         else:
-            # 连续交易阶段
-            buy_marker = "<" if pur_1 and data["current_price"]==pur_1 else " "
-            sell_marker = ">" if sell_1 and data["current_price"]==sell_1 else " "
-            b1_label = f"{int(data["purchaser_vol"][0] / 100)}{buy_marker}" if pur_1 else "-"
-            s1_label = f"{sell_marker}{int(data["seller_vol"][0] / 100)}" if sell_1 else "-"
-            b1_color_sign = 1
-            s1_color_sign = -1
+            # 连续交易阶段（有买/卖盘口量时才显示，否则"-"）
+            pur_v1 = data["purchaser_vol"][0]
+            sell_v1 = data["seller_vol"][0]
+            buy_marker = "<" if pur_1 and pur_v1 and data["current_price"] == pur_1 else " "
+            sell_marker = ">" if sell_1 and sell_v1 and data["current_price"] == sell_1 else " "
+            b1_label = f"{int(pur_v1 / 100)}{buy_marker}" if (pur_1 and pur_v1) else "-"
+            s1_label = f"{sell_marker}{int(sell_v1 / 100)}" if (sell_1 and sell_v1) else "-"
+            b1_color_sign = 1 if (pur_1 and pur_v1) else 0
+            s1_color_sign = -1 if (sell_1 and sell_v1) else 0
 
         # 盘前数据填充
         if data["current_price"] == 0:
@@ -452,6 +454,7 @@ class FloatLabel(QWidget):
             profit_sign = 0
 
         # 数据返回
+        is_index = type == "指"
         format_data = {
             "名称": name,
             "现价": f"{data["current_price"]:.{precision}f}{arrow}",
@@ -460,9 +463,9 @@ class FloatLabel(QWidget):
             "浮盈": profit_label,
             "买一": b1_label,
             "卖一": s1_label,
-            "委比": f"{committee:+.2f}%",
-            "成交量": _format_volume(data["deals_vol"]),
-            "成交额": _format_amount(data["deals_amt"]),
+            "委比": f"{committee:+.2f}%" if (p_sum + s_sum) > 0 else "-",
+            "成交量": ("-" if is_index and not data["deals_vol"] else _format_volume(data["deals_vol"])),
+            "成交额": ("-" if is_index and not data["deals_amt"] else _format_amount(data["deals_amt"])),
             "均价": f"{avg:.{precision}f}",
             "K线": k_payload}
         sign = {
