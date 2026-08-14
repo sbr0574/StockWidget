@@ -1,6 +1,4 @@
-import ctypes
 from functools import partial
-import sys
 import requests
 import threading
 
@@ -12,10 +10,11 @@ from src.Display import SimpleTableModel, KLineDelegate
 from src.hotkeys import GlobalHotkeyManager, HotkeyResult
 from services.stock_data import request_quote, strip_market
 from src.platform_support import (
-    is_wayland, is_x11,
+    is_wayland,
     hotkeys_supported, click_through_supported,
     opacity_supported, force_top_supported,
     mac_set_window_level, mac_get_window_level, MAC_LEVEL_STATUS,
+    apply_click_through, default_font_family, force_top_uses_native_level,
 )
 
 def _format_volume(value: int) -> str:
@@ -86,7 +85,7 @@ class FloatLabel(QWidget):
         # 加载外观配置
         self.header_visible     = bool(cfg.get("header_visible", False))
         self.grid_visible       = bool(cfg.get("grid_visible", False))
-        font_family             = cfg.get("font_family", "PingFang SC" if sys.platform == "darwin" else "Microsoft YaHei")
+        font_family             = cfg.get("font_family", default_font_family())
         font_size               = int(cfg.get("font_size", 10))
         self.font               = QFont(font_family, max(5, min(15, font_size)))
         self.line_extra_px      = int(cfg.get("line_extra_px", 1))
@@ -106,7 +105,7 @@ class FloatLabel(QWidget):
         self.start_on_boot      = bool(cfg.get("start_on_boot", False))
 
         # 平台能力限制:当前平台不支持时强制关闭对应功能
-        # (如 Wayland 下无法实现全局快捷键/鼠标穿透,Linux/macOS 下强制置顶不可靠),
+        # (如 Wayland 下无法实现全局快捷键/鼠标穿透,Linux 下强制置顶不可靠),
         # 并交由设置面板/托盘菜单将相关控件置为不可点按。
         if not hotkeys_supported():
             self.hotkey_enabled = False
@@ -694,95 +693,12 @@ class FloatLabel(QWidget):
         self._defer_fit()
 
     # ----- 鼠标穿透 / 强制置顶 / 快捷键开关 -----
-    # Linux/X11 鼠标穿透用到的缓存(延迟初始化)
-    _x11_xlib = None
-    _x11_xext = None
-    _x11_shape_display = None
-
-    def _apply_click_through(self, enable: bool):
-        """实现鼠标穿透:
-        - Windows:  通过 WS_EX_TRANSPARENT 扩展样式。
-        - Linux/X11:通过 XShape 清空输入区域(libXext)。
-        - 其他(Wayland / macOS):不支持,直接忽略(UI 已禁用对应开关)。
-        """
-        system = sys.platform
-        if system == "win32":
-            self._apply_click_through_windows(enable)
-        elif system == "linux" and is_x11():
-            self._apply_click_through_x11(enable)
-
-    def _apply_click_through_windows(self, enable: bool):
-        """Windows:通过 WS_EX_TRANSPARENT 实现鼠标穿透。"""
-        try:
-            GWL_EXSTYLE = -20
-            WS_EX_LAYERED = 0x00080000
-            WS_EX_TRANSPARENT = 0x00000020
-            SWP_NOSIZE = 0x0001
-            SWP_NOMOVE = 0x0002
-            SWP_NOZORDER = 0x0004
-            SWP_FRAMECHANGED = 0x0020
-
-            hwnd = int(self.winId())
-            user32 = ctypes.windll.user32
-            exstyle = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
-            if enable:
-                exstyle |= WS_EX_LAYERED | WS_EX_TRANSPARENT
-            else:
-                exstyle &= ~WS_EX_TRANSPARENT
-            user32.SetWindowLongW(hwnd, GWL_EXSTYLE, exstyle)
-            user32.SetWindowPos(hwnd, 0, 0, 0, 0, 0,
-                                SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED)
-        except Exception:
-            pass
-
-    def _apply_click_through_x11(self, enable: bool):
-        """Linux/X11:通过 XShape 扩展设置输入区域。
-        启用 = 清空输入区域(窗口不接收鼠标事件,实现穿透);
-        关闭 = 恢复默认输入区域(整个窗口)。
-        """
-        try:
-            if self._x11_xext is None:
-                self._x11_xlib = ctypes.CDLL("libX11.so.6")
-                self._x11_xext = ctypes.CDLL("libXext.so.6")
-                xlib = self._x11_xlib
-                xext = self._x11_xext
-                xlib.XOpenDisplay.restype = ctypes.c_void_p
-                xlib.XOpenDisplay.argtypes = [ctypes.c_char_p]
-                self._x11_shape_display = xlib.XOpenDisplay(None)  # 使用 $DISPLAY
-                if not self._x11_shape_display:
-                    return
-                xext.XShapeCombineRectangles.argtypes = [
-                    ctypes.c_void_p, ctypes.c_ulong, ctypes.c_int,
-                    ctypes.c_int, ctypes.c_int, ctypes.c_void_p,
-                    ctypes.c_int, ctypes.c_int]
-                xext.XShapeCombineMask.argtypes = [
-                    ctypes.c_void_p, ctypes.c_ulong, ctypes.c_int,
-                    ctypes.c_int, ctypes.c_int, ctypes.c_ulong, ctypes.c_int]
-                xlib.XSync.argtypes = [ctypes.c_void_p, ctypes.c_int]
-            if self._x11_shape_display is None:
-                return
-            dpy = self._x11_shape_display
-            win = ctypes.c_ulong(int(self.winId()))
-            ShapeInput = 2  # XInputShape
-            ShapeSet = 0
-            if enable:
-                # 0 个矩形 + ShapeSet -> 输入区域为空 -> 鼠标穿透
-                self._x11_xext.XShapeCombineRectangles(
-                    dpy, win, ShapeInput, 0, 0, None, 0, ShapeSet)
-            else:
-                # mask 为 None + ShapeSet -> 恢复默认输入区域(整个窗口)
-                self._x11_xext.XShapeCombineMask(
-                    dpy, win, ShapeInput, 0, 0, None, ShapeSet)
-            self._x11_xlib.XSync(dpy, False)
-        except Exception:
-            pass
-
     def set_click_through(self, enable: bool):
         enable = bool(enable)
         if self.click_through == enable:
             return
         self.click_through = enable
-        self._apply_click_through(self.click_through)
+        apply_click_through(self, self.click_through)
         self.click_through_changed.emit(self.click_through)
         self._notify_change()
 
@@ -800,7 +716,7 @@ class FloatLabel(QWidget):
         if self.force_top:
             self._apply_mac_force_top(True)
             # macOS 由原生窗口层级保证置顶,无需轮询 raise_(轮询会抢焦点)
-            if (sys.platform != "darwin" and self.isVisible()
+            if (not force_top_uses_native_level() and self.isVisible()
                     and self._keep_top_timer and not self._keep_top_timer.isActive()):
                 self._keep_top_timer.start()
             self._ensure_on_top()
@@ -817,7 +733,7 @@ class FloatLabel(QWidget):
         - 关闭:还原到开启前的原始层级(即 Qt 默认的置顶层级)。
         非 macOS 平台直接忽略。
         """
-        if sys.platform != "darwin":
+        if not force_top_uses_native_level():
             return
         try:
             hwnd = int(self.winId())
@@ -1010,15 +926,15 @@ class FloatLabel(QWidget):
         super().showEvent(event)
         # macOS:每次显示都重新断言原生窗口层级(置顶/强制置顶),
         # 防止被全屏应用或系统(如 hide/show 或睡眠唤醒)重置后掉出置顶。
-        if sys.platform == "darwin":
+        if force_top_uses_native_level():
             self._apply_mac_force_top(self.force_top)
         if self.timer and not self.timer.isActive(): 
             self.timer.start()
         # macOS 无需轮询 raise_(原生层级已保证置顶,轮询会抢焦点)
-        if (sys.platform != "darwin" and self.force_top
+        if (not force_top_uses_native_level() and self.force_top
                 and self._keep_top_timer and not self._keep_top_timer.isActive()):
             self._keep_top_timer.start()
-        self._apply_click_through(self.click_through)
+        apply_click_through(self, self.click_through)
         self._defer_fit()
 
     def hideEvent(self, event):
@@ -1033,7 +949,7 @@ class FloatLabel(QWidget):
             return
         if self.click_through:
             return
-        if sys.platform == "darwin":
+        if force_top_uses_native_level():
             # macOS:原生 NSWindow 层级(25)已保证置顶,无需轮询 raise_;
             # 周期性 raise_ 会把本程序不断激活,抢夺其他正在使用程序的焦点。
             return

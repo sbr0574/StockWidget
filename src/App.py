@@ -1,20 +1,15 @@
 import sys, os, threading
 from datetime import datetime
 
-# 先判断系统类型,再按需 import 平台相关模块
-if sys.platform == "win32":
-    import winreg
-
 from PySide6.QtCore import Qt, QPoint, Signal
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QStyle, QMessageBox
 import resources.resources_rc
 from src.WidgetPanel import FloatLabel
 from src.SettingPanel import SettingsDialog
-from services.code_index import write_codes_groups
 from services.update_check import check_for_update
-from src.utils import load_file, save_file, load_json_from_resource, config_paths, fetch_json_from_url
-from src.platform_support import click_through_supported, start_on_boot_supported
+from src.utils import load_file, save_file, load_json_from_resource, fetch_json_from_url
+from src.platform_support import click_through_supported, start_on_boot_supported, set_start_on_boot
 
 APP_NAME = "StockWidget"
 APP_VERSION = "1.3.1"
@@ -26,7 +21,6 @@ CODES_BRANCHES = ("main", "master")
 
 class App(QApplication):
     update_checked = Signal(bool)
-    index_progress = Signal(int)
     index_finished = Signal(dict)
 
     def __init__(self, argv):
@@ -43,7 +37,7 @@ class App(QApplication):
         if local_codes and self._all_codes_fresh():
             codes_list = local_codes
         else:
-            # 本地缺失/过期：先用资源内嵌兜底显示，启动后后台从 GitHub 下载（或本地拉取）
+            # 本地缺失/过期：先用资源内嵌兜底显示，启动后后台从 GitHub 下载
             codes_list = self._load_resource_codes() or local_codes
             self._need_background_refresh = True
 
@@ -167,20 +161,15 @@ class App(QApplication):
         threading.Thread(target=_worker, daemon=True).start()
 
     def _start_refresh_index(self):
-        """后台线程更新市场代码：优先从 GitHub 下载三文件，失败再本地拉取；进度/结果经信号回传"""
-        self.index_progress.connect(self._on_index_progress)
+        """后台线程从 GitHub 下载三份代码 json；失败则继续使用内置/本地缓存，结果经信号回传。"""
         self.index_finished.connect(self._on_index_finished)
         self.win.set_index_updating(True)
-        self.win._show_message("正在更新市场代码数据 ( 0% )")
+        self.win._show_message("正在更新市场代码数据…")
 
         def _worker():
+            codes = {}
             try:
-                codes = self._download_codes()
-                if codes is None:
-                    groups = write_codes_groups(config_paths(self.app_name), progress_cb=self.index_progress.emit)
-                    codes = {}
-                    for data in (groups or {}).values():
-                        codes.update((data or {}).get("codes", {}) or {})
+                codes = self._download_codes() or {}
             except Exception:
                 codes = {}
             self.index_finished.emit(codes)
@@ -231,9 +220,6 @@ class App(QApplication):
                 return False
         return True
 
-    def _on_index_progress(self, percent: int):
-        self.win._show_message(f"正在更新市场代码数据 ( {percent}% )")
-
     def _on_index_finished(self, codes: dict):
         self.win.set_index_updating(False)
         if codes:
@@ -267,108 +253,6 @@ class App(QApplication):
         self.tray.setIcon(app_icon)
 
     def set_start_on_boot(self, enabled: bool):
-        """Enable or disable auto-start on login.
-        - Windows: 写/删 HKCU Run 注册表键。
-        - Linux:   写/删 XDG autostart .desktop 文件(桌面环境通用)。
-        - macOS:   写/删 ~/Library/LaunchAgents 下的 LaunchAgent plist。
-        """
+        """启用或禁用开机自启（Windows/Linux/macOS），由平台支持层统一实现。"""
         self._start_on_boot = enabled
-        system = sys.platform
-        if system == "win32":
-            self._set_start_on_boot_windows(enabled)
-        elif system == "linux":
-            self._set_start_on_boot_linux(enabled)
-        elif system == "darwin":
-            self._set_start_on_boot_macos(enabled)
-
-    def _set_start_on_boot_windows(self, enabled: bool):
-        """Windows:通过 HKCU Run 注册表键实现开机自启。"""
-        try:
-            key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
-            name = APP_NAME
-            if enabled:
-                if getattr(sys, 'frozen', False):
-                    cmd = f'"{sys.executable}"'
-                else:
-                    cmd = f'"{sys.executable}" "{os.path.abspath(sys.argv[0])}"'
-                with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as key:
-                    winreg.SetValueEx(key, name, 0, winreg.REG_SZ, cmd)
-            else:
-                with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as key:
-                    winreg.DeleteValue(key, name)
-        except Exception:
-            pass
-
-    def _set_start_on_boot_linux(self, enabled: bool):
-        """Linux:通过 XDG autostart 目录(~/.config/autostart)下的 .desktop 文件实现开机自启。
-        GNOME/KDE/XFCE 等主流桌面环境均支持该机制。
-        """
-        try:
-            autostart_dir = os.path.join(os.path.expanduser("~"), ".config", "autostart")
-            desktop_file = os.path.join(autostart_dir, f"{APP_NAME}.desktop")
-            if not enabled:
-                if os.path.exists(desktop_file):
-                    os.remove(desktop_file)
-                return
-            if getattr(sys, 'frozen', False):
-                exec_cmd = f'"{sys.executable}"'
-            else:
-                exec_cmd = f'"{sys.executable}" "{os.path.abspath(sys.argv[0])}"'
-            content = (
-                "[Desktop Entry]\n"
-                "Type=Application\n"
-                f"Name={APP_NAME}\n"
-                f"Comment={APP_NAME} 透明盯盘浮窗\n"
-                f"Exec={exec_cmd}\n"
-                "Terminal=false\n"
-                "X-GNOME-Autostart-enabled=true\n"
-            )
-            os.makedirs(autostart_dir, exist_ok=True)
-            with open(desktop_file, "w", encoding="utf-8") as f:
-                f.write(content)
-        except Exception:
-            pass
-
-    def _set_start_on_boot_macos(self, enabled: bool):
-        """macOS:通过 LaunchAgent(~/Library/LaunchAgents)实现开机自启。
-
-        写入 com.sbr0574.StockWidget.plist(RunAtLoad = true),登录时由 launchd
-        在用户图形会话中自动拉起;并调用 launchctl 立即加载/卸载。
-        """
-        try:
-            import plistlib
-            import subprocess
-            label = "com.sbr0574.StockWidget"
-            launch_dir = os.path.join(os.path.expanduser("~"), "Library", "LaunchAgents")
-            plist_path = os.path.join(launch_dir, f"{label}.plist")
-            uid = str(os.getuid())
-            if not enabled:
-                if os.path.exists(plist_path):
-                    os.remove(plist_path)
-                # 立即卸载(失败忽略,注销后也会自然消失)
-                subprocess.run(
-                    ["launchctl", "bootout", f"gui/{uid}", plist_path],
-                    capture_output=True, timeout=10,
-                )
-                return
-            if getattr(sys, 'frozen', False):
-                args = [sys.executable]
-            else:
-                args = [sys.executable, os.path.abspath(sys.argv[0])]
-            payload = {
-                "Label": label,
-                "ProgramArguments": args,
-                "WorkingDirectory": os.path.dirname(os.path.abspath(sys.argv[0])),
-                "RunAtLoad": True,
-                "ProcessType": "Interactive",
-            }
-            os.makedirs(launch_dir, exist_ok=True)
-            with open(plist_path, "wb") as f:
-                plistlib.dump(payload, f)
-            # 立即加载(若已在运行,launchctl 会报错,忽略即可)
-            subprocess.run(
-                ["launchctl", "bootstrap", f"gui/{uid}", plist_path],
-                capture_output=True, timeout=10,
-            )
-        except Exception:
-            pass
+        set_start_on_boot(enabled, APP_NAME)

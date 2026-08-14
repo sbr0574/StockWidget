@@ -1,3 +1,8 @@
+"""市场代码列表生成模块（仅供 GitHub Action / 离线生成使用，依赖 akshare/pandas/pypinyin）。
+
+运行时程序不导入本模块：代码列表由 CI 每日生成并写入 resources/ 下的 JSON，
+程序启动时直接从远程/内置/缓存 JSON 加载，无需在用户本地调用 akshare。
+"""
 import json
 import os
 from datetime import datetime

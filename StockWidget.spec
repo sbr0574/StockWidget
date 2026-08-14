@@ -1,10 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 import sys
-from PyInstaller.utils.hooks import collect_data_files
 
-datas = []
-datas += collect_data_files('akshare')
-datas += [
+datas = [
     ('README.md', '.'),
     ('LICENSE', '.'),
     ('NOTICE', '.'),
