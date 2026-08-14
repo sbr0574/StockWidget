@@ -17,12 +17,11 @@ Licensed under Apache License 2.0
 """
 
 import sys
-import platform
 from src.App import App, APP_NAME
 
 if __name__ == "__main__":
 
-    if platform.system() == "Windows":
+    if sys.platform == "win32":
         import ctypes
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(f"{APP_NAME}.1")
 

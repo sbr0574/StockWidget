@@ -1,6 +1,6 @@
 import os
-import platform
 import shutil
+import sys
 from functools import partial
 
 from PySide6.QtCore import Qt, QStringListModel, QEvent, QTimer
@@ -13,6 +13,14 @@ from PySide6.QtWidgets import (
 from ui.ui_settings import Ui_SettingDialog
 from src.utils import code_without_market, find_suggestions, config_paths
 from src.WidgetPanel import FloatLabel
+from src.platform_support import (
+    hotkeys_supported,
+    click_through_supported,
+    opacity_supported,
+    force_top_supported,
+    start_on_boot_supported,
+    unsupported_tooltip,
+)
 from services.update_check import PROJECT_URL
 
 
@@ -26,6 +34,10 @@ def _hotkey_error_message(result) -> str:
         return "快捷键无效,需包含至少一个修饰键(Ctrl/Alt/Shift/Win)和一个主键。"
     if result.reason == "unsupported":
         return "当前平台暂不支持全局快捷键。"
+    if result.reason == "permission":
+        return ("macOS 需要「辅助功能/输入监听」权限才能使用全局快捷键。\n"
+                "请前往 系统设置 → 隐私与安全性 → 辅助功能(或输入监控),"
+                "勾选本程序后,重新勾选「启用快捷键」即可。")
     return "快捷键注册失败,请更换后重试。"
 
 
@@ -70,7 +82,7 @@ class SettingsDialog(QDialog):
         self._load_settings()
 
     def _is_macos(self) -> bool:
-        return platform.system() == "Darwin"
+        return sys.platform == "darwin"
 
     def _display_code_for_ui(self, code: str) -> str:
         value = str(code or "").strip().lower()
@@ -124,6 +136,7 @@ class SettingsDialog(QDialog):
         self.slider_all_alpha = self.ui.slider_all_alpha
         self.label_bg_alpha = self.ui.label_bg_alpha
         self.label_all_alpha = self.ui.label_all_alpha
+        self.label_all = self.ui.label_all
 
         self.cmb_family = self.ui.cmb_font
         self.slider_font = self.ui.slider_font_size
@@ -252,8 +265,35 @@ class SettingsDialog(QDialog):
         self.cb_head.setChecked(self.win.header_visible)
         self.cb_grid.setChecked(self.win.grid_visible)
 
+        self._apply_platform_limits()
         self._setup_icon_choices()
         self._setup_about()
+
+    def _apply_platform_limits(self):
+        """按当前平台禁用不支持的功能控件:
+        - Wayland 下:全局快捷键、鼠标穿透、窗口整体透明度不可用。
+        - Linux / macOS 下:强制置顶不可用(raise_ 受窗口管理器/合成器限制)。
+        """
+        if not hotkeys_supported():
+            for w in (self.cb_hotkey_hide, self.cb_hotkey_click_through,
+                      self.keyseq_hide, self.keyseq_click_through):
+                w.setEnabled(False)
+                w.setToolTip(unsupported_tooltip("全局快捷键"))
+        if not click_through_supported():
+            self.cb_click_through.setEnabled(False)
+            self.cb_click_through.setToolTip(unsupported_tooltip("鼠标穿透"))
+        if not opacity_supported():
+            # 整体不透明度滑块:Wayland 平台插件不支持设置窗口透明度
+            for w in (self.slider_all_alpha, self.label_all, self.label_all_alpha):
+                w.setEnabled(False)
+            self.slider_all_alpha.setToolTip(unsupported_tooltip("整体不透明度"))
+        if not force_top_supported():
+            # 强制置顶:仅 Windows 支持;Linux/macOS 下 raise_ 不可靠
+            self.cb_force_top.setEnabled(False)
+            self.cb_force_top.setToolTip(unsupported_tooltip("强制置顶", suggest_x11=False))
+        if not start_on_boot_supported():
+            self.cb_auto_start.setEnabled(False)
+            self.cb_auto_start.setToolTip(unsupported_tooltip("开机自启"))
 
     def _setup_icon_choices(self):
         self.cmb_icon.blockSignals(True)
