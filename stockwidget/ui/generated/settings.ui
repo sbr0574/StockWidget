@@ -6,9 +6,21 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>540</width>
-    <height>360</height>
+    <width>640</width>
+    <height>390</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>640</width>
+    <height>390</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>640</width>
+    <height>390</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>设置</string>
@@ -16,13 +28,51 @@
   <property name="sizeGripEnabled">
    <bool>false</bool>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QGroupBox {
+    font-size: 13px;
+    font-weight: 600;
+}
+QGroupBox#gb_data, QGroupBox#gb_interval, QGroupBox#gb_name,
+QGroupBox#gb_icon, QGroupBox#gb_fcn, QGroupBox#gb_color,
+QGroupBox#gb_text, QGroupBox#gb_tabel, QGroupBox#gb_hotkeys,
+QGroupBox#gb_about {
+    border: none;
+    border-top: 1px solid rgba(128, 128, 128, 0.45);
+    margin-top: 9px;
+    padding-top: 12px;
+}
+QGroupBox#gb_data::title, QGroupBox#gb_interval::title, QGroupBox#gb_name::title,
+QGroupBox#gb_icon::title, QGroupBox#gb_fcn::title, QGroupBox#gb_color::title,
+QGroupBox#gb_text::title, QGroupBox#gb_tabel::title, QGroupBox#gb_hotkeys::title,
+QGroupBox#gb_about::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top center;
+    padding: 0 8px;
+}
+QPushButton {
+    border: 1px solid rgba(128, 128, 128, 0.5);
+    border-radius: 6px;
+    padding: 4px 12px;
+}
+QPushButton:hover {
+    background: rgba(128, 128, 128, 0.16);
+}
+QPushButton:pressed {
+    background: rgba(128, 128, 128, 0.28);
+}
+QPushButton:disabled {
+    color: rgba(128, 128, 128, 0.5);
+    border-color: rgba(128, 128, 128, 0.3);
+}</string>
+  </property>
   <widget class="QTabWidget" name="tab_widget">
    <property name="geometry">
     <rect>
      <x>10</x>
      <y>10</y>
-     <width>520</width>
-     <height>340</height>
+     <width>620</width>
+     <height>370</height>
     </rect>
    </property>
    <property name="currentIndex">
@@ -37,7 +87,7 @@
       <rect>
        <x>10</x>
        <y>10</y>
-       <width>281</width>
+       <width>386</width>
        <height>290</height>
       </rect>
      </property>
@@ -58,7 +108,7 @@
        <rect>
         <x>15</x>
         <y>25</y>
-        <width>200</width>
+        <width>300</width>
         <height>251</height>
        </rect>
       </property>
@@ -120,7 +170,7 @@
      <widget class="QPushButton" name="btn_down">
       <property name="geometry">
        <rect>
-        <x>220</x>
+        <x>325</x>
         <y>120</y>
         <width>51</width>
         <height>26</height>
@@ -133,7 +183,7 @@
      <widget class="QPushButton" name="btn_up">
       <property name="geometry">
        <rect>
-        <x>220</x>
+        <x>325</x>
         <y>90</y>
         <width>51</width>
         <height>26</height>
@@ -146,7 +196,7 @@
      <widget class="QPushButton" name="btn_del">
       <property name="geometry">
        <rect>
-        <x>220</x>
+        <x>325</x>
         <y>60</y>
         <width>51</width>
         <height>26</height>
@@ -159,7 +209,7 @@
      <widget class="QPushButton" name="btn_add">
       <property name="geometry">
        <rect>
-        <x>220</x>
+        <x>325</x>
         <y>30</y>
         <width>51</width>
         <height>26</height>
@@ -172,7 +222,7 @@
      <widget class="QPushButton" name="btn_top">
       <property name="geometry">
        <rect>
-        <x>220</x>
+        <x>325</x>
         <y>150</y>
         <width>51</width>
         <height>26</height>
@@ -186,7 +236,7 @@
     <widget class="QGroupBox" name="gb_data">
      <property name="geometry">
       <rect>
-       <x>300</x>
+       <x>405</x>
        <y>160</y>
        <width>201</width>
        <height>141</height>
@@ -335,7 +385,7 @@
     <widget class="QGroupBox" name="gb_interval">
      <property name="geometry">
       <rect>
-       <x>300</x>
+       <x>405</x>
        <y>10</y>
        <width>201</width>
        <height>51</height>
@@ -356,7 +406,7 @@
         <x>10</x>
         <y>25</y>
         <width>141</width>
-        <height>20</height>
+        <height>24</height>
        </rect>
       </property>
       <property name="minimum">
@@ -404,7 +454,7 @@
     <widget class="QGroupBox" name="gb_name">
      <property name="geometry">
       <rect>
-       <x>300</x>
+       <x>405</x>
        <y>70</y>
        <width>201</width>
        <height>81</height>
@@ -484,7 +534,7 @@
      <property name="geometry">
       <rect>
        <x>150</x>
-       <y>240</y>
+       <y>258</y>
        <width>151</width>
        <height>61</height>
       </rect>
@@ -589,7 +639,7 @@
        <x>10</x>
        <y>10</y>
        <width>291</width>
-       <height>101</height>
+       <height>113</height>
       </rect>
      </property>
      <property name="title">
@@ -672,7 +722,7 @@
         <x>100</x>
         <y>60</y>
         <width>131</width>
-        <height>16</height>
+        <height>24</height>
        </rect>
       </property>
       <property name="minimum">
@@ -694,7 +744,7 @@
         <x>100</x>
         <y>85</y>
         <width>131</width>
-        <height>16</height>
+        <height>24</height>
        </rect>
       </property>
       <property name="minimum">
@@ -741,9 +791,9 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>125</y>
+       <y>133</y>
        <width>291</width>
-       <height>111</height>
+       <height>115</height>
       </rect>
      </property>
      <property name="title">
@@ -810,7 +860,7 @@
         <x>100</x>
         <y>60</y>
         <width>131</width>
-        <height>20</height>
+        <height>24</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -838,7 +888,7 @@
         <x>100</x>
         <y>85</y>
         <width>131</width>
-        <height>20</height>
+        <height>24</height>
        </rect>
       </property>
       <property name="maximum">
@@ -882,7 +932,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>240</y>
+       <y>258</y>
        <width>131</width>
        <height>61</height>
       </rect>
@@ -992,7 +1042,7 @@
      <property name="geometry">
       <rect>
        <x>319</x>
-       <y>240</y>
+       <y>258</y>
        <width>181</width>
        <height>61</height>
       </rect>

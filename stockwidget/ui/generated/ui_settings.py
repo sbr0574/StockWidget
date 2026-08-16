@@ -25,16 +25,55 @@ class Ui_SettingDialog(object):
     def setupUi(self, SettingDialog):
         if not SettingDialog.objectName():
             SettingDialog.setObjectName(u"SettingDialog")
-        SettingDialog.resize(540, 360)
+        SettingDialog.resize(640, 390)
+        SettingDialog.setMinimumSize(QSize(640, 390))
+        SettingDialog.setMaximumSize(QSize(640, 390))
         SettingDialog.setSizeGripEnabled(False)
+        SettingDialog.setStyleSheet(u"QGroupBox {\n"
+"    font-size: 13px;\n"
+"    font-weight: 600;\n"
+"}\n"
+"QGroupBox#gb_data, QGroupBox#gb_interval, QGroupBox#gb_name,\n"
+"QGroupBox#gb_icon, QGroupBox#gb_fcn, QGroupBox#gb_color,\n"
+"QGroupBox#gb_text, QGroupBox#gb_tabel, QGroupBox#gb_hotkeys,\n"
+"QGroupBox#gb_about {\n"
+"    border: none;\n"
+"    border-top: 1px solid rgba(128, 128, 128, 0.45);\n"
+"    margin-top: 9px;\n"
+"    padding-top: 12px;\n"
+"}\n"
+"QGroupBox#gb_data::title, QGroupBox#gb_interval::title, QGroupBox#gb_name::title,\n"
+"QGroupBox#gb_icon::title, QGroupBox#gb_fcn::title, QGroupBox#gb_color::title,\n"
+"QGroupBox#gb_text::title, QGroupBox#gb_tabel::title, QGroupBox#gb_hotkeys::title,\n"
+"QGroupBox#gb_about::title {\n"
+"    subcontrol-origin: margin;\n"
+"    subcontrol-position: top center;\n"
+"    padding: 0 8px;\n"
+"}\n"
+"QPushButton {\n"
+"    border: 1px solid rgba(128, 128, 128, 0.5);\n"
+"    border-radius: 6px;\n"
+"    padding: 4px 12px;\n"
+"}\n"
+"QPushButton:hover {\n"
+"    background: rgba(128, 128, 128, 0.16);\n"
+"}\n"
+""
+                        "QPushButton:pressed {\n"
+"    background: rgba(128, 128, 128, 0.28);\n"
+"}\n"
+"QPushButton:disabled {\n"
+"    color: rgba(128, 128, 128, 0.5);\n"
+"    border-color: rgba(128, 128, 128, 0.3);\n"
+"}")
         self.tab_widget = QTabWidget(SettingDialog)
         self.tab_widget.setObjectName(u"tab_widget")
-        self.tab_widget.setGeometry(QRect(10, 10, 520, 340))
+        self.tab_widget.setGeometry(QRect(10, 10, 620, 370))
         self.data = QWidget()
         self.data.setObjectName(u"data")
         self.gb_list = QGroupBox(self.data)
         self.gb_list.setObjectName(u"gb_list")
-        self.gb_list.setGeometry(QRect(10, 10, 281, 290))
+        self.gb_list.setGeometry(QRect(10, 10, 386, 290))
         self.gb_list.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
         self.gb_list.setFlat(False)
         self.gb_list.setCheckable(False)
@@ -42,7 +81,7 @@ class Ui_SettingDialog(object):
         if (self.list_codes.columnCount() < 3):
             self.list_codes.setColumnCount(3)
         self.list_codes.setObjectName(u"list_codes")
-        self.list_codes.setGeometry(QRect(15, 25, 200, 251))
+        self.list_codes.setGeometry(QRect(15, 25, 300, 251))
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -65,22 +104,22 @@ class Ui_SettingDialog(object):
         self.list_codes.verticalHeader().setCascadingSectionResizes(False)
         self.btn_down = QPushButton(self.gb_list)
         self.btn_down.setObjectName(u"btn_down")
-        self.btn_down.setGeometry(QRect(220, 120, 51, 26))
+        self.btn_down.setGeometry(QRect(325, 120, 51, 26))
         self.btn_up = QPushButton(self.gb_list)
         self.btn_up.setObjectName(u"btn_up")
-        self.btn_up.setGeometry(QRect(220, 90, 51, 26))
+        self.btn_up.setGeometry(QRect(325, 90, 51, 26))
         self.btn_del = QPushButton(self.gb_list)
         self.btn_del.setObjectName(u"btn_del")
-        self.btn_del.setGeometry(QRect(220, 60, 51, 26))
+        self.btn_del.setGeometry(QRect(325, 60, 51, 26))
         self.btn_add = QPushButton(self.gb_list)
         self.btn_add.setObjectName(u"btn_add")
-        self.btn_add.setGeometry(QRect(220, 30, 51, 26))
+        self.btn_add.setGeometry(QRect(325, 30, 51, 26))
         self.btn_top = QPushButton(self.gb_list)
         self.btn_top.setObjectName(u"btn_top")
-        self.btn_top.setGeometry(QRect(220, 150, 51, 26))
+        self.btn_top.setGeometry(QRect(325, 150, 51, 26))
         self.gb_data = QGroupBox(self.data)
         self.gb_data.setObjectName(u"gb_data")
-        self.gb_data.setGeometry(QRect(300, 160, 201, 141))
+        self.gb_data.setGeometry(QRect(405, 160, 201, 141))
         self.gb_data.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_data.setFlat(True)
         self.cb_price = QCheckBox(self.gb_data)
@@ -115,12 +154,12 @@ class Ui_SettingDialog(object):
         self.cb_profit.setGeometry(QRect(10, 115, 61, 24))
         self.gb_interval = QGroupBox(self.data)
         self.gb_interval.setObjectName(u"gb_interval")
-        self.gb_interval.setGeometry(QRect(300, 10, 201, 51))
+        self.gb_interval.setGeometry(QRect(405, 10, 201, 51))
         self.gb_interval.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_interval.setFlat(True)
         self.slider_interval = QSlider(self.gb_interval)
         self.slider_interval.setObjectName(u"slider_interval")
-        self.slider_interval.setGeometry(QRect(10, 25, 141, 20))
+        self.slider_interval.setGeometry(QRect(10, 25, 141, 24))
         self.slider_interval.setMinimum(1)
         self.slider_interval.setMaximum(15)
         self.slider_interval.setPageStep(15)
@@ -135,7 +174,7 @@ class Ui_SettingDialog(object):
         self.label_interval.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_name = QGroupBox(self.data)
         self.gb_name.setObjectName(u"gb_name")
-        self.gb_name.setGeometry(QRect(300, 70, 201, 81))
+        self.gb_name.setGeometry(QRect(405, 70, 201, 81))
         self.gb_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_name.setFlat(True)
         self.gb_name.setCheckable(True)
@@ -157,7 +196,7 @@ class Ui_SettingDialog(object):
         self.general.setObjectName(u"general")
         self.gb_icon = QGroupBox(self.general)
         self.gb_icon.setObjectName(u"gb_icon")
-        self.gb_icon.setGeometry(QRect(150, 240, 151, 61))
+        self.gb_icon.setGeometry(QRect(150, 258, 151, 61))
         self.gb_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_icon.setFlat(True)
         self.cmb_icon = QComboBox(self.gb_icon)
@@ -182,7 +221,7 @@ class Ui_SettingDialog(object):
         self.cb_click_through.setGeometry(QRect(90, 25, 81, 24))
         self.gb_color = QGroupBox(self.general)
         self.gb_color.setObjectName(u"gb_color")
-        self.gb_color.setGeometry(QRect(10, 10, 291, 101))
+        self.gb_color.setGeometry(QRect(10, 10, 291, 113))
         self.gb_color.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_color.setFlat(True)
         self.cb_default_color = QCheckBox(self.gb_color)
@@ -202,14 +241,14 @@ class Ui_SettingDialog(object):
         self.label_all.setGeometry(QRect(10, 85, 91, 16))
         self.slider_bg_alpha = QSlider(self.gb_color)
         self.slider_bg_alpha.setObjectName(u"slider_bg_alpha")
-        self.slider_bg_alpha.setGeometry(QRect(100, 60, 131, 16))
+        self.slider_bg_alpha.setGeometry(QRect(100, 60, 131, 24))
         self.slider_bg_alpha.setMinimum(1)
         self.slider_bg_alpha.setMaximum(100)
         self.slider_bg_alpha.setValue(60)
         self.slider_bg_alpha.setOrientation(Qt.Orientation.Horizontal)
         self.slider_all_alpha = QSlider(self.gb_color)
         self.slider_all_alpha.setObjectName(u"slider_all_alpha")
-        self.slider_all_alpha.setGeometry(QRect(100, 85, 131, 16))
+        self.slider_all_alpha.setGeometry(QRect(100, 85, 131, 24))
         self.slider_all_alpha.setMinimum(10)
         self.slider_all_alpha.setMaximum(100)
         self.slider_all_alpha.setValue(80)
@@ -222,7 +261,7 @@ class Ui_SettingDialog(object):
         self.label_all_alpha.setGeometry(QRect(240, 85, 31, 16))
         self.gb_text = QGroupBox(self.general)
         self.gb_text.setObjectName(u"gb_text")
-        self.gb_text.setGeometry(QRect(10, 125, 291, 111))
+        self.gb_text.setGeometry(QRect(10, 133, 291, 115))
         self.gb_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_text.setFlat(True)
         self.cmb_font = QFontComboBox(self.gb_text)
@@ -239,7 +278,7 @@ class Ui_SettingDialog(object):
         self.label_line_interval.setGeometry(QRect(10, 85, 41, 16))
         self.slider_font_size = QSlider(self.gb_text)
         self.slider_font_size.setObjectName(u"slider_font_size")
-        self.slider_font_size.setGeometry(QRect(100, 60, 131, 20))
+        self.slider_font_size.setGeometry(QRect(100, 60, 131, 24))
         sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
@@ -251,7 +290,7 @@ class Ui_SettingDialog(object):
         self.slider_font_size.setOrientation(Qt.Orientation.Horizontal)
         self.slider_line_interval = QSlider(self.gb_text)
         self.slider_line_interval.setObjectName(u"slider_line_interval")
-        self.slider_line_interval.setGeometry(QRect(100, 85, 131, 20))
+        self.slider_line_interval.setGeometry(QRect(100, 85, 131, 24))
         self.slider_line_interval.setMaximum(20)
         self.slider_line_interval.setValue(3)
         self.slider_line_interval.setOrientation(Qt.Orientation.Horizontal)
@@ -263,7 +302,7 @@ class Ui_SettingDialog(object):
         self.label_current_line_interval.setGeometry(QRect(240, 85, 41, 16))
         self.gb_tabel = QGroupBox(self.general)
         self.gb_tabel.setObjectName(u"gb_tabel")
-        self.gb_tabel.setGeometry(QRect(10, 240, 131, 61))
+        self.gb_tabel.setGeometry(QRect(10, 258, 131, 61))
         self.gb_tabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_tabel.setFlat(True)
         self.cb_head = QCheckBox(self.gb_tabel)
@@ -291,7 +330,7 @@ class Ui_SettingDialog(object):
         self.keyseq_click_through.setGeometry(QRect(30, 105, 141, 25))
         self.gb_about = QGroupBox(self.general)
         self.gb_about.setObjectName(u"gb_about")
-        self.gb_about.setGeometry(QRect(319, 240, 181, 61))
+        self.gb_about.setGeometry(QRect(319, 258, 181, 61))
         self.gb_about.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_about.setFlat(True)
         self.label_about_info = QLabel(self.gb_about)
