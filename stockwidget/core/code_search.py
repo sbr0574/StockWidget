@@ -1,71 +1,21 @@
-import json
-import os
+# -*- coding: utf-8 -*-
+"""自选股代码搜索与规范化（纯业务逻辑，无 Qt/网络依赖）。
+
+根据数字代码、拼音、首字母、中文名/英文名在代码列表中匹配建议。
+"""
+
 import re
 
-import requests
-
-from PySide6.QtCore import QFile, QIODevice
-
-from services.stock_data import MARKET_PREFIXES, strip_market
-
-def config_paths(app_name: str) -> str:
-    return os.path.join(os.getenv("APPDATA") or os.path.expanduser("~"), app_name)
-
-
-def load_file(app_name: str, file_name: str, except_ret: dict | None = None) -> dict:
-    fallback = {} if except_ret is None else except_ret
-    path = os.path.join(config_paths(app_name), file_name)
-    if not os.path.exists(path):
-        return fallback
-    try:
-        with open(path, "r", encoding="utf-8") as file:
-            return json.load(file)
-    except (OSError, json.JSONDecodeError):
-        return fallback
-
-
-def load_json_from_resource(path: str) -> dict:
-    """
-    从 Qt 资源系统读取 JSON 文件
-    Args:
-        path(str): 文件路径如':/settings.json'
-    Returns:
-        dict: JSON 数据
-    """
-    file = QFile(path)
-    if not file.open(QIODevice.ReadOnly | QIODevice.Text):
-        raise FileNotFoundError(f"无法打开资源文件: {path}")
-    content = file.readAll()
-    file.close()
-    
-    text = bytes(content).decode('utf-8')
-    return json.loads(text)
-
-
-def save_file(data: dict, app_name: str, file_name: str) -> None:
-    os.makedirs(config_paths(app_name), exist_ok=True)
-    config_file = os.path.join(config_paths(app_name), file_name)
-    tmp_file = config_file + ".tmp"
-    with open(tmp_file, "w", encoding="utf-8") as file:
-        json.dump(data, file, ensure_ascii=False, indent=2)
-    os.replace(tmp_file, config_file)
+from stockwidget.core.markets import MARKET_PREFIXES, strip_market
 
 
 def code_without_market(code: str) -> str:
+    """去掉代码的市场前缀（兼容旧命名，等价于 strip_market）。"""
     return strip_market(code)
 
 
-def fetch_json_from_url(url: str, timeout: int = 10):
-    """从 URL 下载 JSON，失败返回 None。"""
-    try:
-        r = requests.get(url, timeout=timeout)
-        r.raise_for_status()
-        return r.json()
-    except Exception:
-        return None
-
-
 def normalize_stock_entry(item: dict) -> dict:
+    """把代码列表中的原始条目规范化为统一的搜索字段 dict。"""
     market = str(item.get("market", "") or "").strip().lower()
     code = str(item.get("code", "") or "").strip()
     if market in {"sh", "sz", "bj"} and code.isdigit():
@@ -86,6 +36,7 @@ def normalize_stock_entry(item: dict) -> dict:
 
 
 def _query_variants(text: str) -> set[str]:
+    """把用户输入扩展成多个候选查询（去市场前缀、数字补零等）。"""
     q = str(text or "").strip().lower().replace(" ", "")
     variants = {q}
     if len(q) == 8 and q[:2] in MARKET_PREFIXES:
@@ -97,6 +48,7 @@ def _query_variants(text: str) -> set[str]:
 
 
 def find_suggestions(codes: dict, text: str, limit: int = 20) -> list[dict]:
+    """在代码列表中按相关度返回匹配建议（精确 > 前缀 > 包含）。"""
     queries = _query_variants(text)
     if not queries or not isinstance(codes, dict):
         return []

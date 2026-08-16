@@ -61,6 +61,46 @@
 
 ---
 
+## 📁 项目结构
+
+代码按职责分层，前端（界面）与后端（数据/逻辑）分离：
+
+```
+main.py                      # 程序入口
+StockWidget.spec             # PyInstaller 打包配置
+resources/                   # 静态资源（图标、内置代码列表、Qt 资源）
+tests/                       # 单元测试（python -m unittest discover -s tests）
+stockwidget/
+  app.py                     # 应用装配：连接各层、托盘、后台任务
+  constants.py               # 全局常量（名称/版本/文件/地址）
+  ui/                        # 界面层（前端）：所有 Qt 组件与显示
+    widget.py                #   盯盘浮窗主面板
+    settings_dialog.py       #   设置面板
+    table_model.py           #   表格 Model 与 K 线 Delegate
+    drag_mixin.py            #   拖拽 / 双击隐藏交互（混入）
+    tray.py                  #   系统托盘（平台差异的点击行为）
+    generated/               #   Qt Designer / pyside6-uic 生成文件（勿手改）
+  data/                      # 数据层（后端）：行情请求与整理
+    quotes.py                #   行情请求与解析（新浪 / 东财）
+    code_lists.py            #   代码列表下载 / 缓存 / 兜底
+    update_check.py          #   版本更新检查
+    code_index.py            #   代码列表生成（仅 CI 使用，依赖 akshare）
+  core/                      # 功能函数层：纯业务逻辑（无 Qt，可单元测试）
+    markets.py               #   市场代码约定
+    formatters.py            #   成交量 / 成交额格式化
+    code_search.py           #   代码搜索 / 建议
+    watchlist.py             #   自选列表规范化
+    config_store.py          #   配置读写
+    geometry.py              #   多显示器位置恢复
+  platform/                  # 平台适配层：跨平台原生实现
+    capabilities.py          #   能力探测（X11/Wayland 等）
+    click_through.py         #   鼠标穿透
+    autostart.py             #   开机自启
+    hotkeys.py               #   全局快捷键
+```
+
+分层原则：`ui` 只负责显示与交互，`data` 只负责取数与解析，`core` 是可独立测试的纯函数，`platform` 隔离平台差异；各层通过 `app.py` 装配连接，避免职责互相缠绕。
+
 ## 🧰 运行环境
 
 右侧 [Releases](https://github.com/sbr0574/StockWidget/releases) 已有打包好的程序（`StockWidget-windows.zip`），**直接下载，解压后运行 StockWidget.exe 使用**。

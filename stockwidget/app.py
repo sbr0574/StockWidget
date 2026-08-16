@@ -1,23 +1,33 @@
-import sys, os, threading
-from datetime import datetime
+# -*- coding: utf-8 -*-
+"""应用装配层：创建各层对象、连接信号、处理托盘与后台任务。
+
+本模块只负责“组装”各层，不含界面细节（见 ui/）与数据/网络细节（见 data/）。
+"""
+
+import os
+import sys
+import threading
 
 from PySide6.QtCore import Qt, QPoint, Signal
-from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QStyle, QMessageBox
-import resources.resources_rc
-from src.WidgetPanel import FloatLabel
-from src.SettingPanel import SettingsDialog
-from services.update_check import check_for_update
-from src.utils import load_file, save_file, load_json_from_resource, fetch_json_from_url
-from src.platform_support import click_through_supported, start_on_boot_supported, set_start_on_boot
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QApplication, QStyle, QMessageBox
 
-APP_NAME = "StockWidget"
-APP_VERSION = "1.3.1"
-CONFIG_FILE = "stock_widget_config.json"
-# 全市场代码列表：三个独立 JSON（GitHub Action 每日更新后由程序下载）
-LIST_FILES = ("stock_codes_list.json", "stock_codes_global.json", "stock_codes_futures.json")
-CODES_RAW_URL = "https://raw.githubusercontent.com/sbr0574/StockWidget/{branch}/resources/{name}"
-CODES_BRANCHES = ("main", "master")
+import resources.resources_rc  # noqa: F401  加载 Qt 内嵌资源（图标、内置代码列表）
+
+from stockwidget.constants import APP_NAME, APP_VERSION, CONFIG_FILE
+from stockwidget.core.config_store import load_file, save_file
+from stockwidget.data.code_lists import (
+    all_codes_fresh,
+    download_codes,
+    load_local_codes,
+    load_resource_codes,
+)
+from stockwidget.data.update_check import check_for_update
+from stockwidget.platform.autostart import set_start_on_boot
+from stockwidget.ui.settings_dialog import SettingsDialog
+from stockwidget.ui.tray import TrayIcon
+from stockwidget.ui.widget import FloatLabel
+
 
 class App(QApplication):
     update_checked = Signal(bool)
@@ -33,12 +43,12 @@ class App(QApplication):
 
         # 加载市场代码列表：更新日期为今天则直接读取，否则先用资源缓存启动，后台再更新
         self._need_background_refresh = False
-        local_codes = self._load_local_codes()
-        if local_codes and self._all_codes_fresh():
+        local_codes = load_local_codes(self.app_name)
+        if local_codes and all_codes_fresh(self.app_name):
             codes_list = local_codes
         else:
             # 本地缺失/过期：先用资源内嵌兜底显示，启动后后台从 GitHub 下载
-            codes_list = self._load_resource_codes() or local_codes
+            codes_list = load_resource_codes() or local_codes
             self._need_background_refresh = True
 
         # 加载图标
@@ -49,29 +59,20 @@ class App(QApplication):
         # 初始化浮窗
         self.win = FloatLabel(cfg, codes_list)
         self._start_on_boot = bool(cfg.get("start_on_boot", False))
-        self.set_start_on_boot(self._start_on_boot) # Apply start-on-boot setting from config
+        self.set_start_on_boot(self._start_on_boot)  # 应用配置中的开机自启
         self.win.set_on_change(self.save_now)
         self.win.set_open_settings_callback(self.open_settings)
 
-        # 初始化托盘
-        self.tray = QSystemTrayIcon(app_icon, self)
-        self.tray.setToolTip(APP_NAME)
-        menu = QMenu()
-        menu.addAction(QAction("显示/隐藏 浮窗", self, triggered=self.toggle_win))
-        self.act_click_through = QAction("鼠标穿透", self, checkable=True)
-        self.act_click_through.setChecked(self.win.click_through)
-        self.act_click_through.toggled.connect(self.win.set_click_through)
-        if not click_through_supported():
-            # 当前平台(如 Wayland)不支持鼠标穿透,置为不可点按
-            self.act_click_through.setEnabled(False)
-            self.act_click_through.setToolTip("当前会话不支持鼠标穿透")
-        menu.addAction(self.act_click_through)
-        menu.addAction(QAction("设置…", self, triggered=self.open_settings))
-        menu.addSeparator()
-        menu.addAction(QAction("退出", self, triggered=self.quit_app))
-        menu.aboutToShow.connect(self._sync_tray_click_through)
-        self.tray.setContextMenu(menu)
-        self.tray.activated.connect(self.on_tray_activated)
+        # 初始化托盘（菜单与点击行为封装在 ui/tray.py，按平台区分）
+        self.tray = TrayIcon(
+            app_icon,
+            APP_NAME,
+            on_toggle=self.toggle_win,
+            on_open_settings=self.open_settings,
+            on_quit=self.quit_app,
+            on_click_through=self.win.set_click_through,
+            click_through_getter=lambda: self.win.click_through,
+        )
         self.tray.show()
 
         # 启动浮窗
@@ -95,7 +96,7 @@ class App(QApplication):
         if not choice or choice == 'default':
             return QIcon(":/StockWidget.ico")
         if isinstance(choice, str) and choice.startswith('std:'):
-            key = choice.split(':',1)[1]
+            key = choice.split(':', 1)[1]
             mapping = {
                 'computer': QStyle.SP_ComputerIcon,
                 'network': QStyle.SP_DriveNetIcon,
@@ -111,9 +112,6 @@ class App(QApplication):
                 return QIcon(choice)
         except Exception:
             return QIcon(":/StockWidget.ico")
-
-    def on_tray_activated(self, reason):
-        if reason in (QSystemTrayIcon.Trigger, QSystemTrayIcon.DoubleClick): self.toggle_win()
 
     def toggle_win(self):
         if self.win.isVisible():
@@ -145,10 +143,6 @@ class App(QApplication):
         self.settings_dlg.raise_()
         self.settings_dlg.activateWindow()
 
-    def _sync_tray_click_through(self):
-        if hasattr(self, "act_click_through") and hasattr(self, "win"):
-            self.act_click_through.setChecked(self.win.click_through)
-
     def _start_update_check(self):
         """后台线程检查更新，结果通过信号回传到主线程显示"""
         def _worker():
@@ -169,56 +163,12 @@ class App(QApplication):
         def _worker():
             codes = {}
             try:
-                codes = self._download_codes() or {}
+                codes = download_codes(self.app_name) or {}
             except Exception:
                 codes = {}
             self.index_finished.emit(codes)
 
         threading.Thread(target=_worker, daemon=True).start()
-
-    def _download_codes(self) -> dict | None:
-        """从 GitHub 下载三个代码 json 到本地；全部成功返回合并 codes，否则返回 None。"""
-        merged = {}
-        for fname in LIST_FILES:
-            data = None
-            for branch in CODES_BRANCHES:
-                url = CODES_RAW_URL.format(branch=branch, name=fname)
-                data = fetch_json_from_url(url, timeout=15)
-                if data and data.get("codes"):
-                    break
-            if not data or not data.get("codes"):
-                return None
-            save_file(data, self.app_name, fname)
-            merged.update(data["codes"])
-        return merged
-
-    def _load_local_codes(self) -> dict:
-        """合并本地三个代码 json。"""
-        merged = {}
-        for fname in LIST_FILES:
-            f = load_file(self.app_name, fname)
-            merged.update((f or {}).get("codes", {}) or {})
-        return merged
-
-    def _load_resource_codes(self) -> dict:
-        """从 Qt 资源内嵌的代码 json 合并。"""
-        merged = {}
-        for fname in LIST_FILES:
-            try:
-                res = load_json_from_resource(f":/{fname}")
-            except FileNotFoundError:
-                res = {}
-            merged.update((res or {}).get("codes", {}) or {})
-        return merged
-
-    def _all_codes_fresh(self) -> bool:
-        """三个本地代码 json 是否都是今天生成。"""
-        today = datetime.now().strftime("%Y-%m-%d")
-        for fname in LIST_FILES:
-            f = load_file(self.app_name, fname)
-            if (f or {}).get("last_update") != today or not f.get("codes"):
-                return False
-        return True
 
     def _on_index_finished(self, codes: dict):
         self.win.set_index_updating(False)

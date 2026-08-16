@@ -9,10 +9,11 @@ from PySide6.QtWidgets import (
     QStyledItemDelegate, QLineEdit, QCompleter, QHeaderView, QFileDialog,
     QMessageBox
 )
-from ui.ui_settings import Ui_SettingDialog
-from src.utils import code_without_market, find_suggestions, config_paths
-from src.WidgetPanel import FloatLabel
-from src.platform_support import (
+from stockwidget.ui.generated.ui_settings import Ui_SettingDialog
+from stockwidget.core.code_search import code_without_market, find_suggestions
+from stockwidget.core.config_store import config_paths
+from stockwidget.ui.widget import FloatLabel
+from stockwidget.platform.capabilities import (
     hotkeys_supported,
     click_through_supported,
     opacity_supported,
@@ -21,7 +22,7 @@ from src.platform_support import (
     unsupported_tooltip,
     custom_icon_supported,
 )
-from services.update_check import PROJECT_URL
+from stockwidget.data.update_check import PROJECT_URL
 
 
 def _hotkey_error_message(result) -> str:
@@ -34,10 +35,6 @@ def _hotkey_error_message(result) -> str:
         return "快捷键无效,需包含至少一个修饰键(Ctrl/Alt/Shift/Win)和一个主键。"
     if result.reason == "unsupported":
         return "当前平台暂不支持全局快捷键。"
-    if result.reason == "permission":
-        return ("macOS 需要「辅助功能/输入监听」权限才能使用全局快捷键。\n"
-                "请前往 系统设置 → 隐私与安全性 → 辅助功能(或输入监控),"
-                "勾选本程序后,重新勾选「启用快捷键」即可。")
     return "快捷键注册失败,请更换后重试。"
 
 
@@ -198,6 +195,8 @@ class SettingsDialog(QDialog):
         self.cb_force_top.toggled.connect(self._on_force_top_toggled)
         self.cb_click_through.toggled.connect(self._on_click_through_toggled)
         self.win.click_through_changed.connect(self._sync_click_through_from_win)
+        # 浮窗右键菜单等外部途径修改显示指标时，同步设置窗口复选框
+        self.win.display_flags_changed.connect(self._sync_display_flags_from_win)
         self.cb_hotkey_hide.toggled.connect(self._on_hotkey_hide_enabled_toggled)
         self.cb_hotkey_click_through.toggled.connect(self._on_click_through_hotkey_enabled_toggled)
         self.cb_head.toggled.connect(self._on_header_toggled)
@@ -279,6 +278,10 @@ class SettingsDialog(QDialog):
         if not click_through_supported():
             self.cb_click_through.setEnabled(False)
             self.cb_click_through.setToolTip(unsupported_tooltip("鼠标穿透"))
+            # 鼠标穿透不可用（如 macOS）时，其快捷键一并关闭
+            for w in (self.cb_hotkey_click_through, self.keyseq_click_through):
+                w.setEnabled(False)
+                w.setToolTip(unsupported_tooltip("鼠标穿透"))
         if not opacity_supported():
             # 整体不透明度滑块:Wayland 平台插件不支持设置窗口透明度
             for w in (self.slider_all_alpha, self.label_all, self.label_all_alpha):
@@ -720,6 +723,37 @@ class SettingsDialog(QDialog):
         self.cb_click_through.blockSignals(True)
         self.cb_click_through.setChecked(bool(checked))
         self.cb_click_through.blockSignals(False)
+
+    @staticmethod
+    def _set_checked_blocked(widget, checked: bool):
+        """设置可勾选控件的状态，并屏蔽其 toggled 信号，避免反向触发浮窗改动。"""
+        widget.blockSignals(True)
+        widget.setChecked(bool(checked))
+        widget.blockSignals(False)
+
+    def _sync_display_flags_from_win(self):
+        """浮窗右键菜单等外部途径修改显示指标时，同步设置窗口对应复选框。"""
+        for cb, header in (
+            (self.cb_price, "现价"),
+            (self.cb_diff, "涨跌"),
+            (self.cb_pct, "涨幅"),
+            (self.cb_vol, "成交量"),
+            (self.cb_amount, "成交额"),
+            (self.cb_avg, "均价"),
+            (self.cb_commi, "委比"),
+            (self.cb_kline, "K线"),
+            (self.cb_profit, "浮盈"),
+        ):
+            self._set_checked_blocked(cb, self.win.header_is_visible(header))
+        self._set_checked_blocked(self.cb_b1s1, self.win.b1s1_visible)
+        self._set_checked_blocked(self.gb_name, self.win.name_visible)
+        self._set_checked_blocked(self.cb_type, self.win.type_visible)
+        self._set_checked_blocked(self.cb_code, self.win.code_visible)
+        self._set_checked_blocked(self.cb_head, self.win.header_visible)
+        self._set_checked_blocked(self.cb_grid, self.win.grid_visible)
+        self._set_checked_blocked(self.cb_default_color, self.win.default_color)
+        # 默认颜色开启时禁用前景色选择按钮
+        self.btn_fg.setEnabled(not self.win.default_color)
 
     def _on_click_through_toggled(self, checked: bool):
         self.win.set_click_through(bool(checked))

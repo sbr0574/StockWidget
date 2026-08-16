@@ -17,7 +17,9 @@ Licensed under Apache License 2.0
 """
 
 import sys
-from src.App import App, APP_NAME
+
+from stockwidget.app import App
+from stockwidget.constants import APP_NAME
 
 if __name__ == "__main__":
 

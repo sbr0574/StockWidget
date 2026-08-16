@@ -3,40 +3,32 @@ import requests
 import threading
 import sys
 
-from PySide6.QtCore import Qt, QEvent, QTimer, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QFont, QAction, QColor
 from PySide6.QtWidgets import QApplication, QWidget, QMenu, QVBoxLayout, QLabel, QTableView, QHeaderView, QAbstractItemView, QFrame, QStyledItemDelegate
 
-from src.Display import SimpleTableModel, KLineDelegate
-from src.hotkeys import GlobalHotkeyManager, HotkeyResult
-from services.stock_data import request_quote, strip_market
-from src.platform_support import (
+from stockwidget.ui.table_model import SimpleTableModel, KLineDelegate
+from stockwidget.ui.drag_mixin import DragBehaviorMixin
+from stockwidget.platform.hotkeys import GlobalHotkeyManager, HotkeyResult
+from stockwidget.data.quotes import request_quote
+from stockwidget.core.markets import strip_market
+from stockwidget.core.formatters import format_volume, format_amount
+from stockwidget.core.watchlist import normalize_watchlist
+from stockwidget.core.geometry import resolve_restore_position
+from stockwidget.platform.capabilities import (
     is_wayland,
     hotkeys_supported, click_through_supported,
     opacity_supported, force_top_supported,
-    apply_click_through, default_font_family,
+    default_font_family,
 )
-
-def _format_volume(value: int) -> str:
-    value = int(value/100)
-    if value < 1e4:
-        return f"{value}"
-    if value < 1e8:
-        return f"{value / 1e4:.2f}万"
-    return f"{value / 1e8:.2f}亿"
-
-def _format_amount(value: float) -> str:
-    if value < 1e8:
-        return f"{value / 1e4:.2f}万"
-    if value < 1e12:
-        return f"{value / 1e8:.2f}亿"
-    return f"{value / 1e12:.2f}万亿"
+from stockwidget.platform.click_through import apply_click_through
 
 
-class FloatLabel(QWidget):
+class FloatLabel(DragBehaviorMixin, QWidget):
     hotkey_triggered = Signal()
     click_through_hotkey_triggered = Signal()
     click_through_changed = Signal(bool)
+    display_flags_changed = Signal()  # 显示指标/表头/网格/默认颜色等显示相关设置变化
     data_ready = Signal(object)  # 后台线程请求完成后发回主线程: (ok, ret, data, error)
     ALL_HEADERS = ["名称", "现价", "涨跌", "涨幅", "浮盈", "买一", "卖一", "委比", "成交量", "成交额", "均价", "K线"]
     HEADER_ATTR_MAP = {
@@ -68,7 +60,7 @@ class FloatLabel(QWidget):
         self.codes_list: dict = codes_list
         # 加载自选标的配置（代码 -> {checked, cost, name, type}）
         watchlist_cfg           = cfg.get("watchlist", {})
-        self.watchlist: dict    = self._normalize_watchlist(watchlist_cfg)
+        self.watchlist: dict    = normalize_watchlist(watchlist_cfg)
         # 加载面板配置
         self.name_visible       = bool(cfg.get("name_visible", True))
         self.code_visible       = bool(cfg.get("code_visible", False))
@@ -114,6 +106,8 @@ class FloatLabel(QWidget):
             self.hotkey_click_through_enabled = False
         if not click_through_supported():
             self.click_through = False
+            # 鼠标穿透不可用（如 macOS）时，其快捷键一并关闭，避免"按了没效果"
+            self.hotkey_click_through_enabled = False
         if not force_top_supported():
             self.force_top = False
 
@@ -173,18 +167,8 @@ class FloatLabel(QWidget):
         self.set_window_opacity_percent(self.opacity_pct)
         self._fit_to_contents()
 
-        scr = QApplication.primaryScreen().availableGeometry()
-        pos = cfg.get("pos")
-        if isinstance(pos, dict) and "x" in pos and "y" in pos:
-            x, y = int(pos["x"]), int(pos["y"])
-            x = max(scr.left(), min(x, scr.right()-self.width()))
-            y = max(scr.top(),  min(y, scr.bottom()-self.height()))
-            self.move(x, y)
-        else:
-            self.move(scr.right()-self.width()-40, scr.bottom()-self.height()-80)
-
-        self._drag_pos = None
-        self._system_moving = False
+        self._restore_position(cfg.get("pos"))
+        self._init_drag()
 
         # 定时刷新数据
         self.data_ready.connect(self._process_data)
@@ -205,28 +189,6 @@ class FloatLabel(QWidget):
         self.set_click_through(self.click_through)
 
     # ----- 自选标的派生属性（由 watchlist 生成） -----
-    @staticmethod
-    def _normalize_watchlist(watchlist: dict) -> dict:
-        """规范化自选列表：代码小写，cost 转数值（整数值保持 int），name/type 转字符串"""
-        result = {}
-        for key, info in (watchlist or {}).items():
-            key = str(key).strip().lower()
-            if not key:
-                continue
-            entry = dict(info or {})
-            entry["checked"] = bool(entry.get("checked", True))
-            try:
-                val = float(entry["cost"]) if entry.get("cost") not in (None, "") else None
-            except (TypeError, ValueError):
-                val = None
-            if val is not None and val.is_integer():
-                val = int(val)
-            entry["cost"] = val
-            entry["name"] = str(entry.get("name", "") or "").strip()
-            entry["type"] = str(entry.get("type", "") or "").strip()
-            result[key] = entry
-        return result
-
     @property
     def codes(self) -> list:
         return list(self.watchlist.keys())
@@ -360,6 +322,23 @@ class FloatLabel(QWidget):
     def _defer_fit(self):
         QTimer.singleShot(0, self._fit_to_contents)
 
+    def _restore_position(self, pos_cfg):
+        """多显示器恢复位置：保存位置落在任一屏幕内则原位恢复，否则回退到主屏默认位置。"""
+        screens = QApplication.screens()
+        rects = []
+        for s in screens:
+            g = s.availableGeometry()
+            rects.append((g.left(), g.top(), g.width(), g.height()))
+        pg = QApplication.primaryScreen().availableGeometry()
+        primary = (pg.left(), pg.top(), pg.width(), pg.height())
+
+        saved = None
+        if isinstance(pos_cfg, dict) and "x" in pos_cfg and "y" in pos_cfg:
+            saved = (int(pos_cfg["x"]), int(pos_cfg["y"]))
+
+        x, y = resolve_restore_position(saved, rects, primary, self.width(), self.height())
+        self.move(x, y)
+
     # ----- 数据 & 投影 -----
     def _show_message(self, msg: str, is_error: bool = False):
         """显示顶部提示；is_error=True 时用红色字体，否则用前景色"""
@@ -486,8 +465,8 @@ class FloatLabel(QWidget):
             "买一": b1_label,
             "卖一": s1_label,
             "委比": f"{committee:+.2f}%" if (p_sum + s_sum) > 0 else "-",
-            "成交量": ("-" if is_index and not data["deals_vol"] else _format_volume(data["deals_vol"])),
-            "成交额": ("-" if is_index and not data["deals_amt"] else _format_amount(data["deals_amt"])),
+            "成交量": ("-" if is_index and not data["deals_vol"] else format_volume(data["deals_vol"])),
+            "成交额": ("-" if is_index and not data["deals_amt"] else format_amount(data["deals_amt"])),
             "均价": f"{avg:.{precision}f}",
             "K线": k_payload}
         sign = {
@@ -562,7 +541,7 @@ class FloatLabel(QWidget):
     # ----- 应用设置 -----
     def set_watchlist(self, watchlist: dict):
         """整体替换自选列表（代码 -> {checked, cost, name, type}）"""
-        self.watchlist = self._normalize_watchlist(watchlist)
+        self.watchlist = normalize_watchlist(watchlist)
         self._notify_change()
         self._refresh_from_function()
 
@@ -570,11 +549,13 @@ class FloatLabel(QWidget):
         self.type_visible = bool(visible)
         self._notify_change()
         self._refresh_from_function()
+        self.display_flags_changed.emit()
 
     def set_code_visible(self, visible: bool):
         self.code_visible = bool(visible)
         self._notify_change()
         self._refresh_from_function()
+        self.display_flags_changed.emit()
 
     def set_flag(self, header, checked: bool):
         if isinstance(header, int):
@@ -593,6 +574,7 @@ class FloatLabel(QWidget):
         setattr(self, attr, checked)
         self._notify_change()
         self._refresh_from_function()
+        self.display_flags_changed.emit()
 
     def set_code_type(self, pure_num: bool):
         self.short_code = bool(pure_num)
@@ -619,11 +601,13 @@ class FloatLabel(QWidget):
         self.table.horizontalHeader().setVisible(self.header_visible)
         self._notify_change()
         self._defer_fit()
+        self.display_flags_changed.emit()
 
     def set_grid_visible(self, vis: bool):
         self.grid_visible = bool(vis)
         self.apply_style()
         self._notify_change()
+        self.display_flags_changed.emit()
 
     def set_refresh_interval(self, seconds: int):
         try:
@@ -692,6 +676,7 @@ class FloatLabel(QWidget):
         self.apply_style()
         self._notify_change()
         self._defer_fit()
+        self.display_flags_changed.emit()
 
     # ----- 鼠标穿透 / 强制置顶 / 快捷键开关 -----
     def set_click_through(self, enable: bool):
@@ -818,78 +803,6 @@ class FloatLabel(QWidget):
         menu.addSeparator()
         menu.addAction(QAction("隐藏浮窗", menu, triggered=self.hide))
         menu.exec(event.globalPos())
-
-    # ----- 窗口拖动 -----
-    def _drag_press(self, e):
-        """按下左键:记录拖动起点。
-        Wayland 下先记全局坐标,待移动超过阈值后再交给合成器(startSystemMove),
-        这样普通单击/双击(隐藏浮窗)不受影响。
-        """
-        if self._wayland_drag:
-            self._drag_pos = e.globalPosition().toPoint()
-            self._system_moving = False
-        else:
-            self._drag_pos = e.globalPosition().toPoint() - self.frameGeometry().topLeft()
-        self.setFocus(Qt.MouseFocusReason)
-
-    def _drag_move(self, e):
-        """按住左键移动:Wayland 用系统级拖动,其余平台(X11/Windows)手动 move。"""
-        if getattr(self, "_drag_pos", None) is None or not (e.buttons() & Qt.LeftButton):
-            return
-        if self._wayland_drag:
-            if self._system_moving:
-                return
-            # 移动超过阈值才触发系统级拖动,避免把单击误判为拖动
-            pos = e.globalPosition().toPoint()
-            if (pos - self._drag_pos).manhattanLength() <= 4:
-                return
-            self._system_moving = True
-            win = self.windowHandle()
-            if win is not None and hasattr(win, "startSystemMove"):
-                win.startSystemMove()
-            return
-        self.move(e.globalPosition().toPoint() - self._drag_pos)
-        self._ensure_on_top()
-
-    def _drag_release(self):
-        self._drag_pos = None
-        self._system_moving = False
-        self._ensure_on_top()
-        self._notify_change()
-
-    def mousePressEvent(self, e):
-        if e.button() == Qt.LeftButton:
-            self._drag_press(e)
-
-    def mouseMoveEvent(self, e):
-        self._drag_move(e)
-
-    def mouseReleaseEvent(self, e):
-        if e.button() == Qt.LeftButton:
-            self._drag_release()
-
-    def mouseDoubleClickEvent(self, e):
-        if e.button() == Qt.LeftButton:
-            self._drag_pos = None
-            self._system_moving = False
-            self.hide()
-
-    def eventFilter(self, obj, ev):
-        if ev.type() == QEvent.MouseButtonDblClick and hasattr(ev, "button") and ev.button() == Qt.LeftButton:
-            self._drag_pos = None
-            self._system_moving = False
-            self.hide()
-            return True
-        if ev.type() == QEvent.MouseButtonPress and hasattr(ev, "button") and ev.button() == Qt.LeftButton:
-            self._drag_press(ev)
-            return True
-        if ev.type() == QEvent.MouseMove and hasattr(ev, "buttons") and (ev.buttons() & Qt.LeftButton) and getattr(self, "_drag_pos", None):
-            self._drag_move(ev)
-            return True
-        if ev.type() == QEvent.MouseButtonRelease and hasattr(ev, "button") and ev.button() == Qt.LeftButton:
-            self._drag_release()
-            return True
-        return QWidget.eventFilter(self, obj, ev)
 
     def closeEvent(self, event): 
         event.ignore()

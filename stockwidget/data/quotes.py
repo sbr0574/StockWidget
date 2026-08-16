@@ -1,6 +1,8 @@
 import requests
 from typing import Tuple
 
+from stockwidget.core.markets import market_of
+
 # =====================================================================
 # 统一行情字典 schema（新浪 / 东财 两套数据源返回格式一致）：
 #   data[code] = {
@@ -21,29 +23,6 @@ DATA_SOURCE = "sina"
 _SINA_HEADERS = {"Referer": "https://finance.sina.com.cn", "User-Agent": "Mozilla/5.0"}
 _EM_QUOTE_URL = "https://push2delay.eastmoney.com/api/qt/ulist.np/get"   # 东财延迟行情主机（本机代理下可达更稳）
 _Z5 = (0, 0, 0, 0, 0)   # 空五档（港美股/期货只有一档或无盘口）
-
-# ---- 统一代码的市场前缀（集中定义，避免散落字符串） ----
-#   sh/sz/bj 沪深京 | hk 港股/港股指数 | us 美股/美股指数 | g 全球指数(国际 b_) | 其余(au0 等) 期货
-MARKET_PREFIXES = ("sh", "sz", "bj", "hk", "us")
-
-
-def market_of(code: str) -> str:
-    """返回统一代码的市场标签：sh/sz/bj/hk/us；全球指数返回 "g"；期货裸码返回 ""。"""
-    c = str(code or "").strip().lower()
-    for p in MARKET_PREFIXES:
-        if c.startswith(p) and len(c) > len(p):
-            return p
-    if len(c) > 1 and c.startswith("g"):
-        return "g"
-    return ""
-
-
-def strip_market(code: str) -> str:
-    """去掉市场前缀：sh600519->600519, hk00700->00700, usaapl->aapl, gnky->nky, au0->au0"""
-    c = str(code or "").strip().lower()
-    m = market_of(c)
-    return c[len(m):] if m else c
-
 
 def _new_entry(name, opening, prev_close, current, high, low,
                vol, amt, pur_vol, pur_price, sell_vol, sell_price,
