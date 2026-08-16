@@ -30,11 +30,11 @@ jobs:
 
       - name: Ad-hoc codesign (Apple Silicon)
         run: |
-          codesign --force --deep -s - dist/StockWidget/StockWidget.app
+          codesign --force --deep -s - dist/StockWidget.app
 
       - name: Create zip
         run: |
-          ditto -c -k --sequesterRsrc --keepParent dist/StockWidget StockWidget-macos.zip
+          ditto -c -k --sequesterRsrc --keepParent dist/StockWidget.app StockWidget-macos.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
