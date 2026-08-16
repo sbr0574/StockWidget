@@ -334,7 +334,12 @@ class SettingsDialog(QDialog):
         return super().eventFilter(obj, ev)
 
     def _handle_drop(self, ev):
-        """拖动调整顺序：将拖动的行移动到目标位置"""
+        """拖动调整顺序：将拖动的行移动到目标位置。
+        1. 用 CopyAction（而非 MoveAction）结束拖放，让 drag->exec() 不返回
+           MoveAction，从而不触发 startDrag() 里的 clearOrRemove()；
+        2. 同时清空选中——即使 clearOrRemove() 仍被触发，也没有选中行可删。
+        否则源行会被二次删除，表现为拖拽后丢一行。
+        """
         src_row = self.list_codes.currentRow()
         pos = ev.position().toPoint()
         target_row = self.list_codes.rowAt(pos.y())
@@ -343,7 +348,9 @@ class SettingsDialog(QDialog):
                 target_row = self.list_codes.rowCount() - 1
             if target_row != src_row:
                 self._move_row(src_row, target_row)
-        ev.acceptProposedAction()
+        self.list_codes.clearSelection()
+        ev.accept()
+        ev.setDropAction(Qt.CopyAction)
         QTimer.singleShot(0, lambda: self._on_codes_changed(None))
 
     def _append_code_row(self, code: str = "", name: str = "", checked: bool = False, cost=None):
@@ -390,14 +397,14 @@ class SettingsDialog(QDialog):
         check_item = self.list_codes.item(row, 0)
         if check_item is None:
             check_item = QTableWidgetItem("")
-            check_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+            check_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
             self.list_codes.setItem(row, 0, check_item)
         check_item.setCheckState(Qt.Checked if checked else Qt.Unchecked)
 
         code_item = self.list_codes.item(row, 1)
         if code_item is None:
             code_item = QTableWidgetItem("")
-            code_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsEnabled)
+            code_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
             self.list_codes.setItem(row, 1, code_item)
         code_item.setText(self._code_display_for_row(value_key, display_code, resolved_name))
         code_item.setData(Qt.UserRole, value_key)
@@ -408,11 +415,11 @@ class SettingsDialog(QDialog):
             self.list_codes.setItem(row, 2, cost_item)
         if self._row_type(value_key, display_code) == "指":
             # 指数不允许设置成本
-            cost_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+            cost_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
             cost_item.setText("")
             cost_item.setData(Qt.UserRole, None)
         else:
-            cost_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsEnabled)
+            cost_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
             cost_item.setText("" if cost is None else f"{cost:g}")
             cost_item.setData(Qt.UserRole, cost)
         self.list_codes.blockSignals(False)

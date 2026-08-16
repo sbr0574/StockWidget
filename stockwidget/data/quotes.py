@@ -234,11 +234,10 @@ def _parse_sina_global(parts: list) -> dict:
 
 
 def request_sina(req_codes: list[str]) -> dict:
-    """新浪财经实时行情（A股/港股/美股/上期所期货）。
-    返回 (ret, data)；ret[i] 表示 req_codes[i] 是否成功。"""
+    """新浪财经实时行情（A股/港股/美股/上期所期货）。返回 {统一代码: 行情 dict}。"""
     data = {}
     if not req_codes:
-        return [], {}
+        return {}
     label = ",".join(_sina_code(c) for c in req_codes if str(c).strip())
     url = "https://hq.sinajs.cn/list=" + label
     response = requests.get(url, headers=_SINA_HEADERS, timeout=3)
@@ -310,9 +309,10 @@ def request_eastmoney(req_codes: list[str]) -> Tuple[list, dict]:
     return [c in data for c in req_codes], data
 
 
-def request_quote(req_codes: list[str], source: str = DATA_SOURCE) -> Tuple[list, dict]:
-    """统一行情入口。默认使用 DATA_SOURCE（当前为新浪），切换东财改 DATA_SOURCE 即可。"""
+def request_quote(req_codes: list[str], source: str = DATA_SOURCE) -> dict:
+    """统一行情入口，返回 {统一代码: 行情 dict}。默认使用 DATA_SOURCE（当前为新浪）。"""
     if source == "eastmoney":
-        return request_eastmoney(req_codes)
+        _, data = request_eastmoney(req_codes)
+        return data
     return request_sina(req_codes)
 
