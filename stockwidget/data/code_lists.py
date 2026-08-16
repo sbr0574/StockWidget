@@ -84,3 +84,35 @@ def all_codes_fresh(app_name: str) -> bool:
         if (f or {}).get("last_update") != today or not f.get("codes"):
             return False
     return True
+
+
+def code_data_state(app_name: str) -> tuple[str, str]:
+    """返回市场代码数据的状态与更新日期 (state, date)。
+
+    - ('online', 'YYYY-MM-DD')  ：本地三份 JSON 均为今天生成（今天从 GitHub 下载）。
+    - ('cached', 'YYYY-MM-DD')  ：本地存在旧 JSON（当日未刷新或刷新失败）。
+    - ('offline', 'YYYY-MM-DD') ：无本地缓存，使用内置 qrc 资源。
+    """
+    today = datetime.now().strftime("%Y-%m-%d")
+    local_dates = []
+    for fname in LIST_FILES:
+        f = load_file(app_name, fname)
+        if f and f.get("codes"):
+            d = str(f.get("last_update") or "").strip()
+            if d:
+                local_dates.append(d)
+    if local_dates:
+        if all(d == today for d in local_dates):
+            return "online", today
+        return "cached", max(local_dates)
+
+    res_dates = []
+    for fname in LIST_FILES:
+        try:
+            res = load_json_from_resource(f":/{fname}")
+        except FileNotFoundError:
+            continue
+        d = str((res or {}).get("last_update") or "").strip()
+        if d:
+            res_dates.append(d)
+    return "offline", max(res_dates) if res_dates else today

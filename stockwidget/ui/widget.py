@@ -90,6 +90,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.default_color      = bool(cfg.get("default_color", False))
         # 加载其他配置
         self.refresh_seconds    = int(cfg.get("refresh_seconds", 2))
+        self.data_source        = str(cfg.get("data_source", "sina"))
+        if self.data_source not in ("sina", "eastmoney"):
+            self.data_source = "sina"
         self.force_top          = bool(cfg.get("force_top", False))
         self.click_through      = bool(cfg.get("click_through", False))
         self.hotkey_enabled     = bool(cfg.get("hotkey_enabled", False))
@@ -242,6 +245,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             "default_color":    self.default_color,
 
             "refresh_seconds":  self.refresh_seconds,
+            "data_source":      self.data_source,
             "force_top":        self.force_top,
             "click_through":    self.click_through,
             "hotkey_enabled":   self.hotkey_enabled,
@@ -507,7 +511,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def _fetch_data_worker(self, codes: list):
         """后台线程：执行网络请求，结果经 data_ready 信号回到主线程。"""
         try:
-            data = request_quote(codes)
+            data = request_quote(codes, source=self.data_source)
             payload = (True, data, None)
         except requests.exceptions.RequestException:
             payload = (False, None, "网络请求失败")
@@ -618,6 +622,15 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if self.timer is not None:
             self.timer.setInterval(seconds * 1000)
         self._notify_change()
+
+    def set_data_source(self, source: str):
+        """切换行情数据源：'sina'（新浪）或 'eastmoney'（东方财富）。"""
+        source = str(source or "").strip().lower()
+        if source not in ("sina", "eastmoney") or source == self.data_source:
+            return
+        self.data_source = source
+        self._notify_change()
+        self._refresh_from_function()
 
     def set_fg_color(self, c: QColor):
         if isinstance(c, QColor) and c.isValid():

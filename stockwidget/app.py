@@ -18,6 +18,7 @@ from stockwidget.constants import APP_NAME, APP_VERSION, CONFIG_FILE
 from stockwidget.core.config_store import load_file, save_file
 from stockwidget.data.code_lists import (
     all_codes_fresh,
+    code_data_state,
     download_codes,
     load_local_codes,
     load_resource_codes,
@@ -175,6 +176,16 @@ class App(QApplication):
         if codes:
             self.win.codes_list = codes
         self.win._clear_message()
+        # 市场代码数据刷新结束（成功或失败）后，更新设置面板里的数据状态提示
+        if self.settings_dlg is not None and self.settings_dlg.isVisible():
+            try:
+                self.settings_dlg.refresh_data_state()
+            except Exception:
+                pass
+
+    def code_data_state(self) -> tuple:
+        """市场代码数据状态与更新日期：('online'|'cached'|'offline', 'YYYY-MM-DD')。"""
+        return code_data_state(self.app_name)
 
     def _on_update_checked(self, has_update: bool):
         self._has_update = has_update

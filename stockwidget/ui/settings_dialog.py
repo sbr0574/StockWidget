@@ -2,12 +2,12 @@ import os
 import shutil
 from functools import partial
 
-from PySide6.QtCore import Qt, QStringListModel, QEvent, QTimer
-from PySide6.QtGui import QColor, QKeySequence
+from PySide6.QtCore import Qt, QPoint, QStringListModel, QEvent, QTimer
+from PySide6.QtGui import QColor, QGuiApplication, QKeySequence
 from PySide6.QtWidgets import (
-    QWidget, QDialog, QColorDialog, QAbstractItemView, QTableWidgetItem,
-    QStyledItemDelegate, QLineEdit, QCompleter, QHeaderView, QFileDialog,
-    QMessageBox
+    QApplication, QWidget, QDialog, QColorDialog, QAbstractItemView, QTableWidgetItem,
+    QStyledItemDelegate, QStyle, QStyleOptionViewItem, QLineEdit, QCompleter,
+    QHeaderView, QFileDialog, QMessageBox
 )
 from stockwidget.ui.generated.ui_settings import Ui_SettingDialog
 from stockwidget.core.code_search import code_without_market, find_suggestions
@@ -38,6 +38,75 @@ def _hotkey_error_message(result) -> str:
     return "快捷键注册失败,请更换后重试。"
 
 
+# 扁平化分组框列表（自选列表 gb_list 保持默认带边框样式，不在其中）
+_FLAT_GROUPS = ("gb_data", "gb_data_setting", "gb_name", "gb_icon", "gb_fcn",
+                "gb_color", "gb_text", "gb_tabel", "gb_hotkeys", "gb_about")
+
+
+def _build_settings_stylesheet(dark: bool) -> str:
+    """按系统深浅色生成设置窗口样式表（Qt QSS 不支持媒体查询，故在运行时按主题构建）。"""
+    if dark:
+        btn_bg, btn_bg_hover = "#3A3A3C", "#4C4C4E"
+        btn_bg_pressed, btn_bg_disabled = "#2C2C2E", "#303032"
+        btn_fg, btn_fg_disabled = "#FFFFFF", "rgba(255, 255, 255, 0.45)"
+        btn_border, btn_border_disabled = "rgba(255, 255, 255, 0.25)", "rgba(255, 255, 255, 0.10)"
+        sep = "rgba(255, 255, 255, 0.35)"
+        header_bg, header_line = "rgba(255, 255, 255, 0.10)", "rgba(255, 255, 255, 0.30)"
+    else:
+        btn_bg, btn_bg_hover = "#FFFFFF", "#F5F5F5"
+        btn_bg_pressed, btn_bg_disabled = "#E8E8E8", "#FBFBFB"
+        btn_fg, btn_fg_disabled = "#000000", "rgba(128, 128, 128, 0.5)"
+        btn_border, btn_border_disabled = "rgba(0, 0, 0, 0.20)", "rgba(0, 0, 0, 0.10)"
+        sep = "rgba(0, 0, 0, 0.25)"
+        header_bg, header_line = "rgba(0, 0, 0, 0.06)", "rgba(0, 0, 0, 0.20)"
+
+    flat_boxes = ",\n".join(f"QGroupBox#{n}" for n in _FLAT_GROUPS)
+    flat_titles = ",\n".join(f"QGroupBox#{n}::title" for n in _FLAT_GROUPS)
+
+    return f"""
+QGroupBox {{
+    font-size: 13px;
+    font-weight: 600;
+}}
+{flat_boxes} {{
+    border: none;
+    border-top: 1px solid {sep};
+    margin-top: 9px;
+    padding-top: 12px;
+}}
+{flat_titles} {{
+    subcontrol-origin: margin;
+    subcontrol-position: top center;
+    padding: 0 8px;
+}}
+QPushButton {{
+    background-color: {btn_bg};
+    border: 1px solid {btn_border};
+    border-radius: 6px;
+    padding: 4px 12px;
+    color: {btn_fg};
+}}
+QPushButton:hover {{
+    background-color: {btn_bg_hover};
+}}
+QPushButton:pressed {{
+    background-color: {btn_bg_pressed};
+}}
+QPushButton:disabled {{
+    color: {btn_fg_disabled};
+    background-color: {btn_bg_disabled};
+    border-color: {btn_border_disabled};
+}}
+QTableWidget#list_codes QHeaderView::section {{
+    background-color: {header_bg};
+    border: none;
+    border-bottom: 1px solid {header_line};
+    padding: 4px 8px;
+    font-weight: 600;
+}}
+"""
+
+
 class CodeCompleterDelegate(QStyledItemDelegate):
     def __init__(self, owner):
         super().__init__(owner)
@@ -61,6 +130,55 @@ class CodeCompleterDelegate(QStyledItemDelegate):
         self.owner._remember_editor_value(editor, index)
 
 
+class CenteredCheckBoxDelegate(QStyledItemDelegate):
+    """把自选列表第一列的勾选框在单元格内水平居中，同时保持可点击勾选。
+
+    关键点：Qt 的勾选框“点击命中”走的是 delegate 的 editorEvent（视图在
+    mouseReleaseEvent 里调用 edit() → sendDelegateEvent()），而不是 paint。
+    因此必须同时重写 paint（居中绘制）和 editorEvent（按居中位置命中），
+    否则会出现“画在中间、却要点左边才能切换”的问题。
+    """
+
+    def _centered_check_rect(self, option, index):
+        opt = QStyleOptionViewItem(option)
+        self.initStyleOption(opt, index)
+        widget = opt.widget
+        style = widget.style() if widget is not None else QApplication.style()
+        rect = style.subElementRect(QStyle.SE_ItemViewItemCheckIndicator, opt, widget)
+        rect.moveCenter(QPoint(opt.rect.center().x(), rect.center().y()))
+        return opt, rect, style, widget
+
+    def paint(self, painter, option, index):
+        opt, check_rect, style, widget = self._centered_check_rect(option, index)
+        style.drawPrimitive(QStyle.PE_PanelItemViewItem, opt, painter, widget)
+        # 勾选框绘制：与 Qt 原生 CE_ItemViewItem 一致，需根据 checkState 手动设置
+        # State_On / State_Off / State_NoChange，PE_IndicatorItemViewItemCheck 才会
+        # 画出勾选/未勾选状态（否则永远显示为未勾选）。
+        opt.rect = check_rect
+        opt.state = opt.state & ~QStyle.State_HasFocus
+        if opt.checkState == Qt.CheckState.Checked:
+            opt.state |= QStyle.State_On
+        elif opt.checkState == Qt.CheckState.PartiallyChecked:
+            opt.state |= QStyle.State_NoChange
+        else:
+            opt.state |= QStyle.State_Off
+        style.drawPrimitive(QStyle.PE_IndicatorItemViewItemCheck, opt, painter, widget)
+
+    def editorEvent(self, event, model, option, index):
+        if (event.type() == QEvent.MouseButtonRelease
+                and event.button() == Qt.LeftButton
+                and index.flags() & Qt.ItemIsUserCheckable):
+            _, check_rect, _, _ = self._centered_check_rect(option, index)
+            if check_rect.contains(event.position().toPoint()):
+                # index.data(CheckStateRole) 在 PySide6 中返回整数而非枚举，
+                # 需按数值比较（CheckState.Checked == 2）
+                state = index.data(Qt.CheckStateRole)
+                checked = getattr(state, "value", state) == 2
+                new_state = Qt.CheckState.Unchecked if checked else Qt.CheckState.Checked
+                return model.setData(index, new_state, Qt.ItemDataRole.CheckStateRole)
+        return super().editorEvent(event, model, option, index)
+
+
 class SettingsDialog(QDialog):
 
     def __init__(self, win: FloatLabel, parent: QWidget, app=None):
@@ -70,6 +188,9 @@ class SettingsDialog(QDialog):
         self.ui = Ui_SettingDialog()
         self.ui.setupUi(self)
         self.setModal(False)
+        self._apply_theme_stylesheet()
+        # 系统深浅色切换时跟随更新样式
+        QGuiApplication.styleHints().colorSchemeChanged.connect(self._on_color_scheme_changed)
         self.suggestion_model = QStringListModel(self)
         self._suggestion_map = {}
         self._previous_editor_values = {}
@@ -77,6 +198,14 @@ class SettingsDialog(QDialog):
         self._init_code_table()
         self._bind_widgets()
         self._load_settings()
+
+    def _apply_theme_stylesheet(self):
+        """按当前系统深浅色应用样式表。"""
+        dark = QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
+        self.setStyleSheet(_build_settings_stylesheet(dark))
+
+    def _on_color_scheme_changed(self, _scheme=None):
+        self._apply_theme_stylesheet()
 
     def _display_code_for_ui(self, code: str) -> str:
         value = str(code or "").strip().lower()
@@ -98,6 +227,7 @@ class SettingsDialog(QDialog):
         )
         self.list_codes.setDropIndicatorShown(True)
         self.list_codes.viewport().installEventFilter(self)
+        self.list_codes.setItemDelegateForColumn(0, CenteredCheckBoxDelegate(self))
         self.list_codes.setItemDelegateForColumn(1, CodeCompleterDelegate(self))
 
         for code, entry in self.win.watchlist.items():
@@ -106,8 +236,9 @@ class SettingsDialog(QDialog):
             self._append_code_row(code, entry.get("name", ""), checked, cost)
 
     def _bind_widgets(self):
-        self.slider_interval = self.ui.slider_interval
-        self.label_interval = self.ui.label_interval
+        self.sb_interval = self.ui.sb_interval
+        self.cmb_source = self.ui.cmb_source
+        self.label_data_state = self.ui.label_data_state
         self.gb_name = self.ui.gb_name
         self.cb_code = self.ui.cb_code
         self.cb_type = self.ui.cb_type
@@ -151,7 +282,8 @@ class SettingsDialog(QDialog):
         self.keyseq_hide = self.ui.keyseq_hide
         self.keyseq_click_through = self.ui.keyseq_click_through
 
-        self.slider_interval.valueChanged.connect(self._on_interval_changed)
+        self.sb_interval.valueChanged.connect(self._on_interval_changed)
+        self.cmb_source.currentIndexChanged.connect(self._on_source_changed)
         self.list_codes.itemChanged.connect(self._on_codes_changed)
 
         self.gb_name.toggled.connect(self._on_name_toggled)
@@ -170,14 +302,8 @@ class SettingsDialog(QDialog):
 
         self.btn_add = self.ui.btn_add
         self.btn_del = self.ui.btn_del
-        self.btn_up = self.ui.btn_up
-        self.btn_down = self.ui.btn_down
-        self.btn_top = self.ui.btn_top
         self.btn_add.clicked.connect(self._add_code)
         self.btn_del.clicked.connect(self._del_code)
-        self.btn_up.clicked.connect(self._move_up)
-        self.btn_down.clicked.connect(self._move_down)
-        self.btn_top.clicked.connect(self._top_code)
 
         self.cmb_namelen.currentIndexChanged.connect(self._on_name_length_changed)
         self.cb_default_color.toggled.connect(self._on_default_color_toggled)
@@ -208,8 +334,7 @@ class SettingsDialog(QDialog):
             self.btn_pick_icon.setEnabled(False)
 
     def _load_settings(self):
-        self.slider_interval.setValue(self.win.refresh_seconds)
-        self.label_interval.setText(f"{self.win.refresh_seconds}s")
+        self.sb_interval.setValue(self.win.refresh_seconds)
         self.cb_code.setChecked(self.win.code_visible)
         self.gb_name.setChecked(self.win.name_visible)
         self.cb_type.setChecked(self.win.type_visible)
@@ -263,7 +388,9 @@ class SettingsDialog(QDialog):
 
         self._apply_platform_limits()
         self._setup_icon_choices()
+        self._setup_source_combo()
         self._setup_about()
+        self.refresh_data_state()
 
     def _apply_platform_limits(self):
         """按当前平台禁用不支持的功能控件:
@@ -318,6 +445,31 @@ class SettingsDialog(QDialog):
             idx = self.cmb_icon.count() - 1
         self.cmb_icon.setCurrentIndex(idx if idx >= 0 else 0)
         self.cmb_icon.blockSignals(False)
+
+    def _setup_source_combo(self):
+        """填充行情数据源下拉框（新浪 / 东方财富），并按当前配置选中。"""
+        self.cmb_source.blockSignals(True)
+        self.cmb_source.clear()
+        self.cmb_source.addItem("新浪", "sina")
+        self.cmb_source.addItem("东方财富", "eastmoney")
+        idx = self.cmb_source.findData(getattr(self.win, "data_source", "sina"))
+        self.cmb_source.setCurrentIndex(idx if idx >= 0 else 0)
+        self.cmb_source.blockSignals(False)
+
+    def refresh_data_state(self):
+        """更新“市场代码数据”状态文字：在线/缓存/离线 + 更新日期(yyyymmdd)。"""
+        if self.app is not None and hasattr(self.app, "code_data_state"):
+            state, date = self.app.code_data_state()
+        else:
+            state, date = "offline", ""
+        d = str(date or "").replace("-", "")
+        if state == "online":
+            text = f"✅ 市场代码数据：在线 ({d})"
+        elif state == "cached":
+            text = f"⚠️ 市场代码数据：缓存 ({d})"
+        else:
+            text = f"❌ 市场代码数据：离线 ({d})"
+        self.label_data_state.setText(text)
 
     def eventFilter(self, obj, ev):
         if obj is self.list_codes.viewport() and ev.type() == QEvent.MouseButtonDblClick:
@@ -397,14 +549,14 @@ class SettingsDialog(QDialog):
         check_item = self.list_codes.item(row, 0)
         if check_item is None:
             check_item = QTableWidgetItem("")
-            check_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
+            check_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled)
             self.list_codes.setItem(row, 0, check_item)
         check_item.setCheckState(Qt.Checked if checked else Qt.Unchecked)
 
         code_item = self.list_codes.item(row, 1)
         if code_item is None:
             code_item = QTableWidgetItem("")
-            code_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
+            code_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled)
             self.list_codes.setItem(row, 1, code_item)
         code_item.setText(self._code_display_for_row(value_key, display_code, resolved_name))
         code_item.setData(Qt.UserRole, value_key)
@@ -415,11 +567,11 @@ class SettingsDialog(QDialog):
             self.list_codes.setItem(row, 2, cost_item)
         if self._row_type(value_key, display_code) == "指":
             # 指数不允许设置成本
-            cost_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
+            cost_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled)
             cost_item.setText("")
             cost_item.setData(Qt.UserRole, None)
         else:
-            cost_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
+            cost_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled)
             cost_item.setText("" if cost is None else f"{cost:g}")
             cost_item.setData(Qt.UserRole, cost)
         self.list_codes.blockSignals(False)
@@ -516,28 +668,13 @@ class SettingsDialog(QDialog):
         self.list_codes.blockSignals(False)
         self.list_codes.setCurrentCell(dst, 1)
 
-    def _move_up(self):
-        row = self.list_codes.currentRow()
-        if row > 0:
-            self._move_row(row, row - 1)
-            self._on_codes_changed(None)
-
-    def _move_down(self):
-        row = self.list_codes.currentRow()
-        if 0 <= row < self.list_codes.rowCount() - 1:
-            self._move_row(row, row + 1)
-            self._on_codes_changed(None)
-
-    def _top_code(self):
-        """将选中个股移到列表第一位"""
-        row = self.list_codes.currentRow()
-        if row > 0:
-            self._move_row(row, 0)
-            self._on_codes_changed(None)
-
     def _on_interval_changed(self, value: int):
-        self.label_interval.setText(f"{value}s")
         self.win.set_refresh_interval(value)
+
+    def _on_source_changed(self, idx: int):
+        src = self.cmb_source.itemData(idx)
+        if src:
+            self.win.set_data_source(str(src))
 
     def _on_code_toggled(self, checked: bool):
         self.win.set_code_visible(checked)
@@ -668,7 +805,7 @@ class SettingsDialog(QDialog):
         completer = editor.completer()
         if completer is None:
             return
-        popup_width = max(self.list_codes.viewport().width(), editor.width())
+        popup_width = max(self.list_codes.columnWidth(1), editor.width())
         completer.popup().setMinimumWidth(popup_width)
         completer.popup().setMaximumWidth(popup_width)
         if not has_items:
