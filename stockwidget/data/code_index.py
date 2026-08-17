@@ -18,6 +18,10 @@ GLOBAL_FILE = "stock_codes_global.json"    # 美股个股、全球主要指数
 FUTURES_FILE = "stock_codes_futures.json"  # 上期所期货
 
 _EM_CLIST_URL = "https://push2delay.eastmoney.com/api/qt/clist/get"
+_EM_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Referer": "https://quote.eastmoney.com/center/gridlist.html",
+}
 
 
 def _to_halfwidth(text: str) -> str:
@@ -84,6 +88,7 @@ def _em_clist_all(fs: str, fid: str = "f12", fields: str = "f12,f14") -> list[di
                         "pn": page, "pz": 100, "po": 1, "np": 1, "fltt": 2, "invt": 2,
                         "fid": fid, "fs": fs, "fields": fields,
                     },
+                    headers=_EM_HEADERS,
                     timeout=10,
                 )
                 diff = ((r.json() or {}).get("data") or {}).get("diff") or []
@@ -97,6 +102,88 @@ def _em_clist_all(fs: str, fid: str = "f12", fields: str = "f12,f14") -> list[di
             break
         page += 1
     return rows
+
+
+def _fund_clist(fs: str) -> pd.DataFrame:
+    """从东财 clist 拉取基金列表，返回 [证券代码, 证券简称, 市场] 三列。"""
+    rows = []
+    seen = set()
+    for d in _em_clist_all(fs, fields="f12,f13,f14"):
+        code = str(d.get("f12") or "").strip()
+        name = str(d.get("f14") or "").strip()
+        market_id = str(d.get("f13") or "").strip()
+        if not code or code in seen:
+            continue
+        seen.add(code)
+        market = "sh" if market_id == "1" else "sz" if market_id == "0" else ""
+        rows.append((code, name, market))
+    return pd.DataFrame(rows, columns=["证券代码", "证券简称", "市场"])
+
+
+def _fund_etf_em() -> pd.DataFrame:
+    """东财 ETF 列表（合并两个 ETF 分类，覆盖股票/债券/货币/跨境/黄金等 ETF）。"""
+    frames = [
+        _fund_clist("b:MK0021,b:MK0022,b:MK0023,b:MK0024,b:MK0827"),
+        _fund_clist("b:MK0400,b:MK0401,b:MK0402,b:MK0403"),
+    ]
+    df = pd.concat(frames, ignore_index=True)
+    return df.drop_duplicates(subset=["证券代码"]).reset_index(drop=True)
+
+
+def _fund_lof_em() -> pd.DataFrame:
+    """东财 LOF 列表。"""
+    df = _fund_clist("b:MK0404,b:MK0405,b:MK0406,b:MK0407,b:MK0408")
+    return df.drop_duplicates(subset=["证券代码"]).reset_index(drop=True)
+
+
+def _fund_close_sina() -> pd.DataFrame:
+    """新浪封闭式基金列表（带浏览器头与超时；被限流时返回空表，不阻塞整体更新）。"""
+    url = (
+        "https://vip.stock.finance.sina.com.cn/quotes_service/api/jsonp.php/"
+        "IO.XSRV2.CallbackList['da_yPT46_Ll7K6WD']/Market_Center.getHQNodeDataSimple"
+    )
+    params = {
+        "page": "1", "num": "5000", "sort": "symbol", "asc": "0",
+        "node": "close_fund", "[object HTMLDivElement]": "qvvne",
+    }
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Referer": "https://vip.stock.finance.sina.com.cn/fund_center/index.html",
+    }
+    columns = ["证券代码", "证券简称", "市场"]
+    rows = []
+    try:
+        r = requests.get(url, params=params, headers=headers, timeout=15)
+        text = r.text or ""
+        if r.status_code != 200 or text.lstrip().startswith("<") or "拒绝访问" in text:
+            return pd.DataFrame(rows, columns=columns)
+        from akshare.utils import demjson
+        payload = text[text.find("([") + 1 : -2]
+        data = demjson.decode(payload)
+        if not isinstance(data, list):
+            return pd.DataFrame(rows, columns=columns)
+        for d in data:
+            symbol = str(d.get("symbol") or "").strip()
+            name = str(d.get("name") or "").strip()
+            if len(symbol) < 3:
+                continue
+            market, code = symbol[:2].lower(), symbol[2:]
+            if market in ("sh", "sz", "bj") and code:
+                rows.append((code, name, market))
+    except Exception:
+        # 新浪接口不稳定或已限流，回退为东财 REITs 分类（见 _fund_close_em）
+        pass
+    return pd.DataFrame(rows, columns=columns)
+
+
+def _fund_close_em() -> pd.DataFrame:
+    """封闭式基金：东财 REITs + 新浪传统封闭基金（新浪失败时保留 REITs）。"""
+    frames = [
+        _fund_clist("m:1+t:9+e:97,m:0+t:10+e:97"),
+        _fund_close_sina(),
+    ]
+    df = pd.concat(frames, ignore_index=True)
+    return df.drop_duplicates(subset=["证券代码"]).reset_index(drop=True)
 
 
 def _stock_hk_name_code() -> pd.DataFrame:
@@ -298,26 +385,17 @@ def stock_info_cn(tick=None) -> pd.DataFrame:
     frames.append(stock_bj)
     tick()
 
-    stock_etf = ak.fund_etf_category_sina(symbol="ETF基金")[["代码", "名称"]]
-    stock_etf["市场"] = stock_etf["代码"].str[:2]
-    stock_etf["代码"] = stock_etf["代码"].str[2:]
-    stock_etf.rename(columns={"代码":"证券代码","名称":"证券简称"},inplace=True)
+    stock_etf = _fund_etf_em()
     stock_etf["类型"] = "基"
     frames.append(stock_etf)
     tick()
 
-    stock_lof = ak.fund_etf_category_sina(symbol="LOF基金")[["代码", "名称"]]
-    stock_lof["市场"] = stock_lof["代码"].str[:2]
-    stock_lof["代码"] = stock_lof["代码"].str[2:]
-    stock_lof.rename(columns={"代码":"证券代码","名称":"证券简称"},inplace=True)
+    stock_lof = _fund_lof_em()
     stock_lof["类型"] = "基"
     frames.append(stock_lof)
     tick()
 
-    stock_closefund = ak.fund_etf_category_sina(symbol="封闭式基金")[["代码", "名称"]]
-    stock_closefund["市场"] = stock_closefund["代码"].str[:2]
-    stock_closefund["代码"] = stock_closefund["代码"].str[2:]
-    stock_closefund.rename(columns={"代码":"证券代码","名称":"证券简称"},inplace=True)
+    stock_closefund = _fund_close_em()
     stock_closefund["类型"] = "基"
     frames.append(stock_closefund)
     tick()
@@ -398,7 +476,10 @@ def write_codes_groups(target_dir: str, progress_cb=None) -> dict[str, dict] | N
     """拉取三组代码并写三个 json 到 target_dir；失败返回 None。"""
     try:
         groups = fetch_codes_groups(progress_cb)
-    except Exception:
+    except Exception as exc:
+        import traceback
+        traceback.print_exc()
+        print(f"::error::拉取代码列表失败: {exc}")
         return None
     os.makedirs(target_dir, exist_ok=True)
     for fname, data in groups.items():
