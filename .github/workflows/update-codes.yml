@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    timeout-minutes: 20
     steps:
       - name: 检出仓库
         uses: actions/checkout@v4
@@ -26,7 +27,7 @@ jobs:
         run: pip install akshare pandas pypinyin requests
 
       - name: 拉取市场代码
-        run: python .github/scripts/update_codes.py
+        run: python -u .github/scripts/update_codes.py
 
       - name: 提交代码列表
         run: |

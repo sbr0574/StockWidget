@@ -84,7 +84,7 @@ stockwidget/
     quotes.py                #   行情请求与解析（新浪 / 东财）
     code_lists.py            #   代码列表下载 / 缓存 / 兜底
     update_check.py          #   版本更新检查
-    code_index.py            #   代码列表生成（仅 CI 使用，依赖 akshare）
+    # 代码列表生成已合并到 .github/scripts/update_codes.py（仅 CI 使用，依赖 akshare）
   core/                      # 功能函数层：纯业务逻辑（无 Qt，可单元测试）
     markets.py               #   市场代码约定
     formatters.py            #   成交量 / 成交额格式化
