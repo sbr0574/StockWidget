@@ -138,11 +138,6 @@
         <height>21</height>
        </rect>
       </property>
-      <property name="font">
-       <font>
-        <pointsize>12</pointsize>
-       </font>
-      </property>
       <property name="text">
        <string>删除</string>
       </property>
@@ -156,11 +151,6 @@
         <height>21</height>
        </rect>
       </property>
-      <property name="font">
-       <font>
-        <pointsize>12</pointsize>
-       </font>
-      </property>
       <property name="text">
        <string>添加</string>
       </property>
@@ -173,11 +163,6 @@
         <width>211</width>
         <height>16</height>
        </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>12</pointsize>
-       </font>
       </property>
       <property name="text">
        <string>❌ 市场代码数据：离线 (20260831)</string>
@@ -356,7 +341,7 @@
        <rect>
         <x>100</x>
         <y>25</y>
-        <width>101</width>
+        <width>95</width>
         <height>26</height>
        </rect>
       </property>
@@ -433,7 +418,7 @@
        <rect>
         <x>100</x>
         <y>25</y>
-        <width>101</width>
+        <width>95</width>
         <height>26</height>
        </rect>
       </property>
@@ -517,9 +502,9 @@
      <widget class="QPushButton" name="btn_icon">
       <property name="geometry">
        <rect>
-        <x>100</x>
+        <x>110</x>
         <y>25</y>
-        <width>41</width>
+        <width>31</width>
         <height>26</height>
        </rect>
       </property>
