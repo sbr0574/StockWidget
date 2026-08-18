@@ -23,7 +23,7 @@ from stockwidget.data.code_lists import (
     load_local_codes,
     load_resource_codes,
 )
-from stockwidget.data.update_check import check_for_update
+from stockwidget.data.update_check import get_update_info
 from stockwidget.platform.autostart import set_start_on_boot
 from stockwidget.ui.settings_dialog import SettingsDialog
 from stockwidget.ui.tray import TrayIcon
@@ -86,6 +86,8 @@ class App(QApplication):
 
         # 启动时后台检查更新
         self._has_update = False
+        self._latest_version = None
+        self._latest_release_url = None
         self.update_checked.connect(self._on_update_checked)
         self._start_update_check()
 
@@ -94,6 +96,10 @@ class App(QApplication):
             self._start_refresh_index()
 
     def find_icon(self, choice: str) -> QIcon:
+        if choice == 'light':
+            return QIcon(":/LightGlass.png")
+        if choice == 'dark':
+            return QIcon(":/DarkGlass.png")
         if not choice or choice == 'default':
             return QIcon(":/StockWidget.ico")
         if isinstance(choice, str) and choice.startswith('std:'):
@@ -148,9 +154,11 @@ class App(QApplication):
         """后台线程检查更新，结果通过信号回传到主线程显示"""
         def _worker():
             try:
-                has_update = check_for_update(self.app_version)
+                has_update, latest_version, latest_url = get_update_info(self.app_version)
             except Exception:
-                has_update = False
+                has_update, latest_version, latest_url = False, None, None
+            self._latest_version = latest_version if has_update else None
+            self._latest_release_url = latest_url if has_update else None
             self.update_checked.emit(bool(has_update))
 
         threading.Thread(target=_worker, daemon=True).start()

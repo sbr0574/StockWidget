@@ -1,5 +1,3 @@
-import os
-import shutil
 from functools import partial
 
 from PySide6.QtCore import Qt, QPoint, QStringListModel, QEvent, QTimer
@@ -7,11 +5,10 @@ from PySide6.QtGui import QColor, QGuiApplication, QKeySequence
 from PySide6.QtWidgets import (
     QApplication, QWidget, QDialog, QColorDialog, QAbstractItemView, QTableWidgetItem,
     QStyledItemDelegate, QStyle, QStyleOptionViewItem, QLineEdit, QCompleter,
-    QHeaderView, QFileDialog, QMessageBox
+    QHeaderView, QButtonGroup, QMessageBox
 )
 from stockwidget.ui.generated.ui_settings import Ui_SettingDialog
 from stockwidget.core.code_search import code_without_market, find_suggestions
-from stockwidget.core.config_store import config_paths
 from stockwidget.ui.widget import FloatLabel
 from stockwidget.platform.capabilities import (
     hotkeys_supported,
@@ -20,9 +17,14 @@ from stockwidget.platform.capabilities import (
     force_top_supported,
     start_on_boot_supported,
     unsupported_tooltip,
-    custom_icon_supported,
 )
-from stockwidget.data.update_check import PROJECT_URL
+from stockwidget.data.update_check import (
+    PROJECT_URL,
+    GITEE_URL,
+    LICENSE_URL,
+    README_URL,
+    RELEASES_URL,
+)
 
 
 def _hotkey_error_message(result) -> str:
@@ -46,17 +48,9 @@ _FLAT_GROUPS = ("gb_data", "gb_data_setting", "gb_name", "gb_icon", "gb_fcn",
 def _build_settings_stylesheet(dark: bool) -> str:
     """按系统深浅色生成设置窗口样式表（Qt QSS 不支持媒体查询，故在运行时按主题构建）。"""
     if dark:
-        btn_bg, btn_bg_hover = "#3A3A3C", "#4C4C4E"
-        btn_bg_pressed, btn_bg_disabled = "#2C2C2E", "#303032"
-        btn_fg, btn_fg_disabled = "#FFFFFF", "rgba(255, 255, 255, 0.45)"
-        btn_border, btn_border_disabled = "rgba(255, 255, 255, 0.25)", "rgba(255, 255, 255, 0.10)"
         sep = "rgba(255, 255, 255, 0.35)"
         header_bg, header_line = "rgba(255, 255, 255, 0.10)", "rgba(255, 255, 255, 0.30)"
     else:
-        btn_bg, btn_bg_hover = "#FFFFFF", "#F5F5F5"
-        btn_bg_pressed, btn_bg_disabled = "#E8E8E8", "#FBFBFB"
-        btn_fg, btn_fg_disabled = "#000000", "rgba(128, 128, 128, 0.5)"
-        btn_border, btn_border_disabled = "rgba(0, 0, 0, 0.20)", "rgba(0, 0, 0, 0.10)"
         sep = "rgba(0, 0, 0, 0.25)"
         header_bg, header_line = "rgba(0, 0, 0, 0.06)", "rgba(0, 0, 0, 0.20)"
 
@@ -64,38 +58,16 @@ def _build_settings_stylesheet(dark: bool) -> str:
     flat_titles = ",\n".join(f"QGroupBox#{n}::title" for n in _FLAT_GROUPS)
 
     return f"""
-QGroupBox {{
-    font-size: 13px;
-    font-weight: 600;
-}}
 {flat_boxes} {{
     border: none;
     border-top: 1px solid {sep};
-    margin-top: 9px;
+    margin-top: 8px;
     padding-top: 12px;
 }}
 {flat_titles} {{
     subcontrol-origin: margin;
     subcontrol-position: top center;
     padding: 0 8px;
-}}
-QPushButton {{
-    background-color: {btn_bg};
-    border: 1px solid {btn_border};
-    border-radius: 6px;
-    padding: 4px 12px;
-    color: {btn_fg};
-}}
-QPushButton:hover {{
-    background-color: {btn_bg_hover};
-}}
-QPushButton:pressed {{
-    background-color: {btn_bg_pressed};
-}}
-QPushButton:disabled {{
-    color: {btn_fg_disabled};
-    background-color: {btn_bg_disabled};
-    border-color: {btn_border_disabled};
 }}
 QTableWidget#list_codes QHeaderView::section {{
     background-color: {header_bg};
@@ -269,8 +241,6 @@ class SettingsDialog(QDialog):
         self.label_font = self.ui.label_current_font_size
         self.label_line = self.ui.label_current_line_interval
 
-        self.cmb_icon = self.ui.cmb_icon
-        self.btn_pick_icon = self.ui.btn_icon
         self.cb_auto_start = self.ui.cb_auto_start
         self.cb_force_top = self.ui.cb_force_top
         self.cb_click_through = self.ui.cb_click_through
@@ -327,11 +297,6 @@ class SettingsDialog(QDialog):
         self.cb_hotkey_click_through.toggled.connect(self._on_click_through_hotkey_enabled_toggled)
         self.cb_head.toggled.connect(self._on_header_toggled)
         self.cb_grid.toggled.connect(self._on_grid_toggled)
-        self.cmb_icon.currentIndexChanged.connect(self._on_icon_changed)
-        self.btn_pick_icon.clicked.connect(self._pick_custom_icon)
-        if not custom_icon_supported():
-            self.cmb_icon.setEnabled(False)
-            self.btn_pick_icon.setEnabled(False)
 
     def _load_settings(self):
         self.sb_interval.setValue(self.win.refresh_seconds)
@@ -423,28 +388,37 @@ class SettingsDialog(QDialog):
             self.cb_auto_start.setToolTip(unsupported_tooltip("开机自启"))
 
     def _setup_icon_choices(self):
-        self.cmb_icon.blockSignals(True)
-        self.cmb_icon.clear()
-        icon_items = [
-            ("默认", 'default'),
-            ("系统：计算机", 'std:computer'),
-            ("系统：网络", 'std:network'),
-            ("系统：文件夹", 'std:folder'),
-            ("系统：文件", 'std:file'),
-            ("系统：回收站", 'std:trash'),
-        ]
-        for label, val in icon_items:
-            self.cmb_icon.addItem(label, userData=val)
+        self.icon_buttons = {
+            "default": self.ui.btn_icon_default,
+            "light": self.ui.btn_icon_light,
+            "dark": self.ui.btn_icon_dark,
+        }
+        self.icon_labels = {
+            "default": "默认图标",
+            "light": "LightGlass",
+            "dark": "DarkGlass",
+        }
+        self.label_icon_active = self.ui.label_icon_active
+        self._icon_button_group = QButtonGroup(self)
+        self._icon_button_group.setExclusive(True)
+        for key, btn in self.icon_buttons.items():
+            self._icon_button_group.addButton(btn)
+            btn.setCheckable(True)
+            btn.setStyleSheet("QPushButton:checked { border: 2px solid #4a90d9; border-radius: 4px; }")
+            btn.toggled.connect(partial(self._on_icon_button_toggled, key))
 
         cur_choice = self.app._icon_choice if self.app is not None else None
-        if cur_choice is None:
-            cur_choice = 'default'
-        idx = self.cmb_icon.findData(cur_choice)
-        if idx < 0 and isinstance(cur_choice, str) and os.path.exists(cur_choice):
-            self.cmb_icon.addItem('自定义', userData=cur_choice)
-            idx = self.cmb_icon.count() - 1
-        self.cmb_icon.setCurrentIndex(idx if idx >= 0 else 0)
-        self.cmb_icon.blockSignals(False)
+        if cur_choice not in self.icon_buttons:
+            cur_choice = "default"
+            if self.app is not None:
+                self.app.set_app_icon(cur_choice)
+                self.app.save_now()
+        for btn in self.icon_buttons.values():
+            btn.blockSignals(True)
+        self.icon_buttons[cur_choice].setChecked(True)
+        for btn in self.icon_buttons.values():
+            btn.blockSignals(False)
+        self._update_icon_active_label(cur_choice)
 
     def _setup_source_combo(self):
         """填充行情数据源下拉框（新浪 / 东方财富），并按当前配置选中。"""
@@ -716,31 +690,16 @@ class SettingsDialog(QDialog):
     def _on_grid_toggled(self, checked: bool):
         self.win.set_grid_visible(bool(checked))
 
-    def _on_icon_changed(self, idx: int):
-        val = self.cmb_icon.itemData(idx)
-        if val and self.app is not None:
-            self.app.set_app_icon(val)
-            self.app.save_now()
-
-    def _pick_custom_icon(self):
-        """选择自定义图标并保存到配置文件同目录，立即应用"""
-        path, _ = QFileDialog.getOpenFileName(
-            self, "选择自定义图标", "", "图标文件 (*.ico *.png *.jpg *.jpeg);;所有文件 (*)"
-        )
-        if not path:
-            return
-        try:
-            dest_dir = config_paths(self.app.app_name)
-            os.makedirs(dest_dir, exist_ok=True)
-            dest = os.path.join(dest_dir, "custom_icon.ico")
-            shutil.copyfile(path, dest)
-        except Exception as exc:
-            QMessageBox.warning(self, "图标错误", f"无法保存自定义图标：\n{exc}")
+    def _on_icon_button_toggled(self, key: str, checked: bool):
+        if not checked:
             return
         if self.app is not None:
-            self.app.set_app_icon(dest)
+            self.app.set_app_icon(key)
             self.app.save_now()
-        self._setup_icon_choices()
+        self._update_icon_active_label(key)
+
+    def _update_icon_active_label(self, key: str):
+        self.label_icon_active.setText(f"当前激活：{self.icon_labels.get(key, key)}")
 
     def _on_start_on_boot_toggled(self, checked: bool):
         self.app.set_start_on_boot(bool(checked))
@@ -938,13 +897,28 @@ class SettingsDialog(QDialog):
     def _setup_about(self):
         label = self.ui.label_about_info
         label.setWordWrap(True)
+        app_version = self.app.app_version if self.app is not None else "1.0.0"
         has_update = bool(self.app is not None and getattr(self.app, "_has_update", False))
-        first_line = f"当前版本 v{self.app.app_version}"
-        if has_update:
-            first_line += "（有新版本）"
+        latest_version = getattr(self.app, "_latest_version", None) if self.app is not None else None
+        latest_url = getattr(self.app, "_latest_release_url", None) if self.app is not None else None
+        if not has_update:
+            latest_version = None
+        latest_url = latest_url or RELEASES_URL
+
+        version_line = f"当前版本 v{app_version}"
+        if latest_version:
+            version_line += (
+                f'　<a href="{latest_url}" style="text-decoration:none; color:#4a90d9;">'
+                f"最新版本 v{latest_version}</a>"
+            )
         html = (
-            f'<a href="{PROJECT_URL}" style="text-decoration:none; color:#4a90d9;">'
-            f"{first_line}<br>Copyright 2026 sbr0574</a>"
+            f'<p style="margin:2px 0;">{version_line}</p>'
+            f'<p style="margin:2px 0;"><a href="{LICENSE_URL}" style="text-decoration:none; color:#4a90d9;">License</a></p>'
+            f'<p style="margin:2px 0;"><a href="{README_URL}" style="text-decoration:none; color:#4a90d9;">获取帮助</a></p>'
+            f'<p style="margin:2px 0;">仓库：'
+            f'<a href="{PROJECT_URL}" style="text-decoration:none; color:#4a90d9;">GitHub</a> · '
+            f'<a href="{GITEE_URL}" style="text-decoration:none; color:#4a90d9;">Gitee</a></p>'
+            f'<p style="margin:2px 0;">Copyright 2026 sbr0574</p>'
         )
         label.setTextFormat(Qt.RichText)
         label.setText(html)
