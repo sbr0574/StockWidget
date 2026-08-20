@@ -19,24 +19,24 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComb
     QDialog, QFontComboBox, QGroupBox, QHBoxLayout,
     QHeaderView, QKeySequenceEdit, QLabel, QPushButton,
     QSizePolicy, QSlider, QSpinBox, QTabWidget,
-    QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
+    QTableWidget, QTableWidgetItem, QWidget)
 
 class Ui_SettingDialog(object):
     def setupUi(self, SettingDialog):
         if not SettingDialog.objectName():
             SettingDialog.setObjectName(u"SettingDialog")
-        SettingDialog.resize(600, 410)
-        SettingDialog.setMinimumSize(QSize(600, 410))
-        SettingDialog.setMaximumSize(QSize(600, 410))
+        SettingDialog.resize(600, 400)
+        SettingDialog.setMinimumSize(QSize(600, 400))
+        SettingDialog.setMaximumSize(QSize(600, 400))
         SettingDialog.setSizeGripEnabled(False)
         self.tab_widget = QTabWidget(SettingDialog)
         self.tab_widget.setObjectName(u"tab_widget")
-        self.tab_widget.setGeometry(QRect(10, 10, 581, 391))
+        self.tab_widget.setGeometry(QRect(10, 10, 581, 381))
         self.data = QWidget()
         self.data.setObjectName(u"data")
         self.gb_list = QGroupBox(self.data)
         self.gb_list.setObjectName(u"gb_list")
-        self.gb_list.setGeometry(QRect(10, 10, 331, 341))
+        self.gb_list.setGeometry(QRect(10, 10, 331, 331))
         self.gb_list.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
         self.gb_list.setFlat(False)
         self.gb_list.setCheckable(False)
@@ -44,7 +44,7 @@ class Ui_SettingDialog(object):
         if (self.list_codes.columnCount() < 3):
             self.list_codes.setColumnCount(3)
         self.list_codes.setObjectName(u"list_codes")
-        self.list_codes.setGeometry(QRect(10, 60, 311, 241))
+        self.list_codes.setGeometry(QRect(10, 55, 311, 246))
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -71,15 +71,18 @@ class Ui_SettingDialog(object):
         icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditDelete))
         self.btn_del.setIcon(icon)
         self.btn_del.setIconSize(QSize(12, 12))
+        self.btn_del.setAutoDefault(False)
+        self.btn_del.setFlat(False)
         self.btn_add = QPushButton(self.gb_list)
         self.btn_add.setObjectName(u"btn_add")
         self.btn_add.setGeometry(QRect(10, 25, 70, 26))
         icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.ListAdd))
         self.btn_add.setIcon(icon1)
         self.btn_add.setIconSize(QSize(12, 12))
+        self.btn_add.setAutoDefault(False)
         self.label_data_state = QLabel(self.gb_list)
         self.label_data_state.setObjectName(u"label_data_state")
-        self.label_data_state.setGeometry(QRect(10, 310, 211, 16))
+        self.label_data_state.setGeometry(QRect(10, 305, 300, 16))
         self.label_data_state.setStyleSheet(u"color: rgb(128,128,128)")
         self.gb_data = QGroupBox(self.data)
         self.gb_data.setObjectName(u"gb_data")
@@ -138,7 +141,7 @@ class Ui_SettingDialog(object):
         self.sb_interval.setMaximum(60)
         self.gb_name = QGroupBox(self.data)
         self.gb_name.setObjectName(u"gb_name")
-        self.gb_name.setGeometry(QRect(360, 102, 201, 81))
+        self.gb_name.setGeometry(QRect(360, 100, 201, 81))
         self.gb_name.setStyleSheet(u"")
         self.gb_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_name.setFlat(True)
@@ -161,14 +164,16 @@ class Ui_SettingDialog(object):
         self.general.setObjectName(u"general")
         self.gb_icon = QGroupBox(self.general)
         self.gb_icon.setObjectName(u"gb_icon")
-        self.gb_icon.setGeometry(QRect(150, 260, 202, 101))
+        self.gb_icon.setGeometry(QRect(150, 260, 202, 71))
         self.gb_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_icon.setFlat(True)
-        self.verticalLayout = QVBoxLayout(self.gb_icon)
-        self.verticalLayout.setObjectName(u"verticalLayout")
-        self.horizontalLayout_icons = QHBoxLayout()
+        self.layoutWidget = QWidget(self.gb_icon)
+        self.layoutWidget.setObjectName(u"layoutWidget")
+        self.layoutWidget.setGeometry(QRect(10, 20, 180, 42))
+        self.horizontalLayout_icons = QHBoxLayout(self.layoutWidget)
         self.horizontalLayout_icons.setObjectName(u"horizontalLayout_icons")
-        self.btn_icon_default = QPushButton(self.gb_icon)
+        self.horizontalLayout_icons.setContentsMargins(0, 0, 0, 0)
+        self.btn_icon_default = QPushButton(self.layoutWidget)
         self.btn_icon_default.setObjectName(u"btn_icon_default")
         self.btn_icon_default.setMinimumSize(QSize(40, 40))
         self.btn_icon_default.setMaximumSize(QSize(40, 40))
@@ -181,7 +186,7 @@ class Ui_SettingDialog(object):
 
         self.horizontalLayout_icons.addWidget(self.btn_icon_default)
 
-        self.btn_icon_light = QPushButton(self.gb_icon)
+        self.btn_icon_light = QPushButton(self.layoutWidget)
         self.btn_icon_light.setObjectName(u"btn_icon_light")
         self.btn_icon_light.setMinimumSize(QSize(40, 40))
         self.btn_icon_light.setMaximumSize(QSize(40, 40))
@@ -194,7 +199,7 @@ class Ui_SettingDialog(object):
 
         self.horizontalLayout_icons.addWidget(self.btn_icon_light)
 
-        self.btn_icon_dark = QPushButton(self.gb_icon)
+        self.btn_icon_dark = QPushButton(self.layoutWidget)
         self.btn_icon_dark.setObjectName(u"btn_icon_dark")
         self.btn_icon_dark.setMinimumSize(QSize(40, 40))
         self.btn_icon_dark.setMaximumSize(QSize(40, 40))
@@ -207,7 +212,7 @@ class Ui_SettingDialog(object):
 
         self.horizontalLayout_icons.addWidget(self.btn_icon_dark)
 
-        self.btn_icon_placeholder = QPushButton(self.gb_icon)
+        self.btn_icon_placeholder = QPushButton(self.layoutWidget)
         self.btn_icon_placeholder.setObjectName(u"btn_icon_placeholder")
         self.btn_icon_placeholder.setEnabled(False)
         self.btn_icon_placeholder.setMinimumSize(QSize(40, 40))
@@ -215,18 +220,9 @@ class Ui_SettingDialog(object):
 
         self.horizontalLayout_icons.addWidget(self.btn_icon_placeholder)
 
-
-        self.verticalLayout.addLayout(self.horizontalLayout_icons)
-
-        self.label_icon_active = QLabel(self.gb_icon)
-        self.label_icon_active.setObjectName(u"label_icon_active")
-        self.label_icon_active.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.verticalLayout.addWidget(self.label_icon_active)
-
         self.gb_fcn = QGroupBox(self.general)
         self.gb_fcn.setObjectName(u"gb_fcn")
-        self.gb_fcn.setGeometry(QRect(360, 10, 201, 91))
+        self.gb_fcn.setGeometry(QRect(360, 10, 201, 81))
         self.gb_fcn.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_fcn.setFlat(True)
         self.cb_auto_start = QCheckBox(self.gb_fcn)
@@ -321,21 +317,15 @@ class Ui_SettingDialog(object):
         self.label_current_line_interval.setGeometry(QRect(280, 90, 41, 24))
         self.gb_tabel = QGroupBox(self.general)
         self.gb_tabel.setObjectName(u"gb_tabel")
-        self.gb_tabel.setGeometry(QRect(10, 260, 131, 61))
+        self.gb_tabel.setGeometry(QRect(10, 260, 131, 71))
         self.gb_tabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_tabel.setFlat(True)
-        self.horizontalLayout_2 = QHBoxLayout(self.gb_tabel)
-        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.cb_head = QCheckBox(self.gb_tabel)
         self.cb_head.setObjectName(u"cb_head")
-
-        self.horizontalLayout_2.addWidget(self.cb_head)
-
+        self.cb_head.setGeometry(QRect(10, 25, 55, 24))
         self.cb_grid = QCheckBox(self.gb_tabel)
         self.cb_grid.setObjectName(u"cb_grid")
-
-        self.horizontalLayout_2.addWidget(self.cb_grid)
-
+        self.cb_grid.setGeometry(QRect(70, 25, 55, 24))
         self.gb_hotkeys = QGroupBox(self.general)
         self.gb_hotkeys.setObjectName(u"gb_hotkeys")
         self.gb_hotkeys.setGeometry(QRect(360, 100, 201, 141))
@@ -355,25 +345,21 @@ class Ui_SettingDialog(object):
         self.keyseq_click_through.setGeometry(QRect(30, 105, 141, 25))
         self.gb_about = QGroupBox(self.general)
         self.gb_about.setObjectName(u"gb_about")
-        self.gb_about.setGeometry(QRect(359, 244, 202, 115))
+        self.gb_about.setGeometry(QRect(359, 244, 202, 101))
         self.gb_about.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_about.setFlat(True)
-        self.verticalLayout_about = QVBoxLayout(self.gb_about)
-        self.verticalLayout_about.setObjectName(u"verticalLayout_about")
         self.label_about_info = QLabel(self.gb_about)
         self.label_about_info.setObjectName(u"label_about_info")
+        self.label_about_info.setGeometry(QRect(11, 19, 181, 71))
         self.label_about_info.setTextFormat(Qt.TextFormat.RichText)
         self.label_about_info.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
         self.label_about_info.setWordWrap(True)
         self.label_about_info.setOpenExternalLinks(True)
-
-        self.verticalLayout_about.addWidget(self.label_about_info)
-
         self.tab_widget.addTab(self.general, "")
 
         self.retranslateUi(SettingDialog)
 
-        self.tab_widget.setCurrentIndex(1)
+        self.tab_widget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(SettingDialog)
@@ -420,8 +406,7 @@ class Ui_SettingDialog(object):
 #if QT_CONFIG(tooltip)
         self.btn_icon_placeholder.setToolTip(QCoreApplication.translate("SettingDialog", u"\u9884\u7559\u56fe\u6807\u4f4d", None))
 #endif // QT_CONFIG(tooltip)
-        self.btn_icon_placeholder.setText(QCoreApplication.translate("SettingDialog", u"\u9884\u7559", None))
-        self.label_icon_active.setText(QCoreApplication.translate("SettingDialog", u"\u5f53\u524d\u6fc0\u6d3b\uff1a\u9ed8\u8ba4\u56fe\u6807", None))
+        self.btn_icon_placeholder.setText("")
         self.gb_fcn.setTitle(QCoreApplication.translate("SettingDialog", u"\u529f\u80fd", None))
         self.cb_auto_start.setText(QCoreApplication.translate("SettingDialog", u"\u5f00\u673a\u542f\u52a8", None))
         self.cb_force_top.setText(QCoreApplication.translate("SettingDialog", u"\u5f3a\u5236\u7f6e\u9876", None))
@@ -447,7 +432,10 @@ class Ui_SettingDialog(object):
         self.cb_hotkey_hide.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a/\u9690\u85cf\u6d6e\u7a97", None))
         self.cb_hotkey_click_through.setText(QCoreApplication.translate("SettingDialog", u"\u9f20\u6807\u7a7f\u900f", None))
         self.gb_about.setTitle(QCoreApplication.translate("SettingDialog", u"\u5173\u4e8e StockWidget ", None))
-        self.label_about_info.setText(QCoreApplication.translate("SettingDialog", u"\u5173\u4e8e StockWidget", None))
+        self.label_about_info.setText(QCoreApplication.translate("SettingDialog", u"\u5f53\u524d\u7248\u672c v \n"
+"Apache-2.0 license \u00b7 \u4f7f\u7528\u5e2e\u52a9\n"
+"\u4ed3\u5e93\uff1aGitHub \u00b7 Gitee\n"
+"Copyright 2026 sbr0574", None))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.general), QCoreApplication.translate("SettingDialog", u"\u901a\u7528", None))
     # retranslateUi
 

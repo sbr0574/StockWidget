@@ -7,19 +7,19 @@
     <x>0</x>
     <y>0</y>
     <width>600</width>
-    <height>410</height>
+    <height>400</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>600</width>
-    <height>410</height>
+    <height>400</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>600</width>
-    <height>410</height>
+    <height>400</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -34,11 +34,11 @@
      <x>10</x>
      <y>10</y>
      <width>581</width>
-     <height>391</height>
+     <height>381</height>
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="data">
     <attribute name="title">
@@ -50,7 +50,7 @@
        <x>10</x>
        <y>10</y>
        <width>331</width>
-       <height>341</height>
+       <height>331</height>
       </rect>
      </property>
      <property name="title">
@@ -69,9 +69,9 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>60</y>
+        <y>55</y>
         <width>311</width>
-        <height>241</height>
+        <height>246</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -150,6 +150,12 @@
         <height>12</height>
        </size>
       </property>
+      <property name="autoDefault">
+       <bool>false</bool>
+      </property>
+      <property name="flat">
+       <bool>false</bool>
+      </property>
      </widget>
      <widget class="QPushButton" name="btn_add">
       <property name="geometry">
@@ -172,13 +178,16 @@
         <height>12</height>
        </size>
       </property>
+      <property name="autoDefault">
+       <bool>false</bool>
+      </property>
      </widget>
      <widget class="QLabel" name="label_data_state">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>310</y>
-        <width>211</width>
+        <y>305</y>
+        <width>300</width>
         <height>16</height>
        </rect>
       </property>
@@ -417,7 +426,7 @@
      <property name="geometry">
       <rect>
        <x>360</x>
-       <y>102</y>
+       <y>100</y>
        <width>201</width>
        <height>81</height>
       </rect>
@@ -501,7 +510,7 @@
        <x>150</x>
        <y>260</y>
        <width>202</width>
-       <height>101</height>
+       <height>71</height>
       </rect>
      </property>
      <property name="title">
@@ -513,161 +522,157 @@
      <property name="flat">
       <bool>true</bool>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_icons">
-        <item>
-         <widget class="QPushButton" name="btn_icon_default">
-          <property name="minimumSize">
-           <size>
-            <width>40</width>
-            <height>40</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>40</width>
-            <height>40</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>默认图标</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset>
-            <normaloff>:/StockWidget.ico</normaloff>:/StockWidget.ico</iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>32</width>
-            <height>32</height>
-           </size>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <property name="autoExclusive">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="btn_icon_light">
-          <property name="minimumSize">
-           <size>
-            <width>40</width>
-            <height>40</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>40</width>
-            <height>40</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>LightGlass</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset>
-            <normaloff>:/LightGlass.png</normaloff>:/LightGlass.png</iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>32</width>
-            <height>32</height>
-           </size>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <property name="autoExclusive">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="btn_icon_dark">
-          <property name="minimumSize">
-           <size>
-            <width>40</width>
-            <height>40</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>40</width>
-            <height>40</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>DarkGlass</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset>
-            <normaloff>:/DarkGlass.png</normaloff>:/DarkGlass.png</iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>32</width>
-            <height>32</height>
-           </size>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <property name="autoExclusive">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="btn_icon_placeholder">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>40</width>
-            <height>40</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>40</width>
-            <height>40</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>预留图标位</string>
-          </property>
-          <property name="text">
-           <string>预留</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_icon_active">
-        <property name="text">
-         <string>当前激活：默认图标</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>180</width>
+        <height>42</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_icons">
+       <item>
+        <widget class="QPushButton" name="btn_icon_default">
+         <property name="minimumSize">
+          <size>
+           <width>40</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>40</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>默认图标</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>:/StockWidget.ico</normaloff>:/StockWidget.ico</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>32</width>
+           <height>32</height>
+          </size>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="autoExclusive">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btn_icon_light">
+         <property name="minimumSize">
+          <size>
+           <width>40</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>40</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>LightGlass</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>:/LightGlass.png</normaloff>:/LightGlass.png</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>32</width>
+           <height>32</height>
+          </size>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="autoExclusive">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btn_icon_dark">
+         <property name="minimumSize">
+          <size>
+           <width>40</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>40</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>DarkGlass</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>:/DarkGlass.png</normaloff>:/DarkGlass.png</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>32</width>
+           <height>32</height>
+          </size>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="autoExclusive">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btn_icon_placeholder">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>40</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>40</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>预留图标位</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
     <widget class="QGroupBox" name="gb_fcn">
      <property name="geometry">
@@ -675,7 +680,7 @@
        <x>360</x>
        <y>10</y>
        <width>201</width>
-       <height>91</height>
+       <height>81</height>
       </rect>
      </property>
      <property name="title">
@@ -1028,7 +1033,7 @@
        <x>10</x>
        <y>260</y>
        <width>131</width>
-       <height>61</height>
+       <height>71</height>
       </rect>
      </property>
      <property name="title">
@@ -1040,22 +1045,32 @@
      <property name="flat">
       <bool>true</bool>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
-      <item>
-       <widget class="QCheckBox" name="cb_head">
-        <property name="text">
-         <string>表头</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="cb_grid">
-        <property name="text">
-         <string>网格</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <widget class="QCheckBox" name="cb_head">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>25</y>
+        <width>55</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>表头</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="cb_grid">
+      <property name="geometry">
+       <rect>
+        <x>70</x>
+        <y>25</y>
+        <width>55</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>网格</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QGroupBox" name="gb_hotkeys">
      <property name="geometry">
@@ -1128,7 +1143,7 @@
        <x>359</x>
        <y>244</y>
        <width>202</width>
-       <height>115</height>
+       <height>101</height>
       </rect>
      </property>
      <property name="title">
@@ -1140,27 +1155,34 @@
      <property name="flat">
       <bool>true</bool>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_about">
-      <item>
-       <widget class="QLabel" name="label_about_info">
-        <property name="text">
-         <string>关于 StockWidget</string>
-        </property>
-        <property name="textFormat">
-         <enum>Qt::TextFormat::RichText</enum>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
-        </property>
-        <property name="wordWrap">
-         <bool>true</bool>
-        </property>
-        <property name="openExternalLinks">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <widget class="QLabel" name="label_about_info">
+      <property name="geometry">
+       <rect>
+        <x>11</x>
+        <y>19</y>
+        <width>181</width>
+        <height>71</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>当前版本 v 
+Apache-2.0 license · 使用帮助
+仓库：GitHub · Gitee
+Copyright 2026 sbr0574</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::TextFormat::RichText</enum>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+      <property name="openExternalLinks">
+       <bool>true</bool>
+      </property>
+     </widget>
     </widget>
    </widget>
   </widget>

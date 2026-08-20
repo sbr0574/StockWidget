@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>StockWidget.ico</file>
+        <file>DarkSW.png</file>
         <file>LightGlass.png</file>
         <file>DarkGlass.png</file>
         <file>stock_codes_list.json</file>

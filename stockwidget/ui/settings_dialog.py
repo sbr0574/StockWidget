@@ -61,13 +61,13 @@ def _build_settings_stylesheet(dark: bool) -> str:
 {flat_boxes} {{
     border: none;
     border-top: 1px solid {sep};
-    margin-top: 8px;
-    padding-top: 12px;
+    margin-top: 9px;
+    padding-top: 0px;
 }}
 {flat_titles} {{
     subcontrol-origin: margin;
     subcontrol-position: top center;
-    padding: 0 8px;
+    padding: 2 8px;
 }}
 QTableWidget#list_codes QHeaderView::section {{
     background-color: {header_bg};
@@ -398,7 +398,6 @@ class SettingsDialog(QDialog):
             "light": "LightGlass",
             "dark": "DarkGlass",
         }
-        self.label_icon_active = self.ui.label_icon_active
         self._icon_button_group = QButtonGroup(self)
         self._icon_button_group.setExclusive(True)
         for key, btn in self.icon_buttons.items():
@@ -418,7 +417,6 @@ class SettingsDialog(QDialog):
         self.icon_buttons[cur_choice].setChecked(True)
         for btn in self.icon_buttons.values():
             btn.blockSignals(False)
-        self._update_icon_active_label(cur_choice)
 
     def _setup_source_combo(self):
         """填充行情数据源下拉框（新浪 / 东方财富），并按当前配置选中。"""
@@ -696,10 +694,6 @@ class SettingsDialog(QDialog):
         if self.app is not None:
             self.app.set_app_icon(key)
             self.app.save_now()
-        self._update_icon_active_label(key)
-
-    def _update_icon_active_label(self, key: str):
-        self.label_icon_active.setText(f"当前激活：{self.icon_labels.get(key, key)}")
 
     def _on_start_on_boot_toggled(self, checked: bool):
         self.app.set_start_on_boot(bool(checked))
@@ -913,8 +907,8 @@ class SettingsDialog(QDialog):
             )
         html = (
             f'<p style="margin:2px 0;">{version_line}</p>'
-            f'<p style="margin:2px 0;"><a href="{LICENSE_URL}" style="text-decoration:none; color:#4a90d9;">License</a></p>'
-            f'<p style="margin:2px 0;"><a href="{README_URL}" style="text-decoration:none; color:#4a90d9;">获取帮助</a></p>'
+            f'<p style="margin:2px 0;"><a href="{LICENSE_URL}" style="text-decoration:none; color:#4a90d9;">Apache-2.0 license</a> · '
+            f'<a style="margin:2px 0;"><a href="{README_URL}" style="text-decoration:none; color:#4a90d9;">使用帮助</a></p>'
             f'<p style="margin:2px 0;">仓库：'
             f'<a href="{PROJECT_URL}" style="text-decoration:none; color:#4a90d9;">GitHub</a> · '
             f'<a href="{GITEE_URL}" style="text-decoration:none; color:#4a90d9;">Gitee</a></p>'
