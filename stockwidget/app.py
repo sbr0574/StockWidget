@@ -96,29 +96,13 @@ class App(QApplication):
             self._start_refresh_index()
 
     def find_icon(self, choice: str) -> QIcon:
-        if choice == 'light':
-            return QIcon(":/LightGlass.png")
+        if choice == 'lightG':
+            return QIcon(":/LightGlass.ico")
+        if choice == 'darkG':
+            return QIcon(":/DarkGlass.ico")
         if choice == 'dark':
-            return QIcon(":/DarkGlass.png")
-        if not choice or choice == 'default':
-            return QIcon(":/StockWidget.ico")
-        if isinstance(choice, str) and choice.startswith('std:'):
-            key = choice.split(':', 1)[1]
-            mapping = {
-                'computer': QStyle.SP_ComputerIcon,
-                'network': QStyle.SP_DriveNetIcon,
-                'folder': QStyle.SP_DirIcon,
-                'file': QStyle.SP_FileIcon,
-                'trash': QStyle.SP_TrashIcon,
-                'desktop': QStyle.SP_DesktopIcon,
-            }
-            sp = mapping.get(key, QStyle.SP_ComputerIcon)
-            return self.style().standardIcon(sp)
-        try:
-            if os.path.exists(choice):
-                return QIcon(choice)
-        except Exception:
-            return QIcon(":/StockWidget.ico")
+            return QIcon(":/DarkSW.ico")
+        return QIcon(":/StockWidget.ico")
 
     def toggle_win(self):
         if self.win.isVisible():
@@ -215,7 +199,7 @@ class App(QApplication):
         save_file(cfg, self.app_name, CONFIG_FILE)
 
     def set_app_icon(self, choice):
-        """Set application and tray icon. `choice` can be None/'default', 'std:KEY' or a file path."""
+        """Set application and tray icon."""
         self._icon_choice = choice
         app_icon = self.find_icon(self._icon_choice)
         self.setWindowIcon(app_icon)

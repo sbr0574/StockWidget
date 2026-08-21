@@ -23,6 +23,7 @@ from stockwidget.data.update_check import (
     GITEE_URL,
     LICENSE_URL,
     README_URL,
+    ISSUES_URL,
     RELEASES_URL,
 )
 
@@ -380,7 +381,7 @@ class SettingsDialog(QDialog):
                 w.setEnabled(False)
             self.slider_all_alpha.setToolTip(unsupported_tooltip("整体不透明度"))
         if not force_top_supported():
-            # 强制置顶:仅 Windows / macOS 支持;Linux 下 raise_ 不可靠
+            # 强制置顶:仅 Windows 支持
             self.cb_force_top.setEnabled(False)
             self.cb_force_top.setToolTip(unsupported_tooltip("强制置顶", suggest_x11=False))
         if not start_on_boot_supported():
@@ -390,13 +391,9 @@ class SettingsDialog(QDialog):
     def _setup_icon_choices(self):
         self.icon_buttons = {
             "default": self.ui.btn_icon_default,
-            "light": self.ui.btn_icon_light,
             "dark": self.ui.btn_icon_dark,
-        }
-        self.icon_labels = {
-            "default": "默认图标",
-            "light": "LightGlass",
-            "dark": "DarkGlass",
+            "lightG": self.ui.btn_icon_lightG,
+            "darkG": self.ui.btn_icon_darkG,
         }
         self._icon_button_group = QButtonGroup(self)
         self._icon_button_group.setExclusive(True)
@@ -901,17 +898,14 @@ class SettingsDialog(QDialog):
 
         version_line = f"当前版本 v{app_version}"
         if latest_version:
-            version_line += (
-                f'　<a href="{latest_url}" style="text-decoration:none; color:#4a90d9;">'
-                f"最新版本 v{latest_version}</a>"
-            )
+            version_line += f" 最新 v{latest_version}"
         html = (
-            f'<p style="margin:2px 0;">{version_line}</p>'
-            f'<p style="margin:2px 0;"><a href="{LICENSE_URL}" style="text-decoration:none; color:#4a90d9;">Apache-2.0 license</a> · '
-            f'<a style="margin:2px 0;"><a href="{README_URL}" style="text-decoration:none; color:#4a90d9;">使用帮助</a></p>'
-            f'<p style="margin:2px 0;">仓库：'
-            f'<a href="{PROJECT_URL}" style="text-decoration:none; color:#4a90d9;">GitHub</a> · '
-            f'<a href="{GITEE_URL}" style="text-decoration:none; color:#4a90d9;">Gitee</a></p>'
+            f'<p style="margin:2px 0;"><a href="{latest_url}" style="text-decoration:none; color:#4a90d9;">{version_line}</a></p>'
+            f'<p style="margin:2px 0;"><a href="{LICENSE_URL}" style="text-decoration:none; color:#4a90d9;">License</a> · '
+            f'<a href="{README_URL}" style="text-decoration:none; color:#4a90d9;">使用帮助</a> · '
+            f'<a href="{ISSUES_URL}" style="text-decoration:none; color:#4a90d9;">反馈建议</a></p>'
+            f'<p style="margin:2px 0;"><a href="{PROJECT_URL}" style="text-decoration:none; color:#4a90d9;">GitHub仓库</a> · '
+            f'<a href="{GITEE_URL}" style="text-decoration:none; color:#4a90d9;">Gitee仓库</a></p>'
             f'<p style="margin:2px 0;">Copyright 2026 sbr0574</p>'
         )
         label.setTextFormat(Qt.RichText)

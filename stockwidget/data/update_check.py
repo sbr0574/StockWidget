@@ -6,6 +6,7 @@ PROJECT_URL = "https://github.com/sbr0574/StockWidget"
 GITEE_URL = "https://gitee.com/sbr0574/StockWidget"
 RELEASES_URL = PROJECT_URL + "/releases"
 LICENSE_URL = PROJECT_URL + "/blob/main/LICENSE"
+ISSUES_URL = PROJECT_URL + "/issues"
 README_URL = PROJECT_URL + "#readme"
 
 
