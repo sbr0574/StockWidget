@@ -23,7 +23,7 @@ from stockwidget.data.code_lists import (
     load_local_codes,
     load_resource_codes,
 )
-from stockwidget.data.update_check import check_for_update
+from stockwidget.data.update_check import get_update_info
 from stockwidget.platform.autostart import set_start_on_boot
 from stockwidget.ui.settings_dialog import SettingsDialog
 from stockwidget.ui.tray import TrayIcon
@@ -86,6 +86,8 @@ class App(QApplication):
 
         # 启动时后台检查更新
         self._has_update = False
+        self._latest_version = None
+        self._latest_release_url = None
         self.update_checked.connect(self._on_update_checked)
         self._start_update_check()
 
@@ -94,25 +96,13 @@ class App(QApplication):
             self._start_refresh_index()
 
     def find_icon(self, choice: str) -> QIcon:
-        if not choice or choice == 'default':
-            return QIcon(":/StockWidget.ico")
-        if isinstance(choice, str) and choice.startswith('std:'):
-            key = choice.split(':', 1)[1]
-            mapping = {
-                'computer': QStyle.SP_ComputerIcon,
-                'network': QStyle.SP_DriveNetIcon,
-                'folder': QStyle.SP_DirIcon,
-                'file': QStyle.SP_FileIcon,
-                'trash': QStyle.SP_TrashIcon,
-                'desktop': QStyle.SP_DesktopIcon,
-            }
-            sp = mapping.get(key, QStyle.SP_ComputerIcon)
-            return self.style().standardIcon(sp)
-        try:
-            if os.path.exists(choice):
-                return QIcon(choice)
-        except Exception:
-            return QIcon(":/StockWidget.ico")
+        if choice == 'lightG':
+            return QIcon(":/LightGlass.ico")
+        if choice == 'darkG':
+            return QIcon(":/DarkGlass.ico")
+        if choice == 'dark':
+            return QIcon(":/DarkSW.ico")
+        return QIcon(":/StockWidget.ico")
 
     def toggle_win(self):
         if self.win.isVisible():
@@ -148,9 +138,11 @@ class App(QApplication):
         """后台线程检查更新，结果通过信号回传到主线程显示"""
         def _worker():
             try:
-                has_update = check_for_update(self.app_version)
+                has_update, latest_version, latest_url = get_update_info(self.app_version)
             except Exception:
-                has_update = False
+                has_update, latest_version, latest_url = False, None, None
+            self._latest_version = latest_version if has_update else None
+            self._latest_release_url = latest_url if has_update else None
             self.update_checked.emit(bool(has_update))
 
         threading.Thread(target=_worker, daemon=True).start()
@@ -207,7 +199,7 @@ class App(QApplication):
         save_file(cfg, self.app_name, CONFIG_FILE)
 
     def set_app_icon(self, choice):
-        """Set application and tray icon. `choice` can be None/'default', 'std:KEY' or a file path."""
+        """Set application and tray icon."""
         self._icon_choice = choice
         app_icon = self.find_icon(self._icon_choice)
         self.setWindowIcon(app_icon)
