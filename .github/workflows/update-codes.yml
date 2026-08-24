@@ -1,11 +1,11 @@
 name: Update Stock Codes
 
-# 每周一至周五 UTC 01:05（北京时间 09:05）拉取全市场代码并提交到仓库 resources/ 下三个 JSON。
+# 每周一至周五 UTC 00:30（北京时间 08:30）拉取全市场代码并提交到仓库 resources/ 下三个 JSON。
 # 频率依据：股票/期货代码列表为低频变化（期货仅在新合约挂牌、到期退市、主力换月时变化，约每月），
 # 周末不运行。程序运行时从本仓库 raw 地址下载这三个 JSON，无需在用户本地爬取。
 on:
   schedule:
-    - cron: "5 1 * * 1-5"
+    - cron: "30 0 * * 1-5"
   workflow_dispatch:
 
 jobs:
@@ -21,7 +21,7 @@ jobs:
       - name: 配置 Python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.13"
 
       - name: 安装依赖
         run: pip install akshare pandas pypinyin requests

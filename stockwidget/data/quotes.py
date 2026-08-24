@@ -43,7 +43,7 @@ def _new_entry(name, opening, prev_close, current, high, low,
         "seller_price": list(sell_price),
         "date": str(date or ""),
         "time": str(time or ""),
-        # 东财独有字段（新浪无），预留，取消注释即可启用：
+        # 东财独有字段（新浪无），预留
         # "turnover_rate": None,   # 换手率（%）
         # "volume_ratio": None,    # 量比
     }
@@ -51,9 +51,10 @@ def _new_entry(name, opening, prev_close, current, high, low,
 
 # ---------------- 统一代码 <-> 数据源代码转换 ----------------
 # 统一代码格式：
-#   A股    sh600519 / sz000001 / bj430047
+#   A股    sh600000 / sz000001 / bj920000
 #   港股   hk00700
 #   美股   usaapl（us + 小写代码）
+#   全球指数 gbnky
 #   期货   au2512（具体合约）/ au0（主力连续，对应东财 m:113 的 aum）
 
 def _sina_code(code: str) -> str:
@@ -65,8 +66,8 @@ def _sina_code(code: str) -> str:
         return "rt_hk" + c[2:].upper()   # rt_hk00700 / rt_hkHSI（代码部分大写，兼容字母代码）
     if c.startswith("us"):
         return "gb_" + c[2:]
-    if c.startswith("g") and len(c) > 1:
-        return "b_" + c[1:].upper()      # 全球指数 gnky -> b_NKY
+    if c.startswith("gb"):
+        return "b_" + c[2:].upper()      # 全球指数 gbnky -> b_NKY
     return "nf_" + c.upper()             # 期货: au2512 -> nf_AU2512, au0 -> nf_AU0
 
 
@@ -77,7 +78,7 @@ def _canonical_from_sina(sname: str) -> str:
     if sname.startswith("gb_"):
         return "us" + sname[3:].lower()  # gb_aapl -> usaapl
     if sname.startswith("b_"):
-        return "g" + sname[2:].lower()   # b_NKY -> gnky
+        return "gb" + sname[2:].lower()  # b_NKY -> gbnky
     if sname.startswith("nf_"):
         return sname[3:].lower()          # nf_AU2512 -> au2512
     return sname                          # sh600519
@@ -101,8 +102,8 @@ def _em_secid(code: str) -> str:
         return "116." + c[2:]
     if m == "us":
         return "105." + c[2:].upper()  # 105=纳斯达克（106=纽交所/107=美交所）
-    if m == "g":
-        return "100." + c[1:]          # 全球指数（东财 secid 未验证，暂用 100 前缀）
+    if m == "gb":
+        return "100." + c[2:]          # 全球指数（东财 secid 未验证，暂用 100 前缀）
     mkt = "142" if c[:2] in _INE_PRODUCTS else "113"  # 上期能源142 / 上期所113
     if len(c) == 3 and c.endswith("0"):
         return f"{mkt}.{c[:-1]}m"      # 主力连续 au0 -> aum

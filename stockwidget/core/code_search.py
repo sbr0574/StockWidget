@@ -20,9 +20,12 @@ def normalize_stock_entry(item: dict) -> dict:
     code = str(item.get("code", "") or "").strip()
     if market in {"sh", "sz", "bj"} and code.isdigit():
         code = code.zfill(6)
+    if market == "hk" and code.isdigit():
+        code = code.zfill(5)
     key = str(item.get("key", "") or "").strip().lower()
     if not key and market and code:
         key = f"{market}{code}"
+    name_en = str(item.get("name_en", "") or item.get("engname", "") or "").strip().lower()
     return {
         "key": key,
         "market": market,
@@ -31,7 +34,8 @@ def normalize_stock_entry(item: dict) -> dict:
         "type": str(item.get("type", "") or "").strip(),
         "py": str(item.get("py", "") or "").strip().lower(),
         "abbr": str(item.get("abbr", "") or "").strip().lower(),
-        "engname": str(item.get("engname", "") or "").strip().lower(),
+        "name_en": name_en,
+        "engname": name_en,
     }
 
 
@@ -39,8 +43,10 @@ def _query_variants(text: str) -> set[str]:
     """把用户输入扩展成多个候选查询（去市场前缀、数字补零等）。"""
     q = str(text or "").strip().lower().replace(" ", "")
     variants = {q}
-    if len(q) == 8 and q[:2] in MARKET_PREFIXES:
-        variants.add(q[2:])
+    for prefix in MARKET_PREFIXES:
+        if q.startswith(prefix) and len(q) > len(prefix):
+            variants.add(q[len(prefix):])
+            break
     digits = re.sub(r"\D", "", q)
     if digits:
         variants.add(digits.zfill(6) if len(digits) <= 6 else digits)
@@ -62,12 +68,12 @@ def find_suggestions(codes: dict, text: str, limit: int = 20) -> list[dict]:
             "name": info["name"].lower(),
             "py": info["py"],
             "abbr": info["abbr"],
-            "engname": info["engname"],
+            "name_en": info["name_en"],
         }
         best = 0
         for q in queries:
             if (fields["key"] == q or fields["code"] == q or fields["name"] == q
-                    or fields["py"] == q or fields["abbr"] == q or fields["engname"] == q):
+                    or fields["py"] == q or fields["abbr"] == q or fields["name_en"] == q):
                 best = max(best, 120)
             elif fields["key"].startswith(q):
                 best = max(best, 110)
@@ -75,9 +81,9 @@ def find_suggestions(codes: dict, text: str, limit: int = 20) -> list[dict]:
                 best = max(best, 105)
             elif q in fields["key"] or q in fields["code"]:
                 best = max(best, 95)
-            elif fields["name"].startswith(q) or fields["engname"].startswith(q):
+            elif fields["name"].startswith(q) or fields["name_en"].startswith(q):
                 best = max(best, 90)
-            elif q in fields["name"] or q in fields["engname"]:
+            elif q in fields["name"] or q in fields["name_en"]:
                 best = max(best, 80)
             elif fields["abbr"].startswith(q):
                 best = max(best, 75)

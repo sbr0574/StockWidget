@@ -15,7 +15,8 @@ class TestMarkets(unittest.TestCase):
         self.assertEqual(market_of("bj430047"), "bj")
         self.assertEqual(market_of("hk00700"), "hk")
         self.assertEqual(market_of("usaapl"), "us")
-        self.assertEqual(market_of("gnky"), "g")       # 全球指数
+        self.assertEqual(market_of("gbnky"), "gb")     # 全球指数
+        self.assertEqual(market_of("gnky"), "g")       # 兼容旧全球指数
         self.assertEqual(market_of("au0"), "")         # 期货裸码
         self.assertEqual(market_of(""), "")
 
@@ -23,6 +24,7 @@ class TestMarkets(unittest.TestCase):
         self.assertEqual(strip_market("sh600519"), "600519")
         self.assertEqual(strip_market("hk00700"), "00700")
         self.assertEqual(strip_market("usaapl"), "aapl")
+        self.assertEqual(strip_market("gbnky"), "nky")
         self.assertEqual(strip_market("gnky"), "nky")
         self.assertEqual(strip_market("au0"), "au0")
 

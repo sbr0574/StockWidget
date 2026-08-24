@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import traceback
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
 import pandas as pd
@@ -21,7 +22,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 
 # 全市场代码列表文件名（对应三个独立 JSON）
 CN_FILE = "stock_codes_list.json"          # 沪深京个股、基金、国内指数、港股及港股指数
-GLOBAL_FILE = "stock_codes_global.json"    # 美股个股、全球主要指数
+GLOBAL_FILE = "stock_codes_global.json"    # 美股个股、全球主要指数（gb 前缀）
 FUTURES_FILE = "stock_codes_futures.json"  # 上期所期货
 
 _EM_CLIST_URL = "https://push2delay.eastmoney.com/api/qt/clist/get"
@@ -33,6 +34,19 @@ _SINA_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "Referer": "https://vip.stock.finance.sina.com.cn/",
 }
+
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        value = int(os.getenv(name, str(default)))
+    except ValueError:
+        return default
+    return max(1, value)
+
+
+_EM_PAGE_SIZE = _env_int("UPDATE_CODES_EM_PAGE_SIZE", 500)
+_FETCH_WORKERS = _env_int("UPDATE_CODES_WORKERS", 6)
+_MARKET_ORDER = {"sh": 0, "sz": 1, "bj": 2, "hk": 3, "us": 4, "gb": 5, "": 6}
 
 
 def _to_halfwidth(text: str) -> str:
@@ -59,18 +73,43 @@ def _name_pinyin(name: str) -> tuple[str, str]:
     return py_full.lower(), py_abbr.lower()
 
 
+def _has_cjk(text: str) -> bool:
+    return any("\u4e00" <= ch <= "\u9fff" for ch in str(text or ""))
+
+
+def _normalize_code(code: str, market: str) -> str:
+    code = str(code or "").strip().lower()
+    market = str(market or "").strip().lower()
+    if market in {"sh", "sz", "bj"} and code.isdigit():
+        return code.zfill(6)
+    if market == "hk" and code.isdigit():
+        return code.zfill(5)
+    return code
+
+
+def _code_sort_key(item: tuple[str, dict]) -> tuple:
+    key, entry = item
+    market = str(entry.get("market", "") or "").strip().lower()
+    code = str(entry.get("code", "") or "").strip().lower()
+    return (_MARKET_ORDER.get(market, 99), market, code, key)
+
+
 def _df_to_codes(df: pd.DataFrame) -> dict:
-    """把 [code,name,engname,type,market] 的 df 转成 codes 字典（含拼音/缩写/英文名）。"""
+    """把 [code,name,name_en,type,market] 的 df 转成有序 codes 字典。"""
     codes = {}
     for _, row in df.iterrows():
-        code = str(row.get("code", "") or "").strip()
+        market = str(row.get("market", "") or "").strip().lower()
+        code = _normalize_code(row.get("code", ""), market)
         if not code:
             continue
         name = _to_halfwidth(str(row.get("name", "") or "")).strip()
-        engname = _to_halfwidth(str(row.get("engname", "") or "")).strip()
-        market = str(row.get("market", "") or "").strip()
+        name_en = _to_halfwidth(str(row.get("name_en", "") or row.get("engname", "") or "")).strip()
+        if not name and name_en:
+            name = name_en
+        if name and not name_en and not _has_cjk(name):
+            name_en = name
         mtype = str(row.get("type", "") or "").strip()
-        py_full, py_abbr = _name_pinyin(name)
+        py_full, py_abbr = _name_pinyin(name) if _has_cjk(name) else ("", "")
         entry = {
             "code": code,
             "type": mtype,
@@ -78,17 +117,17 @@ def _df_to_codes(df: pd.DataFrame) -> dict:
             "name": name,
             "py": py_full,
             "abbr": py_abbr,
+            "name_en": name_en,
         }
-        if engname:
-            entry["engname"] = engname
         codes[market + code] = entry
-    return codes
+    return dict(sorted(codes.items(), key=_code_sort_key))
 
 
 def _em_clist_all(fs: str, fid: str = "f12", fields: str = "f12,f14") -> list[dict]:
     """东财 clist 分页拉全市场原始 dict 列表；单页失败重试 3 次，断连返回已收集部分。"""
     rows = []
     page = 1
+    total = None
     while True:
         diff = None
         for _ in range(3):
@@ -96,24 +135,58 @@ def _em_clist_all(fs: str, fid: str = "f12", fields: str = "f12,f14") -> list[di
                 r = requests.get(
                     _EM_CLIST_URL,
                     params={
-                        "pn": page, "pz": 100, "po": 1, "np": 1, "fltt": 2, "invt": 2,
+                        "pn": page, "pz": _EM_PAGE_SIZE, "po": 1, "np": 1, "fltt": 2, "invt": 2,
                         "ut": "bd1d9ddb04089700cf9c27f6f7426281",
                         "fid": fid, "fs": fs, "fields": fields,
                     },
                     headers=_EM_HEADERS,
                     timeout=10,
                 )
-                diff = ((r.json() or {}).get("data") or {}).get("diff") or []
+                data = ((r.json() or {}).get("data") or {})
+                diff = data.get("diff") or []
+                if data.get("total") is not None:
+                    total = int(data.get("total") or 0)
                 break
             except Exception:
                 diff = None
         if not diff:
             break
         rows.extend(diff)
-        if len(diff) < 100:
+        if total is not None and len(rows) >= total:
+            break
+        if total is None and len(diff) < _EM_PAGE_SIZE:
             break
         page += 1
     return rows
+
+
+def _market_from_fs(fs: str) -> str:
+    has_sh = "m:1" in fs
+    has_sz = "m:0" in fs
+    if has_sh and not has_sz:
+        return "sh"
+    if has_sz and not has_sh:
+        return "sz"
+    return ""
+
+
+def _market_from_code(code: str) -> str:
+    code = str(code or "").strip()
+    if code.startswith(("43", "83", "87", "88", "92")):
+        return "bj"
+    if code.startswith(("5", "6", "9")):
+        return "sh"
+    if code.startswith(("0", "1", "2", "3")):
+        return "sz"
+    return ""
+
+
+def _market_from_em(market_id: str) -> str:
+    if market_id == "1":
+        return "sh"
+    if market_id == "0":
+        return "sz"
+    return ""
 
 
 def _em_stock_df(fs: str, mtype: str, market: str | None = None) -> pd.DataFrame:
@@ -122,23 +195,48 @@ def _em_stock_df(fs: str, mtype: str, market: str | None = None) -> pd.DataFrame
     market 用于修正东财 f13 无法表达的市场（例如北交所 f13 返回 0，但实际市场为 bj）。
     """
     rows = []
+    default_market = str(market or "").strip().lower() or _market_from_fs(fs)
     for d in _em_clist_all(fs, fields="f12,f13,f14"):
         code = str(d.get("f12") or "").strip()
         name = str(d.get("f14") or "").strip()
         market_id = str(d.get("f13") or "").strip()
         if not code or name.startswith("退市"):
             continue
-        if market is None:
-            market = "sh" if market_id == "1" else "sz" if market_id == "0" else ""
-        rows.append((code, name, market))
+        row_market = default_market or _market_from_em(market_id) or _market_from_code(code)
+        rows.append((code, name, row_market))
     df = pd.DataFrame(rows, columns=["证券代码", "证券简称", "市场"])
     df["类型"] = mtype
-    return df.drop_duplicates(subset=["证券代码"]).reset_index(drop=True)
+    return df.drop_duplicates(subset=["市场", "证券代码"]).reset_index(drop=True)
 
 
 def _concat_dedup(frames: list[pd.DataFrame]) -> pd.DataFrame:
     df = pd.concat(frames, ignore_index=True)
-    return df.drop_duplicates(subset=["证券代码"]).reset_index(drop=True)
+    subset = [c for c in ("市场", "证券代码") if c in df.columns]
+    if len(subset) < 2:
+        subset = ["证券代码"] if "证券代码" in df.columns else None
+    return df.drop_duplicates(subset=subset).reset_index(drop=True)
+
+
+def _run_frame_tasks(tasks: list[tuple], tick) -> list[pd.DataFrame]:
+    """并发拉取互不依赖的分类，按 tasks 原顺序返回，保证最终 JSON 稳定。"""
+    if not tasks:
+        return []
+    results: list[pd.DataFrame | None] = [None] * len(tasks)
+    workers = min(_FETCH_WORKERS, len(tasks))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {}
+        for idx, task in enumerate(tasks):
+            func, args, kwargs = task
+            futures[pool.submit(func, *args, **kwargs)] = idx
+        for future in as_completed(futures):
+            idx = futures[future]
+            try:
+                results[idx] = future.result()
+            except Exception:
+                traceback.print_exc()
+                results[idx] = pd.DataFrame()
+            tick()
+    return [df if df is not None else pd.DataFrame() for df in results]
 
 
 def _fund_etf_em() -> pd.DataFrame:
@@ -303,7 +401,7 @@ def _stock_global_index_name_code() -> pd.DataFrame:
         rows = []
     df = pd.DataFrame(rows, columns=["证券代码", "证券简称"])
     df["类型"] = "指"
-    df["市场"] = "g"
+    df["市场"] = "gb"
     return df
 
 
@@ -373,77 +471,61 @@ def _stock_shfe_futures() -> pd.DataFrame:
 
 
 def stock_info_cn(tick=None) -> pd.DataFrame:
-    """沪深京个股、基金、国内指数、港股及港股指数（列: code,name,engname,type,market）"""
-    frames = []
+    """沪深京个股、基金、国内指数、港股及港股指数（列: code,name,name_en,type,market）"""
     tick = tick or (lambda: None)
-
-    frames.append(_em_stock_df("m:1+t:2", "沪"))       # 沪主板 A
-    tick()
-    frames.append(_em_stock_df("m:1+t:3", "沪"))       # 沪 B
-    tick()
-    frames.append(_em_stock_df("m:1+t:23", "科"))      # 科创板
-    tick()
-    frames.append(_em_stock_df("m:0+t:6", "深"))       # 深主板 A
-    tick()
-    frames.append(_em_stock_df("m:0+t:80", "创"))      # 创业板
-    tick()
-    frames.append(_em_stock_df("m:0+t:7", "深"))       # 深 B
-    tick()
-    frames.append(_em_stock_df("m:0+t:81+s:2048", "京", market="bj"))  # 北交所
-    tick()
-
-    frames.append(_fund_etf_em())
-    tick()
-    frames.append(_fund_lof_em())
-    tick()
-    frames.append(_fund_close_em())
-    tick()
-    frames.append(_index_cn_em())
-    tick()
-
-    # 港股 + 港股指数
-    frames.append(_stock_hk_name_code())
-    tick()
-    frames.append(_stock_hk_index_name_code())
-    tick()
+    tasks = [
+        (_em_stock_df, ("m:1+t:2", "沪"), {}),                         # 沪主板 A
+        (_em_stock_df, ("m:1+t:3", "沪"), {}),                         # 沪 B
+        (_em_stock_df, ("m:1+t:23", "沪"), {}),                        # 科创板
+        (_em_stock_df, ("m:0+t:6", "深"), {}),                         # 深主板 A
+        (_em_stock_df, ("m:0+t:80", "深"), {}),                        # 创业板
+        (_em_stock_df, ("m:0+t:7", "深"), {}),                         # 深 B
+        (_em_stock_df, ("m:0+t:81+s:2048", "京"), {"market": "bj"}),   # 北交所
+        (_fund_etf_em, (), {}),
+        (_fund_lof_em, (), {}),
+        (_fund_close_em, (), {}),
+        (_index_cn_em, (), {}),
+        (_stock_hk_name_code, (), {}),
+        (_stock_hk_index_name_code, (), {}),
+    ]
+    frames = _run_frame_tasks(tasks, tick)
 
     for df in frames:
         if "英文名称" not in df.columns:
             df["英文名称"] = ""
     df = pd.concat(frames, ignore_index=True)
     df.rename(columns={"证券代码": "code", "证券简称": "name",
-                       "英文名称": "engname", "类型": "type", "市场": "market"}, inplace=True)
+                       "英文名称": "name_en", "类型": "type", "市场": "market"}, inplace=True)
     return df
 
 
 def stock_info_global(tick=None) -> pd.DataFrame:
-    """美股个股 + 全球主要指数（列: code,name,engname,type,market）"""
-    frames = []
+    """美股个股 + 全球主要指数（列: code,name,name_en,type,market）"""
     tick = tick or (lambda: None)
-    frames.append(_stock_us_name_code())
-    tick()
-    frames.append(_stock_global_index_name_code())
-    tick()
-    frames.append(_stock_us_index_name_code())
-    tick()
+    tasks = [
+        (_stock_us_name_code, (), {}),
+        (_stock_global_index_name_code, (), {}),
+        (_stock_us_index_name_code, (), {}),
+    ]
+    frames = _run_frame_tasks(tasks, tick)
     for df in frames:
         if "英文名称" not in df.columns:
             df["英文名称"] = ""
     df = pd.concat(frames, ignore_index=True)
     df.rename(columns={"证券代码": "code", "证券简称": "name",
-                       "英文名称": "engname", "类型": "type", "市场": "market"}, inplace=True)
+                       "英文名称": "name_en", "类型": "type", "市场": "market"}, inplace=True)
     return df
 
 
 def stock_info_futures(tick=None) -> pd.DataFrame:
-    """上期所期货（列: code,name,engname,type,market）"""
+    """上期所期货（列: code,name,name_en,type,market）"""
     if tick:
         tick()
     df = _stock_shfe_futures()
     if "英文名称" not in df.columns:
         df["英文名称"] = ""
     df.rename(columns={"证券代码": "code", "证券简称": "name",
-                       "英文名称": "engname", "类型": "type", "市场": "market"}, inplace=True)
+                       "英文名称": "name_en", "类型": "type", "市场": "market"}, inplace=True)
     return df
 
 
