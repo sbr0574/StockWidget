@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-21",
+  "last_update": "2026-08-24",
   "codes": {
     "sh605599": {
       "code": "605599",
@@ -4901,9 +4901,9 @@
       "code": "603132",
       "type": "沪",
       "market": "sh",
-      "name": "XD金徽股",
-      "py": "xdjinhuigu",
-      "abbr": "xdjhg"
+      "name": "金徽股份",
+      "py": "jinhuigufen",
+      "abbr": "jhgf"
     },
     "sh603131": {
       "code": "603131",
@@ -5893,9 +5893,9 @@
       "code": "601995",
       "type": "沪",
       "market": "sh",
-      "name": "中金公司",
-      "py": "zhongjingongsi",
-      "abbr": "zjgs"
+      "name": "XD中金公",
+      "py": "xdzhongjingong",
+      "abbr": "xdzjg"
     },
     "sh601992": {
       "code": "601992",
@@ -6053,9 +6053,9 @@
       "code": "601928",
       "type": "沪",
       "market": "sh",
-      "name": "XD凤凰传",
-      "py": "xdfenghuangchuan",
-      "abbr": "xdfhc"
+      "name": "凤凰传媒",
+      "py": "fenghuangchuanmei",
+      "abbr": "fhcm"
     },
     "sh601921": {
       "code": "601921",
@@ -6117,9 +6117,9 @@
       "code": "601899",
       "type": "沪",
       "market": "sh",
-      "name": "XD紫金矿",
-      "py": "xdzijinkuang",
-      "abbr": "xdzjk"
+      "name": "紫金矿业",
+      "py": "zijinkuangye",
+      "abbr": "zjky"
     },
     "sh601898": {
       "code": "601898",
@@ -6205,17 +6205,17 @@
       "code": "601869",
       "type": "沪",
       "market": "sh",
-      "name": "XD长飞光",
-      "py": "xdzhangfeiguang",
-      "abbr": "xdzfg"
+      "name": "长飞光纤",
+      "py": "zhangfeiguangxian",
+      "abbr": "zfgx"
     },
     "sh601868": {
       "code": "601868",
       "type": "沪",
       "market": "sh",
-      "name": "中国能建",
-      "py": "zhongguonengjian",
-      "abbr": "zgnj"
+      "name": "XD中国能",
+      "py": "xdzhongguoneng",
+      "abbr": "xdzgn"
     },
     "sh601866": {
       "code": "601866",
@@ -6477,9 +6477,9 @@
       "code": "601688",
       "type": "沪",
       "market": "sh",
-      "name": "XD华泰证",
-      "py": "xdhuataizheng",
-      "abbr": "xdhtz"
+      "name": "华泰证券",
+      "py": "huataizhengquan",
+      "abbr": "htzq"
     },
     "sh601686": {
       "code": "601686",
@@ -7997,9 +7997,9 @@
       "code": "600959",
       "type": "沪",
       "market": "sh",
-      "name": "XD江苏有",
-      "py": "xdjiangsuyou",
-      "abbr": "xdjsy"
+      "name": "江苏有线",
+      "py": "jiangsuyouxian",
+      "abbr": "jsyx"
     },
     "sh600958": {
       "code": "600958",
@@ -9773,9 +9773,9 @@
       "code": "600690",
       "type": "沪",
       "market": "sh",
-      "name": "XD海尔智",
-      "py": "xdhaierzhi",
-      "abbr": "xdhez"
+      "name": "海尔智家",
+      "py": "haierzhijia",
+      "abbr": "hezj"
     },
     "sh600689": {
       "code": "600689",
@@ -10813,9 +10813,9 @@
       "code": "600547",
       "type": "沪",
       "market": "sh",
-      "name": "XD山东黄",
-      "py": "xdshandonghuang",
-      "abbr": "xdsdh"
+      "name": "山东黄金",
+      "py": "shandonghuangjin",
+      "abbr": "sdhj"
     },
     "sh600546": {
       "code": "600546",
@@ -12381,9 +12381,9 @@
       "code": "600288",
       "type": "沪",
       "market": "sh",
-      "name": "XD大恒科",
-      "py": "xddahengke",
-      "abbr": "xddhk"
+      "name": "大恒科技",
+      "py": "dahengkeji",
+      "abbr": "dhkj"
     },
     "sh600287": {
       "code": "600287",
@@ -12941,9 +12941,9 @@
       "code": "600206",
       "type": "沪",
       "market": "sh",
-      "name": "XD有研新",
-      "py": "xdyouyanxin",
-      "abbr": "xdyyx"
+      "name": "有研新材",
+      "py": "youyanxincai",
+      "abbr": "yyxc"
     },
     "sh600205": {
       "code": "600205",
@@ -12997,9 +12997,9 @@
       "code": "600197",
       "type": "沪",
       "market": "sh",
-      "name": "XD伊力特",
-      "py": "xdyilite",
-      "abbr": "xdylt"
+      "name": "伊力特",
+      "py": "yilite",
+      "abbr": "ylt"
     },
     "sh600196": {
       "code": "600196",
@@ -15005,9 +15005,9 @@
       "code": "688775",
       "type": "科",
       "market": "sh",
-      "name": "XD影石创",
-      "py": "xdyingshichuang",
-      "abbr": "xdysc"
+      "name": "影石创新",
+      "py": "yingshichuangxin",
+      "abbr": "yscx"
     },
     "sh688772": {
       "code": "688772",
@@ -15589,9 +15589,9 @@
       "code": "688648",
       "type": "科",
       "market": "sh",
-      "name": "XD中邮科",
-      "py": "xdzhongyouke",
-      "abbr": "xdzyk"
+      "name": "中邮科技",
+      "py": "zhongyoukeji",
+      "abbr": "zykj"
     },
     "sh688646": {
       "code": "688646",
@@ -47005,9 +47005,9 @@
       "code": "920093",
       "type": "京",
       "market": "bj",
-      "name": "N信胜",
-      "py": "nxinsheng",
-      "abbr": "nxs"
+      "name": "信胜科技",
+      "py": "xinshengkeji",
+      "abbr": "xskj"
     },
     "bj920092": {
       "code": "920092",
@@ -47789,9 +47789,9 @@
       "code": "589460",
       "type": "基",
       "market": "sh",
-      "name": "N科创200ETF华宝",
-      "py": "nkechuang200etfhuabao",
-      "abbr": "nkc200etfhb"
+      "name": "科创200ETF华宝",
+      "py": "kechuang200etfhuabao",
+      "abbr": "kc200etfhb"
     },
     "sh589420": {
       "code": "589420",
@@ -48533,9 +48533,9 @@
       "code": "588290",
       "type": "基",
       "market": "sh",
-      "name": "科创芯片ETF华安",
-      "py": "kechuangxinpianetfhuaan",
-      "abbr": "kcxpetfha"
+      "name": "UC科创芯片ETF华安",
+      "py": "uckechuangxinpianetfhuaan",
+      "abbr": "uckcxpetfha"
     },
     "sh588280": {
       "code": "588280",
@@ -49873,6 +49873,14 @@
       "py": "300xianjinliuetfhuitianfu",
       "abbr": "300xjletfhtf"
     },
+    "sh561410": {
+      "code": "561410",
+      "type": "基",
+      "market": "sh",
+      "name": "N光伏ETF工银",
+      "py": "nguangfuetfgongyin",
+      "abbr": "ngfetfgy"
+    },
     "sh561400": {
       "code": "561400",
       "type": "基",
@@ -50344,14 +50352,6 @@
       "name": "云计算50ETF新华",
       "py": "yunjisuan50etfxinhua",
       "abbr": "yjs50etfxh"
-    },
-    "sh560650": {
-      "code": "560650",
-      "type": "基",
-      "market": "sh",
-      "name": "核心50ETF民生加银",
-      "py": "hexin50etfminshengjiayin",
-      "abbr": "hx50etfmsjy"
     },
     "sh560630": {
       "code": "560630",
@@ -53053,9 +53053,9 @@
       "code": "513630",
       "type": "基",
       "market": "sh",
-      "name": "XD港股低波红利ETF摩根",
-      "py": "xdganggudibohonglietfmogen",
-      "abbr": "xdggdbhletfmg"
+      "name": "港股低波红利ETF摩根",
+      "py": "ganggudibohonglietfmogen",
+      "abbr": "ggdbhletfmg"
     },
     "sh513620": {
       "code": "513620",
@@ -59953,6 +59953,14 @@
       "py": "xiyoujinshuetfdacheng",
       "abbr": "xyjsetfdc"
     },
+    "sh159043": {
+      "code": "159043",
+      "type": "基",
+      "market": "sh",
+      "name": "食品ETF华安",
+      "py": "shipinetfhuaan",
+      "abbr": "spetfha"
+    },
     "sh159042": {
       "code": "159042",
       "type": "基",
@@ -60256,6 +60264,14 @@
       "name": "化工ETF博时",
       "py": "huagongetfboshi",
       "abbr": "hgetfbs"
+    },
+    "sh158005": {
+      "code": "158005",
+      "type": "基",
+      "market": "sh",
+      "name": "工程机械ETF博时",
+      "py": "gongchengjixieetfboshi",
+      "abbr": "gcjxetfbs"
     },
     "sh158003": {
       "code": "158003",
@@ -63957,9 +63973,9 @@
       "code": "508086",
       "type": "基",
       "market": "sh",
-      "name": "工银河北高速REIT",
-      "py": "gongyinhebeigaosureit",
-      "abbr": "gyhbgsreit"
+      "name": "XD工银河北高速REIT",
+      "py": "xdgongyinhebeigaosureit",
+      "abbr": "xdgyhbgsreit"
     },
     "sh508085": {
       "code": "508085",
@@ -64005,9 +64021,9 @@
       "code": "508077",
       "type": "基",
       "market": "sh",
-      "name": "华夏基金华润有巢REIT",
-      "py": "huaxiajijinhuarunyouchaoreit",
-      "abbr": "hxjjhrycreit"
+      "name": "XD华夏基金华润有巢REIT",
+      "py": "xdhuaxiajijinhuarunyouchaoreit",
+      "abbr": "xdhxjjhrycreit"
     },
     "sh508069": {
       "code": "508069",
@@ -75591,15 +75607,6 @@
       "abbr": "lcxqy",
       "engname": "LIU CHONG HING"
     },
-    "hk00195": {
-      "code": "00195",
-      "type": "港",
-      "market": "hk",
-      "name": "绿科科技国际",
-      "py": "lvkekejiguoji",
-      "abbr": "lkkjgj",
-      "engname": "GREENTECH INTL"
-    },
     "hk00196": {
       "code": "00196",
       "type": "港",
@@ -76756,10 +76763,10 @@
       "code": "00356",
       "type": "港",
       "market": "hk",
-      "name": "鼎立资本(新)",
-      "py": "dingliziben(xin)",
-      "abbr": "dlzb(x)",
-      "engname": "DT CAPITAL-NEW"
+      "name": "鼎立资本",
+      "py": "dingliziben",
+      "abbr": "dlzb",
+      "engname": "DT CAPITAL"
     },
     "hk00357": {
       "code": "00357",
@@ -78196,10 +78203,10 @@
       "code": "00585",
       "type": "港",
       "market": "hk",
-      "name": "意力国际",
-      "py": "yiliguoji",
-      "abbr": "ylgj",
-      "engname": "IMAGI INT'L"
+      "name": "意力国际(五百)",
+      "py": "yiliguoji(wubai)",
+      "abbr": "ylgj(wb)",
+      "engname": "IMAGI INT'L-500"
     },
     "hk00586": {
       "code": "00586",
@@ -79564,10 +79571,10 @@
       "code": "00789",
       "type": "港",
       "market": "hk",
-      "name": "雅天妮集团(新)",
-      "py": "yatiannijituan(xin)",
-      "abbr": "ytnjt(x)",
-      "engname": "ARTINI HLDG-NEW"
+      "name": "雅天妮集团",
+      "py": "yatiannijituan",
+      "abbr": "ytnjt",
+      "engname": "ARTINI HLDG"
     },
     "hk00794": {
       "code": "00794",
@@ -81103,10 +81110,10 @@
       "code": "01027",
       "type": "港",
       "market": "hk",
-      "name": "亚洲策略科技",
-      "py": "yazhoucelvekeji",
-      "abbr": "yzclkj",
-      "engname": "ASIA STRAT TECH"
+      "name": "亚洲策略(一千)",
+      "py": "yazhoucelve(yiqian)",
+      "abbr": "yzcl(yq)",
+      "engname": "ASIA STRAT-1K"
     },
     "hk01028": {
       "code": "01028",
@@ -86156,15 +86163,6 @@
       "py": "wenyejituan",
       "abbr": "wyjt",
       "engname": "WENYE GROUP"
-    },
-    "hk01803": {
-      "code": "01803",
-      "type": "港",
-      "market": "hk",
-      "name": "北京体育文化",
-      "py": "beijingtiyuwenhua",
-      "abbr": "bjtywh",
-      "engname": "BJ SPORTS & ENT"
     },
     "hk01808": {
       "code": "01808",
@@ -92052,14 +92050,32 @@
       "abbr": "zmgjgq",
       "engname": "CH WOOD INT RTS"
     },
-    "hk02990": {
-      "code": "02990",
+    "hk02908": {
+      "code": "02908",
       "type": "港",
       "market": "hk",
-      "name": "鼎立资本(旧)",
-      "py": "dingliziben(jiu)",
-      "abbr": "dlzb(j)",
-      "engname": "DT CAPITAL-OLD"
+      "name": "北京体育文化",
+      "py": "beijingtiyuwenhua",
+      "abbr": "bjtywh",
+      "engname": "BJ SPORTS & ENT"
+    },
+    "hk02909": {
+      "code": "02909",
+      "type": "港",
+      "market": "hk",
+      "name": "意力国际(八千)",
+      "py": "yiliguoji(baqian)",
+      "abbr": "ylgj(bq)",
+      "engname": "IMAGI INT'L-8K"
+    },
+    "hk02910": {
+      "code": "02910",
+      "type": "港",
+      "market": "hk",
+      "name": "亚洲策略(一万)",
+      "py": "yazhoucelve(yiwan)",
+      "abbr": "yzcl(yw)",
+      "engname": "ASIA STRAT-10K"
     },
     "hk02991": {
       "code": "02991",
@@ -92069,15 +92085,6 @@
       "py": "wanweizhinengkeji-jiu",
       "abbr": "wwznkj-j",
       "engname": "POLY XVERSE-OLD"
-    },
-    "hk02995": {
-      "code": "02995",
-      "type": "港",
-      "market": "hk",
-      "name": "雅天妮集团(旧)",
-      "py": "yatiannijituan(jiu)",
-      "abbr": "ytnjt(j)",
-      "engname": "ARTINI HLDG-OLD"
     },
     "hk03200": {
       "code": "03200",
