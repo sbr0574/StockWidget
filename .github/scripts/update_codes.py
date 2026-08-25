@@ -7,11 +7,13 @@ import json
 import os
 import re
 import sys
+import time
 import traceback
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from io import BytesIO
+from threading import Lock
 
 import pandas as pd
 import requests
@@ -25,15 +27,18 @@ STOCK_FILE = "stock_codes_list.json"      # 沪深京、港美股及全球主要
 FUTURES_FILE = "futures_codes_list.json"  # 上期所期货列表
 
 _EM_CLIST_URL = "https://push2delay.eastmoney.com/api/qt/clist/get"
+_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 _EM_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "User-Agent": _USER_AGENT,
     "Referer": "https://quote.eastmoney.com/center/gridlist.html",
 }
 _SINA_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "User-Agent": _USER_AGENT,
     "Referer": "https://vip.stock.finance.sina.com.cn/",
 }
 _DF_COLUMNS = ["code", "name", "name_en", "type", "market"]
+_SZSE_REQUEST_LOCK = Lock()
+_SZSE_MAX_ATTEMPTS = 4
 
 
 # ----------------- 工具函数 -----------------
@@ -92,7 +97,7 @@ def _stock_sh_name_code(symbol: str) -> pd.DataFrame:
             "Host": "query.sse.com.cn",
             "Pragma": "no-cache",
             "Referer": "https://www.sse.com.cn/assortment/stock/list/share/",
-            "User-Agent": _EM_HEADERS["User-Agent"],
+            "User-Agent": _USER_AGENT,
         },
         timeout=15,
     )
@@ -106,28 +111,77 @@ def _stock_sh_name_code(symbol: str) -> pd.DataFrame:
             rows.append((code, name, "", mtype, "sh"))
     return _rows_frame(rows)
 
+def _stock_sh_all() -> pd.DataFrame:
+    """顺序获取上交所 A 股、B 股和科创板。"""
+    frames = []
+    for label, symbol in (
+        ("沪A", "主板A股"),
+        ("沪B", "主板B股"),
+        ("科创板", "科创板"),
+    ):
+        frame = _stock_sh_name_code(symbol)
+        print(f"{label}: {len(frame)} 条", flush=True)
+        if frame.empty:
+            raise ValueError(f"{label}返回列表为空")
+        frames.append(frame)
+    return _concat_dedup(frames)
+
 def _szse_xlsx(catalog_id: str, tab_key: str, referer: str) -> pd.DataFrame:
     """下载并解析深交所 XLSX"""
-    response = requests.get(
+    url = (
         "https://www.szse.cn/api/report/ShowReport"
         if catalog_id == "1110"
-        else "https://fund.szse.cn/api/report/ShowReport",
-        params={
-            "SHOWTYPE": "xlsx",
-            "CATALOGID": catalog_id,
-            "TABKEY": tab_key,
-            "random": "0.6935816432433362",
-        },
-        headers={
-            "Referer": referer,
-            "User-Agent": _EM_HEADERS["User-Agent"],
-        },
-        timeout=15,
+        else "https://fund.szse.cn/api/report/ShowReport"
     )
-    response.raise_for_status()
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", UserWarning)
-        return pd.read_excel(BytesIO(response.content), engine="openpyxl", dtype=str)
+    last_error: Exception | None = None
+
+    with _SZSE_REQUEST_LOCK:
+        for attempt in range(1, _SZSE_MAX_ATTEMPTS + 1):
+            try:
+                response = requests.get(
+                    url,
+                    params={
+                        "SHOWTYPE": "xlsx",
+                        "CATALOGID": catalog_id,
+                        "TABKEY": tab_key,
+                        "random": f"{time.time():.16f}",
+                    },
+                    headers={
+                        "Accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/octet-stream,*/*",
+                        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+                        "Connection": "close",
+                        "Referer": referer,
+                        "User-Agent": _USER_AGENT,
+                    },
+                    timeout=(15, 30),
+                )
+                response.raise_for_status()
+                if not response.content.startswith(b"PK"):
+                    content_type = response.headers.get("Content-Type", "unknown")
+                    raise ValueError(f"深交所返回的不是 XLSX: {content_type}")
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", UserWarning)
+                    table = pd.read_excel(
+                        BytesIO(response.content), engine="openpyxl", dtype=str
+                    )
+                if table.empty:
+                    raise ValueError("深交所 XLSX 内容为空")
+                return table
+            except Exception as exc:
+                last_error = exc
+                if attempt == _SZSE_MAX_ATTEMPTS:
+                    break
+                delay = 2 ** attempt
+                print(
+                    f"深交所 {catalog_id}/{tab_key} 第 {attempt} 次下载失败，"
+                    f"{delay} 秒后重试: {exc}",
+                    flush=True,
+                )
+                time.sleep(delay)
+
+    raise RuntimeError(
+        f"深交所 {catalog_id}/{tab_key} 连续 {_SZSE_MAX_ATTEMPTS} 次下载失败"
+    ) from last_error
 
 def _stock_sz_a_name_code() -> pd.DataFrame:
     """下载深交所 A 股表，并按交易所板块字段拆分主板和创业板。"""
@@ -146,6 +200,8 @@ def _stock_sz_a_name_code() -> pd.DataFrame:
                 rows.append((code, name, "", mtype, "sz"))
         frame = _rows_frame(rows)
         print(f"深证{board}: {len(frame)} 条", flush=True)
+        if frame.empty:
+            raise ValueError(f"深证{board}返回列表为空")
         frames.append(frame)
     return _concat_dedup(frames)
 
@@ -160,7 +216,16 @@ def _stock_sz_b_name_code() -> pd.DataFrame:
         name = str(item.get("B股简称") or "").strip()
         if code and name:
             rows.append((code, name, "", "深", "sz"))
+    print(f"深B: {len(rows)} 条", flush=True)
+    if rows == []:
+        raise ValueError("深B返回列表为空")
     return _rows_frame(rows)
+
+def _stock_sz_all() -> pd.DataFrame:
+    """顺序获取深交所 A 股、创业板和 B 股。"""
+    a_frame = _stock_sz_a_name_code()
+    b_frame = _stock_sz_b_name_code()
+    return _concat_dedup([a_frame, b_frame])
 
 def _fund_sse_rows() -> dict[str, list[tuple[str, str, str, str, str]]]:
     """获取上交所上市交易基金全表并按官网 fundType 分类。"""
@@ -182,7 +247,7 @@ def _fund_sse_rows() -> dict[str, list[tuple[str, str, str, str, str]]]:
             },
             headers={
                 "Referer": "https://www.sse.com.cn/assortment/fund/list/",
-                "User-Agent": _EM_HEADERS["User-Agent"],
+                "User-Agent": _USER_AGENT,
             },
             timeout=15,
         )
@@ -425,6 +490,19 @@ def _stock_us_index_name_code() -> pd.DataFrame:
     ]
     return pd.DataFrame(rows, columns=_DF_COLUMNS)
 
+def _offline_index_name_code() -> pd.DataFrame:
+    """合并无需联网更新的港股、美股和全球主要指数。"""
+    frames = []
+    for label, func in (
+        ("港股指数", _stock_hk_index_name_code),
+        ("美股指数", _stock_us_index_name_code),
+        ("全球股指", _stock_global_index_name_code),
+    ):
+        frame = func()
+        print(f"{label}: {len(frame)} 条", flush=True)
+        frames.append(frame)
+    return _concat_dedup(frames)
+
 
 # ----------------- 股指列表 -----------------
 
@@ -433,6 +511,7 @@ def _run_frame_tasks(tasks: list[tuple]) -> list[pd.DataFrame]:
     if not tasks:
         return []
     results: list[pd.DataFrame | None] = [None] * len(tasks)
+    failures: list[tuple[str, Exception]] = []
     workers = min(6, len(tasks))
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {}
@@ -443,28 +522,31 @@ def _run_frame_tasks(tasks: list[tuple]) -> list[pd.DataFrame]:
             idx = futures[future]
             label = tasks[idx][0]
             try:
-                results[idx] = future.result()
-            except Exception:
+                result = future.result()
+                if result.empty:
+                    raise ValueError("返回列表为空")
+                results[idx] = result
+                print(f"{label}更新完成: {len(result)} 条", flush=True)
+            except Exception as exc:
                 traceback.print_exc()
                 results[idx] = pd.DataFrame(columns=_DF_COLUMNS)
-            print(f"{label}更新完成: {len(results[idx])} 条", flush=True)
+                failures.append((label, exc))
+                print(f"{label}更新失败", flush=True)
+    if failures:
+        labels = "、".join(label for label, _ in failures)
+        raise RuntimeError(f"以下分类拉取失败: {labels}；未写入 JSON") from failures[0][1]
     return [df if df is not None else pd.DataFrame(columns=_DF_COLUMNS) for df in results]
 
 def _tasks() -> list[tuple]:
     return [
-        ("沪A", _stock_sh_name_code, ("主板A股",), {}),
-        ("科创板", _stock_sh_name_code, ("科创板",), {}),
-        ("沪B", _stock_sh_name_code, ("主板B股",), {}),
-        ("深A及创业板", _stock_sz_a_name_code, (), {}),
-        ("深B", _stock_sz_b_name_code, (), {}),
+        ("沪市股票", _stock_sh_all, (), {}),
+        ("深市股票", _stock_sz_all, (), {}),
         ("京市", _em_stock_df, ("m:0+t:81+s:2048", "京"), {"market": "bj"}),
         ("沪深基金", _fund_exchange_all, (), {}),
         ("国内指数", _index_cn_em, (), {}),
         ("港股", _stock_hk_name_code, (), {}),
-        ("港股指数", _stock_hk_index_name_code, (), {}),
         ("美股", _stock_us_name_code, (), {}),
-        ("全球股指", _stock_global_index_name_code, (), {}),
-        ("美股指数", _stock_us_index_name_code, (), {}),
+        ("离线指数", _offline_index_name_code, (), {}),
     ]
 
 def stock_info_all() -> pd.DataFrame:

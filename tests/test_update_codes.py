@@ -59,16 +59,134 @@ class TestUpdateCodes(unittest.TestCase):
             "market": "sh",
         })
 
-    def test_shenzhen_stock_table_splits_board_column(self):
-        table = pd.DataFrame([
+    def test_shanghai_stock_task_combines_all_boards(self):
+        frames = {
+            "主板A股": update_codes._rows_frame([
+                ("600001", "沪A示例", "", "沪", "sh")
+            ]),
+            "主板B股": update_codes._rows_frame([
+                ("900001", "沪B示例", "", "沪", "sh")
+            ]),
+            "科创板": update_codes._rows_frame([
+                ("688001", "科创示例", "", "科", "sh")
+            ]),
+        }
+        with (
+            patch.object(
+                update_codes,
+                "_stock_sh_name_code",
+                side_effect=lambda symbol: frames[symbol],
+            ) as fetch,
+            patch("builtins.print") as output,
+        ):
+            frame = update_codes._stock_sh_all()
+
+        self.assertEqual(
+            fetch.call_args_list,
+            [call("主板A股"), call("主板B股"), call("科创板")],
+        )
+        self.assertEqual(frame["code"].tolist(), ["600001", "900001", "688001"])
+        output.assert_has_calls([
+            call("沪A: 1 条", flush=True),
+            call("沪B: 1 条", flush=True),
+            call("科创板: 1 条", flush=True),
+        ])
+
+    def test_shenzhen_stock_task_combines_all_boards(self):
+        a_table = pd.DataFrame([
             {"板块": "主板", "A股代码": "1", "A股简称": "主板示例"},
             {"板块": "创业板", "A股代码": "300001", "A股简称": "创业板示例"},
         ])
-        with patch.object(update_codes, "_szse_xlsx", return_value=table):
-            frame = update_codes._stock_sz_a_name_code()
+        b_table = pd.DataFrame([
+            {"B股代码": "200001", "B股简称": "深B示例"},
+        ])
+        with (
+            patch.object(
+                update_codes, "_szse_xlsx", side_effect=[a_table, b_table]
+            ) as fetch,
+            patch("builtins.print") as output,
+        ):
+            frame = update_codes._stock_sz_all()
 
-        self.assertEqual(frame["code"].tolist(), ["000001", "300001"])
+        self.assertEqual(frame["code"].tolist(), ["000001", "300001", "200001"])
         self.assertTrue(frame["market"].eq("sz").all())
+        self.assertEqual(
+            [item.args[:2] for item in fetch.call_args_list],
+            [("1110", "tab1"), ("1110", "tab2")],
+        )
+        output.assert_has_calls([
+            call("深A: 1 条", flush=True),
+            call("创业板: 1 条", flush=True),
+            call("深B: 1 条", flush=True),
+        ])
+
+    def test_offline_indexes_are_one_task_with_category_counts(self):
+        with patch("builtins.print") as output:
+            frame = update_codes._offline_index_name_code()
+
+        self.assertEqual(len(frame), 51)
+        output.assert_has_calls([
+            call("港股指数: 27 条", flush=True),
+            call("美股指数: 4 条", flush=True),
+            call("全球股指: 20 条", flush=True),
+        ])
+
+    def test_frame_tasks_group_exchange_and_offline_categories(self):
+        tasks = update_codes._tasks()
+        self.assertEqual(
+            [task[0] for task in tasks],
+            [
+                "沪市股票",
+                "深市股票",
+                "京市",
+                "沪深基金",
+                "国内指数",
+                "港股",
+                "美股",
+                "离线指数",
+            ],
+        )
+
+    def test_szse_xlsx_retries_connection_reset(self):
+        response = Mock()
+        response.content = b"PK\x03\x04workbook"
+        response.headers = {
+            "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        }
+        expected = pd.DataFrame([{"代码": "000001"}])
+        with (
+            patch.object(
+                update_codes.requests,
+                "get",
+                side_effect=[update_codes.requests.ConnectionError("reset"), response],
+            ) as get,
+            patch.object(update_codes.pd, "read_excel", return_value=expected),
+            patch.object(update_codes.time, "sleep") as sleep,
+        ):
+            actual = update_codes._szse_xlsx("1110", "tab1", "https://www.szse.cn/")
+
+        self.assertIs(actual, expected)
+        self.assertEqual(get.call_count, 2)
+        sleep.assert_called_once_with(2)
+        response.raise_for_status.assert_called_once_with()
+
+    def test_failed_category_aborts_json_update(self):
+        def fail():
+            raise update_codes.requests.ConnectionError("reset")
+
+        with (
+            patch.object(update_codes.traceback, "print_exc"),
+            self.assertRaisesRegex(RuntimeError, "深A.*未写入 JSON"),
+        ):
+            update_codes._run_frame_tasks([("深A", fail, (), {})])
+
+    def test_empty_category_aborts_json_update(self):
+        empty = pd.DataFrame(columns=update_codes._DF_COLUMNS)
+        with (
+            patch.object(update_codes.traceback, "print_exc"),
+            self.assertRaisesRegex(RuntimeError, "深B.*未写入 JSON"),
+        ):
+            update_codes._run_frame_tasks([("深B", lambda: empty, (), {})])
 
     def test_sse_funds_are_classified_by_official_fund_type(self):
         response = Mock()
