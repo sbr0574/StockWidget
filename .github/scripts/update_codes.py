@@ -1,15 +1,17 @@
 """
 GitHub Action 专用：拉取全市场代码并写入 resources/ 下 JSON
 本脚本由 .github/workflows/update-codes.yml 调用, 保持自包含, 不依赖项目运行时包
-数据源优先使用东方财富 clist 接口
+沪深股票和基金直接使用交易所官方接口，其余市场沿用东财或新浪接口
 """
 import json
 import os
 import re
 import sys
 import traceback
+import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
+from io import BytesIO
 
 import pandas as pd
 import requests
@@ -33,6 +35,9 @@ _SINA_HEADERS = {
 }
 _DF_COLUMNS = ["code", "name", "name_en", "type", "market"]
 
+
+# ----------------- 工具函数 -----------------
+
 def _has_cjk(text: str) -> bool:
     """判断字符串是否包含 CJK 中日韩字符。"""
     return any("\u4e00" <= ch <= "\u9fff" for ch in str(text or ""))
@@ -41,47 +46,242 @@ def _concat_dedup(frames: list[pd.DataFrame]) -> pd.DataFrame:
     df = pd.concat(frames, ignore_index=True)
     return df.drop_duplicates(subset=["market", "code"]).reset_index(drop=True)
 
-def _is_active_em_security(item: dict, today: int) -> bool:
-    """依据东财名称、上市日期和行情字段排除退市及待上市证券。"""
-    name = str(item.get("f14") or "").strip()
-    if name.startswith("退市") or name.endswith("退"):
-        return False
 
-    listing_date = str(item.get("f26") or "").strip()
-    if listing_date.isdigit():
-        listing_day = int(listing_date)
-        if listing_day > today:
-            return False
-        if listing_day == today:
-            return True
+# ----------------- 交易所数据 -----------------
 
-    missing_values = {None, "", "-", 0, 0.0}
-    return not (item.get("f2") in missing_values and item.get("f18") in missing_values)
+def _exchange_code(value) -> str:
+    """把交易所工作簿中的数字代码规范为六位字符串。"""
+    text = str(value or "").strip()
+    if not text or text.lower() == "nan":
+        return ""
+    if re.fullmatch(r"\d+(?:\.0+)?", text):
+        return text.split(".", 1)[0].zfill(6)
+    return ""
+
+def _rows_frame(rows: list[tuple[str, str, str, str, str]]) -> pd.DataFrame:
+    return pd.DataFrame(rows, columns=_DF_COLUMNS).drop_duplicates(
+        subset=["market", "code"]
+    ).reset_index(drop=True)
+
+def _stock_sh_name_code(symbol: str) -> pd.DataFrame:
+    """获取上交所股票列表。"""
+    symbol_map = {
+        "主板A股": ("1", "A_STOCK_CODE"),
+        "主板B股": ("2", "B_STOCK_CODE"),
+        "科创板": ("8", "A_STOCK_CODE"),
+    }
+    stock_type, code_field = symbol_map[symbol]
+    response = requests.get(
+        "https://query.sse.com.cn/sseQuery/commonQuery.do",
+        params={
+            "STOCK_TYPE": stock_type,
+            "REG_PROVINCE": "",
+            "CSRC_CODE": "",
+            "STOCK_CODE": "",
+            "sqlId": "COMMON_SSE_CP_GPJCTPZ_GPLB_GP_L",
+            "COMPANY_STATUS": "2,4,5,7,8",
+            "type": "inParams",
+            "isPagination": "true",
+            "pageHelp.cacheSize": "1",
+            "pageHelp.beginPage": "1",
+            "pageHelp.pageSize": "10000",
+            "pageHelp.pageNo": "1",
+            "pageHelp.endPage": "1",
+        },
+        headers={
+            "Host": "query.sse.com.cn",
+            "Pragma": "no-cache",
+            "Referer": "https://www.sse.com.cn/assortment/stock/list/share/",
+            "User-Agent": _EM_HEADERS["User-Agent"],
+        },
+        timeout=15,
+    )
+    response.raise_for_status()
+    rows = []
+    for item in (response.json() or {}).get("result") or []:
+        code = _exchange_code(item.get(code_field))
+        name = str(item.get("SEC_NAME_CN") or "").strip()
+        mtype = "沪" if stock_type in {"1", "2"} else "科"
+        if code and name:
+            rows.append((code, name, "", mtype, "sh"))
+    return _rows_frame(rows)
+
+def _szse_xlsx(catalog_id: str, tab_key: str, referer: str) -> pd.DataFrame:
+    """下载并解析深交所 XLSX"""
+    response = requests.get(
+        "https://www.szse.cn/api/report/ShowReport"
+        if catalog_id == "1110"
+        else "https://fund.szse.cn/api/report/ShowReport",
+        params={
+            "SHOWTYPE": "xlsx",
+            "CATALOGID": catalog_id,
+            "TABKEY": tab_key,
+            "random": "0.6935816432433362",
+        },
+        headers={
+            "Referer": referer,
+            "User-Agent": _EM_HEADERS["User-Agent"],
+        },
+        timeout=15,
+    )
+    response.raise_for_status()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        return pd.read_excel(BytesIO(response.content), engine="openpyxl", dtype=str)
+
+def _stock_sz_a_name_code() -> pd.DataFrame:
+    """下载深交所 A 股表，并按交易所板块字段拆分主板和创业板。"""
+    table = _szse_xlsx(
+        "1110", "tab1", "https://www.szse.cn/market/product/stock/list/index.html"
+    )
+    frames = []
+    for board in ("主板", "创业板"):
+        rows = []
+        board_rows = table[table["板块"].astype(str).str.strip() == board]
+        for _, item in board_rows.iterrows():
+            code = _exchange_code(item.get("A股代码"))
+            name = str(item.get("A股简称") or "").strip()
+            mtype = "深" if board == "主板" else "创"
+            if code and name:
+                rows.append((code, name, "", mtype, "sz"))
+        frame = _rows_frame(rows)
+        print(f"深证{board}: {len(frame)} 条", flush=True)
+        frames.append(frame)
+    return _concat_dedup(frames)
+
+def _stock_sz_b_name_code() -> pd.DataFrame:
+    """获取深交所 B 股列表。"""
+    table = _szse_xlsx(
+        "1110", "tab2", "https://www.szse.cn/market/product/stock/list/index.html"
+    )
+    rows = []
+    for _, item in table.iterrows():
+        code = _exchange_code(item.get("B股代码"))
+        name = str(item.get("B股简称") or "").strip()
+        if code and name:
+            rows.append((code, name, "", "深", "sz"))
+    return _rows_frame(rows)
+
+def _fund_sse_rows() -> dict[str, list[tuple[str, str, str, str, str]]]:
+    """获取上交所上市交易基金全表并按官网 fundType 分类。"""
+    result = {"ETF基金": [], "LOF基金": [], "封闭式基金": []}
+    page = 1
+    while True:
+        response = requests.get(
+            "https://query.sse.com.cn/commonSoaQuery.do",
+            params={
+                "isPagination": "true",
+                "pageHelp.pageSize": "2000",
+                "pageHelp.pageNo": str(page),
+                "pageHelp.beginPage": str(page),
+                "pageHelp.cacheSize": "1",
+                "pageHelp.endPage": str(page),
+                "pagecache": "false",
+                "sqlId": "FUND_LIST",
+                "order": "fundCode|asc",
+            },
+            headers={
+                "Referer": "https://www.sse.com.cn/assortment/fund/list/",
+                "User-Agent": _EM_HEADERS["User-Agent"],
+            },
+            timeout=15,
+        )
+        response.raise_for_status()
+        payload = response.json() or {}
+        for item in payload.get("result") or []:
+            fund_type = str(item.get("fundType") or "").strip()
+            if fund_type == "00":
+                category = "ETF基金"
+            elif fund_type == "10":
+                category = "LOF基金"
+            elif fund_type in {"40", "50"}:
+                category = "封闭式基金"
+            else:
+                continue
+            code = _exchange_code(item.get("fundCode"))
+            name = str(item.get("secNameFull") or item.get("fundAbbr") or "").strip()
+            if code and name:
+                result[category].append((code, name, "", "基", "sh"))
+        page_help = payload.get("pageHelp") or {}
+        if page >= int(page_help.get("pageCount") or 1):
+            break
+        page += 1
+    return result
+
+def _fund_szse_rows() -> dict[str, list[tuple[str, str, str, str, str]]]:
+    """获取深交所基金全表，并使用工作簿的基金类别字段分类。"""
+    table = _szse_xlsx(
+        "1000_lf",
+        "tab1",
+        "https://fund.szse.cn/marketdata/fundslist/index.html",
+    )
+    category_map = {
+        "ETF": "ETF基金",
+        "LOF": "LOF基金",
+        "不动产基金": "封闭式基金",
+        "基础设施基金": "封闭式基金",
+        "REITs": "封闭式基金",
+        "REITS": "封闭式基金",
+    }
+    result = {"ETF基金": [], "LOF基金": [], "封闭式基金": []}
+    for _, item in table.iterrows():
+        category = category_map.get(str(item.get("基金类别") or "").strip())
+        code = _exchange_code(item.get("基金代码"))
+        name = str(item.get("基金简称") or "").strip()
+        if category and code and name:
+            result[category].append((code, name, "", "基", "sz"))
+    return result
+
+def _fund_exchange_all() -> pd.DataFrame:
+    """合并沪深交易所官方基金列表"""
+    sh_rows = _fund_sse_rows()
+    sz_rows = _fund_szse_rows()
+    frames = []
+    for category in ("ETF基金", "LOF基金", "封闭式基金"):
+        frame = _rows_frame(sh_rows[category] + sz_rows[category])
+        print(f"{category}: {len(frame)} 条", flush=True)
+        frames.append(frame)
+    return _concat_dedup(frames)
 
 
-# ----------------- 并发拉取分类 -----------------
+# ----------------- 新浪数据 -----------------
 
-def _run_frame_tasks(tasks: list[tuple]) -> list[pd.DataFrame]:
-    """并发拉取互不依赖的分类，按 tasks 原顺序返回，保证最终 JSON 稳定。"""
-    if not tasks:
-        return []
-    results: list[pd.DataFrame | None] = [None] * len(tasks)
-    workers = min(6, len(tasks))
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = {}
-        for idx, task in enumerate(tasks):
-            label, func, args, kwargs = task
-            futures[pool.submit(func, *args, **kwargs)] = idx
-        for future in as_completed(futures):
-            idx = futures[future]
-            label = tasks[idx][0]
+def _stock_hk_name_code() -> pd.DataFrame:
+    """港股全部股票"""
+    rows = []
+    page = 1
+    while True:
+        diff = None
+        for _ in range(3):
             try:
-                results[idx] = future.result()
+                r = requests.get(
+                    "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHKStockData",
+                    params={"page": page, "num": 60, "sort": "symbol", "asc": 1,
+                            "node": "qbgg_hk", "_s_r_a": "init"},
+                    headers=_SINA_HEADERS,
+                    timeout=10,
+                )
+                diff = r.json()
+                if not isinstance(diff, list):
+                    diff = []
+                break
             except Exception:
-                traceback.print_exc()
-                results[idx] = pd.DataFrame(columns=_DF_COLUMNS)
-            print(f"{label}: {len(results[idx])} 条", flush=True)
-    return [df if df is not None else pd.DataFrame(columns=_DF_COLUMNS) for df in results]
+                diff = None
+        if not diff:
+            break
+        for d in diff:
+            code = str(d.get("symbol") or "").strip().zfill(5)
+            name = str(d.get("name") or "").strip()
+            eng = str(d.get("engname") or "").strip()
+            if code:
+                rows.append((code, name, eng, "港", "hk"))
+        if len(diff) < 60:
+            break
+        page += 1
+    return pd.DataFrame(rows, columns=_DF_COLUMNS)
+
+
+# ----------------- 东财数据 -----------------
 
 def _em_clist_all(fs: str, fid: str = "f12", fields: str = "f12,f14") -> list[dict]:
     """东财 clist 分页拉全市场原始 dict 列表；单页失败重试 3 次，断连返回已收集部分。"""
@@ -120,52 +320,17 @@ def _em_clist_all(fs: str, fid: str = "f12", fields: str = "f12,f14") -> list[di
         page += 1
     return rows
 
-def _em_stock_df(fs: str, mtype: str, market: str, active_only: bool = False) -> pd.DataFrame:
+def _em_stock_df(fs: str, mtype: str, market: str) -> pd.DataFrame:
     """从东财 clist 拉取一个分类的股票/基金/指数列表 返回df"""
     rows = []
-    fields = "f12,f14,f2,f18,f26" if active_only else "f12,f14"
-    today = int(datetime.now().strftime("%Y%m%d"))
-    for d in _em_clist_all(fs, fields=fields):
+    for d in _em_clist_all(fs, fields="f12,f14"):
         code = str(d.get("f12") or "").strip()
         name = str(d.get("f14") or "").strip()
         if not code or name.startswith("退市") or name.endswith("退"):
             continue
-        if active_only and not _is_active_em_security(d, today):
-            continue
         rows.append((code, name, "", mtype, market))
     df = pd.DataFrame(rows, columns=_DF_COLUMNS)
     return df.drop_duplicates(subset=["market", "code"]).reset_index(drop=True)
-
-_ETF_BOARDS = (
-    "MK0021", "MK0022", "MK0023", "MK0024", "MK0827",
-    "MK0400", "MK0401", "MK0402", "MK0403",
-)
-_LOF_BOARDS = ("MK0404", "MK0405", "MK0406", "MK0407", "MK0408")
-
-def _market_board_fs(market_id: int, boards: tuple[str, ...]) -> str:
-    """生成带明确沪深市场约束的东财板块查询。"""
-    return ",".join(f"m:{market_id}+b:{board}" for board in boards)
-
-def _fund_etf_em() -> pd.DataFrame:
-    """东财 ETF 列表，分别按沪深市场拉取。"""
-    return _concat_dedup([
-        _em_stock_df(_market_board_fs(1, _ETF_BOARDS),"基",market="sh",active_only=True,),
-        _em_stock_df(_market_board_fs(0, _ETF_BOARDS),"基",market="sz",active_only=True,),
-    ])
-
-def _fund_lof_em() -> pd.DataFrame:
-    """东财 LOF 列表，分别按沪深市场拉取。"""
-    return _concat_dedup([
-        _em_stock_df(_market_board_fs(1, _LOF_BOARDS),"基",market="sh",active_only=True,),
-        _em_stock_df(_market_board_fs(0, _LOF_BOARDS),"基",market="sz",active_only=True,),
-    ])
-
-def _fund_close_em() -> pd.DataFrame:
-    """分别拉取沪深封闭式基金，避免混合 fs 丢失深市 market。"""
-    return _concat_dedup([
-        _em_stock_df("m:1+t:9+e:97", "基", market="sh", active_only=True),
-        _em_stock_df("m:0+t:10+e:97", "基", market="sz", active_only=True),
-    ])
 
 def _index_cn_em() -> pd.DataFrame:
     """东财沪深指数列表。"""
@@ -174,39 +339,20 @@ def _index_cn_em() -> pd.DataFrame:
         _em_stock_df("m:0+t:5", "指", market="sz"),
     ])
 
-def _stock_hk_name_code() -> pd.DataFrame:
-    """港股全部股票"""
+def _stock_us_name_code() -> pd.DataFrame:
+    """美股全部股票"""
     rows = []
-    page = 1
-    while True:
-        diff = None
-        for _ in range(3):
-            try:
-                r = requests.get(
-                    "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHKStockData",
-                    params={"page": page, "num": 60, "sort": "symbol", "asc": 1,
-                            "node": "qbgg_hk", "_s_r_a": "init"},
-                    headers=_SINA_HEADERS,
-                    timeout=10,
-                )
-                diff = r.json()
-                if not isinstance(diff, list):
-                    diff = []
-                break
-            except Exception:
-                diff = None
-        if not diff:
-            break
-        for d in diff:
-            code = str(d.get("symbol") or "").strip().zfill(5)
-            name = str(d.get("name") or "").strip()
-            eng = str(d.get("engname") or "").strip()
-            if code:
-                rows.append((code, name, eng, "港", "hk"))
-        if len(diff) < 60:
-            break
-        page += 1
+    for d in _em_clist_all("m:105,m:106,m:107", fid="f20"):
+        code = str(d.get("f12") or "").strip().lower()
+        name = str(d.get("f14") or "").strip()
+        if not code:
+            continue
+        eng = name if not _has_cjk(name) else ""
+        rows.append((code, name, eng, "美", "us"))
     return pd.DataFrame(rows, columns=_DF_COLUMNS)
+
+
+# ----------------- 离线数据 -----------------
 
 def _stock_hk_index_name_code() -> pd.DataFrame:
     """港股指数列表。"""
@@ -240,18 +386,6 @@ def _stock_hk_index_name_code() -> pd.DataFrame:
         ("vhsi", "恒指波幅指数"),
     )
     rows = [(code, name, "", "指", "hk") for code, name in _HK_INDEXES]
-    return pd.DataFrame(rows, columns=_DF_COLUMNS)
-
-def _stock_us_name_code() -> pd.DataFrame:
-    """美股全部股票"""
-    rows = []
-    for d in _em_clist_all("m:105,m:106,m:107", fid="f20"):
-        code = str(d.get("f12") or "").strip().lower()
-        name = str(d.get("f14") or "").strip()
-        if not code:
-            continue
-        eng = name if not _has_cjk(name) else ""
-        rows.append((code, name, eng, "美", "us"))
     return pd.DataFrame(rows, columns=_DF_COLUMNS)
 
 def _stock_global_index_name_code() -> pd.DataFrame:
@@ -292,18 +426,39 @@ def _stock_us_index_name_code() -> pd.DataFrame:
     return pd.DataFrame(rows, columns=_DF_COLUMNS)
 
 
+# ----------------- 股指列表 -----------------
+
+def _run_frame_tasks(tasks: list[tuple]) -> list[pd.DataFrame]:
+    """并发拉取互不依赖的分类，按 tasks 原顺序返回，保证最终 JSON 稳定。"""
+    if not tasks:
+        return []
+    results: list[pd.DataFrame | None] = [None] * len(tasks)
+    workers = min(6, len(tasks))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {}
+        for idx, task in enumerate(tasks):
+            label, func, args, kwargs = task
+            futures[pool.submit(func, *args, **kwargs)] = idx
+        for future in as_completed(futures):
+            idx = futures[future]
+            label = tasks[idx][0]
+            try:
+                results[idx] = future.result()
+            except Exception:
+                traceback.print_exc()
+                results[idx] = pd.DataFrame(columns=_DF_COLUMNS)
+            print(f"{label}更新完成: {len(results[idx])} 条", flush=True)
+    return [df if df is not None else pd.DataFrame(columns=_DF_COLUMNS) for df in results]
+
 def _tasks() -> list[tuple]:
     return [
-        ("沪A", _em_stock_df, ("m:1+t:2", "沪"), {"market": "sh", "active_only": True}),
-        ("科创板", _em_stock_df, ("m:1+t:23", "沪"), {"market": "sh", "active_only": True}),
-        ("沪B", _em_stock_df, ("m:1+t:3", "沪"), {"market": "sh", "active_only": True}),
-        ("深A", _em_stock_df, ("m:0+t:6", "深"), {"market": "sz", "active_only": True}),
-        ("创业板", _em_stock_df, ("m:0+t:80", "深"), {"market": "sz", "active_only": True}),
-        ("深B", _em_stock_df, ("m:0+t:7", "深"), {"market": "sz", "active_only": True}),
-        ("京市", _em_stock_df, ("m:0+t:81+s:2048", "京"), {"market": "bj", "active_only": True}),
-        ("ETF基金", _fund_etf_em, (), {}),
-        ("LOF基金", _fund_lof_em, (), {}),
-        ("封闭式基金", _fund_close_em, (), {}),
+        ("沪A", _stock_sh_name_code, ("主板A股",), {}),
+        ("科创板", _stock_sh_name_code, ("科创板",), {}),
+        ("沪B", _stock_sh_name_code, ("主板B股",), {}),
+        ("深A及创业板", _stock_sz_a_name_code, (), {}),
+        ("深B", _stock_sz_b_name_code, (), {}),
+        ("京市", _em_stock_df, ("m:0+t:81+s:2048", "京"), {"market": "bj"}),
+        ("沪深基金", _fund_exchange_all, (), {}),
         ("国内指数", _index_cn_em, (), {}),
         ("港股", _stock_hk_name_code, (), {}),
         ("港股指数", _stock_hk_index_name_code, (), {}),
@@ -311,6 +466,11 @@ def _tasks() -> list[tuple]:
         ("全球股指", _stock_global_index_name_code, (), {}),
         ("美股指数", _stock_us_index_name_code, (), {}),
     ]
+
+def stock_info_all() -> pd.DataFrame:
+    """非期货证券"""
+    frames = _run_frame_tasks(_tasks())
+    return pd.concat(frames, ignore_index=True)
 
 
 # ----------------- 上期所期货 -----------------
@@ -324,7 +484,6 @@ def _futures_nodes() -> list[str]:
     if not match:
         raise ValueError("新浪期货节点脚本中缺少 shfe 列表")
     return re.findall(r"\[\s*'[^']*'\s*,\s*'([^']+)'", match.group(1))
-
 
 def _stock_shfe_futures() -> pd.DataFrame:
     """上期所全部期货合约（含上期能源；新浪 getHQFuturesData 按品种遍历）。"""
@@ -360,6 +519,12 @@ def _stock_shfe_futures() -> pd.DataFrame:
             uniq.append((c, n))
     rows = [(code, name, "", "期", "") for code, name in uniq]
     return pd.DataFrame(rows, columns=_DF_COLUMNS)
+
+def futures_info_all() -> pd.DataFrame:
+    """上期所期货"""
+    df = _stock_shfe_futures()
+    print(f"期货: {len(df)} 条", flush=True)
+    return df
 
 
 # ---------------- 市场列表字典生成 ----------------
@@ -433,31 +598,8 @@ def _df_to_dict(df: pd.DataFrame) -> dict:
 
 # ---------------- 拉取市场列表并保存 ----------------
 
-def futures_info_all() -> pd.DataFrame:
-    """上期所期货"""
-    df = _stock_shfe_futures()
-    print(f"期货: {len(df)} 条", flush=True)
-    return df
-
-def stock_info_all() -> pd.DataFrame:
-    """合并全部非期货证券"""
-    tasks = _tasks()
-    frames = _run_frame_tasks(tasks)
-    by_label = {task[0]: frame for task, frame in zip(tasks, frames)}
-    fund_total = len(_concat_dedup([
-        by_label["ETF基金"], by_label["LOF基金"], by_label["封闭式基金"],
-    ]))
-    index_total = len(_concat_dedup([
-        by_label["国内指数"], by_label["港股指数"],
-        by_label["全球股指"], by_label["美股指数"],
-    ]))
-    print(f"基金合计: {fund_total} 条", flush=True)
-    print(f"指数合计: {index_total} 条", flush=True)
-    return pd.concat(frames, ignore_index=True)
-
 def fetch_codes_groups() -> dict[str, dict]:
     """拉取两组代码，返回 {文件名: {"last_update": "YYYY-MM-DD", "codes": {...}}}。"""
-
     now = datetime.now().strftime("%Y-%m-%d")
     return {
         STOCK_FILE: {

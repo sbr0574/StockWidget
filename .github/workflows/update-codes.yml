@@ -24,13 +24,10 @@ jobs:
           python-version: "3.13"
 
       - name: 安装依赖
-        run: pip install pandas pypinyin requests PySide6-Essentials==6.11.1
+        run: pip install openpyxl pandas pypinyin requests
 
       - name: 拉取市场代码
         run: python -u .github/scripts/update_codes.py
-
-      - name: 生成 Qt 资源
-        run: pyside6-rcc resources/resources.qrc -o resources/resources_rc.py
 
       - name: 提交代码列表
         run: |
