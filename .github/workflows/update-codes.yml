@@ -1,12 +1,16 @@
 name: Update Stock Codes
 
-# 每周日至周四 UTC 23:50 (北京时间周一至周五 07:50) 拉取全市场代码并提交到仓库 resources/ 下两个 JSON。
+# 每周日至周四 UTC 23:50 (北京时间周一至周五 07:50) 拉取全市场代码并提交到 codes-data 分支。
 # 频率依据：股票/期货代码列表为低频变化（期货仅在新合约挂牌、到期退市、主力换月时变化，约每月），
-# 周末不运行。程序运行时从本仓库 raw 地址下载这两个 JSON，无需在用户本地爬取。
+# 周末不运行。codes-data 分支只保存两个 JSON，不更新 main 分支与 QRC。
 on:
   schedule:
     - cron: "50 23 * * 0-4"
   workflow_dispatch:
+
+concurrency:
+  group: update-codes-data
+  cancel-in-progress: false
 
 jobs:
   update-codes:
@@ -17,6 +21,8 @@ jobs:
     steps:
       - name: 检出仓库
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: 配置 Python
         uses: actions/setup-python@v7
@@ -29,14 +35,35 @@ jobs:
       - name: 拉取市场代码
         run: python -u .github/scripts/update_codes.py
 
-      - name: 提交代码列表
+      - name: 提交代码列表到数据分支
+        env:
+          DATA_BRANCH: codes-data
         run: |
+          set -euo pipefail
+          DATA_DIR="$RUNNER_TEMP/codes-data"
+          JSON_DIR="$RUNNER_TEMP/generated-json"
+          mkdir -p "$JSON_DIR"
+          cp resources/stock_codes_list.json resources/futures_codes_list.json "$JSON_DIR/"
+
+          if git ls-remote --exit-code --heads origin "$DATA_BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$DATA_BRANCH"
+            git worktree add --detach "$DATA_DIR" "origin/$DATA_BRANCH"
+          else
+            git worktree add --detach "$DATA_DIR"
+            cd "$DATA_DIR"
+            git switch --orphan "$DATA_BRANCH"
+            git rm -rf --ignore-unmatch .
+          fi
+
+          cd "$DATA_DIR"
+          mkdir -p resources
+          cp "$JSON_DIR/stock_codes_list.json" "$JSON_DIR/futures_codes_list.json" resources/
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add resources/stock_codes_list.json resources/futures_codes_list.json resources/resources_rc.py
+          git add resources/stock_codes_list.json resources/futures_codes_list.json
           if git diff --cached --quiet; then
             echo "代码列表无变更，跳过提交"
           else
             git commit -m "chore: 更新市场代码列表"
-            git push
+            git push origin "HEAD:$DATA_BRANCH"
           fi

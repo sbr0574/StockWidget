@@ -115,8 +115,8 @@ class TestUpdateCodes(unittest.TestCase):
             [("1110", "tab1"), ("1110", "tab2")],
         )
         output.assert_has_calls([
-            call("深A: 1 条", flush=True),
-            call("创业板: 1 条", flush=True),
+            call("深证主板: 1 条", flush=True),
+            call("深证创业板: 1 条", flush=True),
             call("深B: 1 条", flush=True),
         ])
 

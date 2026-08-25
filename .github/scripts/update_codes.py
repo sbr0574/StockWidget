@@ -11,7 +11,7 @@ import time
 import traceback
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from threading import Lock
 
@@ -682,7 +682,7 @@ def _df_to_dict(df: pd.DataFrame) -> dict:
 
 def fetch_codes_groups() -> dict[str, dict]:
     """拉取两组代码，返回 {文件名: {"last_update": "YYYY-MM-DD", "codes": {...}}}。"""
-    now = datetime.now().strftime("%Y-%m-%d")
+    now = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d")
     return {
         STOCK_FILE: {
             "last_update": now,

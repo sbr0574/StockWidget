@@ -8,7 +8,7 @@ import os
 import sys
 import threading
 
-from PySide6.QtCore import Qt, QPoint, Signal
+from PySide6.QtCore import Qt, QPoint, QTimer, Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QStyle, QMessageBox
 
@@ -17,11 +17,13 @@ import resources.resources_rc  # noqa: F401  加载 Qt 内嵌资源（图标、�
 from stockwidget.constants import APP_NAME, APP_VERSION, CONFIG_FILE
 from stockwidget.core.config_store import load_file, save_file
 from stockwidget.data.code_lists import (
-    all_codes_fresh,
+    CODES_RETRY_SECONDS,
+    beijing_today,
+    code_refresh_delay_seconds,
     code_data_state,
-    download_codes,
-    load_local_codes,
-    load_resource_codes,
+    download_code_files,
+    load_best_codes,
+    stale_code_files,
 )
 from stockwidget.data.update_check import GITEE, GITHUB, get_update_info, github_available
 from stockwidget.platform.autostart import set_start_on_boot
@@ -32,6 +34,7 @@ from stockwidget.ui.widget import FloatLabel
 
 class App(QApplication):
     network_finished = Signal(object)
+    codes_refresh_finished = Signal(object)
 
     def __init__(self, argv):
         super().__init__(argv)
@@ -42,15 +45,8 @@ class App(QApplication):
         self.setQuitOnLastWindowClosed(False)
         cfg = load_file(self.app_name, CONFIG_FILE)
 
-        # 加载市场代码列表：更新日期为今天则直接读取，否则先用资源缓存启动，后台再更新
-        self._need_background_refresh = False
-        local_codes = load_local_codes(self.app_name)
-        if local_codes and all_codes_fresh(self.app_name):
-            codes_list = local_codes
-        else:
-            # 本地缺失/过期：先用资源内嵌兜底显示，启动后从可用托管源下载
-            codes_list = load_resource_codes() or local_codes
-            self._need_background_refresh = True
+        # 两份代码表逐份选择本地缓存或内置资源，过期文件稍后独立更新。
+        codes_list = load_best_codes(self.app_name)
 
         # 加载图标
         self._icon_choice = cfg.get('app_icon')
@@ -84,12 +80,18 @@ class App(QApplication):
         self.win.setFocus(Qt.ActiveWindowFocusReason)
         self.save_now()
 
-        # 启动时在同一后台任务中探测代码托管源、检查更新并按需刷新代码表
+        # 应用更新检查和市场代码刷新分别在后台执行，避免网络请求阻塞界面。
         self._has_update = False
         self._latest_version = None
         self._latest_release_url = None
+        self._codes_refresh_running = False
+        self._codes_retry_timer = QTimer(self)
+        self._codes_retry_timer.setSingleShot(True)
+        self._codes_retry_timer.timeout.connect(self._start_codes_refresh)
         self.network_finished.connect(self._on_network_finished)
+        self.codes_refresh_finished.connect(self._on_codes_refresh_finished)
         self._start_network_tasks()
+        self._schedule_codes_refresh()
 
     def find_icon(self, choice: str) -> QIcon:
         if choice == 'lightG':
@@ -131,35 +133,77 @@ class App(QApplication):
         self.settings_dlg.activateWindow()
 
     def _start_network_tasks(self):
-        """后台选择 GitHub/Gitee，并统一执行代码下载与版本检查。"""
-        if self._need_background_refresh:
-            self.win.set_index_updating(True)
-            self.win._show_message("正在更新市场代码数据…")
+        """后台选择 GitHub/Gitee 并检查应用版本。"""
 
         def _worker():
             source = GITHUB if github_available() else GITEE
-            codes = None
-            if self._need_background_refresh:
-                try:
-                    codes = download_codes(self.app_name, source)
-                except Exception:
-                    codes = None
-                if not codes and source == GITHUB:
-                    source = GITEE
-                    try:
-                        codes = download_codes(self.app_name, source)
-                    except Exception:
-                        codes = None
+            self.network_finished.emit({"source": source})
             try:
                 has_update, latest_version, latest_url = get_update_info(self.app_version, source)
             except Exception:
                 has_update, latest_version, latest_url = False, None, None
             self.network_finished.emit({
                 "source": source,
-                "codes": codes or {},
                 "has_update": bool(has_update),
                 "latest_version": latest_version,
                 "latest_url": latest_url,
+            })
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    def _schedule_codes_refresh(self, delay_seconds: int | None = None):
+        """有过期文件时安排首次或下一次代码表更新。"""
+        if not stale_code_files(self.app_name):
+            self._codes_retry_timer.stop()
+            return
+        delay = (
+            code_refresh_delay_seconds()
+            if delay_seconds is None
+            else max(1, int(delay_seconds))
+        )
+        if delay == 0:
+            self._start_codes_refresh()
+        else:
+            self._codes_retry_timer.start(delay * 1000)
+
+    def _start_codes_refresh(self):
+        """北京时间 9 点后在后台逐份刷新尚未更新到今天的代码表。"""
+        if self._codes_refresh_running:
+            return
+        delay = code_refresh_delay_seconds()
+        if delay:
+            self._codes_retry_timer.start(delay * 1000)
+            return
+        pending = stale_code_files(self.app_name)
+        if not pending:
+            return
+
+        self._codes_refresh_running = True
+        self.win.set_index_updating(True)
+        self.win._show_message("正在更新市场代码数据…")
+        expected_date = beijing_today()
+
+        def _worker():
+            source = GITHUB if github_available() else GITEE
+            updated = set()
+            try:
+                updated.update(
+                    download_code_files(
+                        self.app_name, pending, source, expected_date
+                    )
+                )
+                remaining = tuple(name for name in pending if name not in updated)
+                if remaining and source == GITHUB:
+                    updated.update(
+                        download_code_files(
+                            self.app_name, remaining, GITEE, expected_date
+                        )
+                    )
+            except Exception:
+                pass
+            self.codes_refresh_finished.emit({
+                "source": source,
+                "updated": tuple(name for name in pending if name in updated),
             })
 
         threading.Thread(target=_worker, daemon=True).start()
@@ -169,21 +213,29 @@ class App(QApplication):
         self._has_update = bool(result.get("has_update"))
         self._latest_version = result.get("latest_version") if self._has_update else None
         self._latest_release_url = result.get("latest_url") if self._has_update else None
-        codes = result.get("codes") or {}
-        if codes:
-            self.win.set_codes_list(codes)
-        if self._need_background_refresh:
-            self.win.set_index_updating(False)
-            self.win._clear_message()
+        if self.settings_dlg is not None and self.settings_dlg.isVisible():
+            try:
+                self.settings_dlg.refresh_about()
+            except Exception:
+                pass
+
+    def _on_codes_refresh_finished(self, result: dict):
+        self._codes_refresh_running = False
+        self._remote_source = result.get("source") or self._remote_source
+        self.win.set_codes_list(load_best_codes(self.app_name))
+        self.win.set_index_updating(False)
+        self.win._clear_message()
         if self.settings_dlg is not None and self.settings_dlg.isVisible():
             try:
                 self.settings_dlg.refresh_data_state()
                 self.settings_dlg.refresh_about()
             except Exception:
                 pass
+        if stale_code_files(self.app_name):
+            self._schedule_codes_refresh(CODES_RETRY_SECONDS)
 
     def code_data_state(self) -> tuple:
-        """市场代码数据状态与更新日期：('online'|'cached'|'offline', 'YYYY-MM-DD')。"""
+        """市场代码数据状态与更新日期。"""
         return code_data_state(self.app_name)
 
     def quit_app(self):

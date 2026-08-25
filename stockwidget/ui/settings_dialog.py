@@ -18,7 +18,7 @@ from stockwidget.platform.capabilities import (
     start_on_boot_supported,
     unsupported_tooltip,
 )
-from stockwidget.data.update_check import GITHUB, project_links
+from stockwidget.data.update_check import GITEE, GITHUB, project_links
 
 
 def _hotkey_error_message(result) -> str:
@@ -422,7 +422,9 @@ class SettingsDialog(QDialog):
         else:
             state, date = "offline", ""
         d = str(date or "").replace("-", "")
-        if state == "online":
+        if state == "current":
+            text = f"✅ 市场代码数据：最新 ({d})"
+        elif state == "online":
             text = f"✅ 市场代码数据：在线 ({d})"
         elif state == "cached":
             text = f"⚠️ 市场代码数据：缓存 ({d})"
@@ -893,6 +895,8 @@ class SettingsDialog(QDialog):
             latest_version = None
         source = getattr(self.app, "_remote_source", GITHUB) if self.app is not None else GITHUB
         links = project_links(source)
+        github_links = project_links(GITHUB)
+        gitee_links = project_links(GITEE)
         latest_url = latest_url or links["releases"]
 
         version_line = f"当前版本 v{app_version}"
@@ -903,7 +907,8 @@ class SettingsDialog(QDialog):
             f'<p style="margin:2px 0;"><a href="{links["license"]}" style="text-decoration:none; color:#4a90d9;">License</a> · '
             f'<a href="{links["readme"]}" style="text-decoration:none; color:#4a90d9;">使用帮助</a> · '
             f'<a href="{links["issues"]}" style="text-decoration:none; color:#4a90d9;">反馈建议</a></p>'
-            f'<p style="margin:2px 0;"><a href="{links["project"]}" style="text-decoration:none; color:#4a90d9;">{links["repository_label"]}</a></p>'
+            f'<p style="margin:2px 0;"><a href="{github_links["project"]}" style="text-decoration:none; color:#4a90d9;">GitHub仓库</a> · '
+            f'<a href="{gitee_links["project"]}" style="text-decoration:none; color:#4a90d9;">Gitee仓库</a></p>'
             f'<p style="margin:2px 0;">Copyright 2026 sbr0574</p>'
         )
         label.setTextFormat(Qt.RichText)

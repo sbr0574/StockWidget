@@ -1,6 +1,8 @@
 import re
 import requests
 
+from stockwidget.constants import CODES_BRANCHES, CODES_RAW_URL, LIST_FILES
+
 GITHUB_REPO = "sbr0574/StockWidget"
 GITEE_REPO = "sbr0574/StockWidget"
 GITHUB = "github"
@@ -30,15 +32,22 @@ def project_links(source: str = GITHUB) -> dict[str, str]:
     }
 
 
-def github_available(timeout: int = 5) -> bool:
-    """启动时探测 GitHub API；仓库可访问才视为 GitHub 可用。"""
+def github_available(timeout: float = 2.5) -> bool:
+    """快速探测客户端实际使用的 GitHub raw 数据地址。"""
+    probe_url = CODES_RAW_URL.format(
+        branch=CODES_BRANCHES[0],
+        name=LIST_FILES[-1],
+    )
     try:
         resp = requests.get(
-            f"https://api.github.com/repos/{GITHUB_REPO}",
-            timeout=timeout,
-            headers={"User-Agent": "StockWidget"},
+            probe_url,
+            timeout=(timeout, timeout),
+            headers={"Cache-Control": "no-cache", "User-Agent": "StockWidget"},
+            stream=True,
         )
-        return resp.status_code == 200
+        available = resp.status_code == 200
+        resp.close()
+        return available
     except requests.RequestException:
         return False
 
@@ -60,7 +69,7 @@ def get_latest_release(source: str = GITHUB) -> dict | None:
     try:
         resp = requests.get(
             api_url,
-            timeout=5,
+            timeout=(2.5, 3),
             headers={"User-Agent": "StockWidget"},
         )
         if resp.status_code != 200:
