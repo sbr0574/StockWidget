@@ -23,7 +23,7 @@ from stockwidget.data.code_lists import (
     load_local_codes,
     load_resource_codes,
 )
-from stockwidget.data.update_check import get_update_info
+from stockwidget.data.update_check import GITEE, GITHUB, get_update_info, github_available
 from stockwidget.platform.autostart import set_start_on_boot
 from stockwidget.ui.settings_dialog import SettingsDialog
 from stockwidget.ui.tray import TrayIcon
@@ -31,13 +31,13 @@ from stockwidget.ui.widget import FloatLabel
 
 
 class App(QApplication):
-    update_checked = Signal(bool)
-    index_finished = Signal(dict)
+    network_finished = Signal(object)
 
     def __init__(self, argv):
         super().__init__(argv)
         self.app_name = APP_NAME
         self.app_version = APP_VERSION
+        self._remote_source = GITHUB
 
         self.setQuitOnLastWindowClosed(False)
         cfg = load_file(self.app_name, CONFIG_FILE)
@@ -48,7 +48,7 @@ class App(QApplication):
         if local_codes and all_codes_fresh(self.app_name):
             codes_list = local_codes
         else:
-            # 本地缺失/过期：先用资源内嵌兜底显示，启动后后台从 GitHub 下载
+            # 本地缺失/过期：先用资源内嵌兜底显示，启动后从可用托管源下载
             codes_list = load_resource_codes() or local_codes
             self._need_background_refresh = True
 
@@ -84,16 +84,12 @@ class App(QApplication):
         self.win.setFocus(Qt.ActiveWindowFocusReason)
         self.save_now()
 
-        # 启动时后台检查更新
+        # 启动时在同一后台任务中探测代码托管源、检查更新并按需刷新代码表
         self._has_update = False
         self._latest_version = None
         self._latest_release_url = None
-        self.update_checked.connect(self._on_update_checked)
-        self._start_update_check()
-
-        # 启动时后台更新市场代码列表（不阻塞启动）
-        if self._need_background_refresh:
-            self._start_refresh_index()
+        self.network_finished.connect(self._on_network_finished)
+        self._start_network_tasks()
 
     def find_icon(self, choice: str) -> QIcon:
         if choice == 'lightG':
@@ -134,58 +130,61 @@ class App(QApplication):
         self.settings_dlg.raise_()
         self.settings_dlg.activateWindow()
 
-    def _start_update_check(self):
-        """后台线程检查更新，结果通过信号回传到主线程显示"""
+    def _start_network_tasks(self):
+        """后台选择 GitHub/Gitee，并统一执行代码下载与版本检查。"""
+        if self._need_background_refresh:
+            self.win.set_index_updating(True)
+            self.win._show_message("正在更新市场代码数据…")
+
         def _worker():
+            source = GITHUB if github_available() else GITEE
+            codes = None
+            if self._need_background_refresh:
+                try:
+                    codes = download_codes(self.app_name, source)
+                except Exception:
+                    codes = None
+                if not codes and source == GITHUB:
+                    source = GITEE
+                    try:
+                        codes = download_codes(self.app_name, source)
+                    except Exception:
+                        codes = None
             try:
-                has_update, latest_version, latest_url = get_update_info(self.app_version)
+                has_update, latest_version, latest_url = get_update_info(self.app_version, source)
             except Exception:
                 has_update, latest_version, latest_url = False, None, None
-            self._latest_version = latest_version if has_update else None
-            self._latest_release_url = latest_url if has_update else None
-            self.update_checked.emit(bool(has_update))
+            self.network_finished.emit({
+                "source": source,
+                "codes": codes or {},
+                "has_update": bool(has_update),
+                "latest_version": latest_version,
+                "latest_url": latest_url,
+            })
 
         threading.Thread(target=_worker, daemon=True).start()
 
-    def _start_refresh_index(self):
-        """后台线程从 GitHub 下载三份代码 json；失败则继续使用内置/本地缓存，结果经信号回传。"""
-        self.index_finished.connect(self._on_index_finished)
-        self.win.set_index_updating(True)
-        self.win._show_message("正在更新市场代码数据…")
-
-        def _worker():
-            codes = {}
-            try:
-                codes = download_codes(self.app_name) or {}
-            except Exception:
-                codes = {}
-            self.index_finished.emit(codes)
-
-        threading.Thread(target=_worker, daemon=True).start()
-
-    def _on_index_finished(self, codes: dict):
-        self.win.set_index_updating(False)
+    def _on_network_finished(self, result: dict):
+        self._remote_source = result.get("source") or GITHUB
+        self._has_update = bool(result.get("has_update"))
+        self._latest_version = result.get("latest_version") if self._has_update else None
+        self._latest_release_url = result.get("latest_url") if self._has_update else None
+        codes = result.get("codes") or {}
         if codes:
-            self.win.codes_list = codes
-        self.win._clear_message()
-        # 市场代码数据刷新结束（成功或失败）后，更新设置面板里的数据状态提示
+            self.win.set_codes_list(codes)
+        if self._need_background_refresh:
+            self.win.set_index_updating(False)
+            self.win._clear_message()
         if self.settings_dlg is not None and self.settings_dlg.isVisible():
             try:
                 self.settings_dlg.refresh_data_state()
+                self.settings_dlg.refresh_about()
             except Exception:
                 pass
 
     def code_data_state(self) -> tuple:
         """市场代码数据状态与更新日期：('online'|'cached'|'offline', 'YYYY-MM-DD')。"""
         return code_data_state(self.app_name)
-
-    def _on_update_checked(self, has_update: bool):
-        self._has_update = has_update
-        if self.settings_dlg is not None and self.settings_dlg.isVisible():
-            try:
-                self.settings_dlg.refresh_about()
-            except Exception:
-                pass
 
     def quit_app(self):
         self.tray.hide()

@@ -1,32 +1,10 @@
 # -*- coding: utf-8 -*-
-"""核心功能函数（市场代码、格式化、自选列表）的单元测试。"""
+"""核心功能函数（格式化、自选列表）的单元测试。"""
 
 import unittest
 
 from stockwidget.core.formatters import format_amount, format_volume
-from stockwidget.core.markets import market_of, strip_market
 from stockwidget.core.watchlist import normalize_watchlist
-
-
-class TestMarkets(unittest.TestCase):
-    def test_market_of(self):
-        self.assertEqual(market_of("sh600519"), "sh")
-        self.assertEqual(market_of("sz000001"), "sz")
-        self.assertEqual(market_of("bj430047"), "bj")
-        self.assertEqual(market_of("hk00700"), "hk")
-        self.assertEqual(market_of("usaapl"), "us")
-        self.assertEqual(market_of("gbnky"), "gb")     # 全球指数
-        self.assertEqual(market_of("gnky"), "g")       # 兼容旧全球指数
-        self.assertEqual(market_of("au0"), "")         # 期货裸码
-        self.assertEqual(market_of(""), "")
-
-    def test_strip_market(self):
-        self.assertEqual(strip_market("sh600519"), "600519")
-        self.assertEqual(strip_market("hk00700"), "00700")
-        self.assertEqual(strip_market("usaapl"), "aapl")
-        self.assertEqual(strip_market("gbnky"), "nky")
-        self.assertEqual(strip_market("gnky"), "nky")
-        self.assertEqual(strip_market("au0"), "au0")
 
 
 class TestFormatters(unittest.TestCase):
@@ -66,6 +44,14 @@ class TestWatchlist(unittest.TestCase):
 
     def test_none_watchlist(self):
         self.assertEqual(normalize_watchlist(None), {})
+
+    def test_old_watchlist_is_hydrated_from_codes(self):
+        codes = {
+            "sz000001": {"code": "000001", "market": "sz", "name": "平安银行", "type": "深"},
+        }
+        wl = normalize_watchlist({"sz000001": {"checked": True}}, codes)
+        self.assertEqual(wl["sz000001"]["code"], "000001")
+        self.assertEqual(wl["sz000001"]["market"], "sz")
 
 
 if __name__ == "__main__":

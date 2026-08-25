@@ -11,7 +11,6 @@ from stockwidget.ui.table_model import SimpleTableModel, KLineDelegate
 from stockwidget.ui.drag_mixin import DragBehaviorMixin
 from stockwidget.platform.hotkeys import GlobalHotkeyManager, HotkeyResult
 from stockwidget.data.quotes import request_quote
-from stockwidget.core.markets import strip_market
 from stockwidget.core.formatters import format_volume, format_amount
 from stockwidget.core.watchlist import normalize_watchlist
 from stockwidget.core.geometry import resolve_restore_position
@@ -60,7 +59,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.codes_list: dict = codes_list
         # 加载自选标的配置（代码 -> {checked, cost, name, type}）
         watchlist_cfg           = cfg.get("watchlist", {})
-        self.watchlist: dict    = normalize_watchlist(watchlist_cfg)
+        self.watchlist: dict    = normalize_watchlist(watchlist_cfg, self.codes_list)
         # 加载面板配置
         self.name_visible       = bool(cfg.get("name_visible", True))
         self.code_visible       = bool(cfg.get("code_visible", False))
@@ -197,8 +196,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         return list(self.watchlist.keys())
 
     @property
-    def checked_codes(self) -> list:
-        return [c for c, e in self.watchlist.items() if e.get("checked")]
+    def checked_codes(self) -> dict:
+        return {c: dict(e) for c, e in self.watchlist.items() if e.get("checked")}
 
     @property
     def costs(self) -> dict:
@@ -390,10 +389,10 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
         self._fit_to_contents()
 
-    def _format_data(self, code: str, data: dict, type: str):
+    def _format_data(self, code: str, data: dict, type: str, display_code: str):
         # 名称显示
         name = f"({type})" if type is not None and self.type_visible else ""
-        name += f"{strip_market(code)} " if self.code_visible else ""
+        name += f"{display_code} " if self.code_visible else ""
         if self.name_length == -1:
             name += data["name"]
         else:
@@ -508,7 +507,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         )
         self._refresh_thread.start()
 
-    def _fetch_data_worker(self, codes: list):
+    def _fetch_data_worker(self, codes: dict):
         """后台线程：执行网络请求，结果经 data_ready 信号回到主线程。"""
         try:
             data = request_quote(codes, source=self.data_source)
@@ -531,7 +530,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         for c, d in data.items():
             entry = self.watchlist.get(c) or {}
             type_ = entry.get("type") or self._get_code_info(c).get("type")
-            row, sign = self._format_data(c, d, type_)
+            display_code = entry.get("code") or self._get_code_info(c).get("code") or c
+            row, sign = self._format_data(c, d, type_, display_code)
             full_rows.append(row)
             full_sign.append(sign)
 
@@ -544,10 +544,15 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     # ----- 应用设置 -----
     def set_watchlist(self, watchlist: dict):
-        """整体替换自选列表（代码 -> {checked, cost, name, type}）"""
-        self.watchlist = normalize_watchlist(watchlist)
+        """整体替换自选列表（key -> {code, market, checked, cost, name, type}）。"""
+        self.watchlist = normalize_watchlist(watchlist, self.codes_list)
         self._notify_change()
         self._refresh_from_function()
+
+    def set_codes_list(self, codes_list: dict):
+        """替换代码表，并用新代码表补齐自选项元数据。"""
+        self.codes_list = codes_list or {}
+        self.watchlist = normalize_watchlist(self.watchlist, self.codes_list)
 
     def set_type_visible(self, visible: bool):
         self.type_visible = bool(visible)

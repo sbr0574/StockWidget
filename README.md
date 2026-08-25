@@ -41,9 +41,9 @@
 * **列开关与表头显示**：右键浮窗 → “显示列”“显示表头”即时生效。
 * **字体与行距**：字号 **5–15 pt**；行距为额外像素（行高 = 字高 + 行距），**K 线尺寸随字号同步缩放**。
 * **刷新间隔**：可选 **1-15** 秒。
-* **股票代码管理**：设置面板内用列表**增加/删除/上移/下移/置顶**，每日首次启动自动通过akshare源获取全市场代码列表，自选股可通过增加按钮或双击空白区域添加，双击条目可修改，支持输入**数字代码、拼音、首字母、中文名**进行匹配搜索。
+* **股票代码管理**：设置面板内用列表**增加/删除/上移/下移/置顶**，每日首次启动自动从 GitHub/Gitee 下载由 Actions 更新的全市场代码列表，自选股可通过增加按钮或双击空白区域添加，双击条目可修改，支持输入**数字代码、拼音、首字母、中文名**进行匹配搜索。
 * **自动保存**：所有设置即时保存至配置文件（`%APPDATA%\StockWidget\stock_widget_config.json`）；浮窗隐藏时**暂停刷新**，显示时自动恢复。
-* **自动检查更新**：启动时检查 GitHub Releases，有新版本时提示下载。
+* **自动检查更新**：启动时优先检查 GitHub Releases，GitHub 不可用时切换 Gitee，有新版本时提示下载。
 
 ---
 
@@ -84,9 +84,8 @@ stockwidget/
     quotes.py                #   行情请求与解析（新浪 / 东财）
     code_lists.py            #   代码列表下载 / 缓存 / 兜底
     update_check.py          #   版本更新检查
-    # 代码列表生成已合并到 .github/scripts/update_codes.py（仅 CI 使用，依赖 akshare）
+    # 代码列表生成已合并到 .github/scripts/update_codes.py（仅 CI 使用）
   core/                      # 功能函数层：纯业务逻辑（无 Qt，可单元测试）
-    markets.py               #   市场代码约定
     formatters.py            #   成交量 / 成交额格式化
     code_search.py           #   代码搜索 / 建议
     watchlist.py             #   自选列表规范化
@@ -108,7 +107,7 @@ stockwidget/
 若要通过代码脚本形式运行，则需要：
 * Windows 10/11
 * Python **3.12+** （其他 Python 版本暂未测试）
-* 依赖见 `requirements.txt`（`PySide6` 界面、`requests` 拉取行情、`akshare` 更新代码列表等）
+* 依赖见 `requirements.txt`（`PySide6` 界面、`requests` 拉取行情等）
 ```powershell
 pip install -r requirements.txt
 ```

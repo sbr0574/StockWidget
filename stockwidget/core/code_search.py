@@ -6,13 +6,6 @@
 
 import re
 
-from stockwidget.core.markets import MARKET_PREFIXES, strip_market
-
-
-def code_without_market(code: str) -> str:
-    """去掉代码的市场前缀（兼容旧命名，等价于 strip_market）。"""
-    return strip_market(code)
-
 
 def normalize_stock_entry(item: dict) -> dict:
     """把代码列表中的原始条目规范化为统一的搜索字段 dict。"""
@@ -35,7 +28,6 @@ def normalize_stock_entry(item: dict) -> dict:
         "py": str(item.get("py", "") or "").strip().lower(),
         "abbr": str(item.get("abbr", "") or "").strip().lower(),
         "name_en": name_en,
-        "engname": name_en,
     }
 
 
@@ -43,12 +35,8 @@ def _query_variants(text: str) -> set[str]:
     """把用户输入扩展成多个候选查询（去市场前缀、数字补零等）。"""
     q = str(text or "").strip().lower().replace(" ", "")
     variants = {q}
-    for prefix in MARKET_PREFIXES:
-        if q.startswith(prefix) and len(q) > len(prefix):
-            variants.add(q[len(prefix):])
-            break
     digits = re.sub(r"\D", "", q)
-    if digits:
+    if q.isdigit() and digits:
         variants.add(digits.zfill(6) if len(digits) <= 6 else digits)
     return {v for v in variants if v}
 

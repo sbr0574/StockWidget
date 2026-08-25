@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QHeaderView, QButtonGroup, QMessageBox
 )
 from stockwidget.ui.generated.ui_settings import Ui_SettingDialog
-from stockwidget.core.code_search import code_without_market, find_suggestions
+from stockwidget.core.code_search import find_suggestions
 from stockwidget.ui.widget import FloatLabel
 from stockwidget.platform.capabilities import (
     hotkeys_supported,
@@ -18,14 +18,7 @@ from stockwidget.platform.capabilities import (
     start_on_boot_supported,
     unsupported_tooltip,
 )
-from stockwidget.data.update_check import (
-    PROJECT_URL,
-    GITEE_URL,
-    LICENSE_URL,
-    README_URL,
-    ISSUES_URL,
-    RELEASES_URL,
-)
+from stockwidget.data.update_check import GITHUB, project_links
 
 
 def _hotkey_error_message(result) -> str:
@@ -181,10 +174,7 @@ class SettingsDialog(QDialog):
         self._apply_theme_stylesheet()
 
     def _display_code_for_ui(self, code: str) -> str:
-        value = str(code or "").strip().lower()
-        if len(value) == 8 and value[:2] in {"sh", "sz", "bj"}:
-            return value[2:]
-        return code_without_market(value)
+        return str(code or "").strip()
 
     def _init_code_table(self):
         self.list_codes = self.ui.list_codes
@@ -569,7 +559,7 @@ class SettingsDialog(QDialog):
         self.list_codes.blockSignals(False)
 
     def _collect_watchlist_from_list(self):
-        """从表格行收集自选列表（代码 -> {checked, cost, name, type}）"""
+        """从表格行收集自选列表及其显式 code/market 元数据。"""
         watchlist = {}
         for row in range(self.list_codes.rowCount()):
             check_item = self.list_codes.item(row, 0)
@@ -586,7 +576,14 @@ class SettingsDialog(QDialog):
 
             resolved = self._entry_for_text(value)
             type_ = str(resolved.get("type", "") or "") if resolved else ""
-            entry = {"checked": False, "cost": None, "name": "", "type": type_}
+            entry = {
+                "checked": False,
+                "cost": None,
+                "name": "",
+                "type": type_,
+                "code": str(resolved.get("code", "") or "") if resolved else "",
+                "market": str(resolved.get("market", "") or "") if resolved else "",
+            }
             if check_item is not None and check_item.checkState() == Qt.Checked:
                 entry["checked"] = True
             # 指数不允许设置成本
@@ -894,18 +891,19 @@ class SettingsDialog(QDialog):
         latest_url = getattr(self.app, "_latest_release_url", None) if self.app is not None else None
         if not has_update:
             latest_version = None
-        latest_url = latest_url or RELEASES_URL
+        source = getattr(self.app, "_remote_source", GITHUB) if self.app is not None else GITHUB
+        links = project_links(source)
+        latest_url = latest_url or links["releases"]
 
         version_line = f"当前版本 v{app_version}"
         if latest_version:
             version_line += f" 最新 v{latest_version}"
         html = (
             f'<p style="margin:2px 0;"><a href="{latest_url}" style="text-decoration:none; color:#4a90d9;">{version_line}</a></p>'
-            f'<p style="margin:2px 0;"><a href="{LICENSE_URL}" style="text-decoration:none; color:#4a90d9;">License</a> · '
-            f'<a href="{README_URL}" style="text-decoration:none; color:#4a90d9;">使用帮助</a> · '
-            f'<a href="{ISSUES_URL}" style="text-decoration:none; color:#4a90d9;">反馈建议</a></p>'
-            f'<p style="margin:2px 0;"><a href="{PROJECT_URL}" style="text-decoration:none; color:#4a90d9;">GitHub仓库</a> · '
-            f'<a href="{GITEE_URL}" style="text-decoration:none; color:#4a90d9;">Gitee仓库</a></p>'
+            f'<p style="margin:2px 0;"><a href="{links["license"]}" style="text-decoration:none; color:#4a90d9;">License</a> · '
+            f'<a href="{links["readme"]}" style="text-decoration:none; color:#4a90d9;">使用帮助</a> · '
+            f'<a href="{links["issues"]}" style="text-decoration:none; color:#4a90d9;">反馈建议</a></p>'
+            f'<p style="margin:2px 0;"><a href="{links["project"]}" style="text-decoration:none; color:#4a90d9;">{links["repository_label"]}</a></p>'
             f'<p style="margin:2px 0;">Copyright 2026 sbr0574</p>'
         )
         label.setTextFormat(Qt.RichText)

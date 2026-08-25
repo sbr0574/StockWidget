@@ -1,5 +1,5 @@
 # 本地运行/打包所需依赖。
-# akshare/pandas/pypinyin 仅由 GitHub Action 生成代码列表时安装（见 .github/workflows/update-codes.yml），不随程序打包。
+# pandas/pypinyin 仅由 GitHub Action 生成代码列表时安装（见 .github/workflows/update-codes.yml），不随程序打包。
 PySide6==6.11.1
 pyinstaller==6.21.0
 requests==2.34.2

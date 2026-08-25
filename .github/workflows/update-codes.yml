@@ -1,11 +1,11 @@
 name: Update Stock Codes
 
-# 每周一至周五 UTC 00:30（北京时间 08:30）拉取全市场代码并提交到仓库 resources/ 下三个 JSON。
+# 每周日至周四 UTC 23:50 (北京时间周一至周五 07:50) 拉取全市场代码并提交到仓库 resources/ 下两个 JSON。
 # 频率依据：股票/期货代码列表为低频变化（期货仅在新合约挂牌、到期退市、主力换月时变化，约每月），
-# 周末不运行。程序运行时从本仓库 raw 地址下载这三个 JSON，无需在用户本地爬取。
+# 周末不运行。程序运行时从本仓库 raw 地址下载这两个 JSON，无需在用户本地爬取。
 on:
   schedule:
-    - cron: "30 0 * * 1-5"
+    - cron: "50 23 * * 0-4"
   workflow_dispatch:
 
 jobs:
@@ -24,16 +24,19 @@ jobs:
           python-version: "3.13"
 
       - name: 安装依赖
-        run: pip install akshare pandas pypinyin requests
+        run: pip install pandas pypinyin requests PySide6-Essentials==6.11.1
 
       - name: 拉取市场代码
         run: python -u .github/scripts/update_codes.py
+
+      - name: 生成 Qt 资源
+        run: pyside6-rcc resources/resources.qrc -o resources/resources_rc.py
 
       - name: 提交代码列表
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add resources/stock_codes_list.json resources/stock_codes_global.json resources/stock_codes_futures.json
+          git add resources/stock_codes_list.json resources/futures_codes_list.json resources/resources_rc.py
           if git diff --cached --quiet; then
             echo "代码列表无变更，跳过提交"
           else

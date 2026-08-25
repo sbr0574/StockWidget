@@ -3,7 +3,7 @@
 
 import unittest
 
-from stockwidget.core.code_search import code_without_market, find_suggestions, normalize_stock_entry
+from stockwidget.core.code_search import find_suggestions, normalize_stock_entry
 
 CODES = {
     "sh600519": {"code": "600519", "market": "sh", "name": "贵州茅台", "type": "沪",
@@ -32,7 +32,6 @@ class TestNormalizeEntry(unittest.TestCase):
     def test_name_en_accepts_legacy_engname(self):
         e = normalize_stock_entry({"engname": "Microsoft Corporation"})
         self.assertEqual(e["name_en"], "microsoft corporation")
-        self.assertEqual(e["engname"], "microsoft corporation")
 
 
 class TestFindSuggestions(unittest.TestCase):
@@ -60,12 +59,6 @@ class TestFindSuggestions(unittest.TestCase):
 
     def test_no_match(self):
         self.assertEqual(find_suggestions(CODES, "zzzzzznothing"), [])
-
-
-class TestCodeWithoutMarket(unittest.TestCase):
-    def test_strip(self):
-        self.assertEqual(code_without_market("sh600519"), "600519")
-
 
 if __name__ == "__main__":
     unittest.main()

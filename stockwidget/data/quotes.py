@@ -1,8 +1,6 @@
 import requests
 from typing import Tuple
 
-from stockwidget.core.markets import market_of
-
 # =====================================================================
 # 统一行情字典 schema（新浪 / 东财 两套数据源返回格式一致）：
 #   data[code] = {
@@ -57,53 +55,49 @@ def _new_entry(name, opening, prev_close, current, high, low,
 #   全球指数 gbnky
 #   期货   au2512（具体合约）/ au0（主力连续，对应东财 m:113 的 aum）
 
-def _sina_code(code: str) -> str:
-    """统一代码 -> 新浪请求代码"""
-    c = str(code).strip().lower()
-    if c.startswith(("sh", "sz", "bj")):
-        return c
-    if c.startswith("hk"):
-        return "rt_hk" + c[2:].upper()   # rt_hk00700 / rt_hkHSI（代码部分大写，兼容字母代码）
-    if c.startswith("us"):
-        return "gb_" + c[2:]
-    if c.startswith("gb"):
-        return "b_" + c[2:].upper()      # 全球指数 gbnky -> b_NKY
-    return "nf_" + c.upper()             # 期货: au2512 -> nf_AU2512, au0 -> nf_AU0
-
-
-def _canonical_from_sina(sname: str) -> str:
-    """新浪返回 key（hq_str_ 之后）-> 统一代码（统一为小写）"""
-    if sname.startswith("rt_"):
-        return sname[3:].lower()         # rt_hk00700 -> hk00700 / rt_hkHSI -> hkhsi
-    if sname.startswith("gb_"):
-        return "us" + sname[3:].lower()  # gb_aapl -> usaapl
-    if sname.startswith("b_"):
-        return "gb" + sname[2:].lower()  # b_NKY -> gbnky
-    if sname.startswith("nf_"):
-        return sname[3:].lower()          # nf_AU2512 -> au2512
-    return sname                          # sh600519
+def _sina_code(instrument: dict) -> str:
+    """根据显式 market/code 元数据生成新浪请求代码。"""
+    market = str(instrument.get("market", "") or "").strip().lower()
+    code = str(instrument.get("code", "") or "").strip().lower()
+    if not code:
+        return ""
+    if market in {"sh", "sz", "bj"}:
+        return market + code
+    if market == "hk":
+        return "rt_hk" + code.upper()
+    if market == "us":
+        return "gb_" + code
+    if market == "gb":
+        return "b_" + code.upper()
+    if not market:
+        return "nf_" + code.upper()
+    return ""
 
 
 # 上期能源（INE）品种代码前缀，东财 secid 市场码为 142（上期所为 113）
 _INE_PRODUCTS = {"sc", "nr", "lu", "bc", "ec"}
 
 
-def _em_secid(code: str) -> str:
-    """统一代码 -> 东财 secid"""
-    c = str(code).strip().lower()
-    m = market_of(c)
+def _em_secid(instrument: dict) -> str:
+    """根据显式 market/code 元数据生成东财 secid。"""
+    m = str(instrument.get("market", "") or "").strip().lower()
+    c = str(instrument.get("code", "") or "").strip().lower()
+    if not c:
+        return ""
     if m == "sh":
-        return "1." + c[2:]
+        return "1." + c
     if m == "sz":
-        return "0." + c[2:]
+        return "0." + c
     if m == "bj":
-        return "0." + c[2:]            # 北交所东财 secid 未验证，暂用深市前缀
+        return "0." + c                 # 北交所东财 secid 未验证，暂用深市前缀
     if m == "hk":
-        return "116." + c[2:]
+        return "116." + c
     if m == "us":
-        return "105." + c[2:].upper()  # 105=纳斯达克（106=纽交所/107=美交所）
+        return "105." + c.upper()       # 105=纳斯达克（106=纽交所/107=美交所）
     if m == "gb":
-        return "100." + c[2:]          # 全球指数（东财 secid 未验证，暂用 100 前缀）
+        return "100." + c              # 全球指数（东财 secid 未验证，暂用 100 前缀）
+    if m:
+        return ""
     mkt = "142" if c[:2] in _INE_PRODUCTS else "113"  # 上期能源142 / 上期所113
     if len(c) == 3 and c.endswith("0"):
         return f"{mkt}.{c[:-1]}m"      # 主力连续 au0 -> aum
@@ -111,17 +105,6 @@ def _em_secid(code: str) -> str:
 
 
 # ---------------- 新浪解析 ----------------
-
-def _is_index_sina(sname: str) -> bool:
-    """新浪返回 key（hq_str_ 之后）是否为指数。"""
-    if sname.startswith("rt_hk"):
-        return not sname[5:].isdigit()                          # 港股指数：字母代码
-    if sname.startswith("gb_"):
-        return sname[3:].lower() in ("ixic", "dji", "inx", "ndx")  # 美股指数
-    if sname.startswith(("sh", "sz")):
-        return sname.startswith("sh000") or sname.startswith("sz399")  # A股指数
-    return False
-
 
 def _parse_sina_a(parts: list, is_index: bool = False) -> dict:
     """A股: 0名称 1今开 2昨收 3最新 4最高 5最低 6买一 7卖一 8量 9额
@@ -234,13 +217,21 @@ def _parse_sina_global(parts: list) -> dict:
     )
 
 
-def request_sina(req_codes: list[str]) -> dict:
-    """新浪财经实时行情（A股/港股/美股/上期所期货）。返回 {统一代码: 行情 dict}。"""
+def request_sina(instruments: dict[str, dict]) -> dict:
+    """新浪财经实时行情。输入和输出均以代码表 key 为索引。"""
     data = {}
-    if not req_codes:
+    if not instruments:
         return {}
-    label = ",".join(_sina_code(c) for c in req_codes if str(c).strip())
-    url = "https://hq.sinajs.cn/list=" + label
+    requested = {}
+    labels = []
+    for key, instrument in instruments.items():
+        label = _sina_code(instrument)
+        if label:
+            requested[label.lower()] = (str(key).lower(), instrument)
+            labels.append(label)
+    if not requested:
+        return {}
+    url = "https://hq.sinajs.cn/list=" + ",".join(labels)
     response = requests.get(url, headers=_SINA_HEADERS, timeout=3)
     response.encoding = "gbk"
     for line in response.text.split("\n"):
@@ -254,46 +245,68 @@ def request_sina(req_codes: list[str]) -> dict:
         if len(parts) < 3 or "hq_str_" not in key:
             continue
         sname = key.split("hq_str_", 1)[1].strip()
-        if sname.startswith("rt_"):
-            entry = _parse_sina_hk(parts, is_index=_is_index_sina(sname))      # 港股股票 + 港股指数
-        elif sname.startswith("gb_"):
-            entry = _parse_sina_us(parts, is_index=_is_index_sina(sname))      # 美股 + 美股指数
-        elif sname.startswith("nf_"):
+        request_info = requested.get(sname.lower())
+        if request_info is None:
+            continue
+        canonical_key, instrument = request_info
+        market = str(instrument.get("market", "") or "").strip().lower()
+        is_index = str(instrument.get("type", "") or "").strip() == "指"
+        if market == "hk":
+            entry = _parse_sina_hk(parts, is_index=is_index)
+        elif market == "us":
+            entry = _parse_sina_us(parts, is_index=is_index)
+        elif market == "gb":
+            entry = _parse_sina_global(parts)
+        elif market in {"sh", "sz", "bj"}:
+            entry = _parse_sina_a(parts, is_index=is_index)
+        elif not market:
             entry = _parse_sina_futures(parts)
-        elif sname.startswith("b_"):
-            entry = _parse_sina_global(parts)  # 全球指数(日经/KOSPI/DAX等)
-        elif sname.startswith(("sh", "sz", "bj")):
-            entry = _parse_sina_a(parts, is_index=_is_index_sina(sname))
         else:
             continue
-        data[_canonical_from_sina(sname)] = entry
+        data[canonical_key] = entry
     return data
 
 
 # ---------------- 东财解析 ----------------
 
-def request_eastmoney(req_codes: list[str]) -> Tuple[list, dict]:
+def request_eastmoney(instruments: dict[str, dict]) -> Tuple[list, dict]:
     """东方财富实时行情（A股/港股/美股/上期所期货），字段与新浪统一。
     东财独有字段（换手率 f8 / 量比 f10）已随请求拉取，字典中预留（注释）。"""
     data = {}
-    if not req_codes:
+    if not instruments:
         return [], {}
-    secids = [_em_secid(c) for c in req_codes]
+    requests_meta = []
+    for key, instrument in instruments.items():
+        secid = _em_secid(instrument)
+        if secid:
+            requests_meta.append((str(key).lower(), instrument, secid))
+    if not requests_meta:
+        return [], {}
+    secids = [item[2] for item in requests_meta]
     params = {
         "secids": ",".join(secids),
-        "fields": "f12,f14,f2,f3,f4,f5,f6,f15,f16,f17,f18,f8,f10",
+        "fields": "f12,f13,f14,f2,f3,f4,f5,f6,f15,f16,f17,f18,f8,f10",
         "fltt": 2,
         "invt": 2,
     }
     response = requests.get(_EM_QUOTE_URL, params=params, timeout=3)
     diff = ((response.json() or {}).get("data") or {}).get("diff") or []
-    raw_to_code = {s.split(".", 1)[1]: c for c, s in zip(req_codes, secids)}
+    secid_to_request = {s.lower(): (key, instrument) for key, instrument, s in requests_meta}
+    raw_to_requests = {}
+    for key, instrument, secid in requests_meta:
+        raw_to_requests.setdefault(secid.split(".", 1)[1].lower(), []).append((key, instrument))
     for d in diff:
-        code = raw_to_code.get(d.get("f12"))
-        if code is None:
+        raw_code = str(d.get("f12", "") or "").strip().lower()
+        response_secid = f"{d.get('f13')}.{raw_code}".lower()
+        request_info = secid_to_request.get(response_secid)
+        if request_info is None:
+            candidates = raw_to_requests.get(raw_code, [])
+            request_info = candidates[0] if len(candidates) == 1 else None
+        if request_info is None:
             continue
+        key, instrument = request_info
         vol = d.get("f5") or 0
-        if market_of(code) in ("sh", "sz", "bj"):
+        if str(instrument.get("market", "") or "").strip().lower() in {"sh", "sz", "bj"}:
             vol = vol * 100   # 东财 A股 f5 单位是“手”，新浪为“股”，统一为股
         entry = _new_entry(
             name=d.get("f14"),
@@ -306,14 +319,14 @@ def request_eastmoney(req_codes: list[str]) -> Tuple[list, dict]:
         # 东财独有字段（新浪无），预留，取消注释即可填充：
         # entry["turnover_rate"] = d.get("f8")   # 换手率（%）
         # entry["volume_ratio"] = d.get("f10")   # 量比
-        data[code] = entry
-    return [c in data for c in req_codes], data
+        data[key] = entry
+    return [key in data for key in instruments], data
 
 
-def request_quote(req_codes: list[str], source: str = DATA_SOURCE) -> dict:
-    """统一行情入口，返回 {统一代码: 行情 dict}。默认使用 DATA_SOURCE（当前为新浪）。"""
+def request_quote(instruments: dict[str, dict], source: str = DATA_SOURCE) -> dict:
+    """统一行情入口，使用 watchlist 中的显式 code/market 元数据。"""
     if source == "eastmoney":
-        _, data = request_eastmoney(req_codes)
+        _, data = request_eastmoney(instruments)
         return data
-    return request_sina(req_codes)
+    return request_sina(instruments)
 
