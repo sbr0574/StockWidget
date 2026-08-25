@@ -63,5 +63,5 @@ def stock_info_sh_name_code() -> pd.DataFrame:
     temp_df["上市日期"] = pd.to_datetime(temp_df["上市日期"], errors="coerce").dt.date
     return temp_df
 
-sh = stock_info_sh_name_code("主板A股")
+sh = stock_info_sh_name_code()
 print(sh.head(5))
