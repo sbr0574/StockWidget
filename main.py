@@ -8,6 +8,7 @@ Copyright © 2026 sbr0574
 
 官方仓库地址 Official website:
 https://github.com/sbr0574/StockWidget
+https://gitee.com/sbr0574/StockWidget
 
 邮箱 Email:
 sbr0574@qq.com
@@ -19,13 +20,8 @@ Licensed under Apache License 2.0
 import sys
 
 from stockwidget.app import App
-from stockwidget.constants import APP_NAME
 
 if __name__ == "__main__":
-
-    if sys.platform == "win32":
-        import ctypes
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(f"{APP_NAME}.1")
 
     app = App(sys.argv)
     sys.exit(app.exec())
