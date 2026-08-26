@@ -28,12 +28,40 @@ jobs:
         run: |
           pyinstaller --clean --noconfirm StockWidget.spec
 
-      - name: Create zip
+      - name: Read application version
+        id: version
+        shell: pwsh
         run: |
-          Compress-Archive -Path dist\StockWidget -DestinationPath StockWidget-windows.zip
+          $version = (python -c "from stockwidget.constants import APP_VERSION; print(APP_VERSION)").Trim()
+          if (-not $version) {
+            throw "APP_VERSION is empty"
+          }
+          "value=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Create release zip
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          $staging = Join-Path $env:RUNNER_TEMP "StockWidget-Windows-$env:RELEASE_VERSION"
+          New-Item -ItemType Directory -Path $staging | Out-Null
+
+          Copy-Item README.md, LICENSE, NOTICE -Destination $staging
+          Copy-Item dist\StockWidget\StockWidget.exe -Destination $staging
+          Copy-Item dist\StockWidget\_internal -Destination (Join-Path $staging "_internal") -Recurse
+
+          $expected = @("_internal", "LICENSE", "NOTICE", "README.md", "StockWidget.exe") | Sort-Object
+          $actual = Get-ChildItem -LiteralPath $staging | ForEach-Object Name | Sort-Object
+          if (Compare-Object -ReferenceObject $expected -DifferenceObject $actual) {
+            throw "Unexpected files in release staging directory: $($actual -join ', ')"
+          }
+
+          $archive = "StockWidget-Windows-$env:RELEASE_VERSION.zip"
+          Compress-Archive -Path (Join-Path $staging "*") -DestinationPath $archive
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: StockWidget-Windows
-          path: StockWidget-windows.zip
+          path: StockWidget-Windows-${{ steps.version.outputs.value }}.zip
+          if-no-files-found: error
+          archive: false

@@ -4,17 +4,13 @@
 #
 # - Windows / Linux：EXE + COLLECT，产出 one-dir 目录（dist/StockWidget/）。
 # - macOS：额外执行 BUNDLE 阶段，产出可直接拖入「应用程序」的
-#   StockWidget.app 应用包（dist/StockWidget/StockWidget.app）。
+#   StockWidget.app 应用包（dist/StockWidget.app）。
 
 import sys
 
 APP_VERSION = "1.4.0"
 
-datas = [
-    ('README.md', '.'),
-    ('LICENSE', '.'),
-    ('NOTICE', '.'),
-]
+datas = []
 
 
 a = Analysis(
