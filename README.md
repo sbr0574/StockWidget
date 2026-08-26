@@ -11,13 +11,13 @@
 ## 声明
 
 * **作者**：`sbr0574`
-* **官方仓库**：https://github.com/sbr0574/StockWidget
-* 本项目的**唯一官方发布渠道**为上方 GitHub 仓库的 [Releases](https://github.com/sbr0574/StockWidget/releases)，其它网站提供的下载链接均非官方，请谨慎使用。
+* **仓库地址**：https://github.com/sbr0574/StockWidget
+* 本项目的**唯一发布渠道**为上方 GitHub 仓库的 [Releases](https://github.com/sbr0574/StockWidget/releases)，其它网站提供的下载链接请谨慎使用。
 * 本项目基于 **Apache License 2.0** 开源。任何人对本项目进行**再分发**（转载源码、镜像下载、打包发布等）时，**必须**：
 
   * 保留 `LICENSE` 与 `NOTICE` 文件；
   * 保留版权与署名信息（详见 `NOTICE`）；
-  * 在显著位置注明原始作者与仓库地址：https://github.com/sbr0574/StockWidget
+  * 注明原作者与仓库地址：https://github.com/sbr0574/StockWidget
 * 如发现第三方网站转载时未注明上述信息，可先联系对方补充；若对方拒绝，其行为已违反 Apache 2.0 第 4 节（Redistribution）的条款，作者有权要求其停止分发。
 
 ---
@@ -68,24 +68,23 @@
 ```
 main.py                      # 程序入口
 StockWidget.spec             # PyInstaller 打包配置
-resources/                   # 静态资源（图标、内置代码列表、Qt 资源）
-tests/                       # 单元测试（python -m unittest discover -s tests）
+resources/                   # 静态资源
+tests/                       # 测试
 stockwidget/
   app.py                     # 应用装配：连接各层、托盘、后台任务
   constants.py               # 全局常量（名称/版本/文件/地址）
-  ui/                        # 界面层（前端）：所有 Qt 组件与显示
+  ui/                        # 界面层：所有 Qt 组件与显示
     widget.py                #   盯盘浮窗主面板
     settings_dialog.py       #   设置面板
     table_model.py           #   表格 Model 与 K 线 Delegate
-    drag_mixin.py            #   拖拽 / 双击隐藏交互（混入）
-    tray.py                  #   系统托盘（平台差异的点击行为）
-    generated/               #   Qt Designer / pyside6-uic 生成文件（勿手改）
-  data/                      # 数据层（后端）：行情请求与整理
+    drag_mixin.py            #   拖拽 / 双击隐藏交互
+    tray.py                  #   系统托盘
+    generated/               #   Qt Designer / pyside6-uic 生成文件
+  data/                      # 数据层：行情请求与整理
     quotes.py                #   行情请求与解析（新浪 / 东财）
     code_lists.py            #   代码列表下载 / 缓存 / 兜底
     update_check.py          #   版本更新检查
-    # 代码列表生成已合并到 .github/scripts/update_codes.py（仅 CI 使用）
-  core/                      # 功能函数层：纯业务逻辑（无 Qt，可单元测试）
+  core/                      # 功能函数层：纯业务逻辑
     formatters.py            #   成交量 / 成交额格式化
     code_search.py           #   代码搜索 / 建议
     watchlist.py             #   自选列表规范化
@@ -147,5 +146,4 @@ python main.py
 本项目基于 **Apache License 2.0** 发布，完整文本见 [LICENSE](LICENSE)，署名要求见 [NOTICE](NOTICE)。
 
 * 个人/学习用途自由使用；涉及第三方数据源时请遵守其使用条款。
-* **再分发（转载/镜像/打包发布）必须保留 `LICENSE` 与 `NOTICE` 文件，并注明原始作者与仓库地址**（https://github.com/sbr0574/StockWidget），否则视为违反 Apache 2.0 第 4 节的再分发条款。
-* 官方唯一发布渠道：https://github.com/sbr0574/StockWidget
+* **再分发（转载/镜像/打包发布）必须保留 `LICENSE` 与 `NOTICE` 文件，注明原始作者与仓库地址**（https://github.com/sbr0574/StockWidget）。

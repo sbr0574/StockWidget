@@ -1,7 +1,8 @@
-"""
-GitHub Action 专用：拉取全市场代码并写入 resources/ 下 JSON
-本脚本由 .github/workflows/update-codes.yml 调用, 保持自包含, 不依赖项目运行时包
-沪深股票和基金直接使用交易所官方接口，其余市场沿用东财或新浪接口
+"""拉取全市场代码并写入仓库 resources/ 下的 JSON。
+
+脚本可由 Azure Ubuntu 定时任务或 GitHub Actions 调用，保持自包含，
+不依赖 StockWidget 运行时模块。沪深股票和基金直接使用交易所官方接口，
+其余市场沿用东财或新浪接口。
 """
 import json
 import os
@@ -20,8 +21,8 @@ import requests
 
 from pypinyin import Style, pinyin
 
-# 脚本位于 <root>/.github/scripts/
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# 脚本位于 <root>/scripts/，输出目录始终以仓库根目录为准。
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 STOCK_FILE = "stock_codes_list.json"      # 沪深京、港美股及全球主要指数列表
 FUTURES_FILE = "futures_codes_list.json"  # 上期所期货列表

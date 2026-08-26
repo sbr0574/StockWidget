@@ -9,7 +9,8 @@ from unittest.mock import Mock, call, patch
 import pandas as pd
 
 
-SCRIPT_PATH = Path(__file__).parents[1] / ".github" / "scripts" / "update_codes.py"
+PROJECT_ROOT = Path(__file__).parents[1]
+SCRIPT_PATH = PROJECT_ROOT / "scripts" / "update_codes.py"
 SPEC = importlib.util.spec_from_file_location("update_codes_script", SCRIPT_PATH)
 update_codes = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
@@ -17,6 +18,9 @@ SPEC.loader.exec_module(update_codes)
 
 
 class TestUpdateCodes(unittest.TestCase):
+    def test_script_root_is_project_root(self):
+        self.assertEqual(Path(update_codes.ROOT), PROJECT_ROOT)
+
     def test_cn_index_queries_have_explicit_markets(self):
         empty = pd.DataFrame(columns=update_codes._DF_COLUMNS)
         with patch.object(update_codes, "_em_stock_df", return_value=empty) as fetch:

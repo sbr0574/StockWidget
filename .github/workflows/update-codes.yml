@@ -1,11 +1,8 @@
 name: Update Stock Codes
 
-# 每周日至周四 UTC 23:50 (北京时间周一至周五 07:50) 拉取全市场代码并提交到 codes-data 分支。
-# 频率依据：股票/期货代码列表为低频变化（期货仅在新合约挂牌、到期退市、主力换月时变化，约每月），
-# 周末不运行。codes-data 分支只保存两个 JSON，不更新 main 分支与 QRC。
 on:
-  schedule:
-    - cron: "50 23 * * 0-4"
+  # schedule:
+  #   - cron: "1 0 * * 1-5"
   workflow_dispatch:
 
 concurrency:
@@ -30,10 +27,10 @@ jobs:
           python-version: "3.13"
 
       - name: 安装依赖
-        run: pip install openpyxl pandas pypinyin requests
+        run: python -m pip install openpyxl pandas pypinyin requests
 
       - name: 拉取市场代码
-        run: python -u .github/scripts/update_codes.py
+        run: python -u scripts/update_codes.py
 
       - name: 提交代码列表到数据分支
         env:
