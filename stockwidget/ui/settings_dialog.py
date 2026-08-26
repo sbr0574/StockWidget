@@ -1,11 +1,14 @@
 from functools import partial
+from math import isfinite
 
-from PySide6.QtCore import Qt, QPoint, QStringListModel, QEvent, QTimer
+from PySide6.QtCore import (
+    Qt, QPoint, QStringListModel, QEvent, QTimer, QItemSelectionModel,
+)
 from PySide6.QtGui import QColor, QGuiApplication, QKeySequence
 from PySide6.QtWidgets import (
     QApplication, QWidget, QDialog, QColorDialog, QAbstractItemView, QTableWidgetItem,
-    QStyledItemDelegate, QStyle, QStyleOptionViewItem, QLineEdit, QCompleter,
-    QHeaderView, QButtonGroup, QMessageBox
+    QAbstractItemDelegate, QStyledItemDelegate, QStyle, QStyleOptionViewItem,
+    QLineEdit, QCompleter, QHeaderView, QButtonGroup, QMessageBox,
 )
 from stockwidget.ui.generated.ui_settings import Ui_SettingDialog
 from stockwidget.core.code_search import find_suggestions
@@ -19,6 +22,17 @@ from stockwidget.platform.capabilities import (
     unsupported_tooltip,
 )
 from stockwidget.data.update_check import GITEE, GITHUB, project_links
+
+
+def _parse_positive_cost(value):
+    """把成本输入规范化为有限正数；空值或无效值返回 None。"""
+    if value in (None, ""):
+        return None
+    try:
+        cost = float(value)
+    except (TypeError, ValueError):
+        return None
+    return cost if isfinite(cost) and cost > 0 else None
 
 
 def _hotkey_error_message(result) -> str:
@@ -77,23 +91,55 @@ class CodeCompleterDelegate(QStyledItemDelegate):
     def __init__(self, owner):
         super().__init__(owner)
         self.owner = owner
+
     def createEditor(self, parent, option, index):
         editor = QLineEdit(parent)
         editor.setProperty("_row", index.row())
         editor.setProperty("_column", index.column())
+        editor.setProperty("_code_editor_committed", False)
+        editor.setProperty("_code_editor_initialized", False)
         completer = QCompleter(self.owner.suggestion_model, editor)
         completer.setCaseSensitivity(Qt.CaseInsensitive)
         completer.setFilterMode(Qt.MatchContains)
         completer.setCompletionMode(QCompleter.UnfilteredPopupCompletion)
-        completer.activated.connect(lambda text: self.owner._apply_suggestion(editor, text))
+        completer.setWrapAround(False)
+        completer.activated["QModelIndex"].connect(
+            lambda index: self._accept_suggestion(editor, index)
+        )
         editor.textEdited.connect(lambda text: self.owner._update_suggestions(editor, text))
-        editor.editingFinished.connect(lambda: self.owner._commit_code_editor(editor))
-        editor.setCompleter(completer)
+        completer.setWidget(editor)
+        editor._code_completer = completer
         return editor
 
     def setEditorData(self, editor, index):
-        editor.setText(index.data(Qt.DisplayRole) or "")
+        if editor.property("_code_editor_initialized"):
+            return
+        editor.setProperty("_code_editor_initialized", True)
         self.owner._remember_editor_value(editor, index)
+        editor.clear()
+
+    def setModelData(self, editor, model, index):
+        self._commit_editor(editor)
+
+    def destroyEditor(self, editor, index):
+        if not editor.property("_code_editor_committed"):
+            self.owner._cancel_code_editor(editor)
+        super().destroyEditor(editor, index)
+
+    def _accept_suggestion(self, editor, index):
+        if editor.property("_code_editor_committed"):
+            return
+        text = str(index.data(Qt.DisplayRole) or "")
+        self.owner._apply_suggestion(editor, text)
+        self.commitData.emit(editor)
+        self._commit_editor(editor)
+        self.closeEditor.emit(editor, QAbstractItemDelegate.EndEditHint.NoHint)
+
+    def _commit_editor(self, editor):
+        if editor.property("_code_editor_committed"):
+            return
+        editor.setProperty("_code_editor_committed", True)
+        self.owner._commit_code_editor(editor)
 
 
 class CenteredCheckBoxDelegate(QStyledItemDelegate):
@@ -159,7 +205,6 @@ class SettingsDialog(QDialog):
         QGuiApplication.styleHints().colorSchemeChanged.connect(self._on_color_scheme_changed)
         self.suggestion_model = QStringListModel(self)
         self._suggestion_map = {}
-        self._previous_editor_values = {}
 
         self._init_code_table()
         self._bind_widgets()
@@ -505,6 +550,7 @@ class SettingsDialog(QDialog):
         self.list_codes.blockSignals(True)
         value_key = str(value_key or "").strip().lower()
         display_code = str(display_code or "").strip()
+        cost = _parse_positive_cost(cost)
         resolved_name = str(name or "").strip() or self._resolve_name_for_code(value_key, display_code)
 
         check_item = self.list_codes.item(row, 0)
@@ -590,13 +636,7 @@ class SettingsDialog(QDialog):
                 entry["checked"] = True
             # 指数不允许设置成本
             if type_ != "指" and cost_item is not None:
-                cost_text = str(cost_item.text() or "").strip()
-                try:
-                    cost_val = float(cost_text)
-                    if cost_val > 0:
-                        entry["cost"] = cost_val
-                except ValueError:
-                    entry["cost"] = None
+                entry["cost"] = _parse_positive_cost(cost_item.text())
             if resolved:
                 entry["name"] = str(resolved.get("name", "") or "")
             watchlist[value] = entry
@@ -751,7 +791,7 @@ class SettingsDialog(QDialog):
 
 
     def _show_suggestions_for_editor(self, editor: QLineEdit, has_items: bool):
-        completer = editor.completer()
+        completer = getattr(editor, "_code_completer", None)
         if completer is None:
             return
         popup_width = max(self.list_codes.columnWidth(1), editor.width())
@@ -763,6 +803,13 @@ class SettingsDialog(QDialog):
         rect = editor.rect()
         rect.setWidth(popup_width)
         completer.complete(rect)
+        first = completer.completionModel().index(0, completer.completionColumn())
+        if first.isValid():
+            flags = (QItemSelectionModel.SelectionFlag.ClearAndSelect
+                     | QItemSelectionModel.SelectionFlag.Rows)
+            completer.popup().selectionModel().setCurrentIndex(
+                first, flags
+            )
 
     def _commit_code_editor(self, editor: QLineEdit):
         row = editor.property("_row")
@@ -770,15 +817,7 @@ class SettingsDialog(QDialog):
         if row < 0:
             return
         cost_item = self.list_codes.item(row, 2)
-        cost = None
-        if cost_item is not None:
-            cost_text = str(cost_item.text() or "").strip()
-            try:
-                cost_val = float(cost_text)
-                if cost_val > 0:
-                    cost = cost_val
-            except ValueError:
-                cost = None
+        cost = _parse_positive_cost(cost_item.text()) if cost_item is not None else None
         entry = editor.property("_selected_entry")
         text = str(editor.text() or "").strip()
         if isinstance(entry, dict):
@@ -788,7 +827,7 @@ class SettingsDialog(QDialog):
             if entry:
                 self._set_code_row(row, entry["key"], entry["code"], entry["name"], True, cost)
             else:
-                self._restore_or_remove_row(row)
+                self._restore_or_remove_row(row, editor.property("_previous_editor_value"))
         self._on_codes_changed(None)
 
 
@@ -797,16 +836,24 @@ class SettingsDialog(QDialog):
         code_item = self.list_codes.item(row, 1)
         cost_item = self.list_codes.item(row, 2)
         check_item = self.list_codes.item(row, 0)
-        self._previous_editor_values[row] = {
+        previous = {
             "key": str(code_item.data(Qt.UserRole) or "") if code_item else "",
             "code": str(code_item.text() or "") if code_item else "",
-            "cost": str(cost_item.text() or "") if cost_item else "",
+            "cost": _parse_positive_cost(cost_item.text()) if cost_item else None,
             "checked": check_item.checkState() == Qt.Checked if check_item else True,
         }
+        editor.setProperty("_previous_editor_value", previous)
 
-    def _restore_or_remove_row(self, row: int):
-        previous = self._previous_editor_values.get(row)
-        if previous and (previous["key"] or previous["code"]):
+    def _cancel_code_editor(self, editor: QLineEdit):
+        row = editor.property("_row")
+        row = int(row) if row is not None else -1
+        if row < 0:
+            return
+        self._restore_or_remove_row(row, editor.property("_previous_editor_value"))
+        self._on_codes_changed(None)
+
+    def _restore_or_remove_row(self, row: int, previous):
+        if isinstance(previous, dict) and (previous["key"] or previous["code"]):
             self._set_code_row(row, previous["key"], previous["code"], "", previous["checked"], previous.get("cost"))
         elif 0 <= row < self.list_codes.rowCount():
             self.list_codes.removeRow(row)
