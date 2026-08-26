@@ -46963,6 +46963,15 @@
       "py": "zhongguoguanghe",
       "abbr": "zggh"
     },
+    "sz158000": {
+      "code": "158000",
+      "market": "sz",
+      "type": "基",
+      "name": "港股通金融ETF鹏华",
+      "name_en": "",
+      "py": "ganggutongjinrongetfpenghua",
+      "abbr": "ggtjretfph"
+    },
     "sz158003": {
       "code": "158003",
       "market": "sz",
@@ -90943,7 +90952,7 @@
       "type": "港",
       "name": "设计都会",
       "name_en": "DESIGN CAPITAL",
-      "py": "shejiduhui",
+      "py": "shejidouhui",
       "abbr": "sjdh"
     },
     "hk01546": {
@@ -98605,15 +98614,6 @@
       "py": "zhongguoguojia-erwan",
       "abbr": "zggj-ew"
     },
-    "hk02907": {
-      "code": "02907",
-      "market": "hk",
-      "type": "港",
-      "name": "中木国际股权",
-      "name_en": "CH WOOD INT RTS",
-      "py": "zhongmuguojiguquan",
-      "abbr": "zmgjgq"
-    },
     "hk02908": {
       "code": "02908",
       "market": "hk",
@@ -105413,10 +105413,10 @@
       "code": "09963",
       "market": "hk",
       "type": "港",
-      "name": "高科桥",
-      "name_en": "TRANSTECH",
-      "py": "gaokeqiao",
-      "abbr": "gkq"
+      "name": "高科桥光导",
+      "name_en": "TRANSTECH OPTEL",
+      "py": "gaokeqiaoguangdao",
+      "abbr": "gkqgd"
     },
     "hk09966": {
       "code": "09966",
@@ -136393,8 +136393,8 @@
       "type": "美",
       "name": "数字标识",
       "name_en": "",
-      "py": "shuzibiaoshi",
-      "abbr": "szbs"
+      "py": "shuzibiaozhi",
+      "abbr": "szbz"
     },
     "usdmx": {
       "code": "dmx",
@@ -170224,8 +170224,8 @@
       "type": "美",
       "name": "利西亚车行",
       "name_en": "",
-      "py": "lixiyachehang",
-      "abbr": "lxych"
+      "py": "lixiyachexing",
+      "abbr": "lxycx"
     },
     "usladm": {
       "code": "ladm",
