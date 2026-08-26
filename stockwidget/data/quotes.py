@@ -1,5 +1,6 @@
-import requests
 from typing import Tuple
+
+import requests
 
 # =====================================================================
 # 统一行情字典 schema（新浪 / 东财 两套数据源返回格式一致）：
@@ -19,8 +20,24 @@ from typing import Tuple
 DATA_SOURCE = "sina"
 
 _SINA_HEADERS = {"Referer": "https://finance.sina.com.cn", "User-Agent": "Mozilla/5.0"}
-_EM_QUOTE_URL = "https://push2delay.eastmoney.com/api/qt/ulist.np/get"   # 东财延迟行情主机（本机代理下可达更稳）
+_EM_HEADERS = {"Referer": "https://quote.eastmoney.com", "User-Agent": "Mozilla/5.0"}
+_EM_QUOTE_URL = "https://push2delay.eastmoney.com/api/qt/ulist.np/get"
 _Z5 = (0, 0, 0, 0, 0)   # 空五档（港美股/期货只有一档或无盘口）
+
+
+def _as_float(value) -> float:
+    """把行情数字转为 float；盘前的 '-'、空值等占位符按 0 处理。"""
+    try:
+        return float(value) if value not in (None, "", "-", "--") else 0.0
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _as_int(value) -> int:
+    try:
+        return int(_as_float(value))
+    except (OverflowError, ValueError):
+        return 0
 
 def _new_entry(name, opening, prev_close, current, high, low,
                vol, amt, pur_vol, pur_price, sell_vol, sell_price,
@@ -28,17 +45,17 @@ def _new_entry(name, opening, prev_close, current, high, low,
     """按统一 schema 构造行情条目。"""
     return {
         "name": str(name or ""),
-        "opening_price": float(opening or 0),
-        "prev_close": float(prev_close or 0),
-        "current_price": float(current or 0),
-        "high_price": float(high or 0),
-        "low_price": float(low or 0),
-        "deals_vol": int(vol or 0),
-        "deals_amt": float(amt or 0),
-        "purchaser_vol": list(pur_vol),
-        "purchaser_price": list(pur_price),
-        "seller_vol": list(sell_vol),
-        "seller_price": list(sell_price),
+        "opening_price": _as_float(opening),
+        "prev_close": _as_float(prev_close),
+        "current_price": _as_float(current),
+        "high_price": _as_float(high),
+        "low_price": _as_float(low),
+        "deals_vol": _as_int(vol),
+        "deals_amt": _as_float(amt),
+        "purchaser_vol": [_as_int(value) for value in pur_vol],
+        "purchaser_price": [_as_float(value) for value in pur_price],
+        "seller_vol": [_as_int(value) for value in sell_vol],
+        "seller_price": [_as_float(value) for value in sell_price],
         "date": str(date or ""),
         "time": str(time or ""),
         # 东财独有字段（新浪无），预留
@@ -289,7 +306,13 @@ def request_eastmoney(instruments: dict[str, dict]) -> Tuple[list, dict]:
         "fltt": 2,
         "invt": 2,
     }
-    response = requests.get(_EM_QUOTE_URL, params=params, timeout=3)
+    response = requests.get(
+        _EM_QUOTE_URL,
+        params=params,
+        headers=_EM_HEADERS,
+        timeout=3,
+    )
+    response.raise_for_status()
     diff = ((response.json() or {}).get("data") or {}).get("diff") or []
     secid_to_request = {s.lower(): (key, instrument) for key, instrument, s in requests_meta}
     raw_to_requests = {}
@@ -305,7 +328,7 @@ def request_eastmoney(instruments: dict[str, dict]) -> Tuple[list, dict]:
         if request_info is None:
             continue
         key, instrument = request_info
-        vol = d.get("f5") or 0
+        vol = _as_float(d.get("f5"))
         if str(instrument.get("market", "") or "").strip().lower() in {"sh", "sz", "bj"}:
             vol = vol * 100   # 东财 A股 f5 单位是“手”，新浪为“股”，统一为股
         entry = _new_entry(
@@ -313,7 +336,8 @@ def request_eastmoney(instruments: dict[str, dict]) -> Tuple[list, dict]:
             opening=d.get("f17"), prev_close=d.get("f18"), current=d.get("f2"),
             high=d.get("f15"), low=d.get("f16"),
             vol=vol, amt=d.get("f6"),
-            pur_vol=_Z5, pur_price=_Z5, sell_vol=_Z5, sell_price=_Z5,
+            pur_vol=_Z5, pur_price=_Z5,
+            sell_vol=_Z5, sell_price=_Z5,
             date="", time="",
         )
         # 东财独有字段（新浪无），预留，取消注释即可填充：
