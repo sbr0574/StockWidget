@@ -4,4 +4,5 @@ build/
 *.pyc
 .vscode
 __pycache__/
+tests/
 .DS_Store

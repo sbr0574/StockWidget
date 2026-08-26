@@ -69,7 +69,6 @@
 main.py                      # 程序入口
 StockWidget.spec             # PyInstaller 打包配置
 resources/                   # 静态资源
-tests/                       # 测试
 stockwidget/
   app.py                     # 应用装配：连接各层、托盘、后台任务
   constants.py               # 全局常量（名称/版本/文件/地址）
