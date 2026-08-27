@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-25",
+  "last_update": "2026-08-27",
   "codes": {
     "sh000001": {
       "code": "000001",
@@ -7331,10 +7331,10 @@
       "code": "516570",
       "market": "sh",
       "type": "基",
-      "name": "化工行业ETF易方达",
+      "name": "石化ETF易方达",
       "name_en": "",
-      "py": "huagonghangyeetfyifangda",
-      "abbr": "hghyetfyfd"
+      "py": "shihuaetfyifangda",
+      "abbr": "shetfyfd"
     },
     "sh516580": {
       "code": "516580",
@@ -13406,10 +13406,10 @@
       "code": "600165",
       "market": "sh",
       "type": "沪",
-      "name": "ST宁科",
+      "name": "宁科生物",
       "name_en": "",
-      "py": "stningke",
-      "abbr": "stnk"
+      "py": "ningkeshengwu",
+      "abbr": "nksw"
     },
     "sh600166": {
       "code": "600166",
@@ -15746,10 +15746,10 @@
       "code": "600525",
       "market": "sh",
       "type": "沪",
-      "name": "ST长园",
+      "name": "长园集团",
       "name_en": "",
-      "py": "stzhangyuan",
-      "abbr": "stzy"
+      "py": "zhangyuanjituan",
+      "abbr": "zyjt"
     },
     "sh600526": {
       "code": "600526",
@@ -16457,10 +16457,10 @@
       "code": "600620",
       "market": "sh",
       "type": "沪",
-      "name": "XD天宸股",
+      "name": "天宸股份",
       "name_en": "",
-      "py": "xdtianchengu",
-      "abbr": "xdtcg"
+      "py": "tianchengufen",
+      "abbr": "tcgf"
     },
     "sh600621": {
       "code": "600621",
@@ -19922,10 +19922,10 @@
       "code": "601339",
       "market": "sh",
       "type": "沪",
-      "name": "百隆东方",
+      "name": "XD百隆东",
       "name_en": "",
-      "py": "bailongdongfang",
-      "abbr": "bldf"
+      "py": "xdbailongdong",
+      "abbr": "xdbld"
     },
     "sh601360": {
       "code": "601360",
@@ -21875,10 +21875,10 @@
       "code": "603102",
       "market": "sh",
       "type": "沪",
-      "name": "百合股份",
+      "name": "XD百合股",
       "name_en": "",
-      "py": "baihegufen",
-      "abbr": "bhgf"
+      "py": "xdbaihegu",
+      "abbr": "xdbhg"
     },
     "sh603103": {
       "code": "603103",
@@ -22874,10 +22874,10 @@
       "code": "603236",
       "market": "sh",
       "type": "沪",
-      "name": "移远通信",
+      "name": "XD移远通",
       "name_en": "",
-      "py": "yiyuantongxin",
-      "abbr": "yytx"
+      "py": "xdyiyuantong",
+      "abbr": "xdyyt"
     },
     "sh603237": {
       "code": "603237",
@@ -24404,10 +24404,10 @@
       "code": "603558",
       "market": "sh",
       "type": "沪",
-      "name": "XD健盛集",
+      "name": "健盛集团",
       "name_en": "",
-      "py": "xdjianshengji",
-      "abbr": "xdjsj"
+      "py": "jianshengjituan",
+      "abbr": "jsjt"
     },
     "sh603559": {
       "code": "603559",
@@ -33116,19 +33116,19 @@
       "code": "688835",
       "market": "sh",
       "type": "科",
-      "name": "N高凯",
+      "name": "C高凯",
       "name_en": "",
-      "py": "ngaokai",
-      "abbr": "ngk"
+      "py": "cgaokai",
+      "abbr": "cgk"
     },
     "sh688836": {
       "code": "688836",
       "market": "sh",
       "type": "科",
-      "name": "C宇树",
+      "name": "宇树科技",
       "name_en": "",
-      "py": "cyushu",
-      "abbr": "cys"
+      "py": "yushukeji",
+      "abbr": "yskj"
     },
     "sh688981": {
       "code": "688981",
@@ -46963,6 +46963,24 @@
       "py": "zhongguoguanghe",
       "abbr": "zggh"
     },
+    "sz158000": {
+      "code": "158000",
+      "market": "sz",
+      "type": "基",
+      "name": "港股通金融ETF鹏华",
+      "name_en": "",
+      "py": "ganggutongjinrongetfpenghua",
+      "abbr": "ggtjretfph"
+    },
+    "sz158001": {
+      "code": "158001",
+      "market": "sz",
+      "type": "基",
+      "name": "价值ETF嘉实",
+      "name_en": "",
+      "py": "jiazhietfjiashi",
+      "abbr": "jzetfjs"
+    },
     "sz158003": {
       "code": "158003",
       "market": "sz",
@@ -46999,6 +47017,15 @@
       "py": "hangkonghangtianetfnanfang",
       "abbr": "hkhtetfnf"
     },
+    "sz158010": {
+      "code": "158010",
+      "market": "sz",
+      "type": "基",
+      "name": "医疗ETF嘉实",
+      "name_en": "",
+      "py": "yiliaoetfjiashi",
+      "abbr": "yletfjs"
+    },
     "sz158012": {
       "code": "158012",
       "market": "sz",
@@ -47007,6 +47034,24 @@
       "name_en": "",
       "py": "yunjisuanetfnanfang",
       "abbr": "yjsetfnf"
+    },
+    "sz158017": {
+      "code": "158017",
+      "market": "sz",
+      "type": "基",
+      "name": "化工ETF易方达",
+      "name_en": "",
+      "py": "huagongetfyifangda",
+      "abbr": "hgetfyfd"
+    },
+    "sz158019": {
+      "code": "158019",
+      "market": "sz",
+      "type": "基",
+      "name": "电池ETF永赢",
+      "name_en": "",
+      "py": "dianchietfyongying",
+      "abbr": "dcetfyy"
     },
     "sz159001": {
       "code": "159001",
@@ -69044,10 +69089,10 @@
       "code": "301655",
       "market": "sz",
       "type": "创",
-      "name": "C绿控传动",
+      "name": "绿控传动",
       "name_en": "",
-      "py": "clvkongchuandong",
-      "abbr": "clkcd"
+      "py": "lvkongchuandong",
+      "abbr": "lkcd"
     },
     "sz301656": {
       "code": "301656",
@@ -88966,15 +89011,6 @@
       "py": "zhongguochuangxintouzi",
       "abbr": "zgcxtz"
     },
-    "hk01218": {
-      "code": "01218",
-      "market": "hk",
-      "type": "港",
-      "name": "永义国际",
-      "name_en": "EASYKNIT INT'L",
-      "py": "yongyiguoji",
-      "abbr": "yygj"
-    },
     "hk01220": {
       "code": "01220",
       "market": "hk",
@@ -89475,7 +89511,7 @@
       "market": "hk",
       "type": "港",
       "name": "长安民生物流",
-      "name_en": "CMA LOGISTICS",
+      "name_en": "CM LOGISTICS",
       "py": "changanminshengwuliu",
       "abbr": "camswl"
     },
@@ -98605,15 +98641,6 @@
       "py": "zhongguoguojia-erwan",
       "abbr": "zggj-ew"
     },
-    "hk02907": {
-      "code": "02907",
-      "market": "hk",
-      "type": "港",
-      "name": "中木国际股权",
-      "name_en": "CH WOOD INT RTS",
-      "py": "zhongmuguojiguquan",
-      "abbr": "zmgjgq"
-    },
     "hk02908": {
       "code": "02908",
       "market": "hk",
@@ -98640,6 +98667,15 @@
       "name_en": "ASIA STRAT-10K",
       "py": "yazhoucelve(yiwan)",
       "abbr": "yzcl(yw)"
+    },
+    "hk02912": {
+      "code": "02912",
+      "market": "hk",
+      "type": "港",
+      "name": "永义国际",
+      "name_en": "EASYKNIT INT'L",
+      "py": "yongyiguoji",
+      "abbr": "yygj"
     },
     "hk02991": {
       "code": "02991",
@@ -105413,10 +105449,10 @@
       "code": "09963",
       "market": "hk",
       "type": "港",
-      "name": "高科桥",
-      "name_en": "TRANSTECH",
-      "py": "gaokeqiao",
-      "abbr": "gkq"
+      "name": "高科桥光导",
+      "name_en": "TRANSTECH OPTEL",
+      "py": "gaokeqiaoguangdao",
+      "abbr": "gkqgd"
     },
     "hk09966": {
       "code": "09966",
@@ -115561,15 +115597,6 @@
       "py": "",
       "abbr": ""
     },
-    "usavns": {
-      "code": "avns",
-      "market": "us",
-      "type": "美",
-      "name": "Avanos Medical Inc",
-      "name_en": "Avanos Medical Inc",
-      "py": "",
-      "abbr": ""
-    },
     "usavnt": {
       "code": "avnt",
       "market": "us",
@@ -124822,6 +124849,15 @@
       "py": "",
       "abbr": ""
     },
+    "uscapa": {
+      "code": "capa",
+      "market": "us",
+      "type": "美",
+      "name": "Defiance AI Capacitors Leaders",
+      "name_en": "Defiance AI Capacitors Leaders",
+      "py": "",
+      "abbr": ""
+    },
     "uscape": {
       "code": "cape",
       "market": "us",
@@ -131292,15 +131328,6 @@
       "name_en": "",
       "py": "chuangyidazhonghua",
       "abbr": "cydzh"
-    },
-    "uscred": {
-      "code": "cred",
-      "market": "us",
-      "type": "美",
-      "name": "Columbia Research Enhanced Real",
-      "name_en": "Columbia Research Enhanced Real",
-      "py": "",
-      "abbr": ""
     },
     "uscresy": {
       "code": "cresy",
@@ -140788,15 +140815,6 @@
       "py": "",
       "abbr": ""
     },
-    "usempg": {
-      "code": "empg",
-      "market": "us",
-      "type": "美",
-      "name": "Empro Group Inc",
-      "name_en": "Empro Group Inc",
-      "py": "",
-      "abbr": ""
-    },
     "usemqq": {
       "code": "emqq",
       "market": "us",
@@ -147328,15 +147346,6 @@
       "type": "美",
       "name": "flyExclusive Inc Wt",
       "name_en": "flyExclusive Inc Wt",
-      "py": "",
-      "abbr": ""
-    },
-    "usflzh": {
-      "code": "flzh",
-      "market": "us",
-      "type": "美",
-      "name": "Flash Sports & Media Holdings I",
-      "name_en": "Flash Sports & Media Holdings I",
       "py": "",
       "abbr": ""
     },
@@ -179695,12 +179704,48 @@
       "py": "",
       "abbr": ""
     },
+    "usmunf": {
+      "code": "munf",
+      "market": "us",
+      "type": "美",
+      "name": "Northern Trust 2036 Tax-Exempt",
+      "name_en": "Northern Trust 2036 Tax-Exempt",
+      "py": "",
+      "abbr": ""
+    },
+    "usmung": {
+      "code": "mung",
+      "market": "us",
+      "type": "美",
+      "name": "Northern Trust 2046 Tax-Exempt",
+      "name_en": "Northern Trust 2046 Tax-Exempt",
+      "py": "",
+      "abbr": ""
+    },
+    "usmunh": {
+      "code": "munh",
+      "market": "us",
+      "type": "美",
+      "name": "Northern Trust 2056 Tax-Exempt",
+      "name_en": "Northern Trust 2056 Tax-Exempt",
+      "py": "",
+      "abbr": ""
+    },
     "usmuni": {
       "code": "muni",
       "market": "us",
       "type": "美",
       "name": "PIMCO Intermediate Municipal Bo",
       "name_en": "PIMCO Intermediate Municipal Bo",
+      "py": "",
+      "abbr": ""
+    },
+    "usmunj": {
+      "code": "munj",
+      "market": "us",
+      "type": "美",
+      "name": "Northern Trust 2031 Tax-Exempt",
+      "name_en": "Northern Trust 2031 Tax-Exempt",
       "py": "",
       "abbr": ""
     },
@@ -179892,15 +179937,6 @@
       "name_en": "",
       "py": "erbeizuoduomrvletf-graniteshares",
       "abbr": "ebzdmrvletf-graniteshares"
-    },
-    "usmvo": {
-      "code": "mvo",
-      "market": "us",
-      "type": "美",
-      "name": "MV Oil Trust",
-      "name_en": "MV Oil Trust",
-      "py": "",
-      "abbr": ""
     },
     "usmvpa": {
       "code": "mvpa",
@@ -187840,24 +187876,6 @@
       "py": "",
       "abbr": ""
     },
-    "usosrh": {
-      "code": "osrh",
-      "market": "us",
-      "type": "美",
-      "name": "OSR Health Inc",
-      "name_en": "OSR Health Inc",
-      "py": "",
-      "abbr": ""
-    },
-    "usosrhw": {
-      "code": "osrhw",
-      "market": "us",
-      "type": "美",
-      "name": "OSR Health Inc Wt",
-      "name_en": "OSR Health Inc Wt",
-      "py": "",
-      "abbr": ""
-    },
     "usoss": {
       "code": "oss",
       "market": "us",
@@ -187936,6 +187954,15 @@
       "type": "美",
       "name": "Starlink AI Acquisition Corp Rt",
       "name_en": "Starlink AI Acquisition Corp Rt",
+      "py": "",
+      "abbr": ""
+    },
+    "usotax": {
+      "code": "otax",
+      "market": "us",
+      "type": "美",
+      "name": "Optimal Tax Managed Equity ETF",
+      "name_en": "Optimal Tax Managed Equity ETF",
       "py": "",
       "abbr": ""
     },
@@ -194410,6 +194437,15 @@
       "py": "peisheng",
       "abbr": "ps"
     },
+    "uspsox": {
+      "code": "psox",
+      "market": "us",
+      "type": "美",
+      "name": "Tema MLCC & PowerSemi ETF",
+      "name_en": "Tema MLCC & PowerSemi ETF",
+      "py": "",
+      "abbr": ""
+    },
     "uspsp": {
       "code": "psp",
       "market": "us",
@@ -200134,6 +200170,33 @@
       "py": "",
       "abbr": ""
     },
+    "usrnaq": {
+      "code": "rnaq",
+      "market": "us",
+      "type": "美",
+      "name": "Rainier Acquisition Corp-A",
+      "name_en": "Rainier Acquisition Corp-A",
+      "py": "",
+      "abbr": ""
+    },
+    "usrnaqu": {
+      "code": "rnaqu",
+      "market": "us",
+      "type": "美",
+      "name": "Rainier Acquisition Corp Unit C",
+      "name_en": "Rainier Acquisition Corp Unit C",
+      "py": "",
+      "abbr": ""
+    },
+    "usrnaqw": {
+      "code": "rnaqw",
+      "market": "us",
+      "type": "美",
+      "name": "Rainier Acquisition Corp Wt",
+      "name_en": "Rainier Acquisition Corp Wt",
+      "py": "",
+      "abbr": ""
+    },
     "usrnaz": {
       "code": "rnaz",
       "market": "us",
@@ -205281,15 +205344,6 @@
       "name_en": "",
       "py": "sibo",
       "abbr": "sb"
-    },
-    "ussic": {
-      "code": "sic",
-      "market": "us",
-      "type": "美",
-      "name": "Tema Power Semiconductor ETF",
-      "name_en": "Tema Power Semiconductor ETF",
-      "py": "",
-      "abbr": ""
     },
     "ussid": {
       "code": "sid",
@@ -213616,6 +213670,15 @@
       "py": "",
       "abbr": ""
     },
+    "ustgrz": {
+      "code": "tgrz",
+      "market": "us",
+      "type": "美",
+      "name": "China AI Tigers LLM ETF",
+      "name_en": "China AI Tigers LLM ETF",
+      "py": "",
+      "abbr": ""
+    },
     "ustgs": {
       "code": "tgs",
       "market": "us",
@@ -214126,6 +214189,42 @@
       "type": "美",
       "name": "Northern Trust 2055 Inflation-L",
       "name_en": "Northern Trust 2055 Inflation-L",
+      "py": "",
+      "abbr": ""
+    },
+    "ustipe": {
+      "code": "tipe",
+      "market": "us",
+      "type": "美",
+      "name": "Northern Trust 2031 Inflation-L",
+      "name_en": "Northern Trust 2031 Inflation-L",
+      "py": "",
+      "abbr": ""
+    },
+    "ustipf": {
+      "code": "tipf",
+      "market": "us",
+      "type": "美",
+      "name": "Northern Trust 2036 Inflation-L",
+      "name_en": "Northern Trust 2036 Inflation-L",
+      "py": "",
+      "abbr": ""
+    },
+    "ustipg": {
+      "code": "tipg",
+      "market": "us",
+      "type": "美",
+      "name": "Northern Trust 2046 Inflation-L",
+      "name_en": "Northern Trust 2046 Inflation-L",
+      "py": "",
+      "abbr": ""
+    },
+    "ustiph": {
+      "code": "tiph",
+      "market": "us",
+      "type": "美",
+      "name": "Northern Trust 2056 Inflation-L",
+      "name_en": "Northern Trust 2056 Inflation-L",
       "py": "",
       "abbr": ""
     },
@@ -222058,15 +222157,6 @@
       "py": "",
       "abbr": ""
     },
-    "usvln_ws": {
-      "code": "vln_ws",
-      "market": "us",
-      "type": "美",
-      "name": "Valens Semiconductor Ltd Wt",
-      "name_en": "Valens Semiconductor Ltd Wt",
-      "py": "",
-      "abbr": ""
-    },
     "usvlo": {
       "code": "vlo",
       "market": "us",
@@ -228292,6 +228382,15 @@
       "type": "美",
       "name": "FT Vest NVDA & Target Income ET",
       "name_en": "FT Vest NVDA & Target Income ET",
+      "py": "",
+      "abbr": ""
+    },
+    "usxvsp": {
+      "code": "xvsp",
+      "market": "us",
+      "type": "美",
+      "name": "FT Vest SPCX & Target Income ET",
+      "name_en": "FT Vest SPCX & Target Income ET",
       "py": "",
       "abbr": ""
     },
