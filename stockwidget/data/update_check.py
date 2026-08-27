@@ -1,8 +1,6 @@
 import re
 import requests
 
-from stockwidget.constants import CODES_BRANCHES, CODES_RAW_URL, LIST_FILES
-
 GITHUB_REPO = "sbr0574/StockWidget"
 GITEE_REPO = "sbr0574/StockWidget"
 GITHUB = "github"
@@ -32,22 +30,14 @@ def project_links(source: str = GITHUB) -> dict[str, str]:
     }
 
 
-def github_available(timeout: float = 2.5) -> bool:
-    """快速探测客户端实际使用的 GitHub raw 数据地址。"""
-    probe_url = CODES_RAW_URL.format(
-        branch=CODES_BRANCHES[0],
-        name=LIST_FILES[-1],
-    )
+def github_available(timeout=5):
     try:
-        resp = requests.get(
-            probe_url,
-            timeout=(timeout, timeout),
-            headers={"Cache-Control": "no-cache", "User-Agent": "StockWidget"},
-            stream=True,
+        r = requests.get(
+            "https://github.com/",
+            timeout=timeout,
+            headers={"User-Agent": "Mozilla/5.0"},
         )
-        available = resp.status_code == 200
-        resp.close()
-        return available
+        return r.ok and "GitHub" in r.text
     except requests.RequestException:
         return False
 
@@ -93,9 +83,3 @@ def get_update_info(current_version, source: str = GITHUB) -> tuple[bool, str | 
         return False, None, None
     has_update = _version_tuple(info["version"]) > _version_tuple(current_version)
     return has_update, info["version"], info["url"]
-
-
-def check_for_update(current_version, source: str = GITHUB) -> bool:
-    """检查指定远程源是否有比当前版本更新的版本。"""
-    has_update, _, _ = get_update_info(current_version, source)
-    return has_update

@@ -18,7 +18,7 @@ from stockwidget.constants import APP_NAME, APP_VERSION, CONFIG_FILE
 from stockwidget.core.config_store import load_file, save_file
 from stockwidget.data.code_lists import (
     CODES_RETRY_SECONDS,
-    beijing_today,
+    today,
     code_refresh_delay_seconds,
     code_data_state,
     download_code_files,
@@ -43,10 +43,10 @@ class App(QApplication):
         self._remote_source = GITHUB
 
         self.setQuitOnLastWindowClosed(False)
-        cfg = load_file(self.app_name, CONFIG_FILE)
+        cfg = load_file(CONFIG_FILE)
 
         # 两份代码表逐份选择本地缓存或内置资源，过期文件稍后独立更新。
-        codes_list = load_best_codes(self.app_name)
+        codes_list = load_best_codes()
 
         # 加载图标
         self._icon_choice = cfg.get('app_icon')
@@ -153,7 +153,7 @@ class App(QApplication):
 
     def _schedule_codes_refresh(self, delay_seconds: int | None = None):
         """有过期文件时安排首次或下一次代码表更新。"""
-        if not stale_code_files(self.app_name):
+        if not stale_code_files():
             self._codes_retry_timer.stop()
             return
         delay = (
@@ -174,14 +174,14 @@ class App(QApplication):
         if delay:
             self._codes_retry_timer.start(delay * 1000)
             return
-        pending = stale_code_files(self.app_name)
+        pending = stale_code_files()
         if not pending:
             return
 
         self._codes_refresh_running = True
         self.win.set_index_updating(True)
         self.win._show_message("正在更新市场代码数据…")
-        expected_date = beijing_today()
+        expected_date = today()
 
         def _worker():
             source = GITHUB if github_available() else GITEE
@@ -222,7 +222,7 @@ class App(QApplication):
     def _on_codes_refresh_finished(self, result: dict):
         self._codes_refresh_running = False
         self._remote_source = result.get("source") or self._remote_source
-        self.win.set_codes_list(load_best_codes(self.app_name))
+        self.win.set_codes_list(load_best_codes())
         self.win.set_index_updating(False)
         self.win._clear_message()
         if self.settings_dlg is not None and self.settings_dlg.isVisible():
@@ -231,7 +231,7 @@ class App(QApplication):
                 self.settings_dlg.refresh_about()
             except Exception:
                 pass
-        if stale_code_files(self.app_name):
+        if stale_code_files():
             self._schedule_codes_refresh(CODES_RETRY_SECONDS)
 
     def code_data_state(self) -> tuple:
