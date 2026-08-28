@@ -21,7 +21,7 @@ from stockwidget.platform.capabilities import (
     start_on_boot_supported,
     unsupported_tooltip,
 )
-from stockwidget.data.update_check import GITEE, GITHUB, project_links
+from stockwidget.data.update_check import github_available, project_links
 
 
 def _parse_positive_cost(value):
@@ -197,6 +197,7 @@ class SettingsDialog(QDialog):
         super().__init__(parent)
         self.win = win
         self.app = app
+        self._use_gitee_links = not github_available(timeout=2)
         self.ui = Ui_SettingDialog()
         self.ui.setupUi(self)
         self.setModal(False)
@@ -461,20 +462,16 @@ class SettingsDialog(QDialog):
         self.cmb_source.blockSignals(False)
 
     def refresh_data_state(self):
-        """更新“市场代码数据”状态文字：在线/缓存/离线 + 更新日期(yyyymmdd)。"""
+        """更新市场代码状态；qrc 与本地文件都属于缓存。"""
         if self.app is not None and hasattr(self.app, "code_data_state"):
             state, date = self.app.code_data_state()
         else:
-            state, date = "offline", ""
+            state, date = "cached", ""
         d = str(date or "").replace("-", "")
         if state == "current":
             text = f"✅ 市场代码数据：最新 ({d})"
-        elif state == "online":
-            text = f"✅ 市场代码数据：在线 ({d})"
-        elif state == "cached":
-            text = f"⚠️ 市场代码数据：缓存 ({d})"
         else:
-            text = f"❌ 市场代码数据：离线 ({d})"
+            text = f"⚠️ 市场代码数据：缓存 ({d})"
         self.label_data_state.setText(text)
 
     def eventFilter(self, obj, ev):
@@ -937,20 +934,17 @@ class SettingsDialog(QDialog):
         app_version = self.app.app_version if self.app is not None else "1.0.0"
         has_update = bool(self.app is not None and getattr(self.app, "_has_update", False))
         latest_version = getattr(self.app, "_latest_version", None) if self.app is not None else None
-        latest_url = getattr(self.app, "_latest_release_url", None) if self.app is not None else None
         if not has_update:
             latest_version = None
-        source = getattr(self.app, "_remote_source", GITHUB) if self.app is not None else GITHUB
-        links = project_links(source)
-        github_links = project_links(GITHUB)
-        gitee_links = project_links(GITEE)
-        latest_url = latest_url or links["releases"]
+        links = project_links(use_gitee=self._use_gitee_links)
+        github_links = project_links()
+        gitee_links = project_links(use_gitee=True)
 
         version_line = f"当前版本 v{app_version}"
         if latest_version:
             version_line += f" 最新 v{latest_version}"
         html = (
-            f'<p style="margin:2px 0;"><a href="{latest_url}" style="text-decoration:none; color:#4a90d9;">{version_line}</a></p>'
+            f'<p style="margin:2px 0;"><a href="{links["releases"]}" style="text-decoration:none; color:#4a90d9;">{version_line}</a></p>'
             f'<p style="margin:2px 0;"><a href="{links["license"]}" style="text-decoration:none; color:#4a90d9;">License</a> · '
             f'<a href="{links["readme"]}" style="text-decoration:none; color:#4a90d9;">使用帮助</a> · '
             f'<a href="{links["issues"]}" style="text-decoration:none; color:#4a90d9;">反馈建议</a></p>'

@@ -4,7 +4,14 @@
         <file>DarkSW.ico</file>
         <file>LightGlass.ico</file>
         <file>DarkGlass.ico</file>
-        <file>stock_codes_list.json</file>
-        <file>futures_codes_list.json</file>
+        <file>stock_sh.json</file>
+        <file>stock_sz.json</file>
+        <file>stock_bj.json</file>
+        <file>fund_cn.json</file>
+        <file>stock_hk.json</file>
+        <file>stock_us.json</file>
+        <file>index_cn.json</file>
+        <file>index_global.json</file>
+        <file>futures_sh.json</file>
     </qresource>
 </RCC>

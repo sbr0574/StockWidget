@@ -21,11 +21,14 @@ import requests
 
 from pypinyin import Style, pinyin
 
-# 脚本位于 <root>/scripts/，输出目录始终以仓库根目录为准。
+# 脚本位于 <root>/scripts/。服务器可用 CODES_OUTPUT_DIR 指向 codes-data
+# 工作树，确保失败分类保留数据分支中的上一版文件。
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUTPUT_DIR = os.environ.get("CODES_OUTPUT_DIR", os.path.join(ROOT, "resources"))
 
-STOCK_FILE = "stock_codes_list.json"      # 沪深京、港美股及全球主要指数列表
-FUTURES_FILE = "futures_codes_list.json"  # 上期所期货列表
+STATUS_FILE = "codes_update_status.json"
+TASK_ATTEMPTS = 3
+TASK_RETRY_SECONDS = (2, 5)
 
 _EM_CLIST_URL = "https://push2delay.eastmoney.com/api/qt/clist/get"
 _USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -507,53 +510,60 @@ def _offline_index_name_code() -> pd.DataFrame:
 
 # ----------------- 股指列表 -----------------
 
-def _run_frame_tasks(tasks: list[tuple]) -> list[pd.DataFrame]:
-    """并发拉取互不依赖的分类，按 tasks 原顺序返回，保证最终 JSON 稳定。"""
-    if not tasks:
-        return []
-    results: list[pd.DataFrame | None] = [None] * len(tasks)
-    failures: list[tuple[str, Exception]] = []
-    workers = min(6, len(tasks))
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = {}
-        for idx, task in enumerate(tasks):
-            label, func, args, kwargs = task
-            futures[pool.submit(func, *args, **kwargs)] = idx
-        for future in as_completed(futures):
-            idx = futures[future]
-            label = tasks[idx][0]
-            try:
-                result = future.result()
-                if result.empty:
-                    raise ValueError("返回列表为空")
-                results[idx] = result
-                print(f"{label}更新完成: {len(result)} 条", flush=True)
-            except Exception as exc:
-                traceback.print_exc()
-                results[idx] = pd.DataFrame(columns=_DF_COLUMNS)
-                failures.append((label, exc))
-                print(f"{label}更新失败", flush=True)
-    if failures:
-        labels = "、".join(label for label, _ in failures)
-        raise RuntimeError(f"以下分类拉取失败: {labels}；未写入 JSON") from failures[0][1]
-    return [df if df is not None else pd.DataFrame(columns=_DF_COLUMNS) for df in results]
-
 def _tasks() -> list[tuple]:
+    """每个任务只负责一个可独立更新和提交的 JSON。"""
     return [
-        ("沪市股票", _stock_sh_all, (), {}),
-        ("深市股票", _stock_sz_all, (), {}),
-        ("京市", _em_stock_df, ("m:0+t:81+s:2048", "京"), {"market": "bj"}),
-        ("沪深基金", _fund_exchange_all, (), {}),
-        ("国内指数", _index_cn_em, (), {}),
-        ("港股", _stock_hk_name_code, (), {}),
-        ("美股", _stock_us_name_code, (), {}),
-        ("离线指数", _offline_index_name_code, (), {}),
+        ("stock_sh.json", "沪市股票", _stock_sh_all, (), {}),
+        ("stock_sz.json", "深市股票", _stock_sz_all, (), {}),
+        ("stock_bj.json", "京市", _em_stock_df, ("m:0+t:81+s:2048", "京"), {"market": "bj"}),
+        ("fund_cn.json", "沪深基金", _fund_exchange_all, (), {}),
+        ("stock_hk.json", "港股", _stock_hk_name_code, (), {}),
+        ("stock_us.json", "美股", _stock_us_name_code, (), {}),
+        ("index_cn.json", "国内指数", _index_cn_em, (), {}),
+        ("index_global.json", "全球指数", _offline_index_name_code, (), {}),
+        ("futures_sh.json", "上期所期货", futures_info_all, (), {}),
     ]
 
-def stock_info_all() -> pd.DataFrame:
-    """非期货证券"""
-    frames = _run_frame_tasks(_tasks())
-    return pd.concat(frames, ignore_index=True)
+
+def _run_task(task: tuple) -> tuple[pd.DataFrame | None, str | None]:
+    """运行单个分类；首次失败后再重试两次，不影响其他分类。"""
+    _, label, func, args, kwargs = task
+    last_error = None
+    for attempt in range(1, TASK_ATTEMPTS + 1):
+        try:
+            result = func(*args, **kwargs)
+            if result.empty:
+                raise ValueError("返回列表为空")
+            print(f"{label}更新完成: {len(result)} 条", flush=True)
+            return result, None
+        except Exception as exc:
+            last_error = exc
+            traceback.print_exc()
+            if attempt < TASK_ATTEMPTS:
+                delay = TASK_RETRY_SECONDS[attempt - 1]
+                print(
+                    f"{label}第 {attempt} 次拉取失败，{delay} 秒后重试: {exc}",
+                    flush=True,
+                )
+                time.sleep(delay)
+    message = str(last_error or "未知错误")
+    print(f"::warning::{label}连续 {TASK_ATTEMPTS} 次拉取失败，保留旧文件: {message}")
+    return None, message
+
+
+def _run_tasks(tasks: list[tuple]) -> dict[str, tuple[pd.DataFrame | None, str | None]]:
+    """并发执行分类任务，返回每个文件的最终结果。"""
+    results = {}
+    with ThreadPoolExecutor(max_workers=min(6, len(tasks))) as pool:
+        pending = {pool.submit(_run_task, task): task for task in tasks}
+        for future in as_completed(pending):
+            filename = pending[future][0]
+            try:
+                results[filename] = future.result()
+            except Exception as exc:
+                traceback.print_exc()
+                results[filename] = (None, str(exc))
+    return results
 
 
 # ----------------- 上期所期货 -----------------
@@ -681,40 +691,97 @@ def _df_to_dict(df: pd.DataFrame) -> dict:
 
 # ---------------- 拉取市场列表并保存 ----------------
 
-def fetch_codes_groups() -> dict[str, dict]:
-    """拉取两组代码，返回 {文件名: {"last_update": "YYYY-MM-DD", "codes": {...}}}。"""
-    now = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d")
+def _load_json(path: str) -> dict:
+    try:
+        with open(path, "r", encoding="utf-8") as file:
+            data = json.load(file)
+        return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _save_json(path: str, data: dict) -> None:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as file:
+        json.dump(data, file, ensure_ascii=False, indent=2)
+        file.write("\n")
+    os.replace(tmp, path)
+
+
+def _iso_now() -> str:
+    return datetime.now(timezone(timedelta(hours=8))).isoformat(timespec="seconds")
+
+
+def _file_status_on_failure(previous: dict, existing: dict) -> dict:
     return {
-        STOCK_FILE: {
-            "last_update": now,
-            "codes": _df_to_dict(stock_info_all())
-        },
-        FUTURES_FILE: {
-            "last_update": now,
-            "codes": _df_to_dict(futures_info_all()),
-        },
+        "last_checked": str(previous.get("last_checked") or ""),
+        "last_update": str(
+            existing.get("last_update") or previous.get("last_update") or ""
+        ),
+        "updated": False,
+        "error": True,
     }
+
+
+def update_code_files(output_dir: str = OUTPUT_DIR) -> dict:
+    """更新所有分类并写状态文件；某一分类失败时保留其现有 JSON。"""
+    started_at = _iso_now()
+    run_date = started_at[:10]
+    status_path = os.path.join(output_dir, STATUS_FILE)
+    previous_status = _load_json(status_path).get("files", {})
+    tasks = _tasks()
+    results = _run_tasks(tasks)
+    file_states = {}
+
+    for filename, _, _, _, _ in tasks:
+        path = os.path.join(output_dir, filename)
+        existing = _load_json(path)
+        frame, error = results.get(filename, (None, "任务未返回结果"))
+        previous = previous_status.get(filename, {})
+        if frame is None or error:
+            file_states[filename] = _file_status_on_failure(previous, existing)
+            continue
+
+        codes = _df_to_dict(frame)
+        if not codes:
+            file_states[filename] = _file_status_on_failure(previous, existing)
+            continue
+
+        changed = existing.get("codes") != codes or not existing.get("last_update")
+        last_update = run_date if changed else str(existing.get("last_update") or run_date)
+        if changed:
+            _save_json(path, {"last_update": last_update, "codes": codes})
+        file_states[filename] = {
+            "last_checked": run_date,
+            "last_update": last_update,
+            "updated": changed,
+            "error": False,
+        }
+        action = "已更新" if changed else "无变化"
+        print(f"{filename}: {len(codes)} 条，{action}", flush=True)
+
+    status = {
+        "run_date": run_date,
+        "started_at": started_at,
+        "completed_at": _iso_now(),
+        "files": file_states,
+    }
+    _save_json(status_path, status)
+    failed = [name for name, state in file_states.items() if state["error"]]
+    if failed:
+        print(f"本次失败分类: {', '.join(failed)}；其他文件已正常处理", flush=True)
+    return status
+
 
 def main() -> int:
     try:
-        groups = fetch_codes_groups()
+        update_code_files()
+        return 0
     except Exception as exc:
         traceback.print_exc()
-        print(f"::error::拉取代码列表失败: {exc}")
+        print(f"::error::代码列表更新流程失败: {exc}")
         return 1
-
-    resources_dir = os.path.join(ROOT, "resources")
-    os.makedirs(resources_dir, exist_ok=True)
-    for fname, data in groups.items():
-        path = os.path.join(resources_dir, fname)
-        tmp = path + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        os.replace(tmp, path)
-
-    for fname, data in groups.items():
-        print(f"更新 {fname}: {len(data.get('codes', {}))} 条")
-    return 0
 
 
 if __name__ == "__main__":

@@ -1,0 +1,3137 @@
+{
+  "last_update": "2026-08-27",
+  "codes": {
+    "bj810011": {
+      "code": "810011",
+      "market": "bj",
+      "type": "京",
+      "name": "优机定转",
+      "name_en": "",
+      "py": "youjidingzhuan",
+      "abbr": "yjdz"
+    },
+    "bj810013": {
+      "code": "810013",
+      "market": "bj",
+      "type": "京",
+      "name": "万通定转",
+      "name_en": "",
+      "py": "wantongdingzhuan",
+      "abbr": "wtdz"
+    },
+    "bj810014": {
+      "code": "810014",
+      "market": "bj",
+      "type": "京",
+      "name": "莱特定转",
+      "name_en": "",
+      "py": "laitedingzhuan",
+      "abbr": "ltdz"
+    },
+    "bj832317": {
+      "code": "832317",
+      "market": "bj",
+      "type": "京",
+      "name": "观典防务",
+      "name_en": "",
+      "py": "guandianfangwu",
+      "abbr": "gdfw"
+    },
+    "bj833874": {
+      "code": "833874",
+      "market": "bj",
+      "type": "京",
+      "name": "泰祥股份",
+      "name_en": "",
+      "py": "taixianggufen",
+      "abbr": "txgf"
+    },
+    "bj833994": {
+      "code": "833994",
+      "market": "bj",
+      "type": "京",
+      "name": "翰博高新",
+      "name_en": "",
+      "py": "hanbogaoxin",
+      "abbr": "hbgx"
+    },
+    "bj920000": {
+      "code": "920000",
+      "market": "bj",
+      "type": "京",
+      "name": "安徽凤凰",
+      "name_en": "",
+      "py": "anhuifenghuang",
+      "abbr": "ahfh"
+    },
+    "bj920001": {
+      "code": "920001",
+      "market": "bj",
+      "type": "京",
+      "name": "纬达光电",
+      "name_en": "",
+      "py": "weidaguangdian",
+      "abbr": "wdgd"
+    },
+    "bj920002": {
+      "code": "920002",
+      "market": "bj",
+      "type": "京",
+      "name": "万达轴承",
+      "name_en": "",
+      "py": "wandazhoucheng",
+      "abbr": "wdzc"
+    },
+    "bj920003": {
+      "code": "920003",
+      "market": "bj",
+      "type": "京",
+      "name": "中诚咨询",
+      "name_en": "",
+      "py": "zhongchengzixun",
+      "abbr": "zczx"
+    },
+    "bj920005": {
+      "code": "920005",
+      "market": "bj",
+      "type": "京",
+      "name": "鼎佳精密",
+      "name_en": "",
+      "py": "dingjiajingmi",
+      "abbr": "djjm"
+    },
+    "bj920006": {
+      "code": "920006",
+      "market": "bj",
+      "type": "京",
+      "name": "晟楠科技",
+      "name_en": "",
+      "py": "chengnankeji",
+      "abbr": "cnkj"
+    },
+    "bj920007": {
+      "code": "920007",
+      "market": "bj",
+      "type": "京",
+      "name": "酉立智能",
+      "name_en": "",
+      "py": "youlizhineng",
+      "abbr": "ylzn"
+    },
+    "bj920008": {
+      "code": "920008",
+      "market": "bj",
+      "type": "京",
+      "name": "成电光信",
+      "name_en": "",
+      "py": "chengdianguangxin",
+      "abbr": "cdgx"
+    },
+    "bj920009": {
+      "code": "920009",
+      "market": "bj",
+      "type": "京",
+      "name": "丹娜生物",
+      "name_en": "",
+      "py": "dannashengwu",
+      "abbr": "dnsw"
+    },
+    "bj920010": {
+      "code": "920010",
+      "market": "bj",
+      "type": "京",
+      "name": "凯添燃气",
+      "name_en": "",
+      "py": "kaitianranqi",
+      "abbr": "ktrq"
+    },
+    "bj920011": {
+      "code": "920011",
+      "market": "bj",
+      "type": "京",
+      "name": "晨光电机",
+      "name_en": "",
+      "py": "chenguangdianji",
+      "abbr": "cgdj"
+    },
+    "bj920012": {
+      "code": "920012",
+      "market": "bj",
+      "type": "京",
+      "name": "创达新材",
+      "name_en": "",
+      "py": "chuangdaxincai",
+      "abbr": "cdxc"
+    },
+    "bj920014": {
+      "code": "920014",
+      "market": "bj",
+      "type": "京",
+      "name": "特瑞斯",
+      "name_en": "",
+      "py": "teruisi",
+      "abbr": "trs"
+    },
+    "bj920015": {
+      "code": "920015",
+      "market": "bj",
+      "type": "京",
+      "name": "锦华新材",
+      "name_en": "",
+      "py": "jinhuaxincai",
+      "abbr": "jhxc"
+    },
+    "bj920016": {
+      "code": "920016",
+      "market": "bj",
+      "type": "京",
+      "name": "中草香料",
+      "name_en": "",
+      "py": "zhongcaoxiangliao",
+      "abbr": "zcxl"
+    },
+    "bj920017": {
+      "code": "920017",
+      "market": "bj",
+      "type": "京",
+      "name": "星昊医药",
+      "name_en": "",
+      "py": "xinghaoyiyao",
+      "abbr": "xhyy"
+    },
+    "bj920018": {
+      "code": "920018",
+      "market": "bj",
+      "type": "京",
+      "name": "宏远股份",
+      "name_en": "",
+      "py": "hongyuangufen",
+      "abbr": "hygf"
+    },
+    "bj920019": {
+      "code": "920019",
+      "market": "bj",
+      "type": "京",
+      "name": "铜冠矿建",
+      "name_en": "",
+      "py": "tongguankuangjian",
+      "abbr": "tgkj"
+    },
+    "bj920020": {
+      "code": "920020",
+      "market": "bj",
+      "type": "京",
+      "name": "泰凯英",
+      "name_en": "",
+      "py": "taikaiying",
+      "abbr": "tky"
+    },
+    "bj920021": {
+      "code": "920021",
+      "market": "bj",
+      "type": "京",
+      "name": "流金科技",
+      "name_en": "",
+      "py": "liujinkeji",
+      "abbr": "ljkj"
+    },
+    "bj920022": {
+      "code": "920022",
+      "market": "bj",
+      "type": "京",
+      "name": "世昌股份",
+      "name_en": "",
+      "py": "shichanggufen",
+      "abbr": "scgf"
+    },
+    "bj920023": {
+      "code": "920023",
+      "market": "bj",
+      "type": "京",
+      "name": "*ST田野",
+      "name_en": "",
+      "py": "*sttianye",
+      "abbr": "*stty"
+    },
+    "bj920026": {
+      "code": "920026",
+      "market": "bj",
+      "type": "京",
+      "name": "卓兆点胶",
+      "name_en": "",
+      "py": "zhuozhaodianjiao",
+      "abbr": "zzdj"
+    },
+    "bj920027": {
+      "code": "920027",
+      "market": "bj",
+      "type": "京",
+      "name": "交大铁发",
+      "name_en": "",
+      "py": "jiaodatiefa",
+      "abbr": "jdtf"
+    },
+    "bj920028": {
+      "code": "920028",
+      "market": "bj",
+      "type": "京",
+      "name": "新恒泰",
+      "name_en": "",
+      "py": "xinhengtai",
+      "abbr": "xht"
+    },
+    "bj920029": {
+      "code": "920029",
+      "market": "bj",
+      "type": "京",
+      "name": "开发科技",
+      "name_en": "",
+      "py": "kaifakeji",
+      "abbr": "kfkj"
+    },
+    "bj920030": {
+      "code": "920030",
+      "market": "bj",
+      "type": "京",
+      "name": "德众汽车",
+      "name_en": "",
+      "py": "dezhongqiche",
+      "abbr": "dzqc"
+    },
+    "bj920033": {
+      "code": "920033",
+      "market": "bj",
+      "type": "京",
+      "name": "康普化学",
+      "name_en": "",
+      "py": "kangpuhuaxue",
+      "abbr": "kphx"
+    },
+    "bj920035": {
+      "code": "920035",
+      "market": "bj",
+      "type": "京",
+      "name": "精创电气",
+      "name_en": "",
+      "py": "jingchuangdianqi",
+      "abbr": "jcdq"
+    },
+    "bj920036": {
+      "code": "920036",
+      "market": "bj",
+      "type": "京",
+      "name": "觅睿科技",
+      "name_en": "",
+      "py": "miruikeji",
+      "abbr": "mrkj"
+    },
+    "bj920037": {
+      "code": "920037",
+      "market": "bj",
+      "type": "京",
+      "name": "广信科技",
+      "name_en": "",
+      "py": "guangxinkeji",
+      "abbr": "gxkj"
+    },
+    "bj920038": {
+      "code": "920038",
+      "market": "bj",
+      "type": "京",
+      "name": "森合高科",
+      "name_en": "",
+      "py": "senhegaoke",
+      "abbr": "shgk"
+    },
+    "bj920039": {
+      "code": "920039",
+      "market": "bj",
+      "type": "京",
+      "name": "国义招标",
+      "name_en": "",
+      "py": "guoyizhaobiao",
+      "abbr": "gyzb"
+    },
+    "bj920045": {
+      "code": "920045",
+      "market": "bj",
+      "type": "京",
+      "name": "蘅东光",
+      "name_en": "",
+      "py": "hengdongguang",
+      "abbr": "hdg"
+    },
+    "bj920046": {
+      "code": "920046",
+      "market": "bj",
+      "type": "京",
+      "name": "亿能电力",
+      "name_en": "",
+      "py": "yinengdianli",
+      "abbr": "yndl"
+    },
+    "bj920047": {
+      "code": "920047",
+      "market": "bj",
+      "type": "京",
+      "name": "诺思兰德",
+      "name_en": "",
+      "py": "nuosilande",
+      "abbr": "nsld"
+    },
+    "bj920050": {
+      "code": "920050",
+      "market": "bj",
+      "type": "京",
+      "name": "爱伦医疗",
+      "name_en": "",
+      "py": "ailunyiliao",
+      "abbr": "alyl"
+    },
+    "bj920055": {
+      "code": "920055",
+      "market": "bj",
+      "type": "京",
+      "name": "隆源股份",
+      "name_en": "",
+      "py": "longyuangufen",
+      "abbr": "lygf"
+    },
+    "bj920056": {
+      "code": "920056",
+      "market": "bj",
+      "type": "京",
+      "name": "能之光",
+      "name_en": "",
+      "py": "nengzhiguang",
+      "abbr": "nzg"
+    },
+    "bj920057": {
+      "code": "920057",
+      "market": "bj",
+      "type": "京",
+      "name": "百甲科技",
+      "name_en": "",
+      "py": "baijiakeji",
+      "abbr": "bjkj"
+    },
+    "bj920058": {
+      "code": "920058",
+      "market": "bj",
+      "type": "京",
+      "name": "华洋赛车",
+      "name_en": "",
+      "py": "huayangsaiche",
+      "abbr": "hysc"
+    },
+    "bj920059": {
+      "code": "920059",
+      "market": "bj",
+      "type": "京",
+      "name": "双英集团",
+      "name_en": "",
+      "py": "shuangyingjituan",
+      "abbr": "syjt"
+    },
+    "bj920060": {
+      "code": "920060",
+      "market": "bj",
+      "type": "京",
+      "name": "万源通",
+      "name_en": "",
+      "py": "wanyuantong",
+      "abbr": "wyt"
+    },
+    "bj920061": {
+      "code": "920061",
+      "market": "bj",
+      "type": "京",
+      "name": "西磁科技",
+      "name_en": "",
+      "py": "xicikeji",
+      "abbr": "xckj"
+    },
+    "bj920062": {
+      "code": "920062",
+      "market": "bj",
+      "type": "京",
+      "name": "科润智控",
+      "name_en": "",
+      "py": "kerunzhikong",
+      "abbr": "krzk"
+    },
+    "bj920065": {
+      "code": "920065",
+      "market": "bj",
+      "type": "京",
+      "name": "千岸科技",
+      "name_en": "",
+      "py": "qianankeji",
+      "abbr": "qakj"
+    },
+    "bj920066": {
+      "code": "920066",
+      "market": "bj",
+      "type": "京",
+      "name": "科拜尔",
+      "name_en": "",
+      "py": "kebaier",
+      "abbr": "kbe"
+    },
+    "bj920068": {
+      "code": "920068",
+      "market": "bj",
+      "type": "京",
+      "name": "天工股份",
+      "name_en": "",
+      "py": "tiangonggufen",
+      "abbr": "tggf"
+    },
+    "bj920069": {
+      "code": "920069",
+      "market": "bj",
+      "type": "京",
+      "name": "普昂医疗",
+      "name_en": "",
+      "py": "puangyiliao",
+      "abbr": "payl"
+    },
+    "bj920071": {
+      "code": "920071",
+      "market": "bj",
+      "type": "京",
+      "name": "金钛股份",
+      "name_en": "",
+      "py": "jintaigufen",
+      "abbr": "jtgf"
+    },
+    "bj920072": {
+      "code": "920072",
+      "market": "bj",
+      "type": "京",
+      "name": "科莱瑞迪",
+      "name_en": "",
+      "py": "kelairuidi",
+      "abbr": "klrd"
+    },
+    "bj920075": {
+      "code": "920075",
+      "market": "bj",
+      "type": "京",
+      "name": "柏星龙",
+      "name_en": "",
+      "py": "baixinglong",
+      "abbr": "bxl"
+    },
+    "bj920076": {
+      "code": "920076",
+      "market": "bj",
+      "type": "京",
+      "name": "国亮新材",
+      "name_en": "",
+      "py": "guoliangxincai",
+      "abbr": "glxc"
+    },
+    "bj920077": {
+      "code": "920077",
+      "market": "bj",
+      "type": "京",
+      "name": "吉林碳谷",
+      "name_en": "",
+      "py": "jilintangu",
+      "abbr": "jltg"
+    },
+    "bj920078": {
+      "code": "920078",
+      "market": "bj",
+      "type": "京",
+      "name": "族兴新材",
+      "name_en": "",
+      "py": "zuxingxincai",
+      "abbr": "zxxc"
+    },
+    "bj920079": {
+      "code": "920079",
+      "market": "bj",
+      "type": "京",
+      "name": "乔路铭",
+      "name_en": "",
+      "py": "qiaoluming",
+      "abbr": "qlm"
+    },
+    "bj920080": {
+      "code": "920080",
+      "market": "bj",
+      "type": "京",
+      "name": "奥美森",
+      "name_en": "",
+      "py": "aomeisen",
+      "abbr": "ams"
+    },
+    "bj920081": {
+      "code": "920081",
+      "market": "bj",
+      "type": "京",
+      "name": "欧伦电气",
+      "name_en": "",
+      "py": "oulundianqi",
+      "abbr": "oldq"
+    },
+    "bj920082": {
+      "code": "920082",
+      "market": "bj",
+      "type": "京",
+      "name": "方正阀门",
+      "name_en": "",
+      "py": "fangzhengfamen",
+      "abbr": "fzfm"
+    },
+    "bj920083": {
+      "code": "920083",
+      "market": "bj",
+      "type": "京",
+      "name": "金戈新材",
+      "name_en": "",
+      "py": "jingexincai",
+      "abbr": "jgxc"
+    },
+    "bj920086": {
+      "code": "920086",
+      "market": "bj",
+      "type": "京",
+      "name": "科马材料",
+      "name_en": "",
+      "py": "kemacailiao",
+      "abbr": "kmcl"
+    },
+    "bj920087": {
+      "code": "920087",
+      "market": "bj",
+      "type": "京",
+      "name": "秋乐种业",
+      "name_en": "",
+      "py": "qiulezhongye",
+      "abbr": "qlzy"
+    },
+    "bj920088": {
+      "code": "920088",
+      "market": "bj",
+      "type": "京",
+      "name": "科力股份",
+      "name_en": "",
+      "py": "keligufen",
+      "abbr": "klgf"
+    },
+    "bj920089": {
+      "code": "920089",
+      "market": "bj",
+      "type": "京",
+      "name": "禾昌聚合",
+      "name_en": "",
+      "py": "hechangjuhe",
+      "abbr": "hcjh"
+    },
+    "bj920090": {
+      "code": "920090",
+      "market": "bj",
+      "type": "京",
+      "name": "*ST同辉",
+      "name_en": "",
+      "py": "*sttonghui",
+      "abbr": "*stth"
+    },
+    "bj920091": {
+      "code": "920091",
+      "market": "bj",
+      "type": "京",
+      "name": "大鹏工业",
+      "name_en": "",
+      "py": "dapenggongye",
+      "abbr": "dpgy"
+    },
+    "bj920092": {
+      "code": "920092",
+      "market": "bj",
+      "type": "京",
+      "name": "汉鑫科技",
+      "name_en": "",
+      "py": "hanxinkeji",
+      "abbr": "hxkj"
+    },
+    "bj920093": {
+      "code": "920093",
+      "market": "bj",
+      "type": "京",
+      "name": "信胜科技",
+      "name_en": "",
+      "py": "xinshengkeji",
+      "abbr": "xskj"
+    },
+    "bj920096": {
+      "code": "920096",
+      "market": "bj",
+      "type": "京",
+      "name": "嘉晨智能",
+      "name_en": "",
+      "py": "jiachenzhineng",
+      "abbr": "jczn"
+    },
+    "bj920098": {
+      "code": "920098",
+      "market": "bj",
+      "type": "京",
+      "name": "科隆新材",
+      "name_en": "",
+      "py": "kelongxincai",
+      "abbr": "klxc"
+    },
+    "bj920099": {
+      "code": "920099",
+      "market": "bj",
+      "type": "京",
+      "name": "瑞华技术",
+      "name_en": "",
+      "py": "ruihuajishu",
+      "abbr": "rhjs"
+    },
+    "bj920100": {
+      "code": "920100",
+      "market": "bj",
+      "type": "京",
+      "name": "三协电机",
+      "name_en": "",
+      "py": "sanxiedianji",
+      "abbr": "sxdj"
+    },
+    "bj920101": {
+      "code": "920101",
+      "market": "bj",
+      "type": "京",
+      "name": "志高机械",
+      "name_en": "",
+      "py": "zhigaojixie",
+      "abbr": "zgjx"
+    },
+    "bj920106": {
+      "code": "920106",
+      "market": "bj",
+      "type": "京",
+      "name": "林泰新材",
+      "name_en": "",
+      "py": "lintaixincai",
+      "abbr": "ltxc"
+    },
+    "bj920107": {
+      "code": "920107",
+      "market": "bj",
+      "type": "京",
+      "name": "恒兴股份",
+      "name_en": "",
+      "py": "hengxinggufen",
+      "abbr": "hxgf"
+    },
+    "bj920108": {
+      "code": "920108",
+      "market": "bj",
+      "type": "京",
+      "name": "宏海科技",
+      "name_en": "",
+      "py": "honghaikeji",
+      "abbr": "hhkj"
+    },
+    "bj920110": {
+      "code": "920110",
+      "market": "bj",
+      "type": "京",
+      "name": "雷特科技",
+      "name_en": "",
+      "py": "leitekeji",
+      "abbr": "ltkj"
+    },
+    "bj920111": {
+      "code": "920111",
+      "market": "bj",
+      "type": "京",
+      "name": "聚星科技",
+      "name_en": "",
+      "py": "juxingkeji",
+      "abbr": "jxkj"
+    },
+    "bj920112": {
+      "code": "920112",
+      "market": "bj",
+      "type": "京",
+      "name": "巴兰仕",
+      "name_en": "",
+      "py": "balanshi",
+      "abbr": "bls"
+    },
+    "bj920116": {
+      "code": "920116",
+      "market": "bj",
+      "type": "京",
+      "name": "星图测控",
+      "name_en": "",
+      "py": "xingtucekong",
+      "abbr": "xtck"
+    },
+    "bj920117": {
+      "code": "920117",
+      "market": "bj",
+      "type": "京",
+      "name": "龙鑫智能",
+      "name_en": "",
+      "py": "longxinzhineng",
+      "abbr": "lxzn"
+    },
+    "bj920118": {
+      "code": "920118",
+      "market": "bj",
+      "type": "京",
+      "name": "太湖远大",
+      "name_en": "",
+      "py": "taihuyuanda",
+      "abbr": "thyd"
+    },
+    "bj920119": {
+      "code": "920119",
+      "market": "bj",
+      "type": "京",
+      "name": "美德乐",
+      "name_en": "",
+      "py": "meidele",
+      "abbr": "mdl"
+    },
+    "bj920121": {
+      "code": "920121",
+      "market": "bj",
+      "type": "京",
+      "name": "江天科技",
+      "name_en": "",
+      "py": "jiangtiankeji",
+      "abbr": "jtkj"
+    },
+    "bj920122": {
+      "code": "920122",
+      "market": "bj",
+      "type": "京",
+      "name": "中纺标",
+      "name_en": "",
+      "py": "zhongfangbiao",
+      "abbr": "zfb"
+    },
+    "bj920123": {
+      "code": "920123",
+      "market": "bj",
+      "type": "京",
+      "name": "芭薇股份",
+      "name_en": "",
+      "py": "baweigufen",
+      "abbr": "bwgf"
+    },
+    "bj920124": {
+      "code": "920124",
+      "market": "bj",
+      "type": "京",
+      "name": "南特科技",
+      "name_en": "",
+      "py": "nantekeji",
+      "abbr": "ntkj"
+    },
+    "bj920125": {
+      "code": "920125",
+      "market": "bj",
+      "type": "京",
+      "name": "鸿仕达",
+      "name_en": "",
+      "py": "hongshida",
+      "abbr": "hsd"
+    },
+    "bj920126": {
+      "code": "920126",
+      "market": "bj",
+      "type": "京",
+      "name": "永大股份",
+      "name_en": "",
+      "py": "yongdagufen",
+      "abbr": "ydgf"
+    },
+    "bj920128": {
+      "code": "920128",
+      "market": "bj",
+      "type": "京",
+      "name": "胜业电气",
+      "name_en": "",
+      "py": "shengyedianqi",
+      "abbr": "sydq"
+    },
+    "bj920130": {
+      "code": "920130",
+      "market": "bj",
+      "type": "京",
+      "name": "立方控股",
+      "name_en": "",
+      "py": "lifangkonggu",
+      "abbr": "lfkg"
+    },
+    "bj920132": {
+      "code": "920132",
+      "market": "bj",
+      "type": "京",
+      "name": "泰鹏智能",
+      "name_en": "",
+      "py": "taipengzhineng",
+      "abbr": "tpzn"
+    },
+    "bj920136": {
+      "code": "920136",
+      "market": "bj",
+      "type": "京",
+      "name": "永励精密",
+      "name_en": "",
+      "py": "yonglijingmi",
+      "abbr": "yljm"
+    },
+    "bj920138": {
+      "code": "920138",
+      "market": "bj",
+      "type": "京",
+      "name": "杰理科技",
+      "name_en": "",
+      "py": "jielikeji",
+      "abbr": "jlkj"
+    },
+    "bj920139": {
+      "code": "920139",
+      "market": "bj",
+      "type": "京",
+      "name": "华岭股份",
+      "name_en": "",
+      "py": "hualinggufen",
+      "abbr": "hlgf"
+    },
+    "bj920145": {
+      "code": "920145",
+      "market": "bj",
+      "type": "京",
+      "name": "恒合股份",
+      "name_en": "",
+      "py": "henghegufen",
+      "abbr": "hhgf"
+    },
+    "bj920146": {
+      "code": "920146",
+      "market": "bj",
+      "type": "京",
+      "name": "华阳变速",
+      "name_en": "",
+      "py": "huayangbiansu",
+      "abbr": "hybs"
+    },
+    "bj920149": {
+      "code": "920149",
+      "market": "bj",
+      "type": "京",
+      "name": "旭杰科技",
+      "name_en": "",
+      "py": "xujiekeji",
+      "abbr": "xjkj"
+    },
+    "bj920152": {
+      "code": "920152",
+      "market": "bj",
+      "type": "京",
+      "name": "昆工科技",
+      "name_en": "",
+      "py": "kungongkeji",
+      "abbr": "kgkj"
+    },
+    "bj920156": {
+      "code": "920156",
+      "market": "bj",
+      "type": "京",
+      "name": "海昌智能",
+      "name_en": "",
+      "py": "haichangzhineng",
+      "abbr": "hczn"
+    },
+    "bj920158": {
+      "code": "920158",
+      "market": "bj",
+      "type": "京",
+      "name": "长江能科",
+      "name_en": "",
+      "py": "changjiangnengke",
+      "abbr": "cjnk"
+    },
+    "bj920159": {
+      "code": "920159",
+      "market": "bj",
+      "type": "京",
+      "name": "农大科技",
+      "name_en": "",
+      "py": "nongdakeji",
+      "abbr": "ndkj"
+    },
+    "bj920160": {
+      "code": "920160",
+      "market": "bj",
+      "type": "京",
+      "name": "北矿检测",
+      "name_en": "",
+      "py": "beikuangjiance",
+      "abbr": "bkjc"
+    },
+    "bj920161": {
+      "code": "920161",
+      "market": "bj",
+      "type": "京",
+      "name": "龙辰科技",
+      "name_en": "",
+      "py": "longchenkeji",
+      "abbr": "lckj"
+    },
+    "bj920163": {
+      "code": "920163",
+      "market": "bj",
+      "type": "京",
+      "name": "方大新材",
+      "name_en": "",
+      "py": "fangdaxincai",
+      "abbr": "fdxc"
+    },
+    "bj920165": {
+      "code": "920165",
+      "market": "bj",
+      "type": "京",
+      "name": "珈凯生物",
+      "name_en": "",
+      "py": "jiakaishengwu",
+      "abbr": "jksw"
+    },
+    "bj920166": {
+      "code": "920166",
+      "market": "bj",
+      "type": "京",
+      "name": "海圣医疗",
+      "name_en": "",
+      "py": "haishengyiliao",
+      "abbr": "hsyl"
+    },
+    "bj920167": {
+      "code": "920167",
+      "market": "bj",
+      "type": "京",
+      "name": "同享科技",
+      "name_en": "",
+      "py": "tongxiangkeji",
+      "abbr": "txkj"
+    },
+    "bj920168": {
+      "code": "920168",
+      "market": "bj",
+      "type": "京",
+      "name": "通宝光电",
+      "name_en": "",
+      "py": "tongbaoguangdian",
+      "abbr": "tbgd"
+    },
+    "bj920169": {
+      "code": "920169",
+      "market": "bj",
+      "type": "京",
+      "name": "七丰精工",
+      "name_en": "",
+      "py": "qifengjinggong",
+      "abbr": "qfjg"
+    },
+    "bj920171": {
+      "code": "920171",
+      "market": "bj",
+      "type": "京",
+      "name": "志晟信息",
+      "name_en": "",
+      "py": "zhichengxinxi",
+      "abbr": "zcxx"
+    },
+    "bj920174": {
+      "code": "920174",
+      "market": "bj",
+      "type": "京",
+      "name": "五新智能",
+      "name_en": "",
+      "py": "wuxinzhineng",
+      "abbr": "wxzn"
+    },
+    "bj920175": {
+      "code": "920175",
+      "market": "bj",
+      "type": "京",
+      "name": "东方碳素",
+      "name_en": "",
+      "py": "dongfangtansu",
+      "abbr": "dfts"
+    },
+    "bj920176": {
+      "code": "920176",
+      "market": "bj",
+      "type": "京",
+      "name": "维琪科技",
+      "name_en": "",
+      "py": "weiqikeji",
+      "abbr": "wqkj"
+    },
+    "bj920177": {
+      "code": "920177",
+      "market": "bj",
+      "type": "京",
+      "name": "恒道科技",
+      "name_en": "",
+      "py": "hengdaokeji",
+      "abbr": "hdkj"
+    },
+    "bj920178": {
+      "code": "920178",
+      "market": "bj",
+      "type": "京",
+      "name": "锐翔智能",
+      "name_en": "",
+      "py": "ruixiangzhineng",
+      "abbr": "rxzn"
+    },
+    "bj920179": {
+      "code": "920179",
+      "market": "bj",
+      "type": "京",
+      "name": "凯德石英",
+      "name_en": "",
+      "py": "kaideshiying",
+      "abbr": "kdsy"
+    },
+    "bj920180": {
+      "code": "920180",
+      "market": "bj",
+      "type": "京",
+      "name": "爱得科技",
+      "name_en": "",
+      "py": "aidekeji",
+      "abbr": "adkj"
+    },
+    "bj920181": {
+      "code": "920181",
+      "market": "bj",
+      "type": "京",
+      "name": "赛英电子",
+      "name_en": "",
+      "py": "saiyingdianzi",
+      "abbr": "sydz"
+    },
+    "bj920183": {
+      "code": "920183",
+      "market": "bj",
+      "type": "京",
+      "name": "海菲曼",
+      "name_en": "",
+      "py": "haifeiman",
+      "abbr": "hfm"
+    },
+    "bj920184": {
+      "code": "920184",
+      "market": "bj",
+      "type": "京",
+      "name": "国源科技",
+      "name_en": "",
+      "py": "guoyuankeji",
+      "abbr": "gykj"
+    },
+    "bj920185": {
+      "code": "920185",
+      "market": "bj",
+      "type": "京",
+      "name": "贝特瑞",
+      "name_en": "",
+      "py": "beiterui",
+      "abbr": "btr"
+    },
+    "bj920186": {
+      "code": "920186",
+      "market": "bj",
+      "type": "京",
+      "name": "中科仪",
+      "name_en": "",
+      "py": "zhongkeyi",
+      "abbr": "zky"
+    },
+    "bj920187": {
+      "code": "920187",
+      "market": "bj",
+      "type": "京",
+      "name": "通领科技",
+      "name_en": "",
+      "py": "tonglingkeji",
+      "abbr": "tlkj"
+    },
+    "bj920188": {
+      "code": "920188",
+      "market": "bj",
+      "type": "京",
+      "name": "悦龙科技",
+      "name_en": "",
+      "py": "yuelongkeji",
+      "abbr": "ylkj"
+    },
+    "bj920189": {
+      "code": "920189",
+      "market": "bj",
+      "type": "京",
+      "name": "康美特",
+      "name_en": "",
+      "py": "kangmeite",
+      "abbr": "kmt"
+    },
+    "bj920190": {
+      "code": "920190",
+      "market": "bj",
+      "type": "京",
+      "name": "雷神科技",
+      "name_en": "",
+      "py": "leishenkeji",
+      "abbr": "lskj"
+    },
+    "bj920191": {
+      "code": "920191",
+      "market": "bj",
+      "type": "京",
+      "name": "瑞尔竞达",
+      "name_en": "",
+      "py": "ruierjingda",
+      "abbr": "rejd"
+    },
+    "bj920193": {
+      "code": "920193",
+      "market": "bj",
+      "type": "京",
+      "name": "吉和昌",
+      "name_en": "",
+      "py": "jihechang",
+      "abbr": "jhc"
+    },
+    "bj920195": {
+      "code": "920195",
+      "market": "bj",
+      "type": "京",
+      "name": "三祥科技",
+      "name_en": "",
+      "py": "sanxiangkeji",
+      "abbr": "sxkj"
+    },
+    "bj920198": {
+      "code": "920198",
+      "market": "bj",
+      "type": "京",
+      "name": "微创光电",
+      "name_en": "",
+      "py": "weichuangguangdian",
+      "abbr": "wcgd"
+    },
+    "bj920199": {
+      "code": "920199",
+      "market": "bj",
+      "type": "京",
+      "name": "倍益康",
+      "name_en": "",
+      "py": "beiyikang",
+      "abbr": "byk"
+    },
+    "bj920200": {
+      "code": "920200",
+      "market": "bj",
+      "type": "京",
+      "name": "振宏股份",
+      "name_en": "",
+      "py": "zhenhonggufen",
+      "abbr": "zhgf"
+    },
+    "bj920204": {
+      "code": "920204",
+      "market": "bj",
+      "type": "京",
+      "name": "沪江材料",
+      "name_en": "",
+      "py": "hujiangcailiao",
+      "abbr": "hjcl"
+    },
+    "bj920206": {
+      "code": "920206",
+      "market": "bj",
+      "type": "京",
+      "name": "彩客科技",
+      "name_en": "",
+      "py": "caikekeji",
+      "abbr": "ckkj"
+    },
+    "bj920207": {
+      "code": "920207",
+      "market": "bj",
+      "type": "京",
+      "name": "众诚科技",
+      "name_en": "",
+      "py": "zhongchengkeji",
+      "abbr": "zckj"
+    },
+    "bj920208": {
+      "code": "920208",
+      "market": "bj",
+      "type": "京",
+      "name": "青矩技术",
+      "name_en": "",
+      "py": "qingjujishu",
+      "abbr": "qjjs"
+    },
+    "bj920211": {
+      "code": "920211",
+      "market": "bj",
+      "type": "京",
+      "name": "新睿电子",
+      "name_en": "",
+      "py": "xinruidianzi",
+      "abbr": "xrdz"
+    },
+    "bj920212": {
+      "code": "920212",
+      "market": "bj",
+      "type": "京",
+      "name": "智新电子",
+      "name_en": "",
+      "py": "zhixindianzi",
+      "abbr": "zxdz"
+    },
+    "bj920218": {
+      "code": "920218",
+      "market": "bj",
+      "type": "京",
+      "name": "新天力",
+      "name_en": "",
+      "py": "xintianli",
+      "abbr": "xtl"
+    },
+    "bj920220": {
+      "code": "920220",
+      "market": "bj",
+      "type": "京",
+      "name": "朗信电气",
+      "name_en": "",
+      "py": "langxindianqi",
+      "abbr": "lxdq"
+    },
+    "bj920221": {
+      "code": "920221",
+      "market": "bj",
+      "type": "京",
+      "name": "易实精密",
+      "name_en": "",
+      "py": "yishijingmi",
+      "abbr": "ysjm"
+    },
+    "bj920222": {
+      "code": "920222",
+      "market": "bj",
+      "type": "京",
+      "name": "益坤电气",
+      "name_en": "",
+      "py": "yikundianqi",
+      "abbr": "ykdq"
+    },
+    "bj920223": {
+      "code": "920223",
+      "market": "bj",
+      "type": "京",
+      "name": "荣亿精密",
+      "name_en": "",
+      "py": "rongyijingmi",
+      "abbr": "ryjm"
+    },
+    "bj920225": {
+      "code": "920225",
+      "market": "bj",
+      "type": "京",
+      "name": "利通科技",
+      "name_en": "",
+      "py": "litongkeji",
+      "abbr": "ltkj"
+    },
+    "bj920227": {
+      "code": "920227",
+      "market": "bj",
+      "type": "京",
+      "name": "美登科技",
+      "name_en": "",
+      "py": "meidengkeji",
+      "abbr": "mdkj"
+    },
+    "bj920230": {
+      "code": "920230",
+      "market": "bj",
+      "type": "京",
+      "name": "欧康医药",
+      "name_en": "",
+      "py": "oukangyiyao",
+      "abbr": "okyy"
+    },
+    "bj920237": {
+      "code": "920237",
+      "market": "bj",
+      "type": "京",
+      "name": "力佳科技",
+      "name_en": "",
+      "py": "lijiakeji",
+      "abbr": "ljkj"
+    },
+    "bj920238": {
+      "code": "920238",
+      "market": "bj",
+      "type": "京",
+      "name": "长鹰硬科",
+      "name_en": "",
+      "py": "zhangyingyingke",
+      "abbr": "zyyk"
+    },
+    "bj920239": {
+      "code": "920239",
+      "market": "bj",
+      "type": "京",
+      "name": "长虹能源",
+      "name_en": "",
+      "py": "changhongnengyuan",
+      "abbr": "chny"
+    },
+    "bj920242": {
+      "code": "920242",
+      "market": "bj",
+      "type": "京",
+      "name": "建邦科技",
+      "name_en": "",
+      "py": "jianbangkeji",
+      "abbr": "jbkj"
+    },
+    "bj920245": {
+      "code": "920245",
+      "market": "bj",
+      "type": "京",
+      "name": "威博液压",
+      "name_en": "",
+      "py": "weiboyeya",
+      "abbr": "wbyy"
+    },
+    "bj920247": {
+      "code": "920247",
+      "market": "bj",
+      "type": "京",
+      "name": "华密新材",
+      "name_en": "",
+      "py": "huamixincai",
+      "abbr": "hmxc"
+    },
+    "bj920249": {
+      "code": "920249",
+      "market": "bj",
+      "type": "京",
+      "name": "利尔达",
+      "name_en": "",
+      "py": "lierda",
+      "abbr": "led"
+    },
+    "bj920252": {
+      "code": "920252",
+      "market": "bj",
+      "type": "京",
+      "name": "天宏锂电",
+      "name_en": "",
+      "py": "tianhonglidian",
+      "abbr": "thld"
+    },
+    "bj920258": {
+      "code": "920258",
+      "market": "bj",
+      "type": "京",
+      "name": "聚仁新材",
+      "name_en": "",
+      "py": "jurenxincai",
+      "abbr": "jrxc"
+    },
+    "bj920260": {
+      "code": "920260",
+      "market": "bj",
+      "type": "京",
+      "name": "中寰股份",
+      "name_en": "",
+      "py": "zhonghuangufen",
+      "abbr": "zhgf"
+    },
+    "bj920261": {
+      "code": "920261",
+      "market": "bj",
+      "type": "京",
+      "name": "一诺威",
+      "name_en": "",
+      "py": "yinuowei",
+      "abbr": "ynw"
+    },
+    "bj920262": {
+      "code": "920262",
+      "market": "bj",
+      "type": "京",
+      "name": "太湖雪",
+      "name_en": "",
+      "py": "taihuxue",
+      "abbr": "thx"
+    },
+    "bj920263": {
+      "code": "920263",
+      "market": "bj",
+      "type": "京",
+      "name": "中航泰达",
+      "name_en": "",
+      "py": "zhonghangtaida",
+      "abbr": "zhtd"
+    },
+    "bj920266": {
+      "code": "920266",
+      "market": "bj",
+      "type": "京",
+      "name": "生物谷",
+      "name_en": "",
+      "py": "shengwugu",
+      "abbr": "swg"
+    },
+    "bj920267": {
+      "code": "920267",
+      "market": "bj",
+      "type": "京",
+      "name": "鑫汇科",
+      "name_en": "",
+      "py": "xinhuike",
+      "abbr": "xhk"
+    },
+    "bj920269": {
+      "code": "920269",
+      "market": "bj",
+      "type": "京",
+      "name": "杰锋动力",
+      "name_en": "",
+      "py": "jiefengdongli",
+      "abbr": "jfdl"
+    },
+    "bj920270": {
+      "code": "920270",
+      "market": "bj",
+      "type": "京",
+      "name": "天铭科技",
+      "name_en": "",
+      "py": "tianmingkeji",
+      "abbr": "tmkj"
+    },
+    "bj920271": {
+      "code": "920271",
+      "market": "bj",
+      "type": "京",
+      "name": "邦德股份",
+      "name_en": "",
+      "py": "bangdegufen",
+      "abbr": "bdgf"
+    },
+    "bj920273": {
+      "code": "920273",
+      "market": "bj",
+      "type": "京",
+      "name": "一致魔芋",
+      "name_en": "",
+      "py": "yizhimoyu",
+      "abbr": "yzmy"
+    },
+    "bj920274": {
+      "code": "920274",
+      "market": "bj",
+      "type": "京",
+      "name": "宏裕包材",
+      "name_en": "",
+      "py": "hongyubaocai",
+      "abbr": "hybc"
+    },
+    "bj920275": {
+      "code": "920275",
+      "market": "bj",
+      "type": "京",
+      "name": "驱动力",
+      "name_en": "",
+      "py": "qudongli",
+      "abbr": "qdl"
+    },
+    "bj920278": {
+      "code": "920278",
+      "market": "bj",
+      "type": "京",
+      "name": "鹿得医疗",
+      "name_en": "",
+      "py": "ludeyiliao",
+      "abbr": "ldyl"
+    },
+    "bj920284": {
+      "code": "920284",
+      "market": "bj",
+      "type": "京",
+      "name": "灵鸽科技",
+      "name_en": "",
+      "py": "linggekeji",
+      "abbr": "lgkj"
+    },
+    "bj920288": {
+      "code": "920288",
+      "market": "bj",
+      "type": "京",
+      "name": "华大海天",
+      "name_en": "",
+      "py": "huadahaitian",
+      "abbr": "hdht"
+    },
+    "bj920289": {
+      "code": "920289",
+      "market": "bj",
+      "type": "京",
+      "name": "华汇智能",
+      "name_en": "",
+      "py": "huahuizhineng",
+      "abbr": "hhzn"
+    },
+    "bj920299": {
+      "code": "920299",
+      "market": "bj",
+      "type": "京",
+      "name": "灿能电力",
+      "name_en": "",
+      "py": "cannengdianli",
+      "abbr": "cndl"
+    },
+    "bj920300": {
+      "code": "920300",
+      "market": "bj",
+      "type": "京",
+      "name": "辰光医疗",
+      "name_en": "",
+      "py": "chenguangyiliao",
+      "abbr": "cgyl"
+    },
+    "bj920304": {
+      "code": "920304",
+      "market": "bj",
+      "type": "京",
+      "name": "迪尔化工",
+      "name_en": "",
+      "py": "dierhuagong",
+      "abbr": "dehg"
+    },
+    "bj920339": {
+      "code": "920339",
+      "market": "bj",
+      "type": "京",
+      "name": "恒太照明",
+      "name_en": "",
+      "py": "hengtaizhaoming",
+      "abbr": "htzm"
+    },
+    "bj920344": {
+      "code": "920344",
+      "market": "bj",
+      "type": "京",
+      "name": "三元基因",
+      "name_en": "",
+      "py": "sanyuanjiyin",
+      "abbr": "syjy"
+    },
+    "bj920346": {
+      "code": "920346",
+      "market": "bj",
+      "type": "京",
+      "name": "威贸电子",
+      "name_en": "",
+      "py": "weimaodianzi",
+      "abbr": "wmdz"
+    },
+    "bj920351": {
+      "code": "920351",
+      "market": "bj",
+      "type": "京",
+      "name": "华光源海",
+      "name_en": "",
+      "py": "huaguangyuanhai",
+      "abbr": "hgyh"
+    },
+    "bj920357": {
+      "code": "920357",
+      "market": "bj",
+      "type": "京",
+      "name": "雅葆轩",
+      "name_en": "",
+      "py": "yabaoxuan",
+      "abbr": "ybx"
+    },
+    "bj920363": {
+      "code": "920363",
+      "market": "bj",
+      "type": "京",
+      "name": "莱赛激光",
+      "name_en": "",
+      "py": "laisaijiguang",
+      "abbr": "lsjg"
+    },
+    "bj920367": {
+      "code": "920367",
+      "market": "bj",
+      "type": "京",
+      "name": "新赣江",
+      "name_en": "",
+      "py": "xinganjiang",
+      "abbr": "xgj"
+    },
+    "bj920368": {
+      "code": "920368",
+      "market": "bj",
+      "type": "京",
+      "name": "连城数控",
+      "name_en": "",
+      "py": "lianchengshukong",
+      "abbr": "lcsk"
+    },
+    "bj920370": {
+      "code": "920370",
+      "market": "bj",
+      "type": "京",
+      "name": "新安洁",
+      "name_en": "",
+      "py": "xinanjie",
+      "abbr": "xaj"
+    },
+    "bj920371": {
+      "code": "920371",
+      "market": "bj",
+      "type": "京",
+      "name": "欧福蛋业",
+      "name_en": "",
+      "py": "oufudanye",
+      "abbr": "ofdy"
+    },
+    "bj920374": {
+      "code": "920374",
+      "market": "bj",
+      "type": "京",
+      "name": "云里物里",
+      "name_en": "",
+      "py": "yunliwuli",
+      "abbr": "ylwl"
+    },
+    "bj920375": {
+      "code": "920375",
+      "market": "bj",
+      "type": "京",
+      "name": "派诺科技",
+      "name_en": "",
+      "py": "painuokeji",
+      "abbr": "pnkj"
+    },
+    "bj920378": {
+      "code": "920378",
+      "market": "bj",
+      "type": "京",
+      "name": "泰德股份",
+      "name_en": "",
+      "py": "taidegufen",
+      "abbr": "tdgf"
+    },
+    "bj920392": {
+      "code": "920392",
+      "market": "bj",
+      "type": "京",
+      "name": "佳合科技",
+      "name_en": "",
+      "py": "jiahekeji",
+      "abbr": "jhkj"
+    },
+    "bj920394": {
+      "code": "920394",
+      "market": "bj",
+      "type": "京",
+      "name": "民士达",
+      "name_en": "",
+      "py": "minshida",
+      "abbr": "msd"
+    },
+    "bj920395": {
+      "code": "920395",
+      "market": "bj",
+      "type": "京",
+      "name": "朗鸿科技",
+      "name_en": "",
+      "py": "langhongkeji",
+      "abbr": "lhkj"
+    },
+    "bj920396": {
+      "code": "920396",
+      "market": "bj",
+      "type": "京",
+      "name": "常辅股份",
+      "name_en": "",
+      "py": "changfugufen",
+      "abbr": "cfgf"
+    },
+    "bj920402": {
+      "code": "920402",
+      "market": "bj",
+      "type": "京",
+      "name": "硅烷科技",
+      "name_en": "",
+      "py": "guiwankeji",
+      "abbr": "gwkj"
+    },
+    "bj920403": {
+      "code": "920403",
+      "market": "bj",
+      "type": "京",
+      "name": "康农种业",
+      "name_en": "",
+      "py": "kangnongzhongye",
+      "abbr": "knzy"
+    },
+    "bj920405": {
+      "code": "920405",
+      "market": "bj",
+      "type": "京",
+      "name": "海希通讯",
+      "name_en": "",
+      "py": "haixitongxun",
+      "abbr": "hxtx"
+    },
+    "bj920407": {
+      "code": "920407",
+      "market": "bj",
+      "type": "京",
+      "name": "驰诚股份",
+      "name_en": "",
+      "py": "chichenggufen",
+      "abbr": "ccgf"
+    },
+    "bj920414": {
+      "code": "920414",
+      "market": "bj",
+      "type": "京",
+      "name": "欧普泰",
+      "name_en": "",
+      "py": "ouputai",
+      "abbr": "opt"
+    },
+    "bj920415": {
+      "code": "920415",
+      "market": "bj",
+      "type": "京",
+      "name": "恒拓开源",
+      "name_en": "",
+      "py": "hengtuokaiyuan",
+      "abbr": "htky"
+    },
+    "bj920418": {
+      "code": "920418",
+      "market": "bj",
+      "type": "京",
+      "name": "苏轴股份",
+      "name_en": "",
+      "py": "suzhougufen",
+      "abbr": "szgf"
+    },
+    "bj920419": {
+      "code": "920419",
+      "market": "bj",
+      "type": "京",
+      "name": "路斯股份",
+      "name_en": "",
+      "py": "lusigufen",
+      "abbr": "lsgf"
+    },
+    "bj920422": {
+      "code": "920422",
+      "market": "bj",
+      "type": "京",
+      "name": "润普食品",
+      "name_en": "",
+      "py": "runpushipin",
+      "abbr": "rpsp"
+    },
+    "bj920425": {
+      "code": "920425",
+      "market": "bj",
+      "type": "京",
+      "name": "乐创技术",
+      "name_en": "",
+      "py": "lechuangjishu",
+      "abbr": "lcjs"
+    },
+    "bj920427": {
+      "code": "920427",
+      "market": "bj",
+      "type": "京",
+      "name": "华维设计",
+      "name_en": "",
+      "py": "huaweisheji",
+      "abbr": "hwsj"
+    },
+    "bj920429": {
+      "code": "920429",
+      "market": "bj",
+      "type": "京",
+      "name": "康比特",
+      "name_en": "",
+      "py": "kangbite",
+      "abbr": "kbt"
+    },
+    "bj920433": {
+      "code": "920433",
+      "market": "bj",
+      "type": "京",
+      "name": "大唐药业",
+      "name_en": "",
+      "py": "datangyaoye",
+      "abbr": "dtyy"
+    },
+    "bj920436": {
+      "code": "920436",
+      "market": "bj",
+      "type": "京",
+      "name": "大地电气",
+      "name_en": "",
+      "py": "dadidianqi",
+      "abbr": "dddq"
+    },
+    "bj920438": {
+      "code": "920438",
+      "market": "bj",
+      "type": "京",
+      "name": "戈碧迦",
+      "name_en": "",
+      "py": "gebijia",
+      "abbr": "gbj"
+    },
+    "bj920445": {
+      "code": "920445",
+      "market": "bj",
+      "type": "京",
+      "name": "龙竹科技",
+      "name_en": "",
+      "py": "longzhukeji",
+      "abbr": "lzkj"
+    },
+    "bj920454": {
+      "code": "920454",
+      "market": "bj",
+      "type": "京",
+      "name": "同心传动",
+      "name_en": "",
+      "py": "tongxinchuandong",
+      "abbr": "txcd"
+    },
+    "bj920455": {
+      "code": "920455",
+      "market": "bj",
+      "type": "京",
+      "name": "汇隆活塞",
+      "name_en": "",
+      "py": "huilonghuosai",
+      "abbr": "hlhs"
+    },
+    "bj920469": {
+      "code": "920469",
+      "market": "bj",
+      "type": "京",
+      "name": "富恒新材",
+      "name_en": "",
+      "py": "fuhengxincai",
+      "abbr": "fhxc"
+    },
+    "bj920471": {
+      "code": "920471",
+      "market": "bj",
+      "type": "京",
+      "name": "美邦科技",
+      "name_en": "",
+      "py": "meibangkeji",
+      "abbr": "mbkj"
+    },
+    "bj920475": {
+      "code": "920475",
+      "market": "bj",
+      "type": "京",
+      "name": "三友科技",
+      "name_en": "",
+      "py": "sanyoukeji",
+      "abbr": "sykj"
+    },
+    "bj920476": {
+      "code": "920476",
+      "market": "bj",
+      "type": "京",
+      "name": "海能技术",
+      "name_en": "",
+      "py": "hainengjishu",
+      "abbr": "hnjs"
+    },
+    "bj920478": {
+      "code": "920478",
+      "market": "bj",
+      "type": "京",
+      "name": "峆一药业",
+      "name_en": "",
+      "py": "heyiyaoye",
+      "abbr": "hyyy"
+    },
+    "bj920489": {
+      "code": "920489",
+      "market": "bj",
+      "type": "京",
+      "name": "佳先股份",
+      "name_en": "",
+      "py": "jiaxiangufen",
+      "abbr": "jxgf"
+    },
+    "bj920491": {
+      "code": "920491",
+      "market": "bj",
+      "type": "京",
+      "name": "奥迪威",
+      "name_en": "",
+      "py": "aodiwei",
+      "abbr": "adw"
+    },
+    "bj920493": {
+      "code": "920493",
+      "market": "bj",
+      "type": "京",
+      "name": "并行科技",
+      "name_en": "",
+      "py": "bingxingkeji",
+      "abbr": "bxkj"
+    },
+    "bj920496": {
+      "code": "920496",
+      "market": "bj",
+      "type": "京",
+      "name": "许昌智能",
+      "name_en": "",
+      "py": "xuchangzhineng",
+      "abbr": "xczn"
+    },
+    "bj920504": {
+      "code": "920504",
+      "market": "bj",
+      "type": "京",
+      "name": "博迅生物",
+      "name_en": "",
+      "py": "boxunshengwu",
+      "abbr": "bxsw"
+    },
+    "bj920505": {
+      "code": "920505",
+      "market": "bj",
+      "type": "京",
+      "name": "九菱科技",
+      "name_en": "",
+      "py": "jiulingkeji",
+      "abbr": "jlkj"
+    },
+    "bj920508": {
+      "code": "920508",
+      "market": "bj",
+      "type": "京",
+      "name": "殷图网联",
+      "name_en": "",
+      "py": "yintuwanglian",
+      "abbr": "ytwl"
+    },
+    "bj920509": {
+      "code": "920509",
+      "market": "bj",
+      "type": "京",
+      "name": "同惠电子",
+      "name_en": "",
+      "py": "tonghuidianzi",
+      "abbr": "thdz"
+    },
+    "bj920510": {
+      "code": "920510",
+      "market": "bj",
+      "type": "京",
+      "name": "丰光精密",
+      "name_en": "",
+      "py": "fengguangjingmi",
+      "abbr": "fgjm"
+    },
+    "bj920519": {
+      "code": "920519",
+      "market": "bj",
+      "type": "京",
+      "name": "万德股份",
+      "name_en": "",
+      "py": "wandegufen",
+      "abbr": "wdgf"
+    },
+    "bj920522": {
+      "code": "920522",
+      "market": "bj",
+      "type": "京",
+      "name": "纳科诺尔",
+      "name_en": "",
+      "py": "nakenuoer",
+      "abbr": "nkne"
+    },
+    "bj920523": {
+      "code": "920523",
+      "market": "bj",
+      "type": "京",
+      "name": "德瑞锂电",
+      "name_en": "",
+      "py": "deruilidian",
+      "abbr": "drld"
+    },
+    "bj920526": {
+      "code": "920526",
+      "market": "bj",
+      "type": "京",
+      "name": "凯华材料",
+      "name_en": "",
+      "py": "kaihuacailiao",
+      "abbr": "khcl"
+    },
+    "bj920527": {
+      "code": "920527",
+      "market": "bj",
+      "type": "京",
+      "name": "夜光明",
+      "name_en": "",
+      "py": "yeguangming",
+      "abbr": "ygm"
+    },
+    "bj920533": {
+      "code": "920533",
+      "market": "bj",
+      "type": "京",
+      "name": "骏创科技",
+      "name_en": "",
+      "py": "junchuangkeji",
+      "abbr": "jckj"
+    },
+    "bj920541": {
+      "code": "920541",
+      "market": "bj",
+      "type": "京",
+      "name": "铁大科技",
+      "name_en": "",
+      "py": "tiedakeji",
+      "abbr": "tdkj"
+    },
+    "bj920547": {
+      "code": "920547",
+      "market": "bj",
+      "type": "京",
+      "name": "无锡晶海",
+      "name_en": "",
+      "py": "wuxijinghai",
+      "abbr": "wxjh"
+    },
+    "bj920553": {
+      "code": "920553",
+      "market": "bj",
+      "type": "京",
+      "name": "凯腾精工",
+      "name_en": "",
+      "py": "kaitengjinggong",
+      "abbr": "ktjg"
+    },
+    "bj920556": {
+      "code": "920556",
+      "market": "bj",
+      "type": "京",
+      "name": "雅达股份",
+      "name_en": "",
+      "py": "yadagufen",
+      "abbr": "ydgf"
+    },
+    "bj920564": {
+      "code": "920564",
+      "market": "bj",
+      "type": "京",
+      "name": "天润科技",
+      "name_en": "",
+      "py": "tianrunkeji",
+      "abbr": "trkj"
+    },
+    "bj920566": {
+      "code": "920566",
+      "market": "bj",
+      "type": "京",
+      "name": "梓橦宫",
+      "name_en": "",
+      "py": "zitonggong",
+      "abbr": "ztg"
+    },
+    "bj920570": {
+      "code": "920570",
+      "market": "bj",
+      "type": "京",
+      "name": "坤博精工",
+      "name_en": "",
+      "py": "kunbojinggong",
+      "abbr": "kbjg"
+    },
+    "bj920571": {
+      "code": "920571",
+      "market": "bj",
+      "type": "京",
+      "name": "国航远洋",
+      "name_en": "",
+      "py": "guohangyuanyang",
+      "abbr": "ghyy"
+    },
+    "bj920575": {
+      "code": "920575",
+      "market": "bj",
+      "type": "京",
+      "name": "*ST康乐",
+      "name_en": "",
+      "py": "*stkangle",
+      "abbr": "*stkl"
+    },
+    "bj920576": {
+      "code": "920576",
+      "market": "bj",
+      "type": "京",
+      "name": "天力复合",
+      "name_en": "",
+      "py": "tianlifuhe",
+      "abbr": "tlfh"
+    },
+    "bj920578": {
+      "code": "920578",
+      "market": "bj",
+      "type": "京",
+      "name": "巨能股份",
+      "name_en": "",
+      "py": "junenggufen",
+      "abbr": "jngf"
+    },
+    "bj920579": {
+      "code": "920579",
+      "market": "bj",
+      "type": "京",
+      "name": "机科股份",
+      "name_en": "",
+      "py": "jikegufen",
+      "abbr": "jkgf"
+    },
+    "bj920580": {
+      "code": "920580",
+      "market": "bj",
+      "type": "京",
+      "name": "科创新材",
+      "name_en": "",
+      "py": "kechuangxincai",
+      "abbr": "kcxc"
+    },
+    "bj920592": {
+      "code": "920592",
+      "market": "bj",
+      "type": "京",
+      "name": "华信永道",
+      "name_en": "",
+      "py": "huaxinyongdao",
+      "abbr": "hxyd"
+    },
+    "bj920593": {
+      "code": "920593",
+      "market": "bj",
+      "type": "京",
+      "name": "鼎智科技",
+      "name_en": "",
+      "py": "dingzhikeji",
+      "abbr": "dzkj"
+    },
+    "bj920599": {
+      "code": "920599",
+      "market": "bj",
+      "type": "京",
+      "name": "同力股份",
+      "name_en": "",
+      "py": "tongligufen",
+      "abbr": "tlgf"
+    },
+    "bj920608": {
+      "code": "920608",
+      "market": "bj",
+      "type": "京",
+      "name": "丰安股份",
+      "name_en": "",
+      "py": "fengangufen",
+      "abbr": "fagf"
+    },
+    "bj920627": {
+      "code": "920627",
+      "market": "bj",
+      "type": "京",
+      "name": "力王股份",
+      "name_en": "",
+      "py": "liwanggufen",
+      "abbr": "lwgf"
+    },
+    "bj920634": {
+      "code": "920634",
+      "market": "bj",
+      "type": "京",
+      "name": "新威凌",
+      "name_en": "",
+      "py": "xinweiling",
+      "abbr": "xwl"
+    },
+    "bj920639": {
+      "code": "920639",
+      "market": "bj",
+      "type": "京",
+      "name": "晨光电缆",
+      "name_en": "",
+      "py": "chenguangdianlan",
+      "abbr": "cgdl"
+    },
+    "bj920640": {
+      "code": "920640",
+      "market": "bj",
+      "type": "京",
+      "name": "富士达",
+      "name_en": "",
+      "py": "fushida",
+      "abbr": "fsd"
+    },
+    "bj920641": {
+      "code": "920641",
+      "market": "bj",
+      "type": "京",
+      "name": "格利尔",
+      "name_en": "",
+      "py": "gelier",
+      "abbr": "gle"
+    },
+    "bj920642": {
+      "code": "920642",
+      "market": "bj",
+      "type": "京",
+      "name": "通易航天",
+      "name_en": "",
+      "py": "tongyihangtian",
+      "abbr": "tyht"
+    },
+    "bj920651": {
+      "code": "920651",
+      "market": "bj",
+      "type": "京",
+      "name": "天罡股份",
+      "name_en": "",
+      "py": "tianganggufen",
+      "abbr": "tggf"
+    },
+    "bj920656": {
+      "code": "920656",
+      "market": "bj",
+      "type": "京",
+      "name": "海昇药业",
+      "name_en": "",
+      "py": "haishengyaoye",
+      "abbr": "hsyy"
+    },
+    "bj920662": {
+      "code": "920662",
+      "market": "bj",
+      "type": "京",
+      "name": "方盛股份",
+      "name_en": "",
+      "py": "fangshenggufen",
+      "abbr": "fsgf"
+    },
+    "bj920663": {
+      "code": "920663",
+      "market": "bj",
+      "type": "京",
+      "name": "明阳科技",
+      "name_en": "",
+      "py": "mingyangkeji",
+      "abbr": "mykj"
+    },
+    "bj920665": {
+      "code": "920665",
+      "market": "bj",
+      "type": "京",
+      "name": "科强股份",
+      "name_en": "",
+      "py": "keqianggufen",
+      "abbr": "kqgf"
+    },
+    "bj920670": {
+      "code": "920670",
+      "market": "bj",
+      "type": "京",
+      "name": "数字人",
+      "name_en": "",
+      "py": "shuziren",
+      "abbr": "szr"
+    },
+    "bj920675": {
+      "code": "920675",
+      "market": "bj",
+      "type": "京",
+      "name": "秉扬科技",
+      "name_en": "",
+      "py": "bingyangkeji",
+      "abbr": "bykj"
+    },
+    "bj920679": {
+      "code": "920679",
+      "market": "bj",
+      "type": "京",
+      "name": "前进科技",
+      "name_en": "",
+      "py": "qianjinkeji",
+      "abbr": "qjkj"
+    },
+    "bj920682": {
+      "code": "920682",
+      "market": "bj",
+      "type": "京",
+      "name": "球冠电缆",
+      "name_en": "",
+      "py": "qiuguandianlan",
+      "abbr": "qgdl"
+    },
+    "bj920685": {
+      "code": "920685",
+      "market": "bj",
+      "type": "京",
+      "name": "新芝生物",
+      "name_en": "",
+      "py": "xinzhishengwu",
+      "abbr": "xzsw"
+    },
+    "bj920689": {
+      "code": "920689",
+      "market": "bj",
+      "type": "京",
+      "name": "克莱特",
+      "name_en": "",
+      "py": "kelaite",
+      "abbr": "klt"
+    },
+    "bj920690": {
+      "code": "920690",
+      "market": "bj",
+      "type": "京",
+      "name": "捷众科技",
+      "name_en": "",
+      "py": "jiezhongkeji",
+      "abbr": "jzkj"
+    },
+    "bj920693": {
+      "code": "920693",
+      "market": "bj",
+      "type": "京",
+      "name": "阿为特",
+      "name_en": "",
+      "py": "aweite",
+      "abbr": "awt"
+    },
+    "bj920694": {
+      "code": "920694",
+      "market": "bj",
+      "type": "京",
+      "name": "中裕科技",
+      "name_en": "",
+      "py": "zhongyukeji",
+      "abbr": "zykj"
+    },
+    "bj920699": {
+      "code": "920699",
+      "market": "bj",
+      "type": "京",
+      "name": "海达尔",
+      "name_en": "",
+      "py": "haidaer",
+      "abbr": "hde"
+    },
+    "bj920701": {
+      "code": "920701",
+      "market": "bj",
+      "type": "京",
+      "name": "豪声电子",
+      "name_en": "",
+      "py": "haoshengdianzi",
+      "abbr": "hsdz"
+    },
+    "bj920703": {
+      "code": "920703",
+      "market": "bj",
+      "type": "京",
+      "name": "广厦环能",
+      "name_en": "",
+      "py": "guangshahuanneng",
+      "abbr": "gshn"
+    },
+    "bj920706": {
+      "code": "920706",
+      "market": "bj",
+      "type": "京",
+      "name": "铁拓机械",
+      "name_en": "",
+      "py": "tietuojixie",
+      "abbr": "ttjx"
+    },
+    "bj920717": {
+      "code": "920717",
+      "market": "bj",
+      "type": "京",
+      "name": "瑞星股份",
+      "name_en": "",
+      "py": "ruixinggufen",
+      "abbr": "rxgf"
+    },
+    "bj920718": {
+      "code": "920718",
+      "market": "bj",
+      "type": "京",
+      "name": "合肥高科",
+      "name_en": "",
+      "py": "hefeigaoke",
+      "abbr": "hfgk"
+    },
+    "bj920719": {
+      "code": "920719",
+      "market": "bj",
+      "type": "京",
+      "name": "宁新新材",
+      "name_en": "",
+      "py": "ningxinxincai",
+      "abbr": "nxxc"
+    },
+    "bj920720": {
+      "code": "920720",
+      "market": "bj",
+      "type": "京",
+      "name": "吉冈精密",
+      "name_en": "",
+      "py": "jigangjingmi",
+      "abbr": "jgjm"
+    },
+    "bj920725": {
+      "code": "920725",
+      "market": "bj",
+      "type": "京",
+      "name": "惠丰钻石",
+      "name_en": "",
+      "py": "huifengzuanshi",
+      "abbr": "hfzs"
+    },
+    "bj920726": {
+      "code": "920726",
+      "market": "bj",
+      "type": "京",
+      "name": "朱老六",
+      "name_en": "",
+      "py": "zhulaoliu",
+      "abbr": "zll"
+    },
+    "bj920729": {
+      "code": "920729",
+      "market": "bj",
+      "type": "京",
+      "name": "永顺生物",
+      "name_en": "",
+      "py": "yongshunshengwu",
+      "abbr": "yssw"
+    },
+    "bj920735": {
+      "code": "920735",
+      "market": "bj",
+      "type": "京",
+      "name": "德源药业",
+      "name_en": "",
+      "py": "deyuanyaoye",
+      "abbr": "dyyy"
+    },
+    "bj920748": {
+      "code": "920748",
+      "market": "bj",
+      "type": "京",
+      "name": "路桥信息",
+      "name_en": "",
+      "py": "luqiaoxinxi",
+      "abbr": "lqxx"
+    },
+    "bj920751": {
+      "code": "920751",
+      "market": "bj",
+      "type": "京",
+      "name": "惠同新材",
+      "name_en": "",
+      "py": "huitongxincai",
+      "abbr": "htxc"
+    },
+    "bj920753": {
+      "code": "920753",
+      "market": "bj",
+      "type": "京",
+      "name": "天纺标",
+      "name_en": "",
+      "py": "tianfangbiao",
+      "abbr": "tfb"
+    },
+    "bj920765": {
+      "code": "920765",
+      "market": "bj",
+      "type": "京",
+      "name": "美之高",
+      "name_en": "",
+      "py": "meizhigao",
+      "abbr": "mzg"
+    },
+    "bj920768": {
+      "code": "920768",
+      "market": "bj",
+      "type": "京",
+      "name": "拾比佰",
+      "name_en": "",
+      "py": "shibibai",
+      "abbr": "sbb"
+    },
+    "bj920770": {
+      "code": "920770",
+      "market": "bj",
+      "type": "京",
+      "name": "艾能聚",
+      "name_en": "",
+      "py": "ainengju",
+      "abbr": "anj"
+    },
+    "bj920779": {
+      "code": "920779",
+      "market": "bj",
+      "type": "京",
+      "name": "武汉蓝电",
+      "name_en": "",
+      "py": "wuhanlandian",
+      "abbr": "whld"
+    },
+    "bj920781": {
+      "code": "920781",
+      "market": "bj",
+      "type": "京",
+      "name": "瑞奇智造",
+      "name_en": "",
+      "py": "ruiqizhizao",
+      "abbr": "rqzz"
+    },
+    "bj920786": {
+      "code": "920786",
+      "market": "bj",
+      "type": "京",
+      "name": "骑士乳业",
+      "name_en": "",
+      "py": "qishiruye",
+      "abbr": "qsry"
+    },
+    "bj920790": {
+      "code": "920790",
+      "market": "bj",
+      "type": "京",
+      "name": "联迪信息",
+      "name_en": "",
+      "py": "liandixinxi",
+      "abbr": "ldxx"
+    },
+    "bj920792": {
+      "code": "920792",
+      "market": "bj",
+      "type": "京",
+      "name": "东和新材",
+      "name_en": "",
+      "py": "donghexincai",
+      "abbr": "dhxc"
+    },
+    "bj920799": {
+      "code": "920799",
+      "market": "bj",
+      "type": "京",
+      "name": "艾融软件",
+      "name_en": "",
+      "py": "airongruanjian",
+      "abbr": "arrj"
+    },
+    "bj920802": {
+      "code": "920802",
+      "market": "bj",
+      "type": "京",
+      "name": "保丽洁",
+      "name_en": "",
+      "py": "baolijie",
+      "abbr": "blj"
+    },
+    "bj920806": {
+      "code": "920806",
+      "market": "bj",
+      "type": "京",
+      "name": "云星宇",
+      "name_en": "",
+      "py": "yunxingyu",
+      "abbr": "yxy"
+    },
+    "bj920807": {
+      "code": "920807",
+      "market": "bj",
+      "type": "京",
+      "name": "奔朗新材",
+      "name_en": "",
+      "py": "benlangxincai",
+      "abbr": "blxc"
+    },
+    "bj920808": {
+      "code": "920808",
+      "market": "bj",
+      "type": "京",
+      "name": "曙光数创",
+      "name_en": "",
+      "py": "shuguangshuchuang",
+      "abbr": "sgsc"
+    },
+    "bj920809": {
+      "code": "920809",
+      "market": "bj",
+      "type": "京",
+      "name": "安达科技",
+      "name_en": "",
+      "py": "andakeji",
+      "abbr": "adkj"
+    },
+    "bj920810": {
+      "code": "920810",
+      "market": "bj",
+      "type": "京",
+      "name": "春光智能",
+      "name_en": "",
+      "py": "chunguangzhineng",
+      "abbr": "cgzn"
+    },
+    "bj920819": {
+      "code": "920819",
+      "market": "bj",
+      "type": "京",
+      "name": "颖泰生物",
+      "name_en": "",
+      "py": "yingtaishengwu",
+      "abbr": "ytsw"
+    },
+    "bj920821": {
+      "code": "920821",
+      "market": "bj",
+      "type": "京",
+      "name": "则成电子",
+      "name_en": "",
+      "py": "zechengdianzi",
+      "abbr": "zcdz"
+    },
+    "bj920826": {
+      "code": "920826",
+      "market": "bj",
+      "type": "京",
+      "name": "盖世食品",
+      "name_en": "",
+      "py": "gaishishipin",
+      "abbr": "gssp"
+    },
+    "bj920832": {
+      "code": "920832",
+      "market": "bj",
+      "type": "京",
+      "name": "齐鲁华信",
+      "name_en": "",
+      "py": "qiluhuaxin",
+      "abbr": "qlhx"
+    },
+    "bj920833": {
+      "code": "920833",
+      "market": "bj",
+      "type": "京",
+      "name": "美心翼申",
+      "name_en": "",
+      "py": "meixinyishen",
+      "abbr": "mxys"
+    },
+    "bj920834": {
+      "code": "920834",
+      "market": "bj",
+      "type": "京",
+      "name": "三维装备",
+      "name_en": "",
+      "py": "sanweizhuangbei",
+      "abbr": "swzb"
+    },
+    "bj920837": {
+      "code": "920837",
+      "market": "bj",
+      "type": "京",
+      "name": "华原股份",
+      "name_en": "",
+      "py": "huayuangufen",
+      "abbr": "hygf"
+    },
+    "bj920839": {
+      "code": "920839",
+      "market": "bj",
+      "type": "京",
+      "name": "万通液压",
+      "name_en": "",
+      "py": "wantongyeya",
+      "abbr": "wtyy"
+    },
+    "bj920855": {
+      "code": "920855",
+      "market": "bj",
+      "type": "京",
+      "name": "浙江大农",
+      "name_en": "",
+      "py": "zhejiangdanong",
+      "abbr": "zjdn"
+    },
+    "bj920856": {
+      "code": "920856",
+      "market": "bj",
+      "type": "京",
+      "name": "浩淼科技",
+      "name_en": "",
+      "py": "haomiaokeji",
+      "abbr": "hmkj"
+    },
+    "bj920857": {
+      "code": "920857",
+      "market": "bj",
+      "type": "京",
+      "name": "泓禧科技",
+      "name_en": "",
+      "py": "hongxikeji",
+      "abbr": "hxkj"
+    },
+    "bj920866": {
+      "code": "920866",
+      "market": "bj",
+      "type": "京",
+      "name": "绿亨科技",
+      "name_en": "",
+      "py": "lvhengkeji",
+      "abbr": "lhkj"
+    },
+    "bj920870": {
+      "code": "920870",
+      "market": "bj",
+      "type": "京",
+      "name": "恒进感应",
+      "name_en": "",
+      "py": "hengjinganying",
+      "abbr": "hjgy"
+    },
+    "bj920871": {
+      "code": "920871",
+      "market": "bj",
+      "type": "京",
+      "name": "派特尔",
+      "name_en": "",
+      "py": "paiteer",
+      "abbr": "pte"
+    },
+    "bj920873": {
+      "code": "920873",
+      "market": "bj",
+      "type": "京",
+      "name": "中设咨询",
+      "name_en": "",
+      "py": "zhongshezixun",
+      "abbr": "zszx"
+    },
+    "bj920876": {
+      "code": "920876",
+      "market": "bj",
+      "type": "京",
+      "name": "慧为智能",
+      "name_en": "",
+      "py": "huiweizhineng",
+      "abbr": "hwzn"
+    },
+    "bj920879": {
+      "code": "920879",
+      "market": "bj",
+      "type": "京",
+      "name": "基康技术",
+      "name_en": "",
+      "py": "jikangjishu",
+      "abbr": "jkjs"
+    },
+    "bj920885": {
+      "code": "920885",
+      "market": "bj",
+      "type": "京",
+      "name": "星辰科技",
+      "name_en": "",
+      "py": "xingchenkeji",
+      "abbr": "xckj"
+    },
+    "bj920892": {
+      "code": "920892",
+      "market": "bj",
+      "type": "京",
+      "name": "广咨国际",
+      "name_en": "",
+      "py": "guangziguoji",
+      "abbr": "gzgj"
+    },
+    "bj920895": {
+      "code": "920895",
+      "market": "bj",
+      "type": "京",
+      "name": "花溪科技",
+      "name_en": "",
+      "py": "huaxikeji",
+      "abbr": "hxkj"
+    },
+    "bj920896": {
+      "code": "920896",
+      "market": "bj",
+      "type": "京",
+      "name": "旺成科技",
+      "name_en": "",
+      "py": "wangchengkeji",
+      "abbr": "wckj"
+    },
+    "bj920906": {
+      "code": "920906",
+      "market": "bj",
+      "type": "京",
+      "name": "舜宇精工",
+      "name_en": "",
+      "py": "shunyujinggong",
+      "abbr": "syjg"
+    },
+    "bj920914": {
+      "code": "920914",
+      "market": "bj",
+      "type": "京",
+      "name": "远航精密",
+      "name_en": "",
+      "py": "yuanhangjingmi",
+      "abbr": "yhjm"
+    },
+    "bj920924": {
+      "code": "920924",
+      "market": "bj",
+      "type": "京",
+      "name": "广脉科技",
+      "name_en": "",
+      "py": "guangmaikeji",
+      "abbr": "gmkj"
+    },
+    "bj920925": {
+      "code": "920925",
+      "market": "bj",
+      "type": "京",
+      "name": "锦好医疗",
+      "name_en": "",
+      "py": "jinhaoyiliao",
+      "abbr": "jhyl"
+    },
+    "bj920926": {
+      "code": "920926",
+      "market": "bj",
+      "type": "京",
+      "name": "鸿智科技",
+      "name_en": "",
+      "py": "hongzhikeji",
+      "abbr": "hzkj"
+    },
+    "bj920931": {
+      "code": "920931",
+      "market": "bj",
+      "type": "京",
+      "name": "无锡鼎邦",
+      "name_en": "",
+      "py": "wuxidingbang",
+      "abbr": "wxdb"
+    },
+    "bj920932": {
+      "code": "920932",
+      "market": "bj",
+      "type": "京",
+      "name": "科达自控",
+      "name_en": "",
+      "py": "kedazikong",
+      "abbr": "kdzk"
+    },
+    "bj920942": {
+      "code": "920942",
+      "market": "bj",
+      "type": "京",
+      "name": "恒立钻具",
+      "name_en": "",
+      "py": "henglizuanju",
+      "abbr": "hlzj"
+    },
+    "bj920943": {
+      "code": "920943",
+      "market": "bj",
+      "type": "京",
+      "name": "优机股份",
+      "name_en": "",
+      "py": "youjigufen",
+      "abbr": "yjgf"
+    },
+    "bj920946": {
+      "code": "920946",
+      "market": "bj",
+      "type": "京",
+      "name": "森萱医药",
+      "name_en": "",
+      "py": "senxuanyiyao",
+      "abbr": "sxyy"
+    },
+    "bj920950": {
+      "code": "920950",
+      "market": "bj",
+      "type": "京",
+      "name": "迅安科技",
+      "name_en": "",
+      "py": "xunankeji",
+      "abbr": "xakj"
+    },
+    "bj920953": {
+      "code": "920953",
+      "market": "bj",
+      "type": "京",
+      "name": "国子软件",
+      "name_en": "",
+      "py": "guoziruanjian",
+      "abbr": "gzrj"
+    },
+    "bj920957": {
+      "code": "920957",
+      "market": "bj",
+      "type": "京",
+      "name": "汉维科技",
+      "name_en": "",
+      "py": "hanweikeji",
+      "abbr": "hwkj"
+    },
+    "bj920961": {
+      "code": "920961",
+      "market": "bj",
+      "type": "京",
+      "name": "创远信科",
+      "name_en": "",
+      "py": "chuangyuanxinke",
+      "abbr": "cyxk"
+    },
+    "bj920964": {
+      "code": "920964",
+      "market": "bj",
+      "type": "京",
+      "name": "润农节水",
+      "name_en": "",
+      "py": "runnongjieshui",
+      "abbr": "rnjs"
+    },
+    "bj920970": {
+      "code": "920970",
+      "market": "bj",
+      "type": "京",
+      "name": "大禹生物",
+      "name_en": "",
+      "py": "dayushengwu",
+      "abbr": "dysw"
+    },
+    "bj920971": {
+      "code": "920971",
+      "market": "bj",
+      "type": "京",
+      "name": "天马新材",
+      "name_en": "",
+      "py": "tianmaxincai",
+      "abbr": "tmxc"
+    },
+    "bj920974": {
+      "code": "920974",
+      "market": "bj",
+      "type": "京",
+      "name": "凯大催化",
+      "name_en": "",
+      "py": "kaidacuihua",
+      "abbr": "kdch"
+    },
+    "bj920976": {
+      "code": "920976",
+      "market": "bj",
+      "type": "京",
+      "name": "视声智能",
+      "name_en": "",
+      "py": "shishengzhineng",
+      "abbr": "sszn"
+    },
+    "bj920978": {
+      "code": "920978",
+      "market": "bj",
+      "type": "京",
+      "name": "开特股份",
+      "name_en": "",
+      "py": "kaitegufen",
+      "abbr": "ktgf"
+    },
+    "bj920981": {
+      "code": "920981",
+      "market": "bj",
+      "type": "京",
+      "name": "晶赛科技",
+      "name_en": "",
+      "py": "jingsaikeji",
+      "abbr": "jskj"
+    },
+    "bj920982": {
+      "code": "920982",
+      "market": "bj",
+      "type": "京",
+      "name": "锦波生物",
+      "name_en": "",
+      "py": "jinboshengwu",
+      "abbr": "jbsw"
+    },
+    "bj920985": {
+      "code": "920985",
+      "market": "bj",
+      "type": "京",
+      "name": "海泰新能",
+      "name_en": "",
+      "py": "haitaixinneng",
+      "abbr": "htxn"
+    },
+    "bj920992": {
+      "code": "920992",
+      "market": "bj",
+      "type": "京",
+      "name": "中科美菱",
+      "name_en": "",
+      "py": "zhongkemeiling",
+      "abbr": "zkml"
+    }
+  }
+}
