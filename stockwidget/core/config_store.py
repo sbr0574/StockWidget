@@ -40,7 +40,7 @@ def load_json_from_resource(path: str, fallback: dict = {}) -> dict:
     从 Qt 资源系统读取 JSON 文件
     Args:
         path (str): 文件地址如``':/stock_sh.json'``
-    
+
     Returns:
         out (dict)
     """
