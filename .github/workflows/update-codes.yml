@@ -29,35 +29,55 @@ jobs:
       - name: 安装依赖
         run: python -m pip install openpyxl pandas pypinyin requests
 
+      - name: 准备数据分支工作树
+        env:
+          DATA_BRANCH: codes-data
+        run: |
+          set -euo pipefail
+          DATA_DIR="$RUNNER_TEMP/codes-data"
+          if git ls-remote --exit-code --heads origin "$DATA_BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$DATA_BRANCH"
+            git worktree add --detach "$DATA_DIR" "origin/$DATA_BRANCH"
+          else
+            git worktree add --detach "$DATA_DIR"
+            git -C "$DATA_DIR" switch --orphan "$DATA_BRANCH"
+            git -C "$DATA_DIR" rm -rf --ignore-unmatch .
+          fi
+          mkdir -p "$DATA_DIR/resources"
+          for file in \
+            stock_sh.json stock_sz.json stock_bj.json fund_cn.json \
+            stock_hk.json stock_us.json index_cn.json index_global.json \
+            futures_sh.json codes_update_status.json; do
+            if [[ ! -f "$DATA_DIR/resources/$file" ]]; then
+              cp "resources/$file" "$DATA_DIR/resources/$file"
+            fi
+          done
+          echo "DATA_DIR=$DATA_DIR" >> "$GITHUB_ENV"
+
       - name: 拉取市场代码
-        run: python -u scripts/update_codes.py
+        run: CODES_OUTPUT_DIR="$DATA_DIR/resources" python -u scripts/update_codes.py
 
       - name: 提交代码列表到数据分支
         env:
           DATA_BRANCH: codes-data
         run: |
           set -euo pipefail
-          DATA_DIR="$RUNNER_TEMP/codes-data"
-          JSON_DIR="$RUNNER_TEMP/generated-json"
-          mkdir -p "$JSON_DIR"
-          cp resources/stock_codes_list.json resources/futures_codes_list.json "$JSON_DIR/"
-
-          if git ls-remote --exit-code --heads origin "$DATA_BRANCH" >/dev/null 2>&1; then
-            git fetch origin "$DATA_BRANCH"
-            git worktree add --detach "$DATA_DIR" "origin/$DATA_BRANCH"
-          else
-            git worktree add --detach "$DATA_DIR"
-            cd "$DATA_DIR"
-            git switch --orphan "$DATA_BRANCH"
-            git rm -rf --ignore-unmatch .
-          fi
-
           cd "$DATA_DIR"
-          mkdir -p resources
-          cp "$JSON_DIR/stock_codes_list.json" "$JSON_DIR/futures_codes_list.json" resources/
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add resources/stock_codes_list.json resources/futures_codes_list.json
+          git rm -f --ignore-unmatch \
+            resources/stock_codes_list.json resources/futures_codes_list.json
+          git add -- \
+            resources/stock_sh.json \
+            resources/stock_sz.json \
+            resources/stock_bj.json \
+            resources/fund_cn.json \
+            resources/stock_hk.json \
+            resources/stock_us.json \
+            resources/index_cn.json \
+            resources/index_global.json \
+            resources/futures_sh.json \
+            resources/codes_update_status.json
           if git diff --cached --quiet; then
             echo "代码列表无变更，跳过提交"
           else

@@ -69,7 +69,6 @@
 main.py                      # 程序入口
 StockWidget.spec             # PyInstaller 打包配置
 resources/                   # 静态资源
-tests/                       # 测试
 stockwidget/
   app.py                     # 应用装配：连接各层、托盘、后台任务
   constants.py               # 全局常量（名称/版本/文件/地址）
@@ -101,7 +100,7 @@ stockwidget/
 
 ## 🧰 运行环境
 
-右侧 [Releases](https://github.com/sbr0574/StockWidget/releases) 已有打包好的程序（`StockWidget-windows.zip`），**直接下载，解压后运行 StockWidget.exe 使用**。
+右侧 [Releases](https://github.com/sbr0574/StockWidget/releases) 提供按版本号命名的三平台压缩包：`StockWidget-Windows-<版本号>.zip`、`StockWidget-macOS-<版本号>.zip` 和 `StockWidget-Linux-<版本号>.zip`。解压后，Windows 直接运行 `StockWidget.exe`，macOS 将 `StockWidget.app` 拖入“应用程序”，Linux 安装其中的 `.deb` 包。
 
 若要通过代码脚本形式运行，则需要：
 * Windows 10/11

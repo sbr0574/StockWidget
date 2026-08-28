@@ -32,12 +32,32 @@ jobs:
         run: |
           codesign --force --deep -s - dist/StockWidget.app
 
-      - name: Create zip
+      - name: Read application version
+        id: version
         run: |
-          ditto -c -k --sequesterRsrc --keepParent dist/StockWidget.app StockWidget-macos.zip
+          version="$(python -c 'from stockwidget.constants import APP_VERSION; print(APP_VERSION)')"
+          if [[ -z "$version" ]]; then
+            echo "APP_VERSION is empty" >&2
+            exit 1
+          fi
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Create release zip
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          staging="$RUNNER_TEMP/StockWidget-macOS-$RELEASE_VERSION"
+          mkdir "$staging"
+
+          cp README.md LICENSE NOTICE "$staging/"
+          ditto dist/StockWidget.app "$staging/StockWidget.app"
+
+          archive="$GITHUB_WORKSPACE/StockWidget-macOS-$RELEASE_VERSION.zip"
+          ditto -c -k --norsrc "$staging" "$archive"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: StockWidget-MacOS
-          path: StockWidget-macos.zip
+          path: StockWidget-macOS-${{ steps.version.outputs.value }}.zip
+          if-no-files-found: error
+          archive: false

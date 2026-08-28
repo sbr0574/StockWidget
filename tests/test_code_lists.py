@@ -1,152 +1,103 @@
-# -*- coding: utf-8 -*-
-"""市场代码缓存的逐文件更新与北京时间策略测试。"""
-
-import os
-import tempfile
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
-from stockwidget.constants import LIST_FILES
-from stockwidget.core.config_store import load_file, save_file
-from stockwidget.data import code_lists
+from stockwidget.constants import CODES_STATUS_FILE, CODE_LIST_FILES
+from stockwidget.data.code_lists import CodeListManager, expected_status_date
 
 
-class TestCodeLists(unittest.TestCase):
-    def setUp(self):
-        self._old_appdata = os.environ.get("APPDATA")
-        self._tmp = tempfile.TemporaryDirectory()
-        os.environ["APPDATA"] = self._tmp.name
-        self.app_name = "StockWidgetTest"
+UTC8 = timezone(timedelta(hours=8))
 
-    def tearDown(self):
-        self._tmp.cleanup()
-        if self._old_appdata is None:
-            os.environ.pop("APPDATA", None)
-        else:
-            os.environ["APPDATA"] = self._old_appdata
 
-    def test_stale_files_are_checked_individually(self):
-        stock_file, futures_file = LIST_FILES
-        save_file(
-            {"last_update": "2026-08-25", "codes": {"sh1": {}}},
-            self.app_name,
-            stock_file,
-        )
-        save_file(
-            {"last_update": "2026-08-24", "codes": {"au": {}}},
-            self.app_name,
-            futures_file,
-        )
+def _payload(filename: str, update_date: str) -> dict:
+    code = filename.removesuffix(".json")
+    return {
+        "last_update": update_date,
+        "codes": {
+            code: {
+                "code": code,
+                "market": "",
+                "type": "",
+                "name": filename,
+                "name_en": "",
+                "py": "",
+                "abbr": "",
+            }
+        },
+    }
 
-        self.assertEqual(
-            code_lists.stale_code_files(self.app_name, "2026-08-25"),
-            (futures_file,),
-        )
 
-    def test_download_saves_only_requested_file_with_expected_date(self):
-        stock_file, futures_file = LIST_FILES
-        payload = {"last_update": "2026-08-25", "codes": {"sh1": {}}}
-        with patch.object(code_lists, "fetch_json_from_url", return_value=payload) as fetch:
-            updated = code_lists.download_code_files(
-                self.app_name,
-                (stock_file,),
-                expected_date="2026-08-25",
-            )
+class ExpectedStatusDateTests(unittest.TestCase):
+    def test_weekday_before_nine_uses_previous_workday(self):
+        monday = datetime(2026, 8, 31, 8, 59, tzinfo=UTC8)
+        self.assertEqual(expected_status_date(monday), "2026-08-28")
 
-        self.assertEqual(updated, (stock_file,))
-        self.assertEqual(load_file(self.app_name, stock_file), payload)
-        self.assertEqual(load_file(self.app_name, futures_file), {})
-        self.assertEqual(fetch.call_count, 1)
+    def test_weekday_after_nine_uses_today(self):
+        monday = datetime(2026, 8, 31, 9, 0, tzinfo=UTC8)
+        self.assertEqual(expected_status_date(monday), "2026-08-31")
 
-    def test_download_does_not_replace_cache_with_old_remote_file(self):
-        stock_file = LIST_FILES[0]
-        cached = {"last_update": "2026-08-24", "codes": {"old": {}}}
-        remote = {"last_update": "2026-08-24", "codes": {"remote": {}}}
-        save_file(cached, self.app_name, stock_file)
-        with patch.object(code_lists, "fetch_json_from_url", return_value=remote):
-            updated = code_lists.download_code_files(
-                self.app_name,
-                (stock_file,),
-                expected_date="2026-08-25",
-            )
+    def test_weekend_uses_friday(self):
+        saturday = datetime(2026, 8, 29, 12, 0, tzinfo=UTC8)
+        self.assertEqual(expected_status_date(saturday), "2026-08-28")
 
-        self.assertEqual(updated, ())
-        self.assertEqual(load_file(self.app_name, stock_file), cached)
 
-    def test_best_codes_are_selected_per_file(self):
-        stock_file, futures_file = LIST_FILES
-        save_file(
-            {"last_update": "2026-08-25", "codes": {"local-stock": {}}},
-            self.app_name,
-            stock_file,
-        )
-        resources = {
-            f":/{stock_file}": {
-                "last_update": "2026-08-24",
-                "codes": {"resource-stock": {}},
-            },
-            f":/{futures_file}": {
-                "last_update": "2026-08-24",
-                "codes": {"resource-future": {}},
-            },
+class CodeListManagerTests(unittest.TestCase):
+    def test_sync_downloads_only_files_with_different_content_date(self):
+        old_date = "2026-08-27"
+        expected = "2026-08-28"
+        resources = {name: _payload(name, old_date) for name in CODE_LIST_FILES}
+        files = {
+            name: {
+                "last_checked": expected,
+                "last_update": expected if name == "stock_hk.json" else old_date,
+                "updated": name == "stock_hk.json",
+                "error": False,
+            }
+            for name in CODE_LIST_FILES
         }
-        with patch.object(
-            code_lists,
-            "load_json_from_resource",
-            side_effect=lambda path: resources[path],
-        ):
-            codes = code_lists.load_best_codes(self.app_name)
+        status = {"run_date": expected, "files": files}
+        new_hk = _payload("stock_hk-new.json", expected)
+        fetched = []
 
-        self.assertEqual(set(codes), {"local-stock", "resource-future"})
+        def fetcher(url):
+            fetched.append(url)
+            if url.endswith("/" + CODES_STATUS_FILE):
+                return status
+            if url.endswith("/stock_hk.json"):
+                return new_hk
+            return None
 
-    def test_missing_one_local_file_is_not_reported_online(self):
-        stock_file = LIST_FILES[0]
-        save_file(
-            {"last_update": "2026-08-25", "codes": {"sh1": {}}},
-            self.app_name,
-            stock_file,
-        )
         with (
-            patch.object(code_lists, "beijing_today", return_value="2026-08-25"),
-            patch.object(code_lists, "load_json_from_resource", return_value={}),
-        ):
-            state, _ = code_lists.code_data_state(self.app_name)
-
-        self.assertEqual(state, "cached")
-
-    def test_refresh_waits_until_nine_in_beijing(self):
-        self.assertEqual(
-            code_lists.code_refresh_delay_seconds(
-                datetime(2026, 8, 25, 0, 30, tzinfo=timezone.utc)
+            patch(
+                "stockwidget.data.code_lists.load_json_from_resource",
+                side_effect=lambda path: resources.get(path[2:], {}),
             ),
-            30 * 60,
-        )
-        self.assertEqual(
-            code_lists.code_refresh_delay_seconds(
-                datetime(2026, 8, 25, 1, 0, tzinfo=timezone.utc)
-            ),
-            0,
-        )
-
-    def test_weekend_does_not_mark_any_code_file_stale(self):
-        saturday = datetime(2026, 8, 29, 2, 0, tzinfo=timezone.utc)
-        self.assertFalse(code_lists.is_code_update_day(saturday))
-        self.assertEqual(
-            code_lists.stale_code_files(self.app_name, now=saturday),
-            (),
-        )
-
-    def test_weekend_data_state_reports_current(self):
-        saturday = datetime(2026, 8, 29, 2, 0, tzinfo=timezone.utc)
-        resource = {"last_update": "2026-08-28", "codes": {"sh1": {}}}
-        with (
-            patch.object(code_lists, "_beijing_time", return_value=saturday),
-            patch.object(code_lists, "load_json_from_resource", return_value=resource),
+            patch("stockwidget.data.code_lists.load_file", return_value={}),
+            patch("stockwidget.data.code_lists.save_file") as save,
         ):
-            state, date = code_lists.code_data_state(self.app_name)
+            manager = CodeListManager(fetcher=fetcher)
+            manager.load_local()
+            result = manager.sync_remote(
+                now=datetime(2026, 8, 28, 10, 0, tzinfo=UTC8)
+            )
 
-        self.assertEqual((state, date), ("current", "2026-08-28"))
+        self.assertEqual(result["state"], "current")
+        self.assertEqual(result["updated"], ("stock_hk.json",))
+        self.assertEqual(sum(url.endswith(".json") for url in fetched), 2)
+        save.assert_any_call(status, CODES_STATUS_FILE)
+        save.assert_any_call(new_hk, "stock_hk.json")
+
+    def test_remote_file_falls_back_from_github_to_gitee(self):
+        fetched = []
+
+        def fetcher(url):
+            fetched.append(url)
+            return {"ok": True} if "gitee" in url else None
+
+        manager = CodeListManager(fetcher=fetcher)
+        self.assertEqual(manager._fetch_remote("test.json"), {"ok": True})
+        self.assertIn("raw.githubusercontent.com", fetched[0])
+        self.assertIn("gitee", fetched[1])
 
 
 if __name__ == "__main__":

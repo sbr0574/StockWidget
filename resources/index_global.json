@@ -1,0 +1,464 @@
+{
+  "last_update": "2026-08-27",
+  "codes": {
+    "hkces100": {
+      "code": "ces100",
+      "market": "hk",
+      "type": "指",
+      "name": "中华港股通精选100指数",
+      "name_en": "",
+      "py": "zhonghuaganggutongjingxuan100zhishu",
+      "abbr": "zhggtjx100zs"
+    },
+    "hkces120": {
+      "code": "ces120",
+      "market": "hk",
+      "type": "指",
+      "name": "中华120指数",
+      "name_en": "",
+      "py": "zhonghua120zhishu",
+      "abbr": "zh120zs"
+    },
+    "hkces280": {
+      "code": "ces280",
+      "market": "hk",
+      "type": "指",
+      "name": "中华280指数",
+      "name_en": "",
+      "py": "zhonghua280zhishu",
+      "abbr": "zh280zs"
+    },
+    "hkces300": {
+      "code": "ces300",
+      "market": "hk",
+      "type": "指",
+      "name": "中华沪深港300指数",
+      "name_en": "",
+      "py": "zhonghuahushengang300zhishu",
+      "abbr": "zhhsg300zs"
+    },
+    "hkcesa80": {
+      "code": "cesa80",
+      "market": "hk",
+      "type": "指",
+      "name": "中华A80指数",
+      "name_en": "",
+      "py": "zhonghuaa80zhishu",
+      "abbr": "zha80zs"
+    },
+    "hkcesg10": {
+      "code": "cesg10",
+      "market": "hk",
+      "type": "指",
+      "name": "中华博彩业指数",
+      "name_en": "",
+      "py": "zhonghuabocaiyezhishu",
+      "abbr": "zhbcyzs"
+    },
+    "hkceshkm": {
+      "code": "ceshkm",
+      "market": "hk",
+      "type": "指",
+      "name": "中华香港内地指数",
+      "name_en": "",
+      "py": "zhonghuaxianggangneidizhishu",
+      "abbr": "zhxgndzs"
+    },
+    "hkcscmc": {
+      "code": "cscmc",
+      "market": "hk",
+      "type": "指",
+      "name": "中证内地消费指数",
+      "name_en": "",
+      "py": "zhongzhengneidixiaofeizhishu",
+      "abbr": "zzndxfzs"
+    },
+    "hkcshk100": {
+      "code": "cshk100",
+      "market": "hk",
+      "type": "指",
+      "name": "中证香港100指数",
+      "name_en": "",
+      "py": "zhongzhengxianggang100zhishu",
+      "abbr": "zzxg100zs"
+    },
+    "hkcshkdiv": {
+      "code": "cshkdiv",
+      "market": "hk",
+      "type": "指",
+      "name": "中证香港红利港币指数",
+      "name_en": "",
+      "py": "zhongzhengxiangganghongligangbizhishu",
+      "abbr": "zzxghlgbzs"
+    },
+    "hkcshklc": {
+      "code": "cshklc",
+      "market": "hk",
+      "type": "指",
+      "name": "中证香港上市可交易内地消费指数",
+      "name_en": "",
+      "py": "zhongzhengxianggangshangshikejiaoyineidixiaofeizhishu",
+      "abbr": "zzxgsskjyndxfzs"
+    },
+    "hkcshklre": {
+      "code": "cshklre",
+      "market": "hk",
+      "type": "指",
+      "name": "中证香港上市可交易内地地産指数",
+      "name_en": "",
+      "py": "zhongzhengxianggangshangshikejiaoyineididichanzhishu",
+      "abbr": "zzxgsskjynddczs"
+    },
+    "hkcshkmcs": {
+      "code": "cshkmcs",
+      "market": "hk",
+      "type": "指",
+      "name": "中证香港中盘精选港币指数",
+      "name_en": "",
+      "py": "zhongzhengxianggangzhongpanjingxuangangbizhishu",
+      "abbr": "zzxgzpjxgbzs"
+    },
+    "hkcshkme": {
+      "code": "cshkme",
+      "market": "hk",
+      "type": "指",
+      "name": "中证香港内地股港元指数",
+      "name_en": "",
+      "py": "zhongzhengxianggangneidigugangyuanzhishu",
+      "abbr": "zzxgndggyzs"
+    },
+    "hkcshkpe": {
+      "code": "cshkpe",
+      "market": "hk",
+      "type": "指",
+      "name": "中证香港内地民营企业指数",
+      "name_en": "",
+      "py": "zhongzhengxianggangneidiminyingqiyezhishu",
+      "abbr": "zzxgndmyqyzs"
+    },
+    "hkcshkse": {
+      "code": "cshkse",
+      "market": "hk",
+      "type": "指",
+      "name": "中证香港内地国有企业指数",
+      "name_en": "",
+      "py": "zhongzhengxianggangneidiguoyouqiyezhishu",
+      "abbr": "zzxgndgyqyzs"
+    },
+    "hkcsrhk50": {
+      "code": "csrhk50",
+      "market": "hk",
+      "type": "指",
+      "name": "中证锐联香港基本面50港币指数",
+      "name_en": "",
+      "py": "zhongzhengruilianxianggangjibenmian50gangbizhishu",
+      "abbr": "zzrlxgjbm50gbzs"
+    },
+    "hkgem": {
+      "code": "gem",
+      "market": "hk",
+      "type": "指",
+      "name": "标普香港创业板指数",
+      "name_en": "",
+      "py": "biaopuxianggangchuangyebanzhishu",
+      "abbr": "bpxgcybzs"
+    },
+    "hkhkl": {
+      "code": "hkl",
+      "market": "hk",
+      "type": "指",
+      "name": "标普香港大型股指数",
+      "name_en": "",
+      "py": "biaopuxianggangdaxingguzhishu",
+      "abbr": "bpxgdxgzs"
+    },
+    "hkhscci": {
+      "code": "hscci",
+      "market": "hk",
+      "type": "指",
+      "name": "恒生香港中资企业指数",
+      "name_en": "",
+      "py": "hengshengxianggangzhongziqiyezhishu",
+      "abbr": "hsxgzzqyzs"
+    },
+    "hkhscei": {
+      "code": "hscei",
+      "market": "hk",
+      "type": "指",
+      "name": "恒生中国企业指数",
+      "name_en": "",
+      "py": "hengshengzhongguoqiyezhishu",
+      "abbr": "hszgqyzs"
+    },
+    "hkhsi": {
+      "code": "hsi",
+      "market": "hk",
+      "type": "指",
+      "name": "恒生指数",
+      "name_en": "",
+      "py": "hengshengzhishu",
+      "abbr": "hszs"
+    },
+    "hkhsmbi": {
+      "code": "hsmbi",
+      "market": "hk",
+      "type": "指",
+      "name": "恒生中国内地银行指数",
+      "name_en": "",
+      "py": "hengshengzhongguoneidiyinhangzhishu",
+      "abbr": "hszgndyhzs"
+    },
+    "hkhsmogi": {
+      "code": "hsmogi",
+      "market": "hk",
+      "type": "指",
+      "name": "恒生中国内地石油及天然气指数",
+      "name_en": "",
+      "py": "hengshengzhongguoneidishiyoujitianranqizhishu",
+      "abbr": "hszgndsyjtrqzs"
+    },
+    "hkhsmpi": {
+      "code": "hsmpi",
+      "market": "hk",
+      "type": "指",
+      "name": "恒生中国内地地产指数",
+      "name_en": "",
+      "py": "hengshengzhongguoneididichanzhishu",
+      "abbr": "hszgnddczs"
+    },
+    "hkhstech": {
+      "code": "hstech",
+      "market": "hk",
+      "type": "指",
+      "name": "恒生科技指数",
+      "name_en": "",
+      "py": "hengshengkejizhishu",
+      "abbr": "hskjzs"
+    },
+    "hkvhsi": {
+      "code": "vhsi",
+      "market": "hk",
+      "type": "指",
+      "name": "恒指波幅指数",
+      "name_en": "",
+      "py": "hengzhibofuzhishu",
+      "abbr": "hzbfzs"
+    },
+    "usdji": {
+      "code": "dji",
+      "market": "us",
+      "type": "指",
+      "name": "道琼斯工业平均指数",
+      "name_en": "",
+      "py": "daoqiongsigongyepingjunzhishu",
+      "abbr": "dqsgypjzs"
+    },
+    "usinx": {
+      "code": "inx",
+      "market": "us",
+      "type": "指",
+      "name": "标普500指数",
+      "name_en": "",
+      "py": "biaopu500zhishu",
+      "abbr": "bp500zs"
+    },
+    "usixic": {
+      "code": "ixic",
+      "market": "us",
+      "type": "指",
+      "name": "纳斯达克综合指数",
+      "name_en": "",
+      "py": "nasidakezonghezhishu",
+      "abbr": "nsdkzhzs"
+    },
+    "usndx": {
+      "code": "ndx",
+      "market": "us",
+      "type": "指",
+      "name": "纳斯达克100指数",
+      "name_en": "",
+      "py": "nasidake100zhishu",
+      "abbr": "nsdk100zs"
+    },
+    "gbaex": {
+      "code": "aex",
+      "market": "gb",
+      "type": "指",
+      "name": "荷兰AEX综合指数",
+      "name_en": "",
+      "py": "helanaexzonghezhishu",
+      "abbr": "hlaexzhzs"
+    },
+    "gbas51": {
+      "code": "as51",
+      "market": "gb",
+      "type": "指",
+      "name": "澳大利亚标准普尔200指数",
+      "name_en": "",
+      "py": "aodaliyabiaozhunpuer200zhishu",
+      "abbr": "adlybzpe200zs"
+    },
+    "gbcac": {
+      "code": "cac",
+      "market": "gb",
+      "type": "指",
+      "name": "法CAC40指数",
+      "name_en": "",
+      "py": "facac40zhishu",
+      "abbr": "fcac40zs"
+    },
+    "gbcase": {
+      "code": "case",
+      "market": "gb",
+      "type": "指",
+      "name": "埃及CASE 30指数",
+      "name_en": "",
+      "py": "aijicase30zhishu",
+      "abbr": "ajcase30zs"
+    },
+    "gbdax": {
+      "code": "dax",
+      "market": "gb",
+      "type": "指",
+      "name": "德国DAX 30种股价指数",
+      "name_en": "",
+      "py": "deguodax30zhonggujiazhishu",
+      "abbr": "dgdax30zgjzs"
+    },
+    "gbftsemib": {
+      "code": "ftsemib",
+      "market": "gb",
+      "type": "指",
+      "name": "富时意大利MIB指数",
+      "name_en": "",
+      "py": "fushiyidalimibzhishu",
+      "abbr": "fsydlmibzs"
+    },
+    "gbgsptse": {
+      "code": "gsptse",
+      "market": "gb",
+      "type": "指",
+      "name": "加拿大S&P/TSX综合指数",
+      "name_en": "",
+      "py": "jianadas&p/tsxzonghezhishu",
+      "abbr": "jnds&p/tsxzhzs"
+    },
+    "gbibex": {
+      "code": "ibex",
+      "market": "gb",
+      "type": "指",
+      "name": "西班牙IBEX指数",
+      "name_en": "",
+      "py": "xibanyaibexzhishu",
+      "abbr": "xbyibexzs"
+    },
+    "gbibov": {
+      "code": "ibov",
+      "market": "gb",
+      "type": "指",
+      "name": "巴西BOVESPA股票指数",
+      "name_en": "",
+      "py": "baxibovespagupiaozhishu",
+      "abbr": "bxbovespagpzs"
+    },
+    "gbindexcf": {
+      "code": "indexcf",
+      "market": "gb",
+      "type": "指",
+      "name": "俄罗斯MICEX指数",
+      "name_en": "",
+      "py": "eluosimicexzhishu",
+      "abbr": "elsmicexzs"
+    },
+    "gbjci": {
+      "code": "jci",
+      "market": "gb",
+      "type": "指",
+      "name": "印度尼西亚雅加达综合指数",
+      "name_en": "",
+      "py": "yindunixiyayajiadazonghezhishu",
+      "abbr": "ydnxyyjdzhzs"
+    },
+    "gbkospi": {
+      "code": "kospi",
+      "market": "gb",
+      "type": "指",
+      "name": "首尔综合指数",
+      "name_en": "",
+      "py": "shouerzonghezhishu",
+      "abbr": "sezhzs"
+    },
+    "gbmxx": {
+      "code": "mxx",
+      "market": "gb",
+      "type": "指",
+      "name": "墨西哥BOLSA指数",
+      "name_en": "",
+      "py": "moxigebolsazhishu",
+      "abbr": "mxgbolsazs"
+    },
+    "gbnky": {
+      "code": "nky",
+      "market": "gb",
+      "type": "指",
+      "name": "日经225指数",
+      "name_en": "",
+      "py": "rijing225zhishu",
+      "abbr": "rj225zs"
+    },
+    "gbnz250": {
+      "code": "nz250",
+      "market": "gb",
+      "type": "指",
+      "name": "新西兰NZSE 50指数",
+      "name_en": "",
+      "py": "xinxilannzse50zhishu",
+      "abbr": "xxlnzse50zs"
+    },
+    "gbsensex": {
+      "code": "sensex",
+      "market": "gb",
+      "type": "指",
+      "name": "印度孟买SENSEX指数",
+      "name_en": "",
+      "py": "yindumengmaisensexzhishu",
+      "abbr": "ydmmsensexzs"
+    },
+    "gbswi20": {
+      "code": "swi20",
+      "market": "gb",
+      "type": "指",
+      "name": "瑞士股票指数",
+      "name_en": "",
+      "py": "ruishigupiaozhishu",
+      "abbr": "rsgpzs"
+    },
+    "gbsx5e": {
+      "code": "sx5e",
+      "market": "gb",
+      "type": "指",
+      "name": "欧洲Stoxx50指数",
+      "name_en": "",
+      "py": "ouzhoustoxx50zhishu",
+      "abbr": "ozstoxx50zs"
+    },
+    "gbtwjq": {
+      "code": "twjq",
+      "market": "gb",
+      "type": "指",
+      "name": "中国台湾加权指数",
+      "name_en": "",
+      "py": "zhongguotaiwanjiaquanzhishu",
+      "abbr": "zgtwjqzs"
+    },
+    "gbukx": {
+      "code": "ukx",
+      "market": "gb",
+      "type": "指",
+      "name": "英国富时100指数",
+      "name_en": "",
+      "py": "yingguofushi100zhishu",
+      "abbr": "ygfs100zs"
+    }
+  }
+}

@@ -2,7 +2,9 @@
 # 将 PyInstaller 产物 dist/StockWidget 打包成 Debian 包
 set -euo pipefail
 
-if [[ "${GITHUB_REF_NAME}" == v* ]]; then
+if [[ -n "${VERSION:-}" ]]; then
+  VER="$VERSION"
+elif [[ "${GITHUB_REF_NAME:-}" == v* ]]; then
   VER="${GITHUB_REF_NAME#v}"
 else
   VER="0.0.0-$(date +%Y%m%d)"
@@ -17,7 +19,7 @@ mkdir -p "$PKG/DEBIAN" "$PKG/opt/StockWidget" "$PKG/usr/bin" "$PKG/usr/share/app
 # 把 PyInstaller 产物装进 /opt/StockWidget
 cp -a dist/StockWidget/. "$PKG/opt/StockWidget/"
 
-# 文档：README / LICENSE / NOTICE（README/LICENSE/NOTICE 已由 spec 打进 dist/StockWidget）
+# 文档：README / LICENSE / NOTICE
 mkdir -p "$PKG/usr/share/doc/stockwidget"
 cp -a README.md LICENSE NOTICE "$PKG/usr/share/doc/stockwidget/"
 

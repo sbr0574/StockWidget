@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -33,18 +33,45 @@ jobs:
         run: |
           pyinstaller --clean --noconfirm StockWidget.spec
 
-      - name: Create zip (portable)
+      - name: Read application version
+        id: version
         run: |
-          cd dist && zip -r ../StockWidget-linux.zip StockWidget
+          version="$(python -c 'from stockwidget.constants import APP_VERSION; print(APP_VERSION)')"
+          if [[ -z "$version" ]]; then
+            echo "APP_VERSION is empty" >&2
+            exit 1
+          fi
+          echo "value=$version" >> "$GITHUB_OUTPUT"
 
       - name: Package .deb
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
         run: |
           bash .github/scripts/package-deb.sh
 
-      - name: Upload artifacts
+      - name: Create release zip
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          shopt -s nullglob
+          deb_files=(StockWidget-linux_*.deb)
+          if (( ${#deb_files[@]} != 1 )); then
+            echo "Expected exactly one .deb package, found ${#deb_files[@]}" >&2
+            exit 1
+          fi
+
+          staging="$RUNNER_TEMP/StockWidget-Linux-$RELEASE_VERSION"
+          mkdir "$staging"
+          cp README.md LICENSE NOTICE "${deb_files[0]}" "$staging/"
+
+          deb_name="$(basename "${deb_files[0]}")"
+          archive="$GITHUB_WORKSPACE/StockWidget-Linux-$RELEASE_VERSION.zip"
+          cd "$staging"
+          zip -q "$archive" README.md LICENSE NOTICE "$deb_name"
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: StockWidget-Linux
-          path: |
-            StockWidget-linux.zip
-            StockWidget-linux_*.deb
+          path: StockWidget-Linux-${{ steps.version.outputs.value }}.zip
+          if-no-files-found: error
+          archive: false
