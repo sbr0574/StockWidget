@@ -1,8 +1,9 @@
+import threading
 from functools import partial
 from math import isfinite
 
 from PySide6.QtCore import (
-    Qt, QPoint, QStringListModel, QEvent, QTimer, QItemSelectionModel,
+    Qt, QPoint, QStringListModel, QEvent, QTimer, QItemSelectionModel, Signal,
 )
 from PySide6.QtGui import QColor, QGuiApplication, QKeySequence
 from PySide6.QtWidgets import (
@@ -192,12 +193,13 @@ class CenteredCheckBoxDelegate(QStyledItemDelegate):
 
 
 class SettingsDialog(QDialog):
+    github_check_finished = Signal(bool)
 
     def __init__(self, win: FloatLabel, parent: QWidget, app=None):
         super().__init__(parent)
         self.win = win
         self.app = app
-        self._use_gitee_links = not github_available(timeout=2)
+        self._use_gitee_links = False
         self.ui = Ui_SettingDialog()
         self.ui.setupUi(self)
         self.setModal(False)
@@ -210,6 +212,26 @@ class SettingsDialog(QDialog):
         self._init_code_table()
         self._bind_widgets()
         self._load_settings()
+        self.github_check_finished.connect(self._on_github_check_finished)
+        self._start_github_check()
+
+    def _start_github_check(self):
+        """后台选择关于页链接平台，不阻塞设置窗口构造。"""
+
+        def _worker():
+            use_gitee = not github_available(timeout=2)
+            try:
+                self.github_check_finished.emit(use_gitee)
+            except RuntimeError:
+                pass
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    def _on_github_check_finished(self, use_gitee: bool):
+        if self._use_gitee_links == use_gitee:
+            return
+        self._use_gitee_links = use_gitee
+        self._setup_about()
 
     def _apply_theme_stylesheet(self):
         """按当前系统深浅色应用样式表。"""
