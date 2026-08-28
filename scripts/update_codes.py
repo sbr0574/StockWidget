@@ -42,7 +42,6 @@ _SINA_HEADERS = {
 }
 _DF_COLUMNS = ["code", "name", "name_en", "type", "market"]
 _SZSE_REQUEST_LOCK = Lock()
-_SZSE_MAX_ATTEMPTS = 4
 
 
 # ----------------- 工具函数 -----------------
@@ -131,61 +130,42 @@ def _stock_sh_all() -> pd.DataFrame:
     return _concat_dedup(frames)
 
 def _szse_xlsx(catalog_id: str, tab_key: str, referer: str) -> pd.DataFrame:
-    """下载并解析深交所 XLSX"""
+    """下载并解析一次深交所 XLSX，失败后由分类任务统一重试。"""
     url = (
         "https://www.szse.cn/api/report/ShowReport"
         if catalog_id == "1110"
         else "https://fund.szse.cn/api/report/ShowReport"
     )
-    last_error: Exception | None = None
-
     with _SZSE_REQUEST_LOCK:
-        for attempt in range(1, _SZSE_MAX_ATTEMPTS + 1):
-            try:
-                response = requests.get(
-                    url,
-                    params={
-                        "SHOWTYPE": "xlsx",
-                        "CATALOGID": catalog_id,
-                        "TABKEY": tab_key,
-                        "random": f"{time.time():.16f}",
-                    },
-                    headers={
-                        "Accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/octet-stream,*/*",
-                        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-                        "Connection": "close",
-                        "Referer": referer,
-                        "User-Agent": _USER_AGENT,
-                    },
-                    timeout=(15, 30),
-                )
-                response.raise_for_status()
-                if not response.content.startswith(b"PK"):
-                    content_type = response.headers.get("Content-Type", "unknown")
-                    raise ValueError(f"深交所返回的不是 XLSX: {content_type}")
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore", UserWarning)
-                    table = pd.read_excel(
-                        BytesIO(response.content), engine="openpyxl", dtype=str
-                    )
-                if table.empty:
-                    raise ValueError("深交所 XLSX 内容为空")
-                return table
-            except Exception as exc:
-                last_error = exc
-                if attempt == _SZSE_MAX_ATTEMPTS:
-                    break
-                delay = 2 ** attempt
-                print(
-                    f"深交所 {catalog_id}/{tab_key} 第 {attempt} 次下载失败，"
-                    f"{delay} 秒后重试: {exc}",
-                    flush=True,
-                )
-                time.sleep(delay)
-
-    raise RuntimeError(
-        f"深交所 {catalog_id}/{tab_key} 连续 {_SZSE_MAX_ATTEMPTS} 次下载失败"
-    ) from last_error
+        response = requests.get(
+            url,
+            params={
+                "SHOWTYPE": "xlsx",
+                "CATALOGID": catalog_id,
+                "TABKEY": tab_key,
+                "random": f"{time.time():.16f}",
+            },
+            headers={
+                "Accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/octet-stream,*/*",
+                "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+                "Connection": "close",
+                "Referer": referer,
+                "User-Agent": _USER_AGENT,
+            },
+            timeout=(15, 30),
+        )
+        response.raise_for_status()
+        if not response.content.startswith(b"PK"):
+            content_type = response.headers.get("Content-Type", "unknown")
+            raise ValueError(f"深交所返回的不是 XLSX: {content_type}")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            table = pd.read_excel(
+                BytesIO(response.content), engine="openpyxl", dtype=str
+            )
+        if table.empty:
+            raise ValueError("深交所 XLSX 内容为空")
+        return table
 
 def _stock_sz_a_name_code() -> pd.DataFrame:
     """下载深交所 A 股表，并按交易所板块字段拆分主板和创业板。"""
@@ -320,22 +300,17 @@ def _stock_hk_name_code() -> pd.DataFrame:
     rows = []
     page = 1
     while True:
-        diff = None
-        for _ in range(3):
-            try:
-                r = requests.get(
-                    "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHKStockData",
-                    params={"page": page, "num": 60, "sort": "symbol", "asc": 1,
-                            "node": "qbgg_hk", "_s_r_a": "init"},
-                    headers=_SINA_HEADERS,
-                    timeout=10,
-                )
-                diff = r.json()
-                if not isinstance(diff, list):
-                    diff = []
-                break
-            except Exception:
-                diff = None
+        r = requests.get(
+            "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHKStockData",
+            params={"page": page, "num": 60, "sort": "symbol", "asc": 1,
+                    "node": "qbgg_hk", "_s_r_a": "init"},
+            headers=_SINA_HEADERS,
+            timeout=10,
+        )
+        r.raise_for_status()
+        diff = r.json()
+        if not isinstance(diff, list):
+            raise ValueError("新浪港股接口返回格式错误")
         if not diff:
             break
         for d in diff:
@@ -353,33 +328,32 @@ def _stock_hk_name_code() -> pd.DataFrame:
 # ----------------- 东财数据 -----------------
 
 def _em_clist_all(fs: str, fid: str = "f12", fields: str = "f12,f14") -> list[dict]:
-    """东财 clist 分页拉全市场原始 dict 列表；单页失败重试 3 次，断连返回已收集部分。"""
+    """东财 clist 分页拉全市场列表；分页失败由分类任务统一重试。"""
     _em_page_size = 500
     rows = []
     page = 1
     total = None
     while True:
-        diff = None
-        for _ in range(3):
-            try:
-                r = requests.get(
-                    _EM_CLIST_URL,
-                    params={
-                        "pn": page, "pz": _em_page_size, "po": 1, "np": 1, "fltt": 2, "invt": 2,
-                        "ut": "bd1d9ddb04089700cf9c27f6f7426281",
-                        "fid": fid, "fs": fs, "fields": fields,
-                    },
-                    headers=_EM_HEADERS,
-                    timeout=10,
-                )
-                data = ((r.json() or {}).get("data") or {})
-                diff = data.get("diff") or []
-                if data.get("total") is not None:
-                    total = int(data.get("total") or 0)
-                break
-            except Exception:
-                diff = None
+        r = requests.get(
+            _EM_CLIST_URL,
+            params={
+                "pn": page, "pz": _em_page_size, "po": 1, "np": 1, "fltt": 2, "invt": 2,
+                "ut": "bd1d9ddb04089700cf9c27f6f7426281",
+                "fid": fid, "fs": fs, "fields": fields,
+            },
+            headers=_EM_HEADERS,
+            timeout=10,
+        )
+        r.raise_for_status()
+        data = ((r.json() or {}).get("data") or {})
+        diff = data.get("diff") or []
+        if not isinstance(diff, list):
+            raise ValueError("东财代码列表返回格式错误")
+        if data.get("total") is not None:
+            total = int(data.get("total") or 0)
         if not diff:
+            if total is not None and len(rows) < total:
+                raise ValueError(f"东财代码列表提前结束: {len(rows)}/{total}")
             break
         rows.extend(diff)
         if total is not None and len(rows) >= total:
@@ -511,17 +485,17 @@ def _offline_index_name_code() -> pd.DataFrame:
 # ----------------- 股指列表 -----------------
 
 def _tasks() -> list[tuple]:
-    """每个任务只负责一个可独立更新和提交的 JSON。"""
+    """每个任务负责一个 JSON；耗时较长的任务优先提交到线程池。"""
     return [
+        ("stock_us.json", "美股", _stock_us_name_code, (), {}),
+        ("stock_hk.json", "港股", _stock_hk_name_code, (), {}),
+        ("futures_sh.json", "上期所期货", futures_info_all, (), {}),
         ("stock_sh.json", "沪市股票", _stock_sh_all, (), {}),
         ("stock_sz.json", "深市股票", _stock_sz_all, (), {}),
-        ("stock_bj.json", "京市", _em_stock_df, ("m:0+t:81+s:2048", "京"), {"market": "bj"}),
         ("fund_cn.json", "沪深基金", _fund_exchange_all, (), {}),
-        ("stock_hk.json", "港股", _stock_hk_name_code, (), {}),
-        ("stock_us.json", "美股", _stock_us_name_code, (), {}),
+        ("stock_bj.json", "京市", _em_stock_df, ("m:0+t:81+s:2048", "京"), {"market": "bj"}),
         ("index_cn.json", "国内指数", _index_cn_em, (), {}),
         ("index_global.json", "全球指数", _offline_index_name_code, (), {}),
-        ("futures_sh.json", "上期所期货", futures_info_all, (), {}),
     ]
 
 
@@ -572,6 +546,7 @@ def _futures_nodes() -> list[str]:
     """从新浪节点脚本中提取上期所及上期能源节点名。"""
     url = "https://vip.stock.finance.sina.com.cn/quotes_service/view/js/qihuohangqing.js"
     r = requests.get(url, headers=_SINA_HEADERS, timeout=15)
+    r.raise_for_status()
     r.encoding = "gb2312"
     match = re.search(r"\bshfe\s*:\s*\[(.*?)\]\s*,\s*cffex\s*:", r.text, re.DOTALL)
     if not match:
@@ -581,30 +556,27 @@ def _futures_nodes() -> list[str]:
 def _stock_shfe_futures() -> pd.DataFrame:
     """上期所全部期货合约（含上期能源；新浪 getHQFuturesData 按品种遍历）。"""
     rows = []
-    try:
-        for node in _futures_nodes():
-            for page in range(1, 4):
-                try:
-                    r = requests.get(
-                        "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQFuturesData",
-                        params={"page": page, "sort": "position", "asc": "0", "node": node, "base": "futures"},
-                        headers=_SINA_HEADERS,
-                        timeout=8,
-                    )
-                    j = r.json()
-                    if not isinstance(j, list) or not j:
-                        break
-                    for d in j:
-                        symbol = str(d.get("symbol", "") or "").strip().lower()
-                        name = str(d.get("name", "") or "").strip()
-                        if symbol:
-                            rows.append((symbol, name))
-                    if len(j) < 20:
-                        break
-                except Exception:
-                    break
-    except Exception:
-        rows = []
+    for node in _futures_nodes():
+        for page in range(1, 4):
+            r = requests.get(
+                "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQFuturesData",
+                params={"page": page, "sort": "position", "asc": "0", "node": node, "base": "futures"},
+                headers=_SINA_HEADERS,
+                timeout=8,
+            )
+            r.raise_for_status()
+            contracts = r.json()
+            if not isinstance(contracts, list):
+                raise ValueError("新浪期货接口返回格式错误")
+            if not contracts:
+                break
+            for contract in contracts:
+                symbol = str(contract.get("symbol", "") or "").strip().lower()
+                name = str(contract.get("name", "") or "").strip()
+                if symbol:
+                    rows.append((symbol, name))
+            if len(contracts) < 20:
+                break
     seen, uniq = set(), []
     for c, n in rows:
         if c not in seen:
