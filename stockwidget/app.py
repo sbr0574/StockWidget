@@ -82,13 +82,14 @@ class App(QApplication):
         self._start_codes_initialization()
 
     def find_icon(self, choice: str) -> QIcon:
+        file_type = ".icns" if sys.platform == "darwin" else ".ico"
         if choice == 'lightG':
-            return QIcon(":/LightGlass.ico")
+            return QIcon(":/LightGlass"+file_type)
         if choice == 'darkG':
-            return QIcon(":/DarkGlass.ico")
+            return QIcon(":/DarkGlass"+file_type)
         if choice == 'dark':
-            return QIcon(":/DarkSW.ico")
-        return QIcon(":/StockWidget.ico")
+            return QIcon(":/DarkSW"+file_type)
+        return QIcon(":/StockWidget"+file_type)
 
     def toggle_win(self):
         if self.win.isVisible():
