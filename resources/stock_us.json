@@ -766,15 +766,6 @@
       "py": "aibiying",
       "abbr": "aby"
     },
-    "usabng": {
-      "code": "abng",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多爱彼迎ETF-Leverage",
-      "name_en": "",
-      "py": "erbeizuoduoaibiyingetf-leverage",
-      "abbr": "ebzdabyetf-leverage"
-    },
     "usabos": {
       "code": "abos",
       "market": "us",
@@ -9928,15 +9919,6 @@
       "py": "meiguoyuntong",
       "abbr": "mgyt"
     },
-    "usaxpg": {
-      "code": "axpg",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多AXP ETF-Leverage",
-      "name_en": "",
-      "py": "erbeizuoduoaxpetf-leverage",
-      "abbr": "ebzdaxpetf-leverage"
-    },
     "usaxr": {
       "code": "axr",
       "market": "us",
@@ -10981,26 +10963,8 @@
       "py": "",
       "abbr": ""
     },
-    "usbbcq": {
-      "code": "bbcq",
-      "market": "us",
-      "type": "美",
-      "name": "Bleichroeder Acquisition Corp I",
-      "name_en": "Bleichroeder Acquisition Corp I",
-      "py": "",
-      "abbr": ""
-    },
     "usbbcqu": {
       "code": "bbcqu",
-      "market": "us",
-      "type": "美",
-      "name": "Bleichroeder Acquisition Corp I",
-      "name_en": "Bleichroeder Acquisition Corp I",
-      "py": "",
-      "abbr": ""
-    },
-    "usbbcqw": {
-      "code": "bbcqw",
       "market": "us",
       "type": "美",
       "name": "Bleichroeder Acquisition Corp I",
@@ -11404,26 +11368,8 @@
       "py": "",
       "abbr": ""
     },
-    "usbcar": {
-      "code": "bcar",
-      "market": "us",
-      "type": "美",
-      "name": "D. Boral ARC Acquisition I Corp",
-      "name_en": "D. Boral ARC Acquisition I Corp",
-      "py": "",
-      "abbr": ""
-    },
     "usbcaru": {
       "code": "bcaru",
-      "market": "us",
-      "type": "美",
-      "name": "D. Boral ARC Acquisition I Corp",
-      "name_en": "D. Boral ARC Acquisition I Corp",
-      "py": "",
-      "abbr": ""
-    },
-    "usbcarw": {
-      "code": "bcarw",
       "market": "us",
       "type": "美",
       "name": "D. Boral ARC Acquisition I Corp",
@@ -21052,15 +20998,6 @@
       "py": "",
       "abbr": ""
     },
-    "uscgov": {
-      "code": "cgov",
-      "market": "us",
-      "type": "美",
-      "name": "Corgi 0-3 Month T-Bill ETF",
-      "name_en": "Corgi 0-3 Month T-Bill ETF",
-      "py": "",
-      "abbr": ""
-    },
     "uscgpt": {
       "code": "cgpt",
       "market": "us",
@@ -22541,8 +22478,8 @@
       "code": "cloo",
       "market": "us",
       "type": "美",
-      "name": "NYLI Investment Grade CLO ETF",
-      "name_en": "NYLI Investment Grade CLO ETF",
+      "name": "NYLIM Investment Grade CLO ETF",
+      "name_en": "NYLIM Investment Grade CLO ETF",
       "py": "",
       "abbr": ""
     },
@@ -22924,15 +22861,6 @@
       "py": "moshishaokao",
       "abbr": "mssk"
     },
-    "uscmgg": {
-      "code": "cmgg",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多CMG ETF-Leverage",
-      "name_en": "",
-      "py": "erbeizuoduocmgetf-leverage",
-      "abbr": "ebzdcmgetf-leverage"
-    },
     "uscmi": {
       "code": "cmi",
       "market": "us",
@@ -23193,15 +23121,6 @@
       "name_en": "",
       "py": "kangxige",
       "abbr": "kxg"
-    },
-    "uscncg": {
-      "code": "cncg",
-      "market": "us",
-      "type": "美",
-      "name": "Leverage Shares 2X Long CNC Dai",
-      "name_en": "Leverage Shares 2X Long CNC Dai",
-      "py": "",
-      "abbr": ""
     },
     "uscnck": {
       "code": "cnck",
@@ -27172,15 +27091,6 @@
       "py": "",
       "abbr": ""
     },
-    "usczar": {
-      "code": "czar",
-      "market": "us",
-      "type": "美",
-      "name": "Themes Natural Monopoly ETF",
-      "name_en": "Themes Natural Monopoly ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usczfs": {
       "code": "czfs",
       "market": "us",
@@ -30079,15 +29989,6 @@
       "py": "meiyuanshu",
       "abbr": "mys"
     },
-    "usdlux": {
-      "code": "dlux",
-      "market": "us",
-      "type": "美",
-      "name": "DoubleLine Ultrashort Income ET",
-      "name_en": "DoubleLine Ultrashort Income ET",
-      "py": "",
-      "abbr": ""
-    },
     "usdlx": {
       "code": "dlx",
       "market": "us",
@@ -30274,8 +30175,8 @@
       "type": "美",
       "name": "数字标识",
       "name_en": "",
-      "py": "shuzibiaoshi",
-      "abbr": "szbs"
+      "py": "shuzibiaozhi",
+      "abbr": "szbz"
     },
     "usdmx": {
       "code": "dmx",
@@ -30375,15 +30276,6 @@
       "name_en": "",
       "py": "dannisenkuangye",
       "abbr": "dnsky"
-    },
-    "usdnng": {
-      "code": "dnng",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多DNN ETF-Leverage",
-      "name_en": "",
-      "py": "erbeizuoduodnnetf-leverage",
-      "abbr": "ebzddnnetf-leverage"
     },
     "usdnov": {
       "code": "dnov",
@@ -31586,10 +31478,10 @@
       "code": "duku",
       "market": "us",
       "type": "美",
-      "name": "杜克能源(普通单位)",
-      "name_en": "",
-      "py": "dukenengyuan(putongdanwei)",
-      "abbr": "dkny(ptdw)"
+      "name": "Duke Energy Corp Corporate Unit",
+      "name_en": "Duke Energy Corp Corporate Unit",
+      "py": "",
+      "abbr": ""
     },
     "usdukx": {
       "code": "dukx",
@@ -37971,15 +37863,6 @@
       "name_en": "FB Financial Corp",
       "py": "",
       "abbr": ""
-    },
-    "usfbl": {
-      "code": "fbl",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多META ETF-GraniteShares",
-      "name_en": "",
-      "py": "erbeizuoduometaetf-graniteshares",
-      "abbr": "ebzdmetaetf-graniteshares"
     },
     "usfbla": {
       "code": "fbla",
@@ -50527,15 +50410,6 @@
       "py": "",
       "abbr": ""
     },
-    "ushf": {
-      "code": "hf",
-      "market": "us",
-      "type": "美",
-      "name": "DGA Core Plus Absolute Return E",
-      "name_en": "DGA Core Plus Absolute Return E",
-      "py": "",
-      "abbr": ""
-    },
     "ushfbl": {
       "code": "hfbl",
       "market": "us",
@@ -52606,15 +52480,6 @@
       "py": "hafudijiaju-a",
       "abbr": "hfdjj-a"
     },
-    "ushway": {
-      "code": "hway",
-      "market": "us",
-      "type": "美",
-      "name": "Themes US Infrastructure ETF",
-      "name_en": "Themes US Infrastructure ETF",
-      "py": "",
-      "abbr": ""
-    },
     "ushwbk": {
       "code": "hwbk",
       "market": "us",
@@ -54509,8 +54374,8 @@
       "code": "idef",
       "market": "us",
       "type": "美",
-      "name": "iShares Defense Industrials Act",
-      "name_en": "iShares Defense Industrials Act",
+      "name": "iShares Defense Industrials and",
+      "name_en": "iShares Defense Industrials and",
       "py": "",
       "abbr": ""
     },
@@ -57295,6 +57160,33 @@
       "py": "",
       "abbr": ""
     },
+    "usiphx": {
+      "code": "iphx",
+      "market": "us",
+      "type": "美",
+      "name": "Inflection Point Acquisition Co",
+      "name_en": "Inflection Point Acquisition Co",
+      "py": "",
+      "abbr": ""
+    },
+    "usiphxu": {
+      "code": "iphxu",
+      "market": "us",
+      "type": "美",
+      "name": "Inflection Point Acquisition Co",
+      "name_en": "Inflection Point Acquisition Co",
+      "py": "",
+      "abbr": ""
+    },
+    "usiphxw": {
+      "code": "iphxw",
+      "market": "us",
+      "type": "美",
+      "name": "Inflection Point Acquisition Co",
+      "name_en": "Inflection Point Acquisition Co",
+      "py": "",
+      "abbr": ""
+    },
     "usipi": {
       "code": "ipi",
       "market": "us",
@@ -57553,15 +57445,6 @@
       "type": "美",
       "name": "ProShares Nasdaq-100 High Incom",
       "name_en": "ProShares Nasdaq-100 High Incom",
-      "py": "",
-      "abbr": ""
-    },
-    "usiqra": {
-      "code": "iqra",
-      "market": "us",
-      "type": "美",
-      "name": "NYLI CBRE Real Assets ETF",
-      "name_en": "NYLI CBRE Real Assets ETF",
       "py": "",
       "abbr": ""
     },
@@ -63262,6 +63145,15 @@
       "py": "kepuni",
       "abbr": "kpn"
     },
+    "uskpo": {
+      "code": "kpo",
+      "market": "us",
+      "type": "美",
+      "name": "Kensington Premium Opportunitie",
+      "name_en": "Kensington Premium Opportunitie",
+      "py": "",
+      "abbr": ""
+    },
     "uskpro": {
       "code": "kpro",
       "market": "us",
@@ -64108,23 +64000,14 @@
       "py": "",
       "abbr": ""
     },
-    "uslacg": {
-      "code": "lacg",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多LAC ETF-Leverage",
-      "name_en": "",
-      "py": "erbeizuoduolacetf-leverage",
-      "abbr": "ebzdlacetf-leverage"
-    },
     "uslad": {
       "code": "lad",
       "market": "us",
       "type": "美",
       "name": "利西亚车行",
       "name_en": "",
-      "py": "lixiyachehang",
-      "abbr": "lxych"
+      "py": "lixiyachexing",
+      "abbr": "lxycx"
     },
     "usladm": {
       "code": "ladm",
@@ -64522,26 +64405,8 @@
       "py": "ziyouquanqiu-c",
       "abbr": "zyqq-c"
     },
-    "uslcap": {
-      "code": "lcap",
-      "market": "us",
-      "type": "美",
-      "name": "Principal Capital Appreciation",
-      "name_en": "Principal Capital Appreciation",
-      "py": "",
-      "abbr": ""
-    },
     "uslccc": {
       "code": "lccc",
-      "market": "us",
-      "type": "美",
-      "name": "Lakeshore Acquisition III Corp",
-      "name_en": "Lakeshore Acquisition III Corp",
-      "py": "",
-      "abbr": ""
-    },
-    "uslcccr": {
-      "code": "lcccr",
       "market": "us",
       "type": "美",
       "name": "Lakeshore Acquisition III Corp",
@@ -68581,24 +68446,6 @@
       "py": "",
       "abbr": ""
     },
-    "usmbsd": {
-      "code": "mbsd",
-      "market": "us",
-      "type": "美",
-      "name": "Northern Trust Disciplined Dura",
-      "name_en": "Northern Trust Disciplined Dura",
-      "py": "",
-      "abbr": ""
-    },
-    "usmbsf": {
-      "code": "mbsf",
-      "market": "us",
-      "type": "美",
-      "name": "Regan Floating Rate MBS ETF",
-      "name_en": "Regan Floating Rate MBS ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usmbsx": {
       "code": "mbsx",
       "market": "us",
@@ -71321,8 +71168,8 @@
       "code": "mmma",
       "market": "us",
       "type": "美",
-      "name": "NYLI MacKay Muni Allocation ETF",
-      "name_en": "NYLI MacKay Muni Allocation ETF",
+      "name": "NYLIM MacKay Muni Allocation ET",
+      "name_en": "NYLIM MacKay Muni Allocation ET",
       "py": "",
       "abbr": ""
     },
@@ -71348,8 +71195,8 @@
       "code": "mmsd",
       "market": "us",
       "type": "美",
-      "name": "NYLI MacKay Muni Short Duration",
-      "name_en": "NYLI MacKay Muni Short Duration",
+      "name": "NYLIM MacKay Muni Short Duratio",
+      "name_en": "NYLIM MacKay Muni Short Duratio",
       "py": "",
       "abbr": ""
     },
@@ -75664,15 +75511,6 @@
       "py": "",
       "abbr": ""
     },
-    "usnerd": {
-      "code": "nerd",
-      "market": "us",
-      "type": "美",
-      "name": "Roundhill Video Games ETF",
-      "name_en": "Roundhill Video Games ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usnerv": {
       "code": "nerv",
       "market": "us",
@@ -75699,15 +75537,6 @@
       "name_en": "Cloudflare Inc-A",
       "py": "",
       "abbr": ""
-    },
-    "usnetg": {
-      "code": "netg",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多NET ETF-Leverage",
-      "name_en": "",
-      "py": "erbeizuoduonetetf-leverage",
-      "abbr": "ebzdnetetf-leverage"
     },
     "usnetl": {
       "code": "netl",
@@ -76415,8 +76244,8 @@
       "code": "nism",
       "market": "us",
       "type": "美",
-      "name": "NYLI International Small-Mid Ca",
-      "name_en": "NYLI International Small-Mid Ca",
+      "name": "NYLIM International Small-Mid C",
+      "name_en": "NYLIM International Small-Mid C",
       "py": "",
       "abbr": ""
     },
@@ -81586,15 +81415,6 @@
       "py": "",
       "abbr": ""
     },
-    "usorlg": {
-      "code": "orlg",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多ORLY ETF-Leverage",
-      "name_en": "",
-      "py": "erbeizuoduoorlyetf-leverage",
-      "abbr": "ebzdorlyetf-leverage"
-    },
     "usorly": {
       "code": "orly",
       "market": "us",
@@ -81655,15 +81475,6 @@
       "type": "美",
       "name": "Old Second Bancorp Inc",
       "name_en": "Old Second Bancorp Inc",
-      "py": "",
-      "abbr": ""
-    },
-    "usoscg": {
-      "code": "oscg",
-      "market": "us",
-      "type": "美",
-      "name": "Leverage Shares 2X Long OSCR Da",
-      "name_en": "Leverage Shares 2X Long OSCR Da",
       "py": "",
       "abbr": ""
     },
@@ -83502,24 +83313,6 @@
       "name_en": "",
       "py": "gaoshouyifengjietf-powershares",
       "abbr": "gsyfjetf-powershares"
-    },
-    "uspcf": {
-      "code": "pcf",
-      "market": "us",
-      "type": "美",
-      "name": "High Income Securities Fund",
-      "name_en": "High Income Securities Fund",
-      "py": "",
-      "abbr": ""
-    },
-    "uspcfi": {
-      "code": "pcfi",
-      "market": "us",
-      "type": "美",
-      "name": "Polen Floating Rate Income ETF",
-      "name_en": "Polen Floating Rate Income ETF",
-      "py": "",
-      "abbr": ""
     },
     "uspcg": {
       "code": "pcg",
@@ -88390,6 +88183,24 @@
       "py": "",
       "abbr": ""
     },
+    "uspsql": {
+      "code": "psql",
+      "market": "us",
+      "type": "美",
+      "name": "Bleichroeder Acquisition Corp I",
+      "name_en": "Bleichroeder Acquisition Corp I",
+      "py": "",
+      "abbr": ""
+    },
+    "uspsqlw": {
+      "code": "psqlw",
+      "market": "us",
+      "type": "美",
+      "name": "Pasqal Holding SA Wt",
+      "name_en": "Pasqal Holding SA Wt",
+      "py": "",
+      "abbr": ""
+    },
     "uspsqo": {
       "code": "psqo",
       "market": "us",
@@ -90604,15 +90415,6 @@
       "py": "",
       "abbr": ""
     },
-    "usqred": {
-      "code": "qred",
-      "market": "us",
-      "type": "美",
-      "name": "QuasarEdge Acquisition Corp",
-      "name_en": "QuasarEdge Acquisition Corp",
-      "py": "",
-      "abbr": ""
-    },
     "usqred_u": {
       "code": "qred_u",
       "market": "us",
@@ -92422,6 +92224,15 @@
       "py": "",
       "abbr": ""
     },
+    "usreix": {
+      "code": "reix",
+      "market": "us",
+      "type": "美",
+      "name": "NYLI CBRE Real Assets ETF",
+      "name_en": "NYLI CBRE Real Assets ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usrek": {
       "code": "rek",
       "market": "us",
@@ -93535,6 +93346,15 @@
       "type": "美",
       "name": "Rivian Automotive Inc-A",
       "name_en": "Rivian Automotive Inc-A",
+      "py": "",
+      "abbr": ""
+    },
+    "usrivrw": {
+      "code": "rivrw",
+      "market": "us",
+      "type": "美",
+      "name": "RiverNorth Opportunities Fund I",
+      "name_en": "RiverNorth Opportunities Fund I",
       "py": "",
       "abbr": ""
     },
@@ -96643,15 +96463,6 @@
       "py": "erbeizuoduosbetetf-t-rex",
       "abbr": "ebzdsbetetf-t-rex"
     },
-    "ussbu": {
-      "code": "sbu",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多SBUX ETF-Leverage",
-      "name_en": "",
-      "py": "erbeizuoduosbuxetf-leverage",
-      "abbr": "ebzdsbuxetf-leverage"
-    },
     "ussbux": {
       "code": "sbux",
       "market": "us",
@@ -98677,6 +98488,15 @@
       "py": "",
       "abbr": ""
     },
+    "ussgld": {
+      "code": "sgld",
+      "market": "us",
+      "type": "美",
+      "name": "Scorpio Gold Corp ADR",
+      "name_en": "Scorpio Gold Corp ADR",
+      "py": "",
+      "abbr": ""
+    },
     "ussgly": {
       "code": "sgly",
       "market": "us",
@@ -99673,24 +99493,6 @@
       "type": "美",
       "name": "SolarJuice Co Ltd",
       "name_en": "SolarJuice Co Ltd",
-      "py": "",
-      "abbr": ""
-    },
-    "ussjb": {
-      "code": "sjb",
-      "market": "us",
-      "type": "美",
-      "name": "做空高收益债ETF-ProShares",
-      "name_en": "",
-      "py": "zuokonggaoshouyizhaietf-proshares",
-      "abbr": "zkgsyzetf-proshares"
-    },
-    "ussjcp": {
-      "code": "sjcp",
-      "market": "us",
-      "type": "美",
-      "name": "SanJac Alpha Core Plus Bond ETF",
-      "name_en": "SanJac Alpha Core Plus Bond ETF",
       "py": "",
       "abbr": ""
     },
@@ -102423,15 +102225,6 @@
     },
     "usspegr": {
       "code": "spegr",
-      "market": "us",
-      "type": "美",
-      "name": "Silver Pegasus Acquisition Corp",
-      "name_en": "Silver Pegasus Acquisition Corp",
-      "py": "",
-      "abbr": ""
-    },
-    "usspegu": {
-      "code": "spegu",
       "market": "us",
       "type": "美",
       "name": "Silver Pegasus Acquisition Corp",
@@ -113212,15 +113005,6 @@
       "py": "",
       "abbr": ""
     },
-    "usupsg": {
-      "code": "upsg",
-      "market": "us",
-      "type": "美",
-      "name": "Leverage Shares 2X Long UPS Dai",
-      "name_en": "Leverage Shares 2X Long UPS Dai",
-      "py": "",
-      "abbr": ""
-    },
     "usupst": {
       "code": "upst",
       "market": "us",
@@ -113956,15 +113740,6 @@
       "type": "美",
       "name": "Franklin U.S. Equity Index ETF",
       "name_en": "Franklin U.S. Equity Index ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "ususrd": {
-      "code": "usrd",
-      "market": "us",
-      "type": "美",
-      "name": "Themes US R&D Champions ETF",
-      "name_en": "Themes US R&D Champions ETF",
       "py": "",
       "abbr": ""
     },
@@ -120994,6 +120769,24 @@
       "type": "美",
       "name": "Corgi U.S. Regional Banks 2x Da",
       "name_en": "Corgi U.S. Regional Banks 2x Da",
+      "py": "",
+      "abbr": ""
+    },
+    "usxlab": {
+      "code": "xlab",
+      "market": "us",
+      "type": "美",
+      "name": "D. Boral ARC Acquisition I Corp",
+      "name_en": "D. Boral ARC Acquisition I Corp",
+      "py": "",
+      "abbr": ""
+    },
+    "usxlabw": {
+      "code": "xlabw",
+      "market": "us",
+      "type": "美",
+      "name": "Exascale Labs Holdings Inc Wt",
+      "name_en": "Exascale Labs Holdings Inc Wt",
       "py": "",
       "abbr": ""
     },

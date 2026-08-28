@@ -1,27 +1,9 @@
 {
   "run_date": "2026-08-28",
-  "started_at": "2026-08-28T12:01:28+08:00",
-  "completed_at": "2026-08-28T12:03:49+08:00",
+  "started_at": "2026-08-28T17:19:33+08:00",
+  "completed_at": "2026-08-28T17:20:40+08:00",
   "files": {
-    "stock_sh.json": {
-      "last_checked": "2026-08-28",
-      "last_update": "2026-08-28",
-      "updated": true,
-      "error": false
-    },
-    "stock_sz.json": {
-      "last_checked": "2026-08-28",
-      "last_update": "2026-08-28",
-      "updated": true,
-      "error": false
-    },
-    "stock_bj.json": {
-      "last_checked": "2026-08-28",
-      "last_update": "2026-08-28",
-      "updated": true,
-      "error": false
-    },
-    "fund_cn.json": {
+    "stock_us.json": {
       "last_checked": "2026-08-28",
       "last_update": "2026-08-28",
       "updated": true,
@@ -33,28 +15,46 @@
       "updated": true,
       "error": false
     },
-    "stock_us.json": {
+    "futures_sh.json": {
       "last_checked": "2026-08-28",
       "last_update": "2026-08-28",
-      "updated": true,
+      "updated": false,
+      "error": false
+    },
+    "stock_sh.json": {
+      "last_checked": "2026-08-28",
+      "last_update": "2026-08-28",
+      "updated": false,
+      "error": false
+    },
+    "stock_sz.json": {
+      "last_checked": "2026-08-28",
+      "last_update": "2026-08-28",
+      "updated": false,
+      "error": false
+    },
+    "fund_cn.json": {
+      "last_checked": "2026-08-28",
+      "last_update": "2026-08-28",
+      "updated": false,
+      "error": false
+    },
+    "stock_bj.json": {
+      "last_checked": "2026-08-28",
+      "last_update": "2026-08-28",
+      "updated": false,
       "error": false
     },
     "index_cn.json": {
       "last_checked": "2026-08-28",
       "last_update": "2026-08-28",
-      "updated": true,
+      "updated": false,
       "error": false
     },
     "index_global.json": {
       "last_checked": "2026-08-28",
       "last_update": "2026-08-27",
       "updated": false,
-      "error": false
-    },
-    "futures_sh.json": {
-      "last_checked": "2026-08-28",
-      "last_update": "2026-08-28",
-      "updated": true,
       "error": false
     }
   }
