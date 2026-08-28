@@ -6,3 +6,4 @@ build/
 __pycache__/
 /TODO.md
 .DS_Store
+resources/resources_rc.py

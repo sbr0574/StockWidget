@@ -8,7 +8,14 @@ from pathlib import Path
 ROOT = Path(__file__).parents[1]
 UPDATE_WORKFLOW = ROOT / ".github" / "workflows" / "update-codes.yml"
 TEST_WORKFLOW = ROOT / ".github" / "workflows" / "test.yml"
+BUILD_WORKFLOWS = tuple(
+    ROOT / ".github" / "workflows" / f"build-{platform}.yml"
+    for platform in ("linux", "macos", "windows")
+)
 UPDATER = ROOT / "scripts" / "updater.sh"
+RESOURCE_GENERATION_COMMAND = (
+    "pyside6-rcc resources/resources.qrc -o resources/resources_rc.py"
+)
 
 
 class UpdateWorkflowTests(unittest.TestCase):
@@ -56,7 +63,22 @@ class PullRequestTestWorkflowTests(unittest.TestCase):
         self.assertNotIn("tests/", ignored)
         self.assertIn("pull_request:", workflow)
         self.assertIn("- main", workflow)
+        self.assertIn(RESOURCE_GENERATION_COMMAND, workflow)
         self.assertIn("python -m unittest discover -s tests -v", workflow)
+
+    def test_build_workflows_generate_qt_resources_before_packaging(self):
+        for workflow_path in BUILD_WORKFLOWS:
+            with self.subTest(workflow=workflow_path.name):
+                workflow = workflow_path.read_text(encoding="utf-8")
+                generation_index = workflow.index(RESOURCE_GENERATION_COMMAND)
+                packaging_index = workflow.index(
+                    "pyinstaller --clean --noconfirm StockWidget.spec"
+                )
+                self.assertLess(generation_index, packaging_index)
+
+    def test_generated_qt_resources_are_ignored(self):
+        ignored = (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
+        self.assertIn("resources/resources_rc.py", ignored)
 
 
 if __name__ == "__main__":
