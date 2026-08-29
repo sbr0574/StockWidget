@@ -1,10 +1,10 @@
 # StockWidget
 
-一个在 **Windows** 上运行的极简透明盯盘 Widget 浮窗，按指定股票代码实时显示行情表格，可选展示迷你 **K 线**（当天），支持沪深京三市股票、基金、指数。支持拖拽、右键菜单、设置面板、全局快捷键隐藏浮窗、鼠标穿透、自动保存配置。
+极简透明盯盘 Widget 浮窗，实时显示自选股行情，支持沪深京股票基金、港股、美股、全球主要指数、期货（上期所），兼容**Windows、macOS、Linux**多平台。支持调整浮窗样式、双击隐藏浮窗、鼠标穿透，配置自动保存。
 
-> 适合贴在屏幕一角随时查看 👀
+[![Release](https://img.shields.io/badge/下载-Releases-blue?style=flat-square&logo=github)](https://github.com/sbr0574/StockWidget/releases) [![Version](https://img.shields.io/github/v/tag/sbr0574/StockWidget?sort=semver&label=版本&style=flat-square)](https://github.com/sbr0574/StockWidget/tags) ![License](https://img.shields.io/badge/License-Apache--2.0-lightgrey?style=flat-square)
 
-[![Release](https://img.shields.io/badge/下载-Releases-blue?style=flat-square&logo=github)](https://github.com/sbr0574/StockWidget/releases) ![Version](https://img.shields.io/badge/版本-1.3.0-green?style=flat-square) ![License](https://img.shields.io/badge/License-Apache--2.0-lightgrey?style=flat-square)
+[![Windows](https://img.shields.io/badge/Windows-supported-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/sbr0574/StockWidget/releases) [![macOS](https://img.shields.io/badge/macOS-supported-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/sbr0574/StockWidget/releases) [![Linux](https://img.shields.io/badge/Linux-supported-FCC624?style=flat-square&logo=linux&logoColor=black)](https://github.com/sbr0574/StockWidget/releases)
 
 ---
 
@@ -42,7 +42,7 @@
 * **字体与行距**：字号 **5–15 pt**；行距为额外像素（行高 = 字高 + 行距），**K 线尺寸随字号同步缩放**。
 * **刷新间隔**：可选 **1-15** 秒。
 * **股票代码管理**：设置面板内用列表**增加/删除/上移/下移/置顶**，每日首次启动自动从 GitHub/Gitee 下载由 Actions 更新的全市场代码列表，自选股可通过增加按钮或双击空白区域添加，双击条目可修改，支持输入**数字代码、拼音、首字母、中文名**进行匹配搜索。
-* **自动保存**：所有设置即时保存至配置文件（`%APPDATA%\StockWidget\stock_widget_config.json`）；浮窗隐藏时**暂停刷新**，显示时自动恢复。
+* **自动保存**：所有设置即时保存至配置文件（Windows：`%APPDATA%\StockWidget\stock_widget_config.json`；macOS/Linux：`~/StockWidget/stock_widget_config.json`）；浮窗隐藏时**暂停刷新**，显示时自动恢复。
 * **自动检查更新**：启动时优先检查 GitHub Releases，GitHub 不可用时切换 Gitee，有新版本时提示下载。
 
 ---
@@ -98,19 +98,28 @@ stockwidget/
 
 分层原则：`ui` 只负责显示与交互，`data` 只负责取数与解析，`core` 是可独立测试的纯函数，`platform` 隔离平台差异；各层通过 `app.py` 装配连接，避免职责互相缠绕。
 
-## 🧰 运行环境
+## 🧰 下载与运行
 
-右侧 [Releases](https://github.com/sbr0574/StockWidget/releases) 提供按版本号命名的三平台压缩包：`StockWidget-Windows-<版本号>.zip`、`StockWidget-macOS-<版本号>.zip` 和 `StockWidget-Linux-<版本号>.zip`。解压后，Windows 直接运行 `StockWidget.exe`，macOS 将 `StockWidget.app` 拖入“应用程序”，Linux 安装其中的 `.deb` 包。
+右侧 [Releases](https://github.com/sbr0574/StockWidget/releases) 提供按版本号命名的三平台压缩包：
 
-若要通过代码脚本形式运行，则需要：
-* Windows 10/11
-* Python **3.12+** （其他 Python 版本暂未测试）
-* 依赖见 `requirements.txt`（`PySide6` 界面、`requests` 拉取行情等）
-```powershell
+| 平台 | 发布包 | 使用方式 |
+| --- | --- | --- |
+| Windows 10/11 | `StockWidget-Windows-<版本号>.zip` | 解压后运行 `StockWidget.exe` |
+| macOS | `StockWidget-macOS-<版本号>.zip` | 解压后将 `StockWidget.app` 拖入“应用程序” |
+| Linux（Ubuntu/Debian） | `StockWidget-Linux-<版本号>.zip` | 解压后安装其中的 `.deb` 包 |
+
+### 源码运行
+
+支持 Windows、macOS 和 Linux，发布构建与 CI 使用 Python **3.13**。安装依赖并生成 Qt 资源文件：
+
+```bash
 pip install -r requirements.txt
+pyside6-rcc resources/resources.qrc -o resources/resources_rc.py
 ```
+
 脚本式运行：
-```powershell
+
+```bash
 python main.py
 ```
 
