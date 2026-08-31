@@ -5,7 +5,7 @@ APP_NAME = "StockWidget"
 APP_VERSION = "1.4.0"
 CONFIG_FILE = "stock_widget_config.json"
 
-# 分类代码列表（服务器更新到独立数据分支，客户端按文件独立选择版本）。
+# 分类代码列表（服务器更新到独立数据分支，客户端按状态清单整组同步）。
 CODE_LIST_FILES = (
     "stock_sh.json",
     "stock_sz.json",

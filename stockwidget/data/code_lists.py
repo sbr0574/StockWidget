@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""分类代码列表的资源选择、内存索引和远端同步。"""
+"""分类代码列表的本地加载、状态检查和远端同步。"""
 
-from datetime import date, datetime, time as date_time, timedelta, timezone
+from datetime import datetime, time as date_time, timedelta, timezone
 from threading import RLock
 
 import requests
@@ -14,7 +14,7 @@ from stockwidget.constants import (
 from stockwidget.core.config_store import load_file, load_json_from_resource, save_file
 
 
-CODES_UPDATE_HOUR = 9
+CODES_CHECK_HOUR = 9
 CODES_RETRY_SECONDS = 30 * 60
 _UTC8 = timezone(timedelta(hours=8))
 
@@ -27,42 +27,28 @@ def _time_utc8(now: datetime | None = None) -> datetime:
     return now.astimezone(_UTC8)
 
 
-def _previous_workday(value: date) -> date:
-    value -= timedelta(days=1)
-    while value.weekday() >= 5:
-        value -= timedelta(days=1)
-    return value
-
-
-def _next_workday(value: date) -> date:
+def _next_workday(value):
     value += timedelta(days=1)
     while value.weekday() >= 5:
         value += timedelta(days=1)
     return value
 
 
-def expected_status_date(now: datetime | None = None) -> str:
-    """返回当前应当使用的服务端运行日期。"""
+def next_code_check_delay(now: datetime | None = None) -> int:
+    """返回下一次工作日 9:00 的等待秒数。"""
     current = _time_utc8(now)
-    if current.weekday() < 5 and current.hour >= CODES_UPDATE_HOUR:
-        expected = current.date()
-    else:
-        expected = _previous_workday(current.date())
-    return expected.isoformat()
-
-
-def next_status_check_delay(now: datetime | None = None) -> int:
-    """返回下一次工作日 9:00 状态日期发生变化前的秒数。"""
-    current = _time_utc8(now)
-    if current.weekday() < 5 and current.hour < CODES_UPDATE_HOUR:
+    today_target = datetime.combine(
+        current.date(), date_time(CODES_CHECK_HOUR), _UTC8
+    )
+    if current.weekday() < 5 and current < today_target:
         target_date = current.date()
     else:
         target_date = _next_workday(current.date())
-    target = datetime.combine(target_date, date_time(CODES_UPDATE_HOUR), _UTC8)
+    target = datetime.combine(target_date, date_time(CODES_CHECK_HOUR), _UTC8)
     return max(1, int((target - current).total_seconds()))
 
 
-def fetch_json_from_url(url: str, timeout=(2.5, 15)):
+def fetch_json_from_url(url: str, timeout=5):
     """从 URL 下载 JSON；连接、状态码或解析失败时返回 None。"""
     try:
         response = requests.get(
@@ -86,6 +72,24 @@ def _valid_codes(data) -> bool:
     )
 
 
+def _status_run_time(status: dict) -> str:
+    """返回可排序的状态运行时间，兼容只有 run_date 的旧状态文件。"""
+    for key in ("started_at", "completed_at", "run_date"):
+        value = str((status or {}).get(key) or "").strip()
+        if value:
+            return value
+    return ""
+
+
+def _valid_status(status) -> bool:
+    return (
+        isinstance(status, dict)
+        and bool(str(status.get("run_date") or ""))
+        and bool(_status_run_time(status))
+        and isinstance(status.get("files"), dict)
+    )
+
+
 class CodeListManager:
     """一次性加载各分类，并在内存中维护合并后的代码索引。"""
 
@@ -96,8 +100,7 @@ class CodeListManager:
         self._codes: dict[str, dict] = {}
         self._state = "cached"
         self._state_date = ""
-        self._remote_status: dict | None = None
-        self._remote_expected_date = ""
+        self._local_status: dict = {}
 
     def load_local(self) -> dict:
         """逐份选择 qrc 与本地缓存中内容日期较新的有效版本。"""
@@ -112,15 +115,13 @@ class CodeListManager:
                     enumerate(candidates),
                     key=lambda item: (str(item[1].get("last_update") or ""), item[0]),
                 )[1]
+        local_status = load_file(CODES_STATUS_FILE)
         with self._lock:
             self._payloads = selected
+            self._local_status = local_status if _valid_status(local_status) else {}
             self._rebuild_codes_locked()
-            self._state = (
-                "current"
-                if _time_utc8().weekday() >= 5 and len(selected) == len(CODE_LIST_FILES)
-                else "cached"
-            )
-            self._state_date = self._latest_local_date_locked()
+            self._state = "cached"
+            self._state_date = str(self._local_status.get("run_date") or "")
             return self._codes
 
     def codes(self) -> dict:
@@ -131,110 +132,74 @@ class CodeListManager:
         with self._lock:
             return self._state, self._state_date
 
+    def begin_remote_check(self) -> None:
+        """开始启动/定时检查时立即将界面状态置为缓存。"""
+        with self._lock:
+            self._state = "cached"
+            self._state_date = str(self._local_status.get("run_date") or "")
+
     def sync_remote(self, now: datetime | None = None) -> dict:
-        """读取远端状态，只下载内容日期与本地不同的分类文件。"""
+        """比较本地与远端运行时间；远端较新时完整下载九个代码列表。"""
         current = _time_utc8(now)
-        expected = expected_status_date(current)
-        if current.weekday() >= 5:
-            with self._lock:
-                complete = len(self._payloads) == len(CODE_LIST_FILES)
-                self._state = "current" if complete else "cached"
-                self._state_date = self._latest_local_date_locked()
-                state, state_date = self._state, self._state_date
-            return {
-                "state": state,
-                "date": state_date,
-                "status_available": False,
-                "retry_seconds": next_status_check_delay(current),
-                "updated": (),
-            }
-        with self._lock:
-            status = self._remote_status if self._remote_expected_date == expected else None
-
+        self.begin_remote_check()
+        status = self._fetch_remote(CODES_STATUS_FILE, validator=_valid_status)
         if status is None:
-            status = self._fetch_remote(
-                CODES_STATUS_FILE,
-                validator=lambda data: self._valid_status(data, expected),
-            )
-            if status is None:
-                with self._lock:
-                    self._state = "cached"
-                    self._state_date = self._latest_local_date_locked()
-                retry = (
-                    CODES_RETRY_SECONDS
-                    if current.weekday() < 5 and current.hour >= CODES_UPDATE_HOUR
-                    else next_status_check_delay(current)
-                )
-                return {
-                    "state": "cached",
-                    "date": self.state()[1],
-                    "status_available": False,
-                    "retry_seconds": retry,
-                    "updated": (),
-                }
-            save_file(status, CODES_STATUS_FILE)
-            with self._lock:
-                self._remote_status = status
-                self._remote_expected_date = expected
-
-        updated = []
-        download_failed = False
-        server_complete = True
-        files = status.get("files", {})
-
-        for filename in CODE_LIST_FILES:
-            metadata = files.get(filename)
-            if (
-                not isinstance(metadata, dict)
-                or metadata.get("error") is not False
-                or str(metadata.get("last_checked") or "") != expected
-                or not str(metadata.get("last_update") or "")
-            ):
-                server_complete = False
-                continue
-
-            remote_date = str(metadata["last_update"])
-            with self._lock:
-                local_date = str(self._payloads.get(filename, {}).get("last_update") or "")
-            if local_date >= remote_date:
-                continue
-
-            payload = self._fetch_remote(
-                filename,
-                validator=lambda data, expected=remote_date: (
-                    _valid_codes(data)
-                    and str(data.get("last_update") or "") == expected
-                ),
-            )
-            if payload is None:
-                download_failed = True
-                continue
-            save_file(payload, filename)
-            with self._lock:
-                self._payloads[filename] = payload
-            updated.append(filename)
+            return self._sync_result(CODES_RETRY_SECONDS)
 
         with self._lock:
-            self._rebuild_codes_locked()
-            synchronized = server_complete and not download_failed
-            if synchronized:
-                for filename in CODE_LIST_FILES:
-                    remote_date = str(files[filename].get("last_update") or "")
-                    local_date = str(self._payloads.get(filename, {}).get("last_update") or "")
-                    if local_date < remote_date:
-                        synchronized = False
-                        break
-            self._state = "current" if synchronized else "cached"
-            self._state_date = expected if synchronized else self._latest_local_date_locked()
-            state, state_date = self._state, self._state_date
+            local_run_time = _status_run_time(self._local_status)
+            local_complete = all(
+                _valid_codes(self._payloads.get(filename))
+                for filename in CODE_LIST_FILES
+            )
 
-        retry_seconds = CODES_RETRY_SECONDS if download_failed else next_status_check_delay(current)
+        remote_run_time = _status_run_time(status)
+        needs_download = remote_run_time > local_run_time or not local_complete
+        updated = ()
+        if needs_download:
+            downloaded = {}
+            for filename in CODE_LIST_FILES:
+                payload = self._fetch_remote(filename, validator=_valid_codes)
+                if payload is None:
+                    return self._sync_result(CODES_RETRY_SECONDS)
+                downloaded[filename] = payload
+
+            try:
+                for filename in CODE_LIST_FILES:
+                    save_file(downloaded[filename], filename)
+                # 状态文件最后保存：它代表九个列表均已完整落盘。
+                save_file(status, CODES_STATUS_FILE)
+            except OSError:
+                return self._sync_result(CODES_RETRY_SECONDS)
+
+            with self._lock:
+                self._payloads = downloaded
+                self._local_status = status
+                self._rebuild_codes_locked()
+            updated = tuple(CODE_LIST_FILES)
+
+        with self._lock:
+            self._state = "current"
+            self._state_date = str(self._local_status.get("run_date") or "")
+            state_date = self._state_date
         return {
-            "state": state,
+            "state": "current",
             "date": state_date,
-            "status_available": True,
+            "retry_seconds": next_code_check_delay(current),
+            "updated": updated,
+        }
+
+    def _sync_result(self, retry_seconds: int) -> dict:
+        """保持缓存状态，并返回统一的失败重试结果。"""
+        with self._lock:
+            self._state = "cached"
+            self._state_date = str(self._local_status.get("run_date") or "")
+            state_date = self._state_date
+        return {
+            "state": "cached",
+            "date": state_date,
             "retry_seconds": retry_seconds,
-            "updated": tuple(updated),
+            "updated": (),
         }
 
     def _fetch_remote(self, filename: str, validator=None):
@@ -244,14 +209,6 @@ class CodeListManager:
                 return data
         return None
 
-    @staticmethod
-    def _valid_status(status, expected: str) -> bool:
-        return (
-            isinstance(status, dict)
-            and str(status.get("run_date") or "") == expected
-            and isinstance(status.get("files"), dict)
-        )
-
     def _rebuild_codes_locked(self) -> None:
         merged = {}
         for filename in CODE_LIST_FILES:
@@ -259,11 +216,3 @@ class CodeListManager:
             if _valid_codes(payload):
                 merged.update(payload["codes"])
         self._codes = merged
-
-    def _latest_local_date_locked(self) -> str:
-        dates = [
-            str(payload.get("last_update") or "")
-            for payload in self._payloads.values()
-            if str(payload.get("last_update") or "")
-        ]
-        return max(dates) if dates else ""

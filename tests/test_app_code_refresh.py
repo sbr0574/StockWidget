@@ -3,7 +3,7 @@
 
 import unittest
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from stockwidget.app import App
 
@@ -39,6 +39,26 @@ class AppCodeRefreshTests(unittest.TestCase):
         app.win.set_codes_list.assert_called_once_with(codes)
         app.save_now.assert_called_once_with()
         app._start_codes_refresh.assert_called_once_with()
+
+    def test_refresh_marks_cached_before_starting_worker(self):
+        settings = Mock()
+        settings.isVisible.return_value = True
+        app = SimpleNamespace(
+            _codes_refresh_running=False,
+            _codes_local_ready=True,
+            code_manager=Mock(),
+            settings_dlg=settings,
+            codes_refresh_finished=Mock(),
+        )
+
+        with patch("stockwidget.app.threading.Thread") as thread:
+            App._start_codes_refresh(app)
+
+        self.assertTrue(app._codes_refresh_running)
+        app.code_manager.begin_remote_check.assert_called_once_with()
+        settings.refresh_data_state.assert_called_once_with()
+        thread.assert_called_once()
+        thread.return_value.start.assert_called_once_with()
 
     def test_refresh_finished_updates_window_and_schedules_retry(self):
         manager = Mock()
