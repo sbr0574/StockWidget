@@ -1,3 +1,4 @@
+import sys
 import threading
 from functools import partial
 from math import isfinite
@@ -54,7 +55,7 @@ _FLAT_GROUPS = ("gb_data", "gb_data_setting", "gb_name", "gb_icon", "gb_fcn",
                 "gb_color", "gb_text", "gb_tabel", "gb_hotkeys", "gb_about")
 
 
-def _build_settings_stylesheet(dark: bool) -> str:
+def _build_settings_stylesheet(dark: bool, *, macos: bool = False) -> str:
     """按系统深浅色生成设置窗口样式表（Qt QSS 不支持媒体查询，故在运行时按主题构建）。"""
     if dark:
         sep = "rgba(255, 255, 255, 0.35)"
@@ -65,6 +66,82 @@ def _build_settings_stylesheet(dark: bool) -> str:
 
     flat_boxes = ",\n".join(f"QGroupBox#{n}" for n in _FLAT_GROUPS)
     flat_titles = ",\n".join(f"QGroupBox#{n}::title" for n in _FLAT_GROUPS)
+
+    macos_buttons = ""
+    if macos:
+        if dark:
+            button_bg = "rgba(255, 255, 255, 0.10)"
+            button_hover = "rgba(255, 255, 255, 0.16)"
+            button_pressed = "rgba(255, 255, 255, 0.22)"
+            button_border = "rgba(255, 255, 255, 0.24)"
+            button_disabled = "rgba(255, 255, 255, 0.05)"
+            icon_selected = "rgba(10, 132, 255, 0.24)"
+        else:
+            button_bg = "rgba(255, 255, 255, 0.86)"
+            button_hover = "rgba(255, 255, 255, 1.00)"
+            button_pressed = "rgba(0, 0, 0, 0.08)"
+            button_border = "rgba(0, 0, 0, 0.22)"
+            button_disabled = "rgba(0, 0, 0, 0.04)"
+            icon_selected = "rgba(0, 122, 255, 0.14)"
+
+        regular_selectors = (
+            "QPushButton#btn_add",
+            "QPushButton#btn_del",
+            "QPushButton#btn_fg_color",
+            "QPushButton#btn_bg_color",
+        )
+        icon_selectors = (
+            "QPushButton#btn_icon_default",
+            "QPushButton#btn_icon_lightG",
+            "QPushButton#btn_icon_dark",
+            "QPushButton#btn_icon_darkG",
+        )
+        regular_buttons = ",\n".join(regular_selectors)
+        regular_hover = ",\n".join(f"{selector}:hover" for selector in regular_selectors)
+        regular_pressed = ",\n".join(f"{selector}:pressed" for selector in regular_selectors)
+        regular_focus = ",\n".join(f"{selector}:focus" for selector in regular_selectors)
+        regular_disabled = ",\n".join(f"{selector}:disabled" for selector in regular_selectors)
+        icon_buttons = ",\n".join(icon_selectors)
+        icon_hover = ",\n".join(f"{selector}:hover" for selector in icon_selectors)
+        icon_pressed = ",\n".join(f"{selector}:pressed" for selector in icon_selectors)
+        icon_checked = ",\n".join(f"{selector}:checked" for selector in icon_selectors)
+        macos_buttons = f"""
+{regular_buttons} {{
+    background-color: {button_bg};
+    border: 1px solid {button_border};
+    border-radius: 6px;
+    padding: 3px 9px;
+}}
+{regular_hover} {{
+    background-color: {button_hover};
+}}
+{regular_pressed} {{
+    background-color: {button_pressed};
+}}
+{regular_focus} {{
+    border: 2px solid rgba(10, 132, 255, 0.82);
+}}
+{regular_disabled} {{
+    background-color: {button_disabled};
+    border-color: transparent;
+}}
+{icon_buttons} {{
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 3px;
+}}
+{icon_hover} {{
+    background-color: {button_hover};
+}}
+{icon_pressed} {{
+    background-color: {button_pressed};
+}}
+{icon_checked} {{
+    background-color: {icon_selected};
+    border: 2px solid rgb(10, 132, 255);
+}}
+"""
 
     return f"""
 {flat_boxes} {{
@@ -85,6 +162,7 @@ QTableWidget#list_codes QHeaderView::section {{
     padding: 4px 8px;
     font-weight: 600;
 }}
+{macos_buttons}
 """
 
 
@@ -236,7 +314,7 @@ class SettingsDialog(QDialog):
     def _apply_theme_stylesheet(self):
         """按当前系统深浅色应用样式表。"""
         dark = QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
-        self.setStyleSheet(_build_settings_stylesheet(dark))
+        self.setStyleSheet(_build_settings_stylesheet(dark, macos=sys.platform == "darwin"))
 
     def _on_color_scheme_changed(self, _scheme=None):
         self._apply_theme_stylesheet()
@@ -268,7 +346,12 @@ class SettingsDialog(QDialog):
 
     def _bind_widgets(self):
         self.sb_interval = self.ui.sb_interval
-        self.cmb_source = self.ui.cmb_source
+        self.rb_sina = self.ui.rb_sina
+        self.rb_em = self.ui.rb_em
+        self._source_buttons = {
+            "sina": self.rb_sina,
+            "eastmoney": self.rb_em,
+        }
         self.label_data_state = self.ui.label_data_state
         self.gb_name = self.ui.gb_name
         self.cb_code = self.ui.cb_code
@@ -312,7 +395,8 @@ class SettingsDialog(QDialog):
         self.keyseq_click_through = self.ui.keyseq_click_through
 
         self.sb_interval.valueChanged.connect(self._on_interval_changed)
-        self.cmb_source.currentIndexChanged.connect(self._on_source_changed)
+        for source, button in self._source_buttons.items():
+            button.toggled.connect(partial(self._on_source_toggled, source))
         self.list_codes.itemChanged.connect(self._on_codes_changed)
 
         self.gb_name.toggled.connect(self._on_name_toggled)
@@ -412,7 +496,7 @@ class SettingsDialog(QDialog):
 
         self._apply_platform_limits()
         self._setup_icon_choices()
-        self._setup_source_combo()
+        self._setup_source_buttons()
         self._setup_about()
         self.refresh_data_state()
 
@@ -458,7 +542,11 @@ class SettingsDialog(QDialog):
         for key, btn in self.icon_buttons.items():
             self._icon_button_group.addButton(btn)
             btn.setCheckable(True)
-            btn.setStyleSheet("QPushButton:checked { border: 2px solid #4a90d9; border-radius: 4px; }")
+            btn.setFlat(sys.platform == "darwin")
+            if sys.platform != "darwin":
+                btn.setStyleSheet(
+                    "QPushButton:checked { border: 2px solid #4a90d9; border-radius: 4px; }"
+                )
             btn.toggled.connect(partial(self._on_icon_button_toggled, key))
 
         cur_choice = self.app._icon_choice if self.app is not None else None
@@ -473,15 +561,16 @@ class SettingsDialog(QDialog):
         for btn in self.icon_buttons.values():
             btn.blockSignals(False)
 
-    def _setup_source_combo(self):
-        """填充行情数据源下拉框（新浪 / 东方财富），并按当前配置选中。"""
-        self.cmb_source.blockSignals(True)
-        self.cmb_source.clear()
-        self.cmb_source.addItem("新浪", "sina")
-        self.cmb_source.addItem("东方财富", "eastmoney")
-        idx = self.cmb_source.findData(getattr(self.win, "data_source", "sina"))
-        self.cmb_source.setCurrentIndex(idx if idx >= 0 else 0)
-        self.cmb_source.blockSignals(False)
+    def _setup_source_buttons(self):
+        """按当前配置选中行情数据源单选按钮。"""
+        source = getattr(self.win, "data_source", "sina")
+        if source not in self._source_buttons:
+            source = "sina"
+        for button in self._source_buttons.values():
+            button.blockSignals(True)
+        self._source_buttons[source].setChecked(True)
+        for button in self._source_buttons.values():
+            button.blockSignals(False)
 
     def refresh_data_state(self):
         """更新市场代码状态；qrc 与本地文件都属于缓存。"""
@@ -698,10 +787,9 @@ class SettingsDialog(QDialog):
     def _on_interval_changed(self, value: int):
         self.win.set_refresh_interval(value)
 
-    def _on_source_changed(self, idx: int):
-        src = self.cmb_source.itemData(idx)
-        if src:
-            self.win.set_data_source(str(src))
+    def _on_source_toggled(self, source: str, checked: bool):
+        if checked:
+            self.win.set_data_source(source)
 
     def _on_code_toggled(self, checked: bool):
         self.win.set_code_visible(checked)

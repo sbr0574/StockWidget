@@ -369,16 +369,6 @@
      <property name="flat">
       <bool>true</bool>
      </property>
-     <widget class="QComboBox" name="cmb_source">
-      <property name="geometry">
-       <rect>
-        <x>100</x>
-        <y>25</y>
-        <width>95</width>
-        <height>26</height>
-       </rect>
-      </property>
-     </widget>
      <widget class="QLabel" name="label_source">
       <property name="geometry">
        <rect>
@@ -419,6 +409,32 @@
       </property>
       <property name="maximum">
        <number>60</number>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="rb_sina">
+      <property name="geometry">
+       <rect>
+        <x>65</x>
+        <y>25</y>
+        <width>51</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>新浪</string>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="rb_em">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>25</y>
+        <width>81</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>东方财富</string>
       </property>
      </widget>
     </widget>

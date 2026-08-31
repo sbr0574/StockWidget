@@ -3,7 +3,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-from stockwidget.ui.settings_dialog import SettingsDialog
+from stockwidget.ui.settings_dialog import SettingsDialog, _build_settings_stylesheet
 
 
 class _SignalRecorder:
@@ -17,6 +17,28 @@ class _SignalRecorder:
 
 
 class SettingsDialogTests(unittest.TestCase):
+    def test_macos_button_styles_are_platform_scoped(self):
+        regular = _build_settings_stylesheet(dark=False)
+        macos = _build_settings_stylesheet(dark=False, macos=True)
+
+        self.assertNotIn("QPushButton#btn_add", regular)
+        self.assertIn("QPushButton#btn_add", macos)
+        self.assertIn("QPushButton#btn_icon_default", macos)
+        self.assertIn("rgb(10, 132, 255)", macos)
+
+    def test_source_toggle_only_updates_for_selected_button(self):
+        calls = []
+        owner = type(
+            "Owner",
+            (),
+            {"win": type("Window", (), {"set_data_source": calls.append})()},
+        )()
+
+        SettingsDialog._on_source_toggled(owner, "sina", False)
+        SettingsDialog._on_source_toggled(owner, "eastmoney", True)
+
+        self.assertEqual(calls, ["eastmoney"])
+
     def test_github_check_does_not_block_dialog_thread(self):
         owner = type("Owner", (), {"github_check_finished": _SignalRecorder()})()
 

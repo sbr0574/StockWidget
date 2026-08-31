@@ -17,9 +17,9 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComboBox,
     QDialog, QFontComboBox, QGroupBox, QHeaderView,
-    QKeySequenceEdit, QLabel, QPushButton, QSizePolicy,
-    QSlider, QSpinBox, QTabWidget, QTableWidget,
-    QTableWidgetItem, QWidget)
+    QKeySequenceEdit, QLabel, QPushButton, QRadioButton,
+    QSizePolicy, QSlider, QSpinBox, QTabWidget,
+    QTableWidget, QTableWidgetItem, QWidget)
 
 class Ui_SettingDialog(object):
     def setupUi(self, SettingDialog):
@@ -125,9 +125,6 @@ class Ui_SettingDialog(object):
         self.gb_data_setting.setStyleSheet(u"")
         self.gb_data_setting.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_data_setting.setFlat(True)
-        self.cmb_source = QComboBox(self.gb_data_setting)
-        self.cmb_source.setObjectName(u"cmb_source")
-        self.cmb_source.setGeometry(QRect(100, 25, 95, 26))
         self.label_source = QLabel(self.gb_data_setting)
         self.label_source.setObjectName(u"label_source")
         self.label_source.setGeometry(QRect(10, 25, 81, 26))
@@ -139,6 +136,12 @@ class Ui_SettingDialog(object):
         self.sb_interval.setGeometry(QRect(100, 55, 95, 26))
         self.sb_interval.setMinimum(1)
         self.sb_interval.setMaximum(60)
+        self.rb_sina = QRadioButton(self.gb_data_setting)
+        self.rb_sina.setObjectName(u"rb_sina")
+        self.rb_sina.setGeometry(QRect(65, 25, 51, 26))
+        self.rb_em = QRadioButton(self.gb_data_setting)
+        self.rb_em.setObjectName(u"rb_em")
+        self.rb_em.setGeometry(QRect(120, 25, 81, 26))
         self.gb_name = QGroupBox(self.data)
         self.gb_name.setObjectName(u"gb_name")
         self.gb_name.setGeometry(QRect(350, 100, 201, 81))
@@ -378,6 +381,8 @@ class Ui_SettingDialog(object):
         self.gb_data_setting.setTitle(QCoreApplication.translate("SettingDialog", u"\u6570\u636e\u8bbe\u7f6e", None))
         self.label_source.setText(QCoreApplication.translate("SettingDialog", u"\u6570\u636e\u6e90\uff1a", None))
         self.label_interval.setText(QCoreApplication.translate("SettingDialog", u"\u5237\u65b0\u95f4\u9694(s)\uff1a", None))
+        self.rb_sina.setText(QCoreApplication.translate("SettingDialog", u"\u65b0\u6d6a", None))
+        self.rb_em.setText(QCoreApplication.translate("SettingDialog", u"\u4e1c\u65b9\u8d22\u5bcc", None))
         self.gb_name.setTitle(QCoreApplication.translate("SettingDialog", u"\u540d\u79f0\u663e\u793a", None))
         self.cb_code.setText(QCoreApplication.translate("SettingDialog", u"\u4ee3\u7801", None))
         self.cb_type.setText(QCoreApplication.translate("SettingDialog", u"\u7c7b\u578b", None))
