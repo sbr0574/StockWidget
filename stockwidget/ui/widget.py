@@ -389,7 +389,16 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
         self._fit_to_contents()
 
-    def _format_data(self, code: str, data: dict, type: str, display_code: str):
+    def _format_data(
+        self,
+        code: str,
+        data: dict,
+        type: str,
+        display_code: str,
+        market: str = "",
+    ):
+        lot_size = 100 if market in {"sh", "sz", "bj"} else 1
+
         # 名称显示
         name = f"({type})" if type is not None and self.type_visible else ""
         name += f"{display_code} " if self.code_visible else ""
@@ -408,8 +417,11 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if pur_1 == sell_1 > 0:
             # 集合竞价阶段
             data["current_price"] = sell_1
-            paired = int(data["seller_vol"][0] / 100)
-            unpaired = int((data["purchaser_vol"][1] or (-data["seller_vol"][1])) / 100)
+            paired = int(data["seller_vol"][0] / lot_size)
+            unpaired = int(
+                (data["purchaser_vol"][1] or (-data["seller_vol"][1]))
+                / lot_size
+            )
             b1_label = f"{paired:d}"
             s1_label = f"{unpaired:+d}"
             b1_color_sign = (unpaired > 0) - (unpaired < 0)
@@ -420,8 +432,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             sell_v1 = data["seller_vol"][0]
             buy_marker = "<" if pur_1 and pur_v1 and data["current_price"] == pur_1 else " "
             sell_marker = ">" if sell_1 and sell_v1 and data["current_price"] == sell_1 else " "
-            b1_label = f"{int(pur_v1 / 100)}{buy_marker}" if (pur_1 and pur_v1) else "-"
-            s1_label = f"{sell_marker}{int(sell_v1 / 100)}" if (sell_1 and sell_v1) else "-"
+            b1_label = f"{int(pur_v1 / lot_size)}{buy_marker}" if (pur_1 and pur_v1) else "-"
+            s1_label = f"{sell_marker}{int(sell_v1 / lot_size)}" if (sell_1 and sell_v1) else "-"
             b1_color_sign = 1 if (pur_1 and pur_v1) else 0
             s1_color_sign = -1 if (sell_1 and sell_v1) else 0
 
@@ -445,7 +457,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             elif data["current_price"] == data["low_price"]: arrow = "↓"
         k_payload = {"k": (data["opening_price"], data["current_price"], data["high_price"], data["low_price"], data["prev_close"])}
 
-        precision = 3 if type == "基" else 2
+        precision = 3 if type == "基" or market == "us" else 2
 
         # 浮盈计算（与成本价比较），仅显示百分比
         cost = self.costs.get(code)
@@ -468,7 +480,10 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             "买一": b1_label,
             "卖一": s1_label,
             "委比": f"{committee:+.2f}%" if (p_sum + s_sum) > 0 else "-",
-            "成交量": ("-" if is_index and not data["deals_vol"] else format_volume(data["deals_vol"])),
+            "成交量": (
+                "-" if is_index and not data["deals_vol"]
+                else format_volume(data["deals_vol"], lot_size=lot_size)
+            ),
             "成交额": ("-" if is_index and not data["deals_amt"] else format_amount(data["deals_amt"])),
             "均价": f"{avg:.{precision}f}",
             "K线": k_payload}
@@ -529,9 +544,13 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         full_sign = []
         for c, d in data.items():
             entry = self.watchlist.get(c) or {}
-            type_ = entry.get("type") or self._get_code_info(c).get("type")
-            display_code = entry.get("code") or self._get_code_info(c).get("code") or c
-            row, sign = self._format_data(c, d, type_, display_code)
+            code_info = self._get_code_info(c)
+            type_ = entry.get("type") or code_info.get("type")
+            market = entry.get("market") or code_info.get("market") or ""
+            display_code = entry.get("code") or code_info.get("code") or c
+            row, sign = self._format_data(
+                c, d, type_, display_code, market=market
+            )
             full_rows.append(row)
             full_sign.append(sign)
 

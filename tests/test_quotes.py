@@ -24,6 +24,58 @@ class ExplicitMarketMetadataTests(unittest.TestCase):
         self.assertEqual(_em_secid(future), "113.aum")
 
 
+class SinaVolumeUnitTests(unittest.TestCase):
+    @staticmethod
+    def _index_parts(volume: str) -> list[str]:
+        parts = ["0"] * 32
+        parts[0] = "指数"
+        parts[1:6] = ["10", "9", "11", "12", "8"]
+        parts[8] = volume
+        parts[9] = "5000"
+        return parts
+
+    def test_shanghai_index_lots_are_normalized_to_shares(self):
+        entry = quotes._parse_sina_a(
+            self._index_parts("1234"), is_index=True, market="sh"
+        )
+        self.assertEqual(entry["deals_vol"], 123400)
+
+    def test_shenzhen_index_is_already_in_shares(self):
+        entry = quotes._parse_sina_a(
+            self._index_parts("1234"), is_index=True, market="sz"
+        )
+        self.assertEqual(entry["deals_vol"], 1234)
+
+    def test_hong_kong_index_is_already_in_shares(self):
+        parts = ["0"] * 19
+        parts[0:7] = ["HSI", "恒生指数", "10", "9", "12", "8", "11"]
+        parts[11] = "5000"
+        parts[12] = "1234"
+        entry = quotes._parse_sina_hk(parts, is_index=True)
+        self.assertEqual(entry["deals_vol"], 1234)
+
+    def test_us_index_is_already_in_shares(self):
+        parts = ["0"] * 31
+        parts[0] = "纳斯达克"
+        parts[1] = "11"
+        parts[3] = "2026-08-29 05:30:00"
+        parts[5:8] = ["10", "12", "8"]
+        parts[10] = "1234"
+        parts[26] = "9"
+        entry = quotes._parse_sina_us(parts, is_index=True)
+        self.assertEqual(entry["deals_vol"], 1234)
+
+    def test_futures_volume_is_contract_count(self):
+        parts = ["0"] * 18
+        parts[0] = "黄金连续"
+        parts[1] = "150000"
+        parts[2:8] = ["10", "12", "8", "10", "11", "11"]
+        parts[10] = "9"
+        parts[14] = "1234"
+        entry = quotes._parse_sina_futures(parts)
+        self.assertEqual(entry["deals_vol"], 1234)
+
+
 class EastmoneyQuoteTests(unittest.TestCase):
     @staticmethod
     def _response(payload):

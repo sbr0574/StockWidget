@@ -2,9 +2,9 @@
 """行情数值的显示格式化（纯函数，供 UI 层调用）。"""
 
 
-def format_volume(value: int) -> str:
-    """成交量：股 -> 手（÷100），并按 万/亿 缩写。"""
-    value = int(value / 100)
+def format_volume(value: int, lot_size: int = 100) -> str:
+    """按市场每手股数换算成交量，并按 万/亿 缩写。"""
+    value = int(value / lot_size)
     if value < 1e4:
         return f"{value}"
     if value < 1e8:
