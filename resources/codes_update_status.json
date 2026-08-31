@@ -1,24 +1,24 @@
 {
   "run_date": "2026-08-31",
-  "started_at": "2026-08-31T13:05:28+08:00",
-  "completed_at": "2026-08-31T13:07:15+08:00",
+  "started_at": "2026-08-31T21:29:19+08:00",
+  "completed_at": "2026-08-31T21:29:58+08:00",
   "files": {
     "stock_us.json": {
       "last_checked": "2026-08-31",
       "last_update": "2026-08-31",
-      "updated": false,
+      "updated": true,
       "error": false
     },
     "stock_hk.json": {
       "last_checked": "2026-08-31",
-      "last_update": "2026-08-28",
-      "updated": false,
+      "last_update": "2026-08-31",
+      "updated": true,
       "error": false
     },
     "futures_sh.json": {
       "last_checked": "2026-08-31",
       "last_update": "2026-08-31",
-      "updated": true,
+      "updated": false,
       "error": false
     },
     "stock_sh.json": {
