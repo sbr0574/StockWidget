@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-28",
+  "last_update": "2026-08-31",
   "codes": {
     "usa": {
       "code": "a",
@@ -20998,6 +20998,15 @@
       "py": "",
       "abbr": ""
     },
+    "uscgov": {
+      "code": "cgov",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi 0-3 Month T-Bill ETF",
+      "name_en": "Corgi 0-3 Month T-Bill ETF",
+      "py": "",
+      "abbr": ""
+    },
     "uscgpt": {
       "code": "cgpt",
       "market": "us",
@@ -24440,8 +24449,8 @@
       "code": "cplb",
       "market": "us",
       "type": "美",
-      "name": "NYLI MacKay Core Plus Bond ETF",
-      "name_en": "NYLI MacKay Core Plus Bond ETF",
+      "name": "NYLIM MacKay Core Plus Bond ETF",
+      "name_en": "NYLIM MacKay Core Plus Bond ETF",
       "py": "",
       "abbr": ""
     },
@@ -29988,6 +29997,15 @@
       "name_en": "",
       "py": "meiyuanshu",
       "abbr": "mys"
+    },
+    "usdlux": {
+      "code": "dlux",
+      "market": "us",
+      "type": "美",
+      "name": "DoubleLine Ultrashort Income ET",
+      "name_en": "DoubleLine Ultrashort Income ET",
+      "py": "",
+      "abbr": ""
     },
     "usdlx": {
       "code": "dlx",
@@ -37863,6 +37881,15 @@
       "name_en": "FB Financial Corp",
       "py": "",
       "abbr": ""
+    },
+    "usfbl": {
+      "code": "fbl",
+      "market": "us",
+      "type": "美",
+      "name": "二倍做多META ETF-GraniteShares",
+      "name_en": "",
+      "py": "erbeizuoduometaetf-graniteshares",
+      "abbr": "ebzdmetaetf-graniteshares"
     },
     "usfbla": {
       "code": "fbla",
@@ -50410,6 +50437,15 @@
       "py": "",
       "abbr": ""
     },
+    "ushf": {
+      "code": "hf",
+      "market": "us",
+      "type": "美",
+      "name": "DGA Core Plus Absolute Return E",
+      "name_en": "DGA Core Plus Absolute Return E",
+      "py": "",
+      "abbr": ""
+    },
     "ushfbl": {
       "code": "hfbl",
       "market": "us",
@@ -50540,8 +50576,8 @@
       "code": "hfxi",
       "market": "us",
       "type": "美",
-      "name": "NYLI FTSE International Equity",
-      "name_en": "NYLI FTSE International Equity",
+      "name": "NYLIM FTSE International Equity",
+      "name_en": "NYLIM FTSE International Equity",
       "py": "",
       "abbr": ""
     },
@@ -57371,8 +57407,8 @@
       "code": "iqhi",
       "market": "us",
       "type": "美",
-      "name": "NYLI MacKay High Income ETF",
-      "name_en": "NYLI MacKay High Income ETF",
+      "name": "NYLIM MacKay High Income ETF",
+      "name_en": "NYLIM MacKay High Income ETF",
       "py": "",
       "abbr": ""
     },
@@ -57452,8 +57488,8 @@
       "code": "iqsi",
       "market": "us",
       "type": "美",
-      "name": "NYLI Candriam International Equ",
-      "name_en": "NYLI Candriam International Equ",
+      "name": "NYLIM Candriam International Eq",
+      "name_en": "NYLIM Candriam International Eq",
       "py": "",
       "abbr": ""
     },
@@ -57461,8 +57497,8 @@
       "code": "iqsm",
       "market": "us",
       "type": "美",
-      "name": "NYLI Candriam U.S. Mid Cap Equi",
-      "name_en": "NYLI Candriam U.S. Mid Cap Equi",
+      "name": "NYLIM Candriam U.S. Mid Cap Equ",
+      "name_en": "NYLIM Candriam U.S. Mid Cap Equ",
       "py": "",
       "abbr": ""
     },
@@ -57479,8 +57515,8 @@
       "code": "iqsu",
       "market": "us",
       "type": "美",
-      "name": "NYLI Candriam U.S. Large Cap Eq",
-      "name_en": "NYLI Candriam U.S. Large Cap Eq",
+      "name": "NYLIM Candriam U.S. Large Cap E",
+      "name_en": "NYLIM Candriam U.S. Large Cap E",
       "py": "",
       "abbr": ""
     },
@@ -58604,8 +58640,8 @@
       "code": "iwfg",
       "market": "us",
       "type": "美",
-      "name": "NYLI Winslow Focused Large Cap",
-      "name_en": "NYLI Winslow Focused Large Cap",
+      "name": "NYLIM Winslow Focused Large Cap",
+      "name_en": "NYLIM Winslow Focused Large Cap",
       "py": "",
       "abbr": ""
     },
@@ -58631,8 +58667,8 @@
       "code": "iwlg",
       "market": "us",
       "type": "美",
-      "name": "NYLI Winslow Large Cap Growth E",
-      "name_en": "NYLI Winslow Large Cap Growth E",
+      "name": "NYLIM Winslow Large Cap Growth",
+      "name_en": "NYLIM Winslow Large Cap Growth",
       "py": "",
       "abbr": ""
     },
@@ -64405,8 +64441,26 @@
       "py": "ziyouquanqiu-c",
       "abbr": "zyqq-c"
     },
+    "uslcap": {
+      "code": "lcap",
+      "market": "us",
+      "type": "美",
+      "name": "Principal Capital Appreciation",
+      "name_en": "Principal Capital Appreciation",
+      "py": "",
+      "abbr": ""
+    },
     "uslccc": {
       "code": "lccc",
+      "market": "us",
+      "type": "美",
+      "name": "Lakeshore Acquisition III Corp",
+      "name_en": "Lakeshore Acquisition III Corp",
+      "py": "",
+      "abbr": ""
+    },
+    "uslcccr": {
+      "code": "lcccr",
       "market": "us",
       "type": "美",
       "name": "Lakeshore Acquisition III Corp",
@@ -64481,8 +64535,8 @@
       "code": "lclg",
       "market": "us",
       "type": "美",
-      "name": "Logan Capital Broad Innovative",
-      "name_en": "Logan Capital Broad Innovative",
+      "name": "Logan Capital Large Cap Growth",
+      "name_en": "Logan Capital Large Cap Growth",
       "py": "",
       "abbr": ""
     },
@@ -66776,8 +66830,8 @@
       "code": "lrnd",
       "market": "us",
       "type": "美",
-      "name": "IQ U.S. Large Cap R&D Leaders E",
-      "name_en": "IQ U.S. Large Cap R&D Leaders E",
+      "name": "NYLIM U.S. Large Cap R&D Leader",
+      "name_en": "NYLIM U.S. Large Cap R&D Leader",
       "py": "",
       "abbr": ""
     },
@@ -68446,6 +68500,24 @@
       "py": "",
       "abbr": ""
     },
+    "usmbsd": {
+      "code": "mbsd",
+      "market": "us",
+      "type": "美",
+      "name": "Northern Trust Disciplined Dura",
+      "name_en": "Northern Trust Disciplined Dura",
+      "py": "",
+      "abbr": ""
+    },
+    "usmbsf": {
+      "code": "mbsf",
+      "market": "us",
+      "type": "美",
+      "name": "Regan Floating Rate MBS ETF",
+      "name_en": "Regan Floating Rate MBS ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usmbsx": {
       "code": "mbsx",
       "market": "us",
@@ -69251,8 +69323,8 @@
       "code": "megi",
       "market": "us",
       "type": "美",
-      "name": "NYLI CBRE Global Infrastructure",
-      "name_en": "NYLI CBRE Global Infrastructure",
+      "name": "NYLIM CBRE Global Infrastructur",
+      "name_en": "NYLIM CBRE Global Infrastructur",
       "py": "",
       "abbr": ""
     },
@@ -71069,8 +71141,8 @@
       "code": "mmca",
       "market": "us",
       "type": "美",
-      "name": "NYLI MacKay California Muni Int",
-      "name_en": "NYLI MacKay California Muni Int",
+      "name": "NYLIM MacKay California Muni In",
+      "name_en": "NYLIM MacKay California Muni In",
       "py": "",
       "abbr": ""
     },
@@ -71078,8 +71150,8 @@
       "code": "mmd",
       "market": "us",
       "type": "美",
-      "name": "NYLI MacKay DefinedTerm Muni Op",
-      "name_en": "NYLI MacKay DefinedTerm Muni Op",
+      "name": "NYLIM MacKay DefinedTerm Muni O",
+      "name_en": "NYLIM MacKay DefinedTerm Muni O",
       "py": "",
       "abbr": ""
     },
@@ -71114,8 +71186,8 @@
       "code": "mmin",
       "market": "us",
       "type": "美",
-      "name": "NYLI MacKay Muni Insured ETF",
-      "name_en": "NYLI MacKay Muni Insured ETF",
+      "name": "NYLIM MacKay Muni Insured ETF",
+      "name_en": "NYLIM MacKay Muni Insured ETF",
       "py": "",
       "abbr": ""
     },
@@ -71123,8 +71195,8 @@
       "code": "mmit",
       "market": "us",
       "type": "美",
-      "name": "NYLI MacKay Muni Intermediate E",
-      "name_en": "NYLI MacKay Muni Intermediate E",
+      "name": "NYLIM MacKay Muni Intermediate",
+      "name_en": "NYLIM MacKay Muni Intermediate",
       "py": "",
       "abbr": ""
     },
@@ -71276,8 +71348,8 @@
       "code": "mna",
       "market": "us",
       "type": "美",
-      "name": "NYLI Merger Arbitrage ETF",
-      "name_en": "NYLI Merger Arbitrage ETF",
+      "name": "NYLIM Merger Arbitrage ETF",
+      "name_en": "NYLIM Merger Arbitrage ETF",
       "py": "",
       "abbr": ""
     },
@@ -75511,6 +75583,15 @@
       "py": "",
       "abbr": ""
     },
+    "usnerd": {
+      "code": "nerd",
+      "market": "us",
+      "type": "美",
+      "name": "Roundhill Video Games ETF",
+      "name_en": "Roundhill Video Games ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usnerv": {
       "code": "nerv",
       "market": "us",
@@ -75537,6 +75618,15 @@
       "name_en": "Cloudflare Inc-A",
       "py": "",
       "abbr": ""
+    },
+    "usnetg": {
+      "code": "netg",
+      "market": "us",
+      "type": "美",
+      "name": "二倍做多NET ETF-Leverage",
+      "name_en": "",
+      "py": "erbeizuoduonetetf-leverage",
+      "abbr": "ebzdnetetf-leverage"
     },
     "usnetl": {
       "code": "netl",
@@ -83314,6 +83404,24 @@
       "py": "gaoshouyifengjietf-powershares",
       "abbr": "gsyfjetf-powershares"
     },
+    "uspcf": {
+      "code": "pcf",
+      "market": "us",
+      "type": "美",
+      "name": "High Income Securities Fund",
+      "name_en": "High Income Securities Fund",
+      "py": "",
+      "abbr": ""
+    },
+    "uspcfi": {
+      "code": "pcfi",
+      "market": "us",
+      "type": "美",
+      "name": "Polen Floating Rate Income ETF",
+      "name_en": "Polen Floating Rate Income ETF",
+      "py": "",
+      "abbr": ""
+    },
     "uspcg": {
       "code": "pcg",
       "market": "us",
@@ -88187,8 +88295,8 @@
       "code": "psql",
       "market": "us",
       "type": "美",
-      "name": "Bleichroeder Acquisition Corp I",
-      "name_en": "Bleichroeder Acquisition Corp I",
+      "name": "Pasqal Holding SA",
+      "name_en": "Pasqal Holding SA",
       "py": "",
       "abbr": ""
     },
@@ -90415,6 +90523,15 @@
       "py": "",
       "abbr": ""
     },
+    "usqred": {
+      "code": "qred",
+      "market": "us",
+      "type": "美",
+      "name": "QuasarEdge Acquisition Corp",
+      "name_en": "QuasarEdge Acquisition Corp",
+      "py": "",
+      "abbr": ""
+    },
     "usqred_u": {
       "code": "qred_u",
       "market": "us",
@@ -92228,8 +92345,8 @@
       "code": "reix",
       "market": "us",
       "type": "美",
-      "name": "NYLI CBRE Real Assets ETF",
-      "name_en": "NYLI CBRE Real Assets ETF",
+      "name": "NYLIM CBRE Real Estate & Infras",
+      "name_en": "NYLIM CBRE Real Estate & Infras",
       "py": "",
       "abbr": ""
     },
@@ -97745,8 +97862,8 @@
       "code": "secr",
       "market": "us",
       "type": "美",
-      "name": "NYLI MacKay Securitized Income",
-      "name_en": "NYLI MacKay Securitized Income",
+      "name": "NYLIM MacKay Securitized Income",
+      "name_en": "NYLIM MacKay Securitized Income",
       "py": "",
       "abbr": ""
     },
@@ -99493,6 +99610,24 @@
       "type": "美",
       "name": "SolarJuice Co Ltd",
       "name_en": "SolarJuice Co Ltd",
+      "py": "",
+      "abbr": ""
+    },
+    "ussjb": {
+      "code": "sjb",
+      "market": "us",
+      "type": "美",
+      "name": "做空高收益债ETF-ProShares",
+      "name_en": "",
+      "py": "zuokonggaoshouyizhaietf-proshares",
+      "abbr": "zkgsyzetf-proshares"
+    },
+    "ussjcp": {
+      "code": "sjcp",
+      "market": "us",
+      "type": "美",
+      "name": "SanJac Alpha Core Plus Bond ETF",
+      "name_en": "SanJac Alpha Core Plus Bond ETF",
       "py": "",
       "abbr": ""
     },
@@ -102225,6 +102360,15 @@
     },
     "usspegr": {
       "code": "spegr",
+      "market": "us",
+      "type": "美",
+      "name": "Silver Pegasus Acquisition Corp",
+      "name_en": "Silver Pegasus Acquisition Corp",
+      "py": "",
+      "abbr": ""
+    },
+    "usspegu": {
+      "code": "spegu",
       "market": "us",
       "type": "美",
       "name": "Silver Pegasus Acquisition Corp",
@@ -119264,8 +119408,8 @@
       "code": "wrnd",
       "market": "us",
       "type": "美",
-      "name": "NYLI Global Equity R&D Leaders",
-      "name_en": "NYLI Global Equity R&D Leaders",
+      "name": "NYLIM Global Equity R&D Leaders",
+      "name_en": "NYLIM Global Equity R&D Leaders",
       "py": "",
       "abbr": ""
     },
@@ -120776,8 +120920,8 @@
       "code": "xlab",
       "market": "us",
       "type": "美",
-      "name": "D. Boral ARC Acquisition I Corp",
-      "name_en": "D. Boral ARC Acquisition I Corp",
+      "name": "Exascale Labs Holdings Inc-A",
+      "name_en": "Exascale Labs Holdings Inc-A",
       "py": "",
       "abbr": ""
     },
@@ -121478,8 +121622,8 @@
       "code": "xpon",
       "market": "us",
       "type": "美",
-      "name": "Expion360 Inc",
-      "name_en": "Expion360 Inc",
+      "name": "Expion Energy Inc",
+      "name_en": "Expion Energy Inc",
       "py": "",
       "abbr": ""
     },

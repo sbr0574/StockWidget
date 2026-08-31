@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-28",
+  "last_update": "2026-08-31",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -5576,10 +5576,10 @@
       "code": "600817",
       "market": "sh",
       "type": "沪",
-      "name": "XD宇通重",
+      "name": "宇通重工",
       "name_en": "",
-      "py": "xdyutongzhong",
-      "abbr": "xdytz"
+      "py": "yutongzhonggong",
+      "abbr": "ytzg"
     },
     "sh600818": {
       "code": "600818",
@@ -8186,10 +8186,10 @@
       "code": "601788",
       "market": "sh",
       "type": "沪",
-      "name": "XD光大证",
+      "name": "光大证券",
       "name_en": "",
-      "py": "xdguangdazheng",
-      "abbr": "xdgdz"
+      "py": "guangdazhengquan",
+      "abbr": "gdzq"
     },
     "sh601789": {
       "code": "601789",
@@ -14639,10 +14639,10 @@
       "code": "605136",
       "market": "sh",
       "type": "沪",
-      "name": "丽人丽妆",
+      "name": "XD丽人丽",
       "name_en": "",
-      "py": "lirenlizhuang",
-      "abbr": "lrlz"
+      "py": "xdlirenli",
+      "abbr": "xdlrl"
     },
     "sh605138": {
       "code": "605138",
@@ -15584,10 +15584,10 @@
       "code": "688036",
       "market": "sh",
       "type": "科",
-      "name": "传音控股",
+      "name": "XD传音控",
       "name_en": "",
-      "py": "chuanyinkonggu",
-      "abbr": "cykg"
+      "py": "xdchuanyinkong",
+      "abbr": "xdcyk"
     },
     "sh688037": {
       "code": "688037",

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-28",
+  "last_update": "2026-08-31",
   "codes": {
     "bj810011": {
       "code": "810011",
@@ -1598,10 +1598,10 @@
       "code": "920288",
       "market": "bj",
       "type": "京",
-      "name": "N华大",
+      "name": "华大海天",
       "name_en": "",
-      "py": "nhuada",
-      "abbr": "nhd"
+      "py": "huadahaitian",
+      "abbr": "hdht"
     },
     "bj920289": {
       "code": "920289",

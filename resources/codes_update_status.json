@@ -1,58 +1,58 @@
 {
-  "run_date": "2026-08-28",
-  "started_at": "2026-08-28T17:19:33+08:00",
-  "completed_at": "2026-08-28T17:20:40+08:00",
+  "run_date": "2026-08-31",
+  "started_at": "2026-08-31T09:01:10+08:00",
+  "completed_at": "2026-08-31T09:02:20+08:00",
   "files": {
     "stock_us.json": {
-      "last_checked": "2026-08-28",
-      "last_update": "2026-08-28",
+      "last_checked": "2026-08-31",
+      "last_update": "2026-08-31",
       "updated": true,
       "error": false
     },
     "stock_hk.json": {
       "last_checked": "2026-08-28",
       "last_update": "2026-08-28",
+      "updated": false,
+      "error": true
+    },
+    "futures_sh.json": {
+      "last_checked": "2026-08-31",
+      "last_update": "2026-08-31",
       "updated": true,
       "error": false
     },
-    "futures_sh.json": {
-      "last_checked": "2026-08-28",
-      "last_update": "2026-08-28",
-      "updated": false,
-      "error": false
-    },
     "stock_sh.json": {
-      "last_checked": "2026-08-28",
-      "last_update": "2026-08-28",
-      "updated": false,
+      "last_checked": "2026-08-31",
+      "last_update": "2026-08-31",
+      "updated": true,
       "error": false
     },
     "stock_sz.json": {
-      "last_checked": "2026-08-28",
-      "last_update": "2026-08-28",
-      "updated": false,
+      "last_checked": "2026-08-31",
+      "last_update": "2026-08-31",
+      "updated": true,
       "error": false
     },
     "fund_cn.json": {
-      "last_checked": "2026-08-28",
+      "last_checked": "2026-08-31",
       "last_update": "2026-08-28",
       "updated": false,
       "error": false
     },
     "stock_bj.json": {
-      "last_checked": "2026-08-28",
-      "last_update": "2026-08-28",
-      "updated": false,
+      "last_checked": "2026-08-31",
+      "last_update": "2026-08-31",
+      "updated": true,
       "error": false
     },
     "index_cn.json": {
-      "last_checked": "2026-08-28",
+      "last_checked": "2026-08-31",
       "last_update": "2026-08-28",
       "updated": false,
       "error": false
     },
     "index_global.json": {
-      "last_checked": "2026-08-28",
+      "last_checked": "2026-08-31",
       "last_update": "2026-08-27",
       "updated": false,
       "error": false
