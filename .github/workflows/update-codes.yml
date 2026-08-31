@@ -46,7 +46,8 @@ jobs:
           mkdir -p "$DATA_DIR/resources"
           for file in \
             stock_sh.json stock_sz.json stock_bj.json fund_cn.json \
-            stock_hk.json stock_us.json index_cn.json index_global.json \
+            stock_hk.json stock_us.json cache_us_cn_aliases.json \
+            index_cn.json index_global.json \
             futures_sh.json codes_update_status.json; do
             if [[ ! -f "$DATA_DIR/resources/$file" ]]; then
               cp "resources/$file" "$DATA_DIR/resources/$file"
@@ -74,6 +75,7 @@ jobs:
             resources/fund_cn.json \
             resources/stock_hk.json \
             resources/stock_us.json \
+            resources/cache_us_cn_aliases.json \
             resources/index_cn.json \
             resources/index_global.json \
             resources/futures_sh.json \

@@ -4,6 +4,8 @@
 import unittest
 from pathlib import Path
 
+from stockwidget.constants import CODE_LIST_FILES
+
 
 ROOT = Path(__file__).parents[1]
 UPDATE_WORKFLOW = ROOT / ".github" / "workflows" / "update-codes.yml"
@@ -19,6 +21,9 @@ RESOURCE_GENERATION_COMMAND = (
 
 
 class UpdateWorkflowTests(unittest.TestCase):
+    def test_us_alias_cache_is_not_a_client_download(self):
+        self.assertNotIn("cache_us_cn_aliases.json", CODE_LIST_FILES)
+
     def test_only_classified_json_files_are_committed(self):
         text = UPDATE_WORKFLOW.read_text(encoding="utf-8")
         self.assertIn("workflow_dispatch:", text)
@@ -32,6 +37,7 @@ class UpdateWorkflowTests(unittest.TestCase):
             "fund_cn.json",
             "stock_hk.json",
             "stock_us.json",
+            "cache_us_cn_aliases.json",
             "index_cn.json",
             "index_global.json",
             "futures_sh.json",
@@ -40,6 +46,7 @@ class UpdateWorkflowTests(unittest.TestCase):
             self.assertIn(f"resources/{filename}", text)
         self.assertNotIn("resources/resources_rc.py", text)
         self.assertNotIn("git add -A", text)
+        self.assertIn("resources/cache_us_cn_aliases.json", text)
 
     def test_server_updater_scopes_credentials_and_added_files(self):
         text = UPDATER.read_text(encoding="utf-8")
@@ -49,6 +56,7 @@ class UpdateWorkflowTests(unittest.TestCase):
         self.assertIn('git -C "$DATA_DIR" add --', text)
         self.assertNotIn("git add -A", text)
         self.assertNotIn("resources/resources_rc.py", text)
+        self.assertIn("cache_us_cn_aliases.json", text)
 
 
 class PullRequestTestWorkflowTests(unittest.TestCase):

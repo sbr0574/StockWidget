@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-27",
+  "last_update": "2026-08-31",
   "codes": {
     "sh000001": {
       "code": "000001",
@@ -8298,6 +8298,24 @@
       "name_en": "",
       "py": "chuangyebantongxinr",
       "abbr": "cybtxr"
+    },
+    "sz970095": {
+      "code": "970095",
+      "market": "sz",
+      "type": "指",
+      "name": "创业板AI应用",
+      "name_en": "",
+      "py": "chuangyebanaiyingyong",
+      "abbr": "cybaiyy"
+    },
+    "sz97009501": {
+      "code": "97009501",
+      "market": "sz",
+      "type": "指",
+      "name": "创业板AI应用R",
+      "name_en": "",
+      "py": "chuangyebanaiyingyongr",
+      "abbr": "cybaiyyr"
     },
     "sz970097": {
       "code": "970097",

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-27",
+  "last_update": "2026-08-31",
   "codes": {
     "bj810011": {
       "code": "810011",
@@ -1512,6 +1512,15 @@
       "name_en": "",
       "py": "xinhuike",
       "abbr": "xhk"
+    },
+    "bj920268": {
+      "code": "920268",
+      "market": "bj",
+      "type": "京",
+      "name": "百迈科",
+      "name_en": "",
+      "py": "baimaike",
+      "abbr": "bmk"
     },
     "bj920269": {
       "code": "920269",

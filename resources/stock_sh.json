@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-27",
+  "last_update": "2026-08-31",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -7610,10 +7610,10 @@
       "code": "601339",
       "market": "sh",
       "type": "沪",
-      "name": "XD百隆东",
+      "name": "百隆东方",
       "name_en": "",
-      "py": "xdbailongdong",
-      "abbr": "xdbld"
+      "py": "bailongdongfang",
+      "abbr": "bldf"
     },
     "sh601360": {
       "code": "601360",
@@ -9563,10 +9563,10 @@
       "code": "603102",
       "market": "sh",
       "type": "沪",
-      "name": "XD百合股",
+      "name": "百合股份",
       "name_en": "",
-      "py": "xdbaihegu",
-      "abbr": "xdbhg"
+      "py": "baihegufen",
+      "abbr": "bhgf"
     },
     "sh603103": {
       "code": "603103",
@@ -10562,10 +10562,10 @@
       "code": "603236",
       "market": "sh",
       "type": "沪",
-      "name": "XD移远通",
+      "name": "移远通信",
       "name_en": "",
-      "py": "xdyiyuantong",
-      "abbr": "xdyyt"
+      "py": "yiyuantongxin",
+      "abbr": "yytx"
     },
     "sh603237": {
       "code": "603237",
@@ -14639,10 +14639,10 @@
       "code": "605136",
       "market": "sh",
       "type": "沪",
-      "name": "丽人丽妆",
+      "name": "XD丽人丽",
       "name_en": "",
-      "py": "lirenlizhuang",
-      "abbr": "lrlz"
+      "py": "xdlirenli",
+      "abbr": "xdlrl"
     },
     "sh605138": {
       "code": "605138",
@@ -15584,10 +15584,10 @@
       "code": "688036",
       "market": "sh",
       "type": "科",
-      "name": "传音控股",
+      "name": "XD传音控",
       "name_en": "",
-      "py": "chuanyinkonggu",
-      "abbr": "cykg"
+      "py": "xdchuanyinkong",
+      "abbr": "xdcyk"
     },
     "sh688037": {
       "code": "688037",

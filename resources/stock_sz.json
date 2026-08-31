@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-27",
+  "last_update": "2026-08-31",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -2048,10 +2048,10 @@
       "code": "000711",
       "market": "sz",
       "type": "深",
-      "name": "ST京蓝",
+      "name": "京蓝科技",
       "name_en": "",
-      "py": "stjinglan",
-      "abbr": "stjl"
+      "py": "jinglankeji",
+      "abbr": "jlkj"
     },
     "sz000712": {
       "code": "000712",
@@ -5288,10 +5288,10 @@
       "code": "002058",
       "market": "sz",
       "type": "深",
-      "name": "威尔泰",
+      "name": "紫竹高科",
       "name_en": "",
-      "py": "weiertai",
-      "abbr": "wet"
+      "py": "zizhugaoke",
+      "abbr": "zzgk"
     },
     "sz002059": {
       "code": "002059",
@@ -9725,10 +9725,10 @@
       "code": "002586",
       "market": "sz",
       "type": "深",
-      "name": "ST围海",
+      "name": "围海股份",
       "name_en": "",
-      "py": "stweihai",
-      "abbr": "stwh"
+      "py": "weihaigufen",
+      "abbr": "whgf"
     },
     "sz002587": {
       "code": "002587",
