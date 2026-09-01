@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-31",
+  "last_update": "2026-09-01",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -2336,10 +2336,10 @@
       "code": "600351",
       "market": "sh",
       "type": "沪",
-      "name": "亚宝药业",
+      "name": "XD亚宝药",
       "name_en": "",
-      "py": "yabaoyaoye",
-      "abbr": "ybyy"
+      "py": "xdyabaoyao",
+      "abbr": "xdyby"
     },
     "sh600352": {
       "code": "600352",
@@ -6647,10 +6647,10 @@
       "code": "600989",
       "market": "sh",
       "type": "沪",
-      "name": "宝丰能源",
+      "name": "XD宝丰能",
       "name_en": "",
-      "py": "baofengnengyuan",
-      "abbr": "bfny"
+      "py": "xdbaofengneng",
+      "abbr": "xdbfn"
     },
     "sh600990": {
       "code": "600990",
@@ -7164,6 +7164,15 @@
       "name_en": "",
       "py": "baodikuangye",
       "abbr": "bdky"
+    },
+    "sh601123": {
+      "code": "601123",
+      "market": "sh",
+      "type": "沪",
+      "name": "N马矿",
+      "name_en": "",
+      "py": "nmakuang",
+      "abbr": "nmk"
     },
     "sh601126": {
       "code": "601126",
@@ -14639,10 +14648,10 @@
       "code": "605136",
       "market": "sh",
       "type": "沪",
-      "name": "XD丽人丽",
+      "name": "丽人丽妆",
       "name_en": "",
-      "py": "xdlirenli",
-      "abbr": "xdlrl"
+      "py": "lirenlizhuang",
+      "abbr": "lrlz"
     },
     "sh605138": {
       "code": "605138",
@@ -15584,10 +15593,10 @@
       "code": "688036",
       "market": "sh",
       "type": "科",
-      "name": "XD传音控",
+      "name": "传音控股",
       "name_en": "",
-      "py": "xdchuanyinkong",
-      "abbr": "xdcyk"
+      "py": "chuanyinkonggu",
+      "abbr": "cykg"
     },
     "sh688037": {
       "code": "688037",
@@ -20804,10 +20813,10 @@
       "code": "688835",
       "market": "sh",
       "type": "科",
-      "name": "C高凯",
+      "name": "高凯技术",
       "name_en": "",
-      "py": "cgaokai",
-      "abbr": "cgk"
+      "py": "gaokaijishu",
+      "abbr": "gkjs"
     },
     "sh688836": {
       "code": "688836",

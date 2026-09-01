@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-28",
+  "last_update": "2026-09-01",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -7740,6 +7740,15 @@
       "name_en": "",
       "py": "300xianjinliuetfhuabao",
       "abbr": "300xjletfhb"
+    },
+    "sh562180": {
+      "code": "562180",
+      "market": "sh",
+      "type": "基",
+      "name": "A500红利低波ETF招商",
+      "name_en": "",
+      "py": "a500honglidiboetfzhaoshang",
+      "abbr": "a500hldbetfzs"
     },
     "sh562300": {
       "code": "562300",

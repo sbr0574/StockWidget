@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-31",
+  "last_update": "2026-09-01",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -4401,6 +4401,15 @@
       "name_en": "GOLDENBRIDGE GP",
       "py": "jinqiaojituankonggu",
       "abbr": "jqjtkg"
+    },
+    "hk00625": {
+      "code": "00625",
+      "market": "hk",
+      "type": "港",
+      "name": "希音-W",
+      "name_en": "SHEIN-W",
+      "py": "xiyin-w",
+      "abbr": "xy-w"
     },
     "hk00626": {
       "code": "00626",
@@ -27127,6 +27136,15 @@
       "py": "longqikeji",
       "abbr": "lqkj"
     },
+    "hk09615": {
+      "code": "09615",
+      "market": "hk",
+      "type": "港",
+      "name": "梅卡曼德機器人",
+      "name_en": "MECH-MIND ROBOT",
+      "py": "meikamandejiqiren",
+      "abbr": "mkmdjqr"
+    },
     "hk09616": {
       "code": "09616",
       "market": "hk",
@@ -27752,10 +27770,10 @@
       "code": "09888",
       "market": "hk",
       "type": "港",
-      "name": "百度集團-SW",
-      "name_en": "BIDU-SW",
-      "py": "baidujituan-sw",
-      "abbr": "bdjt-sw"
+      "name": "百度集團-W",
+      "name_en": "BIDU-W",
+      "py": "baidujituan-w",
+      "abbr": "bdjt-w"
     },
     "hk09889": {
       "code": "09889",
@@ -29066,10 +29084,10 @@
       "code": "89888",
       "market": "hk",
       "type": "港",
-      "name": "百度集團-SWR",
-      "name_en": "BIDU-SWR",
-      "py": "baidujituan-swr",
-      "abbr": "bdjt-swr"
+      "name": "百度集團-WR",
+      "name_en": "BIDU-WR",
+      "py": "baidujituan-wr",
+      "abbr": "bdjt-wr"
     },
     "hk89988": {
       "code": "89988",

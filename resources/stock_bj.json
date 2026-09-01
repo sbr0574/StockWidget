@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-31",
+  "last_update": "2026-09-01",
   "codes": {
     "bj810011": {
       "code": "810011",
@@ -1611,6 +1611,15 @@
       "name_en": "",
       "py": "huahuizhineng",
       "abbr": "hhzn"
+    },
+    "bj920298": {
+      "code": "920298",
+      "market": "bj",
+      "type": "京",
+      "name": "腾信精密",
+      "name_en": "",
+      "py": "tengxinjingmi",
+      "abbr": "txjm"
     },
     "bj920299": {
       "code": "920299",

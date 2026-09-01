@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-31",
+  "last_update": "2026-09-01",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -26388,6 +26388,15 @@
       "name_en": "",
       "py": "sanruizhineng",
       "abbr": "srzn"
+    },
+    "sz301697": {
+      "code": "301697",
+      "market": "sz",
+      "type": "创",
+      "name": "N贝特利",
+      "name_en": "",
+      "py": "nbeiteli",
+      "abbr": "nbtl"
     },
     "sz301707": {
       "code": "301707",

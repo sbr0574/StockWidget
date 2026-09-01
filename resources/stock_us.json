@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-31",
+  "last_update": "2026-09-01",
   "codes": {
     "usa": {
       "code": "a",
@@ -28897,8 +28897,8 @@
       "type": "美",
       "name": "数字标识",
       "name_en": "Digimarc Corporation - Common Stock",
-      "py": "shuzibiaoshi",
-      "abbr": "szbs"
+      "py": "shuzibiaozhi",
+      "abbr": "szbz"
     },
     "usdmx": {
       "code": "dmx",
@@ -61027,8 +61027,8 @@
       "type": "美",
       "name": "利西亚车行",
       "name_en": "Lithia Motors, Inc. Common Stock",
-      "py": "lixiyachehang",
-      "abbr": "lxych"
+      "py": "lixiyachexing",
+      "abbr": "lxycx"
     },
     "usladm": {
       "code": "ladm",
