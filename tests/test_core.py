@@ -13,6 +13,9 @@ class FormatterTests(unittest.TestCase):
         self.assertEqual(format_volume(1000000), "1.00万")
         self.assertEqual(format_volume(10000000000), "1.00亿")
 
+    def test_format_volume_without_board_lot_conversion(self):
+        self.assertEqual(format_volume(100000, lot_size=1), "10.00万")
+
     def test_format_amount(self):
         self.assertEqual(format_amount(1000000), "100.00万")
         self.assertEqual(format_amount(100000000), "1.00亿")

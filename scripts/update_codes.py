@@ -1,9 +1,10 @@
 """拉取全市场代码并写入仓库 resources/ 下的 JSON。
 
 脚本可由 Azure Ubuntu 定时任务或 GitHub Actions 调用，保持自包含，
-不依赖 StockWidget 运行时模块。沪深股票和基金直接使用交易所官方接口，
-其余市场沿用东财或新浪接口。
+不依赖 StockWidget 运行时模块。沪深股票和基金、港股股票和基金、美股上市
+证券直接使用交易所官方接口，其余市场沿用东财或新浪接口。
 """
+import csv
 import json
 import os
 import re
@@ -12,13 +13,14 @@ import time
 import traceback
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timedelta, timezone
-from io import BytesIO
+from datetime import date, datetime, timedelta, timezone
+from io import BytesIO, StringIO
 from threading import Lock
 
 import pandas as pd
 import requests
 
+from openpyxl import load_workbook
 from pypinyin import Style, pinyin
 
 # 脚本位于 <root>/scripts/。服务器可用 CODES_OUTPUT_DIR 指向 codes-data
@@ -27,6 +29,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUT_DIR = os.environ.get("CODES_OUTPUT_DIR", os.path.join(ROOT, "resources"))
 
 STATUS_FILE = "codes_update_status.json"
+US_CN_ALIAS_CACHE_FILE = "cache_us_cn_aliases.json"
 TASK_ATTEMPTS = 3
 TASK_RETRY_SECONDS = (2, 5)
 
@@ -35,6 +38,31 @@ _USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHT
 _EM_HEADERS = {
     "User-Agent": _USER_AGENT,
     "Referer": "https://quote.eastmoney.com/center/gridlist.html",
+}
+_HKEX_SECURITIES_EN_URL = (
+    "https://www.hkex.com.hk/eng/services/trading/securities/"
+    "securitieslists/ListOfSecurities.xlsx"
+)
+_HKEX_SECURITIES_ZH_URL = (
+    "https://www.hkex.com.hk/chi/services/trading/securities/"
+    "securitieslists/ListOfSecurities_c.xlsx"
+)
+_HKEX_HEADERS = {
+    "User-Agent": _USER_AGENT,
+    "Referer": "https://www.hkex.com.hk/Services/Trading/Securities/Securities-Lists",
+}
+_HKEX_CATEGORY_TYPES = {
+    "Equity": "港",
+    "Exchange Traded Products": "基",
+    "Real Estate Investment Trusts": "基",
+}
+_NASDAQ_LISTED_URL = "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt"
+_NASDAQ_OTHER_LISTED_URL = (
+    "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt"
+)
+_NASDAQ_HEADERS = {
+    "User-Agent": _USER_AGENT,
+    "Referer": "https://www.nasdaqtrader.com/trader.aspx?id=symboldirdefs",
 }
 _SINA_HEADERS = {
     "User-Agent": _USER_AGENT,
@@ -49,6 +77,7 @@ _SZSE_REQUEST_LOCK = Lock()
 def _has_cjk(text: str) -> bool:
     """判断字符串是否包含 CJK 中日韩字符。"""
     return any("\u4e00" <= ch <= "\u9fff" for ch in str(text or ""))
+
 
 def _concat_dedup(frames: list[pd.DataFrame]) -> pd.DataFrame:
     df = pd.concat(frames, ignore_index=True)
@@ -65,6 +94,17 @@ def _exchange_code(value) -> str:
     if re.fullmatch(r"\d+(?:\.0+)?", text):
         return text.split(".", 1)[0].zfill(6)
     return ""
+
+
+def _hkex_code(value) -> str:
+    """把港交所工作簿中的证券代码规范为五位字符串。"""
+    text = str(value or "").strip()
+    if not text or text.lower() == "nan":
+        return ""
+    if re.fullmatch(r"\d{1,5}(?:\.0+)?", text):
+        return text.split(".", 1)[0].zfill(5)
+    return ""
+
 
 def _rows_frame(rows: list[tuple[str, str, str, str, str]]) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=_DF_COLUMNS).drop_duplicates(
@@ -293,36 +333,95 @@ def _fund_exchange_all() -> pd.DataFrame:
     return _concat_dedup(frames)
 
 
-# ----------------- 新浪数据 -----------------
+# ----------------- 港交所数据 -----------------
+
+def _hkex_xlsx_records(url: str, required_columns: tuple[str, ...]) -> list[dict]:
+    """下载港交所完整证券名录，并返回指定列。"""
+    response = requests.get(
+        url,
+        headers=_HKEX_HEADERS,
+        timeout=(15, 60),
+    )
+    response.raise_for_status()
+    if not response.content.startswith(b"PK"):
+        content_type = response.headers.get("Content-Type", "unknown")
+        raise ValueError(f"港交所返回的不是 XLSX: {content_type}")
+
+    workbook = load_workbook(
+        BytesIO(response.content), read_only=True, data_only=True
+    )
+    try:
+        if "ListOfSecurities" not in workbook.sheetnames:
+            raise ValueError("港交所工作簿缺少 ListOfSecurities 工作表")
+        sheet = workbook["ListOfSecurities"]
+        # 港交所文件的 dimension 当前仅声明到第 8 行；只读模式必须重置，
+        # 否则 openpyxl 会忽略后续一万余条证券记录。
+        sheet.reset_dimensions()
+        row_iter = sheet.iter_rows(values_only=True)
+        column_indexes = None
+        for values in row_iter:
+            cells = [str(value or "").strip() for value in values]
+            if all(column in cells for column in required_columns):
+                column_indexes = {
+                    column: cells.index(column) for column in required_columns
+                }
+                break
+        if column_indexes is None:
+            raise ValueError(
+                "港交所工作簿缺少必要列: " + ", ".join(required_columns)
+            )
+
+        records = []
+        for values in row_iter:
+            record = {
+                column: values[index] if index < len(values) else None
+                for column, index in column_indexes.items()
+            }
+            if any(value not in (None, "") for value in record.values()):
+                records.append(record)
+        return records
+    finally:
+        workbook.close()
+
 
 def _stock_hk_name_code() -> pd.DataFrame:
-    """港股全部股票"""
+    """从港交所官方名录获取港股股票、交易所买卖产品及 REIT。"""
+    english_records = _hkex_xlsx_records(
+        _HKEX_SECURITIES_EN_URL,
+        ("Stock Code", "Name of Securities", "Category"),
+    )
+    chinese_records = _hkex_xlsx_records(
+        _HKEX_SECURITIES_ZH_URL,
+        ("股份代號", "股份名稱"),
+    )
+    chinese_names = {
+        code: str(item.get("股份名稱") or "").strip()
+        for item in chinese_records
+        if (code := _hkex_code(item.get("股份代號")))
+    }
+
     rows = []
-    page = 1
-    while True:
-        r = requests.get(
-            "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHKStockData",
-            params={"page": page, "num": 60, "sort": "symbol", "asc": 1,
-                    "node": "qbgg_hk", "_s_r_a": "init"},
-            headers=_SINA_HEADERS,
-            timeout=10,
-        )
-        r.raise_for_status()
-        diff = r.json()
-        if not isinstance(diff, list):
-            raise ValueError("新浪港股接口返回格式错误")
-        if not diff:
-            break
-        for d in diff:
-            code = str(d.get("symbol") or "").strip().zfill(5)
-            name = str(d.get("name") or "").strip()
-            eng = str(d.get("engname") or "").strip()
-            if code:
-                rows.append((code, name, eng, "港", "hk"))
-        if len(diff) < 60:
-            break
-        page += 1
-    return pd.DataFrame(rows, columns=_DF_COLUMNS)
+    stock_count = 0
+    fund_count = 0
+    for item in english_records:
+        category = str(item.get("Category") or "").strip()
+        mtype = _HKEX_CATEGORY_TYPES.get(category)
+        if not mtype:
+            continue
+        code = _hkex_code(item.get("Stock Code"))
+        name_en = str(item.get("Name of Securities") or "").strip()
+        name = chinese_names.get(code, "")
+        if not code or not (name or name_en):
+            continue
+        rows.append((code, name, name_en, mtype, "hk"))
+        if mtype == "基":
+            fund_count += 1
+        else:
+            stock_count += 1
+
+    print(f"港股股票: {stock_count} 条", flush=True)
+    print(f"港股基金: {fund_count} 条", flush=True)
+    return _rows_frame(rows)
 
 
 # ----------------- 东财数据 -----------------
@@ -382,17 +481,108 @@ def _index_cn_em() -> pd.DataFrame:
         _em_stock_df("m:0+t:5", "指", market="sz"),
     ])
 
-def _stock_us_name_code() -> pd.DataFrame:
-    """美股全部股票"""
+
+def _clean_us_cn_aliases(value) -> dict[str, str]:
+    """清理别名缓存，只保留带中文字符的 code -> name。"""
+    aliases = {}
+    for raw_code, raw_name in (value if isinstance(value, dict) else {}).items():
+        code = str(raw_code or "").strip().lower()
+        name = str(raw_name or "").strip()
+        if code and _has_cjk(name):
+            aliases[code] = name
+    return aliases
+
+
+def _fetch_us_cn_aliases() -> dict[str, str]:
+    """从东财拉取美股中文展示名；不参与官方证券范围判断。"""
+    aliases = {}
+    for item in _em_clist_all("m:105,m:106,m:107", fid="f20"):
+        code = str(item.get("f12") or "").strip().lower()
+        name = str(item.get("f14") or "").strip()
+        if code and _has_cjk(name):
+            aliases[code] = name
+    if not aliases:
+        raise ValueError("东财美股列表未返回中文别名")
+    return aliases
+
+
+def _load_us_cn_alias_state(cache_path: str) -> tuple[dict, dict[str, str]]:
+    """读取由数据分支管理、但不向客户端下发的中文别名表。"""
+    cache = _load_json(cache_path)
+    return cache, _clean_us_cn_aliases(cache.get("aliases"))
+
+
+def _stock_us_name_code(
+    today: date | None = None,
+    output_dir: str | None = None,
+    cache_path: str | None = None,
+) -> pd.DataFrame:
+    """每日以 Nasdaq 官方目录为准；跨月后的首次运行从东财更新中文别名。"""
+    output_dir = output_dir or OUTPUT_DIR
+    cache_path = cache_path or os.path.join(output_dir, US_CN_ALIAS_CACHE_FILE)
+    today = today or datetime.now(timezone(timedelta(hours=8))).date()
+
+    official_rows = []
     rows = []
-    for d in _em_clist_all("m:105,m:106,m:107", fid="f20"):
-        code = str(d.get("f12") or "").strip().lower()
-        name = str(d.get("f14") or "").strip()
-        if not code:
-            continue
-        eng = name if not _has_cjk(name) else ""
-        rows.append((code, name, eng, "美", "us"))
-    return pd.DataFrame(rows, columns=_DF_COLUMNS)
+    sources = (
+        (_NASDAQ_LISTED_URL, "Symbol"),
+        # CQS Symbol 最接近现有行情接口使用的代码：类别股用点号、
+        # 优先股用小写 p、权证用 .WS；下方统一转换为下划线形式。
+        (_NASDAQ_OTHER_LISTED_URL, "CQS Symbol"),
+    )
+    for url, symbol_field in sources:
+        response = requests.get(
+            url,
+            headers=_NASDAQ_HEADERS,
+            timeout=(15, 60),
+        )
+        response.raise_for_status()
+        text = response.content.decode("utf-8-sig")
+        for item in csv.DictReader(StringIO(text), delimiter="|"):
+            if str(item.get("Test Issue") or "").strip().upper() != "N":
+                continue
+            symbol = str(item.get(symbol_field) or "").strip()
+            name = str(item.get("Security Name") or "").strip()
+            if not symbol or not name or symbol.startswith("File Creation Time"):
+                continue
+            code = symbol.replace(".", "_").replace("p", "_").lower()
+            official_rows.append((code, name))
+
+    official_codes = {code for code, _ in official_rows}
+    cache, aliases = _load_us_cn_alias_state(cache_path)
+    current_month = today.strftime("%Y-%m")
+    cached_month = str(cache.get("last_update") or "")[:7]
+    if cached_month != current_month or not aliases:
+        try:
+            refreshed = _fetch_us_cn_aliases()
+            aliases = {
+                code: name for code, name in refreshed.items()
+                if code in official_codes
+            }
+            if not aliases:
+                raise ValueError("东财中文别名与 Nasdaq 官方代码无匹配")
+            _save_json(
+                cache_path,
+                {"last_update": today.isoformat(), "aliases": aliases},
+            )
+            print(f"美股中文别名: 东财更新 {len(aliases)} 条", flush=True)
+        except Exception as exc:
+            print(
+                f"::warning::美股中文别名更新失败，继续使用缓存: {exc}",
+                flush=True,
+            )
+    else:
+        aliases = {
+            code: name for code, name in aliases.items()
+            if code in official_codes
+        }
+        print(f"美股中文别名: 使用缓存 {len(aliases)} 条", flush=True)
+
+    for code, official_name in official_rows:
+        rows.append(
+            (code, aliases.get(code, official_name), official_name, "美", "us")
+        )
+    return _rows_frame(rows)
 
 
 # ----------------- 离线数据 -----------------

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-27",
+  "last_update": "2026-08-31",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -7507,6 +7507,15 @@
       "py": "dianlietfboshi",
       "abbr": "dletfbs"
     },
+    "sh561730": {
+      "code": "561730",
+      "market": "sh",
+      "type": "基",
+      "name": "A股ETF华夏",
+      "name_en": "",
+      "py": "aguetfhuaxia",
+      "abbr": "agetfhx"
+    },
     "sh561750": {
       "code": "561750",
       "market": "sh",
@@ -9946,6 +9955,15 @@
       "py": "huagongetfboshi",
       "abbr": "hgetfbs"
     },
+    "sz158008": {
+      "code": "158008",
+      "market": "sz",
+      "type": "基",
+      "name": "新能源电池ETF华夏",
+      "name_en": "",
+      "py": "xinnengyuandianchietfhuaxia",
+      "abbr": "xnydcetfhx"
+    },
     "sz158009": {
       "code": "158009",
       "market": "sz",
@@ -10665,6 +10683,15 @@
       "name_en": "",
       "py": "yunjisuanetfyinhua",
       "abbr": "yjsetfyh"
+    },
+    "sz159096": {
+      "code": "159096",
+      "market": "sz",
+      "type": "基",
+      "name": "价值ETF华夏",
+      "name_en": "",
+      "py": "jiazhietfhuaxia",
+      "abbr": "jzetfhx"
     },
     "sz159098": {
       "code": "159098",
@@ -14027,10 +14054,10 @@
       "code": "159638",
       "market": "sz",
       "type": "基",
-      "name": "高端装备ETF嘉实",
+      "name": "航空航天ETF嘉实",
       "name_en": "",
-      "py": "gaoduanzhuangbeietfjiashi",
-      "abbr": "gdzbetfjs"
+      "py": "hangkonghangtianetfjiashi",
+      "abbr": "hkhtetfjs"
     },
     "sz159639": {
       "code": "159639",
