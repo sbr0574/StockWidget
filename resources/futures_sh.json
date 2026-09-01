@@ -550,6 +550,15 @@
       "py": "guojitong2701",
       "abbr": "gjt2701"
     },
+    "bc2704": {
+      "code": "bc2704",
+      "market": "",
+      "type": "期",
+      "name": "国际铜2704",
+      "name_en": "",
+      "py": "guojitong2704",
+      "abbr": "gjt2704"
+    },
     "br0": {
       "code": "br0",
       "market": "",
@@ -1684,6 +1693,15 @@
       "py": "qian2701",
       "abbr": "q2701"
     },
+    "pb2704": {
+      "code": "pb2704",
+      "market": "",
+      "type": "期",
+      "name": "铅2704",
+      "name_en": "",
+      "py": "qian2704",
+      "abbr": "q2704"
+    },
     "pb2706": {
       "code": "pb2706",
       "market": "",
@@ -1990,6 +2008,15 @@
       "py": "shanghaiyuanyou2704",
       "abbr": "shyy2704"
     },
+    "sc2705": {
+      "code": "sc2705",
+      "market": "",
+      "type": "期",
+      "name": "上海原油2705",
+      "name_en": "",
+      "py": "shanghaiyuanyou2705",
+      "abbr": "shyy2705"
+    },
     "sc2706": {
       "code": "sc2706",
       "market": "",
@@ -2016,6 +2043,15 @@
       "name_en": "",
       "py": "shanghaiyuanyou2712",
       "abbr": "shyy2712"
+    },
+    "sc2803": {
+      "code": "sc2803",
+      "market": "",
+      "type": "期",
+      "name": "上海原油2803",
+      "name_en": "",
+      "py": "shanghaiyuanyou2803",
+      "abbr": "shyy2803"
     },
     "sc2806": {
       "code": "sc2806",
@@ -2376,6 +2412,15 @@
       "name_en": "",
       "py": "buxiugang2708",
       "abbr": "bxg2708"
+    },
+    "wr2610": {
+      "code": "wr2610",
+      "market": "",
+      "type": "期",
+      "name": "线材连续",
+      "name_en": "",
+      "py": "xiancailianxu",
+      "abbr": "xclx"
     },
     "wr2701": {
       "code": "wr2701",

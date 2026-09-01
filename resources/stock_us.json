@@ -2692,6 +2692,15 @@
       "py": "",
       "abbr": ""
     },
+    "usaggm": {
+      "code": "aggm",
+      "market": "us",
+      "type": "美",
+      "name": "iShares 1-10 Year U.S. Aggregate Bond ETF",
+      "name_en": "iShares 1-10 Year U.S. Aggregate Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usaggs": {
       "code": "aggs",
       "market": "us",
@@ -29723,10 +29732,10 @@
       "code": "dspc",
       "market": "us",
       "type": "美",
-      "name": "Leverage Shares 1X Short SPCX Daily ETF",
+      "name": "做空SpaceX ETF-Leverage",
       "name_en": "Leverage Shares 1X Short SPCX Daily ETF",
-      "py": "",
-      "abbr": ""
+      "py": "zuokongspacexetf-leverage",
+      "abbr": "zkspacexetf-leverage"
     },
     "usdspy": {
       "code": "dspy",
@@ -30119,10 +30128,10 @@
       "code": "duku",
       "market": "us",
       "type": "美",
-      "name": "杜克能源(普通单位)",
+      "name": "Duke Energy Corporation Corporate Units",
       "name_en": "Duke Energy Corporation Corporate Units",
-      "py": "dukenengyuan(putongdanwei)",
-      "abbr": "dkny(ptdw)"
+      "py": "",
+      "abbr": ""
     },
     "usdukx": {
       "code": "dukx",
@@ -42454,15 +42463,6 @@
       "py": "",
       "abbr": ""
     },
-    "usgbf": {
-      "code": "gbf",
-      "market": "us",
-      "type": "美",
-      "name": "iShares Government/Credit Bond ETF",
-      "name_en": "iShares Government/Credit Bond ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usgbfh": {
       "code": "gbfh",
       "market": "us",
@@ -50326,6 +50326,15 @@
       "type": "美",
       "name": "Mast HedgeIndex Adaptive Equities ETF",
       "name_en": "Mast HedgeIndex Adaptive Equities ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "ushxf": {
+      "code": "hxf",
+      "market": "us",
+      "type": "美",
+      "name": "Mast HedgeIndex Managed Futures Strategy ETF",
+      "name_en": "Mast HedgeIndex Managed Futures Strategy ETF",
       "py": "",
       "abbr": ""
     },
@@ -118040,8 +118049,8 @@
       "code": "zone",
       "market": "us",
       "type": "美",
-      "name": "CleanCore Solutions Inc. Class B Common Stock",
-      "name_en": "CleanCore Solutions Inc. Class B Common Stock",
+      "name": "Zone Frontier Inc. Class B Common Stock",
+      "name_en": "Zone Frontier Inc. Class B Common Stock",
       "py": "",
       "abbr": ""
     },

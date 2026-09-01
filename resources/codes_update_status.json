@@ -1,7 +1,7 @@
 {
   "run_date": "2026-09-01",
-  "started_at": "2026-09-01T10:30:20+08:00",
-  "completed_at": "2026-09-01T10:31:10+08:00",
+  "started_at": "2026-09-01T17:08:42+08:00",
+  "completed_at": "2026-09-01T17:09:45+08:00",
   "files": {
     "stock_us.json": {
       "last_checked": "2026-09-01",
@@ -12,7 +12,7 @@
     "stock_hk.json": {
       "last_checked": "2026-09-01",
       "last_update": "2026-09-01",
-      "updated": true,
+      "updated": false,
       "error": false
     },
     "futures_sh.json": {
@@ -24,32 +24,32 @@
     "stock_sh.json": {
       "last_checked": "2026-09-01",
       "last_update": "2026-09-01",
-      "updated": true,
+      "updated": false,
       "error": false
     },
     "stock_sz.json": {
       "last_checked": "2026-09-01",
       "last_update": "2026-09-01",
-      "updated": true,
+      "updated": false,
       "error": false
     },
     "fund_cn.json": {
       "last_checked": "2026-09-01",
       "last_update": "2026-09-01",
-      "updated": true,
+      "updated": false,
       "error": false
     },
     "stock_bj.json": {
       "last_checked": "2026-09-01",
       "last_update": "2026-09-01",
-      "updated": true,
+      "updated": false,
       "error": false
     },
     "index_cn.json": {
-      "last_checked": "2026-08-31",
+      "last_checked": "2026-09-01",
       "last_update": "2026-08-28",
       "updated": false,
-      "error": true
+      "error": false
     },
     "index_global.json": {
       "last_checked": "2026-09-01",
