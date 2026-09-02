@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-01",
+  "last_update": "2026-09-02",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -2336,10 +2336,10 @@
       "code": "600351",
       "market": "sh",
       "type": "沪",
-      "name": "XD亚宝药",
+      "name": "亚宝药业",
       "name_en": "",
-      "py": "xdyabaoyao",
-      "abbr": "xdyby"
+      "py": "yabaoyaoye",
+      "abbr": "ybyy"
     },
     "sh600352": {
       "code": "600352",
@@ -6647,10 +6647,10 @@
       "code": "600989",
       "market": "sh",
       "type": "沪",
-      "name": "XD宝丰能",
+      "name": "宝丰能源",
       "name_en": "",
-      "py": "xdbaofengneng",
-      "abbr": "xdbfn"
+      "py": "baofengnengyuan",
+      "abbr": "bfny"
     },
     "sh600990": {
       "code": "600990",
@@ -7169,10 +7169,10 @@
       "code": "601123",
       "market": "sh",
       "type": "沪",
-      "name": "N马矿",
+      "name": "C马矿",
       "name_en": "",
-      "py": "nmakuang",
-      "abbr": "nmk"
+      "py": "cmakuang",
+      "abbr": "cmk"
     },
     "sh601126": {
       "code": "601126",
@@ -19346,10 +19346,10 @@
       "code": "688578",
       "market": "sh",
       "type": "科",
-      "name": "艾力斯",
+      "name": "XD艾力斯",
       "name_en": "",
-      "py": "ailisi",
-      "abbr": "als"
+      "py": "xdailisi",
+      "abbr": "xdals"
     },
     "sh688579": {
       "code": "688579",

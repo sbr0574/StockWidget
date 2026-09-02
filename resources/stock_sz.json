@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-01",
+  "last_update": "2026-09-02",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -26380,6 +26380,15 @@
       "py": "xinguangyi",
       "abbr": "xgy"
     },
+    "sz301688": {
+      "code": "301688",
+      "market": "sz",
+      "type": "创",
+      "name": "N格林生物",
+      "name_en": "",
+      "py": "ngelinshengwu",
+      "abbr": "nglsw"
+    },
     "sz301696": {
       "code": "301696",
       "market": "sz",
@@ -26393,10 +26402,10 @@
       "code": "301697",
       "market": "sz",
       "type": "创",
-      "name": "N贝特利",
+      "name": "C贝特利",
       "name_en": "",
-      "py": "nbeiteli",
-      "abbr": "nbtl"
+      "py": "cbeiteli",
+      "abbr": "cbtl"
     },
     "sz301707": {
       "code": "301707",

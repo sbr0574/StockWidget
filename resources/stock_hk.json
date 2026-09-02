@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-01",
+  "last_update": "2026-09-02",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -5235,7 +5235,7 @@
       "market": "hk",
       "type": "港",
       "name": "中國國家文化產業",
-      "name_en": "CN CULTURE-2000",
+      "name_en": "CN CULTURE GP",
       "py": "zhongguoguojiawenhuachanye",
       "abbr": "zggjwhcy"
     },
@@ -6585,7 +6585,7 @@
       "market": "hk",
       "type": "港",
       "name": "阿爾法企業",
-      "name_en": "ALPHA PRO HLDGS",
+      "name_en": "ALPHA PRO H-10K",
       "py": "aerfaqiye",
       "abbr": "aefqy"
     },
@@ -11697,7 +11697,7 @@
       "market": "hk",
       "type": "港",
       "name": "驢跡科技",
-      "name_en": "LVJI TECH-NEW",
+      "name_en": "LVJI TECH",
       "py": "lvjikeji",
       "abbr": "ljkj"
     },
@@ -18379,15 +18379,6 @@
       "py": "zijinkuangye",
       "abbr": "zjky"
     },
-    "hk02900": {
-      "code": "02900",
-      "market": "hk",
-      "type": "港",
-      "name": "驢跡科技",
-      "name_en": "LVJI TECH-OLD",
-      "py": "lvjikeji",
-      "abbr": "ljkj"
-    },
     "hk02901": {
       "code": "02901",
       "market": "hk",
@@ -18405,15 +18396,6 @@
       "name_en": "SUNCORP TEC-OLD",
       "py": "xinquekeji",
       "abbr": "xqkj"
-    },
-    "hk02905": {
-      "code": "02905",
-      "market": "hk",
-      "type": "港",
-      "name": "中國國家-二萬",
-      "name_en": "CN CULTURE-20K",
-      "py": "zhongguoguojia-erwan",
-      "abbr": "zggj-ew"
     },
     "hk02908": {
       "code": "02908",
@@ -18450,6 +18432,15 @@
       "name_en": "EASYKNIT INT'L",
       "py": "yongyiguoji",
       "abbr": "yygj"
+    },
+    "hk02914": {
+      "code": "02914",
+      "market": "hk",
+      "type": "港",
+      "name": "阿爾法企業-二萬",
+      "name_en": "ALPHA PRO H-20K",
+      "py": "aerfaqiye-erwan",
+      "abbr": "aefqy-ew"
     },
     "hk03001": {
       "code": "03001",

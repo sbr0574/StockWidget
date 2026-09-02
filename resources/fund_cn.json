@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-01",
+  "last_update": "2026-09-02",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -7579,6 +7579,15 @@
       "py": "yiliaoqixieetfhuataibairui",
       "abbr": "ylqxetfhtbr"
     },
+    "sh561830": {
+      "code": "561830",
+      "market": "sh",
+      "type": "基",
+      "name": "有色ETF国泰海通",
+      "name_en": "",
+      "py": "youseetfguotaihaitong",
+      "abbr": "ysetfgtht"
+    },
     "sh561870": {
       "code": "561870",
       "market": "sh",
@@ -10017,6 +10026,15 @@
       "name_en": "",
       "py": "dianchietfyongying",
       "abbr": "dcetfyy"
+    },
+    "sz158027": {
+      "code": "158027",
+      "market": "sz",
+      "type": "基",
+      "name": "工业互联网ETF易方达",
+      "name_en": "",
+      "py": "gongyehulianwangetfyifangda",
+      "abbr": "gyhlwetfyfd"
     },
     "sz159001": {
       "code": "159001",

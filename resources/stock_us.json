@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-01",
+  "last_update": "2026-09-02",
   "codes": {
     "usa": {
       "code": "a",
@@ -44056,6 +44056,15 @@
       "py": "",
       "abbr": ""
     },
+    "usgixi": {
+      "code": "gixi",
+      "market": "us",
+      "type": "美",
+      "name": "Gix Internet Ltd. - Ordinary Shares",
+      "name_en": "Gix Internet Ltd. - Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
     "usgixxr": {
       "code": "gixxr",
       "market": "us",
@@ -55386,6 +55395,15 @@
       "name_en": "Intuitive Surgical, Inc. - Common Stock",
       "py": "zhijuewaike",
       "abbr": "zjwk"
+    },
+    "usisrl": {
+      "code": "isrl",
+      "market": "us",
+      "type": "美",
+      "name": "Defiance KSM Israel 120 ETF",
+      "name_en": "Defiance KSM Israel 120 ETF",
+      "py": "",
+      "abbr": ""
     },
     "usissb": {
       "code": "issb",
@@ -93961,6 +93979,15 @@
       "py": "",
       "abbr": ""
     },
+    "ussgld": {
+      "code": "sgld",
+      "market": "us",
+      "type": "美",
+      "name": "Scorpio Gold Corporation - Common Stock",
+      "name_en": "Scorpio Gold Corporation - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
     "ussgly": {
       "code": "sgly",
       "market": "us",
@@ -103174,6 +103201,15 @@
       "type": "美",
       "name": "GraniteShares Autocallable TSLA ETF",
       "name_en": "GraniteShares Autocallable TSLA ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "ustlacu": {
+      "code": "tlacu",
+      "market": "us",
+      "type": "美",
+      "name": "Three Lions Acquisition Corp. - Units",
+      "name_en": "Three Lions Acquisition Corp. - Units",
       "py": "",
       "abbr": ""
     },
