@@ -24,10 +24,12 @@ class AppCodeRefreshTests(unittest.TestCase):
         app._codes_retry_timer.start.assert_called_once_with(1000)
 
     def test_codes_loaded_updates_window_before_remote_sync(self):
+        settings = Mock()
+        settings.isVisible.return_value = True
         app = SimpleNamespace(
             _codes_local_ready=False,
             win=Mock(),
-            settings_dlg=None,
+            settings_dlg=settings,
             save_now=Mock(),
             _start_codes_refresh=Mock(),
         )
@@ -38,6 +40,8 @@ class AppCodeRefreshTests(unittest.TestCase):
         self.assertTrue(app._codes_local_ready)
         app.win.set_codes_list.assert_called_once_with(codes)
         app.save_now.assert_called_once_with()
+        settings.refresh_data_state.assert_called_once_with()
+        settings.refresh_code_search.assert_called_once_with()
         app._start_codes_refresh.assert_called_once_with()
 
     def test_refresh_marks_cached_before_starting_worker(self):
@@ -63,11 +67,13 @@ class AppCodeRefreshTests(unittest.TestCase):
     def test_refresh_finished_updates_window_and_schedules_retry(self):
         manager = Mock()
         manager.codes.return_value = {"sh600000": {}}
+        settings = Mock()
+        settings.isVisible.return_value = True
         app = SimpleNamespace(
             _codes_refresh_running=True,
             code_manager=manager,
             win=Mock(),
-            settings_dlg=None,
+            settings_dlg=settings,
             _schedule_codes_refresh=Mock(),
         )
 
@@ -75,6 +81,8 @@ class AppCodeRefreshTests(unittest.TestCase):
 
         self.assertFalse(app._codes_refresh_running)
         app.win.set_codes_list.assert_called_once_with(manager.codes.return_value)
+        settings.refresh_data_state.assert_called_once_with()
+        settings.refresh_code_search.assert_called_once_with()
         app._schedule_codes_refresh.assert_called_once_with(1800)
 
 

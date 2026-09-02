@@ -157,6 +157,7 @@ class App(QApplication):
         self.save_now()
         if self.settings_dlg is not None and self.settings_dlg.isVisible():
             self.settings_dlg.refresh_data_state()
+            self.settings_dlg.refresh_code_search()
         self._start_codes_refresh()
 
     def _start_codes_refresh(self):
@@ -202,6 +203,7 @@ class App(QApplication):
         if self.settings_dlg is not None and self.settings_dlg.isVisible():
             try:
                 self.settings_dlg.refresh_data_state()
+                self.settings_dlg.refresh_code_search()
             except Exception:
                 pass
         retry_seconds = result.get("retry_seconds")

@@ -4,16 +4,20 @@ from functools import partial
 from math import isfinite
 
 from PySide6.QtCore import (
-    Qt, QPoint, QStringListModel, QEvent, QTimer, QItemSelectionModel, Signal,
+    Qt, QPoint, QEvent, QTimer, QItemSelectionModel, QModelIndex, Signal,
 )
-from PySide6.QtGui import QColor, QGuiApplication, QKeySequence
+from PySide6.QtGui import (
+    QColor, QGuiApplication, QKeySequence, QStandardItem, QStandardItemModel,
+)
 from PySide6.QtWidgets import (
     QApplication, QWidget, QDialog, QColorDialog, QAbstractItemView, QTableWidgetItem,
     QAbstractItemDelegate, QStyledItemDelegate, QStyle, QStyleOptionViewItem,
-    QLineEdit, QCompleter, QHeaderView, QButtonGroup, QMessageBox,
+    QLineEdit, QCompleter, QHeaderView, QButtonGroup, QMessageBox, QComboBox,
 )
 from stockwidget.ui.generated.ui_settings import Ui_SettingDialog
-from stockwidget.core.code_search import find_suggestions
+from stockwidget.core.code_search import (
+    SEARCH_CATEGORIES, build_search_index, search_suggestions,
+)
 from stockwidget.ui.widget import FloatLabel
 from stockwidget.platform.capabilities import (
     hotkeys_supported,
@@ -53,6 +57,16 @@ def _hotkey_error_message(result) -> str:
 # 扁平化分组框列表（自选列表 gb_list 保持默认带边框样式，不在其中）
 _FLAT_GROUPS = ("gb_data", "gb_data_setting", "gb_name", "gb_icon", "gb_fcn",
                 "gb_color", "gb_text", "gb_tabel", "gb_hotkeys", "gb_about")
+
+_SUGGESTION_ENTRY_ROLE = Qt.ItemDataRole.UserRole + 1
+_SUGGESTION_ADDED_ROLE = Qt.ItemDataRole.UserRole + 2
+_SEARCH_CATEGORY_ITEMS = (
+    ("股票", "stock"),
+    ("基金", "fund"),
+    ("指数", "index"),
+    ("期货", "futures"),
+)
+_SEARCH_PLACEHOLDER = "搜索代码、名称、拼音或缩写，空格区分关键词"
 
 
 def _build_settings_stylesheet(dark: bool, *, macos: bool = False) -> str:
@@ -166,13 +180,54 @@ QTableWidget#list_codes QHeaderView::section {{
 """
 
 
+class CodeSearchEditor(QLineEdit):
+    """在行内输入框左侧嵌入搜索类别下拉。"""
+
+    def __init__(self, category: str, parent=None):
+        super().__init__(parent)
+        self.setPlaceholderText(_SEARCH_PLACEHOLDER)
+        self.setToolTip(_SEARCH_PLACEHOLDER)
+
+        self.category_combo = QComboBox(self)
+        self.category_combo.setObjectName("code_search_category")
+        self.category_combo.setFrame(False)
+        self.category_combo.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.category_combo.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToContents
+        )
+        for label, value in _SEARCH_CATEGORY_ITEMS:
+            self.category_combo.addItem(label, value)
+
+        index = self.category_combo.findData(category)
+        self.category_combo.setCurrentIndex(index if index >= 0 else 0)
+        widest_label = max(
+            self.fontMetrics().horizontalAdvance(label)
+            for label, _value in _SEARCH_CATEGORY_ITEMS
+        )
+        self._category_width = max(50, widest_label + 28)
+        # self._category_width = max(58, self.category_combo.sizeHint().width())
+        self.category_combo.setFixedWidth(self._category_width)
+        self.setTextMargins(self._category_width + 2, 0, 0, 0)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        height = max(0, self.height() - 2)
+        width = min(self._category_width, max(0, self.width() - 2))
+        self.category_combo.setGeometry(1, 1, width, height)
+
+    def category(self) -> str:
+        value = self.category_combo.currentData()
+        return str(value or "stock")
+
+
 class CodeCompleterDelegate(QStyledItemDelegate):
     def __init__(self, owner):
         super().__init__(owner)
         self.owner = owner
 
     def createEditor(self, parent, option, index):
-        editor = QLineEdit(parent)
+        self.owner._ensure_search_index()
+        editor = CodeSearchEditor(self.owner._search_category, parent)
         editor.setProperty("_row", index.row())
         editor.setProperty("_column", index.column())
         editor.setProperty("_code_editor_committed", False)
@@ -186,6 +241,9 @@ class CodeCompleterDelegate(QStyledItemDelegate):
             lambda index: self._accept_suggestion(editor, index)
         )
         editor.textEdited.connect(lambda text: self.owner._update_suggestions(editor, text))
+        editor.category_combo.currentIndexChanged.connect(
+            lambda _index: self.owner._on_search_category_changed(editor)
+        )
         completer.setWidget(editor)
         editor._code_completer = completer
         return editor
@@ -208,8 +266,8 @@ class CodeCompleterDelegate(QStyledItemDelegate):
     def _accept_suggestion(self, editor, index):
         if editor.property("_code_editor_committed"):
             return
-        text = str(index.data(Qt.DisplayRole) or "")
-        self.owner._apply_suggestion(editor, text)
+        if not self.owner._apply_suggestion(editor, index):
+            return
         self.commitData.emit(editor)
         self._commit_editor(editor)
         self.closeEditor.emit(editor, QAbstractItemDelegate.EndEditHint.NoHint)
@@ -284,8 +342,13 @@ class SettingsDialog(QDialog):
         self._apply_theme_stylesheet()
         # 系统深浅色切换时跟随更新样式
         QGuiApplication.styleHints().colorSchemeChanged.connect(self._on_color_scheme_changed)
-        self.suggestion_model = QStringListModel(self)
-        self._suggestion_map = {}
+        # 搜索类别只在本次设置窗口生命周期内保留；重新打开恢复为股票。
+        self._search_category = "stock"
+        self._search_index_source = None
+        self._search_index_size = -1
+        self._search_index = ()
+        self._search_entries_by_key = {}
+        self.suggestion_model = QStandardItemModel(self)
 
         self._init_code_table()
         self._bind_widgets()
@@ -585,6 +648,15 @@ class SettingsDialog(QDialog):
             text = f"⚠️ 市场代码数据：缓存 ({d})"
         self.label_data_state.setText(text)
 
+    def refresh_code_search(self):
+        """代码表异步替换后刷新索引及当前可见的行内搜索。"""
+        self._search_index_source = None
+        self._search_index_size = -1
+        self._ensure_search_index()
+        for editor in self.list_codes.findChildren(CodeSearchEditor):
+            if editor.isVisible():
+                self._update_suggestions(editor, editor.text())
+
     def eventFilter(self, obj, ev):
         if obj is self.list_codes.viewport() and ev.type() == QEvent.MouseButtonDblClick:
             pos = ev.position().toPoint() if hasattr(ev, 'position') else ev.pos()
@@ -626,8 +698,29 @@ class SettingsDialog(QDialog):
         self._set_code_row(row, code, code, name, checked, cost)
         self.list_codes.blockSignals(False)
 
-    def _entry_for_text(self, text: str) -> dict | None:
-        suggestions = find_suggestions(self.win.codes_list, text, limit=1)
+    def _ensure_search_index(self):
+        """代码表对象变化时重建索引；普通查询复用已规范化记录。"""
+        codes = self.win.codes_list if isinstance(self.win.codes_list, dict) else {}
+        if codes is self._search_index_source and len(codes) == self._search_index_size:
+            return
+        self._search_index = build_search_index(codes)
+        self._search_entries_by_key = {
+            record.entry["key"]: record.entry for record in self._search_index
+        }
+        self._search_index_source = codes
+        self._search_index_size = len(codes)
+
+    def _entry_for_text(self, text: str, category: str | None = None) -> dict | None:
+        self._ensure_search_index()
+        key = str(text or "").strip().casefold()
+        if category is None and key in self._search_entries_by_key:
+            return self._search_entries_by_key[key]
+        suggestions = search_suggestions(
+            self._search_index,
+            text,
+            limit=1,
+            category=category,
+        )
         return suggestions[0] if suggestions else None
 
     def _resolve_name_for_code(self, value_key: str, display_code: str = "") -> str:
@@ -695,7 +788,8 @@ class SettingsDialog(QDialog):
         self.list_codes.blockSignals(True)
         seen = set()
         remove_rows = []
-        for row in range(self.list_codes.rowCount() - 1, -1, -1):
+        # 从上到下判重，保留原有条目及其成本、勾选状态和排序。
+        for row in range(self.list_codes.rowCount()):
             code_item = self.list_codes.item(row, 1)
             if code_item is None:
                 remove_rows.append(row)
@@ -710,7 +804,7 @@ class SettingsDialog(QDialog):
                 continue
             if value:
                 seen.add(value)
-        for row in remove_rows:
+        for row in reversed(remove_rows):
             self.list_codes.removeRow(row)
         self.list_codes.blockSignals(False)
 
@@ -869,54 +963,129 @@ class SettingsDialog(QDialog):
         self.label_line.setText(f"+{v} px")
         self.win.set_line_extra(v)
 
-    def _display_text(self, item: dict) -> str:
-        parts = [str(item.get("type", "") or "").strip(), str(item.get("code", "") or "").strip(), str(item.get("name", "") or "").strip()]
-        return "/".join([p for p in parts if p])
+    def _display_text(self, item: dict, *, added: bool = False) -> str:
+        parts = [
+            str(item.get("type", "") or "").strip(),
+            str(item.get("code", "") or "").strip(),
+            str(item.get("name", "") or "").strip(),
+        ]
+        label = "/".join([part for part in parts if part])
+        return f"（已添加）{label}" if added else label
 
-    def _apply_suggestion(self, editor: QLineEdit, text: str):
-        entry = self._suggestion_map.get(text)
-        if isinstance(entry, dict):
-            editor.setProperty("_selected_entry", entry)
-            code = str(entry.get("code", "") or "").strip() or str(entry.get("key", "") or "").strip()
-            editor.setText(code)
-            editor.selectAll()
-        else:
-            editor.setProperty("_selected_entry", None)
+    def _existing_code_keys(self) -> set[str]:
+        keys = set()
+        for row in range(self.list_codes.rowCount()):
+            item = self.list_codes.item(row, 1)
+            if item is None:
+                continue
+            key = str(item.data(Qt.UserRole) or "").strip().casefold()
+            if key:
+                keys.add(key)
+        return keys
+
+    def _apply_suggestion(self, editor: QLineEdit, index) -> bool:
+        if not index.isValid():
+            return False
+        flags = index.flags()
+        if not (flags & Qt.ItemFlag.ItemIsEnabled
+                and flags & Qt.ItemFlag.ItemIsSelectable):
+            return False
+        if bool(index.data(_SUGGESTION_ADDED_ROLE)):
+            return False
+        entry = index.data(_SUGGESTION_ENTRY_ROLE)
+        if not isinstance(entry, dict):
+            return False
+
+        editor.setProperty("_selected_entry", entry)
+        code = str(entry.get("code", "") or "").strip()
+        if not code:
+            code = str(entry.get("key", "") or "").strip()
+        editor.setText(code)
+        editor.selectAll()
+        return True
+
+    def _on_search_category_changed(self, editor: CodeSearchEditor):
+        category = editor.category()
+        if category not in SEARCH_CATEGORIES:
+            category = "stock"
+        self._search_category = category
+        editor.setProperty("_selected_entry", None)
+        self._update_suggestions(editor, editor.text())
+        QTimer.singleShot(0, editor.setFocus)
 
     def _update_suggestions(self, editor: QLineEdit, text: str):
+        self._ensure_search_index()
         query = str(text or "").strip()
-        candidates = find_suggestions(self.win.codes_list, query, limit=10)
-        labels = []
-        self._suggestion_map = {}
-        for item in candidates:
-            label = self._display_text(item)
-            labels.append(label)
-            self._suggestion_map[label] = item
-        self.suggestion_model.setStringList(labels)
+        candidates = search_suggestions(
+            self._search_index,
+            query,
+            limit=10,
+            category=self._search_category,
+        )
+        existing_keys = self._existing_code_keys()
+        self.suggestion_model.clear()
+        for entry in candidates:
+            added = str(entry.get("key", "") or "").casefold() in existing_keys
+            model_item = QStandardItem(self._display_text(entry, added=added))
+            model_item.setEditable(False)
+            model_item.setData(entry, _SUGGESTION_ENTRY_ROLE)
+            model_item.setData(added, _SUGGESTION_ADDED_ROLE)
+            if added:
+                model_item.setEnabled(False)
+                model_item.setSelectable(False)
+            self.suggestion_model.appendRow(model_item)
         editor.setProperty("_selected_entry", None)
-        self._show_suggestions_for_editor(editor, bool(labels))
+        self._show_suggestions_for_editor(editor, bool(candidates))
 
 
     def _show_suggestions_for_editor(self, editor: QLineEdit, has_items: bool):
         completer = getattr(editor, "_code_completer", None)
         if completer is None:
             return
-        popup_width = max(self.list_codes.columnWidth(1), editor.width())
-        completer.popup().setMinimumWidth(popup_width)
-        completer.popup().setMaximumWidth(popup_width)
+        popup = completer.popup()
         if not has_items:
-            completer.popup().hide()
+            popup.hide()
             return
+
+        base_width = self.list_codes.columnWidth(1) + self.list_codes.columnWidth(2)
+        content_width = max(0, popup.sizeHintForColumn(0))
+        content_width += 2 * popup.frameWidth()
+        content_width += 2 * popup.style().pixelMetric(QStyle.PM_FocusFrameHMargin)
+        if self.suggestion_model.rowCount() > completer.maxVisibleItems():
+            content_width += popup.style().pixelMetric(QStyle.PM_ScrollBarExtent)
+
+        screen = editor.screen() or QGuiApplication.primaryScreen()
+        available = screen.availableGeometry() if screen is not None else None
+        popup_width = max(base_width, content_width)
+        if available is not None:
+            popup_width = min(popup_width, available.width())
+
+        popup.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        popup.setMinimumWidth(popup_width)
+        popup.setMaximumWidth(popup_width)
         rect = editor.rect()
         rect.setWidth(popup_width)
+        if available is not None:
+            editor_left = editor.mapToGlobal(editor.rect().topLeft()).x()
+            room_on_right = available.right() - editor_left + 1
+            if popup_width > room_on_right:
+                shift = min(popup_width - room_on_right, editor_left - available.left())
+                rect.moveLeft(-max(0, shift))
         completer.complete(rect)
-        first = completer.completionModel().index(0, completer.completionColumn())
-        if first.isValid():
-            flags = (QItemSelectionModel.SelectionFlag.ClearAndSelect
-                     | QItemSelectionModel.SelectionFlag.Rows)
-            completer.popup().selectionModel().setCurrentIndex(
-                first, flags
-            )
+        completion_model = completer.completionModel()
+        popup.selectionModel().clearSelection()
+        popup.setCurrentIndex(QModelIndex())
+        for row in range(completion_model.rowCount()):
+            index = completion_model.index(row, completer.completionColumn())
+            item_flags = index.flags()
+            if (item_flags & Qt.ItemFlag.ItemIsEnabled
+                    and item_flags & Qt.ItemFlag.ItemIsSelectable):
+                selection_flags = (
+                    QItemSelectionModel.SelectionFlag.ClearAndSelect
+                    | QItemSelectionModel.SelectionFlag.Rows
+                )
+                popup.selectionModel().setCurrentIndex(index, selection_flags)
+                break
 
     def _commit_code_editor(self, editor: QLineEdit):
         row = editor.property("_row")
@@ -927,14 +1096,18 @@ class SettingsDialog(QDialog):
         cost = _parse_positive_cost(cost_item.text()) if cost_item is not None else None
         entry = editor.property("_selected_entry")
         text = str(editor.text() or "").strip()
-        if isinstance(entry, dict):
-            self._set_code_row(row, entry["key"], entry["code"], entry["name"], True, cost)
+        if not isinstance(entry, dict):
+            entry = self._entry_for_text(text, category=self._search_category)
+
+        existing_keys = self._existing_code_keys()
+        entry_key = str(entry.get("key", "") or "").casefold() if entry else ""
+        if entry and entry_key and entry_key not in existing_keys:
+            self._set_code_row(
+                row, entry["key"], entry["code"], entry["name"], True, cost
+            )
         else:
-            entry = self._entry_for_text(text)
-            if entry:
-                self._set_code_row(row, entry["key"], entry["code"], entry["name"], True, cost)
-            else:
-                self._restore_or_remove_row(row, editor.property("_previous_editor_value"))
+            # 无效或重复输入均恢复旧行；新增空行则直接移除。
+            self._restore_or_remove_row(row, editor.property("_previous_editor_value"))
         self._on_codes_changed(None)
 
 
