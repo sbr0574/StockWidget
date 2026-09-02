@@ -120,7 +120,54 @@ class SettingsDialogTests(unittest.TestCase):
         self.assertNotIn("QPushButton#btn_add", regular)
         self.assertIn("QPushButton#btn_add", macos)
         self.assertIn("QPushButton#btn_icon_default", macos)
+        self.assertNotIn("QPushButton#btn_fg_color", macos)
         self.assertIn("rgb(10, 132, 255)", macos)
+
+    def test_general_layout_and_about_tab(self):
+        dialog, _window = self._make_dialog()
+
+        self.assertEqual(dialog.minimumSize(), dialog.maximumSize())
+        self.assertEqual(dialog.size(), dialog.minimumSize())
+        self.assertFalse(dialog.isSizeGripEnabled())
+        self.assertEqual(
+            [dialog.ui.tab_widget.tabText(i)
+             for i in range(dialog.ui.tab_widget.count())],
+            ["数据", "通用", "关于"],
+        )
+        self.assertIs(dialog.ui.gb_about.parentWidget(), dialog.ui.about)
+
+        self.assertLess(dialog.ui.gb_icon.geometry().bottom(), dialog.ui.gb_fcn.y())
+        self.assertLess(dialog.ui.gb_fcn.geometry().bottom(), dialog.ui.gb_hotkeys.y())
+        self.assertLess(dialog.ui.gb_color.geometry().bottom(), dialog.ui.gb_text.y())
+        self.assertEqual(dialog.ui.gb_fcn.x(), dialog.ui.gb_hotkeys.x())
+
+    def test_unicolor_defaults_on_and_controls_direction_colors(self):
+        dialog, window = self._make_dialog()
+
+        self.assertTrue(window.unicolor)
+        self.assertEqual(window.up_color.name(), "#dd2100")
+        self.assertEqual(window.down_color.name(), "#019933")
+        self.assertEqual(window.neutral_color.name(), "#494949")
+        self.assertTrue(dialog.cb_unicolor.isChecked())
+        self.assertTrue(dialog.btn_bg.isEnabled())
+        self.assertTrue(dialog.btn_fg.isEnabled())
+        self.assertFalse(dialog.btn_up.isEnabled())
+        self.assertFalse(dialog.btn_down.isEnabled())
+        self.assertFalse(dialog.btn_neutral.isEnabled())
+        self.assertIn(window.up_color.name(), dialog.btn_up.styleSheet())
+
+        dialog.cb_unicolor.setChecked(False)
+        self.qt_app.processEvents()
+
+        self.assertFalse(window.unicolor)
+        self.assertTrue(dialog.btn_up.isEnabled())
+        self.assertTrue(dialog.btn_down.isEnabled())
+        self.assertTrue(dialog.btn_neutral.isEnabled())
+        config = window.current_config()
+        self.assertFalse(config["unicolor"])
+        self.assertEqual(config["up_color"], window.up_color.name())
+        self.assertEqual(config["down_color"], window.down_color.name())
+        self.assertEqual(config["neutral_color"], window.neutral_color.name())
 
     def test_source_toggle_only_updates_for_selected_button(self):
         calls = []

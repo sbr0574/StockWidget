@@ -101,8 +101,6 @@ def _build_settings_stylesheet(dark: bool, *, macos: bool = False) -> str:
         regular_selectors = (
             "QPushButton#btn_add",
             "QPushButton#btn_del",
-            "QPushButton#btn_fg_color",
-            "QPushButton#btn_bg_color",
         )
         icon_selectors = (
             "QPushButton#btn_icon_default",
@@ -378,6 +376,37 @@ class SettingsDialog(QDialog):
         """按当前系统深浅色应用样式表。"""
         dark = QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
         self.setStyleSheet(_build_settings_stylesheet(dark, macos=sys.platform == "darwin"))
+        self._refresh_color_button_styles()
+
+    def _refresh_color_button_styles(self):
+        """让五个颜色按钮直接显示当前色值，并随系统主题调整边框。"""
+        if not hasattr(self, "_color_buttons"):
+            return
+
+        dark = QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
+        border = "rgba(255, 255, 255, 1)" if dark else "rgba(0, 0, 0, 1)"
+        disabled_border = (
+            "rgba(255, 255, 255, 0.22)" if dark else "rgba(0, 0, 0, 0.18)"
+        )
+        for button, attr, title in self._color_buttons:
+            color = QColor(getattr(self.win, attr))
+            color_name = color.name(QColor.NameFormat.HexRgb)
+            button.setToolTip(f"{title}: {color_name}")
+            button.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: {color_name};
+                    border: 1px solid {border};
+                    border-radius: 10px;
+                    padding: 0;
+                }}
+                QPushButton:hover, QPushButton:focus {{
+                    border: 1px solid rgba(10, 132, 255, 0.90);
+                }}
+                QPushButton:disabled {{
+                    background-color: {color_name};
+                    border: 1px solid {disabled_border};
+                }}
+            """)
 
     def _on_color_scheme_changed(self, _scheme=None):
         self._apply_theme_stylesheet()
@@ -431,9 +460,22 @@ class SettingsDialog(QDialog):
         self.cb_profit = self.ui.cb_profit
         self.cmb_namelen = self.ui.cmb_namelen
 
-        self.cb_default_color = self.ui.cb_default_color
+        self.cb_unicolor = self.ui.cb_unicolor
         self.btn_fg = self.ui.btn_fg_color
         self.btn_bg = self.ui.btn_bg_color
+        self.btn_up = self.ui.btn_up_color
+        self.btn_down = self.ui.btn_down_color
+        self.btn_neutral = self.ui.btn_neutral_color
+        self.label_up_color = self.ui.label_up_color
+        self.label_down_color = self.ui.label_down_color
+        self.label_neutral_color = self.ui.label_neutral_color
+        self._color_buttons = (
+            (self.btn_bg, "bg", "背景颜色"),
+            (self.btn_fg, "fg", "文字颜色"),
+            (self.btn_up, "up_color", "上涨颜色"),
+            (self.btn_down, "down_color", "下跌颜色"),
+            (self.btn_neutral, "neutral_color", "中性颜色"),
+        )
         self.slider_bg_alpha = self.ui.slider_bg_alpha
         self.slider_all_alpha = self.ui.slider_all_alpha
         self.label_bg_alpha = self.ui.label_bg_alpha
@@ -482,9 +524,12 @@ class SettingsDialog(QDialog):
         self.btn_del.clicked.connect(self._del_code)
 
         self.cmb_namelen.currentIndexChanged.connect(self._on_name_length_changed)
-        self.cb_default_color.toggled.connect(self._on_default_color_toggled)
+        self.cb_unicolor.toggled.connect(self._on_unicolor_toggled)
         self.btn_fg.clicked.connect(self.pick_fg)
         self.btn_bg.clicked.connect(self.pick_bg)
+        self.btn_up.clicked.connect(self.pick_up)
+        self.btn_down.clicked.connect(self.pick_down)
+        self.btn_neutral.clicked.connect(self.pick_neutral)
         self.slider_bg_alpha.valueChanged.connect(self.apply_bg_alpha)
         self.slider_all_alpha.valueChanged.connect(self.apply_win_opacity)
 
@@ -532,8 +577,9 @@ class SettingsDialog(QDialog):
         self.cmb_namelen.setCurrentIndex(idx_name if idx_name >= 0 else 1)
         self.cmb_namelen.blockSignals(False)
 
-        self.cb_default_color.setChecked(self.win.default_color)
-        self.btn_fg.setEnabled(not self.win.default_color)
+        self._set_checked_blocked(self.cb_unicolor, self.win.unicolor)
+        self._update_direction_color_controls()
+        self._refresh_color_button_styles()
         self.slider_bg_alpha.setValue(int(round(self.win.bg.alpha() / 2.55)))
         self.label_bg_alpha.setText(f"{self.slider_bg_alpha.value()}%")
         self.slider_all_alpha.setValue(int(round(self.win.windowOpacity() * 100)))
@@ -900,9 +946,22 @@ class SettingsDialog(QDialog):
     def _on_b1s1_toggled(self, checked: bool):
         self.win.set_flag("买一", checked)
 
-    def _on_default_color_toggled(self, checked: bool):
-        self.btn_fg.setEnabled(not checked)
-        self.win.set_default_color(bool(checked))
+    def _update_direction_color_controls(self):
+        enabled = not self.win.unicolor
+        for widget in (
+            self.btn_up,
+            self.btn_down,
+            self.btn_neutral,
+            self.label_up_color,
+            self.label_down_color,
+            self.label_neutral_color,
+        ):
+            widget.setEnabled(enabled)
+
+    def _on_unicolor_toggled(self, checked: bool):
+        self.win.set_unicolor(bool(checked))
+        self._update_direction_color_controls()
+        self._refresh_color_button_styles()
 
     def _on_name_length_changed(self, idx: int):
         value = self.cmb_namelen.itemData(idx)
@@ -939,6 +998,7 @@ class SettingsDialog(QDialog):
         c = QColorDialog.getColor(self.win.fg, self, "选择文字颜色")
         if c.isValid():
             self.win.set_fg_color(c)
+            self._refresh_color_button_styles()
 
     def pick_bg(self):
         base = QColor(self.win.bg)
@@ -946,6 +1006,25 @@ class SettingsDialog(QDialog):
         c = QColorDialog.getColor(base, self, "选择背景颜色")
         if c.isValid():
             self.win.set_bg_rgb_keep_alpha(c)
+            self._refresh_color_button_styles()
+
+    def pick_up(self):
+        c = QColorDialog.getColor(self.win.up_color, self, "选择上涨颜色")
+        if c.isValid():
+            self.win.set_up_color(c)
+            self._refresh_color_button_styles()
+
+    def pick_down(self):
+        c = QColorDialog.getColor(self.win.down_color, self, "选择下跌颜色")
+        if c.isValid():
+            self.win.set_down_color(c)
+            self._refresh_color_button_styles()
+
+    def pick_neutral(self):
+        c = QColorDialog.getColor(self.win.neutral_color, self, "选择中性颜色")
+        if c.isValid():
+            self.win.set_neutral_color(c)
+            self._refresh_color_button_styles()
 
     def apply_bg_alpha(self, v: int):
         self.label_bg_alpha.setText(f"{v}%")
@@ -1171,9 +1250,9 @@ class SettingsDialog(QDialog):
         self._set_checked_blocked(self.cb_code, self.win.code_visible)
         self._set_checked_blocked(self.cb_head, self.win.header_visible)
         self._set_checked_blocked(self.cb_grid, self.win.grid_visible)
-        self._set_checked_blocked(self.cb_default_color, self.win.default_color)
-        # 默认颜色开启时禁用前景色选择按钮
-        self.btn_fg.setEnabled(not self.win.default_color)
+        self._set_checked_blocked(self.cb_unicolor, self.win.unicolor)
+        self._update_direction_color_controls()
+        self._refresh_color_button_styles()
 
     def _on_click_through_toggled(self, checked: bool):
         self.win.set_click_through(bool(checked))

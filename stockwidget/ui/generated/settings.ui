@@ -526,7 +526,7 @@
        <x>330</x>
        <y>10</y>
        <width>221</width>
-       <height>70</height>
+       <height>71</height>
       </rect>
      </property>
      <property name="title">
@@ -538,205 +538,183 @@
      <property name="flat">
       <bool>true</bool>
      </property>
-     <widget class="QPushButton" name="btn_icon_default">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>25</y>
-        <width>40</width>
-        <height>40</height>
-       </rect>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>40</width>
-        <height>40</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>40</width>
-        <height>40</height>
-       </size>
-      </property>
-      <property name="toolTip">
-       <string>默认图标</string>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-      <property name="icon">
-       <iconset>
-        <normaloff>:/StockWidget.ico</normaloff>:/StockWidget.ico</iconset>
-      </property>
-      <property name="iconSize">
-       <size>
-        <width>32</width>
-        <height>32</height>
-       </size>
-      </property>
-      <property name="checkable">
-       <bool>true</bool>
-      </property>
-      <property name="autoExclusive">
-       <bool>true</bool>
-      </property>
-      <property name="autoDefault">
-       <bool>false</bool>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="btn_icon_lightG">
-      <property name="geometry">
-       <rect>
-        <x>100</x>
-        <y>25</y>
-        <width>40</width>
-        <height>40</height>
-       </rect>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>40</width>
-        <height>40</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>40</width>
-        <height>40</height>
-       </size>
-      </property>
-      <property name="toolTip">
-       <string>浅色玻璃</string>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-      <property name="icon">
-       <iconset>
-        <normaloff>:/LightGlass.ico</normaloff>:/LightGlass.ico</iconset>
-      </property>
-      <property name="iconSize">
-       <size>
-        <width>32</width>
-        <height>32</height>
-       </size>
-      </property>
-      <property name="checkable">
-       <bool>true</bool>
-      </property>
-      <property name="autoExclusive">
-       <bool>true</bool>
-      </property>
-      <property name="autoDefault">
-       <bool>false</bool>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="btn_icon_dark">
-      <property name="geometry">
-       <rect>
-        <x>55</x>
-        <y>25</y>
-        <width>40</width>
-        <height>40</height>
-       </rect>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>40</width>
-        <height>40</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>40</width>
-        <height>40</height>
-       </size>
-      </property>
-      <property name="toolTip">
-       <string>深色图标</string>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-      <property name="icon">
-       <iconset>
-        <normaloff>:/DarkSW.ico</normaloff>:/DarkSW.ico</iconset>
-      </property>
-      <property name="iconSize">
-       <size>
-        <width>32</width>
-        <height>32</height>
-       </size>
-      </property>
-      <property name="checkable">
-       <bool>true</bool>
-      </property>
-      <property name="autoExclusive">
-       <bool>true</bool>
-      </property>
-      <property name="autoDefault">
-       <bool>false</bool>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="btn_icon_darkG">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="geometry">
-       <rect>
-        <x>145</x>
-        <y>25</y>
-        <width>40</width>
-        <height>40</height>
-       </rect>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>40</width>
-        <height>40</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>40</width>
-        <height>40</height>
-       </size>
-      </property>
-      <property name="toolTip">
-       <string>深色玻璃</string>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-      <property name="icon">
-       <iconset>
-        <normaloff>:/DarkGlass.ico</normaloff>:/DarkGlass.ico</iconset>
-      </property>
-      <property name="iconSize">
-       <size>
-        <width>32</width>
-        <height>32</height>
-       </size>
-      </property>
-      <property name="checkable">
-       <bool>true</bool>
-      </property>
-      <property name="autoExclusive">
-       <bool>true</bool>
-      </property>
-      <property name="autoDefault">
-       <bool>false</bool>
-      </property>
-     </widget>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QPushButton" name="btn_icon_default">
+        <property name="minimumSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>默认图标</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/StockWidget.ico</normaloff>:/StockWidget.ico</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="autoExclusive">
+         <bool>true</bool>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btn_icon_dark">
+        <property name="minimumSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>深色图标</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/DarkSW.ico</normaloff>:/DarkSW.ico</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="autoExclusive">
+         <bool>true</bool>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btn_icon_lightG">
+        <property name="minimumSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>浅色玻璃</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/LightGlass.ico</normaloff>:/LightGlass.ico</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="autoExclusive">
+         <bool>true</bool>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btn_icon_darkG">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>深色玻璃</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/DarkGlass.ico</normaloff>:/DarkGlass.ico</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="autoExclusive">
+         <bool>true</bool>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
     <widget class="QGroupBox" name="gb_fcn">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>250</y>
-       <width>301</width>
-       <height>81</height>
+       <x>330</x>
+       <y>85</y>
+       <width>221</width>
+       <height>121</height>
       </rect>
      </property>
      <property name="title">
@@ -748,71 +726,43 @@
      <property name="flat">
       <bool>true</bool>
      </property>
-     <widget class="QCheckBox" name="cb_auto_start">
-      <property name="geometry">
-       <rect>
-        <x>100</x>
-        <y>25</y>
-        <width>81</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>开机启动</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="cb_force_top">
-      <property name="geometry">
-       <rect>
-        <x>190</x>
-        <y>25</y>
-        <width>88</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>强制置顶</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="cb_click_through">
-      <property name="geometry">
-       <rect>
-        <x>100</x>
-        <y>55</y>
-        <width>81</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>鼠标穿透</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="cb_head">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>25</y>
-        <width>81</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>显示表头</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="cb_grid">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>55</y>
-        <width>81</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>显示网格</string>
-      </property>
-     </widget>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="cb_grid">
+        <property name="text">
+         <string>显示网格</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="cb_head">
+        <property name="text">
+         <string>显示表头</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QCheckBox" name="cb_auto_start">
+        <property name="text">
+         <string>开机启动</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QCheckBox" name="cb_force_top">
+        <property name="text">
+         <string>强制置顶</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QCheckBox" name="cb_click_through">
+        <property name="text">
+         <string>鼠标穿透</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
     <widget class="QGroupBox" name="gb_color">
      <property name="geometry">
@@ -820,11 +770,11 @@
        <x>10</x>
        <y>10</y>
        <width>301</width>
-       <height>120</height>
+       <height>90</height>
       </rect>
      </property>
      <property name="title">
-      <string>颜色与透明度</string>
+      <string>颜色管理</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -832,155 +782,154 @@
      <property name="flat">
       <bool>true</bool>
      </property>
-     <widget class="QCheckBox" name="cb_default_color">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>25</y>
-        <width>88</width>
-        <height>26</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>默认颜色</string>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="btn_fg_color">
-      <property name="geometry">
-       <rect>
-        <x>100</x>
-        <y>25</y>
-        <width>91</width>
-        <height>26</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>文字颜色...</string>
-      </property>
-      <property name="autoDefault">
-       <bool>false</bool>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="btn_bg_color">
-      <property name="geometry">
-       <rect>
-        <x>200</x>
-        <y>25</y>
-        <width>91</width>
-        <height>26</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>背景颜色...</string>
-      </property>
-      <property name="autoDefault">
-       <bool>false</bool>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_bg">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>60</y>
-        <width>91</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>背景不透明度：</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_all">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>90</y>
-        <width>91</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>整体不透明度：</string>
-      </property>
-     </widget>
-     <widget class="QSlider" name="slider_bg_alpha">
-      <property name="geometry">
-       <rect>
-        <x>100</x>
-        <y>60</y>
-        <width>151</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="minimum">
-       <number>1</number>
-      </property>
-      <property name="maximum">
-       <number>100</number>
-      </property>
-      <property name="value">
-       <number>60</number>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Orientation::Horizontal</enum>
-      </property>
-     </widget>
-     <widget class="QSlider" name="slider_all_alpha">
-      <property name="geometry">
-       <rect>
-        <x>100</x>
-        <y>90</y>
-        <width>151</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="minimum">
-       <number>10</number>
-      </property>
-      <property name="maximum">
-       <number>100</number>
-      </property>
-      <property name="value">
-       <number>80</number>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Orientation::Horizontal</enum>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_bg_alpha">
-      <property name="geometry">
-       <rect>
-        <x>255</x>
-        <y>60</y>
-        <width>41</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>100%</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_all_alpha">
-      <property name="geometry">
-       <rect>
-        <x>255</x>
-        <y>90</y>
-        <width>41</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>100%</string>
-      </property>
-     </widget>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="1" column="1">
+       <widget class="QPushButton" name="btn_up_color">
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="label_up_color">
+        <property name="text">
+         <string>上涨</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="6">
+       <widget class="QPushButton" name="btn_neutral_color">
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="5">
+       <widget class="QLabel" name="label_down_color">
+        <property name="text">
+         <string>下跌</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="4">
+       <widget class="QPushButton" name="btn_down_color">
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="7">
+       <widget class="QLabel" name="label_neutral_color">
+        <property name="text">
+         <string>中性</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="cb_unicolor">
+        <property name="baseSize">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>统一颜色</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QPushButton" name="btn_fg_color">
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="label_fg_color">
+        <property name="text">
+         <string>文字</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4">
+       <widget class="QPushButton" name="btn_bg_color">
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="5">
+       <widget class="QLabel" name="label_bg_color">
+        <property name="text">
+         <string>背景</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>主颜色：</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
     <widget class="QGroupBox" name="gb_text">
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>130</y>
+       <y>200</y>
        <width>301</width>
-       <height>120</height>
+       <height>140</height>
       </rect>
      </property>
      <property name="title">
@@ -992,134 +941,99 @@
      <property name="flat">
       <bool>true</bool>
      </property>
-     <widget class="QFontComboBox" name="cmb_font">
-      <property name="geometry">
-       <rect>
-        <x>100</x>
-        <y>25</y>
-        <width>191</width>
-        <height>25</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_font">
-      <property name="geometry">
-       <rect>
-        <x>35</x>
-        <y>25</y>
-        <width>61</width>
-        <height>25</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>字体样式：</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_font_size">
-      <property name="geometry">
-       <rect>
-        <x>35</x>
-        <y>60</y>
-        <width>61</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>字体大小：</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_line_interval">
-      <property name="geometry">
-       <rect>
-        <x>46</x>
-        <y>90</y>
-        <width>51</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>行间距：</string>
-      </property>
-     </widget>
-     <widget class="QSlider" name="slider_font_size">
-      <property name="geometry">
-       <rect>
-        <x>100</x>
-        <y>60</y>
-        <width>151</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimum">
-       <number>5</number>
-      </property>
-      <property name="maximum">
-       <number>15</number>
-      </property>
-      <property name="value">
-       <number>10</number>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Orientation::Horizontal</enum>
-      </property>
-     </widget>
-     <widget class="QSlider" name="slider_line_interval">
-      <property name="geometry">
-       <rect>
-        <x>100</x>
-        <y>90</y>
-        <width>151</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="maximum">
-       <number>20</number>
-      </property>
-      <property name="value">
-       <number>3</number>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Orientation::Horizontal</enum>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_current_font_size">
-      <property name="geometry">
-       <rect>
-        <x>255</x>
-        <y>60</y>
-        <width>41</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>00 pt</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_current_line_interval">
-      <property name="geometry">
-       <rect>
-        <x>255</x>
-        <y>90</y>
-        <width>41</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>+0 px</string>
-      </property>
-     </widget>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_font">
+        <property name="text">
+         <string>字体样式：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" colspan="2">
+       <widget class="QFontComboBox" name="cmb_font"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_font_size">
+        <property name="text">
+         <string>字体大小：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSlider" name="slider_font_size">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimum">
+         <number>5</number>
+        </property>
+        <property name="maximum">
+         <number>15</number>
+        </property>
+        <property name="value">
+         <number>10</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="label_current_font_size">
+        <property name="minimumSize">
+         <size>
+          <width>40</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>00 pt</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_line_interval">
+        <property name="text">
+         <string>行间距：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSlider" name="slider_line_interval">
+        <property name="maximum">
+         <number>20</number>
+        </property>
+        <property name="value">
+         <number>3</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLabel" name="label_current_line_interval">
+        <property name="minimumSize">
+         <size>
+          <width>40</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>+0 px</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
     <widget class="QGroupBox" name="gb_hotkeys">
      <property name="geometry">
       <rect>
        <x>330</x>
-       <y>85</y>
+       <y>200</y>
        <width>221</width>
        <height>135</height>
       </rect>
@@ -1138,7 +1052,7 @@
        <rect>
         <x>10</x>
         <y>25</y>
-        <width>151</width>
+        <width>131</width>
         <height>24</height>
        </rect>
       </property>
@@ -1180,13 +1094,111 @@
       </property>
      </widget>
     </widget>
+    <widget class="QGroupBox" name="gb_opacity">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>100</y>
+       <width>301</width>
+       <height>100</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>不透明度</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+     <property name="flat">
+      <bool>true</bool>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_bg">
+        <property name="text">
+         <string>背景：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSlider" name="slider_bg_alpha">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>60</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="label_bg_alpha">
+        <property name="minimumSize">
+         <size>
+          <width>40</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>100%</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_all">
+        <property name="text">
+         <string>整体窗口：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSlider" name="slider_all_alpha">
+        <property name="minimum">
+         <number>10</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>80</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="label_all_alpha">
+        <property name="minimumSize">
+         <size>
+          <width>40</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>100%</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="about">
+    <attribute name="title">
+     <string>关于</string>
+    </attribute>
     <widget class="QGroupBox" name="gb_about">
      <property name="geometry">
       <rect>
-       <x>330</x>
-       <y>230</y>
-       <width>221</width>
-       <height>101</height>
+       <x>10</x>
+       <y>10</y>
+       <width>541</width>
+       <height>321</height>
       </rect>
      </property>
      <property name="title">
@@ -1201,10 +1213,10 @@
      <widget class="QLabel" name="label_about_info">
       <property name="geometry">
        <rect>
-        <x>11</x>
-        <y>25</y>
-        <width>221</width>
-        <height>71</height>
+        <x>20</x>
+        <y>30</y>
+        <width>501</width>
+        <height>121</height>
        </rect>
       </property>
       <property name="text">

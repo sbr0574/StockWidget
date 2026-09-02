@@ -4,6 +4,10 @@
 import unittest
 from types import SimpleNamespace
 
+from stockwidget.ui.table_model import (
+    COLOR_ROLE_TEXT,
+    COLOR_ROLE_UP,
+)
 from stockwidget.ui.widget import FloatLabel
 
 
@@ -52,6 +56,18 @@ class WidgetFormattingTests(unittest.TestCase):
             self.widget, "au0", _quote(604495), "期", "au0", market=""
         )
         self.assertEqual(row["成交量"], "60.45万")
+
+    def test_ordinary_text_and_directional_values_have_separate_color_roles(self):
+        _row, roles = FloatLabel._format_data(
+            self.widget, "sh600000", _quote(), "沪", "600000", market="sh"
+        )
+
+        self.assertEqual(roles["名称"], COLOR_ROLE_TEXT)
+        self.assertEqual(roles["成交量"], COLOR_ROLE_TEXT)
+        self.assertEqual(roles["成交额"], COLOR_ROLE_TEXT)
+        self.assertEqual(roles["现价"], COLOR_ROLE_UP)
+        self.assertEqual(roles["涨跌"], COLOR_ROLE_UP)
+        self.assertEqual(roles["涨幅"], COLOR_ROLE_UP)
 
 
 if __name__ == "__main__":
