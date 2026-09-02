@@ -14,6 +14,7 @@ FILES=(
   fund_cn.json
   stock_hk.json
   stock_us.json
+  cache_us_cn_aliases.json
   index_cn.json
   index_global.json
   futures_sh.json

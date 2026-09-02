@@ -15,7 +15,7 @@ import resources.resources_rc  # noqa: F401  加载 Qt 内嵌资源（图标、�
 
 from stockwidget.constants import APP_NAME, APP_VERSION, CONFIG_FILE
 from stockwidget.core.config_store import load_file, save_file
-from stockwidget.data.code_lists import CodeListManager
+from stockwidget.data.code_lists import CODES_RETRY_SECONDS, CodeListManager
 from stockwidget.data.update_check import get_update_info
 from stockwidget.platform.autostart import set_start_on_boot
 from stockwidget.ui.settings_dialog import SettingsDialog
@@ -160,11 +160,17 @@ class App(QApplication):
         self._start_codes_refresh()
 
     def _start_codes_refresh(self):
-        """在后台读取状态清单，并按分类同步有变化的文件。"""
+        """进入缓存状态，并在后台检查状态清单及同步代码文件。"""
         if self._codes_refresh_running or not self._codes_local_ready:
             return
 
         self._codes_refresh_running = True
+        self.code_manager.begin_remote_check()
+        if self.settings_dlg is not None and self.settings_dlg.isVisible():
+            try:
+                self.settings_dlg.refresh_data_state()
+            except Exception:
+                pass
 
         def _worker():
             try:
@@ -174,7 +180,7 @@ class App(QApplication):
                 result = {
                     "state": state,
                     "date": state_date,
-                    "retry_seconds": 30 * 60,
+                    "retry_seconds": CODES_RETRY_SECONDS,
                     "updated": (),
                 }
             self.codes_refresh_finished.emit(result)

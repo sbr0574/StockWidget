@@ -123,15 +123,19 @@ def _em_secid(instrument: dict) -> str:
 
 # ---------------- 新浪解析 ----------------
 
-def _parse_sina_a(parts: list, is_index: bool = False) -> dict:
+def _parse_sina_a(parts: list, is_index: bool = False, market: str = "") -> dict:
     """A股: 0名称 1今开 2昨收 3最新 4最高 5最低 6买一 7卖一 8量 9额
-    10~29 五档(量,价...) 30日期 31时间；指数无五档且量单位为手(×100转股)。"""
+    10~29 五档(量,价...) 30日期 31时间。指数无五档；上证指数的量为手，
+    深证指数的量为股，统一转换为股后写入 schema。"""
     if is_index:
+        volume = _as_int(parts[8])
+        if market == "sh":
+            volume *= 100
         return _new_entry(
             name=parts[0],
             opening=parts[1], prev_close=parts[2], current=parts[3],
             high=parts[4], low=parts[5],
-            vol=int(parts[8] or 0) * 100, amt=parts[9],
+            vol=volume, amt=parts[9],
             pur_vol=_Z5, pur_price=_Z5, sell_vol=_Z5, sell_price=_Z5,
             date=parts[30] if len(parts) > 30 else "",
             time=parts[31] if len(parts) > 31 else "",
@@ -153,13 +157,13 @@ def _parse_sina_a(parts: list, is_index: bool = False) -> dict:
 def _parse_sina_hk(parts: list, is_index: bool = False) -> dict:
     """港股: 0英文名 1中文名 2今开 3昨收 4最高 5最低 6最新
     7涨跌额 8涨跌幅 9买一价 10卖一价 11成交额 12成交量 ... 17日期 18时间
-    港股指数无盘口、量单位为手(×100)、额为千元(×1000)。"""
+    港股指数无盘口，成交量已是股，成交额为千元(×1000)。"""
     if is_index:
         return _new_entry(
             name=parts[1],
             opening=parts[2], prev_close=parts[3], current=parts[6],
             high=parts[4], low=parts[5],
-            vol=int(parts[12] or 0) * 100,
+            vol=parts[12],
             amt=float(parts[11] or 0) * 1000,
             pur_vol=_Z5, pur_price=_Z5, sell_vol=_Z5, sell_price=_Z5,
             date=parts[17] if len(parts) > 17 else "",
@@ -179,14 +183,14 @@ def _parse_sina_hk(parts: list, is_index: bool = False) -> dict:
 
 def _parse_sina_us(parts: list, is_index: bool = False) -> dict:
     """美股: 0名称 1最新 2涨跌幅 3时间 4涨跌额 5今开 6最高 7最低
-    10成交量 ... 26昨收 ... 30成交额；美股指数量单位为手(×100)、无成交额。"""
+    10成交量 ... 26昨收 ... 30成交额；成交量已是股，美股指数无成交额。"""
     t = (parts[3].split() + ["", ""])[:2] if len(parts) > 3 else ["", ""]
     if is_index:
         return _new_entry(
             name=parts[0],
             opening=parts[5], prev_close=parts[26] if len(parts) > 26 else 0,
             current=parts[1], high=parts[6], low=parts[7],
-            vol=int(parts[10] or 0) * 100,
+            vol=parts[10],
             amt=0,   # 美股指数无成交额
             pur_vol=_Z5, pur_price=_Z5, sell_vol=_Z5, sell_price=_Z5,
             date=t[0], time=t[1],
@@ -275,7 +279,7 @@ def request_sina(instruments: dict[str, dict]) -> dict:
         elif market == "gb":
             entry = _parse_sina_global(parts)
         elif market in {"sh", "sz", "bj"}:
-            entry = _parse_sina_a(parts, is_index=is_index)
+            entry = _parse_sina_a(parts, is_index=is_index, market=market)
         elif not market:
             entry = _parse_sina_futures(parts)
         else:
@@ -353,4 +357,3 @@ def request_quote(instruments: dict[str, dict], source: str = DATA_SOURCE) -> di
         _, data = request_eastmoney(instruments)
         return data
     return request_sina(instruments)
-
