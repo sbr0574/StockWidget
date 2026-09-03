@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-02",
+  "last_update": "2026-09-03",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -7407,6 +7407,15 @@
       "name_en": "",
       "py": "zhongyaoetfhuataibairui",
       "abbr": "zyetfhtbr"
+    },
+    "sh561530": {
+      "code": "561530",
+      "market": "sh",
+      "type": "基",
+      "name": "银行ETF银华",
+      "name_en": "",
+      "py": "yinhangetfyinhua",
+      "abbr": "yhetfyh"
     },
     "sh561550": {
       "code": "561550",
@@ -19278,6 +19287,15 @@
       "name_en": "",
       "py": "nanfangrunzekejishujuzhongxinreit",
       "abbr": "nfrzkjsjzxreit"
+    },
+    "sz181001": {
+      "code": "181001",
+      "market": "sz",
+      "type": "基",
+      "name": "创金合信北京国资公司REIT",
+      "name_en": "",
+      "py": "chuangjinhexinbeijingguozigongsireit",
+      "abbr": "cjhxbjgzgsreit"
     }
   }
 }

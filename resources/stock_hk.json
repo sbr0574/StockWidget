@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-02",
+  "last_update": "2026-09-03",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -18432,6 +18432,15 @@
       "name_en": "EASYKNIT INT'L",
       "py": "yongyiguoji",
       "abbr": "yygj"
+    },
+    "hk02913": {
+      "code": "02913",
+      "market": "hk",
+      "type": "港",
+      "name": "天成控股",
+      "name_en": "TIAN CHENG HLDG",
+      "py": "tianchengkonggu",
+      "abbr": "tckg"
     },
     "hk02914": {
       "code": "02914",

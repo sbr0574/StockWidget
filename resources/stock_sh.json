@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-02",
+  "last_update": "2026-09-03",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -17492,10 +17492,10 @@
       "code": "688281",
       "market": "sh",
       "type": "科",
-      "name": "华秦科技",
+      "name": "XD华秦科",
       "name_en": "",
-      "py": "huaqinkeji",
-      "abbr": "hqkj"
+      "py": "xdhuaqinke",
+      "abbr": "xdhqk"
     },
     "sh688282": {
       "code": "688282",
@@ -19139,10 +19139,10 @@
       "code": "688550",
       "market": "sh",
       "type": "科",
-      "name": "瑞联新材",
+      "name": "XD瑞联新",
       "name_en": "",
-      "py": "ruilianxincai",
-      "abbr": "rlxc"
+      "py": "xdruilianxin",
+      "abbr": "xdrlx"
     },
     "sh688551": {
       "code": "688551",
@@ -19346,10 +19346,10 @@
       "code": "688578",
       "market": "sh",
       "type": "科",
-      "name": "XD艾力斯",
+      "name": "艾力斯",
       "name_en": "",
-      "py": "xdailisi",
-      "abbr": "xdals"
+      "py": "ailisi",
+      "abbr": "als"
     },
     "sh688579": {
       "code": "688579",

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-01",
+  "last_update": "2026-09-03",
   "codes": {
     "bj810011": {
       "code": "810011",
@@ -500,10 +500,10 @@
       "code": "920071",
       "market": "bj",
       "type": "京",
-      "name": "金钛股份",
+      "name": "N金钛",
       "name_en": "",
-      "py": "jintaigufen",
-      "abbr": "jtgf"
+      "py": "njintai",
+      "abbr": "njt"
     },
     "bj920072": {
       "code": "920072",
