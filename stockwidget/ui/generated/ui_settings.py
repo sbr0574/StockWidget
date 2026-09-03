@@ -241,39 +241,27 @@ class Ui_SettingDialog(object):
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.btn_up_color = QPushButton(self.gb_color)
         self.btn_up_color.setObjectName(u"btn_up_color")
-        self.btn_up_color.setMaximumSize(QSize(20, 20))
+        self.btn_up_color.setIconSize(QSize(12, 12))
+        self.btn_up_color.setFlat(True)
         self.btn_up_color.setAutoDefault(False)
 
         self.gridLayout_4.addWidget(self.btn_up_color, 1, 1, 1, 1)
 
-        self.label_up_color = QLabel(self.gb_color)
-        self.label_up_color.setObjectName(u"label_up_color")
-
-        self.gridLayout_4.addWidget(self.label_up_color, 1, 2, 1, 1)
-
         self.btn_neutral_color = QPushButton(self.gb_color)
         self.btn_neutral_color.setObjectName(u"btn_neutral_color")
-        self.btn_neutral_color.setMaximumSize(QSize(20, 20))
+        self.btn_neutral_color.setIconSize(QSize(12, 12))
+        self.btn_neutral_color.setFlat(True)
         self.btn_neutral_color.setAutoDefault(False)
 
-        self.gridLayout_4.addWidget(self.btn_neutral_color, 1, 6, 1, 1)
-
-        self.label_down_color = QLabel(self.gb_color)
-        self.label_down_color.setObjectName(u"label_down_color")
-
-        self.gridLayout_4.addWidget(self.label_down_color, 1, 5, 1, 1)
+        self.gridLayout_4.addWidget(self.btn_neutral_color, 1, 3, 1, 1)
 
         self.btn_down_color = QPushButton(self.gb_color)
         self.btn_down_color.setObjectName(u"btn_down_color")
-        self.btn_down_color.setMaximumSize(QSize(20, 20))
+        self.btn_down_color.setIconSize(QSize(12, 12))
+        self.btn_down_color.setFlat(True)
         self.btn_down_color.setAutoDefault(False)
 
-        self.gridLayout_4.addWidget(self.btn_down_color, 1, 4, 1, 1)
-
-        self.label_neutral_color = QLabel(self.gb_color)
-        self.label_neutral_color.setObjectName(u"label_neutral_color")
-
-        self.gridLayout_4.addWidget(self.label_neutral_color, 1, 7, 1, 1)
+        self.gridLayout_4.addWidget(self.btn_down_color, 1, 2, 1, 1)
 
         self.cb_unicolor = QCheckBox(self.gb_color)
         self.cb_unicolor.setObjectName(u"cb_unicolor")
@@ -283,27 +271,19 @@ class Ui_SettingDialog(object):
 
         self.btn_fg_color = QPushButton(self.gb_color)
         self.btn_fg_color.setObjectName(u"btn_fg_color")
-        self.btn_fg_color.setMaximumSize(QSize(20, 20))
+        self.btn_fg_color.setIconSize(QSize(12, 12))
+        self.btn_fg_color.setFlat(True)
         self.btn_fg_color.setAutoDefault(False)
 
         self.gridLayout_4.addWidget(self.btn_fg_color, 0, 1, 1, 1)
 
-        self.label_fg_color = QLabel(self.gb_color)
-        self.label_fg_color.setObjectName(u"label_fg_color")
-
-        self.gridLayout_4.addWidget(self.label_fg_color, 0, 2, 1, 1)
-
         self.btn_bg_color = QPushButton(self.gb_color)
         self.btn_bg_color.setObjectName(u"btn_bg_color")
-        self.btn_bg_color.setMaximumSize(QSize(20, 20))
+        self.btn_bg_color.setIconSize(QSize(12, 12))
+        self.btn_bg_color.setFlat(True)
         self.btn_bg_color.setAutoDefault(False)
 
-        self.gridLayout_4.addWidget(self.btn_bg_color, 0, 4, 1, 1)
-
-        self.label_bg_color = QLabel(self.gb_color)
-        self.label_bg_color.setObjectName(u"label_bg_color")
-
-        self.gridLayout_4.addWidget(self.label_bg_color, 0, 5, 1, 1)
+        self.gridLayout_4.addWidget(self.btn_bg_color, 0, 2, 1, 1)
 
         self.label = QLabel(self.gb_color)
         self.label.setObjectName(u"label")
@@ -502,17 +482,12 @@ class Ui_SettingDialog(object):
         self.cb_force_top.setText(QCoreApplication.translate("SettingDialog", u"\u5f3a\u5236\u7f6e\u9876", None))
         self.cb_click_through.setText(QCoreApplication.translate("SettingDialog", u"\u9f20\u6807\u7a7f\u900f", None))
         self.gb_color.setTitle(QCoreApplication.translate("SettingDialog", u"\u989c\u8272\u7ba1\u7406", None))
-        self.btn_up_color.setText("")
-        self.label_up_color.setText(QCoreApplication.translate("SettingDialog", u"\u4e0a\u6da8", None))
-        self.btn_neutral_color.setText("")
-        self.label_down_color.setText(QCoreApplication.translate("SettingDialog", u"\u4e0b\u8dcc", None))
-        self.btn_down_color.setText("")
-        self.label_neutral_color.setText(QCoreApplication.translate("SettingDialog", u"\u4e2d\u6027", None))
+        self.btn_up_color.setText(QCoreApplication.translate("SettingDialog", u"\u4e0a\u6da8", None))
+        self.btn_neutral_color.setText(QCoreApplication.translate("SettingDialog", u"\u4e2d\u6027", None))
+        self.btn_down_color.setText(QCoreApplication.translate("SettingDialog", u"\u4e0b\u8dcc", None))
         self.cb_unicolor.setText(QCoreApplication.translate("SettingDialog", u"\u7edf\u4e00\u989c\u8272", None))
-        self.btn_fg_color.setText("")
-        self.label_fg_color.setText(QCoreApplication.translate("SettingDialog", u"\u6587\u5b57", None))
-        self.btn_bg_color.setText("")
-        self.label_bg_color.setText(QCoreApplication.translate("SettingDialog", u"\u80cc\u666f", None))
+        self.btn_fg_color.setText(QCoreApplication.translate("SettingDialog", u"\u6587\u5b57", None))
+        self.btn_bg_color.setText(QCoreApplication.translate("SettingDialog", u"\u80cc\u666f", None))
         self.label.setText(QCoreApplication.translate("SettingDialog", u"\u4e3b\u989c\u8272\uff1a", None))
         self.gb_text.setTitle(QCoreApplication.translate("SettingDialog", u"\u5b57\u4f53\u4e0e\u884c\u8ddd", None))
         self.label_font.setText(QCoreApplication.translate("SettingDialog", u"\u5b57\u4f53\u6837\u5f0f\uff1a", None))

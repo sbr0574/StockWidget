@@ -7,7 +7,8 @@ from PySide6.QtCore import (
     Qt, QPoint, QEvent, QTimer, QItemSelectionModel, QModelIndex, Signal,
 )
 from PySide6.QtGui import (
-    QColor, QGuiApplication, QKeySequence, QStandardItem, QStandardItemModel,
+    QColor, QGuiApplication, QIcon, QKeySequence, QPainter, QPixmap,
+    QStandardItem, QStandardItemModel,
 )
 from PySide6.QtWidgets import (
     QApplication, QWidget, QDialog, QColorDialog, QAbstractItemView, QTableWidgetItem,
@@ -58,10 +59,34 @@ def _hotkey_error_message(result) -> str:
 
 
 # 扁平化分组框列表（自选列表 gb_list 保持默认带边框样式，不在其中）
-_FLAT_GROUPS = ("gb_data", "gb_data_setting", "gb_name", "gb_icon", "gb_fcn",
+_FLAT_GROUPS = ("gb_data", "gb_data_setting", "gb_name", "gb_icon", "gb_fcn", "gb_opacity",
                 "gb_color", "gb_text", "gb_tabel", "gb_hotkeys", "gb_about")
 
 _SEARCH_PLACEHOLDER = "搜索代码、名称、拼音或缩写，空格区分关键词"
+_COLOR_SWATCH_SIZE = 12
+_UNICOLOR_EXTRA_WIDTH = 8
+
+
+def _color_swatch_icon(color: QColor, device_pixel_ratio: float = 1.0) -> QIcon:
+    """按屏幕像素比绘制无描边圆形色标，避免高 DPI 缩放发糊。"""
+    ratio = max(1.0, float(device_pixel_ratio))
+    pixel_size = max(_COLOR_SWATCH_SIZE, round(_COLOR_SWATCH_SIZE * ratio))
+    ratio = pixel_size / _COLOR_SWATCH_SIZE
+    pixmap = QPixmap(pixel_size, pixel_size)
+    pixmap.setDevicePixelRatio(ratio)
+    pixmap.fill(Qt.GlobalColor.transparent)
+
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.setBrush(color)
+    painter.drawEllipse(1, 1, _COLOR_SWATCH_SIZE - 2, _COLOR_SWATCH_SIZE - 2)
+    painter.end()
+
+    icon = QIcon()
+    icon.addPixmap(pixmap, QIcon.Mode.Normal, QIcon.State.Off)
+    icon.addPixmap(pixmap, QIcon.Mode.Disabled, QIcon.State.Off)
+    return icon
 
 
 def _build_settings_stylesheet(dark: bool, *, macos: bool = False) -> str:
@@ -105,14 +130,22 @@ def _build_settings_stylesheet(dark: bool, *, macos: bool = False) -> str:
             "QPushButton#btn_icon_dark",
             "QPushButton#btn_icon_darkG",
         )
+        color_selectors = (
+            "QPushButton#btn_fg_color",
+            "QPushButton#btn_bg_color",
+            "QPushButton#btn_up_color",
+            "QPushButton#btn_down_color",
+            "QPushButton#btn_neutral_color",
+        )
+        flat_selectors = icon_selectors + color_selectors
         regular_buttons = ",\n".join(regular_selectors)
         regular_hover = ",\n".join(f"{selector}:hover" for selector in regular_selectors)
         regular_pressed = ",\n".join(f"{selector}:pressed" for selector in regular_selectors)
         regular_focus = ",\n".join(f"{selector}:focus" for selector in regular_selectors)
         regular_disabled = ",\n".join(f"{selector}:disabled" for selector in regular_selectors)
-        icon_buttons = ",\n".join(icon_selectors)
-        icon_hover = ",\n".join(f"{selector}:hover" for selector in icon_selectors)
-        icon_pressed = ",\n".join(f"{selector}:pressed" for selector in icon_selectors)
+        flat_buttons = ",\n".join(flat_selectors)
+        flat_hover = ",\n".join(f"{selector}:hover" for selector in flat_selectors)
+        flat_pressed = ",\n".join(f"{selector}:pressed" for selector in flat_selectors)
         icon_checked = ",\n".join(f"{selector}:checked" for selector in icon_selectors)
         macos_buttons = f"""
 {regular_buttons} {{
@@ -134,16 +167,16 @@ def _build_settings_stylesheet(dark: bool, *, macos: bool = False) -> str:
     background-color: {button_disabled};
     border-color: transparent;
 }}
-{icon_buttons} {{
+{flat_buttons} {{
     background-color: transparent;
     border: 1px solid transparent;
     border-radius: 8px;
     padding: 3px;
 }}
-{icon_hover} {{
+{flat_hover} {{
     background-color: {button_hover};
 }}
-{icon_pressed} {{
+{flat_pressed} {{
     background-color: {button_pressed};
 }}
 {icon_checked} {{
@@ -356,37 +389,18 @@ class SettingsDialog(QDialog):
             self.metric_pool.set_theme(dark)
         if hasattr(self, "add_code_panel"):
             self.add_code_panel.set_theme(dark)
-        self._refresh_color_button_styles()
+        self._refresh_color_buttons()
 
-    def _refresh_color_button_styles(self):
-        """让五个颜色按钮直接显示当前色值，并随系统主题调整边框。"""
+    def _refresh_color_buttons(self):
+        """用无描边圆形图标展示五个颜色按钮的当前色值。"""
         if not hasattr(self, "_color_buttons"):
             return
 
-        dark = QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
-        border = "rgba(255, 255, 255, 1)" if dark else "rgba(0, 0, 0, 1)"
-        disabled_border = (
-            "rgba(255, 255, 255, 0.22)" if dark else "rgba(0, 0, 0, 0.18)"
-        )
         for button, attr, title in self._color_buttons:
             color = QColor(getattr(self.win, attr))
             color_name = color.name(QColor.NameFormat.HexRgb)
             button.setToolTip(f"{title}: {color_name}")
-            button.setStyleSheet(f"""
-                QPushButton {{
-                    background-color: {color_name};
-                    border: 1px solid {border};
-                    border-radius: 10px;
-                    padding: 0;
-                }}
-                QPushButton:hover, QPushButton:focus {{
-                    border: 1px solid rgba(10, 132, 255, 0.90);
-                }}
-                QPushButton:disabled {{
-                    background-color: {color_name};
-                    border: 1px solid {disabled_border};
-                }}
-            """)
+            button.setIcon(_color_swatch_icon(color, button.devicePixelRatioF()))
 
     def _on_color_scheme_changed(self, _scheme=None):
         self._apply_theme_stylesheet()
@@ -445,14 +459,15 @@ class SettingsDialog(QDialog):
         self.cmb_namelen = self.ui.cmb_namelen
 
         self.cb_unicolor = self.ui.cb_unicolor
+        # macOS 原生复选框的 sizeHint 较紧，额外留出字形右侧空间避免裁切。
+        self.cb_unicolor.setMinimumWidth(
+            self.cb_unicolor.sizeHint().width() + _UNICOLOR_EXTRA_WIDTH
+        )
         self.btn_fg = self.ui.btn_fg_color
         self.btn_bg = self.ui.btn_bg_color
         self.btn_up = self.ui.btn_up_color
         self.btn_down = self.ui.btn_down_color
         self.btn_neutral = self.ui.btn_neutral_color
-        self.label_up_color = self.ui.label_up_color
-        self.label_down_color = self.ui.label_down_color
-        self.label_neutral_color = self.ui.label_neutral_color
         self._color_buttons = (
             (self.btn_bg, "bg", "背景颜色"),
             (self.btn_fg, "fg", "文字颜色"),
@@ -552,7 +567,7 @@ class SettingsDialog(QDialog):
 
         self._set_checked_blocked(self.cb_unicolor, self.win.unicolor)
         self._update_direction_color_controls()
-        self._refresh_color_button_styles()
+        self._refresh_color_buttons()
         self.slider_bg_alpha.setValue(int(round(self.win.bg.alpha() / 2.55)))
         self.label_bg_alpha.setText(f"{self.slider_bg_alpha.value()}%")
         self.slider_all_alpha.setValue(int(round(self.win.windowOpacity() * 100)))
@@ -963,16 +978,13 @@ class SettingsDialog(QDialog):
             self.btn_up,
             self.btn_down,
             self.btn_neutral,
-            self.label_up_color,
-            self.label_down_color,
-            self.label_neutral_color,
         ):
             widget.setEnabled(enabled)
 
     def _on_unicolor_toggled(self, checked: bool):
         self.win.set_unicolor(bool(checked))
         self._update_direction_color_controls()
-        self._refresh_color_button_styles()
+        self._refresh_color_buttons()
 
     def _on_name_length_changed(self, idx: int):
         value = self.cmb_namelen.itemData(idx)
@@ -1009,7 +1021,7 @@ class SettingsDialog(QDialog):
         c = QColorDialog.getColor(self.win.fg, self, "选择文字颜色")
         if c.isValid():
             self.win.set_fg_color(c)
-            self._refresh_color_button_styles()
+            self._refresh_color_buttons()
 
     def pick_bg(self):
         base = QColor(self.win.bg)
@@ -1017,25 +1029,25 @@ class SettingsDialog(QDialog):
         c = QColorDialog.getColor(base, self, "选择背景颜色")
         if c.isValid():
             self.win.set_bg_rgb_keep_alpha(c)
-            self._refresh_color_button_styles()
+            self._refresh_color_buttons()
 
     def pick_up(self):
         c = QColorDialog.getColor(self.win.up_color, self, "选择上涨颜色")
         if c.isValid():
             self.win.set_up_color(c)
-            self._refresh_color_button_styles()
+            self._refresh_color_buttons()
 
     def pick_down(self):
         c = QColorDialog.getColor(self.win.down_color, self, "选择下跌颜色")
         if c.isValid():
             self.win.set_down_color(c)
-            self._refresh_color_button_styles()
+            self._refresh_color_buttons()
 
     def pick_neutral(self):
         c = QColorDialog.getColor(self.win.neutral_color, self, "选择中性颜色")
         if c.isValid():
             self.win.set_neutral_color(c)
-            self._refresh_color_button_styles()
+            self._refresh_color_buttons()
 
     def apply_bg_alpha(self, v: int):
         self.label_bg_alpha.setText(f"{v}%")
@@ -1232,7 +1244,7 @@ class SettingsDialog(QDialog):
         self._set_checked_blocked(self.cb_grid, self.win.grid_visible)
         self._set_checked_blocked(self.cb_unicolor, self.win.unicolor)
         self._update_direction_color_controls()
-        self._refresh_color_button_styles()
+        self._refresh_color_buttons()
 
     def _on_click_through_toggled(self, checked: bool):
         self.win.set_click_through(bool(checked))

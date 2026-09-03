@@ -6,7 +6,8 @@ from unittest.mock import Mock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QPoint, Qt
+from PySide6.QtCore import QPoint, QSize, Qt
+from PySide6.QtGui import QColor, QIcon
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QAbstractItemDelegate
 
@@ -14,8 +15,11 @@ from stockwidget.ui.add_code_panel import ADDED_ROLE, ENTRY_ROLE, PAGE_SIZE
 from stockwidget.ui.settings_dialog import (
     CodeSearchEditor,
     SettingsDialog,
+    _COLOR_SWATCH_SIZE,
     _SEARCH_PLACEHOLDER,
+    _UNICOLOR_EXTRA_WIDTH,
     _build_settings_stylesheet,
+    _color_swatch_icon,
 )
 from stockwidget.ui.widget import FloatLabel
 
@@ -120,8 +124,22 @@ class SettingsDialogTests(unittest.TestCase):
         self.assertNotIn("QPushButton#btn_add", regular)
         self.assertIn("QPushButton#btn_add", macos)
         self.assertIn("QPushButton#btn_icon_default", macos)
-        self.assertNotIn("QPushButton#btn_fg_color", macos)
+        self.assertIn("QPushButton#btn_fg_color:hover", macos)
+        self.assertIn("QPushButton#btn_fg_color:pressed", macos)
+        self.assertNotIn("QPushButton#btn_fg_color:checked", macos)
         self.assertIn("rgb(10, 132, 255)", macos)
+
+    def test_color_swatch_renders_at_device_pixel_ratio(self):
+        icon = _color_swatch_icon(QColor("#123456"), 2.0)
+        pixmap = icon.pixmap(QSize(_COLOR_SWATCH_SIZE, _COLOR_SWATCH_SIZE), 2.0)
+
+        self.assertEqual(pixmap.devicePixelRatio(), 2.0)
+        self.assertEqual(pixmap.width(), _COLOR_SWATCH_SIZE * 2)
+        self.assertEqual(pixmap.height(), _COLOR_SWATCH_SIZE * 2)
+        image = pixmap.toImage()
+        center = image.pixelColor(image.width() // 2, image.height() // 2)
+        self.assertEqual(center.name(), "#123456")
+        self.assertEqual(image.pixelColor(0, 0).alpha(), 0)
 
     def test_general_layout_and_about_tab(self):
         dialog, _window = self._make_dialog()
@@ -184,12 +202,62 @@ class SettingsDialogTests(unittest.TestCase):
         self.assertEqual(window.down_color.name(), "#019933")
         self.assertEqual(window.neutral_color.name(), "#494949")
         self.assertTrue(dialog.cb_unicolor.isChecked())
+        self.assertGreaterEqual(
+            dialog.cb_unicolor.minimumWidth(),
+            dialog.cb_unicolor.sizeHint().width() + _UNICOLOR_EXTRA_WIDTH,
+        )
         self.assertTrue(dialog.btn_bg.isEnabled())
         self.assertTrue(dialog.btn_fg.isEnabled())
         self.assertFalse(dialog.btn_up.isEnabled())
         self.assertFalse(dialog.btn_down.isEnabled())
         self.assertFalse(dialog.btn_neutral.isEnabled())
-        self.assertIn(window.up_color.name(), dialog.btn_up.styleSheet())
+
+        color_buttons = (
+            (dialog.btn_fg, "文字", window.fg),
+            (dialog.btn_bg, "背景", window.bg),
+            (dialog.btn_up, "上涨", window.up_color),
+            (dialog.btn_down, "下跌", window.down_color),
+            (dialog.btn_neutral, "中性", window.neutral_color),
+        )
+        for button, text, color in color_buttons:
+            self.assertTrue(button.isFlat())
+            self.assertEqual(button.text(), text)
+            self.assertEqual(button.styleSheet(), "")
+            self.assertLess(button.iconSize().width(), 20)
+            self.assertGreater(button.maximumWidth(), 20)
+            image = button.icon().pixmap(button.iconSize()).toImage()
+            center = image.pixelColor(image.width() // 2, image.height() // 2)
+            self.assertEqual(center.name(), QColor(color).name())
+            self.assertEqual(image.pixelColor(0, 0).alpha(), 0)
+
+        disabled_icon = dialog.btn_up.icon().pixmap(
+            dialog.btn_up.iconSize(), QIcon.Mode.Disabled
+        ).toImage()
+        disabled_center = disabled_icon.pixelColor(
+            disabled_icon.width() // 2, disabled_icon.height() // 2
+        )
+        self.assertEqual(disabled_center.name(), window.up_color.name())
+
+        for label_name in (
+            "label_fg_color",
+            "label_bg_color",
+            "label_up_color",
+            "label_down_color",
+            "label_neutral_color",
+        ):
+            self.assertFalse(hasattr(dialog.ui, label_name))
+
+        with patch(
+            "stockwidget.ui.settings_dialog.QColorDialog.getColor",
+            return_value=QColor("#123456"),
+        ):
+            dialog.pick_fg()
+        updated_icon = dialog.btn_fg.icon().pixmap(dialog.btn_fg.iconSize()).toImage()
+        updated_center = updated_icon.pixelColor(
+            updated_icon.width() // 2, updated_icon.height() // 2
+        )
+        self.assertEqual(updated_center.name(), "#123456")
+        self.assertIn("#123456", dialog.btn_fg.toolTip())
 
         dialog.cb_unicolor.setChecked(False)
         self.qt_app.processEvents()
