@@ -13,12 +13,14 @@ from PySide6.QtWidgets import (
     QApplication, QWidget, QDialog, QColorDialog, QAbstractItemView, QTableWidgetItem,
     QAbstractItemDelegate, QStyledItemDelegate, QStyle, QStyleOptionViewItem,
     QLineEdit, QCompleter, QHeaderView, QButtonGroup, QMessageBox, QComboBox,
+    QVBoxLayout,
 )
 from stockwidget.ui.generated.ui_settings import Ui_SettingDialog
 from stockwidget.core.code_search import (
     SEARCH_CATEGORIES, build_search_index, search_suggestions,
 )
 from stockwidget.ui.widget import FloatLabel
+from stockwidget.ui.metric_pool import MetricPoolWidget
 from stockwidget.platform.capabilities import (
     hotkeys_supported,
     click_through_supported,
@@ -336,6 +338,7 @@ class SettingsDialog(QDialog):
         self._use_gitee_links = False
         self.ui = Ui_SettingDialog()
         self.ui.setupUi(self)
+        self._init_metric_pool()
         self.setModal(False)
         self._apply_theme_stylesheet()
         # 系统深浅色切换时跟随更新样式
@@ -353,6 +356,14 @@ class SettingsDialog(QDialog):
         self._load_settings()
         self.github_check_finished.connect(self._on_github_check_finished)
         self._start_github_check()
+
+    def _init_metric_pool(self):
+        """用动态双池替换固定指标复选框区域。"""
+        layout = QVBoxLayout(self.ui.gb_data)
+        layout.setContentsMargins(5, 20, 5, 5)
+        layout.setSpacing(0)
+        self.metric_pool = MetricPoolWidget(self.ui.gb_data)
+        layout.addWidget(self.metric_pool)
 
     def _start_github_check(self):
         """后台选择关于页链接平台，不阻塞设置窗口构造。"""
@@ -376,6 +387,8 @@ class SettingsDialog(QDialog):
         """按当前系统深浅色应用样式表。"""
         dark = QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
         self.setStyleSheet(_build_settings_stylesheet(dark, macos=sys.platform == "darwin"))
+        if hasattr(self, "metric_pool"):
+            self.metric_pool.set_theme(dark)
         self._refresh_color_button_styles()
 
     def _refresh_color_button_styles(self):
@@ -448,16 +461,6 @@ class SettingsDialog(QDialog):
         self.gb_name = self.ui.gb_name
         self.cb_code = self.ui.cb_code
         self.cb_type = self.ui.cb_type
-        self.cb_price = self.ui.cb_price
-        self.cb_diff = self.ui.cb_diff
-        self.cb_pct = self.ui.cb_pct
-        self.cb_vol = self.ui.cb_vol
-        self.cb_amount = self.ui.cb_amount
-        self.cb_avg = self.ui.cb_avg
-        self.cb_b1s1 = self.ui.cb_b1s1
-        self.cb_commi = self.ui.cb_commi
-        self.cb_kline = self.ui.cb_kline
-        self.cb_profit = self.ui.cb_profit
         self.cmb_namelen = self.ui.cmb_namelen
 
         self.cb_unicolor = self.ui.cb_unicolor
@@ -507,16 +510,9 @@ class SettingsDialog(QDialog):
         self.gb_name.toggled.connect(self._on_name_toggled)
         self.cb_code.toggled.connect(self._on_code_toggled)
         self.cb_type.toggled.connect(self._on_type_toggled)
-        self.cb_price.toggled.connect(partial(self._on_flag_toggled, "现价"))
-        self.cb_diff.toggled.connect(partial(self._on_flag_toggled, "涨跌"))
-        self.cb_pct.toggled.connect(partial(self._on_flag_toggled, "涨幅"))
-        self.cb_vol.toggled.connect(partial(self._on_flag_toggled, "成交量"))
-        self.cb_amount.toggled.connect(partial(self._on_flag_toggled, "成交额"))
-        self.cb_avg.toggled.connect(partial(self._on_flag_toggled, "均价"))
-        self.cb_b1s1.toggled.connect(self._on_b1s1_toggled)
-        self.cb_commi.toggled.connect(partial(self._on_flag_toggled, "委比"))
-        self.cb_kline.toggled.connect(partial(self._on_flag_toggled, "K线"))
-        self.cb_profit.toggled.connect(partial(self._on_flag_toggled, "浮盈"))
+        self.metric_pool.visible_metrics_changed.connect(
+            self.win.set_visible_metrics
+        )
 
         self.btn_add = self.ui.btn_add
         self.btn_del = self.ui.btn_del
@@ -554,16 +550,7 @@ class SettingsDialog(QDialog):
         self.cb_code.setChecked(self.win.code_visible)
         self.gb_name.setChecked(self.win.name_visible)
         self.cb_type.setChecked(self.win.type_visible)
-        self.cb_price.setChecked(self.win.header_is_visible("现价"))
-        self.cb_diff.setChecked(self.win.header_is_visible("涨跌"))
-        self.cb_pct.setChecked(self.win.header_is_visible("涨幅"))
-        self.cb_vol.setChecked(self.win.header_is_visible("成交量"))
-        self.cb_amount.setChecked(self.win.header_is_visible("成交额"))
-        self.cb_avg.setChecked(self.win.header_is_visible("均价"))
-        self.cb_b1s1.setChecked(self.win.b1s1_visible)
-        self.cb_commi.setChecked(self.win.header_is_visible("委比"))
-        self.cb_kline.setChecked(self.win.header_is_visible("K线"))
-        self.cb_profit.setChecked(self.win.profit_visible)
+        self.metric_pool.set_visible_metrics(self.win.visible_metrics)
 
         # 名称显示字数: 0=不显示, -1=全部显示, 1-4=前 N 个字
         # 填充选项时会触发 currentIndexChanged，需屏蔽信号避免意外修改配置
@@ -940,12 +927,6 @@ class SettingsDialog(QDialog):
     def _on_type_toggled(self, checked: bool):
         self.win.set_type_visible(checked)
 
-    def _on_flag_toggled(self, header: str, checked: bool):
-        self.win.set_flag(header, checked)
-
-    def _on_b1s1_toggled(self, checked: bool):
-        self.win.set_flag("买一", checked)
-
     def _update_direction_color_controls(self):
         enabled = not self.win.unicolor
         for widget in (
@@ -1231,20 +1212,8 @@ class SettingsDialog(QDialog):
         widget.blockSignals(False)
 
     def _sync_display_flags_from_win(self):
-        """浮窗右键菜单等外部途径修改显示指标时，同步设置窗口对应复选框。"""
-        for cb, header in (
-            (self.cb_price, "现价"),
-            (self.cb_diff, "涨跌"),
-            (self.cb_pct, "涨幅"),
-            (self.cb_vol, "成交量"),
-            (self.cb_amount, "成交额"),
-            (self.cb_avg, "均价"),
-            (self.cb_commi, "委比"),
-            (self.cb_kline, "K线"),
-            (self.cb_profit, "浮盈"),
-        ):
-            self._set_checked_blocked(cb, self.win.header_is_visible(header))
-        self._set_checked_blocked(self.cb_b1s1, self.win.b1s1_visible)
+        """浮窗右键菜单等外部途径修改显示状态时，同步指标池。"""
+        self.metric_pool.set_visible_metrics(self.win.visible_metrics)
         self._set_checked_blocked(self.gb_name, self.win.name_visible)
         self._set_checked_blocked(self.cb_type, self.win.type_visible)
         self._set_checked_blocked(self.cb_code, self.win.code_visible)

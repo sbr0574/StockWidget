@@ -141,6 +141,41 @@ class SettingsDialogTests(unittest.TestCase):
         self.assertLess(dialog.ui.gb_color.geometry().bottom(), dialog.ui.gb_text.y())
         self.assertEqual(dialog.ui.gb_fcn.x(), dialog.ui.gb_hotkeys.x())
 
+    def test_metric_pool_controls_order_while_name_keeps_its_own_switch(self):
+        dialog, window = self._make_dialog()
+        save = Mock()
+        window.set_on_change(save)
+
+        self.assertEqual(
+            dialog.metric_pool.visible_metrics,
+            ["price", "change_pct"],
+        )
+        self.assertTrue(dialog.gb_name.isChecked())
+
+        with patch.object(window, "_refresh_from_function") as refresh:
+            dialog.metric_pool.move_metric(
+                "available", "displayed", "kline", 0
+            )
+
+        self.assertEqual(
+            window.visible_metrics,
+            ["kline", "price", "change_pct"],
+        )
+        self.assertEqual(
+            dialog.metric_pool.visible_metrics,
+            window.visible_metrics,
+        )
+        save.assert_called_once_with()
+        refresh.assert_called_once_with()
+
+        dialog.gb_name.setChecked(False)
+        self.qt_app.processEvents()
+        self.assertFalse(window.name_visible)
+        self.assertEqual(
+            window.visible_metrics,
+            ["kline", "price", "change_pct"],
+        )
+
     def test_unicolor_defaults_on_and_controls_direction_colors(self):
         dialog, window = self._make_dialog()
 

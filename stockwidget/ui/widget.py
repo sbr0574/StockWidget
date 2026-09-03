@@ -20,6 +20,14 @@ from stockwidget.ui.drag_mixin import DragBehaviorMixin
 from stockwidget.platform.hotkeys import GlobalHotkeyManager, HotkeyResult
 from stockwidget.data.quotes import request_quote
 from stockwidget.core.formatters import format_volume, format_amount
+from stockwidget.core.metric_layout import (
+    METRIC_BY_ID,
+    METRIC_SPECS,
+    expand_metric_headers,
+    metric_id_for_header,
+    normalize_visible_metrics,
+    visible_metrics_from_config,
+)
 from stockwidget.core.watchlist import normalize_watchlist
 from stockwidget.core.geometry import resolve_restore_position
 from stockwidget.platform.capabilities import (
@@ -78,16 +86,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.code_visible       = bool(cfg.get("code_visible", False))
         self.type_visible       = bool(cfg.get("type_visible", False))
         self.name_length        = int(cfg.get("name_length", -1))
-        self.price_visible      = bool(cfg.get("price_visible", True))
-        self.change_visible     = bool(cfg.get("change_visible", False))
-        self.change_pct_visible = bool(cfg.get("change_pct_visible", True))
-        self.profit_visible     = bool(cfg.get("profit_visible", False))
-        self.b1s1_visible       = bool(cfg.get("b1s1_visible", False))
-        self.commi_visible      = bool(cfg.get("commi_visible", False))
-        self.vol_visible        = bool(cfg.get("vol_visible", False))
-        self.amount_visible     = bool(cfg.get("amount_visible", False))
-        self.avg_visible        = bool(cfg.get("avg_visible", False))
-        self.kline_visible      = bool(cfg.get("kline_visible", False))
+        self.visible_metrics    = visible_metrics_from_config(cfg)
+        self._sync_metric_visibility_attrs()
         # 加载外观配置
         self.header_visible     = bool(cfg.get("header_visible", False))
         self.grid_visible       = bool(cfg.get("grid_visible", False))
@@ -163,6 +163,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.message_label = QLabel("", self.panel)
         self.message_label.setStyleSheet("padding: 2px 4px;")
         self.message_label.setVisible(False)
+        self._message_kind = None
         self.vbox.addWidget(self.message_label)
         self._index_updating = False # 市场代码列表后台更新标志
         self._refresh_thread = None  # 后台刷新线程（避免网络请求阻塞 UI）
@@ -171,6 +172,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.table.setModel(self.model)
 
         self.k_delegate = KLineDelegate(self.table, base_pt=12)
+        self._default_item_delegate = QStyledItemDelegate(self.table)
         self._sync_colors_to_views()
         self.k_delegate.set_point_size(self.font.pointSize())
         self.k_column_visible_index = None
@@ -237,6 +239,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             "code_visible":         self.code_visible,
             "type_visible":         self.type_visible,
             "name_length":          self.name_length,
+            "visible_metrics":      list(self.visible_metrics),
             "price_visible":        self.price_visible,
             "change_visible":       self.change_visible,
             "change_pct_visible":   self.change_pct_visible,
@@ -274,8 +277,11 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         }
 
     def header_is_visible(self, header: str) -> bool:
-        attr = self.HEADER_ATTR_MAP.get(header)
-        return bool(getattr(self, attr, False)) if attr else False
+        header = str(header)
+        if header == "名称":
+            return self.name_visible
+        metric_id = metric_id_for_header(header)
+        return metric_id in self.visible_metrics if metric_id else False
 
     # ----- 外观/尺寸 -----
     def _sync_colors_to_views(self):
@@ -374,27 +380,30 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.move(x, y)
 
     # ----- 数据 & 投影 -----
-    def _show_message(self, msg: str, is_error: bool = False):
+    def _show_message(self, msg: str, is_error: bool = False, *, kind=None):
         """显示顶部提示；is_error=True 时用红色字体，否则用前景色"""
         text = str(msg) if msg is not None else ""
         color = "#ff6666" if is_error else self.fg.name(QColor.HexRgb)
         self.message_label.setStyleSheet(f"color: {color}; padding: 2px 4px;")
         self.message_label.setText(text)
         self.message_label.setVisible(True)
+        self._message_kind = kind
         self._defer_fit()
 
     def _clear_message(self):
         """清除顶部提示"""
         self.message_label.setVisible(False)
         self.message_label.setText("")
+        self._message_kind = None
 
     def set_index_updating(self, updating: bool):
         """标记市场代码列表是否正在后台更新（期间保持进度提示不被清除）"""
         self._index_updating = bool(updating)
 
     def _project_columns(self, full_rows: list[dict], color_roles: list[dict]):
-        # 名称作为数据列显示；其余按显示顺序筛选已启用的列
-        headers = [h for h in self.ALL_HEADERS if self.header_is_visible(h)]
+        # 名称保持独立开关且始终在首列；其余指标按用户配置顺序展开。
+        headers = ["名称"] if self.name_visible else []
+        headers.extend(expand_metric_headers(self.visible_metrics))
 
         proj_rows, projected_roles = [], []
         for r, row in enumerate(full_rows):
@@ -407,15 +416,27 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.model.set_rows_headers(proj_rows, headers, projected_roles)
         self._sync_colors_to_views()
 
-        if "K线" in headers:
-            col = headers.index("K线")
-            self.k_column_visible_index = col
+        old_kline_col = self.k_column_visible_index
+        new_kline_col = headers.index("K线") if "K线" in headers else None
+        if old_kline_col is not None and old_kline_col != new_kline_col:
+            self.table.setItemDelegateForColumn(
+                old_kline_col, self._default_item_delegate
+            )
+        if new_kline_col is not None:
+            self.k_column_visible_index = new_kline_col
             self.k_delegate.set_point_size(self.font.pointSize())
-            self.table.setItemDelegateForColumn(col, self.k_delegate)
+            self.table.setItemDelegateForColumn(new_kline_col, self.k_delegate)
         else:
-            if self.k_column_visible_index is not None:
-                self.table.setItemDelegateForColumn(self.k_column_visible_index, QStyledItemDelegate(self.table))
-                self.k_column_visible_index = None
+            self.k_column_visible_index = None
+
+        if not headers and not self._index_updating:
+            self._show_message(
+                "请在设置面板中选择至少一个显示指标",
+                is_error=True,
+                kind="metrics",
+            )
+        elif headers and self._message_kind == "metrics":
+            self._clear_message()
 
         self._fit_to_contents()
 
@@ -615,6 +636,37 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._refresh_from_function()
         self.display_flags_changed.emit()
 
+    def _sync_metric_visibility_attrs(self):
+        visible = set(self.visible_metrics)
+        for spec in METRIC_SPECS:
+            setattr(self, spec.legacy_attr, spec.metric_id in visible)
+
+    def set_visible_metrics(self, metric_ids):
+        """一次性应用其余指标的显示状态和顺序。"""
+        normalized = normalize_visible_metrics(metric_ids)
+        if normalized == self.visible_metrics:
+            return
+        self.visible_metrics = normalized
+        self._sync_metric_visibility_attrs()
+        self._notify_change()
+        self._refresh_from_function()
+        self.display_flags_changed.emit()
+
+    def set_metric_visible(self, metric_id: str, visible: bool):
+        metric_id = str(metric_id or "")
+        if metric_id not in METRIC_BY_ID:
+            return
+        updated = list(self.visible_metrics)
+        if visible:
+            if metric_id in updated:
+                return
+            updated.append(metric_id)
+        else:
+            if metric_id not in updated:
+                return
+            updated.remove(metric_id)
+        self.set_visible_metrics(updated)
+
     def set_flag(self, header, checked: bool):
         if isinstance(header, int):
             if 0 <= header < len(self.ALL_HEADERS):
@@ -622,17 +674,19 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             else:
                 return
         header = str(header)
-        attr = self.HEADER_ATTR_MAP.get(header)
-        if not attr:
+        checked = bool(checked)
+        if header == "名称":
+            if self.name_visible == checked:
+                return
+            self.name_visible = checked
+            self._notify_change()
+            self._refresh_from_function()
+            self.display_flags_changed.emit()
             return
 
-        checked = bool(checked)
-        if bool(getattr(self, attr, False)) == checked:
-            return
-        setattr(self, attr, checked)
-        self._notify_change()
-        self._refresh_from_function()
-        self.display_flags_changed.emit()
+        metric_id = metric_id_for_header(header)
+        if metric_id:
+            self.set_metric_visible(metric_id, checked)
 
     def set_code_type(self, pure_num: bool):
         self.short_code = bool(pure_num)

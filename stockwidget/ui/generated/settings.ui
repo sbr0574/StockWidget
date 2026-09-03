@@ -209,7 +209,7 @@
       </rect>
      </property>
      <property name="title">
-      <string>显示数据</string>
+      <string>显示指标</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -217,136 +217,6 @@
      <property name="flat">
       <bool>true</bool>
      </property>
-     <widget class="QCheckBox" name="cb_price">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>24</y>
-        <width>51</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>现价</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="cb_diff">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>55</y>
-        <width>51</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>涨跌</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="cb_pct">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>85</y>
-        <width>61</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>涨幅</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="cb_vol">
-      <property name="geometry">
-       <rect>
-        <x>70</x>
-        <y>25</y>
-        <width>51</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>量</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="cb_amount">
-      <property name="geometry">
-       <rect>
-        <x>70</x>
-        <y>55</y>
-        <width>51</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>额</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="cb_avg">
-      <property name="geometry">
-       <rect>
-        <x>130</x>
-        <y>25</y>
-        <width>51</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>均价</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="cb_b1s1">
-      <property name="geometry">
-       <rect>
-        <x>70</x>
-        <y>115</y>
-        <width>88</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>买一/卖一</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="cb_commi">
-      <property name="geometry">
-       <rect>
-        <x>70</x>
-        <y>85</y>
-        <width>51</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>委比</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="cb_kline">
-      <property name="geometry">
-       <rect>
-        <x>130</x>
-        <y>55</y>
-        <width>71</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>日K线</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="cb_profit">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>115</y>
-        <width>61</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>浮盈</string>
-      </property>
-     </widget>
     </widget>
     <widget class="QGroupBox" name="gb_data_setting">
      <property name="geometry">
