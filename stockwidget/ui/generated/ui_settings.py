@@ -202,7 +202,7 @@ class Ui_SettingDialog(object):
 
         self.gb_fcn = QGroupBox(self.general)
         self.gb_fcn.setObjectName(u"gb_fcn")
-        self.gb_fcn.setGeometry(QRect(330, 85, 221, 121))
+        self.gb_fcn.setGeometry(QRect(330, 85, 221, 111))
         self.gb_fcn.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_fcn.setFlat(True)
         self.gridLayout = QGridLayout(self.gb_fcn)

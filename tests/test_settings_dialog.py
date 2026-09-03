@@ -6,15 +6,15 @@ from unittest.mock import Mock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPoint, Qt
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QAbstractItemDelegate
 
+from stockwidget.ui.add_code_panel import ADDED_ROLE, ENTRY_ROLE, PAGE_SIZE
 from stockwidget.ui.settings_dialog import (
     CodeSearchEditor,
     SettingsDialog,
     _SEARCH_PLACEHOLDER,
-    _SUGGESTION_ADDED_ROLE,
-    _SUGGESTION_ENTRY_ROLE,
     _build_settings_stylesheet,
 )
 from stockwidget.ui.widget import FloatLabel
@@ -98,16 +98,16 @@ class SettingsDialogTests(unittest.TestCase):
             window.deleteLater()
         self.qt_app.processEvents()
 
-    def _make_dialog(self, watchlist=None):
+    def _make_dialog(self, watchlist=None, codes=None):
         cfg = {"watchlist": watchlist or {}}
-        window = FloatLabel(cfg, CODES)
+        window = FloatLabel(cfg, CODES if codes is None else codes)
         with patch.object(SettingsDialog, "_start_github_check"):
             dialog = SettingsDialog(window, window)
         self._windows.append((dialog, window))
         return dialog, window
 
     def _start_code_editor(self, dialog):
-        dialog._add_code()
+        dialog._start_quick_add()
         self.qt_app.processEvents()
         editor = dialog.list_codes.findChild(CodeSearchEditor)
         self.assertIsNotNone(editor)
@@ -236,63 +236,146 @@ class SettingsDialogTests(unittest.TestCase):
 
         self.assertTrue(owner.github_check_finished.value)
 
-    def test_inline_editor_contains_category_selector_and_placeholder(self):
+    def test_quick_editor_has_no_category_selector_and_searches_all_types(self):
         dialog, _window = self._make_dialog()
         editor = self._start_code_editor(dialog)
 
         self.assertEqual(editor.placeholderText(), _SEARCH_PLACEHOLDER)
+        self.assertFalse(hasattr(editor, "category_combo"))
+
+        expected = {
+            "茅台": "sh600519",
+            "财通": "sh501001",
+            "上证": "sh000001",
+            "铝合金": "ad0",
+        }
+        for query, key in expected.items():
+            dialog._update_suggestions(editor, query)
+            self.assertEqual(
+                dialog.suggestion_model.item(0).data(ENTRY_ROLE)["key"], key
+            )
+
+    def test_empty_hint_is_visible_and_does_not_block_double_click(self):
+        dialog, _window = self._make_dialog()
+        dialog.show()
+        self.qt_app.processEvents()
+
+        hint = dialog.empty_watchlist_hint
+        self.assertEqual(hint.text(), "双击空白处添加条目")
+        self.assertFalse(hint.isHidden())
+        self.assertTrue(
+            hint.testAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        )
+
+        QTest.mouseDClick(
+            dialog.list_codes.viewport(),
+            Qt.MouseButton.LeftButton,
+            pos=QPoint(20, 80),
+        )
+        self.qt_app.processEvents()
+
+        self.assertEqual(dialog.list_codes.rowCount(), 1)
+        self.assertTrue(hint.isHidden())
+        self.assertIsNotNone(dialog.list_codes.findChild(CodeSearchEditor))
+
+    def test_add_button_opens_panel_without_creating_a_row(self):
+        dialog, _window = self._make_dialog()
+        dialog.move(20, 20)
+        dialog.show()
+        self.qt_app.processEvents()
+
+        dialog.btn_add.click()
+        self.qt_app.processEvents()
+
+        panel = dialog.add_code_panel
+        self.assertEqual(dialog.list_codes.rowCount(), 0)
+        self.assertTrue(panel.isVisible())
+        self.assertEqual(panel.search_input.placeholderText(), _SEARCH_PLACEHOLDER)
         self.assertEqual(
-            [editor.category_combo.itemText(i)
-             for i in range(editor.category_combo.count())],
+            [box.text() for box in panel.category_filters.option_checkboxes.values()],
             ["股票", "基金", "指数", "期货"],
         )
-        self.assertEqual(editor.category(), "stock")
-        widest_label = max(
-            editor.fontMetrics().horizontalAdvance(
-                editor.category_combo.itemText(i)
-            )
-            for i in range(editor.category_combo.count())
+        self.assertEqual(
+            [box.text() for box in panel.region_filters.option_checkboxes.values()],
+            ["沪", "深", "京", "港", "美", "其他"],
         )
-        self.assertEqual(editor._category_width, max(50, widest_label + 28))
-        combo_style = editor.category_combo.styleSheet()
-        self.assertIn("background-color: rgba(127, 127, 127, 0.14)", combo_style)
-        self.assertIn("border-right: 1px solid", combo_style)
+        button_bottom = dialog.btn_add.mapToGlobal(
+            QPoint(0, dialog.btn_add.height())
+        ).y()
+        self.assertGreaterEqual(panel.y(), button_bottom)
 
-    def test_category_is_session_only_and_new_dialog_defaults_to_stock(self):
+    def test_opening_panel_cancels_unfinished_quick_add_row(self):
+        dialog, _window = self._make_dialog()
+        self._start_code_editor(dialog)
+        self.assertEqual(dialog.list_codes.rowCount(), 1)
+
+        dialog._show_add_code_panel()
+        self.qt_app.processEvents()
+
+        self.assertEqual(dialog.list_codes.rowCount(), 0)
+        self.assertTrue(dialog.add_code_panel.isVisible())
+        self.assertFalse(dialog.empty_watchlist_hint.isHidden())
+
+    def test_filter_select_all_checkbox_uses_three_states(self):
+        dialog, _window = self._make_dialog()
+        filters = dialog.add_code_panel.category_filters
+        fund = filters.option_checkboxes["fund"]
+
+        fund.setChecked(False)
+        self.assertEqual(
+            filters.all_checkbox.checkState(), Qt.CheckState.PartiallyChecked
+        )
+        filters.all_checkbox.click()
+        self.assertEqual(filters.all_checkbox.checkState(), Qt.CheckState.Checked)
+        self.assertTrue(all(box.isChecked() for box in filters.option_checkboxes.values()))
+        filters.all_checkbox.click()
+        self.assertEqual(filters.all_checkbox.checkState(), Qt.CheckState.Unchecked)
+        self.assertFalse(any(box.isChecked() for box in filters.option_checkboxes.values()))
+
+    def test_panel_paginates_ten_results_and_resets_after_filter_change(self):
+        codes = {
+            f"sh{code:06d}": {
+                "code": f"{code:06d}",
+                "market": "sh",
+                "name": f"测试股票{code}",
+                "type": "沪",
+            }
+            for code in range(21)
+        }
+        dialog, _window = self._make_dialog(codes=codes)
+        panel = dialog.add_code_panel
+        dialog._show_add_code_panel()
+
+        self.assertEqual(panel.current_result.total, 21)
+        self.assertEqual(panel.current_result.page_count, 3)
+        self.assertEqual(panel.result_model.rowCount(), PAGE_SIZE)
+        panel.next_button.click()
+        self.assertEqual(panel.current_result.page, 2)
+        self.assertEqual(panel.result_model.rowCount(), PAGE_SIZE)
+
+        panel.category_filters.option_checkboxes["stock"].setChecked(False)
+        self.assertEqual(panel.current_result.page, 0)
+        self.assertEqual(panel.current_result.total, 0)
+        self.assertEqual(panel.result_model.rowCount(), 0)
+
+    def test_panel_adds_complete_entry_and_marks_it_added(self):
         dialog, window = self._make_dialog()
-        editor = self._start_code_editor(dialog)
         save_callback = Mock()
         window.set_on_change(save_callback)
+        dialog._show_add_code_panel()
+        panel = dialog.add_code_panel
 
-        editor.category_combo.setCurrentIndex(
-            editor.category_combo.findData("fund")
-        )
-        self.qt_app.processEvents()
+        panel._activate_index(panel.result_model.index(0, 0))
 
-        self.assertEqual(dialog._search_category, "fund")
-        self.assertFalse(save_callback.called)
-        self.assertNotIn("search_type_filters", window.current_config())
-
-        other_dialog, _other_window = self._make_dialog()
-        self.assertEqual(other_dialog._search_category, "stock")
-
-    def test_category_change_filters_current_query_immediately(self):
-        dialog, _window = self._make_dialog()
-        editor = self._start_code_editor(dialog)
-        editor.setText("财通")
-
-        dialog._update_suggestions(editor, editor.text())
-        self.assertEqual(dialog.suggestion_model.rowCount(), 0)
-
-        editor.category_combo.setCurrentIndex(
-            editor.category_combo.findData("fund")
-        )
-        self.qt_app.processEvents()
-
-        self.assertEqual(dialog.suggestion_model.rowCount(), 1)
-        self.assertEqual(
-            dialog.suggestion_model.item(0).data(_SUGGESTION_ENTRY_ROLE)["key"],
-            "sh501001",
+        self.assertEqual(dialog.list_codes.rowCount(), 1)
+        self.assertIn("sh600519", window.watchlist)
+        self.assertEqual(window.watchlist["sh600519"]["market"], "sh")
+        self.assertEqual(window.watchlist["sh600519"]["code"], "600519")
+        self.assertTrue(window.watchlist["sh600519"]["checked"])
+        self.assertEqual(save_callback.call_count, 1)
+        self.assertTrue(panel.result_model.item(0).data(ADDED_ROLE))
+        self.assertFalse(
+            panel.result_model.item(0).flags() & Qt.ItemFlag.ItemIsEnabled
         )
 
     def test_added_result_has_prefix_and_cannot_be_selected(self):
@@ -312,7 +395,7 @@ class SettingsDialogTests(unittest.TestCase):
         dialog._update_suggestions(editor, "茅台")
         item = dialog.suggestion_model.item(0)
         self.assertEqual(item.text(), "（已添加）沪/600519/贵州茅台")
-        self.assertTrue(item.data(_SUGGESTION_ADDED_ROLE))
+        self.assertTrue(item.data(ADDED_ROLE))
         self.assertFalse(item.flags() & Qt.ItemFlag.ItemIsEnabled)
         self.assertFalse(item.flags() & Qt.ItemFlag.ItemIsSelectable)
 
