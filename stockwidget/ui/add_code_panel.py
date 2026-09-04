@@ -1,8 +1,15 @@
 """自选标的添加悬浮面板。"""
 
-from PySide6.QtCore import QModelIndex, QPoint, QSignalBlocker, Qt, QTimer, Signal
-from PySide6.QtGui import QKeyEvent, QStandardItem, QStandardItemModel
+from PySide6.QtCore import (
+    QModelIndex, QPoint, QPointF, QRect, QRectF, QSize, QSignalBlocker, Qt,
+    QTimer, Signal,
+)
+from PySide6.QtGui import (
+    QColor, QKeyEvent, QPainter, QPainterPath, QPalette, QPen,
+    QStandardItem, QStandardItemModel,
+)
 from PySide6.QtWidgets import (
+    QApplication,
     QCheckBox,
     QFrame,
     QHBoxLayout,
@@ -11,6 +18,10 @@ from PySide6.QtWidgets import (
     QListView,
     QPushButton,
     QSizePolicy,
+    QStyle,
+    QStyledItemDelegate,
+    QStyleOptionButton,
+    QStyleOptionViewItem,
     QVBoxLayout,
     QWidget,
 )
@@ -21,6 +32,8 @@ from stockwidget.core.code_search import query_search_index
 ENTRY_ROLE = Qt.ItemDataRole.UserRole + 1
 ADDED_ROLE = Qt.ItemDataRole.UserRole + 2
 PAGE_SIZE = 10
+RESULT_ROW_HEIGHT = 24
+ADDED_BADGE_TEXT = "已添加"
 
 CATEGORY_FILTER_ITEMS = (
     ("股票", "stock"),
@@ -48,7 +61,140 @@ def entry_display_text(entry: dict, *, added: bool = False) -> str:
     return f"（已添加）{label}" if added else label
 
 
-class SelectAllCheckBox(QCheckBox):
+class FilledCheckBox(QCheckBox):
+    """保留 Qt 原生布局和交互，仅覆盖指示器的状态填充。"""
+
+    _INDICATOR_SIZE = 13
+    _INDICATOR_TEXT_GAP = 3
+    _HOVER_HORIZONTAL_PADDING = 4
+    _HOVER_VERTICAL_PADDING = 3
+
+    def __init__(self, text="", parent=None):
+        super().__init__(text, parent)
+        self.set_theme(False)
+
+    def set_theme(self, dark: bool):
+        if dark:
+            self._indicator_border = QColor(255, 255, 255, 115)
+            self._unchecked_fill = QColor(255, 255, 255, 31)
+            self._checked_fill = QColor(10, 132, 255)
+            self._partial_fill = QColor(10, 132, 255, 148)
+            self._hover_fill = QColor(255, 255, 255, 18)
+        else:
+            self._indicator_border = QColor(0, 0, 0, 97)
+            self._unchecked_fill = QColor(0, 0, 0, 20)
+            self._checked_fill = QColor(0, 122, 255)
+            self._partial_fill = QColor(0, 122, 255, 148)
+            self._hover_fill = QColor(0, 122, 255, 15)
+        self.update()
+
+    def sizeHint(self):
+        metrics = self.fontMetrics()
+        width = (
+            2 * self._HOVER_HORIZONTAL_PADDING
+            + self._INDICATOR_SIZE
+            + self._INDICATOR_TEXT_GAP
+            + metrics.horizontalAdvance(self.text())
+        )
+        height = (
+            max(self._INDICATOR_SIZE, metrics.height())
+            + 2 * self._HOVER_VERTICAL_PADDING
+        )
+        return QSize(width, height)
+
+    def minimumSizeHint(self):
+        return self.sizeHint()
+
+    def _indicator_rect(self):
+        return QRect(
+            self._HOVER_HORIZONTAL_PADDING,
+            (self.height() - self._INDICATOR_SIZE) // 2,
+            self._INDICATOR_SIZE,
+            self._INDICATOR_SIZE,
+        )
+
+    def _text_rect(self, indicator: QRect):
+        left = indicator.right() + 1 + self._INDICATOR_TEXT_GAP
+        return QRect(
+            left,
+            0,
+            max(0, self.width() - self._HOVER_HORIZONTAL_PADDING - left),
+            self.height(),
+        )
+
+    def paintEvent(self, event):
+        option = QStyleOptionButton()
+        self.initStyleOption(option)
+        style = self.style()
+        indicator = self._indicator_rect()
+        contents = self._text_rect(indicator)
+        state = self.checkState()
+        if state == Qt.CheckState.Checked:
+            fill = QColor(self._checked_fill)
+        elif state == Qt.CheckState.PartiallyChecked:
+            fill = QColor(self._partial_fill)
+        else:
+            fill = QColor(self._unchecked_fill)
+        border = QColor(
+            self._checked_fill
+            if state != Qt.CheckState.Unchecked
+            else self._indicator_border
+        )
+        if not self.isEnabled():
+            fill.setAlpha(round(fill.alpha() * 0.45))
+            border.setAlpha(round(border.alpha() * 0.45))
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        if self.isEnabled() and self.underMouse():
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(self._hover_fill)
+            hover_rect = QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
+            painter.drawRoundedRect(hover_rect, 4, 4)
+
+        # 不调用原生 CE_CheckBox，彻底避免系统 indicator 的阴影边缘残留。
+        painter.setPen(QPen(border, 1))
+        painter.setBrush(fill)
+        indicator_rect = QRectF(indicator).adjusted(0.5, 0.5, -0.5, -0.5)
+        painter.drawRoundedRect(indicator_rect, 3, 3)
+
+        mark_color = QColor(255, 255, 255)
+        if not self.isEnabled():
+            mark_color.setAlpha(130)
+        mark_pen = QPen(mark_color, max(1.5, indicator_rect.height() * 0.13))
+        mark_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        mark_pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+        painter.setPen(mark_pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        left, top = indicator_rect.left(), indicator_rect.top()
+        width, height = indicator_rect.width(), indicator_rect.height()
+        if state == Qt.CheckState.Checked:
+            path = QPainterPath(QPointF(left + width * 0.22, top + height * 0.52))
+            path.lineTo(left + width * 0.43, top + height * 0.72)
+            path.lineTo(left + width * 0.80, top + height * 0.30)
+            painter.drawPath(path)
+        elif state == Qt.CheckState.PartiallyChecked:
+            painter.drawLine(
+                QPointF(left + width * 0.25, top + height * 0.50),
+                QPointF(left + width * 0.75, top + height * 0.50),
+            )
+
+        painter.setFont(self.font())
+        style.drawItemText(
+            painter,
+            contents,
+            Qt.AlignmentFlag.AlignLeft
+            | Qt.AlignmentFlag.AlignVCenter
+            | Qt.TextFlag.TextShowMnemonic
+            | Qt.TextFlag.TextSingleLine,
+            option.palette,
+            self.isEnabled(),
+            option.text,
+            QPalette.ColorRole.WindowText,
+        )
+
+
+class SelectAllCheckBox(FilledCheckBox):
     """半选状态只用于展示；用户点击时切换为全选或全不选。"""
 
     def nextCheckState(self):
@@ -67,7 +213,8 @@ class FilterCheckRow(QWidget):
         super().__init__(parent)
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(6)
+        # 相邻筛选项的间距大于 indicator 与自身文字的间距，避免视觉串组。
+        layout.setSpacing(8)
 
         title_label = QLabel(title, self)
         title_label.setObjectName(f"{object_prefix}_filter_title")
@@ -81,7 +228,7 @@ class FilterCheckRow(QWidget):
 
         self.option_checkboxes = {}
         for label, value in items:
-            checkbox = QCheckBox(label, self)
+            checkbox = FilledCheckBox(label, self)
             checkbox.setObjectName(f"{object_prefix}_filter_{value}")
             checkbox.setChecked(True)
             self.option_checkboxes[value] = checkbox
@@ -140,6 +287,92 @@ class SearchResultList(QListView):
         super().keyPressEvent(event)
 
 
+class SearchResultDelegate(QStyledItemDelegate):
+    """固定结果行高，并为已添加条目绘制状态徽标。"""
+
+    _BADGE_HORIZONTAL_PADDING = 6
+    _BADGE_HEIGHT = 18
+    _CONTENT_MARGIN = 5
+    _BADGE_GAP = 7
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.set_theme(False)
+
+    def set_theme(self, dark: bool):
+        if dark:
+            self._badge_background = QColor(48, 209, 88, 58)
+            self._badge_foreground = QColor(119, 235, 146)
+        else:
+            self._badge_background = QColor(52, 199, 89, 46)
+            self._badge_foreground = QColor(24, 122, 63)
+
+    def sizeHint(self, option, index):
+        size = super().sizeHint(option, index)
+        return QSize(size.width(), RESULT_ROW_HEIGHT)
+
+    def paint(self, painter, option, index):
+        opt = QStyleOptionViewItem(option)
+        self.initStyleOption(opt, index)
+        # 保留键盘焦点和回车操作，只去除原生的粗焦点框。
+        opt.state &= ~QStyle.StateFlag.State_HasFocus
+
+        if not bool(index.data(ADDED_ROLE)):
+            super().paint(painter, opt, index)
+            return
+
+        label = opt.text
+        opt.text = ""
+        widget = opt.widget
+        style = widget.style() if widget is not None else QApplication.style()
+        style.drawControl(QStyle.ControlElement.CE_ItemViewItem, opt, painter, widget)
+
+        content_rect = opt.rect.adjusted(
+            self._CONTENT_MARGIN, 0, -self._CONTENT_MARGIN, 0
+        )
+        font_metrics = opt.fontMetrics
+        badge_width = (
+            font_metrics.horizontalAdvance(ADDED_BADGE_TEXT)
+            + 2 * self._BADGE_HORIZONTAL_PADDING
+        )
+        badge_height = min(self._BADGE_HEIGHT, max(0, content_rect.height() - 4))
+        badge_rect = QRect(
+            content_rect.right() - badge_width + 1,
+            content_rect.center().y() - badge_height // 2,
+            badge_width,
+            badge_height,
+        )
+        text_rect = QRect(
+            content_rect.left(),
+            content_rect.top(),
+            max(0, badge_rect.left() - self._BADGE_GAP - content_rect.left()),
+            content_rect.height(),
+        )
+
+        painter.save()
+        painter.setFont(opt.font)
+        painter.setPen(
+            opt.palette.color(
+                QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text
+            )
+        )
+        painter.drawText(
+            text_rect,
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            font_metrics.elidedText(
+                label, Qt.TextElideMode.ElideRight, text_rect.width()
+            ),
+        )
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(self._badge_background)
+        radius = badge_height / 2
+        painter.drawRoundedRect(badge_rect, radius, radius)
+        painter.setPen(self._badge_foreground)
+        painter.drawText(badge_rect, Qt.AlignmentFlag.AlignCenter, ADDED_BADGE_TEXT)
+        painter.restore()
+
+
 class AddCodePanel(QFrame):
     """带多选筛选与分页的自选标的添加面板。"""
 
@@ -184,7 +417,13 @@ class AddCodePanel(QFrame):
         self.result_list.setEditTriggers(QListView.EditTrigger.NoEditTriggers)
         self.result_list.setSelectionMode(QListView.SelectionMode.SingleSelection)
         self.result_list.setUniformItemSizes(True)
-        self.result_list.setFixedHeight(242)
+        self.result_list.setSpacing(0)
+        self.result_list.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.result_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.result_delegate = SearchResultDelegate(self.result_list)
+        self.result_list.setItemDelegate(self.result_delegate)
+        # 1px 上下边框 + 10 个固定高度条目，正好填满当前列表高度。
+        self.result_list.setFixedHeight(PAGE_SIZE * RESULT_ROW_HEIGHT + 2)
         layout.addWidget(self.result_list)
 
         page_layout = QHBoxLayout()
@@ -227,12 +466,17 @@ class AddCodePanel(QFrame):
             border = "rgba(255, 255, 255, 0.28)"
             field = "rgb(58, 58, 60)"
             selected = "rgba(10, 132, 255, 0.42)"
+            hovered = "rgba(255, 255, 255, 0.08)"
         else:
             background = "rgb(250, 250, 250)"
             foreground = "rgb(28, 28, 30)"
             border = "rgba(0, 0, 0, 0.28)"
             field = "rgb(255, 255, 255)"
             selected = "rgba(0, 122, 255, 0.20)"
+            hovered = "rgba(0, 122, 255, 0.08)"
+        self.result_delegate.set_theme(dark)
+        for checkbox in self.findChildren(FilledCheckBox):
+            checkbox.set_theme(dark)
         self.setStyleSheet(f"""
             QFrame#add_code_panel {{
                 background-color: {background};
@@ -246,16 +490,25 @@ class AddCodePanel(QFrame):
                 border: none;
                 background: transparent;
             }}
-            QFrame#add_code_panel QLineEdit,
             QFrame#add_code_panel QListView {{
                 color: {foreground};
                 background-color: {field};
                 border: 1px solid {border};
                 border-radius: 5px;
+                outline: none;
             }}
-            QFrame#add_code_panel QListView::item {{ padding: 3px 5px; }}
+            QFrame#add_code_panel QListView::item {{
+                padding: 0px 5px;
+                border: none;
+            }}
+            QFrame#add_code_panel QListView::item:hover {{
+                background-color: {hovered};
+            }}
             QFrame#add_code_panel QListView::item:selected {{
                 background-color: {selected};
+                color: {foreground};
+                border: none;
+                outline: none;
             }}
         """)
 
@@ -283,7 +536,8 @@ class AddCodePanel(QFrame):
         for entry in result.items:
             key = str(entry.get("key", "") or "").strip().casefold()
             added = key in self._existing_keys
-            item = QStandardItem(entry_display_text(entry, added=added))
+            # “已添加”状态由 delegate 绘制为徽标，不再混入证券名称文本。
+            item = QStandardItem(entry_display_text(entry))
             item.setEditable(False)
             item.setData(entry, ENTRY_ROLE)
             item.setData(added, ADDED_ROLE)

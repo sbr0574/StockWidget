@@ -736,8 +736,14 @@ class SettingsDialog(QDialog):
         QTimer.singleShot(0, lambda: self._on_codes_changed(None))
 
     def _append_code_row(self, code: str = "", name: str = "", checked: bool = False, cost=None):
+        self._insert_code_row(
+            self.list_codes.rowCount(), code, name, checked, cost
+        )
+
+    def _insert_code_row(self, row: int, code: str = "", name: str = "",
+                         checked: bool = False, cost=None):
         self.list_codes.blockSignals(True)
-        row = self.list_codes.rowCount()
+        row = max(0, min(int(row), self.list_codes.rowCount()))
         self.list_codes.insertRow(row)
         self._set_code_row(row, code, code, name, checked, cost)
         self.list_codes.blockSignals(False)
@@ -925,12 +931,13 @@ class SettingsDialog(QDialog):
         key = str(entry.get("key", "") or "").strip().casefold()
         if not key or key in self._existing_code_keys():
             return
-        self._append_code_row(
+        self._insert_code_row(
+            0,
             key,
             str(entry.get("name", "") or ""),
             True,
         )
-        self.list_codes.setCurrentCell(self.list_codes.rowCount() - 1, 1)
+        self.list_codes.setCurrentCell(0, 1)
         self._on_codes_changed(None)
 
     def _del_code(self):

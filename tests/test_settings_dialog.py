@@ -11,7 +11,14 @@ from PySide6.QtGui import QColor, QIcon
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QAbstractItemDelegate
 
-from stockwidget.ui.add_code_panel import ADDED_ROLE, ENTRY_ROLE, PAGE_SIZE
+from stockwidget.ui.add_code_panel import (
+    ADDED_ROLE,
+    ENTRY_ROLE,
+    FilledCheckBox,
+    PAGE_SIZE,
+    RESULT_ROW_HEIGHT,
+    SearchResultDelegate,
+)
 from stockwidget.ui.settings_dialog import (
     CodeSearchEditor,
     SettingsDialog,
@@ -371,6 +378,28 @@ class SettingsDialogTests(unittest.TestCase):
             QPoint(0, dialog.btn_add.height())
         ).y()
         self.assertGreaterEqual(panel.y(), button_bottom)
+        self.assertEqual(panel.search_input.styleSheet(), "")
+        self.assertNotIn("QFrame#add_code_panel QLineEdit", panel.styleSheet())
+        checkboxes = panel.findChildren(FilledCheckBox)
+        self.assertEqual(len(checkboxes), 12)
+        self.assertTrue(
+            all(box._unchecked_fill != box._checked_fill for box in checkboxes)
+        )
+        self.assertTrue(all(box._hover_fill.alpha() > 0 for box in checkboxes))
+        self.assertTrue(
+            all(
+                box.sizeHint().height()
+                >= box.fontMetrics().height()
+                + 2 * box._HOVER_VERTICAL_PADDING
+                for box in checkboxes
+            )
+        )
+        self.assertGreater(
+            panel.category_filters.layout().spacing(),
+            FilledCheckBox._INDICATOR_TEXT_GAP,
+        )
+        self.assertIn("QListView::item:hover", panel.styleSheet())
+        self.assertIn("color: rgb(28, 28, 30);", panel.styleSheet())
 
     def test_opening_panel_cancels_unfinished_quick_add_row(self):
         dialog, _window = self._make_dialog()
@@ -417,6 +446,21 @@ class SettingsDialogTests(unittest.TestCase):
         self.assertEqual(panel.current_result.total, 21)
         self.assertEqual(panel.current_result.page_count, 3)
         self.assertEqual(panel.result_model.rowCount(), PAGE_SIZE)
+        self.qt_app.processEvents()
+        self.assertIsInstance(panel.result_list.itemDelegate(), SearchResultDelegate)
+        self.assertEqual(
+            panel.result_list.viewport().height(), PAGE_SIZE * RESULT_ROW_HEIGHT
+        )
+        self.assertEqual(
+            [panel.result_list.sizeHintForRow(row) for row in range(PAGE_SIZE)],
+            [RESULT_ROW_HEIGHT] * PAGE_SIZE,
+        )
+        self.assertEqual(
+            panel.result_list.visualRect(
+                panel.result_model.index(PAGE_SIZE - 1, 0)
+            ).bottom(),
+            panel.result_list.viewport().rect().bottom(),
+        )
         panel.next_button.click()
         self.assertEqual(panel.current_result.page, 2)
         self.assertEqual(panel.result_model.rowCount(), PAGE_SIZE)
@@ -445,6 +489,37 @@ class SettingsDialogTests(unittest.TestCase):
         self.assertFalse(
             panel.result_model.item(0).flags() & Qt.ItemFlag.ItemIsEnabled
         )
+        self.assertEqual(panel.result_model.item(0).text(), "沪/600519/贵州茅台")
+        self.assertNotIn("已添加", panel.result_model.item(0).text())
+
+    def test_panel_adds_new_entry_at_start_of_watchlist(self):
+        watchlist = {
+            "sh501001": {
+                "checked": False,
+                "cost": 12.5,
+                "name": "财通精选混合LOF",
+                "type": "基",
+                "market": "sh",
+                "code": "501001",
+            }
+        }
+        dialog, window = self._make_dialog(watchlist)
+        dialog._show_add_code_panel()
+        panel = dialog.add_code_panel
+
+        panel._activate_index(panel.result_model.index(0, 0))
+
+        self.assertEqual(
+            dialog.list_codes.item(0, 1).data(Qt.ItemDataRole.UserRole),
+            "sh600519",
+        )
+        self.assertEqual(
+            dialog.list_codes.item(1, 1).data(Qt.ItemDataRole.UserRole),
+            "sh501001",
+        )
+        self.assertEqual(list(window.watchlist), ["sh600519", "sh501001"])
+        self.assertFalse(window.watchlist["sh501001"]["checked"])
+        self.assertEqual(window.watchlist["sh501001"]["cost"], 12.5)
 
     def test_added_result_has_prefix_and_cannot_be_selected(self):
         watchlist = {
