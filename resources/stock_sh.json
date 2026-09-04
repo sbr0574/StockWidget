@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-03",
+  "last_update": "2026-09-04",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -10121,10 +10121,10 @@
       "code": "603182",
       "market": "sh",
       "type": "沪",
-      "name": "嘉华股份",
+      "name": "XD嘉华股",
       "name_en": "",
-      "py": "jiahuagufen",
-      "abbr": "jhgf"
+      "py": "xdjiahuagu",
+      "abbr": "xdjhg"
     },
     "sh603183": {
       "code": "603183",
@@ -10652,10 +10652,10 @@
       "code": "603259",
       "market": "sh",
       "type": "沪",
-      "name": "药明康德",
+      "name": "XD药明康",
       "name_en": "",
-      "py": "yaomingkangde",
-      "abbr": "ymkd"
+      "py": "xdyaomingkang",
+      "abbr": "xdymk"
     },
     "sh603260": {
       "code": "603260",
@@ -17492,10 +17492,10 @@
       "code": "688281",
       "market": "sh",
       "type": "科",
-      "name": "XD华秦科",
+      "name": "华秦科技",
       "name_en": "",
-      "py": "xdhuaqinke",
-      "abbr": "xdhqk"
+      "py": "huaqinkeji",
+      "abbr": "hqkj"
     },
     "sh688282": {
       "code": "688282",
@@ -19139,10 +19139,10 @@
       "code": "688550",
       "market": "sh",
       "type": "科",
-      "name": "XD瑞联新",
+      "name": "瑞联新材",
       "name_en": "",
-      "py": "xdruilianxin",
-      "abbr": "xdrlx"
+      "py": "ruilianxincai",
+      "abbr": "rlxc"
     },
     "sh688551": {
       "code": "688551",

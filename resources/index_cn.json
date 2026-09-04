@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-28",
+  "last_update": "2026-09-04",
   "codes": {
     "sh000001": {
       "code": "000001",
@@ -8316,6 +8316,24 @@
       "name_en": "",
       "py": "chuangyebanaiyingyongr",
       "abbr": "cybaiyyr"
+    },
+    "sz970096": {
+      "code": "970096",
+      "market": "sz",
+      "type": "指",
+      "name": "创业板芯片",
+      "name_en": "",
+      "py": "chuangyebanxinpian",
+      "abbr": "cybxp"
+    },
+    "sz97009601": {
+      "code": "97009601",
+      "market": "sz",
+      "type": "指",
+      "name": "创业板芯片R",
+      "name_en": "",
+      "py": "chuangyebanxinpianr",
+      "abbr": "cybxpr"
     },
     "sz970097": {
       "code": "970097",

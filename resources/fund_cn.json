@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-03",
+  "last_update": "2026-09-04",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -6067,6 +6067,15 @@
       "py": "ganggutongxinxijishuetfzhaoshang",
       "abbr": "ggtxxjsetfzs"
     },
+    "sh526060": {
+      "code": "526060",
+      "market": "sh",
+      "type": "基",
+      "name": "港股通信息技术ETF华泰柏瑞",
+      "name_en": "",
+      "py": "ganggutongxinxijishuetfhuataibairui",
+      "abbr": "ggtxxjsetfhtbr"
+    },
     "sh526070": {
       "code": "526070",
       "market": "sh",
@@ -9712,6 +9721,15 @@
       "py": "kechuangxinpianshejietfyongying",
       "abbr": "kcxpsjetfyy"
     },
+    "sh589430": {
+      "code": "589430",
+      "market": "sh",
+      "type": "基",
+      "name": "科创芯片设计ETF华宝",
+      "name_en": "",
+      "py": "kechuangxinpianshejietfhuabao",
+      "abbr": "kcxpsjetfhb"
+    },
     "sh589460": {
       "code": "589460",
       "market": "sh",
@@ -10008,6 +10026,15 @@
       "name_en": "",
       "py": "yiliaoetfjiashi",
       "abbr": "yletfjs"
+    },
+    "sz158011": {
+      "code": "158011",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板软件ETF国泰",
+      "name_en": "",
+      "py": "chuangyebanruanjianetfguotai",
+      "abbr": "cybrjetfgt"
     },
     "sz158012": {
       "code": "158012",

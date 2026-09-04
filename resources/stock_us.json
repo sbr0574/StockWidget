@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-03",
+  "last_update": "2026-09-04",
   "codes": {
     "usa": {
       "code": "a",
@@ -7171,15 +7171,6 @@
       "type": "美",
       "name": "Arqit Quantum Inc. - Ordinary Shares",
       "name_en": "Arqit Quantum Inc. - Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usarqqw": {
-      "code": "arqqw",
-      "market": "us",
-      "type": "美",
-      "name": "Arqit Quantum Inc. - Warrants",
-      "name_en": "Arqit Quantum Inc. - Warrants",
       "py": "",
       "abbr": ""
     },
@@ -57781,6 +57772,24 @@
       "py": "",
       "abbr": ""
     },
+    "usjone": {
+      "code": "jone",
+      "market": "us",
+      "type": "美",
+      "name": "Jones Ventures INTL Acquisition1 Corp - Class A Ordinary Shares",
+      "name_en": "Jones Ventures INTL Acquisition1 Corp - Class A Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "usjoner": {
+      "code": "joner",
+      "market": "us",
+      "type": "美",
+      "name": "Jones Ventures INTL Acquisition1 Corp - Rights",
+      "name_en": "Jones Ventures INTL Acquisition1 Corp - Rights",
+      "py": "",
+      "abbr": ""
+    },
     "usjoneu": {
       "code": "joneu",
       "market": "us",
@@ -81352,6 +81361,15 @@
       "py": "",
       "abbr": ""
     },
+    "uspjsm": {
+      "code": "pjsm",
+      "market": "us",
+      "type": "美",
+      "name": "PGIM Jennison Small-Mid Cap Core Equity ETF",
+      "name_en": "PGIM Jennison Small-Mid Cap Core Equity ETF",
+      "py": "",
+      "abbr": ""
+    },
     "uspjt": {
       "code": "pjt",
       "market": "us",
@@ -83473,15 +83491,6 @@
       "type": "美",
       "name": "Parnassus Value Select ETF",
       "name_en": "Parnassus Value Select ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usprvt": {
-      "code": "prvt",
-      "market": "us",
-      "type": "美",
-      "name": "Tema Alternative Asset Managers ETF",
-      "name_en": "Tema Alternative Asset Managers ETF",
       "py": "",
       "abbr": ""
     },
@@ -87433,15 +87442,6 @@
       "type": "美",
       "name": "Rocket Pharmaceuticals, Inc. - Common Stock",
       "name_en": "Rocket Pharmaceuticals, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usrcktw": {
-      "code": "rcktw",
-      "market": "us",
-      "type": "美",
-      "name": "Rocket Pharmaceuticals, Inc. - Warrant",
-      "name_en": "Rocket Pharmaceuticals, Inc. - Warrant",
       "py": "",
       "abbr": ""
     },
@@ -105289,6 +105289,15 @@
       "type": "美",
       "name": "Thrivent Small Cap Value ETF",
       "name_en": "Thrivent Small Cap Value ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "ustscz": {
+      "code": "tscz",
+      "market": "us",
+      "type": "美",
+      "name": "T. Rowe Price Securitized Income ETF",
+      "name_en": "T. Rowe Price Securitized Income ETF",
       "py": "",
       "abbr": ""
     },

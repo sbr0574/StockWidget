@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-03",
+  "last_update": "2026-09-04",
   "codes": {
     "bj810011": {
       "code": "810011",
@@ -500,10 +500,10 @@
       "code": "920071",
       "market": "bj",
       "type": "京",
-      "name": "N金钛",
+      "name": "金钛股份",
       "name_en": "",
-      "py": "njintai",
-      "abbr": "njt"
+      "py": "jintaigufen",
+      "abbr": "jtgf"
     },
     "bj920072": {
       "code": "920072",
@@ -1252,6 +1252,15 @@
       "py": "zhenhonggufen",
       "abbr": "zhgf"
     },
+    "bj920201": {
+      "code": "920201",
+      "market": "bj",
+      "type": "京",
+      "name": "百瑞吉",
+      "name_en": "",
+      "py": "bairuiji",
+      "abbr": "brj"
+    },
     "bj920204": {
       "code": "920204",
       "market": "bj",
@@ -1607,10 +1616,10 @@
       "code": "920289",
       "market": "bj",
       "type": "京",
-      "name": "华汇智能",
+      "name": "N华汇",
       "name_en": "",
-      "py": "huahuizhineng",
-      "abbr": "hhzn"
+      "py": "nhuahui",
+      "abbr": "nhh"
     },
     "bj920298": {
       "code": "920298",
@@ -2894,10 +2903,10 @@
       "code": "920879",
       "market": "bj",
       "type": "京",
-      "name": "基康技术",
+      "name": "XD基康技",
       "name_en": "",
-      "py": "jikangjishu",
-      "abbr": "jkjs"
+      "py": "xdjikangji",
+      "abbr": "xdjkj"
     },
     "bj920885": {
       "code": "920885",
