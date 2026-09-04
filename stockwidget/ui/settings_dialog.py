@@ -13,7 +13,7 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QApplication, QWidget, QDialog, QColorDialog, QAbstractItemView, QTableWidgetItem,
     QAbstractItemDelegate, QStyledItemDelegate, QStyle, QStyleOptionViewItem,
-    QLineEdit, QCompleter, QHeaderView, QButtonGroup, QMessageBox, QLabel,
+    QLineEdit, QCompleter, QHeaderView, QButtonGroup, QFileDialog, QMessageBox, QLabel,
     QVBoxLayout,
 )
 from stockwidget.ui.generated.ui_settings import Ui_SettingDialog
@@ -64,6 +64,10 @@ _FLAT_GROUPS = ("gb_data", "gb_data_setting", "gb_name", "gb_icon", "gb_fcn", "g
 
 _SEARCH_PLACEHOLDER = "搜索代码、名称、拼音或缩写，空格区分关键词"
 _COLOR_SWATCH_SIZE = 12
+_ICON_FILE_FILTER = (
+    "图标文件 (*.png *.ico *.icns *.svg *.jpg *.jpeg *.bmp *.gif *.webp);;"
+    "所有文件 (*)"
+)
 
 
 def _color_swatch_icon(color: QColor, device_pixel_ratio: float = 1.0) -> QIcon:
@@ -135,6 +139,7 @@ def _build_settings_stylesheet(dark: bool, *, macos: bool = False) -> str:
         "QPushButton#btn_icon_lightG",
         "QPushButton#btn_icon_dark",
         "QPushButton#btn_icon_darkG",
+        "QPushButton#btn_icon_custom",
     )
     color_selectors = (
         "QPushButton#btn_fg_color",
@@ -197,6 +202,10 @@ def _build_settings_stylesheet(dark: bool, *, macos: bool = False) -> str:
     border: 1px solid transparent;
     border-radius: 8px;
     padding: 3px;
+}}
+QPushButton#btn_icon_custom {{
+    font-size: 22px;
+    font-weight: 300;
 }}
 {icon_hover} {{
     background-color: {icon_hover_bg};
@@ -676,7 +685,14 @@ class SettingsDialog(QDialog):
             "dark": self.ui.btn_icon_dark,
             "lightG": self.ui.btn_icon_lightG,
             "darkG": self.ui.btn_icon_darkG,
+            "custom": self.ui.btn_icon_custom,
         }
+        custom_path = getattr(self.app, "_custom_icon_path", "") if self.app else ""
+        custom_icon = QIcon(custom_path) if custom_path else QIcon()
+        self.ui.btn_icon_custom.set_custom_icon(custom_icon)
+        self._update_custom_icon_tooltip(custom_path if not custom_icon.isNull() else "")
+        self.ui.btn_icon_custom.deleteRequested.connect(self._clear_custom_icon)
+
         self._icon_button_group = QButtonGroup(self)
         self._icon_button_group.setExclusive(True)
         for key, btn in self.icon_buttons.items():
@@ -686,6 +702,8 @@ class SettingsDialog(QDialog):
             btn.toggled.connect(partial(self._on_icon_button_toggled, key))
 
         cur_choice = self.app._icon_choice if self.app is not None else None
+        if cur_choice == "custom" and not self.ui.btn_icon_custom.has_custom_icon():
+            cur_choice = "default"
         if cur_choice not in self.icon_buttons:
             cur_choice = "default"
             if self.app is not None:
@@ -696,6 +714,53 @@ class SettingsDialog(QDialog):
         self.icon_buttons[cur_choice].setChecked(True)
         for btn in self.icon_buttons.values():
             btn.blockSignals(False)
+        self._active_icon_choice = cur_choice
+
+    def _set_checked_icon(self, choice: str):
+        for button in self.icon_buttons.values():
+            button.blockSignals(True)
+        self.icon_buttons[choice].setChecked(True)
+        for button in self.icon_buttons.values():
+            button.blockSignals(False)
+
+    def _update_custom_icon_tooltip(self, path: str):
+        if path:
+            self.ui.btn_icon_custom.setToolTip(
+                f"自定义图标：{path}\n悬停右上角可删除"
+            )
+        else:
+            self.ui.btn_icon_custom.setToolTip("选择自定义图标")
+
+    def _choose_custom_icon(self):
+        previous = self._active_icon_choice
+        initial_path = getattr(self.app, "_custom_icon_path", "") if self.app else ""
+        path, _selected_filter = QFileDialog.getOpenFileName(
+            self, "选择自定义图标", initial_path, _ICON_FILE_FILTER
+        )
+        if not path:
+            self._set_checked_icon(previous)
+            return
+
+        if self.app is None or not self.app.set_custom_icon(path):
+            QMessageBox.warning(self, "图标无效", "无法读取所选图标文件，请选择其他文件。")
+            self._set_checked_icon(previous)
+            return
+
+        custom_path = self.app._custom_icon_path
+        self.ui.btn_icon_custom.set_custom_icon(QIcon(custom_path))
+        self._update_custom_icon_tooltip(custom_path)
+        self._active_icon_choice = "custom"
+        self._set_checked_icon("custom")
+        self.app.save_now()
+
+    def _clear_custom_icon(self):
+        self.ui.btn_icon_custom.clear_custom_icon()
+        self._update_custom_icon_tooltip("")
+        self._active_icon_choice = "default"
+        self._set_checked_icon("default")
+        if self.app is not None:
+            self.app.clear_custom_icon()
+            self.app.save_now()
 
     def _setup_source_buttons(self):
         """按当前配置选中行情数据源单选按钮。"""
@@ -1056,6 +1121,20 @@ class SettingsDialog(QDialog):
     def _on_icon_button_toggled(self, key: str, checked: bool):
         if not checked:
             return
+        if key == "custom":
+            if not self.ui.btn_icon_custom.has_custom_icon():
+                self._choose_custom_icon()
+                return
+            if self.app is not None:
+                self.app.set_app_icon("custom")
+                if self.app._icon_choice != "custom":
+                    self._clear_custom_icon()
+                    return
+                self.app.save_now()
+            self._active_icon_choice = "custom"
+            return
+
+        self._active_icon_choice = key
         if self.app is not None:
             self.app.set_app_icon(key)
             self.app.save_now()

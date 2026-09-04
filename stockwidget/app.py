@@ -4,6 +4,7 @@
 本模块只负责“组装”各层，不含界面细节（见 ui/）与数据/网络细节（见 data/）。
 """
 
+import os
 import sys
 import threading
 
@@ -23,6 +24,19 @@ from stockwidget.ui.tray import TrayIcon
 from stockwidget.ui.widget import FloatLabel
 
 
+def _load_custom_icon(path) -> tuple[str, QIcon]:
+    """返回规范化的有效本地图标路径及图标；无效时返回空值。"""
+    if not isinstance(path, str) or not path.strip():
+        return "", QIcon()
+    normalized = os.path.abspath(os.path.expanduser(path.strip()))
+    if not os.path.isfile(normalized):
+        return "", QIcon()
+    icon = QIcon(normalized)
+    if icon.isNull():
+        return "", QIcon()
+    return normalized, icon
+
+
 class App(QApplication):
     network_finished = Signal(object)
     codes_loaded = Signal(object)
@@ -38,6 +52,11 @@ class App(QApplication):
 
         # 加载图标
         self._icon_choice = cfg.get('app_icon')
+        self._custom_icon_path, custom_icon = _load_custom_icon(
+            cfg.get("custom_icon_path")
+        )
+        if self._icon_choice == "custom" and custom_icon.isNull():
+            self._icon_choice = "default"
         app_icon = self.find_icon(self._icon_choice)
         self.setWindowIcon(app_icon)
 
@@ -82,6 +101,10 @@ class App(QApplication):
         self._start_codes_initialization()
 
     def find_icon(self, choice: str) -> QIcon:
+        if choice == "custom":
+            _path, icon = _load_custom_icon(self._custom_icon_path)
+            if not icon.isNull():
+                return icon
         file_type = ".icns" if sys.platform == "darwin" else ".ico"
         if choice == 'lightG':
             return QIcon(":/LightGlass"+file_type)
@@ -222,15 +245,40 @@ class App(QApplication):
     def save_now(self):
         cfg = self.win.current_config()
         cfg['app_icon'] = self._icon_choice
+        if self._custom_icon_path:
+            cfg['custom_icon_path'] = self._custom_icon_path
         cfg['start_on_boot'] = self._start_on_boot
         save_file(cfg, CONFIG_FILE)
 
     def set_app_icon(self, choice):
         """Set application and tray icon."""
+        if choice == "custom":
+            normalized, custom_icon = _load_custom_icon(self._custom_icon_path)
+            if custom_icon.isNull():
+                self._custom_icon_path = ""
+                choice = "default"
+            else:
+                self._custom_icon_path = normalized
         self._icon_choice = choice
         app_icon = self.find_icon(self._icon_choice)
         self.setWindowIcon(app_icon)
         self.tray.setIcon(app_icon)
+
+    def set_custom_icon(self, path: str) -> bool:
+        """校验并立即应用一个本地图标文件。"""
+        normalized, icon = _load_custom_icon(path)
+        if icon.isNull():
+            return False
+        self._custom_icon_path = normalized
+        self._icon_choice = "custom"
+        self.setWindowIcon(icon)
+        self.tray.setIcon(icon)
+        return True
+
+    def clear_custom_icon(self):
+        """清除自定义图标地址并恢复默认内置图标。"""
+        self._custom_icon_path = ""
+        self.set_app_icon("default")
 
     def set_start_on_boot(self, enabled: bool):
         """启用或禁用开机自启（Windows/Linux/macOS），由平台支持层统一实现。"""

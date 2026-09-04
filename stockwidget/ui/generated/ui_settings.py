@@ -22,6 +22,8 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComb
     QSpinBox, QTabWidget, QTableWidget, QTableWidgetItem,
     QWidget)
 
+from stockwidget.ui.icon_button import CustomIconButton
+
 class Ui_SettingDialog(object):
     def setupUi(self, SettingDialog):
         if not SettingDialog.objectName():
@@ -142,7 +144,9 @@ class Ui_SettingDialog(object):
         self.gb_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_icon.setFlat(True)
         self.horizontalLayout = QHBoxLayout(self.gb_icon)
+        self.horizontalLayout.setSpacing(3)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.horizontalLayout.setContentsMargins(4, -1, 4, -1)
         self.btn_icon_default = QPushButton(self.gb_icon)
         self.btn_icon_default.setObjectName(u"btn_icon_default")
         self.btn_icon_default.setMinimumSize(QSize(40, 40))
@@ -200,9 +204,20 @@ class Ui_SettingDialog(object):
 
         self.horizontalLayout.addWidget(self.btn_icon_darkG)
 
+        self.btn_icon_custom = CustomIconButton(self.gb_icon)
+        self.btn_icon_custom.setObjectName(u"btn_icon_custom")
+        self.btn_icon_custom.setMinimumSize(QSize(40, 40))
+        self.btn_icon_custom.setMaximumSize(QSize(40, 40))
+        self.btn_icon_custom.setIconSize(QSize(32, 32))
+        self.btn_icon_custom.setCheckable(True)
+        self.btn_icon_custom.setAutoExclusive(True)
+        self.btn_icon_custom.setAutoDefault(False)
+
+        self.horizontalLayout.addWidget(self.btn_icon_custom)
+
         self.gb_fcn = QGroupBox(self.general)
         self.gb_fcn.setObjectName(u"gb_fcn")
-        self.gb_fcn.setGeometry(QRect(330, 85, 221, 121))
+        self.gb_fcn.setGeometry(QRect(330, 85, 221, 111))
         self.gb_fcn.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_fcn.setFlat(True)
         self.gridLayout = QGridLayout(self.gb_fcn)
@@ -494,6 +509,10 @@ class Ui_SettingDialog(object):
         self.btn_icon_darkG.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6df1\u8272\u73bb\u7483", None))
 #endif // QT_CONFIG(tooltip)
         self.btn_icon_darkG.setText("")
+#if QT_CONFIG(tooltip)
+        self.btn_icon_custom.setToolTip(QCoreApplication.translate("SettingDialog", u"\u9009\u62e9\u81ea\u5b9a\u4e49\u56fe\u6807", None))
+#endif // QT_CONFIG(tooltip)
+        self.btn_icon_custom.setText(QCoreApplication.translate("SettingDialog", u"+", None))
         self.gb_fcn.setTitle(QCoreApplication.translate("SettingDialog", u"\u529f\u80fd", None))
         self.cb_grid.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u7f51\u683c", None))
         self.cb_head.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u8868\u5934", None))

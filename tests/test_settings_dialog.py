@@ -1,4 +1,5 @@
 import os
+import tempfile
 import threading
 import time
 import unittest
@@ -7,7 +8,7 @@ from unittest.mock import Mock, patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QPoint, QSize, Qt
-from PySide6.QtGui import QColor, QIcon
+from PySide6.QtGui import QColor, QIcon, QPixmap
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QAbstractItemDelegate
 
@@ -108,13 +109,42 @@ class SettingsDialogTests(unittest.TestCase):
             window.deleteLater()
         self.qt_app.processEvents()
 
-    def _make_dialog(self, watchlist=None, codes=None):
+    def _make_dialog(self, watchlist=None, codes=None, app=None):
         cfg = {"watchlist": watchlist or {}}
         window = FloatLabel(cfg, CODES if codes is None else codes)
         with patch.object(SettingsDialog, "_start_github_check"):
-            dialog = SettingsDialog(window, window)
+            dialog = SettingsDialog(window, window, app=app)
         self._windows.append((dialog, window))
         return dialog, window
+
+    def _make_icon_app(self, choice="default", custom_path=""):
+        app = Mock()
+        app._icon_choice = choice
+        app._custom_icon_path = custom_path
+        app.app_version = "1.0.0"
+        app._has_update = False
+        app._latest_version = None
+        app.code_data_state.return_value = ("cached", "")
+
+        def set_app_icon(icon_choice):
+            app._icon_choice = icon_choice
+
+        def set_custom_icon(path):
+            icon = QIcon(path)
+            if icon.isNull():
+                return False
+            app._custom_icon_path = os.path.abspath(path)
+            app._icon_choice = "custom"
+            return True
+
+        def clear_custom_icon():
+            app._custom_icon_path = ""
+            app._icon_choice = "default"
+
+        app.set_app_icon.side_effect = set_app_icon
+        app.set_custom_icon.side_effect = set_custom_icon
+        app.clear_custom_icon.side_effect = clear_custom_icon
+        return app
 
     def _start_code_editor(self, dialog):
         dialog._start_quick_add()
@@ -137,6 +167,7 @@ class SettingsDialogTests(unittest.TestCase):
             self.assertIn("QPushButton#btn_icon_default:checked", stylesheet)
             self.assertIn("QPushButton#btn_icon_default:checked:hover", stylesheet)
             self.assertIn("QPushButton#btn_icon_default:checked:pressed", stylesheet)
+            self.assertIn("QPushButton#btn_icon_custom", stylesheet)
             self.assertIn("QPushButton#btn_fg_color:hover", stylesheet)
             self.assertIn("QPushButton#btn_fg_color:pressed", stylesheet)
             self.assertIn("QPushButton#btn_fg_color:disabled", stylesheet)
@@ -195,6 +226,68 @@ class SettingsDialogTests(unittest.TestCase):
         for button in dialog.icon_buttons.values():
             self.assertTrue(button.isFlat())
             self.assertEqual(button.styleSheet(), "")
+        self.assertEqual(dialog.ui.btn_icon_custom.text(), "+")
+        self.assertFalse(dialog.ui.btn_icon_custom.has_custom_icon())
+
+    def test_custom_icon_can_be_selected_and_deleted_from_hover_action(self):
+        app = self._make_icon_app()
+        dialog, _window = self._make_dialog(app=app)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            icon_path = os.path.join(temp_dir, "custom.png")
+            pixmap = QPixmap(24, 24)
+            pixmap.fill(QColor("#3578e5"))
+            self.assertTrue(pixmap.save(icon_path))
+
+            with patch(
+                "stockwidget.ui.settings_dialog.QFileDialog.getOpenFileName",
+                return_value=(icon_path, ""),
+            ):
+                dialog.ui.btn_icon_custom.click()
+
+            self.assertEqual(app._icon_choice, "custom")
+            self.assertEqual(app._custom_icon_path, os.path.abspath(icon_path))
+            self.assertTrue(dialog.ui.btn_icon_custom.has_custom_icon())
+            self.assertEqual(dialog.ui.btn_icon_custom.text(), "")
+            self.assertTrue(dialog.ui.btn_icon_custom.isChecked())
+            app.set_custom_icon.assert_called_once_with(icon_path)
+            app.save_now.assert_called_once_with()
+
+            dialog.ui.tab_widget.setCurrentWidget(dialog.ui.general)
+            dialog.show()
+            self.qt_app.processEvents()
+            QTest.mouseMove(dialog.ui.btn_icon_custom, QPoint(35, 5))
+            self.qt_app.processEvents()
+            self.assertTrue(dialog.ui.btn_icon_custom.underMouse())
+
+            QTest.mouseClick(
+                dialog.ui.btn_icon_custom,
+                Qt.MouseButton.LeftButton,
+                pos=QPoint(35, 5),
+            )
+
+        self.assertEqual(app._icon_choice, "default")
+        self.assertEqual(app._custom_icon_path, "")
+        self.assertFalse(dialog.ui.btn_icon_custom.has_custom_icon())
+        self.assertEqual(dialog.ui.btn_icon_custom.text(), "+")
+        self.assertTrue(dialog.ui.btn_icon_default.isChecked())
+        app.clear_custom_icon.assert_called_once_with()
+        self.assertEqual(app.save_now.call_count, 2)
+
+    def test_cancelling_custom_icon_picker_restores_previous_choice(self):
+        app = self._make_icon_app(choice="dark")
+        dialog, _window = self._make_dialog(app=app)
+
+        with patch(
+            "stockwidget.ui.settings_dialog.QFileDialog.getOpenFileName",
+            return_value=("", ""),
+        ):
+            dialog.ui.btn_icon_custom.click()
+
+        self.assertTrue(dialog.ui.btn_icon_dark.isChecked())
+        self.assertEqual(app._icon_choice, "dark")
+        app.set_custom_icon.assert_not_called()
+        app.save_now.assert_not_called()
 
     def test_metric_pool_controls_order_while_name_keeps_its_own_switch(self):
         dialog, window = self._make_dialog()

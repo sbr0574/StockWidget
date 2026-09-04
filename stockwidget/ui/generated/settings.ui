@@ -409,6 +409,15 @@
       <bool>true</bool>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="spacing">
+       <number>3</number>
+      </property>
+      <property name="leftMargin">
+       <number>4</number>
+      </property>
+      <property name="rightMargin">
+       <number>4</number>
+      </property>
       <item>
        <widget class="QPushButton" name="btn_icon_default">
         <property name="minimumSize">
@@ -576,6 +585,43 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="CustomIconButton" name="btn_icon_custom">
+        <property name="minimumSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>选择自定义图标</string>
+        </property>
+        <property name="text">
+         <string>+</string>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="autoExclusive">
+         <bool>true</bool>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
     <widget class="QGroupBox" name="gb_fcn">
@@ -584,7 +630,7 @@
        <x>330</x>
        <y>85</y>
        <width>221</width>
-       <height>121</height>
+       <height>111</height>
       </rect>
      </property>
      <property name="title">
@@ -1158,6 +1204,13 @@ Copyright 2026 sbr0574</string>
    </widget>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CustomIconButton</class>
+   <extends>QPushButton</extends>
+   <header>stockwidget.ui.icon_button</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
