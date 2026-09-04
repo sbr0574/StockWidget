@@ -584,7 +584,7 @@
        <x>330</x>
        <y>85</y>
        <width>221</width>
-       <height>111</height>
+       <height>121</height>
       </rect>
      </property>
      <property name="title">
@@ -640,7 +640,7 @@
        <x>10</x>
        <y>10</y>
        <width>301</width>
-       <height>90</height>
+       <height>101</height>
       </rect>
      </property>
      <property name="title">
@@ -655,6 +655,12 @@
      <layout class="QGridLayout" name="gridLayout_4">
       <item row="1" column="1">
        <widget class="QPushButton" name="btn_up_color">
+        <property name="maximumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
         <property name="text">
          <string>上涨</string>
         </property>
@@ -664,16 +670,22 @@
           <height>12</height>
          </size>
         </property>
-        <property name="flat">
-         <bool>true</bool>
-        </property>
         <property name="autoDefault">
          <bool>false</bool>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
       <item row="1" column="3">
        <widget class="QPushButton" name="btn_neutral_color">
+        <property name="maximumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
         <property name="text">
          <string>中性</string>
         </property>
@@ -683,16 +695,22 @@
           <height>12</height>
          </size>
         </property>
-        <property name="flat">
-         <bool>true</bool>
-        </property>
         <property name="autoDefault">
          <bool>false</bool>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
       <item row="1" column="2">
        <widget class="QPushButton" name="btn_down_color">
+        <property name="maximumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
         <property name="text">
          <string>下跌</string>
         </property>
@@ -702,16 +720,34 @@
           <height>12</height>
          </size>
         </property>
-        <property name="flat">
-         <bool>true</bool>
-        </property>
         <property name="autoDefault">
          <bool>false</bool>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
       <item row="1" column="0">
        <widget class="QCheckBox" name="cb_unicolor">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>90</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>90</width>
+          <height>25</height>
+         </size>
+        </property>
         <property name="baseSize">
          <size>
           <width>0</width>
@@ -725,6 +761,12 @@
       </item>
       <item row="0" column="1">
        <widget class="QPushButton" name="btn_fg_color">
+        <property name="maximumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
         <property name="text">
          <string>文字</string>
         </property>
@@ -734,16 +776,22 @@
           <height>12</height>
          </size>
         </property>
-        <property name="flat">
-         <bool>true</bool>
-        </property>
         <property name="autoDefault">
          <bool>false</bool>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
       <item row="0" column="2">
        <widget class="QPushButton" name="btn_bg_color">
+        <property name="maximumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
         <property name="text">
          <string>背景</string>
         </property>
@@ -753,16 +801,34 @@
           <height>12</height>
          </size>
         </property>
-        <property name="flat">
-         <bool>true</bool>
-        </property>
         <property name="autoDefault">
          <bool>false</bool>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
       <item row="0" column="0">
        <widget class="QLabel" name="label">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>90</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>90</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>主颜色：</string>
         </property>
@@ -777,9 +843,9 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>200</y>
+       <y>209</y>
        <width>301</width>
-       <height>140</height>
+       <height>131</height>
       </rect>
      </property>
      <property name="title">
@@ -948,9 +1014,9 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>100</y>
+       <y>115</y>
        <width>301</width>
-       <height>100</height>
+       <height>91</height>
       </rect>
      </property>
      <property name="title">

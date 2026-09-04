@@ -24,7 +24,6 @@ from stockwidget.ui.settings_dialog import (
     SettingsDialog,
     _COLOR_SWATCH_SIZE,
     _SEARCH_PLACEHOLDER,
-    _UNICOLOR_EXTRA_WIDTH,
     _build_settings_stylesheet,
     _color_swatch_icon,
 )
@@ -124,17 +123,45 @@ class SettingsDialogTests(unittest.TestCase):
         self.assertIsNotNone(editor)
         return editor
 
-    def test_macos_button_styles_are_platform_scoped(self):
+    def test_choice_button_styles_are_cross_platform(self):
         regular = _build_settings_stylesheet(dark=False)
         macos = _build_settings_stylesheet(dark=False, macos=True)
+        dark = _build_settings_stylesheet(dark=True)
 
         self.assertNotIn("QPushButton#btn_add", regular)
         self.assertIn("QPushButton#btn_add", macos)
-        self.assertIn("QPushButton#btn_icon_default", macos)
-        self.assertIn("QPushButton#btn_fg_color:hover", macos)
-        self.assertIn("QPushButton#btn_fg_color:pressed", macos)
-        self.assertNotIn("QPushButton#btn_fg_color:checked", macos)
-        self.assertIn("rgb(10, 132, 255)", macos)
+        for stylesheet in (regular, macos, dark):
+            self.assertIn("QPushButton#btn_icon_default", stylesheet)
+            self.assertIn("QPushButton#btn_icon_default:hover", stylesheet)
+            self.assertIn("QPushButton#btn_icon_default:pressed", stylesheet)
+            self.assertIn("QPushButton#btn_icon_default:checked", stylesheet)
+            self.assertIn("QPushButton#btn_icon_default:checked:hover", stylesheet)
+            self.assertIn("QPushButton#btn_icon_default:checked:pressed", stylesheet)
+            self.assertIn("QPushButton#btn_fg_color:hover", stylesheet)
+            self.assertIn("QPushButton#btn_fg_color:pressed", stylesheet)
+            self.assertIn("QPushButton#btn_fg_color:disabled", stylesheet)
+            self.assertNotIn("QPushButton#btn_fg_color:checked", stylesheet)
+            self.assertIn("rgb(10, 132, 255)", stylesheet)
+
+            color_rules = []
+            for state in ("", ":hover", ":pressed", ":disabled"):
+                rule = stylesheet.split(
+                    f"QPushButton#btn_neutral_color{state} {{", 1
+                )[1].split("}", 1)[0]
+                background = next(
+                    line.strip()
+                    for line in rule.splitlines()
+                    if line.strip().startswith("background-color:")
+                )
+                self.assertNotIn("transparent", background)
+                color_rules.append(background)
+
+            self.assertEqual(len(set(color_rules)), 4)
+            color_base_rule = stylesheet.split(
+                "QPushButton#btn_neutral_color {", 1
+            )[1].split("}", 1)[0]
+            self.assertIn("border: none", color_base_rule)
+            self.assertIn("border-radius: 6px", color_base_rule)
 
     def test_color_swatch_renders_at_device_pixel_ratio(self):
         icon = _color_swatch_icon(QColor("#123456"), 2.0)
@@ -165,6 +192,9 @@ class SettingsDialogTests(unittest.TestCase):
         self.assertLess(dialog.ui.gb_fcn.geometry().bottom(), dialog.ui.gb_hotkeys.y())
         self.assertLess(dialog.ui.gb_color.geometry().bottom(), dialog.ui.gb_text.y())
         self.assertEqual(dialog.ui.gb_fcn.x(), dialog.ui.gb_hotkeys.x())
+        for button in dialog.icon_buttons.values():
+            self.assertTrue(button.isFlat())
+            self.assertEqual(button.styleSheet(), "")
 
     def test_metric_pool_controls_order_while_name_keeps_its_own_switch(self):
         dialog, window = self._make_dialog()
@@ -209,9 +239,11 @@ class SettingsDialogTests(unittest.TestCase):
         self.assertEqual(window.down_color.name(), "#019933")
         self.assertEqual(window.neutral_color.name(), "#494949")
         self.assertTrue(dialog.cb_unicolor.isChecked())
+        self.assertEqual(
+            dialog.cb_unicolor.minimumWidth(), dialog.cb_unicolor.maximumWidth()
+        )
         self.assertGreaterEqual(
-            dialog.cb_unicolor.minimumWidth(),
-            dialog.cb_unicolor.sizeHint().width() + _UNICOLOR_EXTRA_WIDTH,
+            dialog.cb_unicolor.minimumWidth(), dialog.cb_unicolor.sizeHint().width()
         )
         self.assertTrue(dialog.btn_bg.isEnabled())
         self.assertTrue(dialog.btn_fg.isEnabled())

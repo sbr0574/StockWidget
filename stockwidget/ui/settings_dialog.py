@@ -64,7 +64,6 @@ _FLAT_GROUPS = ("gb_data", "gb_data_setting", "gb_name", "gb_icon", "gb_fcn", "g
 
 _SEARCH_PLACEHOLDER = "搜索代码、名称、拼音或缩写，空格区分关键词"
 _COLOR_SWATCH_SIZE = 12
-_UNICOLOR_EXTRA_WIDTH = 8
 
 
 def _color_swatch_icon(color: QColor, device_pixel_ratio: float = 1.0) -> QIcon:
@@ -95,58 +94,81 @@ def _build_settings_stylesheet(dark: bool, *, macos: bool = False) -> str:
         sep = "rgba(255, 255, 255, 0.35)"
         header_bg, header_line = "rgba(255, 255, 255, 0.10)", "rgba(255, 255, 255, 0.30)"
         empty_hint = "rgba(255, 255, 255, 0.28)"
+        button_bg = "rgba(255, 255, 255, 0.10)"
+        button_hover = "rgba(255, 255, 255, 0.16)"
+        button_pressed = "rgba(255, 255, 255, 0.22)"
+        button_border = "rgba(255, 255, 255, 0.24)"
+        button_disabled = "rgba(255, 255, 255, 0.05)"
+        icon_hover_bg = "rgba(255, 255, 255, 0.12)"
+        icon_pressed_bg = "rgba(255, 255, 255, 0.18)"
+        icon_selected = "rgba(10, 132, 255, 0.24)"
+        icon_selected_hover = "rgba(10, 132, 255, 0.32)"
+        icon_selected_pressed = "rgba(10, 132, 255, 0.40)"
+        color_bg = "rgba(255, 255, 255, 0.10)"
+        color_hover_bg = "rgba(10, 132, 255, 0.20)"
+        color_pressed_bg = "rgba(10, 132, 255, 0.30)"
+        color_disabled_bg = "rgba(255, 255, 255, 0.05)"
     else:
         sep = "rgba(0, 0, 0, 0.25)"
         header_bg, header_line = "rgba(0, 0, 0, 0.06)", "rgba(0, 0, 0, 0.20)"
         empty_hint = "rgba(0, 0, 0, 0.28)"
+        button_bg = "rgba(255, 255, 255, 0.86)"
+        button_hover = "rgba(255, 255, 255, 1.00)"
+        button_pressed = "rgba(0, 0, 0, 0.08)"
+        button_border = "rgba(0, 0, 0, 0.22)"
+        button_disabled = "rgba(0, 0, 0, 0.04)"
+        icon_hover_bg = "rgba(0, 0, 0, 0.08)"
+        icon_pressed_bg = "rgba(0, 0, 0, 0.14)"
+        icon_selected = "rgba(0, 122, 255, 0.14)"
+        icon_selected_hover = "rgba(0, 122, 255, 0.21)"
+        icon_selected_pressed = "rgba(0, 122, 255, 0.28)"
+        color_bg = "rgba(0, 0, 0, 0.07)"
+        color_hover_bg = "rgba(0, 122, 255, 0.13)"
+        color_pressed_bg = "rgba(0, 122, 255, 0.22)"
+        color_disabled_bg = "rgba(0, 0, 0, 0.04)"
 
     flat_boxes = ",\n".join(f"QGroupBox#{n}" for n in _FLAT_GROUPS)
     flat_titles = ",\n".join(f"QGroupBox#{n}::title" for n in _FLAT_GROUPS)
 
+    icon_selectors = (
+        "QPushButton#btn_icon_default",
+        "QPushButton#btn_icon_lightG",
+        "QPushButton#btn_icon_dark",
+        "QPushButton#btn_icon_darkG",
+    )
+    color_selectors = (
+        "QPushButton#btn_fg_color",
+        "QPushButton#btn_bg_color",
+        "QPushButton#btn_up_color",
+        "QPushButton#btn_down_color",
+        "QPushButton#btn_neutral_color",
+    )
+    icon_buttons = ",\n".join(icon_selectors)
+    icon_hover = ",\n".join(f"{selector}:hover" for selector in icon_selectors)
+    icon_pressed = ",\n".join(f"{selector}:pressed" for selector in icon_selectors)
+    icon_checked = ",\n".join(f"{selector}:checked" for selector in icon_selectors)
+    icon_checked_hover = ",\n".join(
+        f"{selector}:checked:hover" for selector in icon_selectors
+    )
+    icon_checked_pressed = ",\n".join(
+        f"{selector}:checked:pressed" for selector in icon_selectors
+    )
+    color_buttons = ",\n".join(color_selectors)
+    color_hover = ",\n".join(f"{selector}:hover" for selector in color_selectors)
+    color_pressed = ",\n".join(f"{selector}:pressed" for selector in color_selectors)
+    color_disabled = ",\n".join(f"{selector}:disabled" for selector in color_selectors)
+
     macos_buttons = ""
     if macos:
-        if dark:
-            button_bg = "rgba(255, 255, 255, 0.10)"
-            button_hover = "rgba(255, 255, 255, 0.16)"
-            button_pressed = "rgba(255, 255, 255, 0.22)"
-            button_border = "rgba(255, 255, 255, 0.24)"
-            button_disabled = "rgba(255, 255, 255, 0.05)"
-            icon_selected = "rgba(10, 132, 255, 0.24)"
-        else:
-            button_bg = "rgba(255, 255, 255, 0.86)"
-            button_hover = "rgba(255, 255, 255, 1.00)"
-            button_pressed = "rgba(0, 0, 0, 0.08)"
-            button_border = "rgba(0, 0, 0, 0.22)"
-            button_disabled = "rgba(0, 0, 0, 0.04)"
-            icon_selected = "rgba(0, 122, 255, 0.14)"
-
         regular_selectors = (
             "QPushButton#btn_add",
             "QPushButton#btn_del",
         )
-        icon_selectors = (
-            "QPushButton#btn_icon_default",
-            "QPushButton#btn_icon_lightG",
-            "QPushButton#btn_icon_dark",
-            "QPushButton#btn_icon_darkG",
-        )
-        color_selectors = (
-            "QPushButton#btn_fg_color",
-            "QPushButton#btn_bg_color",
-            "QPushButton#btn_up_color",
-            "QPushButton#btn_down_color",
-            "QPushButton#btn_neutral_color",
-        )
-        flat_selectors = icon_selectors + color_selectors
         regular_buttons = ",\n".join(regular_selectors)
         regular_hover = ",\n".join(f"{selector}:hover" for selector in regular_selectors)
         regular_pressed = ",\n".join(f"{selector}:pressed" for selector in regular_selectors)
         regular_focus = ",\n".join(f"{selector}:focus" for selector in regular_selectors)
         regular_disabled = ",\n".join(f"{selector}:disabled" for selector in regular_selectors)
-        flat_buttons = ",\n".join(flat_selectors)
-        flat_hover = ",\n".join(f"{selector}:hover" for selector in flat_selectors)
-        flat_pressed = ",\n".join(f"{selector}:pressed" for selector in flat_selectors)
-        icon_checked = ",\n".join(f"{selector}:checked" for selector in icon_selectors)
         macos_buttons = f"""
 {regular_buttons} {{
     background-color: {button_bg};
@@ -167,21 +189,45 @@ def _build_settings_stylesheet(dark: bool, *, macos: bool = False) -> str:
     background-color: {button_disabled};
     border-color: transparent;
 }}
-{flat_buttons} {{
+"""
+
+    choice_buttons = f"""
+{icon_buttons} {{
     background-color: transparent;
     border: 1px solid transparent;
     border-radius: 8px;
     padding: 3px;
 }}
-{flat_hover} {{
-    background-color: {button_hover};
+{icon_hover} {{
+    background-color: {icon_hover_bg};
 }}
-{flat_pressed} {{
-    background-color: {button_pressed};
+{icon_pressed} {{
+    background-color: {icon_pressed_bg};
 }}
 {icon_checked} {{
     background-color: {icon_selected};
     border: 2px solid rgb(10, 132, 255);
+}}
+{icon_checked_hover} {{
+    background-color: {icon_selected_hover};
+}}
+{icon_checked_pressed} {{
+    background-color: {icon_selected_pressed};
+}}
+{color_buttons} {{
+    background-color: {color_bg};
+    border: none;
+    border-radius: 6px;
+    padding: 3px;
+}}
+{color_hover} {{
+    background-color: {color_hover_bg};
+}}
+{color_pressed} {{
+    background-color: {color_pressed_bg};
+}}
+{color_disabled} {{
+    background-color: {color_disabled_bg};
 }}
 """
 
@@ -210,6 +256,7 @@ QLabel#empty_watchlist_hint {{
     font-size: 18px;
     font-weight: 500;
 }}
+{choice_buttons}
 {macos_buttons}
 """
 
@@ -459,10 +506,6 @@ class SettingsDialog(QDialog):
         self.cmb_namelen = self.ui.cmb_namelen
 
         self.cb_unicolor = self.ui.cb_unicolor
-        # macOS 原生复选框的 sizeHint 较紧，额外留出字形右侧空间避免裁切。
-        self.cb_unicolor.setMinimumWidth(
-            self.cb_unicolor.sizeHint().width() + _UNICOLOR_EXTRA_WIDTH
-        )
         self.btn_fg = self.ui.btn_fg_color
         self.btn_bg = self.ui.btn_bg_color
         self.btn_up = self.ui.btn_up_color
@@ -639,11 +682,7 @@ class SettingsDialog(QDialog):
         for key, btn in self.icon_buttons.items():
             self._icon_button_group.addButton(btn)
             btn.setCheckable(True)
-            btn.setFlat(sys.platform == "darwin")
-            if sys.platform != "darwin":
-                btn.setStyleSheet(
-                    "QPushButton:checked { border: 2px solid #4a90d9; border-radius: 4px; }"
-                )
+            btn.setFlat(True)
             btn.toggled.connect(partial(self._on_icon_button_toggled, key))
 
         cur_choice = self.app._icon_choice if self.app is not None else None
