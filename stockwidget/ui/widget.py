@@ -19,7 +19,7 @@ from stockwidget.ui.table_model import (
 from stockwidget.ui.drag_mixin import DragBehaviorMixin
 from stockwidget.platform.hotkeys import GlobalHotkeyManager, HotkeyResult
 from stockwidget.data.quotes import request_quote
-from stockwidget.core.formatters import format_volume, format_amount
+from stockwidget.core.formatters import format_value, should_use_english_units
 from stockwidget.core.metric_layout import (
     METRIC_BY_ID,
     METRIC_SPECS,
@@ -86,6 +86,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.code_visible       = bool(cfg.get("code_visible", False))
         self.type_visible       = bool(cfg.get("type_visible", False))
         self.name_length        = int(cfg.get("name_length", -1))
+        self.unit_mode          = str(cfg.get("unit_mode", "auto"))
+        if self.unit_mode not in ("cn", "en", "auto"):
+            self.unit_mode = "auto"
         self.visible_metrics    = visible_metrics_from_config(cfg)
         self._sync_metric_visibility_attrs()
         # 加载外观配置
@@ -239,6 +242,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             "code_visible":         self.code_visible,
             "type_visible":         self.type_visible,
             "name_length":          self.name_length,
+            "unit_mode":            self.unit_mode,
             "visible_metrics":      list(self.visible_metrics),
             "price_visible":        self.price_visible,
             "change_visible":       self.change_visible,
@@ -278,8 +282,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     def header_is_visible(self, header: str) -> bool:
         header = str(header)
-        if header == "名称":
-            return self.name_visible
         metric_id = metric_id_for_header(header)
         return metric_id in self.visible_metrics if metric_id else False
 
@@ -401,9 +403,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._index_updating = bool(updating)
 
     def _project_columns(self, full_rows: list[dict], color_roles: list[dict]):
-        # 名称保持独立开关且始终在首列；其余指标按用户配置顺序展开。
-        headers = ["名称"] if self.name_visible else []
-        headers.extend(expand_metric_headers(self.visible_metrics))
+        # 名称与其余指标统一按用户配置顺序展开。
+        headers = expand_metric_headers(self.visible_metrics)
 
         proj_rows, projected_roles = [], []
         for r, row in enumerate(full_rows):
@@ -522,6 +523,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
         # 数据返回
         is_index = type == "指"
+        english_units = should_use_english_units(
+            getattr(self, "unit_mode", "auto"), market
+        )
         format_data = {
             "名称": name,
             "现价": f"{data["current_price"]:.{precision}f}{arrow}",
@@ -533,9 +537,20 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             "委比": f"{committee:+.2f}%" if (p_sum + s_sum) > 0 else "-",
             "成交量": (
                 "-" if is_index and not data["deals_vol"]
-                else format_volume(data["deals_vol"], lot_size=lot_size)
+                else format_value(
+                    data["deals_vol"],
+                    lot_size=lot_size,
+                    unit_cn=not english_units,
+                )
             ),
-            "成交额": ("-" if is_index and not data["deals_amt"] else format_amount(data["deals_amt"])),
+            "成交额": (
+                "-" if is_index and not data["deals_amt"]
+                else format_value(
+                    data["deals_amt"],
+                    lot_size=1,
+                    unit_cn=not english_units,
+                )
+            ),
             "均价": f"{avg:.{precision}f}",
             "K线": k_payload}
         color_roles = {
@@ -675,15 +690,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
                 return
         header = str(header)
         checked = bool(checked)
-        if header == "名称":
-            if self.name_visible == checked:
-                return
-            self.name_visible = checked
-            self._notify_change()
-            self._refresh_from_function()
-            self.display_flags_changed.emit()
-            return
-
         metric_id = metric_id_for_header(header)
         if metric_id:
             self.set_metric_visible(metric_id, checked)
@@ -699,6 +705,16 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self.name_length = name_len
             self._notify_change()
             self._refresh_from_function()
+
+    def set_unit_mode(self, mode: str):
+        """设置成交量/成交额单位模式：cn=中文, en=英文, auto=自动。"""
+        mode = str(mode or "").strip().lower()
+        if mode not in ("cn", "en", "auto") or mode == self.unit_mode:
+            return
+        self.unit_mode = mode
+        self._notify_change()
+        self._refresh_from_function()
+        self.display_flags_changed.emit()
 
     def set_b1s1_display(self, mode: str):
         """mode: 'qty' | 'price' | 'both'"""

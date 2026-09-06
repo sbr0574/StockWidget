@@ -67,6 +67,7 @@ if sys.platform == 'darwin':
         version=APP_VERSION,
         info_plist={
             'NSHighResolutionCapable': True,
+            'LSUIElement': True,
             'NSHumanReadableCopyright': 'Copyright © 2026 sbr0574',
             'LSApplicationCategoryType': 'public.app-category.finance',
         },

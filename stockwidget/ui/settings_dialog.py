@@ -1,24 +1,30 @@
+import os
+import sys
 import threading
 from functools import partial
 from math import isfinite
 
 from PySide6.QtCore import (
-    Qt, QPoint, QEvent, QTimer, QItemSelectionModel, QModelIndex, Signal,
+    Qt, QPoint, QEvent, QTimer, QItemSelectionModel, QModelIndex, QUrl, Signal,
 )
 from PySide6.QtGui import (
-    QColor, QGuiApplication, QIcon, QKeySequence, QPainter, QPixmap,
-    QStandardItem, QStandardItemModel,
+    QColor, QDesktopServices, QGuiApplication, QIcon, QKeySequence, QPainter,
+    QPixmap, QStandardItem, QStandardItemModel,
 )
 from PySide6.QtWidgets import (
     QApplication, QWidget, QDialog, QColorDialog, QAbstractItemView, QTableWidgetItem,
     QAbstractItemDelegate, QStyledItemDelegate, QStyle, QStyleOptionViewItem,
     QLineEdit, QCompleter, QHeaderView, QButtonGroup, QFileDialog, QMessageBox, QLabel,
-    QVBoxLayout,
+    QScrollBar, QVBoxLayout,
 )
 from stockwidget.ui.generated.ui_settings import Ui_SettingDialog
+from stockwidget.constants import APP_VERSION
 from stockwidget.core.code_search import build_search_index, search_suggestions
+from stockwidget.core.config_store import config_paths
 from stockwidget.ui.widget import FloatLabel
 from stockwidget.ui.metric_pool import MetricPoolWidget
+from stockwidget.ui.name_settings_panel import NameSettingsPanel
+from stockwidget.ui.unit_settings_panel import UnitSettingsPanel
 from stockwidget.ui.add_code_panel import (
     ADDED_ROLE, ENTRY_ROLE, AddCodePanel, entry_display_text,
 )
@@ -30,7 +36,11 @@ from stockwidget.platform.capabilities import (
     start_on_boot_supported,
     unsupported_tooltip,
 )
-from stockwidget.data.update_check import github_available, project_links
+from stockwidget.data.update_check import (
+    get_update_info,
+    github_available,
+    project_links,
+)
 
 
 def _parse_positive_cost(value):
@@ -58,7 +68,7 @@ def _hotkey_error_message(result) -> str:
 
 
 # 扁平化分组框列表（自选列表 gb_list 保持默认带边框样式，不在其中）
-_FLAT_GROUPS = ("gb_data", "gb_data_setting", "gb_name", "gb_icon", "gb_fcn", "gb_opacity",
+_FLAT_GROUPS = ("gb_data", "gb_data_setting", "gb_icon", "gb_fcn", "gb_opacity",
                 "gb_color", "gb_text", "gb_tabel", "gb_hotkeys", "gb_about")
 
 _SEARCH_PLACEHOLDER = "搜索代码、名称、拼音或缩写，空格区分关键词"
@@ -106,6 +116,7 @@ def _build_settings_stylesheet(dark: bool) -> str:
         color_hover_bg = "rgba(10, 132, 255, 0.20)"
         color_pressed_bg = "rgba(10, 132, 255, 0.30)"
         color_disabled_bg = "rgba(255, 255, 255, 0.05)"
+        color_disabled_text = "rgba(255, 255, 255, 0.35)"
     else:
         sep = "rgba(0, 0, 0, 0.25)"
         header_bg, header_line = "rgba(0, 0, 0, 0.06)", "rgba(0, 0, 0, 0.20)"
@@ -119,6 +130,7 @@ def _build_settings_stylesheet(dark: bool) -> str:
         color_hover_bg = "rgba(0, 122, 255, 0.13)"
         color_pressed_bg = "rgba(0, 122, 255, 0.22)"
         color_disabled_bg = "rgba(0, 0, 0, 0.04)"
+        color_disabled_text = "rgba(0, 0, 0, 0.35)"
 
     flat_boxes = ",\n".join(f"QGroupBox#{n}" for n in _FLAT_GROUPS)
     flat_titles = ",\n".join(f"QGroupBox#{n}::title" for n in _FLAT_GROUPS)
@@ -139,6 +151,8 @@ def _build_settings_stylesheet(dark: bool) -> str:
         "QPushButton#btn_add",
         "QPushButton#btn_del",
         "QPushButton#btn_top",
+        "QPushButton#btn_check_update",
+        "QPushButton#btn_open_cache_dir",
     )
     icon_buttons = ",\n".join(icon_selectors)
     icon_hover = ",\n".join(f"{selector}:hover" for selector in icon_selectors)
@@ -196,6 +210,7 @@ QPushButton#btn_icon_custom {{
 }}
 {color_disabled} {{
     background-color: {color_disabled_bg};
+    color: {color_disabled_text};
 }}
 """
 
@@ -344,6 +359,7 @@ class CenteredCheckBoxDelegate(QStyledItemDelegate):
 
 class SettingsDialog(QDialog):
     github_check_finished = Signal(bool)
+    update_check_finished = Signal(object)
 
     def __init__(self, win: FloatLabel, parent: QWidget, app=None):
         super().__init__(parent)
@@ -352,6 +368,12 @@ class SettingsDialog(QDialog):
         self._use_gitee_links = False
         self.ui = Ui_SettingDialog()
         self.ui.setupUi(self)
+        # Linux 下用 Tool 窗口避开任务栏/程序坞条目；
+        # macOS 的 Dock 图标由应用级 Accessory 激活策略隐藏
+        # （见 app._hide_macos_dock_icon），窗口保持普通标题栏，
+        # 避免 Tool 窗口的小号红黄绿按钮与小标题。
+        if sys.platform == "linux":
+            self.setWindowFlags(self.windowFlags() | Qt.WindowType.Tool)
         self._init_metric_pool()
         self.setModal(False)
         self._apply_theme_stylesheet()
@@ -367,7 +389,10 @@ class SettingsDialog(QDialog):
         self._bind_widgets()
         self._load_settings()
         self.github_check_finished.connect(self._on_github_check_finished)
+        self.update_check_finished.connect(self._on_update_check_finished)
         self._start_github_check()
+        # 全局监听鼠标按下：点击设置页空白/其他区域时清除自选列表与指标池的选中
+        QApplication.instance().installEventFilter(self)
 
     def _init_metric_pool(self):
         """用动态双池替换固定指标复选框区域。"""
@@ -403,6 +428,10 @@ class SettingsDialog(QDialog):
             self.metric_pool.set_theme(dark)
         if hasattr(self, "add_code_panel"):
             self.add_code_panel.set_theme(dark)
+        if hasattr(self, "name_settings_panel"):
+            self.name_settings_panel.set_theme(dark)
+        if hasattr(self, "unit_settings_panel"):
+            self.unit_settings_panel.set_theme(dark)
         self._refresh_color_buttons()
 
     def _refresh_color_buttons(self):
@@ -457,6 +486,13 @@ class SettingsDialog(QDialog):
             cost = entry.get("cost")
             self._append_code_row(code, entry.get("name", ""), checked, cost)
         self._refresh_empty_watchlist_hint()
+        # 打开面板时不预选任何条目
+        self.list_codes.setCurrentCell(-1, -1)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        # 显示时按当前选中状态刷新按钮可用性
+        self._update_watchlist_action_buttons()
 
     def _bind_widgets(self):
         self.sb_interval = self.ui.sb_interval
@@ -467,10 +503,6 @@ class SettingsDialog(QDialog):
             "eastmoney": self.rb_em,
         }
         self.label_data_state = self.ui.label_data_state
-        self.gb_name = self.ui.gb_name
-        self.cb_code = self.ui.cb_code
-        self.cb_type = self.ui.cb_type
-        self.cmb_namelen = self.ui.cmb_namelen
 
         self.cb_unicolor = self.ui.cb_unicolor
         self.btn_fg = self.ui.btn_fg_color
@@ -513,12 +545,47 @@ class SettingsDialog(QDialog):
             button.toggled.connect(partial(self._on_source_toggled, source))
         self.list_codes.itemChanged.connect(self._on_codes_changed)
 
-        self.gb_name.toggled.connect(self._on_name_toggled)
-        self.cb_code.toggled.connect(self._on_code_toggled)
-        self.cb_type.toggled.connect(self._on_type_toggled)
         self.metric_pool.visible_metrics_changed.connect(
             self.win.set_visible_metrics
         )
+        self.metric_pool.name_settings_requested.connect(
+            self._show_name_settings_panel
+        )
+        self.metric_pool.unit_settings_requested.connect(
+            self._show_unit_settings_panel
+        )
+        self.name_settings_panel = NameSettingsPanel(self)
+        self.name_settings_panel.set_theme(
+            QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
+        )
+        self.name_settings_panel.name_length_changed.connect(
+            self.win.set_name_length
+        )
+        self.name_settings_panel.code_visible_changed.connect(
+            self.win.set_code_visible
+        )
+        self.name_settings_panel.type_visible_changed.connect(
+            self.win.set_type_visible
+        )
+        self.unit_settings_panel = UnitSettingsPanel(self)
+        self.unit_settings_panel.set_theme(
+            QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
+        )
+        self.unit_settings_panel.unit_mode_changed.connect(
+            self.win.set_unit_mode
+        )
+        # 面板关闭（含点击外部空白关闭）后清除指标块的选中状态
+        self.name_settings_panel.panel_closed.connect(
+            self.metric_pool._clear_pool_selections
+        )
+        self.unit_settings_panel.panel_closed.connect(
+            self.metric_pool._clear_pool_selections
+        )
+
+        self.btn_check_update = self.ui.btn_check_update
+        self.btn_open_cache_dir = self.ui.btn_open_cache_dir
+        self.btn_check_update.clicked.connect(self._check_update_manually)
+        self.btn_open_cache_dir.clicked.connect(self._open_cache_dir)
 
         self.btn_add = self.ui.btn_add
         self.btn_del = self.ui.btn_del
@@ -532,10 +599,14 @@ class SettingsDialog(QDialog):
         self.btn_add.clicked.connect(self._show_add_code_panel)
         self.btn_del.clicked.connect(self._del_code)
         self.btn_top.clicked.connect(self._top_code)
-        self.list_codes.itemSelectionChanged.connect(self._update_top_button_state)
-        self._update_top_button_state()
+        self.list_codes.itemSelectionChanged.connect(
+            self._update_watchlist_action_buttons
+        )
+        self.list_codes.currentCellChanged.connect(
+            self._update_watchlist_action_buttons
+        )
+        self._update_watchlist_action_buttons()
 
-        self.cmb_namelen.currentIndexChanged.connect(self._on_name_length_changed)
         self.cb_unicolor.toggled.connect(self._on_unicolor_toggled)
         self.btn_fg.clicked.connect(self.pick_fg)
         self.btn_bg.clicked.connect(self.pick_bg)
@@ -563,22 +634,9 @@ class SettingsDialog(QDialog):
 
     def _load_settings(self):
         self.sb_interval.setValue(self.win.refresh_seconds)
-        self.cb_code.setChecked(self.win.code_visible)
-        self.gb_name.setChecked(self.win.name_visible)
-        self.cb_type.setChecked(self.win.type_visible)
         self.metric_pool.set_visible_metrics(self.win.visible_metrics)
-
-        # 名称显示字数: 0=不显示, -1=全部显示, 1-4=前 N 个字
-        # 填充选项时会触发 currentIndexChanged，需屏蔽信号避免意外修改配置
-        self.cmb_namelen.blockSignals(True)
-        self.cmb_namelen.clear()
-        self.cmb_namelen.addItem("不显示", userData=0)
-        self.cmb_namelen.addItem("全部显示", userData=-1)
-        for length in [1, 2, 3, 4]:
-            self.cmb_namelen.addItem(f"{length}个字", userData=length)
-        idx_name = self.cmb_namelen.findData(self.win.name_length)
-        self.cmb_namelen.setCurrentIndex(idx_name if idx_name >= 0 else 1)
-        self.cmb_namelen.blockSignals(False)
+        self.name_settings_panel.sync_from(self.win)
+        self.unit_settings_panel.sync_from(self.win)
 
         self._set_checked_blocked(self.cb_unicolor, self.win.unicolor)
         self._update_direction_color_controls()
@@ -764,6 +822,11 @@ class SettingsDialog(QDialog):
     def eventFilter(self, obj, ev):
         if obj is self.list_codes.viewport() and ev.type() == QEvent.Resize:
             self._refresh_empty_watchlist_hint()
+        if obj is self.list_codes.viewport() and ev.type() == QEvent.MouseButtonPress:
+            # 单击自选列表空白处：清除选中条目与焦点
+            pos = ev.position().toPoint() if hasattr(ev, 'position') else ev.pos()
+            if self.list_codes.itemAt(pos) is None:
+                self.list_codes.setCurrentCell(-1, -1)
         if obj is self.list_codes.viewport() and ev.type() == QEvent.MouseButtonDblClick:
             pos = ev.position().toPoint() if hasattr(ev, 'position') else ev.pos()
             if self.list_codes.itemAt(pos) is None:
@@ -772,7 +835,79 @@ class SettingsDialog(QDialog):
         if obj is self.list_codes.viewport() and ev.type() == QEvent.Drop:
             self._handle_drop(ev)
             return True
+        if ev.type() == QEvent.MouseButtonPress:
+            self._handle_outside_press(obj)
         return super().eventFilter(obj, ev)
+
+    def _widget_in_dialog(self, widget) -> bool:
+        """widget 是否属于设置对话框本体（悬浮面板等独立顶层窗口不算）。"""
+        w = widget
+        while w is not None:
+            if w is self:
+                return True
+            if w.window() is w:
+                return False
+            w = w.parentWidget()
+        return False
+
+    def _inside_watchlist(self, widget) -> bool:
+        w = widget
+        while w is not None and w is not self:
+            if w is self.list_codes:
+                return True
+            w = w.parentWidget()
+        return False
+
+    def _pool_for_widget(self, widget):
+        w = widget
+        while w is not None and w is not self:
+            for pool in (self.metric_pool.available_pool, self.metric_pool.displayed_pool):
+                if w is pool:
+                    return pool
+            w = w.parentWidget()
+        return None
+
+    def _clear_watchlist_selection(self):
+        if self.list_codes.currentRow() >= 0 or self.list_codes.selectedItems():
+            self.list_codes.setCurrentCell(-1, -1)
+
+    def _clear_metric_pool_selections(self):
+        for pool in (self.metric_pool.available_pool, self.metric_pool.displayed_pool):
+            pool.clearSelection()
+            pool.setCurrentItem(None)
+            pool.clearFocus()
+            pool.cancel_pending_click()
+
+    def _handle_outside_press(self, obj):
+        """设置页内按下鼠标时联动清除另一处选中：
+        - 按下自选列表：清除指标池选中；
+        - 按下指标池：清除自选列表选中与另一池选中；
+        - 按下其余空白区域：全部清除并把焦点移回对话框。
+        删除/置顶按钮与滚动条除外，避免影响其自身操作。
+        """
+        if not isinstance(obj, QWidget) or not self._widget_in_dialog(obj):
+            return
+        if isinstance(obj, QScrollBar):
+            return
+        if obj in (getattr(self, "btn_del", None), getattr(self, "btn_top", None)):
+            return
+
+        pool = self._pool_for_widget(obj)
+        if pool is not None:
+            self._clear_watchlist_selection()
+            for other in (self.metric_pool.available_pool, self.metric_pool.displayed_pool):
+                if other is not pool:
+                    other.clearSelection()
+                    other.setCurrentItem(None)
+                    other.clearFocus()
+                    other.cancel_pending_click()
+        elif self._inside_watchlist(obj):
+            self._clear_metric_pool_selections()
+        else:
+            self._clear_watchlist_selection()
+            self._clear_metric_pool_selections()
+            if obj is self:
+                self.setFocus()
 
     def _refresh_empty_watchlist_hint(self, *_args):
         if not hasattr(self, "empty_watchlist_hint"):
@@ -1020,11 +1155,14 @@ class SettingsDialog(QDialog):
         self._move_row(row, 0)
         self._on_codes_changed(None)
 
-    def _update_top_button_state(self, *_args):
-        """没有选中条目或选中条目已在顶部时禁用置顶按钮。"""
-        if not hasattr(self, "btn_top"):
+    def _update_watchlist_action_buttons(self, *_args):
+        """按自选列表选中状态更新置顶/删除按钮：
+        无选中条目时删除按钮禁用；条目已在顶部时置顶按钮禁用。"""
+        if not hasattr(self, "btn_top") or not hasattr(self, "btn_del"):
             return
-        self.btn_top.setEnabled(self.list_codes.currentRow() > 0)
+        row = self.list_codes.currentRow()
+        self.btn_del.setEnabled(row >= 0)
+        self.btn_top.setEnabled(row > 0)
 
     def _move_row(self, src: int, dst: int):
         """将 src 行移动到 dst 位置"""
@@ -1050,15 +1188,6 @@ class SettingsDialog(QDialog):
         if checked:
             self.win.set_data_source(source)
 
-    def _on_code_toggled(self, checked: bool):
-        self.win.set_code_visible(checked)
-
-    def _on_name_toggled(self, checked: bool):
-        self.win.set_flag("名称", checked)
-
-    def _on_type_toggled(self, checked: bool):
-        self.win.set_type_visible(checked)
-
     def _update_direction_color_controls(self):
         enabled = not self.win.unicolor
         for widget in (
@@ -1073,10 +1202,19 @@ class SettingsDialog(QDialog):
         self._update_direction_color_controls()
         self._refresh_color_buttons()
 
-    def _on_name_length_changed(self, idx: int):
-        value = self.cmb_namelen.itemData(idx)
-        if isinstance(value, int):
-            self.win.set_name_length(value)
+    def _show_name_settings_panel(self, anchor=None):
+        """单击“名称”指标块时弹出名称显示设置面板。"""
+        self.name_settings_panel.sync_from(self.win)
+        if not isinstance(anchor, QWidget):
+            anchor = self.metric_pool
+        self.name_settings_panel.show_for(anchor)
+
+    def _show_unit_settings_panel(self, anchor=None):
+        """单击“成交量/成交额”指标块时弹出单位设置面板。"""
+        self.unit_settings_panel.sync_from(self.win)
+        if not isinstance(anchor, QWidget):
+            anchor = self.metric_pool
+        self.unit_settings_panel.show_for(anchor)
 
     def _on_family_changed(self, fam: str):
         self.win.set_font_family(fam)
@@ -1338,9 +1476,8 @@ class SettingsDialog(QDialog):
     def _sync_display_flags_from_win(self):
         """浮窗右键菜单等外部途径修改显示状态时，同步指标池。"""
         self.metric_pool.set_visible_metrics(self.win.visible_metrics)
-        self._set_checked_blocked(self.gb_name, self.win.name_visible)
-        self._set_checked_blocked(self.cb_type, self.win.type_visible)
-        self._set_checked_blocked(self.cb_code, self.win.code_visible)
+        self.name_settings_panel.sync_from(self.win)
+        self.unit_settings_panel.sync_from(self.win)
         self._set_checked_blocked(self.cb_head, self.win.header_visible)
         self._set_checked_blocked(self.cb_grid, self.win.grid_visible)
         self._set_checked_blocked(self.cb_unicolor, self.win.unicolor)
@@ -1416,9 +1553,66 @@ class SettingsDialog(QDialog):
     def refresh_about(self):
         self._setup_about()
 
+    def _check_update_manually(self):
+        """后台检查更新，完成后弹窗提示结果。"""
+        self.btn_check_update.setEnabled(False)
+        self.btn_check_update.setText("检查中…")
+
+        def _worker():
+            try:
+                result = get_update_info(
+                    self.app.app_version if self.app is not None else APP_VERSION
+                )
+            except Exception:
+                result = (False, None)
+            try:
+                self.update_check_finished.emit(result)
+            except RuntimeError:
+                pass
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    def _on_update_check_finished(self, result):
+        self.btn_check_update.setEnabled(True)
+        self.btn_check_update.setText("检查更新")
+        has_update, latest_version = result
+        if self.app is not None:
+            self.app._has_update = bool(has_update)
+            self.app._latest_version = latest_version if has_update else None
+        self._setup_about()
+
+        current_version = (
+            self.app.app_version if self.app is not None else APP_VERSION
+        )
+        if has_update and latest_version:
+            QMessageBox.information(
+                self,
+                "检查更新",
+                f"发现新版本 v{latest_version}（当前 v{current_version}）。\n"
+                "请前往 Releases 页面下载更新。",
+            )
+        elif latest_version:
+            QMessageBox.information(
+                self, "检查更新", f"当前已是最新版本 v{current_version}。"
+            )
+        else:
+            QMessageBox.warning(
+                self, "检查更新", "检查更新失败，请检查网络连接后重试。"
+            )
+
+    def _open_cache_dir(self):
+        """打开配置/缓存目录所在的文件夹。"""
+        path = config_paths()
+        os.makedirs(path, exist_ok=True)
+        QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+
     def closeEvent(self, event):
         if hasattr(self, "add_code_panel"):
             self.add_code_panel.hide()
+        if hasattr(self, "name_settings_panel"):
+            self.name_settings_panel.hide()
+        if hasattr(self, "unit_settings_panel"):
+            self.unit_settings_panel.hide()
         self._cleanup_code_rows()
         self._on_codes_changed(None)
         super().closeEvent(event)

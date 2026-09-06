@@ -292,16 +292,23 @@ class SettingsDialogTests(unittest.TestCase):
         app.set_custom_icon.assert_not_called()
         app.save_now.assert_not_called()
 
-    def test_metric_pool_controls_order_while_name_keeps_its_own_switch(self):
+    def test_metric_pool_controls_order_and_name_visibility(self):
         dialog, window = self._make_dialog()
         save = Mock()
         window.set_on_change(save)
 
         self.assertEqual(
             dialog.metric_pool.visible_metrics,
-            ["price", "change_pct"],
+            ["name", "price", "change_pct"],
         )
-        self.assertTrue(dialog.gb_name.isChecked())
+        self.assertTrue(window.name_visible)
+        displayed_ids = [
+            dialog.metric_pool.displayed_pool.item(row).data(
+                Qt.ItemDataRole.UserRole
+            )
+            for row in range(dialog.metric_pool.displayed_pool.count())
+        ]
+        self.assertEqual(displayed_ids, ["name", "price", "change_pct"])
 
         with patch.object(window, "_refresh_from_function") as refresh:
             dialog.metric_pool.move_metric(
@@ -310,7 +317,7 @@ class SettingsDialogTests(unittest.TestCase):
 
         self.assertEqual(
             window.visible_metrics,
-            ["kline", "price", "change_pct"],
+            ["kline", "name", "price", "change_pct"],
         )
         self.assertEqual(
             dialog.metric_pool.visible_metrics,
@@ -319,13 +326,326 @@ class SettingsDialogTests(unittest.TestCase):
         save.assert_called_once_with()
         refresh.assert_called_once_with()
 
-        dialog.gb_name.setChecked(False)
-        self.qt_app.processEvents()
+        # 名称与其他指标一样可从显示池移出，从而关闭名称列
+        with patch.object(window, "_refresh_from_function") as refresh:
+            dialog.metric_pool.move_metric(
+                "displayed", "available", "name", 0
+            )
         self.assertFalse(window.name_visible)
         self.assertEqual(
             window.visible_metrics,
             ["kline", "price", "change_pct"],
         )
+
+    def test_name_metric_click_opens_settings_panel(self):
+        dialog, window = self._make_dialog()
+        pool = dialog.metric_pool.displayed_pool
+        name_item = next(
+            pool.item(row)
+            for row in range(pool.count())
+            if pool.item(row).data(Qt.ItemDataRole.UserRole) == "name"
+        )
+
+        with patch.object(window, "_refresh_from_function"):
+            pool.itemClicked.emit(name_item)
+            # 单击等待期结束后打开面板
+            pool._fire_pending_click()
+        self.qt_app.processEvents()
+
+        panel = dialog.name_settings_panel
+        self.assertTrue(panel.isVisible())
+        self.assertEqual(panel.cmb_namelen.currentData(), window.name_length)
+        self.assertFalse(panel.cb_code.isChecked())
+        self.assertFalse(panel.cb_type.isChecked())
+
+        with patch.object(window, "_refresh_from_function"):
+            panel.cb_code.setChecked(True)
+            panel.cb_type.setChecked(True)
+            panel.cmb_namelen.setCurrentIndex(
+                panel.cmb_namelen.findData(2)
+            )
+        self.assertTrue(window.code_visible)
+        self.assertTrue(window.type_visible)
+        self.assertEqual(window.name_length, 2)
+
+        panel.hide()
+
+    def test_volume_metric_click_opens_shared_unit_settings_panel(self):
+        dialog, window = self._make_dialog()
+        pool = dialog.metric_pool.available_pool
+        volume_item = next(
+            pool.item(row)
+            for row in range(pool.count())
+            if pool.item(row).data(Qt.ItemDataRole.UserRole) == "volume"
+        )
+
+        with patch.object(window, "_refresh_from_function"):
+            pool.itemClicked.emit(volume_item)
+            # 单击等待期结束后打开面板
+            pool._fire_pending_click()
+        self.qt_app.processEvents()
+
+        panel = dialog.unit_settings_panel
+        self.assertTrue(panel.isVisible())
+        self.assertTrue(panel.radio_buttons["auto"].isChecked())
+        self.assertEqual(window.unit_mode, "auto")
+
+        # 成交量/成交额共享同一面板与同一设置
+        with patch.object(window, "_refresh_from_function"):
+            panel.radio_buttons["en"].setChecked(True)
+        self.assertEqual(window.unit_mode, "en")
+        self.assertEqual(
+            window.current_config()["unit_mode"], "en"
+        )
+        panel.sync_from(window)
+        self.assertTrue(panel.radio_buttons["en"].isChecked())
+
+        panel.hide()
+
+    def test_delete_button_disabled_without_watchlist_selection(self):
+        watchlist = {
+            "sh600519": {
+                "checked": True,
+                "name": "贵州茅台",
+                "type": "沪",
+                "market": "sh",
+                "code": "600519",
+            },
+            "sh000001": {
+                "checked": True,
+                "name": "上证指数",
+                "type": "指",
+                "market": "sh",
+                "code": "000001",
+            },
+        }
+        dialog, _window = self._make_dialog(watchlist)
+
+        self.assertFalse(dialog.btn_del.isEnabled())
+        self.assertFalse(dialog.btn_top.isEnabled())
+
+        dialog.list_codes.setCurrentCell(1, 1)
+        self.qt_app.processEvents()
+        self.assertTrue(dialog.btn_del.isEnabled())
+        self.assertTrue(dialog.btn_top.isEnabled())
+
+        # 点击空白处后取消选中，删除与置顶按钮均禁用
+        dialog.list_codes.setCurrentCell(-1, -1)
+        self.qt_app.processEvents()
+        self.assertFalse(dialog.btn_del.isEnabled())
+        self.assertFalse(dialog.btn_top.isEnabled())
+
+    def test_outside_press_clears_watchlist_and_metric_selections(self):
+        watchlist = {
+            "sh600519": {
+                "checked": True,
+                "name": "贵州茅台",
+                "type": "沪",
+                "market": "sh",
+                "code": "600519",
+            },
+            "sh000001": {
+                "checked": True,
+                "name": "上证指数",
+                "type": "指",
+                "market": "sh",
+                "code": "000001",
+            },
+        }
+        dialog, _window = self._make_dialog(watchlist)
+        displayed = dialog.metric_pool.displayed_pool
+
+        dialog.list_codes.setCurrentCell(1, 1)
+        displayed.setCurrentItem(displayed.item(1))
+        self.qt_app.processEvents()
+        self.assertEqual(dialog.list_codes.currentRow(), 1)
+        self.assertTrue(dialog.btn_del.isEnabled())
+        self.assertIsNotNone(displayed.currentItem())
+
+        # 点击设置页其他区域（空白处）→ 自选列表与指标池选中全部清除
+        dialog._handle_outside_press(dialog.ui.gb_color)
+        self.qt_app.processEvents()
+
+        self.assertEqual(dialog.list_codes.currentRow(), -1)
+        self.assertFalse(dialog.btn_del.isEnabled())
+        self.assertFalse(dialog.btn_top.isEnabled())
+        self.assertIsNone(displayed.currentItem())
+
+    def test_press_inside_pool_clears_watchlist_and_other_pool(self):
+        watchlist = {
+            "sh600519": {
+                "checked": True,
+                "name": "贵州茅台",
+                "type": "沪",
+                "market": "sh",
+                "code": "600519",
+            },
+        }
+        dialog, _window = self._make_dialog(watchlist)
+        displayed = dialog.metric_pool.displayed_pool
+        available = dialog.metric_pool.available_pool
+
+        dialog.list_codes.setCurrentCell(0, 1)
+        displayed.setCurrentItem(displayed.item(1))
+        self.qt_app.processEvents()
+
+        dialog._handle_outside_press(available.viewport())
+        self.qt_app.processEvents()
+
+        self.assertEqual(dialog.list_codes.currentRow(), -1)
+        self.assertIsNone(displayed.currentItem())
+        self.assertFalse(dialog.btn_del.isEnabled())
+
+    def test_press_on_delete_or_top_button_keeps_selection(self):
+        watchlist = {
+            "sh600519": {
+                "checked": True,
+                "name": "贵州茅台",
+                "type": "沪",
+                "market": "sh",
+                "code": "600519",
+            },
+            "sh000001": {
+                "checked": True,
+                "name": "上证指数",
+                "type": "指",
+                "market": "sh",
+                "code": "000001",
+            },
+        }
+        dialog, _window = self._make_dialog(watchlist)
+        dialog.list_codes.setCurrentCell(1, 1)
+        self.qt_app.processEvents()
+
+        dialog._handle_outside_press(dialog.btn_del)
+        dialog._handle_outside_press(dialog.btn_top)
+        self.qt_app.processEvents()
+
+        self.assertEqual(dialog.list_codes.currentRow(), 1)
+        self.assertTrue(dialog.btn_del.isEnabled())
+
+    def test_clickable_metric_chips_have_i_badge_and_tooltip(self):
+        dialog, _window = self._make_dialog()
+        displayed = dialog.metric_pool.displayed_pool
+        available = dialog.metric_pool.available_pool
+
+        name_item = displayed.item(0)
+        self.assertEqual(
+            name_item.data(Qt.ItemDataRole.UserRole), "name"
+        )
+        self.assertIn("ⓘ", name_item.text())
+        self.assertIn("单击", name_item.toolTip())
+        price_item = displayed.item(1)
+        self.assertNotIn("ⓘ", price_item.text())
+        self.assertEqual(price_item.toolTip(), "")
+        # 可单击块的 ⓘ 提示计入文本宽度
+        self.assertGreater(
+            name_item.sizeHint().width(), price_item.sizeHint().width()
+        )
+
+        volume_item = next(
+            available.item(row)
+            for row in range(available.count())
+            if available.item(row).data(Qt.ItemDataRole.UserRole) == "volume"
+        )
+        self.assertIn("ⓘ", volume_item.text())
+        self.assertIn("单位", volume_item.toolTip())
+
+    def test_plain_metric_chip_does_not_keep_selection(self):
+        dialog, _window = self._make_dialog()
+        displayed = dialog.metric_pool.displayed_pool
+        available = dialog.metric_pool.available_pool
+
+        # 单击没有独立面板的指标块：不保留选中状态
+        displayed.itemClicked.emit(displayed.item(1))
+        self.qt_app.processEvents()
+        self.assertIsNone(displayed.currentItem())
+
+        # 双击/拖动切换显示后，普通指标同样不保留选中
+        dialog.metric_pool.move_metric("available", "displayed", "kline", 0)
+        self.qt_app.processEvents()
+        self.assertIsNone(displayed.currentItem())
+        self.assertIsNone(available.currentItem())
+
+    def test_double_click_moves_clickable_metric_without_opening_panel(self):
+        dialog, window = self._make_dialog()
+        displayed = dialog.metric_pool.displayed_pool
+        name_item = next(
+            displayed.item(row)
+            for row in range(displayed.count())
+            if displayed.item(row).data(Qt.ItemDataRole.UserRole) == "name"
+        )
+
+        # 第一击排队打开面板
+        displayed.itemClicked.emit(name_item)
+        self.assertEqual(displayed._pending_click, "name")
+
+        # 第二击（双击）取消面板并快速移动到另一池
+        with patch.object(window, "_refresh_from_function"):
+            displayed.itemDoubleClicked.emit(name_item)
+        self.qt_app.processEvents()
+
+        self.assertIsNone(displayed._pending_click)
+        self.assertFalse(dialog.name_settings_panel.isVisible())
+        self.assertFalse(window.name_visible)
+        self.assertEqual(displayed.currentItem(), None)
+
+    def test_clickable_chip_loses_selection_when_panel_closes(self):
+        dialog, _window = self._make_dialog()
+        displayed = dialog.metric_pool.displayed_pool
+        name_item = next(
+            displayed.item(row)
+            for row in range(displayed.count())
+            if displayed.item(row).data(Qt.ItemDataRole.UserRole) == "name"
+        )
+
+        displayed.itemClicked.emit(name_item)
+        displayed._fire_pending_click()
+        self.qt_app.processEvents()
+        panel = dialog.name_settings_panel
+        self.assertTrue(panel.isVisible())
+
+        displayed.setCurrentItem(name_item)
+        self.assertIsNotNone(displayed.currentItem())
+
+        # 面板关闭（含点击外部空白关闭）后指标块失焦
+        panel.hide()
+        self.qt_app.processEvents()
+        self.assertIsNone(displayed.currentItem())
+
+    def test_manual_update_check_shows_result(self):
+        dialog, _window = self._make_dialog()
+
+        with patch(
+            "stockwidget.ui.settings_dialog.QMessageBox.information"
+        ) as info:
+            dialog._on_update_check_finished((True, "9.9.9"))
+            info.assert_called_once()
+
+        with patch(
+            "stockwidget.ui.settings_dialog.QMessageBox.information"
+        ) as info:
+            dialog._on_update_check_finished((False, "1.4.0"))
+            info.assert_called_once()
+
+        with patch(
+            "stockwidget.ui.settings_dialog.QMessageBox.warning"
+        ) as warn:
+            dialog._on_update_check_finished((False, None))
+            warn.assert_called_once()
+
+    def test_open_cache_dir_button_opens_folder(self):
+        from stockwidget.core.config_store import config_paths
+
+        dialog, _window = self._make_dialog()
+        with patch(
+            "stockwidget.ui.settings_dialog.QDesktopServices.openUrl"
+        ) as open_url:
+            dialog._open_cache_dir()
+            open_url.assert_called_once()
+            url = open_url.call_args[0][0]
+            self.assertTrue(url.isLocalFile())
+            self.assertEqual(url.toLocalFile(), config_paths())
 
     def test_unicolor_defaults_on_and_controls_direction_colors(self):
         dialog, window = self._make_dialog()

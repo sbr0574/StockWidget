@@ -234,9 +234,9 @@
      <property name="geometry">
       <rect>
        <x>350</x>
-       <y>190</y>
+       <y>100</y>
        <width>201</width>
-       <height>141</height>
+       <height>231</height>
       </rect>
      </property>
      <property name="title">
@@ -336,83 +336,6 @@
       </property>
       <property name="text">
        <string>东方财富</string>
-      </property>
-     </widget>
-    </widget>
-    <widget class="QGroupBox" name="gb_name">
-     <property name="geometry">
-      <rect>
-       <x>350</x>
-       <y>100</y>
-       <width>201</width>
-       <height>81</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true"/>
-     </property>
-     <property name="title">
-      <string>名称显示</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignmentFlag::AlignCenter</set>
-     </property>
-     <property name="flat">
-      <bool>true</bool>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-     <property name="checked">
-      <bool>true</bool>
-     </property>
-     <widget class="QComboBox" name="cmb_namelen">
-      <property name="geometry">
-       <rect>
-        <x>100</x>
-        <y>25</y>
-        <width>95</width>
-        <height>26</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="cb_code">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>55</y>
-        <width>51</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>代码</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="cb_type">
-      <property name="geometry">
-       <rect>
-        <x>70</x>
-        <y>55</y>
-        <width>61</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>类型</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_namelen">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>25</y>
-        <width>91</width>
-        <height>26</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>名称显示字数：</string>
       </property>
      </widget>
     </widget>
@@ -1273,6 +1196,44 @@ Copyright 2026 sbr0574</string>
        <bool>true</bool>
       </property>
       <property name="openExternalLinks">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn_check_update">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>160</y>
+        <width>100</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>检查更新</string>
+      </property>
+      <property name="autoDefault">
+       <bool>false</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn_open_cache_dir">
+      <property name="geometry">
+       <rect>
+        <x>130</x>
+        <y>160</y>
+        <width>130</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>打开缓存目录</string>
+      </property>
+      <property name="autoDefault">
+       <bool>false</bool>
+      </property>
+      <property name="flat">
        <bool>true</bool>
       </property>
      </widget>

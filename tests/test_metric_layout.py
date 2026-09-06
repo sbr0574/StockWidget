@@ -11,13 +11,13 @@ from stockwidget.core.metric_layout import (
 
 
 class MetricLayoutTests(unittest.TestCase):
-    def test_defaults_match_existing_visibility_and_exclude_name(self):
-        self.assertEqual(DEFAULT_VISIBLE_METRICS, ("price", "change_pct"))
+    def test_defaults_match_existing_visibility_and_include_name(self):
+        self.assertEqual(DEFAULT_VISIBLE_METRICS, ("name", "price", "change_pct"))
         self.assertEqual(
             visible_metrics_from_config({}),
-            ["price", "change_pct"],
+            ["name", "price", "change_pct"],
         )
-        self.assertNotIn("name", METRIC_IDS)
+        self.assertIn("name", METRIC_IDS)
 
     def test_legacy_flags_migrate_in_canonical_order(self):
         config = {
@@ -29,16 +29,32 @@ class MetricLayoutTests(unittest.TestCase):
         }
         self.assertEqual(
             visible_metrics_from_config(config),
-            ["change", "b1s1", "kline"],
+            ["name", "change", "b1s1", "kline"],
         )
 
-    def test_explicit_order_preserves_empty_and_filters_invalid_values(self):
-        self.assertEqual(visible_metrics_from_config({"visible_metrics": []}), [])
+    def test_explicit_order_keeps_legacy_name_switch_behavior(self):
+        # 旧配置的 visible_metrics 不含名称：未关闭 name_visible 时名称补在首位。
+        self.assertEqual(
+            visible_metrics_from_config({"visible_metrics": []}),
+            ["name"],
+        )
         self.assertEqual(
             visible_metrics_from_config(
                 {"visible_metrics": ["kline", "price", "kline", "bad"]}
             ),
+            ["name", "kline", "price"],
+        )
+        self.assertEqual(
+            visible_metrics_from_config(
+                {"name_visible": False, "visible_metrics": ["kline", "price"]}
+            ),
             ["kline", "price"],
+        )
+        self.assertEqual(
+            visible_metrics_from_config(
+                {"name_visible": True, "visible_metrics": ["kline", "name"]}
+            ),
+            ["kline", "name"],
         )
 
     def test_normalize_and_expand_combined_level_one_metric(self):

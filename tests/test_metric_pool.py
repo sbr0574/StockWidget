@@ -4,10 +4,14 @@ from unittest.mock import Mock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PySide6.QtCore import QPoint, QRect
 from PySide6.QtWidgets import QApplication
 
-from stockwidget.core.metric_layout import METRIC_IDS
-from stockwidget.ui.metric_pool import MetricPoolWidget
+from stockwidget.core.metric_layout import (
+    METRIC_IDS,
+    expand_metric_headers,
+)
+from stockwidget.ui.metric_pool import MetricListWidget, MetricPoolWidget
 from stockwidget.ui.table_model import COLOR_ROLE_TEXT
 from stockwidget.ui.widget import FloatLabel
 
@@ -54,6 +58,30 @@ class MetricPoolWidgetTests(unittest.TestCase):
         self.assertEqual(self.pool.visible_metrics, ["price"])
         self.assertEqual(changes, [])
 
+    def test_drop_insert_index_handles_blank_gap_in_wrapped_rows(self):
+        pool = MetricListWidget("displayed", "空")
+        pool.set_metric_ids(["price", "kline", "amount", "b1s1"])
+        # 模拟两行布局：第一行两个块，第二行两个块
+        rects = {
+            0: QRect(0, 0, 50, 22),
+            1: QRect(52, 0, 50, 22),
+            2: QRect(0, 24, 60, 22),
+            3: QRect(62, 24, 70, 22),
+        }
+        pool.visualRect = lambda index: rects[index.row()]
+
+        # 第一行右侧空白处：应插在第一行之后（索引 2），而不是队尾
+        self.assertEqual(pool._drop_insert_index(QPoint(120, 10)), 2)
+        # 第一个块左侧
+        self.assertEqual(pool._drop_insert_index(QPoint(-10, 5)), 0)
+        # 最后一个块右侧
+        self.assertEqual(pool._drop_insert_index(QPoint(200, 30)), 4)
+        # 第二行两个块之间
+        self.assertEqual(pool._drop_insert_index(QPoint(61, 30)), 3)
+
+        pool.close()
+        pool.deleteLater()
+
 
 class FloatLabelMetricLayoutTests(unittest.TestCase):
     @classmethod
@@ -84,7 +112,7 @@ class FloatLabelMetricLayoutTests(unittest.TestCase):
         roles = {header: COLOR_ROLE_TEXT for header in FloatLabel.ALL_HEADERS}
         return row, roles
 
-    def test_name_is_independent_and_always_projects_first(self):
+    def test_name_metric_migrates_first_and_projects_in_order(self):
         window = self._window(
             {
                 "name_visible": True,
@@ -99,7 +127,30 @@ class FloatLabelMetricLayoutTests(unittest.TestCase):
             window.model._headers,
             ["名称", "K线", "现价", "买一", "卖一"],
         )
-        self.assertNotIn("name", window.visible_metrics)
+        self.assertEqual(
+            window.visible_metrics,
+            ["name", "kline", "price", "b1s1"],
+        )
+
+    def test_name_metric_can_be_reordered_like_other_metrics(self):
+        window = self._window(
+            {
+                "name_visible": True,
+                "visible_metrics": ["kline", "price", "name"],
+            }
+        )
+        row, roles = self._row_and_roles()
+
+        window._project_columns([row], [roles])
+
+        self.assertEqual(
+            window.model._headers,
+            ["K线", "现价", "名称"],
+        )
+        self.assertEqual(
+            window.model._headers,
+            expand_metric_headers(window.visible_metrics),
+        )
 
     def test_setting_order_syncs_legacy_flags_and_saves_once(self):
         window = self._window({})
@@ -126,7 +177,7 @@ class FloatLabelMetricLayoutTests(unittest.TestCase):
         window.set_flag("买一", True)
         window.set_flag("卖一", False)
 
-        self.assertEqual(window.visible_metrics, ["price", "amount"])
+        self.assertEqual(window.visible_metrics, ["name", "price", "amount"])
         self.assertFalse(window.b1s1_visible)
 
     def test_kline_delegate_moves_to_new_column(self):

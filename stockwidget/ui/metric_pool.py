@@ -1,12 +1,19 @@
 """设置页的指标显示池与拖动排序控件。"""
 
-from PySide6.QtCore import QByteArray, QMimeData, QSize, Qt, Signal
-from PySide6.QtGui import QDrag, QKeyEvent, QPainter, QPalette
-from PySide6.QtWidgets import QLabel, QListWidget, QListWidgetItem, QVBoxLayout, QWidget
+from PySide6.QtCore import (
+    QByteArray, QMimeData, QPoint, QRectF, QSize, Qt, QTimer, Signal,
+)
+from PySide6.QtGui import (
+    QColor, QCursor, QDrag, QKeyEvent, QPainter, QPalette, QPixmap,
+)
+from PySide6.QtWidgets import (
+    QApplication, QLabel, QListWidget, QListWidgetItem, QVBoxLayout, QWidget,
+)
 
 from stockwidget.core.metric_layout import (
     METRIC_BY_ID,
     METRIC_SPECS,
+    NAME_METRIC_ID,
     normalize_visible_metrics,
 )
 
@@ -14,13 +21,27 @@ from stockwidget.core.metric_layout import (
 _METRIC_MIME_TYPE = "application/x-stockwidget-metric"
 _POOL_DISPLAYED = "displayed"
 _POOL_AVAILABLE = "available"
+# 单击打开单位设置面板的指标
+_UNIT_METRIC_IDS = ("volume", "amount")
+# 可单击调出设置面板的指标：文本后追加 ⓘ 提示
+_CLICKABLE_METRIC_IDS = (NAME_METRIC_ID, "volume", "amount")
+
+
+def _metric_display_text(metric_id: str) -> str:
+    """指标块显示文本：可单击调面板的指标追加 ⓘ 提示。"""
+    label = METRIC_BY_ID[metric_id].label
+    return f"{label} ⓘ" if metric_id in _CLICKABLE_METRIC_IDS else label
 
 
 class MetricListWidget(QListWidget):
-    """横向指标块列表；拖放结果交由父控件统一更新。"""
+    """圆角矩形指标块列表；拖放结果交由父控件统一更新。"""
 
     drop_requested = Signal(str, str, int)
     metric_activated = Signal(str, str)
+    # 单击“名称”块时请求打开名称设置面板；参数为池自身，用于定位面板。
+    name_settings_requested = Signal(object)
+    # 单击“成交量/成交额”块时请求打开单位设置面板；参数为池自身。
+    unit_settings_requested = Signal(object)
 
     def __init__(self, pool_name: str, empty_text: str, parent=None):
         super().__init__(parent)
@@ -34,30 +55,48 @@ class MetricListWidget(QListWidget):
         self.setDefaultDropAction(Qt.DropAction.MoveAction)
         self.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
         self.setFlow(QListWidget.Flow.LeftToRight)
-        self.setWrapping(False)
+        self.setWrapping(True)
         self.setResizeMode(QListWidget.ResizeMode.Adjust)
+        # 指标块按文字宽度自适应，禁省略号，避免文字显示成“...”
+        self.setTextElideMode(Qt.TextElideMode.ElideNone)
         self.setHorizontalScrollMode(QListWidget.ScrollMode.ScrollPerPixel)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.setFixedHeight(37)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setSpacing(2)
         self.setToolTip("拖动指标改变显示状态或顺序；双击可快速移入另一侧")
+        self.itemClicked.connect(self._on_item_clicked)
         self.itemDoubleClicked.connect(self._activate_item)
+        self._drag_chip_bg = QColor(0, 0, 0, 18)
+        self._drag_radius = 5.0
+        # 拖拽时目标插入位置指示（None 表示未在拖拽中）
+        self._drop_indicator_index = None
+        self._drop_color = QColor(0, 122, 255)
+        # 单击可单击块的“待打开面板”状态：双击间隔内未出第二击才打开面板
+        self._pending_click = None
+        self._pending_timer = QTimer(self)
+        self._pending_timer.setSingleShot(True)
+        self._pending_timer.setInterval(QApplication.doubleClickInterval() or 400)
+        self._pending_timer.timeout.connect(self._fire_pending_click)
+        self.set_theme(False)
 
     def set_metric_ids(self, metric_ids: list[str]):
         current_metric_id = self.current_metric_id()
         self.clear()
         for metric_id in metric_ids:
-            spec = METRIC_BY_ID[metric_id]
-            item = QListWidgetItem(spec.label)
+            text = _metric_display_text(metric_id)
+            item = QListWidgetItem(text)
             item.setData(Qt.ItemDataRole.UserRole, metric_id)
             item.setFlags(
                 Qt.ItemFlag.ItemIsEnabled
                 | Qt.ItemFlag.ItemIsSelectable
                 | Qt.ItemFlag.ItemIsDragEnabled
             )
-            width = self.fontMetrics().horizontalAdvance(spec.label) + 22
-            item.setSizeHint(QSize(max(48, width), 24))
+            if metric_id == NAME_METRIC_ID:
+                item.setToolTip("单击设置名称显示（字数/代码/类型）")
+            elif metric_id in _UNIT_METRIC_IDS:
+                item.setToolTip("单击设置数值单位（中文/英文/自动）")
+            width = self.fontMetrics().horizontalAdvance(text) + 14
+            item.setSizeHint(QSize(max(38, width), 22))
             self.addItem(item)
             if metric_id == current_metric_id:
                 self.setCurrentItem(item)
@@ -70,14 +109,118 @@ class MetricListWidget(QListWidget):
         metric_id = str(item.data(Qt.ItemDataRole.UserRole) or "")
         return metric_id if metric_id in METRIC_BY_ID else None
 
+    def set_theme(self, dark: bool):
+        if dark:
+            pool_bg = "rgba(255, 255, 255, 0.06)"
+            chip = "rgba(255, 255, 255, 0.12)"
+            hover = "rgba(10, 132, 255, 0.30)"
+            selected = "rgba(10, 132, 255, 0.46)"
+            scroll_handle = "rgba(255, 255, 255, 0.34)"
+            self._drag_chip_bg = QColor(255, 255, 255, 31)
+            self._drop_color = QColor(10, 132, 255)
+        else:
+            pool_bg = "rgba(0, 0, 0, 0.05)"
+            chip = "rgba(0, 0, 0, 0.07)"
+            hover = "rgba(0, 122, 255, 0.16)"
+            selected = "rgba(0, 122, 255, 0.28)"
+            scroll_handle = "rgba(0, 0, 0, 0.28)"
+            self._drag_chip_bg = QColor(0, 0, 0, 18)
+            self._drop_color = QColor(0, 122, 255)
+        self.setStyleSheet(f"""
+            QListWidget {{
+                background-color: {pool_bg};
+                border: none;
+                border-radius: 8px;
+                outline: none;
+            }}
+            QListWidget::item {{
+                background: {chip};
+                border: none;
+                border-radius: 5px;
+                padding: 1px 1px;
+                margin: 1px;
+            }}
+            QListWidget::item:hover {{ background: {hover}; }}
+            QListWidget::item:selected {{ background: {selected}; }}
+            QScrollBar:horizontal {{
+                height: 5px;
+                background: transparent;
+                margin: 0;
+            }}
+            QScrollBar::handle:horizontal {{
+                min-width: 24px;
+                background: {scroll_handle};
+                border-radius: 2px;
+            }}
+            QScrollBar::add-line:horizontal,
+            QScrollBar::sub-line:horizontal {{ width: 0; }}
+            QScrollBar::add-page:horizontal,
+            QScrollBar::sub-page:horizontal {{ background: transparent; }}
+            QScrollBar:vertical {{
+                width: 5px;
+                background: transparent;
+                margin: 0;
+            }}
+            QScrollBar::handle:vertical {{
+                min-height: 24px;
+                background: {scroll_handle};
+                border-radius: 2px;
+            }}
+            QScrollBar::add-line:vertical,
+            QScrollBar::sub-line:vertical {{ height: 0; }}
+            QScrollBar::add-page:vertical,
+            QScrollBar::sub-page:vertical {{ background: transparent; }}
+        """)
+
+    def _drag_chip_pixmap(self, text: str, size: QSize) -> QPixmap:
+        """渲染跟随鼠标的圆角矩形指标块。"""
+        ratio = max(1.0, float(self.devicePixelRatioF()))
+        pixmap = QPixmap(
+            max(1, round(size.width() * ratio)),
+            max(1, round(size.height() * ratio)),
+        )
+        pixmap.setDevicePixelRatio(ratio)
+        pixmap.fill(Qt.GlobalColor.transparent)
+
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(self._drag_chip_bg)
+        painter.drawRoundedRect(
+            QRectF(0, 0, size.width(), size.height()),
+            self._drag_radius,
+            self._drag_radius,
+        )
+        painter.setFont(self.font())
+        painter.setPen(self.palette().color(QPalette.ColorRole.Text))
+        painter.drawText(
+            QRectF(0, 0, size.width(), size.height()),
+            Qt.AlignmentFlag.AlignCenter,
+            text,
+        )
+        painter.end()
+        return pixmap
+
     def startDrag(self, _supported_actions):
         metric_id = self.current_metric_id()
         if metric_id is None:
+            return
+        rect = self.visualRect(self.currentIndex())
+        if not rect.isValid() or rect.isEmpty():
             return
         mime = QMimeData()
         mime.setData(_METRIC_MIME_TYPE, QByteArray(metric_id.encode("utf-8")))
         drag = QDrag(self)
         drag.setMimeData(mime)
+        drag.setPixmap(
+            self._drag_chip_pixmap(_metric_display_text(metric_id), rect.size())
+        )
+        cursor = self.viewport().mapFromGlobal(QCursor.pos())
+        hotspot = QPoint(
+            min(max(cursor.x() - rect.x(), 0), rect.width()),
+            min(max(cursor.y() - rect.y(), 0), rect.height()),
+        )
+        drag.setHotSpot(hotspot)
         drag.exec(Qt.DropAction.MoveAction)
 
     def dragEnterEvent(self, event):
@@ -91,8 +234,36 @@ class MetricListWidget(QListWidget):
         if event.mimeData().hasFormat(_METRIC_MIME_TYPE):
             event.setDropAction(Qt.DropAction.MoveAction)
             event.accept()
+            self._drop_indicator_index = self._drop_insert_index(
+                event.position().toPoint()
+            )
+            self.viewport().update()
             return
         event.ignore()
+
+    def dragLeaveEvent(self, event):
+        self._drop_indicator_index = None
+        self.viewport().update()
+        super().dragLeaveEvent(event)
+
+    def _drop_insert_index(self, pos: QPoint) -> int:
+        """按视觉顺序计算投放位置：拖放点之前的指标块数量。
+
+        换行布局下按行带（中心 ± 半高）比较，先比行、再比列，
+        行尾空白处也能得到正确插入位置，避免被追加到队尾。
+        """
+        insert_at = 0
+        for row in range(self.count()):
+            rect = self.visualRect(self.model().index(row, 0))
+            center = rect.center()
+            half = max(1, rect.height()) / 2
+            if center.y() + half < pos.y():
+                # 块所在行整体在拖放点上方
+                insert_at += 1
+            elif abs(center.y() - pos.y()) <= half and center.x() < pos.x():
+                # 同一行内且在拖放点左侧
+                insert_at += 1
+        return insert_at
 
     def dropEvent(self, event):
         source = event.source()
@@ -106,13 +277,9 @@ class MetricListWidget(QListWidget):
             event.ignore()
             return
 
-        pos = event.position().toPoint()
-        index = self.indexAt(pos)
-        insert_at = self.count()
-        if index.isValid():
-            insert_at = index.row()
-            if pos.x() > self.visualRect(index).center().x():
-                insert_at += 1
+        insert_at = self._drop_insert_index(event.position().toPoint())
+        self._drop_indicator_index = None
+        self.viewport().update()
 
         self.drop_requested.emit(source.pool_name, metric_id, insert_at)
         event.setDropAction(Qt.DropAction.MoveAction)
@@ -128,18 +295,64 @@ class MetricListWidget(QListWidget):
         ):
             metric_id = self.current_metric_id()
             if metric_id is not None:
-                self.metric_activated.emit(self.pool_name, metric_id)
+                if metric_id == NAME_METRIC_ID:
+                    self.name_settings_requested.emit(self)
+                elif metric_id in _UNIT_METRIC_IDS:
+                    self.unit_settings_requested.emit(self)
+                else:
+                    self.metric_activated.emit(self.pool_name, metric_id)
                 event.accept()
                 return
         super().keyPressEvent(event)
 
+    def _on_item_clicked(self, item: QListWidgetItem):
+        metric_id = str(item.data(Qt.ItemDataRole.UserRole) or "")
+        if metric_id in _CLICKABLE_METRIC_IDS:
+            # 单击先排队：双击间隔内没有第二击才打开设置面板
+            self._pending_click = metric_id
+            self._pending_timer.start()
+        else:
+            # 没有独立面板的指标块单击后不保留选中状态
+            self.clearSelection()
+            self.setCurrentItem(None)
+            self.clearFocus()
+
+    def _fire_pending_click(self):
+        """单击等待期结束后打开对应设置面板。"""
+        metric_id, self._pending_click = self._pending_click, None
+        self._pending_timer.stop()
+        if metric_id == NAME_METRIC_ID:
+            self.name_settings_requested.emit(self)
+        elif metric_id in _UNIT_METRIC_IDS:
+            self.unit_settings_requested.emit(self)
+
+    def cancel_pending_click(self):
+        """取消排队中的面板打开（点击空白/其他区域时调用）。"""
+        self._pending_click = None
+        self._pending_timer.stop()
+
     def _activate_item(self, item: QListWidgetItem):
         metric_id = str(item.data(Qt.ItemDataRole.UserRole) or "")
-        if metric_id in METRIC_BY_ID:
-            self.metric_activated.emit(self.pool_name, metric_id)
+        if metric_id not in METRIC_BY_ID:
+            return
+        # 双击：取消排队中的面板打开，并快速移动到另一池
+        if self._pending_click == metric_id:
+            self.cancel_pending_click()
+        self.metric_activated.emit(self.pool_name, metric_id)
+
+    def mousePressEvent(self, event):
+        # 点击池内空白处时取消选中与焦点，其余交给默认处理。
+        if (event.button() == Qt.MouseButton.LeftButton
+                and not self.indexAt(event.position().toPoint()).isValid()):
+            self.clearSelection()
+            self.setCurrentItem(None)
+            self.clearFocus()
+            self.cancel_pending_click()
+        super().mousePressEvent(event)
 
     def paintEvent(self, event):
         super().paintEvent(event)
+        self._paint_drop_indicator()
         if self.count() or not self.empty_text:
             return
         painter = QPainter(self.viewport())
@@ -151,44 +364,132 @@ class MetricListWidget(QListWidget):
             self.empty_text,
         )
 
+    def _paint_drop_indicator(self):
+        """拖拽过程中在目标插入位置绘制竖向圆角指示条。"""
+        insert_at = self._drop_indicator_index
+        if insert_at is None or self.count() == 0:
+            return
+        if insert_at < self.count():
+            rect = self.visualRect(self.model().index(insert_at, 0))
+            x = rect.left() - 3
+        else:
+            rect = self.visualRect(self.model().index(self.count() - 1, 0))
+            x = rect.right() + 2
+        painter = QPainter(self.viewport())
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(self._drop_color)
+        painter.drawRoundedRect(QRectF(x, rect.top(), 3, rect.height()), 1.5, 1.5)
+        painter.end()
+
 
 class MetricPoolWidget(QWidget):
-    """维护“已显示/可用指标”双池，并输出有序的已显示指标列表。"""
+    """上“可用指标”、下“已显示指标”双池，输出有序的已显示指标列表。"""
 
     visible_metrics_changed = Signal(list)
+    name_settings_requested = Signal(object)
+    unit_settings_requested = Signal(object)
+
+    # 每行指标块占用的估算高度（22 高圆角块 + 网格间距 2 + 边距 2 + 冗余 2）
+    _ROW_PITCH = 28
+    # 每个池至少保留两行高度
+    _MIN_ROWS = 2
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._visible_metrics: list[str] = []
 
-        self.displayed_label = QLabel("已显示（拖动排序）", self)
         self.available_label = QLabel("可用指标", self)
-        for label in (self.displayed_label, self.available_label):
+        self.displayed_label = QLabel("已显示指标", self)
+        for label in (self.available_label, self.displayed_label):
             label.setFixedHeight(14)
 
-        self.displayed_pool = MetricListWidget(
-            _POOL_DISPLAYED, "拖入要显示的指标", self
-        )
         self.available_pool = MetricListWidget(
             _POOL_AVAILABLE, "已全部显示", self
+        )
+        self.displayed_pool = MetricListWidget(
+            _POOL_DISPLAYED, "拖入要显示的指标", self
         )
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
-        layout.addWidget(self.displayed_label)
-        layout.addWidget(self.displayed_pool)
         layout.addWidget(self.available_label)
         layout.addWidget(self.available_pool)
+        layout.addWidget(self.displayed_label)
+        layout.addWidget(self.displayed_pool)
 
-        for pool in (self.displayed_pool, self.available_pool):
+        for pool in (self.available_pool, self.displayed_pool):
             pool.drop_requested.connect(
                 lambda source, metric_id, index, target=pool.pool_name:
                 self.move_metric(source, target, metric_id, index)
             )
             pool.metric_activated.connect(self._toggle_metric)
+            pool.name_settings_requested.connect(self.name_settings_requested)
+            pool.unit_settings_requested.connect(self.unit_settings_requested)
 
         self._rebuild_pools()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._apply_pool_heights()
+
+    def _estimated_rows(self, pool: MetricListWidget) -> int:
+        """按当前池宽度估算指标块换行后的行数。"""
+        count = pool.count()
+        if count <= 0:
+            return 0
+        width = max(0, pool.viewport().width() - 2)
+        if width <= 0:
+            # 尚未布局时按每行 3 个粗略估算
+            return max(1, (count + 2) // 3)
+        step = pool.spacing() + 16  # 网格间距 + QSS padding(7*2) + margin(1*2)
+        rows = 0
+        used = 0
+        for row in range(count):
+            item_width = pool.item(row).sizeHint().width() + step
+            if rows == 0 or used + item_width > width:
+                rows += 1
+                used = item_width
+            else:
+                used += item_width
+        return max(1, rows)
+
+    def _apply_pool_heights(self):
+        """两个池按内容行数自动分配高度：较空的池让出空间，最少保留两行。"""
+        total = max(0, self.height() - 2 * 14 - 3 * 2)  # 减去两个标题与间距
+        if total <= 0:
+            return
+        rows_available = self._estimated_rows(self.available_pool)
+        rows_displayed = self._estimated_rows(self.displayed_pool)
+        pitch = self._ROW_PITCH
+        min_px = self._MIN_ROWS * pitch
+        ideal_available = max(rows_available, self._MIN_ROWS) * pitch
+        ideal_displayed = max(rows_displayed, self._MIN_ROWS) * pitch
+
+        if ideal_available + ideal_displayed <= total:
+            self.available_pool.setFixedHeight(ideal_available)
+            self.displayed_pool.setFixedHeight(ideal_displayed)
+            return
+
+        # 空间不足：先各保底两行，剩余高度按所需行数比例分配并封顶
+        remainder = max(0, total - 2 * min_px)
+        weight_available = max(0, rows_available - self._MIN_ROWS)
+        weight_displayed = max(0, rows_displayed - self._MIN_ROWS)
+        weight_total = weight_available + weight_displayed
+        if weight_total > 0:
+            extra_available = min(
+                weight_available * pitch,
+                remainder * weight_available // weight_total,
+            )
+            extra_displayed = min(
+                weight_displayed * pitch,
+                remainder - extra_available,
+            )
+        else:
+            extra_available = extra_displayed = 0
+        self.available_pool.setFixedHeight(min_px + extra_available)
+        self.displayed_pool.setFixedHeight(min_px + extra_displayed)
 
     @property
     def visible_metrics(self) -> list[str]:
@@ -231,51 +532,21 @@ class MetricPoolWidget(QWidget):
         if updated == self._visible_metrics:
             return
         self._visible_metrics = updated
-        self._rebuild_pools(select_metric_id=metric_id, selected_pool=target_pool)
+        # 移动后一律不保留选中状态
+        self._rebuild_pools()
+        self._clear_pool_selections()
         self.visible_metrics_changed.emit(list(self._visible_metrics))
 
+    def _clear_pool_selections(self):
+        for pool in (self.available_pool, self.displayed_pool):
+            pool.clearSelection()
+            pool.setCurrentItem(None)
+            pool.clearFocus()
+            pool.cancel_pending_click()
+
     def set_theme(self, dark: bool):
-        border = "rgba(255, 255, 255, 0.26)" if dark else "rgba(0, 0, 0, 0.22)"
-        chip = "rgba(255, 255, 255, 0.10)" if dark else "rgba(0, 0, 0, 0.06)"
-        hover = "rgba(10, 132, 255, 0.22)" if dark else "rgba(0, 122, 255, 0.14)"
-        selected = "rgba(10, 132, 255, 0.34)" if dark else "rgba(0, 122, 255, 0.24)"
-        scroll_handle = "rgba(255, 255, 255, 0.34)" if dark else "rgba(0, 0, 0, 0.28)"
-        style = f"""
-            QListWidget {{
-                background: transparent;
-                border: 1px solid {border};
-                border-radius: 5px;
-                outline: none;
-            }}
-            QListWidget::item {{
-                background: {chip};
-                border: 1px solid {border};
-                border-radius: 8px;
-                padding: 2px 7px;
-                margin: 1px;
-            }}
-            QListWidget::item:hover {{ background: {hover}; }}
-            QListWidget::item:selected {{
-                background: {selected};
-                border-color: rgb(10, 132, 255);
-            }}
-            QScrollBar:horizontal {{
-                height: 5px;
-                background: transparent;
-                margin: 0;
-            }}
-            QScrollBar::handle:horizontal {{
-                min-width: 24px;
-                background: {scroll_handle};
-                border-radius: 2px;
-            }}
-            QScrollBar::add-line:horizontal,
-            QScrollBar::sub-line:horizontal {{ width: 0; }}
-            QScrollBar::add-page:horizontal,
-            QScrollBar::sub-page:horizontal {{ background: transparent; }}
-        """
-        self.displayed_pool.setStyleSheet(style)
-        self.available_pool.setStyleSheet(style)
+        for pool in (self.available_pool, self.displayed_pool):
+            pool.set_theme(dark)
 
     def _toggle_metric(self, source_pool: str, metric_id: str):
         if source_pool == _POOL_DISPLAYED:
@@ -290,12 +561,7 @@ class MetricPoolWidget(QWidget):
                 len(self._visible_metrics),
             )
 
-    def _rebuild_pools(
-        self,
-        *,
-        select_metric_id: str | None = None,
-        selected_pool: str | None = None,
-    ):
+    def _rebuild_pools(self):
         visible = set(self._visible_metrics)
         available = [
             spec.metric_id for spec in METRIC_SPECS
@@ -303,16 +569,4 @@ class MetricPoolWidget(QWidget):
         ]
         self.displayed_pool.set_metric_ids(self._visible_metrics)
         self.available_pool.set_metric_ids(available)
-
-        if select_metric_id is not None:
-            pool = (
-                self.displayed_pool
-                if selected_pool == _POOL_DISPLAYED
-                else self.available_pool
-            )
-            for row in range(pool.count()):
-                item = pool.item(row)
-                if item.data(Qt.ItemDataRole.UserRole) == select_metric_id:
-                    pool.setCurrentItem(item)
-                    pool.scrollToItem(item)
-                    break
+        self._apply_pool_heights()

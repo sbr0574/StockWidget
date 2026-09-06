@@ -13,7 +13,11 @@ class MetricSpec:
     default_visible: bool = False
 
 
+# 名称作为可排序、可显示/隐藏的普通指标参与布局。
+NAME_METRIC_ID = "name"
+
 METRIC_SPECS = (
+    MetricSpec(NAME_METRIC_ID, "名称", ("名称",), "name_visible", True),
     MetricSpec("price", "现价", ("现价",), "price_visible", True),
     MetricSpec("change", "涨跌", ("涨跌",), "change_visible"),
     MetricSpec("change_pct", "涨幅", ("涨幅",), "change_pct_visible", True),
@@ -58,7 +62,12 @@ def visible_metrics_from_config(cfg: Mapping | None) -> list[str]:
     cfg = cfg if isinstance(cfg, Mapping) else {}
     raw_metrics = cfg.get("visible_metrics")
     if isinstance(raw_metrics, (list, tuple)):
-        return normalize_visible_metrics(raw_metrics)
+        normalized = normalize_visible_metrics(raw_metrics)
+        # 旧版本配置的 visible_metrics 不含名称指标：名称仍受独立的
+        # name_visible 开关控制，未关闭时补在首位，保持原有显示效果。
+        if NAME_METRIC_ID not in normalized and bool(cfg.get("name_visible", True)):
+            normalized.insert(0, NAME_METRIC_ID)
+        return normalized
 
     return [
         spec.metric_id
