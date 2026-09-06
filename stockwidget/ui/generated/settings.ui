@@ -71,7 +71,7 @@
         <x>10</x>
         <y>55</y>
         <width>300</width>
-        <height>240</height>
+        <height>235</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -142,7 +142,7 @@
        <string>删除</string>
       </property>
       <property name="icon">
-       <iconset theme="QIcon::ThemeIcon::EditDelete"/>
+       <iconset theme="QIcon::ThemeIcon::ListRemove"/>
       </property>
       <property name="iconSize">
        <size>
@@ -154,7 +154,7 @@
        <bool>false</bool>
       </property>
       <property name="flat">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
      </widget>
      <widget class="QPushButton" name="btn_add">
@@ -180,6 +180,37 @@
       </property>
       <property name="autoDefault">
        <bool>false</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn_top">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>25</y>
+        <width>70</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>置顶</string>
+      </property>
+      <property name="icon">
+       <iconset theme="QIcon::ThemeIcon::GoUp"/>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>12</width>
+        <height>12</height>
+       </size>
+      </property>
+      <property name="autoDefault">
+       <bool>false</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
       </property>
      </widget>
      <widget class="QLabel" name="label_data_state">
@@ -457,6 +488,9 @@
         <property name="autoDefault">
          <bool>false</bool>
         </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
       <item>
@@ -498,6 +532,9 @@
         <property name="autoDefault">
          <bool>false</bool>
         </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
       <item>
@@ -538,6 +575,9 @@
         </property>
         <property name="autoDefault">
          <bool>false</bool>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -583,6 +623,9 @@
         <property name="autoDefault">
          <bool>false</bool>
         </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
       <item>
@@ -619,6 +662,9 @@
         </property>
         <property name="autoDefault">
          <bool>false</bool>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -701,6 +747,12 @@
      <layout class="QGridLayout" name="gridLayout_4">
       <item row="1" column="1">
        <widget class="QPushButton" name="btn_up_color">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
           <width>60</width>
@@ -726,6 +778,12 @@
       </item>
       <item row="1" column="3">
        <widget class="QPushButton" name="btn_neutral_color">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
           <width>60</width>
@@ -751,6 +809,12 @@
       </item>
       <item row="1" column="2">
        <widget class="QPushButton" name="btn_down_color">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
           <width>60</width>
@@ -759,6 +823,37 @@
         </property>
         <property name="text">
          <string>下跌</string>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>12</width>
+          <height>12</height>
+         </size>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QPushButton" name="btn_fg_color">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>文字</string>
         </property>
         <property name="iconSize">
          <size>
@@ -805,33 +900,42 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QPushButton" name="btn_fg_color">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>90</width>
+          <height>25</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
-          <width>60</width>
+          <width>90</width>
           <height>25</height>
          </size>
         </property>
         <property name="text">
-         <string>文字</string>
+         <string>主颜色：</string>
         </property>
-        <property name="iconSize">
-         <size>
-          <width>12</width>
-          <height>12</height>
-         </size>
-        </property>
-        <property name="autoDefault">
-         <bool>false</bool>
-        </property>
-        <property name="flat">
-         <bool>true</bool>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
         </property>
        </widget>
       </item>
       <item row="0" column="2">
        <widget class="QPushButton" name="btn_bg_color">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>25</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
           <width>60</width>
@@ -852,34 +956,6 @@
         </property>
         <property name="flat">
          <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>90</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>90</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>主颜色：</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
         </property>
        </widget>
       </item>

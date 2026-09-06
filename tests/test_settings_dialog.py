@@ -153,14 +153,16 @@ class SettingsDialogTests(unittest.TestCase):
         self.assertIsNotNone(editor)
         return editor
 
-    def test_choice_button_styles_are_cross_platform(self):
+    def test_watchlist_action_buttons_share_color_button_style(self):
         regular = _build_settings_stylesheet(dark=False)
-        macos = _build_settings_stylesheet(dark=False, macos=True)
         dark = _build_settings_stylesheet(dark=True)
 
-        self.assertNotIn("QPushButton#btn_add", regular)
-        self.assertIn("QPushButton#btn_add", macos)
-        for stylesheet in (regular, macos, dark):
+        for stylesheet in (regular, dark):
+            for selector in ("btn_add", "btn_del", "btn_top"):
+                self.assertIn(f"QPushButton#{selector}", stylesheet)
+                self.assertIn(f"QPushButton#{selector}:hover", stylesheet)
+                self.assertIn(f"QPushButton#{selector}:pressed", stylesheet)
+                self.assertIn(f"QPushButton#{selector}:disabled", stylesheet)
             self.assertIn("QPushButton#btn_icon_default", stylesheet)
             self.assertIn("QPushButton#btn_icon_default:hover", stylesheet)
             self.assertIn("QPushButton#btn_icon_default:pressed", stylesheet)
@@ -193,6 +195,7 @@ class SettingsDialogTests(unittest.TestCase):
             )[1].split("}", 1)[0]
             self.assertIn("border: none", color_base_rule)
             self.assertIn("border-radius: 6px", color_base_rule)
+            self.assertIn("padding: 3px", color_base_rule)
 
     def test_color_swatch_renders_at_device_pixel_ratio(self):
         icon = _color_swatch_icon(QColor("#123456"), 2.0)
@@ -525,6 +528,69 @@ class SettingsDialogTests(unittest.TestCase):
         )
         self.assertIn("QListView::item:hover", panel.styleSheet())
         self.assertIn("color: rgb(28, 28, 30);", panel.styleSheet())
+
+    def test_top_button_moves_selected_row_to_top_and_persists_order(self):
+        watchlist = {
+            "sh600519": {
+                "checked": True,
+                "cost": 123,
+                "name": "贵州茅台",
+                "type": "沪",
+                "market": "sh",
+                "code": "600519",
+            },
+            "sh501001": {
+                "checked": False,
+                "cost": 12.5,
+                "name": "财通精选混合LOF",
+                "type": "基",
+                "market": "sh",
+                "code": "501001",
+            },
+            "sh000001": {
+                "checked": True,
+                "name": "上证指数",
+                "type": "指",
+                "market": "sh",
+                "code": "000001",
+            },
+        }
+        dialog, window = self._make_dialog(watchlist)
+
+        self.assertEqual(dialog.btn_top.text(), "置顶")
+        self.assertIs(dialog.btn_top.parentWidget(), dialog.ui.gb_list)
+        self.assertLessEqual(
+            dialog.btn_top.geometry().right(), dialog.ui.gb_list.width()
+        )
+        self.assertLess(dialog.btn_top.iconSize().width(), 20)
+        # 没有选中条目时按钮禁用
+        self.assertFalse(dialog.btn_top.isEnabled())
+
+        dialog.list_codes.setCurrentCell(2, 1)
+        self.assertTrue(dialog.btn_top.isEnabled())
+
+        dialog.btn_top.click()
+
+        self.assertEqual(
+            dialog.list_codes.item(0, 1).data(Qt.ItemDataRole.UserRole),
+            "sh000001",
+        )
+        self.assertEqual(
+            dialog.list_codes.item(1, 1).data(Qt.ItemDataRole.UserRole),
+            "sh600519",
+        )
+        self.assertEqual(
+            list(window.watchlist), ["sh000001", "sh600519", "sh501001"]
+        )
+        # 置顶后当前行回到顶部，按钮随之禁用
+        self.assertEqual(dialog.list_codes.currentRow(), 0)
+        self.assertFalse(dialog.btn_top.isEnabled())
+
+        # 已在顶部的行再点置顶不产生变化
+        dialog._top_code()
+        self.assertEqual(
+            list(window.watchlist), ["sh000001", "sh600519", "sh501001"]
+        )
 
     def test_opening_panel_cancels_unfinished_quick_add_row(self):
         dialog, _window = self._make_dialog()

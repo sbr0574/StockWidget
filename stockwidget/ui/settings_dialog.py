@@ -1,4 +1,3 @@
-import sys
 import threading
 from functools import partial
 from math import isfinite
@@ -92,17 +91,12 @@ def _color_swatch_icon(color: QColor, device_pixel_ratio: float = 1.0) -> QIcon:
     return icon
 
 
-def _build_settings_stylesheet(dark: bool, *, macos: bool = False) -> str:
-    """按系统深浅色生成设置窗口样式表（Qt QSS 不支持媒体查询，故在运行时按主题构建）。"""
+def _build_settings_stylesheet(dark: bool) -> str:
+    """按系统深浅色生成设置窗口样式表"""
     if dark:
         sep = "rgba(255, 255, 255, 0.35)"
         header_bg, header_line = "rgba(255, 255, 255, 0.10)", "rgba(255, 255, 255, 0.30)"
         empty_hint = "rgba(255, 255, 255, 0.28)"
-        button_bg = "rgba(255, 255, 255, 0.10)"
-        button_hover = "rgba(255, 255, 255, 0.16)"
-        button_pressed = "rgba(255, 255, 255, 0.22)"
-        button_border = "rgba(255, 255, 255, 0.24)"
-        button_disabled = "rgba(255, 255, 255, 0.05)"
         icon_hover_bg = "rgba(255, 255, 255, 0.12)"
         icon_pressed_bg = "rgba(255, 255, 255, 0.18)"
         icon_selected = "rgba(10, 132, 255, 0.24)"
@@ -116,11 +110,6 @@ def _build_settings_stylesheet(dark: bool, *, macos: bool = False) -> str:
         sep = "rgba(0, 0, 0, 0.25)"
         header_bg, header_line = "rgba(0, 0, 0, 0.06)", "rgba(0, 0, 0, 0.20)"
         empty_hint = "rgba(0, 0, 0, 0.28)"
-        button_bg = "rgba(255, 255, 255, 0.86)"
-        button_hover = "rgba(255, 255, 255, 1.00)"
-        button_pressed = "rgba(0, 0, 0, 0.08)"
-        button_border = "rgba(0, 0, 0, 0.22)"
-        button_disabled = "rgba(0, 0, 0, 0.04)"
         icon_hover_bg = "rgba(0, 0, 0, 0.08)"
         icon_pressed_bg = "rgba(0, 0, 0, 0.14)"
         icon_selected = "rgba(0, 122, 255, 0.14)"
@@ -147,6 +136,9 @@ def _build_settings_stylesheet(dark: bool, *, macos: bool = False) -> str:
         "QPushButton#btn_up_color",
         "QPushButton#btn_down_color",
         "QPushButton#btn_neutral_color",
+        "QPushButton#btn_add",
+        "QPushButton#btn_del",
+        "QPushButton#btn_top",
     )
     icon_buttons = ",\n".join(icon_selectors)
     icon_hover = ",\n".join(f"{selector}:hover" for selector in icon_selectors)
@@ -162,39 +154,6 @@ def _build_settings_stylesheet(dark: bool, *, macos: bool = False) -> str:
     color_hover = ",\n".join(f"{selector}:hover" for selector in color_selectors)
     color_pressed = ",\n".join(f"{selector}:pressed" for selector in color_selectors)
     color_disabled = ",\n".join(f"{selector}:disabled" for selector in color_selectors)
-
-    macos_buttons = ""
-    if macos:
-        regular_selectors = (
-            "QPushButton#btn_add",
-            "QPushButton#btn_del",
-        )
-        regular_buttons = ",\n".join(regular_selectors)
-        regular_hover = ",\n".join(f"{selector}:hover" for selector in regular_selectors)
-        regular_pressed = ",\n".join(f"{selector}:pressed" for selector in regular_selectors)
-        regular_focus = ",\n".join(f"{selector}:focus" for selector in regular_selectors)
-        regular_disabled = ",\n".join(f"{selector}:disabled" for selector in regular_selectors)
-        macos_buttons = f"""
-{regular_buttons} {{
-    background-color: {button_bg};
-    border: 1px solid {button_border};
-    border-radius: 6px;
-    padding: 3px 9px;
-}}
-{regular_hover} {{
-    background-color: {button_hover};
-}}
-{regular_pressed} {{
-    background-color: {button_pressed};
-}}
-{regular_focus} {{
-    border: 2px solid rgba(10, 132, 255, 0.82);
-}}
-{regular_disabled} {{
-    background-color: {button_disabled};
-    border-color: transparent;
-}}
-"""
 
     choice_buttons = f"""
 {icon_buttons} {{
@@ -266,7 +225,6 @@ QLabel#empty_watchlist_hint {{
     font-weight: 500;
 }}
 {choice_buttons}
-{macos_buttons}
 """
 
 
@@ -440,7 +398,7 @@ class SettingsDialog(QDialog):
     def _apply_theme_stylesheet(self):
         """按当前系统深浅色应用样式表。"""
         dark = QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
-        self.setStyleSheet(_build_settings_stylesheet(dark, macos=sys.platform == "darwin"))
+        self.setStyleSheet(_build_settings_stylesheet(dark))
         if hasattr(self, "metric_pool"):
             self.metric_pool.set_theme(dark)
         if hasattr(self, "add_code_panel"):
@@ -564,6 +522,8 @@ class SettingsDialog(QDialog):
 
         self.btn_add = self.ui.btn_add
         self.btn_del = self.ui.btn_del
+        self.btn_top = self.ui.btn_top
+        self.btn_top.setToolTip("选中条目移动到列表顶部")
         self.add_code_panel = AddCodePanel(_SEARCH_PLACEHOLDER, self)
         self.add_code_panel.set_theme(
             QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
@@ -571,6 +531,9 @@ class SettingsDialog(QDialog):
         self.add_code_panel.entry_requested.connect(self._add_entry_from_panel)
         self.btn_add.clicked.connect(self._show_add_code_panel)
         self.btn_del.clicked.connect(self._del_code)
+        self.btn_top.clicked.connect(self._top_code)
+        self.list_codes.itemSelectionChanged.connect(self._update_top_button_state)
+        self._update_top_button_state()
 
         self.cmb_namelen.currentIndexChanged.connect(self._on_name_length_changed)
         self.cb_unicolor.toggled.connect(self._on_unicolor_toggled)
@@ -698,7 +661,6 @@ class SettingsDialog(QDialog):
         for key, btn in self.icon_buttons.items():
             self._icon_button_group.addButton(btn)
             btn.setCheckable(True)
-            btn.setFlat(True)
             btn.toggled.connect(partial(self._on_icon_button_toggled, key))
 
         cur_choice = self.app._icon_choice if self.app is not None else None
@@ -1049,6 +1011,20 @@ class SettingsDialog(QDialog):
         if row >= 0:
             self.list_codes.removeRow(row)
             self._on_codes_changed(None)
+
+    def _top_code(self):
+        """把当前选中的自选条目移动到列表顶部。"""
+        row = self.list_codes.currentRow()
+        if row <= 0:
+            return
+        self._move_row(row, 0)
+        self._on_codes_changed(None)
+
+    def _update_top_button_state(self, *_args):
+        """没有选中条目或选中条目已在顶部时禁用置顶按钮。"""
+        if not hasattr(self, "btn_top"):
+            return
+        self.btn_top.setEnabled(self.list_codes.currentRow() > 0)
 
     def _move_row(self, src: int, dst: int):
         """将 src 行移动到 dst 位置"""
