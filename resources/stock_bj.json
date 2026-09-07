@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-04",
+  "last_update": "2026-09-07",
   "codes": {
     "bj810011": {
       "code": "810011",
@@ -1535,10 +1535,10 @@
       "code": "920269",
       "market": "bj",
       "type": "京",
-      "name": "杰锋动力",
+      "name": "N杰锋",
       "name_en": "",
-      "py": "jiefengdongli",
-      "abbr": "jfdl"
+      "py": "njiefeng",
+      "abbr": "njf"
     },
     "bj920270": {
       "code": "920270",
@@ -1616,10 +1616,10 @@
       "code": "920289",
       "market": "bj",
       "type": "京",
-      "name": "N华汇",
+      "name": "华汇智能",
       "name_en": "",
-      "py": "nhuahui",
-      "abbr": "nhh"
+      "py": "huahuizhineng",
+      "abbr": "hhzn"
     },
     "bj920298": {
       "code": "920298",
@@ -2903,10 +2903,10 @@
       "code": "920879",
       "market": "bj",
       "type": "京",
-      "name": "XD基康技",
+      "name": "基康技术",
       "name_en": "",
-      "py": "xdjikangji",
-      "abbr": "xdjkj"
+      "py": "jikangjishu",
+      "abbr": "jkjs"
     },
     "bj920885": {
       "code": "920885",

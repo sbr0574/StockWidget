@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-04",
+  "last_update": "2026-09-07",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -7516,6 +7516,15 @@
       "py": "a500honglidiboetfpingan",
       "abbr": "a500hldbetfpa"
     },
+    "sh561690": {
+      "code": "561690",
+      "market": "sh",
+      "type": "基",
+      "name": "300质量ETF农银",
+      "name_en": "",
+      "py": "300zhiliangetfnongyin",
+      "abbr": "300zletfny"
+    },
     "sh561700": {
       "code": "561700",
       "market": "sh",
@@ -10045,6 +10054,15 @@
       "py": "yunjisuanetfnanfang",
       "abbr": "yjsetfnf"
     },
+    "sz158013": {
+      "code": "158013",
+      "market": "sz",
+      "type": "基",
+      "name": "航空航天ETF易方达",
+      "name_en": "",
+      "py": "hangkonghangtianetfyifangda",
+      "abbr": "hkhtetfyfd"
+    },
     "sz158017": {
       "code": "158017",
       "market": "sz",
@@ -10062,6 +10080,15 @@
       "name_en": "",
       "py": "dianchietfyongying",
       "abbr": "dcetfyy"
+    },
+    "sz158023": {
+      "code": "158023",
+      "market": "sz",
+      "type": "基",
+      "name": "红利低波ETF万家",
+      "name_en": "",
+      "py": "honglidiboetfwanjia",
+      "abbr": "hldbetfwj"
     },
     "sz158027": {
       "code": "158027",

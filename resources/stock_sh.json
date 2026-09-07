@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-04",
+  "last_update": "2026-09-07",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -2453,10 +2453,10 @@
       "code": "600367",
       "market": "sh",
       "type": "沪",
-      "name": "红星发展",
+      "name": "XD红星发",
       "name_en": "",
-      "py": "hongxingfazhan",
-      "abbr": "hxfz"
+      "py": "xdhongxingfa",
+      "abbr": "xdhxf"
     },
     "sh600368": {
       "code": "600368",
@@ -8537,10 +8537,10 @@
       "code": "601921",
       "market": "sh",
       "type": "沪",
-      "name": "浙版传媒",
+      "name": "XD浙版传",
       "name_en": "",
-      "py": "zhebanchuanmei",
-      "abbr": "zbcm"
+      "py": "xdzhebanchuan",
+      "abbr": "xdzbc"
     },
     "sh601928": {
       "code": "601928",
@@ -10121,10 +10121,10 @@
       "code": "603182",
       "market": "sh",
       "type": "沪",
-      "name": "XD嘉华股",
+      "name": "嘉华股份",
       "name_en": "",
-      "py": "xdjiahuagu",
-      "abbr": "xdjhg"
+      "py": "jiahuagufen",
+      "abbr": "jhgf"
     },
     "sh603183": {
       "code": "603183",
@@ -10652,10 +10652,10 @@
       "code": "603259",
       "market": "sh",
       "type": "沪",
-      "name": "XD药明康",
+      "name": "药明康德",
       "name_en": "",
-      "py": "xdyaomingkang",
-      "abbr": "xdymk"
+      "py": "yaomingkangde",
+      "abbr": "ymkd"
     },
     "sh603260": {
       "code": "603260",
@@ -11516,10 +11516,10 @@
       "code": "603379",
       "market": "sh",
       "type": "沪",
-      "name": "三美股份",
+      "name": "XD三美股",
       "name_en": "",
-      "py": "sanmeigufen",
-      "abbr": "smgf"
+      "py": "xdsanmeigu",
+      "abbr": "xdsmg"
     },
     "sh603380": {
       "code": "603380",
@@ -11781,6 +11781,15 @@
       "name_en": "",
       "py": "jibite",
       "abbr": "jbt"
+    },
+    "sh603448": {
+      "code": "603448",
+      "market": "sh",
+      "type": "沪",
+      "name": "N天博",
+      "name_en": "",
+      "py": "ntianbo",
+      "abbr": "ntb"
     },
     "sh603456": {
       "code": "603456",
@@ -14540,10 +14549,10 @@
       "code": "605098",
       "market": "sh",
       "type": "沪",
-      "name": "行动教育",
+      "name": "XD行动教",
       "name_en": "",
-      "py": "xingdongjiaoyu",
-      "abbr": "xdjy"
+      "py": "xdxingdongjiao",
+      "abbr": "xdxdj"
     },
     "sh605099": {
       "code": "605099",

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-03",
+  "last_update": "2026-09-07",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -11751,7 +11751,7 @@
       "market": "hk",
       "type": "港",
       "name": "智算能建",
-      "name_en": "AI ENERGY ENG",
+      "name_en": "AI ENERGY E-2K",
       "py": "zhisuannengjian",
       "abbr": "zsnj"
     },
@@ -12147,7 +12147,7 @@
       "market": "hk",
       "type": "港",
       "name": "北京體育文化",
-      "name_en": "BJ SPORTS & ENT",
+      "name_en": "BJ SPORTS&E-NEW",
       "py": "beijingtiyuwenhua",
       "abbr": "bjtywh"
     },
@@ -13199,10 +13199,10 @@
       "code": "01953",
       "market": "hk",
       "type": "港",
-      "name": "RIMBACO",
-      "name_en": "RIMBACO",
-      "py": "",
-      "abbr": ""
+      "name": "賽孚迅國際",
+      "name_en": "SFQ GLOBAL",
+      "py": "saifuxunguoji",
+      "abbr": "sfxgj"
     },
     "hk01955": {
       "code": "01955",
@@ -13770,6 +13770,15 @@
       "name_en": "CIMC",
       "py": "zhongjijituan",
       "abbr": "zjjt"
+    },
+    "hk02041": {
+      "code": "02041",
+      "market": "hk",
+      "type": "港",
+      "name": "麥科田",
+      "name_en": "MEDCAPTAIN",
+      "py": "maiketian",
+      "abbr": "mkt"
     },
     "hk02048": {
       "code": "02048",
@@ -18402,7 +18411,7 @@
       "market": "hk",
       "type": "港",
       "name": "北京體育文化",
-      "name_en": "BJ SPORTS & ENT",
+      "name_en": "BJ SPORTS&E-OLD",
       "py": "beijingtiyuwenhua",
       "abbr": "bjtywh"
     },
@@ -18450,6 +18459,15 @@
       "name_en": "ALPHA PRO H-20K",
       "py": "aerfaqiye-erwan",
       "abbr": "aefqy-ew"
+    },
+    "hk02918": {
+      "code": "02918",
+      "market": "hk",
+      "type": "港",
+      "name": "智算能建(一萬)",
+      "name_en": "AI ENERGY E-10K",
+      "py": "zhisuannengjian(yiwan)",
+      "abbr": "zsnj(yw)"
     },
     "hk03001": {
       "code": "03001",
@@ -26218,14 +26236,14 @@
       "py": "yaoxingkejijituan",
       "abbr": "yxkjjt"
     },
-    "hk08578": {
-      "code": "08578",
+    "hk08580": {
+      "code": "08580",
       "market": "hk",
       "type": "港",
-      "name": "國恩控股股權",
-      "name_en": "GUOEN HLDGS RTS",
-      "py": "guoenkongguguquan",
-      "abbr": "gekggq"
+      "name": "吉輝控股股權",
+      "name_en": "KPM HOLDING RTS",
+      "py": "jihuikongguguquan",
+      "abbr": "jhkggq"
     },
     "hk08601": {
       "code": "08601",

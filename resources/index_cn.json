@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-04",
+  "last_update": "2026-09-07",
   "codes": {
     "sh000001": {
       "code": "000001",
@@ -6548,10 +6548,10 @@
       "code": "480059",
       "market": "sz",
       "type": "指",
-      "name": "航空出行R",
+      "name": "国证航空R",
       "name_en": "",
-      "py": "hangkongchuxingr",
-      "abbr": "hkcxr"
+      "py": "guozhenghangkongr",
+      "abbr": "gzhkr"
     },
     "sz480063": {
       "code": "480063",
@@ -8816,10 +8816,10 @@
       "code": "980059",
       "market": "sz",
       "type": "指",
-      "name": "航空出行",
+      "name": "国证航空",
       "name_en": "",
-      "py": "hangkongchuxing",
-      "abbr": "hkcx"
+      "py": "guozhenghangkong",
+      "abbr": "gzhk"
     },
     "sz980063": {
       "code": "980063",
