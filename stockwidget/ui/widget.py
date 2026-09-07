@@ -171,7 +171,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._index_updating = False # 市场代码列表后台更新标志
         self._refresh_thread = None  # 后台刷新线程（避免网络请求阻塞 UI）
 
-        self.model = SimpleTableModel(headers=self.ALL_HEADERS, align_right_cols=[1,2,3,4,5])
+        # 首次报价到达前只显示紧凑提示，避免所有列撑出临时长条。
+        self.model = SimpleTableModel(headers=[], align_right_cols=[])
         self.table.setModel(self.model)
 
         self.k_delegate = KLineDelegate(self.table, base_pt=12)
@@ -181,6 +182,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.k_column_visible_index = None
 
         self.vbox.addWidget(self.table)
+        self.table.hide()
+        self._show_message("加载中…", kind="loading")
 
         for w in (self.panel, self.table, self.table.viewport(), self.table.horizontalHeader()):
             w.installEventFilter(self)
@@ -378,7 +381,13 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if isinstance(pos_cfg, dict) and "x" in pos_cfg and "y" in pos_cfg:
             saved = (int(pos_cfg["x"]), int(pos_cfg["y"]))
 
-        x, y = resolve_restore_position(saved, rects, primary, self.width(), self.height())
+        # 已保存的屏内左上角不应被临时加载提示的尺寸推走。
+        restoring_on_screen = saved is not None and any(
+            left <= saved[0] < left + width and top <= saved[1] < top + height
+            for left, top, width, height in rects
+        )
+        width, height = (1, 1) if restoring_on_screen else (self.width(), self.height())
+        x, y = resolve_restore_position(saved, rects, primary, width, height)
         self.move(x, y)
 
     # ----- 数据 & 投影 -----
@@ -415,6 +424,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         right_cols = [i for i, h in enumerate(headers) if h not in ("名称", "K线", "卖一")]
         self.model.set_align_right_cols(right_cols)
         self.model.set_rows_headers(proj_rows, headers, projected_roles)
+        self.table.setVisible(bool(headers))
         self._sync_colors_to_views()
 
         old_kline_col = self.k_column_visible_index

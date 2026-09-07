@@ -132,6 +132,28 @@ class FloatLabelMetricLayoutTests(unittest.TestCase):
             ["name", "kline", "price", "b1s1"],
         )
 
+    def test_startup_is_compact_and_keeps_saved_position_near_right_edge(self):
+        screen = self.qt_app.primaryScreen().availableGeometry()
+        saved = QPoint(screen.right() - 25, screen.top() + 100)
+        window = self._window({
+            "pos": {"x": saved.x(), "y": saved.y()},
+            "visible_metrics": ["price"],
+            "name_visible": False,
+        })
+        window.show()
+        self.qt_app.processEvents()
+        self.assertLess(window.width(), 150)
+        self.assertEqual(window.pos(), saved)
+        self.assertTrue(window.table.isHidden())
+        row, roles = self._row_and_roles()
+        with patch.object(window, "_format_data", return_value=(row, roles)):
+            window._process_data((True, {"sh600519": {}}, None))
+        self.qt_app.processEvents()
+        self.assertEqual(window.pos(), saved)
+        self.assertFalse(window.table.isHidden())
+        self.assertTrue(window.message_label.isHidden())
+        self.assertEqual(window.model._headers, ["现价"])
+
     def test_name_metric_can_be_reordered_like_other_metrics(self):
         window = self._window(
             {

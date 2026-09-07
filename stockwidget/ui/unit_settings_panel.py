@@ -1,6 +1,6 @@
 """成交量/成交额的单位设置悬浮面板。"""
 
-from PySide6.QtCore import QPoint, Qt, Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -8,8 +8,9 @@ from PySide6.QtWidgets import (
     QRadioButton,
     QSizePolicy,
     QVBoxLayout,
-    QWidget,
 )
+
+from stockwidget.ui.metric_settings_panel import MetricSettingsPanel
 
 # 单位模式: cn=中文, en=英文, auto=自动（美股/国际指数用英文，其余用中文）
 UNIT_OPTIONS = (
@@ -19,15 +20,15 @@ UNIT_OPTIONS = (
 )
 
 
-class UnitSettingsPanel(QFrame):
-    """单击“成交量/成交额”指标块时弹出的单位选择面板。"""
+class UnitSettingsPanel(MetricSettingsPanel):
+    """点击“成交量/成交额”后的 ⓘ时弹出的单位选择面板。"""
 
     unit_mode_changed = Signal(str)
     # 面板关闭（含点击外部空白关闭）时发出，用于清除指标块的选中状态
     panel_closed = Signal()
 
     def __init__(self, parent=None):
-        super().__init__(parent, Qt.WindowType.Popup)
+        super().__init__(parent)
         self.setObjectName("unit_settings_panel")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setFrameShape(QFrame.Shape.StyledPanel)
@@ -79,45 +80,17 @@ class UnitSettingsPanel(QFrame):
     def set_theme(self, dark: bool):
         if dark:
             background = "rgb(44, 44, 46)"
-            foreground = "rgb(242, 242, 247)"
             border = "rgba(255, 255, 255, 0.28)"
         else:
             background = "rgb(250, 250, 250)"
-            foreground = "rgb(28, 28, 30)"
             border = "rgba(0, 0, 0, 0.28)"
         self.setStyleSheet(f"""
             QFrame#unit_settings_panel {{
                 background-color: {background};
-                color: {foreground};
                 border: 1px solid {border};
                 border-radius: 8px;
             }}
-            QFrame#unit_settings_panel QLabel,
-            QFrame#unit_settings_panel QRadioButton {{
-                color: {foreground};
-                border: none;
-                background: transparent;
-            }}
         """)
-
-    def show_for(self, anchor: QWidget):
-        """在锚点控件下方弹出并限制在屏幕范围内。"""
-        self.adjustSize()
-        position = anchor.mapToGlobal(QPoint(0, anchor.height() + 2))
-        screen = anchor.screen()
-        available = screen.availableGeometry() if screen is not None else None
-        if available is not None:
-            max_x = max(available.left(), available.right() - self.width() + 1)
-            x = min(max(position.x(), available.left()), max_x)
-            below_y = position.y()
-            above_y = anchor.mapToGlobal(QPoint(0, -self.height() - 2)).y()
-            y = below_y if below_y + self.height() <= available.bottom() + 1 else above_y
-            max_y = max(available.top(), available.bottom() - self.height() + 1)
-            y = min(max(y, available.top()), max_y)
-            position = QPoint(x, y)
-        self.move(position)
-        self.show()
-        self.raise_()
 
     def hideEvent(self, event):
         super().hideEvent(event)

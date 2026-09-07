@@ -1,13 +1,13 @@
 """设置页的指标显示池与拖动排序控件。"""
 
 from PySide6.QtCore import (
-    QByteArray, QMimeData, QPoint, QRectF, QSize, Qt, QTimer, Signal,
+    QByteArray, QMimeData, QPoint, QRect, QRectF, QSize, Qt, Signal,
 )
 from PySide6.QtGui import (
     QColor, QCursor, QDrag, QKeyEvent, QPainter, QPalette, QPixmap,
 )
 from PySide6.QtWidgets import (
-    QApplication, QLabel, QListWidget, QListWidgetItem, QVBoxLayout, QWidget,
+    QLabel, QListWidget, QListWidgetItem, QVBoxLayout, QWidget,
 )
 
 from stockwidget.core.metric_layout import (
@@ -16,19 +16,20 @@ from stockwidget.core.metric_layout import (
     NAME_METRIC_ID,
     normalize_visible_metrics,
 )
+from stockwidget.ui.theme import accent_color, accent_rgba
 
 
 _METRIC_MIME_TYPE = "application/x-stockwidget-metric"
 _POOL_DISPLAYED = "displayed"
 _POOL_AVAILABLE = "available"
-# 单击打开单位设置面板的指标
+# 点击 ⓘ 打开单位设置面板的指标
 _UNIT_METRIC_IDS = ("volume", "amount")
-# 可单击调出设置面板的指标：文本后追加 ⓘ 提示
+# 带设置入口的指标：文本后追加 ⓘ
 _CLICKABLE_METRIC_IDS = (NAME_METRIC_ID, "volume", "amount")
 
 
 def _metric_display_text(metric_id: str) -> str:
-    """指标块显示文本：可单击调面板的指标追加 ⓘ 提示。"""
+    """指标块显示文本：有设置面板的指标追加 ⓘ 入口。"""
     label = METRIC_BY_ID[metric_id].label
     return f"{label} ⓘ" if metric_id in _CLICKABLE_METRIC_IDS else label
 
@@ -38,9 +39,9 @@ class MetricListWidget(QListWidget):
 
     drop_requested = Signal(str, str, int)
     metric_activated = Signal(str, str)
-    # 单击“名称”块时请求打开名称设置面板；参数为池自身，用于定位面板。
+    # 点击“名称”后的 ⓘ 请求打开面板；参数为池自身，用于定位面板。
     name_settings_requested = Signal(object)
-    # 单击“成交量/成交额”块时请求打开单位设置面板；参数为池自身。
+    # 点击“成交量/成交额”后的 ⓘ 请求打开面板；参数为池自身。
     unit_settings_requested = Signal(object)
 
     def __init__(self, pool_name: str, empty_text: str, parent=None):
@@ -70,13 +71,8 @@ class MetricListWidget(QListWidget):
         self._drag_radius = 5.0
         # 拖拽时目标插入位置指示（None 表示未在拖拽中）
         self._drop_indicator_index = None
-        self._drop_color = QColor(0, 122, 255)
-        # 单击可单击块的“待打开面板”状态：双击间隔内未出第二击才打开面板
-        self._pending_click = None
-        self._pending_timer = QTimer(self)
-        self._pending_timer.setSingleShot(True)
-        self._pending_timer.setInterval(QApplication.doubleClickInterval() or 400)
-        self._pending_timer.timeout.connect(self._fire_pending_click)
+        self._drop_color = accent_color()
+        self._pressed_info_id = None
         self.set_theme(False)
 
     def set_metric_ids(self, metric_ids: list[str]):
@@ -85,6 +81,7 @@ class MetricListWidget(QListWidget):
         for metric_id in metric_ids:
             text = _metric_display_text(metric_id)
             item = QListWidgetItem(text)
+            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             item.setData(Qt.ItemDataRole.UserRole, metric_id)
             item.setFlags(
                 Qt.ItemFlag.ItemIsEnabled
@@ -92,9 +89,9 @@ class MetricListWidget(QListWidget):
                 | Qt.ItemFlag.ItemIsDragEnabled
             )
             if metric_id == NAME_METRIC_ID:
-                item.setToolTip("单击设置名称显示（字数/代码/类型）")
+                item.setToolTip("单击 ⓘ 设置名称显示（字数/代码/类型）；双击文字移入另一池")
             elif metric_id in _UNIT_METRIC_IDS:
-                item.setToolTip("单击设置数值单位（中文/英文/自动）")
+                item.setToolTip("单击 ⓘ 设置数值单位（中文/英文/自动）；双击文字移入另一池")
             width = self.fontMetrics().horizontalAdvance(text) + 14
             item.setSizeHint(QSize(max(38, width), 22))
             self.addItem(item)
@@ -113,19 +110,16 @@ class MetricListWidget(QListWidget):
         if dark:
             pool_bg = "rgba(255, 255, 255, 0.06)"
             chip = "rgba(255, 255, 255, 0.12)"
-            hover = "rgba(10, 132, 255, 0.30)"
-            selected = "rgba(10, 132, 255, 0.46)"
+            hover = accent_rgba(0.12)
             scroll_handle = "rgba(255, 255, 255, 0.34)"
             self._drag_chip_bg = QColor(255, 255, 255, 31)
-            self._drop_color = QColor(10, 132, 255)
         else:
             pool_bg = "rgba(0, 0, 0, 0.05)"
             chip = "rgba(0, 0, 0, 0.07)"
-            hover = "rgba(0, 122, 255, 0.16)"
-            selected = "rgba(0, 122, 255, 0.28)"
+            hover = accent_rgba(0.08)
             scroll_handle = "rgba(0, 0, 0, 0.28)"
             self._drag_chip_bg = QColor(0, 0, 0, 18)
-            self._drop_color = QColor(0, 122, 255)
+        self._drop_color = accent_color()
         self.setStyleSheet(f"""
             QListWidget {{
                 background-color: {pool_bg};
@@ -141,7 +135,10 @@ class MetricListWidget(QListWidget):
                 margin: 1px;
             }}
             QListWidget::item:hover {{ background: {hover}; }}
-            QListWidget::item:selected {{ background: {selected}; }}
+            QListWidget::item:selected {{
+                background: {hover};
+                color: palette(text);
+            }}
             QScrollBar:horizontal {{
                 height: 5px;
                 background: transparent;
@@ -305,50 +302,78 @@ class MetricListWidget(QListWidget):
                 return
         super().keyPressEvent(event)
 
-    def _on_item_clicked(self, item: QListWidgetItem):
-        metric_id = str(item.data(Qt.ItemDataRole.UserRole) or "")
-        if metric_id in _CLICKABLE_METRIC_IDS:
-            # 单击先排队：双击间隔内没有第二击才打开设置面板
-            self._pending_click = metric_id
-            self._pending_timer.start()
-        else:
-            # 没有独立面板的指标块单击后不保留选中状态
-            self.clearSelection()
-            self.setCurrentItem(None)
-            self.clearFocus()
+    def _on_item_clicked(self, _item: QListWidgetItem):
+        self.clearSelection()
+        self.setCurrentItem(None)
+        self.clearFocus()
 
-    def _fire_pending_click(self):
-        """单击等待期结束后打开对应设置面板。"""
-        metric_id, self._pending_click = self._pending_click, None
-        self._pending_timer.stop()
+    def info_rect(self, item: QListWidgetItem) -> QRect:
+        """居中文本末尾 ⓘ 的独立命中区域（viewport 坐标）。"""
+        if item.data(Qt.ItemDataRole.UserRole) not in _CLICKABLE_METRIC_IDS:
+            return QRect()
+        rect = self.visualItemRect(item)
+        metrics = self.fontMetrics()
+        text_width = metrics.horizontalAdvance(item.text())
+        info_width = metrics.horizontalAdvance("ⓘ")
+        right = rect.center().x() + text_width // 2
+        return QRect(right - info_width - 2, rect.top(), info_width + 4, rect.height())
+
+    def _request_settings(self, metric_id: str):
         if metric_id == NAME_METRIC_ID:
             self.name_settings_requested.emit(self)
         elif metric_id in _UNIT_METRIC_IDS:
             self.unit_settings_requested.emit(self)
 
-    def cancel_pending_click(self):
-        """取消排队中的面板打开（点击空白/其他区域时调用）。"""
-        self._pending_click = None
-        self._pending_timer.stop()
-
     def _activate_item(self, item: QListWidgetItem):
         metric_id = str(item.data(Qt.ItemDataRole.UserRole) or "")
         if metric_id not in METRIC_BY_ID:
             return
-        # 双击：取消排队中的面板打开，并快速移动到另一池
-        if self._pending_click == metric_id:
-            self.cancel_pending_click()
         self.metric_activated.emit(self.pool_name, metric_id)
 
     def mousePressEvent(self, event):
+        self._pressed_info_id = None
+        pos = event.position().toPoint()
+        item = self.itemAt(pos)
+        if (event.button() == Qt.MouseButton.LeftButton and item is not None
+                and self.info_rect(item).contains(pos)):
+            self._pressed_info_id = item.data(Qt.ItemDataRole.UserRole)
+            event.accept()
+            return
         # 点击池内空白处时取消选中与焦点，其余交给默认处理。
         if (event.button() == Qt.MouseButton.LeftButton
                 and not self.indexAt(event.position().toPoint()).isValid()):
             self.clearSelection()
             self.setCurrentItem(None)
             self.clearFocus()
-            self.cancel_pending_click()
         super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        metric_id, self._pressed_info_id = self._pressed_info_id, None
+        if metric_id is not None and event.button() == Qt.MouseButton.LeftButton:
+            pos = event.position().toPoint()
+            item = self.itemAt(pos)
+            if (item is not None and item.data(Qt.ItemDataRole.UserRole) == metric_id
+                    and self.info_rect(item).contains(pos)):
+                self.setCurrentItem(item)
+                self._request_settings(metric_id)
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self._pressed_info_id is not None:
+            event.accept()
+            return
+        super().mouseMoveEvent(event)
+
+    def mouseDoubleClickEvent(self, event):
+        pos = event.position().toPoint()
+        item = self.itemAt(pos)
+        if (event.button() == Qt.MouseButton.LeftButton and item is not None
+                and self.info_rect(item).contains(pos)):
+            self.mousePressEvent(event)
+            return
+        super().mouseDoubleClickEvent(event)
 
     def paintEvent(self, event):
         super().paintEvent(event)
@@ -384,7 +409,7 @@ class MetricListWidget(QListWidget):
 
 
 class MetricPoolWidget(QWidget):
-    """上“可用指标”、下“已显示指标”双池，输出有序的已显示指标列表。"""
+    """上“已显示指标”、下“可用指标”双池，输出有序的已显示指标列表。"""
 
     visible_metrics_changed = Signal(list)
     name_settings_requested = Signal(object)
@@ -414,10 +439,10 @@ class MetricPoolWidget(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
-        layout.addWidget(self.available_label)
-        layout.addWidget(self.available_pool)
         layout.addWidget(self.displayed_label)
         layout.addWidget(self.displayed_pool)
+        layout.addWidget(self.available_label)
+        layout.addWidget(self.available_pool)
 
         for pool in (self.available_pool, self.displayed_pool):
             pool.drop_requested.connect(
@@ -542,7 +567,6 @@ class MetricPoolWidget(QWidget):
             pool.clearSelection()
             pool.setCurrentItem(None)
             pool.clearFocus()
-            pool.cancel_pending_click()
 
     def set_theme(self, dark: bool):
         for pool in (self.available_pool, self.displayed_pool):

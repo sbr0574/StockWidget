@@ -1,4 +1,5 @@
 import os
+import re
 import tempfile
 import threading
 import time
@@ -8,7 +9,7 @@ from unittest.mock import Mock, patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QPoint, QSize, Qt
-from PySide6.QtGui import QColor, QIcon, QPixmap
+from PySide6.QtGui import QColor, QIcon, QPalette, QPixmap
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QAbstractItemDelegate
 
@@ -117,6 +118,12 @@ class SettingsDialogTests(unittest.TestCase):
         self._windows.append((dialog, window))
         return dialog, window
 
+    def _click_info(self, dialog, pool, item):
+        dialog.show()
+        self.qt_app.processEvents()
+        pool.scrollToItem(item)
+        QTest.mouseClick(pool.viewport(), Qt.LeftButton, pos=pool.info_rect(item).center())
+
     def _make_icon_app(self, choice="default", custom_path=""):
         app = Mock()
         app._icon_choice = choice
@@ -174,13 +181,13 @@ class SettingsDialogTests(unittest.TestCase):
             self.assertIn("QPushButton#btn_fg_color:pressed", stylesheet)
             self.assertIn("QPushButton#btn_fg_color:disabled", stylesheet)
             self.assertNotIn("QPushButton#btn_fg_color:checked", stylesheet)
-            self.assertIn("rgb(10, 132, 255)", stylesheet)
+            self.assertIn(self.qt_app.palette().color(QPalette.Accent).name(), stylesheet)
 
             color_rules = []
             for state in ("", ":hover", ":pressed", ":disabled"):
-                rule = stylesheet.split(
-                    f"QPushButton#btn_neutral_color{state} {{", 1
-                )[1].split("}", 1)[0]
+                rule = re.search(
+                    rf"QPushButton#btn_neutral_color{state}(?:,\s*[^{{]+)? \{{([^}}]+)", stylesheet
+                ).group(1)
                 background = next(
                     line.strip()
                     for line in rule.splitlines()
@@ -190,9 +197,9 @@ class SettingsDialogTests(unittest.TestCase):
                 color_rules.append(background)
 
             self.assertEqual(len(set(color_rules)), 4)
-            color_base_rule = stylesheet.split(
-                "QPushButton#btn_neutral_color {", 1
-            )[1].split("}", 1)[0]
+            color_base_rule = re.search(
+                r"QPushButton#btn_neutral_color(?:,\s*[^{}]+)? \{([^}]+)", stylesheet
+            ).group(1)
             self.assertIn("border: none", color_base_rule)
             self.assertIn("border-radius: 6px", color_base_rule)
             self.assertIn("padding: 3px", color_base_rule)
@@ -208,6 +215,50 @@ class SettingsDialogTests(unittest.TestCase):
         center = image.pixelColor(image.width() // 2, image.height() // 2)
         self.assertEqual(center.name(), "#123456")
         self.assertEqual(image.pixelColor(0, 0).alpha(), 0)
+
+    def test_buttons_and_metric_pools_follow_palette_changes(self):
+        dialog, _window = self._make_dialog()
+        original = self.qt_app.palette()
+        try:
+            palette = QPalette(original)
+            palette.setColor(QPalette.Accent, QColor("#a23b61"))
+            self.qt_app.setPalette(palette)
+            self.qt_app.processEvents()
+            self.assertIn("#a23b61", dialog.styleSheet())
+            self.assertIn("rgba(162, 59, 97, 0.08)", dialog.styleSheet())
+            for pool in (dialog.metric_pool.displayed_pool, dialog.metric_pool.available_pool):
+                self.assertEqual(pool._drop_color.name(), "#a23b61")
+                self.assertIn("rgba(162, 59, 97, 0.08)", pool.styleSheet())
+        finally:
+            self.qt_app.setPalette(original)
+
+    def test_drop_restores_dragged_row_selection_after_cleanup(self):
+        for target in (0, 1):
+            with self.subTest(target=target):
+                with patch.object(FloatLabel, "_refresh_from_function"):
+                    dialog, _window = self._make_dialog({
+                        "sh600519": {"checked": True},
+                        "sh000001": {"checked": True},
+                    })
+                dialog.show()
+                self.qt_app.processEvents()
+                table = dialog.list_codes
+                table.setCurrentCell(0, 1)
+                dragged = table.item(0, 1)
+                event = Mock()
+                event.source.return_value = table
+                event.position.return_value.toPoint.return_value = table.visualItemRect(table.item(target, 1)).center()
+                dialog._handle_drop(event)
+                self.assertEqual(table.selectedItems(), [])
+                event.setDropAction.assert_called_once_with(Qt.CopyAction)
+                self.qt_app.processEvents()
+                self.assertIs(table.currentItem(), dragged)
+                self.assertIn(dragged, table.selectedItems())
+                self.assertEqual(table.currentRow(), target)
+                self.assertEqual(table.rowCount(), 2)
+                self.assertTrue(table.hasFocus())
+                self.assertTrue(dialog.btn_del.isEnabled())
+                self.assertEqual(dialog.btn_top.isEnabled(), target > 0)
 
     def test_general_layout_and_about_tab(self):
         dialog, _window = self._make_dialog()
@@ -347,9 +398,7 @@ class SettingsDialogTests(unittest.TestCase):
         )
 
         with patch.object(window, "_refresh_from_function"):
-            pool.itemClicked.emit(name_item)
-            # 单击等待期结束后打开面板
-            pool._fire_pending_click()
+            self._click_info(dialog, pool, name_item)
         self.qt_app.processEvents()
 
         panel = dialog.name_settings_panel
@@ -380,9 +429,7 @@ class SettingsDialogTests(unittest.TestCase):
         )
 
         with patch.object(window, "_refresh_from_function"):
-            pool.itemClicked.emit(volume_item)
-            # 单击等待期结束后打开面板
-            pool._fire_pending_click()
+            self._click_info(dialog, pool, volume_item)
         self.qt_app.processEvents()
 
         panel = dialog.unit_settings_panel
@@ -576,16 +623,19 @@ class SettingsDialogTests(unittest.TestCase):
             if displayed.item(row).data(Qt.ItemDataRole.UserRole) == "name"
         )
 
-        # 第一击排队打开面板
-        displayed.itemClicked.emit(name_item)
-        self.assertEqual(displayed._pending_click, "name")
+        # 点击文字立即结束，不会打开面板，也没有待执行的延迟。
+        dialog.show()
+        self.qt_app.processEvents()
+        pos = displayed.visualItemRect(name_item).center() - QPoint(8, 0)
+        QTest.mouseClick(displayed.viewport(), Qt.LeftButton, pos=pos)
+        self.assertIsNone(displayed.currentItem())
+        self.assertFalse(dialog.name_settings_panel.isVisible())
 
-        # 第二击（双击）取消面板并快速移动到另一池
+        # 双击文字快速移动到另一池。
         with patch.object(window, "_refresh_from_function"):
-            displayed.itemDoubleClicked.emit(name_item)
+            QTest.mouseDClick(displayed.viewport(), Qt.LeftButton, pos=pos)
         self.qt_app.processEvents()
 
-        self.assertIsNone(displayed._pending_click)
         self.assertFalse(dialog.name_settings_panel.isVisible())
         self.assertFalse(window.name_visible)
         self.assertEqual(displayed.currentItem(), None)
@@ -599,8 +649,7 @@ class SettingsDialogTests(unittest.TestCase):
             if displayed.item(row).data(Qt.ItemDataRole.UserRole) == "name"
         )
 
-        displayed.itemClicked.emit(name_item)
-        displayed._fire_pending_click()
+        self._click_info(dialog, displayed, name_item)
         self.qt_app.processEvents()
         panel = dialog.name_settings_panel
         self.assertTrue(panel.isVisible())
@@ -612,6 +661,49 @@ class SettingsDialogTests(unittest.TestCase):
         panel.hide()
         self.qt_app.processEvents()
         self.assertIsNone(displayed.currentItem())
+
+    def test_info_click_toggles_immediately_and_outside_click_closes(self):
+        dialog, _window = self._make_dialog()
+        pool = dialog.metric_pool.displayed_pool
+        item = pool.item(0)
+        self._click_info(dialog, pool, item)
+        panel = dialog.name_settings_panel
+        self.assertTrue(panel.isVisible())
+        self.assertIs(pool.currentItem(), item)
+        # QTest 直接投递到指标池时，也应切换关闭。
+        QTest.mouseClick(pool.viewport(), Qt.LeftButton, pos=pool.info_rect(item).center())
+        self.assertFalse(panel.isVisible())
+        self.assertIsNone(pool.currentItem())
+
+        self._click_info(dialog, pool, item)
+        # 原生 Popup 把外部点击交给弹窗：同一个 ⓘ 禁止重放，避免重开。
+        global_pos = pool.viewport().mapToGlobal(pool.info_rect(item).center())
+        with patch.object(panel, "setAttribute", wraps=panel.setAttribute) as set_attribute:
+            QTest.mouseClick(panel, Qt.LeftButton, pos=panel.mapFromGlobal(global_pos))
+            set_attribute.assert_any_call(Qt.WA_NoMouseReplay, True)
+        self.assertFalse(panel.isVisible())
+        self.assertIsNone(pool.currentItem())
+
+        self._click_info(dialog, pool, item)
+        global_pos = dialog.ui.gb_color.mapToGlobal(QPoint(4, 4))
+        QTest.mouseClick(panel, Qt.LeftButton, pos=panel.mapFromGlobal(global_pos))
+        self.assertFalse(panel.isVisible())
+        self.assertFalse(panel.testAttribute(Qt.WA_NoMouseReplay))
+        self.assertIsNone(pool.currentItem())
+
+    def test_switching_info_entry_preserves_new_highlight(self):
+        dialog, _window = self._make_dialog()
+        name_pool = dialog.metric_pool.displayed_pool
+        self._click_info(dialog, name_pool, name_pool.item(0))
+        pool = dialog.metric_pool.available_pool
+        item = next(pool.item(r) for r in range(pool.count())
+                    if pool.item(r).data(Qt.UserRole) == "volume")
+        QTest.mouseClick(pool.viewport(), Qt.LeftButton, pos=pool.info_rect(item).center())
+        self.assertFalse(dialog.name_settings_panel.isVisible())
+        self.assertTrue(dialog.unit_settings_panel.isVisible())
+        self.assertIs(pool.currentItem(), item)
+        self.assertIsNone(name_pool.currentItem())
+        self.assertEqual(dialog.unit_settings_panel._metric_id, "volume")
 
     def test_manual_update_check_shows_result(self):
         dialog, _window = self._make_dialog()
@@ -645,7 +737,7 @@ class SettingsDialogTests(unittest.TestCase):
             open_url.assert_called_once()
             url = open_url.call_args[0][0]
             self.assertTrue(url.isLocalFile())
-            self.assertEqual(url.toLocalFile(), config_paths())
+            self.assertEqual(os.path.normpath(url.toLocalFile()), os.path.normpath(config_paths()))
 
     def test_unicolor_defaults_on_and_controls_direction_colors(self):
         dialog, window = self._make_dialog()

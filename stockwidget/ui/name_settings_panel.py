@@ -1,6 +1,6 @@
 """名称指标的显示设置悬浮面板。"""
 
-from PySide6.QtCore import QPoint, Qt, Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -9,8 +9,9 @@ from PySide6.QtWidgets import (
     QLabel,
     QSizePolicy,
     QVBoxLayout,
-    QWidget,
 )
+
+from stockwidget.ui.metric_settings_panel import MetricSettingsPanel
 
 # 名称显示字数选项: 0=不显示, -1=全部显示, 1-4=前 N 个字
 NAME_LENGTH_OPTIONS = (
@@ -23,8 +24,8 @@ NAME_LENGTH_OPTIONS = (
 )
 
 
-class NameSettingsPanel(QFrame):
-    """单击“名称”指标块时弹出的设置面板（显示字数/代码/类型）。"""
+class NameSettingsPanel(MetricSettingsPanel):
+    """点击“名称”后的 ⓘ时弹出的设置面板（显示字数/代码/类型）。"""
 
     name_length_changed = Signal(int)
     code_visible_changed = Signal(bool)
@@ -33,7 +34,7 @@ class NameSettingsPanel(QFrame):
     panel_closed = Signal()
 
     def __init__(self, parent=None):
-        super().__init__(parent, Qt.WindowType.Popup)
+        super().__init__(parent)
         self.setObjectName("name_settings_panel")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setFrameShape(QFrame.Shape.StyledPanel)
@@ -101,44 +102,17 @@ class NameSettingsPanel(QFrame):
     def set_theme(self, dark: bool):
         if dark:
             background = "rgb(44, 44, 46)"
-            foreground = "rgb(242, 242, 247)"
             border = "rgba(255, 255, 255, 0.28)"
         else:
             background = "rgb(250, 250, 250)"
-            foreground = "rgb(28, 28, 30)"
             border = "rgba(0, 0, 0, 0.28)"
         self.setStyleSheet(f"""
             QFrame#name_settings_panel {{
                 background-color: {background};
-                color: {foreground};
                 border: 1px solid {border};
                 border-radius: 8px;
             }}
-            QFrame#name_settings_panel QLabel,
-            QFrame#name_settings_panel QCheckBox,
-            QFrame#name_settings_panel QComboBox {{
-                color: {foreground};
-            }}
         """)
-
-    def show_for(self, anchor: QWidget):
-        """在锚点控件下方弹出并限制在屏幕范围内。"""
-        self.adjustSize()
-        position = anchor.mapToGlobal(QPoint(0, anchor.height() + 2))
-        screen = anchor.screen()
-        available = screen.availableGeometry() if screen is not None else None
-        if available is not None:
-            max_x = max(available.left(), available.right() - self.width() + 1)
-            x = min(max(position.x(), available.left()), max_x)
-            below_y = position.y()
-            above_y = anchor.mapToGlobal(QPoint(0, -self.height() - 2)).y()
-            y = below_y if below_y + self.height() <= available.bottom() + 1 else above_y
-            max_y = max(available.top(), available.bottom() - self.height() + 1)
-            y = min(max(y, available.top()), max_y)
-            position = QPoint(x, y)
-        self.move(position)
-        self.show()
-        self.raise_()
 
     def hideEvent(self, event):
         super().hideEvent(event)

@@ -25,6 +25,7 @@ from stockwidget.ui.widget import FloatLabel
 from stockwidget.ui.metric_pool import MetricPoolWidget
 from stockwidget.ui.name_settings_panel import NameSettingsPanel
 from stockwidget.ui.unit_settings_panel import UnitSettingsPanel
+from stockwidget.ui.theme import accent_color, accent_rgba
 from stockwidget.ui.add_code_panel import (
     ADDED_ROLE, ENTRY_ROLE, AddCodePanel, entry_display_text,
 )
@@ -107,28 +108,28 @@ def _build_settings_stylesheet(dark: bool) -> str:
         sep = "rgba(255, 255, 255, 0.35)"
         header_bg, header_line = "rgba(255, 255, 255, 0.10)", "rgba(255, 255, 255, 0.30)"
         empty_hint = "rgba(255, 255, 255, 0.28)"
-        icon_hover_bg = "rgba(255, 255, 255, 0.12)"
-        icon_pressed_bg = "rgba(255, 255, 255, 0.18)"
-        icon_selected = "rgba(10, 132, 255, 0.24)"
-        icon_selected_hover = "rgba(10, 132, 255, 0.32)"
-        icon_selected_pressed = "rgba(10, 132, 255, 0.40)"
+        icon_hover_bg = accent_rgba(0.12)
+        icon_pressed_bg = accent_rgba(0.22)
+        icon_selected = accent_rgba(0.20)
+        icon_selected_hover = accent_rgba(0.26)
+        icon_selected_pressed = accent_rgba(0.34)
         color_bg = "rgba(255, 255, 255, 0.10)"
-        color_hover_bg = "rgba(10, 132, 255, 0.20)"
-        color_pressed_bg = "rgba(10, 132, 255, 0.30)"
+        color_hover_bg = accent_rgba(0.12)
+        color_pressed_bg = accent_rgba(0.22)
         color_disabled_bg = "rgba(255, 255, 255, 0.05)"
         color_disabled_text = "rgba(255, 255, 255, 0.35)"
     else:
         sep = "rgba(0, 0, 0, 0.25)"
         header_bg, header_line = "rgba(0, 0, 0, 0.06)", "rgba(0, 0, 0, 0.20)"
         empty_hint = "rgba(0, 0, 0, 0.28)"
-        icon_hover_bg = "rgba(0, 0, 0, 0.08)"
-        icon_pressed_bg = "rgba(0, 0, 0, 0.14)"
-        icon_selected = "rgba(0, 122, 255, 0.14)"
-        icon_selected_hover = "rgba(0, 122, 255, 0.21)"
-        icon_selected_pressed = "rgba(0, 122, 255, 0.28)"
+        icon_hover_bg = accent_rgba(0.08)
+        icon_pressed_bg = accent_rgba(0.16)
+        icon_selected = accent_rgba(0.12)
+        icon_selected_hover = accent_rgba(0.18)
+        icon_selected_pressed = accent_rgba(0.24)
         color_bg = "rgba(0, 0, 0, 0.07)"
-        color_hover_bg = "rgba(0, 122, 255, 0.13)"
-        color_pressed_bg = "rgba(0, 122, 255, 0.22)"
+        color_hover_bg = accent_rgba(0.08)
+        color_pressed_bg = accent_rgba(0.16)
         color_disabled_bg = "rgba(0, 0, 0, 0.04)"
         color_disabled_text = "rgba(0, 0, 0, 0.35)"
 
@@ -188,7 +189,7 @@ QPushButton#btn_icon_custom {{
 }}
 {icon_checked} {{
     background-color: {icon_selected};
-    border: 2px solid rgb(10, 132, 255);
+    border: 2px solid {accent_color().name()};
 }}
 {icon_checked_hover} {{
     background-color: {icon_selected_hover};
@@ -379,6 +380,7 @@ class SettingsDialog(QDialog):
         self._apply_theme_stylesheet()
         # 系统深浅色切换时跟随更新样式
         QGuiApplication.styleHints().colorSchemeChanged.connect(self._on_color_scheme_changed)
+        QApplication.instance().paletteChanged.connect(self._on_palette_changed)
         self._search_index_source = None
         self._search_index_size = -1
         self._search_index = ()
@@ -433,6 +435,9 @@ class SettingsDialog(QDialog):
         if hasattr(self, "unit_settings_panel"):
             self.unit_settings_panel.set_theme(dark)
         self._refresh_color_buttons()
+
+    def _on_palette_changed(self, _palette):
+        self._apply_theme_stylesheet()
 
     def _refresh_color_buttons(self):
         """用无描边圆形图标展示五个颜色按钮的当前色值。"""
@@ -876,7 +881,6 @@ class SettingsDialog(QDialog):
             pool.clearSelection()
             pool.setCurrentItem(None)
             pool.clearFocus()
-            pool.cancel_pending_click()
 
     def _handle_outside_press(self, obj):
         """设置页内按下鼠标时联动清除另一处选中：
@@ -900,7 +904,6 @@ class SettingsDialog(QDialog):
                     other.clearSelection()
                     other.setCurrentItem(None)
                     other.clearFocus()
-                    other.cancel_pending_click()
         elif self._inside_watchlist(obj):
             self._clear_metric_pool_selections()
         else:
@@ -920,21 +923,34 @@ class SettingsDialog(QDialog):
         """拖动调整顺序：将拖动的行移动到目标位置。
         1. 用 CopyAction（而非 MoveAction）结束拖放，让 drag->exec() 不返回
            MoveAction，从而不触发 startDrag() 里的 clearOrRemove()；
-        2. 同时清空选中——即使 clearOrRemove() 仍被触发，也没有选中行可删。
+        2. 暂时清空选中，等拖放清理完成后恢复拖动行的高亮与焦点。
         否则源行会被二次删除，表现为拖拽后丢一行。
         """
         src_row = self.list_codes.currentRow()
         pos = ev.position().toPoint()
         target_row = self.list_codes.rowAt(pos.y())
-        if ev.source() is self.list_codes and src_row >= 0:
-            if target_row < 0:
-                target_row = self.list_codes.rowCount() - 1
-            if target_row != src_row:
-                self._move_row(src_row, target_row)
+        if ev.source() is not self.list_codes or src_row < 0:
+            ev.ignore()
+            return
+        if target_row < 0:
+            target_row = self.list_codes.rowCount() - 1
+        if target_row != src_row:
+            self._move_row(src_row, target_row)
+        dragged_item = self.list_codes.item(target_row, 1)
         self.list_codes.clearSelection()
-        ev.accept()
         ev.setDropAction(Qt.CopyAction)
-        QTimer.singleShot(0, lambda: self._on_codes_changed(None))
+        ev.accept()
+
+        def finish_drop():
+            if dragged_item is not None:
+                self.list_codes.setCurrentItem(
+                    dragged_item,
+                    QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows,
+                )
+                self.list_codes.setFocus(Qt.MouseFocusReason)
+            self._on_codes_changed(None)
+
+        QTimer.singleShot(0, finish_drop)
 
     def _append_code_row(self, code: str = "", name: str = "", checked: bool = False, cost=None):
         self._insert_code_row(
@@ -1203,18 +1219,27 @@ class SettingsDialog(QDialog):
         self._refresh_color_buttons()
 
     def _show_name_settings_panel(self, anchor=None):
-        """单击“名称”指标块时弹出名称显示设置面板。"""
-        self.name_settings_panel.sync_from(self.win)
-        if not isinstance(anchor, QWidget):
-            anchor = self.metric_pool
-        self.name_settings_panel.show_for(anchor)
+        """点击“名称”后的 ⓘ 切换名称显示设置面板。"""
+        self._show_metric_settings_panel(
+            self.name_settings_panel, self.unit_settings_panel, anchor
+        )
 
     def _show_unit_settings_panel(self, anchor=None):
-        """单击“成交量/成交额”指标块时弹出单位设置面板。"""
-        self.unit_settings_panel.sync_from(self.win)
+        """点击“成交量/成交额”后的 ⓘ 切换单位设置面板。"""
+        self._show_metric_settings_panel(
+            self.unit_settings_panel, self.name_settings_panel, anchor
+        )
+
+    def _show_metric_settings_panel(self, panel, other_panel, anchor):
         if not isinstance(anchor, QWidget):
             anchor = self.metric_pool
-        self.unit_settings_panel.show_for(anchor)
+        item = anchor.currentItem() if hasattr(anchor, "currentItem") else None
+        other_panel.hide()
+        # 关闭旧面板会清除两池选中，切换入口时恢复新入口的高亮。
+        if item is not None:
+            anchor.setCurrentItem(item)
+        panel.sync_from(self.win)
+        panel.show_for(anchor)
 
     def _on_family_changed(self, fam: str):
         self.win.set_font_family(fam)
