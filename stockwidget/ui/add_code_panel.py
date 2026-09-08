@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
 )
 
 from stockwidget.core.code_search import query_search_index
+from stockwidget.ui.theme import accent_color, accent_rgba
 
 
 ENTRY_ROLE = Qt.ItemDataRole.UserRole + 1
@@ -77,15 +78,14 @@ class FilledCheckBox(QCheckBox):
         if dark:
             self._indicator_border = QColor(255, 255, 255, 115)
             self._unchecked_fill = QColor(255, 255, 255, 31)
-            self._checked_fill = QColor(10, 132, 255)
-            self._partial_fill = QColor(10, 132, 255, 148)
-            self._hover_fill = QColor(255, 255, 255, 18)
         else:
             self._indicator_border = QColor(0, 0, 0, 97)
             self._unchecked_fill = QColor(0, 0, 0, 20)
-            self._checked_fill = QColor(0, 122, 255)
-            self._partial_fill = QColor(0, 122, 255, 148)
-            self._hover_fill = QColor(0, 122, 255, 15)
+        self._checked_fill = accent_color()
+        self._partial_fill = QColor(self._checked_fill)
+        self._partial_fill.setAlpha(148)
+        self._hover_fill = QColor(self._checked_fill)
+        self._hover_fill.setAlphaF(0.12 if dark else 0.08)
         self.update()
 
     def sizeHint(self):
@@ -158,7 +158,9 @@ class FilledCheckBox(QCheckBox):
         indicator_rect = QRectF(indicator).adjusted(0.5, 0.5, -0.5, -0.5)
         painter.drawRoundedRect(indicator_rect, 3, 3)
 
-        mark_color = QColor(255, 255, 255)
+        mark_color = QApplication.palette().color(
+            QPalette.ColorGroup.Active, QPalette.ColorRole.HighlightedText
+        )
         if not self.isEnabled():
             mark_color.setAlpha(130)
         mark_pen = QPen(mark_color, max(1.5, indicator_rect.height() * 0.13))
@@ -465,15 +467,15 @@ class AddCodePanel(QFrame):
             foreground = "rgb(242, 242, 247)"
             border = "rgba(255, 255, 255, 0.28)"
             field = "rgb(58, 58, 60)"
-            selected = "rgba(10, 132, 255, 0.42)"
-            hovered = "rgba(255, 255, 255, 0.08)"
+            selected = accent_rgba(0.22)
+            hovered = accent_rgba(0.12)
         else:
             background = "rgb(250, 250, 250)"
             foreground = "rgb(28, 28, 30)"
             border = "rgba(0, 0, 0, 0.28)"
             field = "rgb(255, 255, 255)"
-            selected = "rgba(0, 122, 255, 0.20)"
-            hovered = "rgba(0, 122, 255, 0.08)"
+            selected = accent_rgba(0.16)
+            hovered = accent_rgba(0.08)
         self.result_delegate.set_theme(dark)
         for checkbox in self.findChildren(FilledCheckBox):
             checkbox.set_theme(dark)

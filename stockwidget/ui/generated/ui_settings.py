@@ -15,12 +15,11 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComboBox,
-    QDialog, QFontComboBox, QGridLayout, QGroupBox,
-    QHBoxLayout, QHeaderView, QKeySequenceEdit, QLabel,
-    QPushButton, QRadioButton, QSizePolicy, QSlider,
-    QSpinBox, QTabWidget, QTableWidget, QTableWidgetItem,
-    QWidget)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QDialog,
+    QFontComboBox, QGridLayout, QGroupBox, QHBoxLayout,
+    QHeaderView, QKeySequenceEdit, QLabel, QPushButton,
+    QRadioButton, QSizePolicy, QSlider, QSpinBox,
+    QTabWidget, QTableWidget, QTableWidgetItem, QWidget)
 
 from stockwidget.ui.icon_button import CustomIconButton
 
@@ -459,19 +458,19 @@ class Ui_SettingDialog(object):
         self.gb_about.setFlat(True)
         self.label_about_info = QLabel(self.gb_about)
         self.label_about_info.setObjectName(u"label_about_info")
-        self.label_about_info.setGeometry(QRect(20, 30, 501, 121))
+        self.label_about_info.setGeometry(QRect(20, 30, 501, 236))
         self.label_about_info.setTextFormat(Qt.TextFormat.RichText)
         self.label_about_info.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
         self.label_about_info.setWordWrap(True)
         self.label_about_info.setOpenExternalLinks(True)
         self.btn_check_update = QPushButton(self.gb_about)
         self.btn_check_update.setObjectName(u"btn_check_update")
-        self.btn_check_update.setGeometry(QRect(20, 160, 100, 26))
+        self.btn_check_update.setGeometry(QRect(20, 280, 100, 26))
         self.btn_check_update.setAutoDefault(False)
         self.btn_check_update.setFlat(True)
         self.btn_open_cache_dir = QPushButton(self.gb_about)
         self.btn_open_cache_dir.setObjectName(u"btn_open_cache_dir")
-        self.btn_open_cache_dir.setGeometry(QRect(130, 160, 130, 26))
+        self.btn_open_cache_dir.setGeometry(QRect(130, 280, 130, 26))
         self.btn_open_cache_dir.setAutoDefault(False)
         self.btn_open_cache_dir.setFlat(True)
         self.tab_widget.addTab(self.about, "")
@@ -548,13 +547,10 @@ class Ui_SettingDialog(object):
         self.label_all.setText(QCoreApplication.translate("SettingDialog", u"\u6574\u4f53\u7a97\u53e3\uff1a", None))
         self.label_all_alpha.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.general), QCoreApplication.translate("SettingDialog", u"\u901a\u7528", None))
-        self.gb_about.setTitle(QCoreApplication.translate("SettingDialog", u"\u5173\u4e8e StockWidget ", None))
+        self.gb_about.setTitle(QCoreApplication.translate("SettingDialog", u"StockWidget - \u6781\u7b80\u684c\u9762\u76ef\u76d8", None))
+        self.label_about_info.setText("")
         self.btn_check_update.setText(QCoreApplication.translate("SettingDialog", u"\u68c0\u67e5\u66f4\u65b0", None))
         self.btn_open_cache_dir.setText(QCoreApplication.translate("SettingDialog", u"\u6253\u5f00\u7f13\u5b58\u76ee\u5f55", None))
-        self.label_about_info.setText(QCoreApplication.translate("SettingDialog", u"\u5f53\u524d\u7248\u672c v \n"
-"Apache-2.0 license \u00b7 \u4f7f\u7528\u5e2e\u52a9\n"
-"\u4ed3\u5e93\uff1aGitHub \u00b7 Gitee\n"
-"Copyright 2026 sbr0574", None))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.about), QCoreApplication.translate("SettingDialog", u"\u5173\u4e8e", None))
     # retranslateUi
 

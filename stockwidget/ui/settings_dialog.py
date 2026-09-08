@@ -2,6 +2,7 @@ import os
 import sys
 import threading
 from functools import partial
+from html import escape
 from math import isfinite
 
 from PySide6.QtCore import (
@@ -1548,7 +1549,7 @@ class SettingsDialog(QDialog):
     def _setup_about(self):
         label = self.ui.label_about_info
         label.setWordWrap(True)
-        app_version = self.app.app_version if self.app is not None else "1.0.0"
+        app_version = self.app.app_version if self.app is not None else APP_VERSION
         has_update = bool(self.app is not None and getattr(self.app, "_has_update", False))
         latest_version = getattr(self.app, "_latest_version", None) if self.app is not None else None
         if not has_update:
@@ -1557,23 +1558,35 @@ class SettingsDialog(QDialog):
         github_links = project_links()
         gitee_links = project_links(use_gitee=True)
 
-        version_line = f"当前版本 v{app_version}"
+        def link(url, text):
+            return (
+                f'<a href="{escape(url, quote=True)}" '
+                f'style="text-decoration:none; color:#4a90d9;">{escape(text)}</a>'
+            )
+
+        version_line = f"当前版本 v{escape(str(app_version))}"
         if latest_version:
-            version_line += f" 最新 v{latest_version}"
-        html = (
-            f'<p style="margin:2px 0;"><a href="{links["releases"]}" style="text-decoration:none; color:#4a90d9;">{version_line}</a></p>'
-            f'<p style="margin:2px 0;"><a href="{links["license"]}" style="text-decoration:none; color:#4a90d9;">License</a> · '
-            f'<a href="{links["readme"]}" style="text-decoration:none; color:#4a90d9;">使用帮助</a> · '
-            f'<a href="{links["issues"]}" style="text-decoration:none; color:#4a90d9;">反馈建议</a></p>'
-            f'<p style="margin:2px 0;"><a href="{github_links["project"]}" style="text-decoration:none; color:#4a90d9;">GitHub仓库</a> · '
-            f'<a href="{gitee_links["project"]}" style="text-decoration:none; color:#4a90d9;">Gitee仓库</a></p>'
-            f'<p style="margin:2px 0;">Copyright 2026 sbr0574</p>'
-        )
+            version_line += link(
+                github_links["releases"] + "/latest", f"（有更新 v{latest_version}）"
+            )
+        lines = [
+            version_line,
+            f'本项目基于 {link(links["license"], "Apache-2.0 License")} 开源',
+            "Copyright 2026 sbr0574",
+            "&nbsp;",
+            "支持：",
+            f'仓库地址：{link(github_links["project"], github_links["project"])}',
+            f'镜像仓库：{link(gitee_links["project"], gitee_links["project"])}',
+            f'发行下载：{link(links["releases"], links["releases"])}',
+            f'使用帮助：{link(links["readme"], links["readme"])}',
+            f'问题反馈：{link(links["issues"], links["issues"])}',
+        ]
+        html = "".join(f'<p style="margin:2px 0;">{line}</p>' for line in lines)
         label.setTextFormat(Qt.RichText)
         label.setText(html)
         label.setOpenExternalLinks(True)
         label.setTextInteractionFlags(Qt.TextBrowserInteraction)
-        label.setCursor(Qt.PointingHandCursor)
+        label.unsetCursor()
 
     def refresh_about(self):
         self._setup_about()

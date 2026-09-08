@@ -443,6 +443,9 @@ class MetricPoolWidget(QWidget):
         layout.addWidget(self.displayed_pool)
         layout.addWidget(self.available_label)
         layout.addWidget(self.available_pool)
+        # 两池按内容固定高度后，余量统一留在底部，避免布局把空隙
+        # 分散到标题和池之间，造成增删指标时顶部位置上下跳动。
+        layout.addStretch(1)
 
         for pool in (self.available_pool, self.displayed_pool):
             pool.drop_requested.connect(

@@ -1163,7 +1163,7 @@
       </rect>
      </property>
      <property name="title">
-      <string>关于 StockWidget </string>
+      <string>StockWidget - 极简桌面盯盘</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -1177,14 +1177,11 @@
         <x>20</x>
         <y>30</y>
         <width>501</width>
-        <height>121</height>
+        <height>236</height>
        </rect>
       </property>
       <property name="text">
-       <string>当前版本 v 
-Apache-2.0 license · 使用帮助
-仓库：GitHub · Gitee
-Copyright 2026 sbr0574</string>
+       <string></string>
       </property>
       <property name="textFormat">
        <enum>Qt::TextFormat::RichText</enum>
@@ -1203,7 +1200,7 @@ Copyright 2026 sbr0574</string>
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>160</y>
+        <y>280</y>
         <width>100</width>
         <height>26</height>
        </rect>
@@ -1222,7 +1219,7 @@ Copyright 2026 sbr0574</string>
       <property name="geometry">
        <rect>
         <x>130</x>
-        <y>160</y>
+        <y>280</y>
         <width>130</width>
         <height>26</height>
        </rect>
