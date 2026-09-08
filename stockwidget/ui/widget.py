@@ -7,11 +7,27 @@ from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QFont, QAction, QColor
 from PySide6.QtWidgets import QApplication, QWidget, QMenu, QVBoxLayout, QLabel, QTableView, QHeaderView, QAbstractItemView, QFrame, QStyledItemDelegate
 
-from stockwidget.ui.table_model import SimpleTableModel, KLineDelegate
+from stockwidget.ui.table_model import (
+    COLOR_ROLE_TEXT,
+    DEFAULT_DOWN_COLOR,
+    DEFAULT_NEUTRAL_COLOR,
+    DEFAULT_UP_COLOR,
+    KLineDelegate,
+    SimpleTableModel,
+    direction_color_role,
+)
 from stockwidget.ui.drag_mixin import DragBehaviorMixin
 from stockwidget.platform.hotkeys import GlobalHotkeyManager, HotkeyResult
 from stockwidget.data.quotes import request_quote
-from stockwidget.core.formatters import format_volume, format_amount
+from stockwidget.core.formatters import format_value, should_use_english_units
+from stockwidget.core.metric_layout import (
+    METRIC_BY_ID,
+    METRIC_SPECS,
+    expand_metric_headers,
+    metric_id_for_header,
+    normalize_visible_metrics,
+    visible_metrics_from_config,
+)
 from stockwidget.core.watchlist import normalize_watchlist
 from stockwidget.core.geometry import resolve_restore_position
 from stockwidget.platform.capabilities import (
@@ -23,11 +39,16 @@ from stockwidget.platform.capabilities import (
 from stockwidget.platform.click_through import apply_click_through
 
 
+def _config_color(value, default: QColor) -> QColor:
+    color = QColor(value) if isinstance(value, (QColor, str)) else QColor()
+    return color if color.isValid() else QColor(default)
+
+
 class FloatLabel(DragBehaviorMixin, QWidget):
     hotkey_triggered = Signal()
     click_through_hotkey_triggered = Signal()
     click_through_changed = Signal(bool)
-    display_flags_changed = Signal()  # 显示指标/表头/网格/默认颜色等显示相关设置变化
+    display_flags_changed = Signal()  # 显示指标/表头/网格/统一颜色等显示相关设置变化
     data_ready = Signal(object)  # 后台线程请求完成后发回主线程: (ok, ret, data, error)
     ALL_HEADERS = ["名称", "现价", "涨跌", "涨幅", "浮盈", "买一", "卖一", "委比", "成交量", "成交额", "均价", "K线"]
     HEADER_ATTR_MAP = {
@@ -65,16 +86,11 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.code_visible       = bool(cfg.get("code_visible", False))
         self.type_visible       = bool(cfg.get("type_visible", False))
         self.name_length        = int(cfg.get("name_length", -1))
-        self.price_visible      = bool(cfg.get("price_visible", True))
-        self.change_visible     = bool(cfg.get("change_visible", False))
-        self.change_pct_visible = bool(cfg.get("change_pct_visible", True))
-        self.profit_visible     = bool(cfg.get("profit_visible", False))
-        self.b1s1_visible       = bool(cfg.get("b1s1_visible", False))
-        self.commi_visible      = bool(cfg.get("commi_visible", False))
-        self.vol_visible        = bool(cfg.get("vol_visible", False))
-        self.amount_visible     = bool(cfg.get("amount_visible", False))
-        self.avg_visible        = bool(cfg.get("avg_visible", False))
-        self.kline_visible      = bool(cfg.get("kline_visible", False))
+        self.unit_mode          = str(cfg.get("unit_mode", "auto"))
+        if self.unit_mode not in ("cn", "en", "auto"):
+            self.unit_mode = "auto"
+        self.visible_metrics    = visible_metrics_from_config(cfg)
+        self._sync_metric_visibility_attrs()
         # 加载外观配置
         self.header_visible     = bool(cfg.get("header_visible", False))
         self.grid_visible       = bool(cfg.get("grid_visible", False))
@@ -86,7 +102,10 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         bg                      = cfg.get("bg", {"r":0,"g":0,"b":0,"a":191})
         self.bg                 = QColor(bg["r"],bg["g"],bg["b"],bg["a"])
         self.opacity_pct        = int(cfg.get("opacity_pct", 90))
-        self.default_color      = bool(cfg.get("default_color", False))
+        self.unicolor           = bool(cfg.get("unicolor", True))
+        self.up_color           = _config_color(cfg.get("up_color"), DEFAULT_UP_COLOR)
+        self.down_color         = _config_color(cfg.get("down_color"), DEFAULT_DOWN_COLOR)
+        self.neutral_color      = _config_color(cfg.get("neutral_color"), DEFAULT_NEUTRAL_COLOR)
         # 加载其他配置
         self.refresh_seconds    = int(cfg.get("refresh_seconds", 2))
         self.data_source        = str(cfg.get("data_source", "sina"))
@@ -147,20 +166,24 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.message_label = QLabel("", self.panel)
         self.message_label.setStyleSheet("padding: 2px 4px;")
         self.message_label.setVisible(False)
+        self._message_kind = None
         self.vbox.addWidget(self.message_label)
         self._index_updating = False # 市场代码列表后台更新标志
         self._refresh_thread = None  # 后台刷新线程（避免网络请求阻塞 UI）
 
-        self.model = SimpleTableModel(headers=self.ALL_HEADERS, align_right_cols=[1,2,3,4,5])
-        self.model.set_color_scheme(self.default_color, self.fg)
+        # 首次报价到达前只显示紧凑提示，避免所有列撑出临时长条。
+        self.model = SimpleTableModel(headers=[], align_right_cols=[])
         self.table.setModel(self.model)
 
         self.k_delegate = KLineDelegate(self.table, base_pt=12)
-        self.k_delegate.update_scheme(self.default_color, self.fg)
+        self._default_item_delegate = QStyledItemDelegate(self.table)
+        self._sync_colors_to_views()
         self.k_delegate.set_point_size(self.font.pointSize())
         self.k_column_visible_index = None
 
         self.vbox.addWidget(self.table)
+        self.table.hide()
+        self._show_message("加载中…", kind="loading")
 
         for w in (self.panel, self.table, self.table.viewport(), self.table.horizontalHeader()):
             w.installEventFilter(self)
@@ -222,6 +245,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             "code_visible":         self.code_visible,
             "type_visible":         self.type_visible,
             "name_length":          self.name_length,
+            "unit_mode":            self.unit_mode,
+            "visible_metrics":      list(self.visible_metrics),
             "price_visible":        self.price_visible,
             "change_visible":       self.change_visible,
             "change_pct_visible":   self.change_pct_visible,
@@ -241,7 +266,10 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             "fg":               self.fg.name(QColor.HexRgb),
             "bg":               {"r": self.bg.red(), "g": self.bg.green(), "b": self.bg.blue(), "a": self.bg.alpha()},
             "opacity_pct":      int(round(getattr(self, "opacity_pct", 90))),
-            "default_color":    self.default_color,
+            "unicolor":         self.unicolor,
+            "up_color":         self.up_color.name(QColor.HexRgb),
+            "down_color":       self.down_color.name(QColor.HexRgb),
+            "neutral_color":    self.neutral_color.name(QColor.HexRgb),
 
             "refresh_seconds":  self.refresh_seconds,
             "data_source":      self.data_source,
@@ -256,10 +284,24 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         }
 
     def header_is_visible(self, header: str) -> bool:
-        attr = self.HEADER_ATTR_MAP.get(header)
-        return bool(getattr(self, attr, False)) if attr else False
+        header = str(header)
+        metric_id = metric_id_for_header(header)
+        return metric_id in self.visible_metrics if metric_id else False
 
     # ----- 外观/尺寸 -----
+    def _sync_colors_to_views(self):
+        colors = (
+            self.unicolor,
+            self.fg,
+            self.up_color,
+            self.down_color,
+            self.neutral_color,
+        )
+        self.model.set_colors(*colors)
+        self.k_delegate.set_colors(*colors)
+        self.table.viewport().update()
+        self.table.horizontalHeader().viewport().update()
+
     def apply_style(self):
         r,g,b,a = self.bg.red(), self.bg.green(), self.bg.blue(), self.bg.alpha()
         fg_r, fg_g, fg_b = self.fg.red(), self.fg.green(), self.fg.blue()
@@ -273,7 +315,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
                 background: transparent;
                 border: {f"1px solid {line_col}" if self.grid_visible else "none"};
                 border-radius: 3px;
-                {"" if self.default_color else f"color: {self.fg.name()};"}
+                color: {self.fg.name()};
                 outline: none;
             }}
             QTableView::item {{
@@ -288,7 +330,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
                 border: none;
                 border-bottom: 1px solid {line_col};
                 font-weight: 600;
-                {"" if self.default_color else f"color: {self.fg.name()};"}
+                color: {self.fg.name()};
                 padding: 2px 4px;
             }}
         """)
@@ -339,53 +381,73 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if isinstance(pos_cfg, dict) and "x" in pos_cfg and "y" in pos_cfg:
             saved = (int(pos_cfg["x"]), int(pos_cfg["y"]))
 
-        x, y = resolve_restore_position(saved, rects, primary, self.width(), self.height())
+        # 已保存的屏内左上角不应被临时加载提示的尺寸推走。
+        restoring_on_screen = saved is not None and any(
+            left <= saved[0] < left + width and top <= saved[1] < top + height
+            for left, top, width, height in rects
+        )
+        width, height = (1, 1) if restoring_on_screen else (self.width(), self.height())
+        x, y = resolve_restore_position(saved, rects, primary, width, height)
         self.move(x, y)
 
     # ----- 数据 & 投影 -----
-    def _show_message(self, msg: str, is_error: bool = False):
+    def _show_message(self, msg: str, is_error: bool = False, *, kind=None):
         """显示顶部提示；is_error=True 时用红色字体，否则用前景色"""
         text = str(msg) if msg is not None else ""
         color = "#ff6666" if is_error else self.fg.name(QColor.HexRgb)
         self.message_label.setStyleSheet(f"color: {color}; padding: 2px 4px;")
         self.message_label.setText(text)
         self.message_label.setVisible(True)
+        self._message_kind = kind
         self._defer_fit()
 
     def _clear_message(self):
         """清除顶部提示"""
         self.message_label.setVisible(False)
         self.message_label.setText("")
+        self._message_kind = None
 
     def set_index_updating(self, updating: bool):
         """标记市场代码列表是否正在后台更新（期间保持进度提示不被清除）"""
         self._index_updating = bool(updating)
 
-    def _project_columns(self, full_rows: list[dict], sign_data: list[dict]):
-        # 名称作为数据列显示；其余按显示顺序筛选已启用的列
-        headers = [h for h in self.ALL_HEADERS if self.header_is_visible(h)]
+    def _project_columns(self, full_rows: list[dict], color_roles: list[dict]):
+        # 名称与其余指标统一按用户配置顺序展开。
+        headers = expand_metric_headers(self.visible_metrics)
 
-        proj_rows, proj_meta = [], []
+        proj_rows, projected_roles = [], []
         for r, row in enumerate(full_rows):
             proj_rows.append([row[h] for h in headers])
-            proj_meta.append([sign_data[r][h] for h in headers])
+            projected_roles.append([color_roles[r][h] for h in headers])
 
         # 右对齐：名称、K线、卖一除外
         right_cols = [i for i, h in enumerate(headers) if h not in ("名称", "K线", "卖一")]
         self.model.set_align_right_cols(right_cols)
-        self.model.set_rows_headers(proj_rows, headers, proj_meta)
-        self.model.set_color_scheme(self.default_color, self.fg)
+        self.model.set_rows_headers(proj_rows, headers, projected_roles)
+        self.table.setVisible(bool(headers))
+        self._sync_colors_to_views()
 
-        if "K线" in headers:
-            col = headers.index("K线")
-            self.k_column_visible_index = col
-            self.k_delegate.update_scheme(self.default_color, self.fg)
+        old_kline_col = self.k_column_visible_index
+        new_kline_col = headers.index("K线") if "K线" in headers else None
+        if old_kline_col is not None and old_kline_col != new_kline_col:
+            self.table.setItemDelegateForColumn(
+                old_kline_col, self._default_item_delegate
+            )
+        if new_kline_col is not None:
+            self.k_column_visible_index = new_kline_col
             self.k_delegate.set_point_size(self.font.pointSize())
-            self.table.setItemDelegateForColumn(col, self.k_delegate)
+            self.table.setItemDelegateForColumn(new_kline_col, self.k_delegate)
         else:
-            if self.k_column_visible_index is not None:
-                self.table.setItemDelegateForColumn(self.k_column_visible_index, QStyledItemDelegate(self.table))
-                self.k_column_visible_index = None
+            self.k_column_visible_index = None
+
+        if not headers and not self._index_updating:
+            self._show_message(
+                "请在设置面板中选择至少一个显示指标",
+                is_error=True,
+                kind="metrics",
+            )
+        elif headers and self._message_kind == "metrics":
+            self._clear_message()
 
         self._fit_to_contents()
 
@@ -471,6 +533,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
         # 数据返回
         is_index = type == "指"
+        english_units = should_use_english_units(
+            getattr(self, "unit_mode", "auto"), market
+        )
         format_data = {
             "名称": name,
             "现价": f"{data["current_price"]:.{precision}f}{arrow}",
@@ -482,30 +547,41 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             "委比": f"{committee:+.2f}%" if (p_sum + s_sum) > 0 else "-",
             "成交量": (
                 "-" if is_index and not data["deals_vol"]
-                else format_volume(data["deals_vol"], lot_size=lot_size)
+                else format_value(
+                    data["deals_vol"],
+                    lot_size=lot_size,
+                    unit_cn=not english_units,
+                )
             ),
-            "成交额": ("-" if is_index and not data["deals_amt"] else format_amount(data["deals_amt"])),
+            "成交额": (
+                "-" if is_index and not data["deals_amt"]
+                else format_value(
+                    data["deals_amt"],
+                    lot_size=1,
+                    unit_cn=not english_units,
+                )
+            ),
             "均价": f"{avg:.{precision}f}",
             "K线": k_payload}
-        sign = {
-            "名称": 0,
-            "现价": (change > 0) - (change < 0),
-            "涨跌": (change > 0) - (change < 0),
-            "涨幅": (change > 0) - (change < 0),
-            "浮盈": profit_sign,
-            "买一": b1_color_sign,
-            "卖一": s1_color_sign,
-            "委比": (committee > 0) - (committee < 0),
-            "成交量": 0,
-            "成交额": 0,
-            "均价": (avg > data["prev_close"]) - (avg < data["prev_close"]),
-            "K线": 0}
+        color_roles = {
+            "名称": COLOR_ROLE_TEXT,
+            "现价": direction_color_role(change),
+            "涨跌": direction_color_role(change),
+            "涨幅": direction_color_role(change),
+            "浮盈": direction_color_role(profit_sign),
+            "买一": direction_color_role(b1_color_sign),
+            "卖一": direction_color_role(s1_color_sign),
+            "委比": direction_color_role(committee),
+            "成交量": COLOR_ROLE_TEXT,
+            "成交额": COLOR_ROLE_TEXT,
+            "均价": direction_color_role(avg - data["prev_close"]),
+            "K线": COLOR_ROLE_TEXT}
         # 指数不显示浮盈/买一卖一/委比/均价（均置为"-"）
         if type == "指":
             for key in ("浮盈", "买一", "卖一", "委比", "均价"):
                 format_data[key] = "-"
-                sign[key] = 0
-        return format_data, sign
+                color_roles[key] = direction_color_role(0)
+        return format_data, color_roles
 
     def _get_code_info(self, c: str) -> dict:
         return self.codes_list.get(c, {})
@@ -541,25 +617,25 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             return
 
         full_rows = []
-        full_sign = []
+        full_color_roles = []
         for c, d in data.items():
             entry = self.watchlist.get(c) or {}
             code_info = self._get_code_info(c)
             type_ = entry.get("type") or code_info.get("type")
             market = entry.get("market") or code_info.get("market") or ""
             display_code = entry.get("code") or code_info.get("code") or c
-            row, sign = self._format_data(
+            row, color_roles = self._format_data(
                 c, d, type_, display_code, market=market
             )
             full_rows.append(row)
-            full_sign.append(sign)
+            full_color_roles.append(color_roles)
 
         if not self._index_updating:
             if len(data) > 0:
                 self._clear_message()
             else:
                 self._show_message("请在设置面板中添加自选股", is_error=True)
-        self._project_columns(full_rows, full_sign)
+        self._project_columns(full_rows, full_color_roles)
 
     # ----- 应用设置 -----
     def set_watchlist(self, watchlist: dict):
@@ -585,6 +661,37 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._refresh_from_function()
         self.display_flags_changed.emit()
 
+    def _sync_metric_visibility_attrs(self):
+        visible = set(self.visible_metrics)
+        for spec in METRIC_SPECS:
+            setattr(self, spec.legacy_attr, spec.metric_id in visible)
+
+    def set_visible_metrics(self, metric_ids):
+        """一次性应用其余指标的显示状态和顺序。"""
+        normalized = normalize_visible_metrics(metric_ids)
+        if normalized == self.visible_metrics:
+            return
+        self.visible_metrics = normalized
+        self._sync_metric_visibility_attrs()
+        self._notify_change()
+        self._refresh_from_function()
+        self.display_flags_changed.emit()
+
+    def set_metric_visible(self, metric_id: str, visible: bool):
+        metric_id = str(metric_id or "")
+        if metric_id not in METRIC_BY_ID:
+            return
+        updated = list(self.visible_metrics)
+        if visible:
+            if metric_id in updated:
+                return
+            updated.append(metric_id)
+        else:
+            if metric_id not in updated:
+                return
+            updated.remove(metric_id)
+        self.set_visible_metrics(updated)
+
     def set_flag(self, header, checked: bool):
         if isinstance(header, int):
             if 0 <= header < len(self.ALL_HEADERS):
@@ -592,17 +699,10 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             else:
                 return
         header = str(header)
-        attr = self.HEADER_ATTR_MAP.get(header)
-        if not attr:
-            return
-
         checked = bool(checked)
-        if bool(getattr(self, attr, False)) == checked:
-            return
-        setattr(self, attr, checked)
-        self._notify_change()
-        self._refresh_from_function()
-        self.display_flags_changed.emit()
+        metric_id = metric_id_for_header(header)
+        if metric_id:
+            self.set_metric_visible(metric_id, checked)
 
     def set_code_type(self, pure_num: bool):
         self.short_code = bool(pure_num)
@@ -615,6 +715,16 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self.name_length = name_len
             self._notify_change()
             self._refresh_from_function()
+
+    def set_unit_mode(self, mode: str):
+        """设置成交量/成交额单位模式：cn=中文, en=英文, auto=自动。"""
+        mode = str(mode or "").strip().lower()
+        if mode not in ("cn", "en", "auto") or mode == self.unit_mode:
+            return
+        self.unit_mode = mode
+        self._notify_change()
+        self._refresh_from_function()
+        self.display_flags_changed.emit()
 
     def set_b1s1_display(self, mode: str):
         """mode: 'qty' | 'price' | 'both'"""
@@ -659,6 +769,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def set_fg_color(self, c: QColor):
         if isinstance(c, QColor) and c.isValid():
             self.fg = QColor(c)
+            self._sync_colors_to_views()
             self.apply_style()
             self._notify_change()
 
@@ -706,10 +817,28 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._defer_fit()
         self._notify_change()
 
-    def set_default_color(self, enabled: bool):
-        self.default_color = bool(enabled)
-        self.model.set_color_scheme(self.default_color, self.fg)
-        self.k_delegate.update_scheme(self.default_color, self.fg)
+    def _set_direction_color(self, attr: str, color: QColor):
+        if not isinstance(color, QColor) or not color.isValid():
+            return
+        setattr(self, attr, QColor(color))
+        self._sync_colors_to_views()
+        self._notify_change()
+
+    def set_up_color(self, color: QColor):
+        self._set_direction_color("up_color", color)
+
+    def set_down_color(self, color: QColor):
+        self._set_direction_color("down_color", color)
+
+    def set_neutral_color(self, color: QColor):
+        self._set_direction_color("neutral_color", color)
+
+    def set_unicolor(self, enabled: bool):
+        enabled = bool(enabled)
+        if self.unicolor == enabled:
+            return
+        self.unicolor = enabled
+        self._sync_colors_to_views()
         self.apply_style()
         self._notify_change()
         self._defer_fit()
@@ -824,9 +953,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         act_grid.toggled.connect(self.set_grid_visible)
         menu.addAction(act_grid)
 
-        act_color = QAction("默认颜色", menu, checkable=True)
-        act_color.setChecked(self.default_color)
-        act_color.toggled.connect(self.set_default_color)
+        act_color = QAction("统一颜色", menu, checkable=True)
+        act_color.setChecked(self.unicolor)
+        act_color.toggled.connect(self.set_unicolor)
         menu.addAction(act_color)
 
         menu.addSeparator()

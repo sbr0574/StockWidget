@@ -3,9 +3,25 @@ from PySide6.QtGui import QColor, QPainter, QPen, QBrush
 from PySide6.QtWidgets import QStyledItemDelegate
 
 # ----- 颜色配置 -----
-UP_COLOR = QColor("#dd2100")
-DOWN_COLOR = QColor("#019933")
-NEUTRAL_COLOR = QColor("#494949")
+DEFAULT_TEXT_COLOR = QColor("#FFFFFF")
+DEFAULT_UP_COLOR = QColor("#dd2100")
+DEFAULT_DOWN_COLOR = QColor("#019933")
+DEFAULT_NEUTRAL_COLOR = QColor("#494949")
+
+COLOR_ROLE_TEXT = "text"
+COLOR_ROLE_UP = "up"
+COLOR_ROLE_DOWN = "down"
+COLOR_ROLE_NEUTRAL = "neutral"
+
+
+def direction_color_role(value) -> str:
+    """把正负方向转换为明确颜色角色，避免 0 同时表示普通文本和平盘。"""
+    if value > 0:
+        return COLOR_ROLE_UP
+    if value < 0:
+        return COLOR_ROLE_DOWN
+    return COLOR_ROLE_NEUTRAL
+
 
 class SimpleTableModel(QAbstractTableModel):
     """
@@ -13,16 +29,39 @@ class SimpleTableModel(QAbstractTableModel):
     """
     def __init__(self, rows=None, headers=None, align_right_cols=None, parent=None):
         super().__init__(parent)
-        self.default_color = False
-        self.fg_color = QColor("#FFFFFF")
+        self.unicolor = True
+        self.text_color = QColor(DEFAULT_TEXT_COLOR)
+        self.up_color = QColor(DEFAULT_UP_COLOR)
+        self.down_color = QColor(DEFAULT_DOWN_COLOR)
+        self.neutral_color = QColor(DEFAULT_NEUTRAL_COLOR)
         self._rows = rows or []
         self._headers = headers or []
         self._align_right = align_right_cols or []
-        self._row_meta = []
+        self._color_roles = []
 
-    def set_color_scheme(self, use_default: bool, fg: QColor):
-        self.default_color = bool(use_default)
-        self.fg_color = QColor(fg)
+    def set_colors(
+        self,
+        unicolor: bool,
+        text_color: QColor,
+        up_color: QColor,
+        down_color: QColor,
+        neutral_color: QColor,
+    ):
+        self.unicolor = bool(unicolor)
+        self.text_color = QColor(text_color)
+        self.up_color = QColor(up_color)
+        self.down_color = QColor(down_color)
+        self.neutral_color = QColor(neutral_color)
+        if self.rowCount() and self.columnCount():
+            self.dataChanged.emit(
+                self.index(0, 0),
+                self.index(self.rowCount() - 1, self.columnCount() - 1),
+                [Qt.ItemDataRole.ForegroundRole],
+            )
+        if self.columnCount():
+            self.headerDataChanged.emit(
+                Qt.Orientation.Horizontal, 0, self.columnCount() - 1
+            )
 
     def rowCount(self, parent=QModelIndex()):
         return len(self._rows)
@@ -46,30 +85,35 @@ class SimpleTableModel(QAbstractTableModel):
             return (Qt.AlignRight | Qt.AlignVCenter) if c in self._align_right else (Qt.AlignLeft | Qt.AlignVCenter)
 
         if role == Qt.ForegroundRole:
-            if not self.default_color:
-                return self.fg_color
+            if self.unicolor:
+                return self.text_color
 
-            sign = self._row_meta[r][c]
-            if sign > 0:
-                return UP_COLOR
-            if sign < 0:
-                return DOWN_COLOR
-            return NEUTRAL_COLOR
+            if r >= len(self._color_roles) or c >= len(self._color_roles[r]):
+                return self.text_color
+            color_role = self._color_roles[r][c]
+            if color_role == COLOR_ROLE_UP:
+                return self.up_color
+            if color_role == COLOR_ROLE_DOWN:
+                return self.down_color
+            if color_role == COLOR_ROLE_NEUTRAL:
+                return self.neutral_color
+            return self.text_color
 
         return None
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):
-        if role != Qt.DisplayRole:
-            return None
         if orientation == Qt.Horizontal and 0 <= section < len(self._headers):
-            return self._headers[section]
+            if role == Qt.DisplayRole:
+                return self._headers[section]
+            if role == Qt.ForegroundRole:
+                return self.text_color
         return None
 
-    def set_rows_headers(self, rows, headers, meta):
+    def set_rows_headers(self, rows, headers, color_roles):
         self.beginResetModel()
         self._rows = rows
         self._headers = headers
-        self._row_meta = meta
+        self._color_roles = color_roles
         self.endResetModel()
 
     def set_align_right_cols(self, cols_idx):
@@ -82,14 +126,39 @@ class KLineDelegate(QStyledItemDelegate):
     """
     def __init__(self, parent=None, base_pt=12):
         super().__init__(parent)
-        self.default_color = False
-        self.fg = QColor("#FFFFFF")
+        self.unicolor = True
+        self.text_color = QColor(DEFAULT_TEXT_COLOR)
+        self.up_color = QColor(DEFAULT_UP_COLOR)
+        self.down_color = QColor(DEFAULT_DOWN_COLOR)
+        self.neutral_color = QColor(DEFAULT_NEUTRAL_COLOR)
         self.base_pt = max(1, int(base_pt))
         self.scale = 1.0  # 缩放
 
-    def update_scheme(self, default_color: bool, fg: QColor):
-        self.default_color = bool(default_color)
-        self.fg = QColor(fg)
+    def set_colors(
+        self,
+        unicolor: bool,
+        text_color: QColor,
+        up_color: QColor,
+        down_color: QColor,
+        neutral_color: QColor,
+    ):
+        self.unicolor = bool(unicolor)
+        self.text_color = QColor(text_color)
+        self.up_color = QColor(up_color)
+        self.down_color = QColor(down_color)
+        self.neutral_color = QColor(neutral_color)
+
+    def candle_color(self, opening, closing) -> QColor:
+        if self.unicolor:
+            return QColor(self.text_color)
+        if closing > opening:
+            return QColor(self.up_color)
+        if closing < opening:
+            return QColor(self.down_color)
+        return QColor(self.neutral_color)
+
+    def reference_color(self) -> QColor:
+        return QColor(self.text_color if self.unicolor else self.neutral_color)
 
     def set_point_size(self, pt: int):
         self.scale = max(0.5, min(1.5, float(pt) / float(self.base_pt)))
@@ -128,19 +197,12 @@ class KLineDelegate(QStyledItemDelegate):
         x = krect.center().x()
 
         # 昨收虚线
-        dash_col = QColor(NEUTRAL_COLOR if self.default_color else self.fg)
+        dash_col = self.reference_color()
         dash_col.setAlpha(180)
         painter.setPen(QPen(dash_col, 1, Qt.DashLine))
         painter.drawLine(x - body_w, y_p, x + body_w, y_p)
 
-        kcolor = self.fg
-        if self.default_color:
-            if c>o:
-                kcolor = UP_COLOR
-            elif c<o:
-                kcolor = DOWN_COLOR
-            else:
-                kcolor = NEUTRAL_COLOR
+        kcolor = self.candle_color(o, c)
 
         top, bot = min(y_o, y_c), max(y_o, y_c)
         body_h = max(2, bot - top)
