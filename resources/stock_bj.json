@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-07",
+  "last_update": "2026-09-08",
   "codes": {
     "bj810011": {
       "code": "810011",
@@ -1378,6 +1378,15 @@
       "py": "meidengkeji",
       "abbr": "mdkj"
     },
+    "bj920229": {
+      "code": "920229",
+      "market": "bj",
+      "type": "京",
+      "name": "世纪数码",
+      "name_en": "",
+      "py": "shijishuma",
+      "abbr": "sjsm"
+    },
     "bj920230": {
       "code": "920230",
       "market": "bj",
@@ -1535,10 +1544,10 @@
       "code": "920269",
       "market": "bj",
       "type": "京",
-      "name": "N杰锋",
+      "name": "杰锋动力",
       "name_en": "",
-      "py": "njiefeng",
-      "abbr": "njf"
+      "py": "jiefengdongli",
+      "abbr": "jfdl"
     },
     "bj920270": {
       "code": "920270",

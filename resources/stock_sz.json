@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-03",
+  "last_update": "2026-09-08",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -11012,10 +11012,10 @@
       "code": "002743",
       "market": "sz",
       "type": "深",
-      "name": "富煌钢构",
+      "name": "ST富煌",
       "name_en": "",
-      "py": "fuhuangganggou",
-      "abbr": "fhgg"
+      "py": "stfuhuang",
+      "abbr": "stfh"
     },
     "sz002745": {
       "code": "002745",
@@ -25808,10 +25808,10 @@
       "code": "301560",
       "market": "sz",
       "type": "创",
-      "name": "众捷汽车",
+      "name": "众捷股份",
       "name_en": "",
-      "py": "zhongjieqiche",
-      "abbr": "zjqc"
+      "py": "zhongjiegufen",
+      "abbr": "zjgf"
     },
     "sz301563": {
       "code": "301563",
@@ -26402,10 +26402,10 @@
       "code": "301697",
       "market": "sz",
       "type": "创",
-      "name": "C贝特利",
+      "name": "贝特利",
       "name_en": "",
-      "py": "cbeiteli",
-      "abbr": "cbtl"
+      "py": "beiteli",
+      "abbr": "btl"
     },
     "sz301707": {
       "code": "301707",

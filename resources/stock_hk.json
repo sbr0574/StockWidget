@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-07",
+  "last_update": "2026-09-08",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -28143,6 +28143,15 @@
       "name_en": "CHERY AUTO",
       "py": "qiruiqiche",
       "abbr": "qrqc"
+    },
+    "hk09976": {
+      "code": "09976",
+      "market": "hk",
+      "type": "港",
+      "name": "江波龍",
+      "name_en": "LONGSYS",
+      "py": "jiangbolong",
+      "abbr": "jbl"
     },
     "hk09978": {
       "code": "09978",
