@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-08",
+  "last_update": "2026-09-09",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -743,10 +743,10 @@
       "code": "600114",
       "market": "sh",
       "type": "沪",
-      "name": "东睦股份",
+      "name": "XD东睦股",
       "name_en": "",
-      "py": "dongmugufen",
-      "abbr": "dmgf"
+      "py": "xddongmugu",
+      "abbr": "xddmg"
     },
     "sh600115": {
       "code": "600115",
@@ -9419,10 +9419,10 @@
       "code": "603083",
       "market": "sh",
       "type": "沪",
-      "name": "XD剑桥科",
+      "name": "剑桥科技",
       "name_en": "",
-      "py": "xdjianqiaoke",
-      "abbr": "xdjqk"
+      "py": "jianqiaokeji",
+      "abbr": "jqkj"
     },
     "sh603085": {
       "code": "603085",
@@ -9977,10 +9977,10 @@
       "code": "603165",
       "market": "sh",
       "type": "沪",
-      "name": "XD荣晟环",
+      "name": "荣晟环保",
       "name_en": "",
-      "py": "xdrongchenghuan",
-      "abbr": "xdrch"
+      "py": "rongchenghuanbao",
+      "abbr": "rchb"
     },
     "sh603166": {
       "code": "603166",
@@ -14252,19 +14252,19 @@
       "code": "603992",
       "market": "sh",
       "type": "沪",
-      "name": "松霖科技",
+      "name": "XD松霖科",
       "name_en": "",
-      "py": "songlinkeji",
-      "abbr": "slkj"
+      "py": "xdsonglinke",
+      "abbr": "xdslk"
     },
     "sh603993": {
       "code": "603993",
       "market": "sh",
       "type": "沪",
-      "name": "洛阳钼业",
+      "name": "XD洛阳钼",
       "name_en": "",
-      "py": "luoyangmuye",
-      "abbr": "lymy"
+      "py": "xdluoyangmu",
+      "abbr": "xdlym"
     },
     "sh603995": {
       "code": "603995",
@@ -15143,10 +15143,10 @@
       "code": "605377",
       "market": "sh",
       "type": "沪",
-      "name": "华旺科技",
+      "name": "XD华旺科",
       "name_en": "",
-      "py": "huawangkeji",
-      "abbr": "hwkj"
+      "py": "xdhuawangke",
+      "abbr": "xdhwk"
     },
     "sh605378": {
       "code": "605378",
@@ -15170,10 +15170,10 @@
       "code": "605389",
       "market": "sh",
       "type": "沪",
-      "name": "XD长龄液",
+      "name": "长龄液压",
       "name_en": "",
-      "py": "xdzhanglingye",
-      "abbr": "xdzly"
+      "py": "zhanglingyeya",
+      "abbr": "zlyy"
     },
     "sh605398": {
       "code": "605398",
@@ -16331,10 +16331,10 @@
       "code": "688128",
       "market": "sh",
       "type": "科",
-      "name": "中国电研",
+      "name": "XD中国电",
       "name_en": "",
-      "py": "zhongguodianyan",
-      "abbr": "zgdy"
+      "py": "xdzhongguodian",
+      "abbr": "xdzgd"
     },
     "sh688129": {
       "code": "688129",
@@ -17420,10 +17420,10 @@
       "code": "688271",
       "market": "sh",
       "type": "科",
-      "name": "联影医疗",
+      "name": "XD联影医",
       "name_en": "",
-      "py": "lianyingyiliao",
-      "abbr": "lyyl"
+      "py": "xdlianyingyi",
+      "abbr": "xdlyy"
     },
     "sh688272": {
       "code": "688272",

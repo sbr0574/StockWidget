@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-08",
+  "last_update": "2026-09-09",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -54,15 +54,6 @@
       "name_en": "POWER ASSETS",
       "py": "diannengshiye",
       "abbr": "dnsy"
-    },
-    "hk00007": {
-      "code": "00007",
-      "market": "hk",
-      "type": "港",
-      "name": "智富資源投資",
-      "name_en": "WISDOM WEALTH",
-      "py": "zhifuziyuantouzi",
-      "abbr": "zfzytz"
     },
     "hk00008": {
       "code": "00008",
@@ -7287,7 +7278,7 @@
       "market": "hk",
       "type": "港",
       "name": "新確科技",
-      "name_en": "SUNCORP TEC-NEW",
+      "name_en": "SUNCORP TECH",
       "py": "xinquekeji",
       "abbr": "xqkj"
     },
@@ -9483,7 +9474,7 @@
       "market": "hk",
       "type": "港",
       "name": "粵港灣智算",
-      "name_en": "GBA AI COMP",
+      "name_en": "GBA AI COMP-500",
       "py": "yuegangwanzhisuan",
       "abbr": "ygwzs"
     },
@@ -18397,15 +18388,6 @@
       "py": "huayangniankonggu",
       "abbr": "hynkg"
     },
-    "hk02903": {
-      "code": "02903",
-      "market": "hk",
-      "type": "港",
-      "name": "新確科技",
-      "name_en": "SUNCORP TEC-OLD",
-      "py": "xinquekeji",
-      "abbr": "xqkj"
-    },
     "hk02908": {
       "code": "02908",
       "market": "hk",
@@ -18468,6 +18450,15 @@
       "name_en": "AI ENERGY E-10K",
       "py": "zhisuannengjian(yiwan)",
       "abbr": "zsnj(yw)"
+    },
+    "hk02919": {
+      "code": "02919",
+      "market": "hk",
+      "type": "港",
+      "name": "粵港灣智算-二千",
+      "name_en": "GBA AI COMP-2K",
+      "py": "yuegangwanzhisuan-erqian",
+      "abbr": "ygwzs-eq"
     },
     "hk03001": {
       "code": "03001",
@@ -19512,6 +19503,15 @@
       "name_en": "INGENIC",
       "py": "junzhenggufen",
       "abbr": "jzgf"
+    },
+    "hk03231": {
+      "code": "03231",
+      "market": "hk",
+      "type": "港",
+      "name": "優地機器人",
+      "name_en": "EXCELLAND ROBOT",
+      "py": "youdijiqiren",
+      "abbr": "ydjqr"
     },
     "hk03268": {
       "code": "03268",

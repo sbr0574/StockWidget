@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-08",
+  "last_update": "2026-09-09",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -18455,10 +18455,10 @@
       "code": "300562",
       "market": "sz",
       "type": "创",
-      "name": "乐心医疗",
+      "name": "乐心股份",
       "name_en": "",
-      "py": "lexinyiliao",
-      "abbr": "lxyl"
+      "py": "lexingufen",
+      "abbr": "lxgf"
     },
     "sz300563": {
       "code": "300563",
@@ -26384,10 +26384,10 @@
       "code": "301688",
       "market": "sz",
       "type": "创",
-      "name": "C格林生物",
+      "name": "格林生物",
       "name_en": "",
-      "py": "cgelinshengwu",
-      "abbr": "cglsw"
+      "py": "gelinshengwu",
+      "abbr": "glsw"
     },
     "sz301696": {
       "code": "301696",
@@ -26406,6 +26406,15 @@
       "name_en": "",
       "py": "beiteli",
       "abbr": "btl"
+    },
+    "sz301699": {
+      "code": "301699",
+      "market": "sz",
+      "type": "创",
+      "name": "N洛轴股份",
+      "name_en": "",
+      "py": "nluozhougufen",
+      "abbr": "nlzgf"
     },
     "sz301707": {
       "code": "301707",

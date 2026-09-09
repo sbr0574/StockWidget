@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-07",
+  "last_update": "2026-09-09",
   "codes": {
     "usa": {
       "code": "a",
@@ -4460,8 +4460,8 @@
       "code": "alp",
       "market": "us",
       "type": "美",
-      "name": "Alpha Compute Corp  - Common Stock",
-      "name_en": "Alpha Compute Corp  - Common Stock",
+      "name": "Alpha Compute Corp  - Ordinary Shares",
+      "name_en": "Alpha Compute Corp  - Ordinary Shares",
       "py": "",
       "abbr": ""
     },
@@ -4717,12 +4717,30 @@
       "py": "erbeizuoduoyamaxunetf-corgi",
       "abbr": "ebzdymxetf-corgi"
     },
+    "usamac": {
+      "code": "amac",
+      "market": "us",
+      "type": "美",
+      "name": "AMR Resources Acquisition Corp - Class A Ordinary Shares",
+      "name_en": "AMR Resources Acquisition Corp - Class A Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
     "usamacu": {
       "code": "amacu",
       "market": "us",
       "type": "美",
       "name": "AMR Resources Acquisition Corp - Units",
       "name_en": "AMR Resources Acquisition Corp - Units",
+      "py": "",
+      "abbr": ""
+    },
+    "usamacw": {
+      "code": "amacw",
+      "market": "us",
+      "type": "美",
+      "name": "AMR Resources Acquisition Corp - Warrants",
+      "name_en": "AMR Resources Acquisition Corp - Warrants",
       "py": "",
       "abbr": ""
     },
@@ -8620,6 +8638,15 @@
       "type": "美",
       "name": "Auddia Inc. - Common Stock",
       "name_en": "Auddia Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usauxx": {
+      "code": "auxx",
+      "market": "us",
+      "type": "美",
+      "name": "Gold X2 Mining Inc. Common Shares",
+      "name_en": "Gold X2 Mining Inc. Common Shares",
       "py": "",
       "abbr": ""
     },
@@ -16111,15 +16138,6 @@
       "py": "",
       "abbr": ""
     },
-    "usbtai": {
-      "code": "btai",
-      "market": "us",
-      "type": "美",
-      "name": "BioXcel Therapeutics, Inc. - Common Stock",
-      "name_en": "BioXcel Therapeutics, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "usbtal": {
       "code": "btal",
       "market": "us",
@@ -20115,6 +20133,15 @@
       "name_en": "Chagee Holdings Limited - American Depositary Shares, each representing 1 Class A ordinary share",
       "py": "bawangchaji",
       "abbr": "bwcj"
+    },
+    "uschad": {
+      "code": "chad",
+      "market": "us",
+      "type": "美",
+      "name": "DeFi Development Corp. - Variable Rate Series C Perpetual Preferred Stock",
+      "name_en": "DeFi Development Corp. - Variable Rate Series C Perpetual Preferred Stock",
+      "py": "",
+      "abbr": ""
     },
     "uschai": {
       "code": "chai",
@@ -43957,15 +43984,6 @@
       "py": "",
       "abbr": ""
     },
-    "usgiprw": {
-      "code": "giprw",
-      "market": "us",
-      "type": "美",
-      "name": "Generation Income Properties Inc. - Warrant",
-      "name_en": "Generation Income Properties Inc. - Warrant",
-      "py": "",
-      "abbr": ""
-    },
     "usgis": {
       "code": "gis",
       "market": "us",
@@ -63394,15 +63412,6 @@
       "type": "美",
       "name": "Long Pond Real Estate Select ETF",
       "name_en": "Long Pond Real Estate Select ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "uslpsn": {
-      "code": "lpsn",
-      "market": "us",
-      "type": "美",
-      "name": "LivePerson, Inc. - Common Stock",
-      "name_en": "LivePerson, Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
