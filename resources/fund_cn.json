@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-07",
+  "last_update": "2026-09-10",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -4212,6 +4212,15 @@
       "name_en": "",
       "py": "dashujuetffuguo",
       "abbr": "dsjetffg"
+    },
+    "sh515440": {
+      "code": "515440",
+      "market": "sh",
+      "type": "基",
+      "name": "A股ETF南方",
+      "name_en": "",
+      "py": "aguetfnanfang",
+      "abbr": "agetfnf"
     },
     "sh515450": {
       "code": "515450",

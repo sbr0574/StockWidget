@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-09",
+  "last_update": "2026-09-10",
   "codes": {
     "usa": {
       "code": "a",
@@ -7421,8 +7421,8 @@
       "code": "asbp",
       "market": "us",
       "type": "美",
-      "name": "Aspire Biopharma Holdings, Inc.  - Common Stock",
-      "name_en": "Aspire Biopharma Holdings, Inc.  - Common Stock",
+      "name": "Aspire-Lakewood Holdings, Inc. - Common Stock",
+      "name_en": "Aspire-Lakewood Holdings, Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -7430,8 +7430,8 @@
       "code": "asbpw",
       "market": "us",
       "type": "美",
-      "name": "Aspire Biopharma Holdings, Inc.  - Warrant",
-      "name_en": "Aspire Biopharma Holdings, Inc.  - Warrant",
+      "name": "Aspire-Lakewood Holdings, Inc. - Warrant",
+      "name_en": "Aspire-Lakewood Holdings, Inc. - Warrant",
       "py": "",
       "abbr": ""
     },
@@ -15355,15 +15355,6 @@
       "py": "",
       "abbr": ""
     },
-    "usbrns": {
-      "code": "brns",
-      "market": "us",
-      "type": "美",
-      "name": "Barinthus Biotherapeutics plc - American Depositary Shares",
-      "name_en": "Barinthus Biotherapeutics plc - American Depositary Shares",
-      "py": "",
-      "abbr": ""
-    },
     "usbrnx": {
       "code": "brnx",
       "market": "us",
@@ -18810,6 +18801,15 @@
       "name_en": "Concord Medical Services Holdings Limited American Depositary Shares (Each represents thirty (30) Class A ordinary shares)",
       "py": "taihechengyiliao",
       "abbr": "thcyl"
+    },
+    "usccml": {
+      "code": "ccml",
+      "market": "us",
+      "type": "美",
+      "name": "Roundhill MLCC & Electronic Components ETF",
+      "name_en": "Roundhill MLCC & Electronic Components ETF",
+      "py": "",
+      "abbr": ""
     },
     "usccne": {
       "code": "ccne",
@@ -25822,15 +25822,6 @@
       "py": "",
       "abbr": ""
     },
-    "uscycn": {
-      "code": "cycn",
-      "market": "us",
-      "type": "美",
-      "name": "Cyclerion Therapeutics, Inc. - Common Stock",
-      "name_en": "Cyclerion Therapeutics, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "uscycu": {
       "code": "cycu",
       "market": "us",
@@ -28123,6 +28114,15 @@
       "type": "美",
       "name": "1stdibs.com, Inc. - Common Stock",
       "name_en": "1stdibs.com, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usdice": {
+      "code": "dice",
+      "market": "us",
+      "type": "美",
+      "name": "Tema Trading & Prediction Markets ETF",
+      "name_en": "Tema Trading & Prediction Markets ETF",
       "py": "",
       "abbr": ""
     },
@@ -58690,6 +58690,15 @@
       "py": "",
       "abbr": ""
     },
+    "uskatt": {
+      "code": "katt",
+      "market": "us",
+      "type": "美",
+      "name": "T-REX 2X Long PURR Daily Target ETF",
+      "name_en": "T-REX 2X Long PURR Daily Target ETF",
+      "py": "",
+      "abbr": ""
+    },
     "uskaug": {
       "code": "kaug",
       "market": "us",
@@ -60472,6 +60481,15 @@
       "py": "",
       "abbr": ""
     },
+    "uskrsa": {
+      "code": "krsa",
+      "market": "us",
+      "type": "美",
+      "name": "Korsana Biosciences, Inc. - Common Stock",
+      "name_en": "Korsana Biosciences, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
     "uskrsp": {
       "code": "krsp",
       "market": "us",
@@ -60847,24 +60865,6 @@
       "type": "美",
       "name": "KraneShares Wahed Alternative Income Index ETF",
       "name_en": "KraneShares Wahed Alternative Income Index ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "uskwm": {
-      "code": "kwm",
-      "market": "us",
-      "type": "美",
-      "name": "K Wave Media, Ltd. - Ordinary Shares",
-      "name_en": "K Wave Media, Ltd. - Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "uskwmww": {
-      "code": "kwmww",
-      "market": "us",
-      "type": "美",
-      "name": "K Wave Media, Ltd. - Warrant",
-      "name_en": "K Wave Media, Ltd. - Warrant",
       "py": "",
       "abbr": ""
     },
@@ -75178,6 +75178,24 @@
       "py": "",
       "abbr": ""
     },
+    "usnxat": {
+      "code": "nxat",
+      "market": "us",
+      "type": "美",
+      "name": "Nexus Advanced Technologies Inc. - Ordinary Shares",
+      "name_en": "Nexus Advanced Technologies Inc. - Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "usnxatw": {
+      "code": "nxatw",
+      "market": "us",
+      "type": "美",
+      "name": "Nexus Advanced Technologies Inc. - Warrant",
+      "name_en": "Nexus Advanced Technologies Inc. - Warrant",
+      "py": "",
+      "abbr": ""
+    },
     "usnxb": {
       "code": "nxb",
       "market": "us",
@@ -80942,8 +80960,8 @@
       "code": "phge",
       "market": "us",
       "type": "美",
-      "name": "BiomX Inc. COmmon Stock",
-      "name_en": "BiomX Inc. COmmon Stock",
+      "name": "BiomX Inc. Common Stock",
+      "name_en": "BiomX Inc. Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -89485,6 +89503,15 @@
       "type": "美",
       "name": "Suncrete, Inc. - Class A Common Stock",
       "name_en": "Suncrete, Inc. - Class A Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usrml": {
+      "code": "rml",
+      "market": "us",
+      "type": "美",
+      "name": "Resolution Minerals Ltd - American Depositary Shares",
+      "name_en": "Resolution Minerals Ltd - American Depositary Shares",
       "py": "",
       "abbr": ""
     },
@@ -105244,6 +105271,15 @@
       "type": "美",
       "name": "TRX Gold Corporation Common Stock",
       "name_en": "TRX Gold Corporation Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "ustrxs": {
+      "code": "trxs",
+      "market": "us",
+      "type": "美",
+      "name": "Canary Staked TRX ETF",
+      "name_en": "Canary Staked TRX ETF",
       "py": "",
       "abbr": ""
     },

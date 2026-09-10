@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-09",
+  "last_update": "2026-09-10",
   "codes": {
     "bj810011": {
       "code": "810011",
@@ -1535,10 +1535,10 @@
       "code": "920268",
       "market": "bj",
       "type": "京",
-      "name": "N百迈科",
+      "name": "百迈科",
       "name_en": "",
-      "py": "nbaimaike",
-      "abbr": "nbmk"
+      "py": "baimaike",
+      "abbr": "bmk"
     },
     "bj920269": {
       "code": "920269",

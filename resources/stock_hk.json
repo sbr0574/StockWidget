@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-09",
+  "last_update": "2026-09-10",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -8349,7 +8349,7 @@
       "market": "hk",
       "type": "港",
       "name": "永義國際",
-      "name_en": "EASYKNIT INT'L",
+      "name_en": "EASYKNIT-NEW",
       "py": "yongyiguoji",
       "abbr": "yygj"
     },
@@ -16277,10 +16277,10 @@
       "code": "02490",
       "market": "hk",
       "type": "港",
-      "name": "樂艙物流",
-      "name_en": "LC LOGISTICS",
-      "py": "lecangwuliu",
-      "abbr": "lcwl"
+      "name": "樂艙控股",
+      "name_en": "LC HOLDING",
+      "py": "lecangkonggu",
+      "abbr": "lckg"
     },
     "hk02493": {
       "code": "02493",
@@ -18420,7 +18420,7 @@
       "market": "hk",
       "type": "港",
       "name": "永義國際",
-      "name_en": "EASYKNIT INT'L",
+      "name_en": "EASYKNIT-OLD",
       "py": "yongyiguoji",
       "abbr": "yygj"
     },
@@ -18459,6 +18459,15 @@
       "name_en": "GBA AI COMP-2K",
       "py": "yuegangwanzhisuan-erqian",
       "abbr": "ygwzs-eq"
+    },
+    "hk02921": {
+      "code": "02921",
+      "market": "hk",
+      "type": "港",
+      "name": "首惠產業金融",
+      "name_en": "CAPITAL IND FIN",
+      "py": "shouhuichanyejinrong",
+      "abbr": "shcyjr"
     },
     "hk03001": {
       "code": "03001",
