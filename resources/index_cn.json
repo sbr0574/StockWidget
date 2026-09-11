@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-10",
+  "last_update": "2026-09-11",
   "codes": {
     "sh000001": {
       "code": "000001",
@@ -8316,6 +8316,24 @@
       "name_en": "",
       "py": "chuangyebantongxinr",
       "abbr": "cybtxr"
+    },
+    "sz970089": {
+      "code": "970089",
+      "market": "sz",
+      "type": "指",
+      "name": "创业板消费电子",
+      "name_en": "",
+      "py": "chuangyebanxiaofeidianzi",
+      "abbr": "cybxfdz"
+    },
+    "sz97008901": {
+      "code": "97008901",
+      "market": "sz",
+      "type": "指",
+      "name": "创业板消费电子R",
+      "name_en": "",
+      "py": "chuangyebanxiaofeidianzir",
+      "abbr": "cybxfdzr"
     },
     "sz970095": {
       "code": "970095",

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-10",
+  "last_update": "2026-09-11",
   "codes": {
     "usa": {
       "code": "a",
@@ -862,6 +862,24 @@
       "type": "美",
       "name": "Aurora Cannabis Inc. - Common Shares",
       "name_en": "Aurora Cannabis Inc. - Common Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "usacbe": {
+      "code": "acbe",
+      "market": "us",
+      "type": "美",
+      "name": "Pacer Metaurus Enhanced Core Income Autocallable ETF",
+      "name_en": "Pacer Metaurus Enhanced Core Income Autocallable ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usacbh": {
+      "code": "acbh",
+      "market": "us",
+      "type": "美",
+      "name": "Pacer Metaurus High Income Autocallable ETF",
+      "name_en": "Pacer Metaurus High Income Autocallable ETF",
       "py": "",
       "abbr": ""
     },
@@ -3349,6 +3367,15 @@
       "py": "",
       "abbr": ""
     },
+    "usaifr": {
+      "code": "aifr",
+      "market": "us",
+      "type": "美",
+      "name": "Defiance Global Foundries ETF",
+      "name_en": "Defiance Global Foundries ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usaifu": {
       "code": "aifu",
       "market": "us",
@@ -3463,6 +3490,15 @@
       "type": "美",
       "name": "Ainos, Inc. - warrants",
       "name_en": "Ainos, Inc. - warrants",
+      "py": "",
+      "abbr": ""
+    },
+    "usaimg": {
+      "code": "aimg",
+      "market": "us",
+      "type": "美",
+      "name": "Defiance AI Magnificent 10 ETF",
+      "name_en": "Defiance AI Magnificent 10 ETF",
       "py": "",
       "abbr": ""
     },
@@ -8368,6 +8404,15 @@
       "type": "美",
       "name": "Arin Tactical Tail Risk ETF",
       "name_en": "Arin Tactical Tail Risk ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usattt": {
+      "code": "attt",
+      "market": "us",
+      "type": "美",
+      "name": "Atlas Trinity Tech Limited - Ordinary Shares",
+      "name_en": "Atlas Trinity Tech Limited - Ordinary Shares",
       "py": "",
       "abbr": ""
     },
@@ -15472,12 +15517,30 @@
       "py": "brtfangdichanxintuo",
       "abbr": "brtfdcxt"
     },
+    "usbrtm": {
+      "code": "brtm",
+      "market": "us",
+      "type": "美",
+      "name": "B&R Technology Merger Corp. - Class A Ordinary Shares",
+      "name_en": "B&R Technology Merger Corp. - Class A Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
     "usbrtmu": {
       "code": "brtmu",
       "market": "us",
       "type": "美",
       "name": "B&R Technology Merger Corp. - Units",
       "name_en": "B&R Technology Merger Corp. - Units",
+      "py": "",
+      "abbr": ""
+    },
+    "usbrtmw": {
+      "code": "brtmw",
+      "market": "us",
+      "type": "美",
+      "name": "B&R Technology Merger Corp. - Warrants",
+      "name_en": "B&R Technology Merger Corp. - Warrants",
       "py": "",
       "abbr": ""
     },
@@ -23722,6 +23785,15 @@
       "type": "美",
       "name": "VanEck Oil Refiners ETF",
       "name_en": "VanEck Oil Refiners ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "uscram": {
+      "code": "cram",
+      "market": "us",
+      "type": "美",
+      "name": "Defiance China Memory ETF",
+      "name_en": "Defiance China Memory ETF",
       "py": "",
       "abbr": ""
     },
@@ -33336,6 +33408,15 @@
       "name_en": "Corgi EOSE 2x Daily ETF",
       "py": "erbeizuoduoeoseetf-corgi",
       "abbr": "ebzdeoseetf-corgi"
+    },
+    "useocn": {
+      "code": "eocn",
+      "market": "us",
+      "type": "美",
+      "name": "Eocene Ltd. - Ordinary Shares",
+      "name_en": "Eocene Ltd. - Ordinary Shares",
+      "py": "",
+      "abbr": ""
     },
     "useoct": {
       "code": "eoct",
@@ -44415,15 +44496,6 @@
       "name_en": "ProShares UltraShort Gold",
       "py": "erbeizuokonghuangjinetf-proshares",
       "abbr": "ebzkhjetf-proshares"
-    },
-    "usglmd": {
-      "code": "glmd",
-      "market": "us",
-      "type": "美",
-      "name": "Galmed Pharmaceuticals Ltd. - Ordinary Shares",
-      "name_en": "Galmed Pharmaceuticals Ltd. - Ordinary Shares",
-      "py": "",
-      "abbr": ""
     },
     "usglnd": {
       "code": "glnd",
@@ -66502,6 +66574,15 @@
       "py": "",
       "abbr": ""
     },
+    "usmfsd": {
+      "code": "mfsd",
+      "market": "us",
+      "type": "美",
+      "name": "MFS Active Short Duration Income ETF",
+      "name_en": "MFS Active Short Duration Income ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usmfsg": {
       "code": "mfsg",
       "market": "us",
@@ -66535,6 +66616,15 @@
       "type": "美",
       "name": "MFS Active Value ETF",
       "name_en": "MFS Active Value ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usmfsx": {
+      "code": "mfsx",
+      "market": "us",
+      "type": "美",
+      "name": "MFS Active Short Muni Bond ETF",
+      "name_en": "MFS Active Short Muni Bond ETF",
       "py": "",
       "abbr": ""
     },
@@ -72991,12 +73081,12 @@
       "py": "",
       "abbr": ""
     },
-    "usnmcorw": {
-      "code": "nmcorw",
+    "usnmcor": {
+      "code": "nmcor",
       "market": "us",
       "type": "美",
-      "name": "Nuveen Municipal Credit Opportunities Fund Rights (expiring October 7, 2026) Rights when issued",
-      "name_en": "Nuveen Municipal Credit Opportunities Fund Rights (expiring October 7, 2026) Rights when issued",
+      "name": "Nuveen Municipal Credit Opportunities Fund Rights (expiring October 7, 2026) Rights",
+      "name_en": "Nuveen Municipal Credit Opportunities Fund Rights (expiring October 7, 2026) Rights",
       "py": "",
       "abbr": ""
     },
@@ -73645,6 +73735,15 @@
       "type": "美",
       "name": "Neuberger Quality Select ETF",
       "name_en": "Neuberger Quality Select ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usnram": {
+      "code": "nram",
+      "market": "us",
+      "type": "美",
+      "name": "Yorkville America Next Generation Memory Index ETF",
+      "name_en": "Yorkville America Next Generation Memory Index ETF",
       "py": "",
       "abbr": ""
     },
@@ -81987,7 +82086,7 @@
       "market": "us",
       "type": "美",
       "name": "明成集团",
-      "name_en": "Ming Shing Group Holdings Limited - Ordinary Shares",
+      "name_en": "PMA Graphene Technology Group Inc. - Class A Ordinary Shares",
       "py": "mingchengjituan",
       "abbr": "mcjt"
     },
@@ -87201,15 +87300,6 @@
       "name_en": "Northern Trust Ultra-Short Fixed Income ETF",
       "py": "",
       "abbr": ""
-    },
-    "usray": {
-      "code": "ray",
-      "market": "us",
-      "type": "美",
-      "name": "雷特控股",
-      "name_en": "Raytech Holding Limited - Ordinary Shares",
-      "py": "leitekonggu",
-      "abbr": "ltkg"
     },
     "usraya": {
       "code": "raya",
@@ -100360,6 +100450,15 @@
       "py": "",
       "abbr": ""
     },
+    "usswrd": {
+      "code": "swrd",
+      "market": "us",
+      "type": "美",
+      "name": "Stewards Inc - Common Stock",
+      "name_en": "Stewards Inc - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
     "usswvl": {
       "code": "swvl",
       "market": "us",
@@ -103570,15 +103669,6 @@
       "type": "美",
       "name": "The Metals Royalty Company Inc. - Common Stock",
       "name_en": "The Metals Royalty Company Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "ustmcww": {
-      "code": "tmcww",
-      "market": "us",
-      "type": "美",
-      "name": "TMC the metals company Inc. - Warrant",
-      "name_en": "TMC the metals company Inc. - Warrant",
       "py": "",
       "abbr": ""
     },
@@ -109810,6 +109900,15 @@
       "py": "",
       "abbr": ""
     },
+    "usveem": {
+      "code": "veem",
+      "market": "us",
+      "type": "美",
+      "name": "VanEck MSCI EM Analyst Sentiment ETF",
+      "name_en": "VanEck MSCI EM Analyst Sentiment ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usveev": {
       "code": "veev",
       "market": "us",
@@ -109852,6 +109951,15 @@
       "type": "美",
       "name": "US Vegan Climate ETF",
       "name_en": "US Vegan Climate ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usvegx": {
+      "code": "vegx",
+      "market": "us",
+      "type": "美",
+      "name": "International Vegan Climate ETF",
+      "name_en": "International Vegan Climate ETF",
       "py": "",
       "abbr": ""
     },
@@ -115480,12 +115588,30 @@
       "py": "tongxunfuwuhangyejingxuanzhishuetf-spdr",
       "abbr": "txfwhyjxzsetf-spdr"
     },
+    "usxlcd": {
+      "code": "xlcd",
+      "market": "us",
+      "type": "美",
+      "name": "MicroSectors -3x Short Communication Services (XLC) ETNs",
+      "name_en": "MicroSectors -3x Short Communication Services (XLC) ETNs",
+      "py": "",
+      "abbr": ""
+    },
     "usxlci": {
       "code": "xlci",
       "market": "us",
       "type": "美",
       "name": "State Street Communication Services Select Sector SPDR Premium Income ETF",
       "name_en": "State Street Communication Services Select Sector SPDR Premium Income ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usxlcu": {
+      "code": "xlcu",
+      "market": "us",
+      "type": "美",
+      "name": "MicroSectors 3x Long Communication Services (XLC) ETNs",
+      "name_en": "MicroSectors 3x Long Communication Services (XLC) ETNs",
       "py": "",
       "abbr": ""
     },
@@ -115623,6 +115749,24 @@
       "name_en": "State Street Consumer Staples Select Sector SPDR ETF",
       "py": "richangxiaofeietf-spdr",
       "abbr": "rcxfetf-spdr"
+    },
+    "usxlpd": {
+      "code": "xlpd",
+      "market": "us",
+      "type": "美",
+      "name": "MicroSectors -3x Short Consumer Staples (XLP) ETNs",
+      "name_en": "MicroSectors -3x Short Consumer Staples (XLP) ETNs",
+      "py": "",
+      "abbr": ""
+    },
+    "usxlpu": {
+      "code": "xlpu",
+      "market": "us",
+      "type": "美",
+      "name": "MicroSectors 3x Long Consumer Staples (XLP) ETNs",
+      "name_en": "MicroSectors 3x Long Consumer Staples (XLP) ETNs",
+      "py": "",
+      "abbr": ""
     },
     "usxlpx": {
       "code": "xlpx",

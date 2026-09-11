@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-10",
+  "last_update": "2026-09-11",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -18460,6 +18460,15 @@
       "py": "yuegangwanzhisuan-erqian",
       "abbr": "ygwzs-eq"
     },
+    "hk02920": {
+      "code": "02920",
+      "market": "hk",
+      "type": "港",
+      "name": "卓悅控股",
+      "name_en": "BONJOUR HOLD",
+      "py": "zhuoyuekonggu",
+      "abbr": "zykg"
+    },
     "hk02921": {
       "code": "02921",
       "market": "hk",
@@ -25800,7 +25809,7 @@
       "market": "hk",
       "type": "港",
       "name": "耀星科技集團",
-      "name_en": "BRIGHTSTAR-NEW",
+      "name_en": "BRIGHTSTAR TECH",
       "py": "yaoxingkejijituan",
       "abbr": "yxkjjt"
     },
@@ -26235,15 +26244,6 @@
       "name_en": "GOLDEN LEAF INT",
       "py": "jinyeguojijituan",
       "abbr": "jygjjt"
-    },
-    "hk08577": {
-      "code": "08577",
-      "market": "hk",
-      "type": "港",
-      "name": "耀星科技集團",
-      "name_en": "BRIGHTSTAR-OLD",
-      "py": "yaoxingkejijituan",
-      "abbr": "yxkjjt"
     },
     "hk08580": {
       "code": "08580",

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-10",
+  "last_update": "2026-09-11",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -26393,10 +26393,10 @@
       "code": "301689",
       "market": "sz",
       "type": "创",
-      "name": "N电科思仪",
+      "name": "C电科思仪",
       "name_en": "",
-      "py": "ndiankesiyi",
-      "abbr": "ndksy"
+      "py": "cdiankesiyi",
+      "abbr": "cdksy"
     },
     "sz301696": {
       "code": "301696",

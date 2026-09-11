@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-10",
+  "last_update": "2026-09-11",
   "codes": {
     "bj810011": {
       "code": "810011",
@@ -252,6 +252,15 @@
       "name_en": "",
       "py": "*sttianye",
       "abbr": "*stty"
+    },
+    "bj920025": {
+      "code": "920025",
+      "market": "bj",
+      "type": "京",
+      "name": "凯达重工",
+      "name_en": "",
+      "py": "kaidazhonggong",
+      "abbr": "kdzg"
     },
     "bj920026": {
       "code": "920026",
@@ -671,10 +680,10 @@
       "code": "920096",
       "market": "bj",
       "type": "京",
-      "name": "嘉晨智能",
+      "name": "XD嘉晨智",
       "name_en": "",
-      "py": "jiachenzhineng",
-      "abbr": "jczn"
+      "py": "xdjiachenzhi",
+      "abbr": "xdjcz"
     },
     "bj920098": {
       "code": "920098",

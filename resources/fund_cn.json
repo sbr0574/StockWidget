@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-10",
+  "last_update": "2026-09-11",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -10107,6 +10107,15 @@
       "name_en": "",
       "py": "gongyehulianwangetfyifangda",
       "abbr": "gyhlwetfyfd"
+    },
+    "sz158028": {
+      "code": "158028",
+      "market": "sz",
+      "type": "基",
+      "name": "稀有金属ETF招商",
+      "name_en": "",
+      "py": "xiyoujinshuetfzhaoshang",
+      "abbr": "xyjsetfzs"
     },
     "sz159001": {
       "code": "159001",
