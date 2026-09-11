@@ -1,4 +1,4 @@
-"""拉取全市场代码并写入仓库 resources/ 下的 JSON。
+"""拉取全市场代码并写入仓库 resources/data/ 下的 JSON。
 
 脚本可由 Azure Ubuntu 定时任务或 GitHub Actions 调用，保持自包含，
 不依赖 StockWidget 运行时模块。沪深股票和基金、港股股票和基金、美股上市
@@ -26,7 +26,7 @@ from pypinyin import Style, pinyin
 # 脚本位于 <root>/scripts/。服务器可用 CODES_OUTPUT_DIR 指向 codes-data
 # 工作树，确保失败分类保留数据分支中的上一版文件。
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUTPUT_DIR = os.environ.get("CODES_OUTPUT_DIR", os.path.join(ROOT, "resources"))
+OUTPUT_DIR = os.environ.get("CODES_OUTPUT_DIR", os.path.join(ROOT, "resources", "data"))
 
 STATUS_FILE = "codes_update_status.json"
 US_CN_ALIAS_CACHE_FILE = "cache_us_cn_aliases.json"
@@ -772,7 +772,7 @@ def _stock_shfe_futures() -> pd.DataFrame:
         if c not in seen:
             seen.add(c)
             uniq.append((c, n))
-    rows = [(code, name, "", "期", "") for code, name in uniq]
+    rows = [(code, name, "", "期", "sh") for code, name in uniq]
     return pd.DataFrame(rows, columns=_DF_COLUMNS)
 
 def futures_info_all() -> pd.DataFrame:
@@ -847,7 +847,8 @@ def _df_to_dict(df: pd.DataFrame) -> dict:
             "py": py_full,
             "abbr": py_abbr,
         }
-        codes[market + code] = entry
+        # 期货沿用原有合约键，避免更新代码表后丢失已有自选项。
+        codes[code if mtype == "期" else market + code] = entry
     return dict(sorted(codes.items(), key=_code_sort_key))
 
 

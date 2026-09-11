@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-31",
+  "last_update": "2026-09-11",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -4213,6 +4213,15 @@
       "py": "dashujuetffuguo",
       "abbr": "dsjetffg"
     },
+    "sh515440": {
+      "code": "515440",
+      "market": "sh",
+      "type": "基",
+      "name": "A股ETF南方",
+      "name_en": "",
+      "py": "aguetfnanfang",
+      "abbr": "agetfnf"
+    },
     "sh515450": {
       "code": "515450",
       "market": "sh",
@@ -6067,6 +6076,15 @@
       "py": "ganggutongxinxijishuetfzhaoshang",
       "abbr": "ggtxxjsetfzs"
     },
+    "sh526060": {
+      "code": "526060",
+      "market": "sh",
+      "type": "基",
+      "name": "港股通信息技术ETF华泰柏瑞",
+      "name_en": "",
+      "py": "ganggutongxinxijishuetfhuataibairui",
+      "abbr": "ggtxxjsetfhtbr"
+    },
     "sh526070": {
       "code": "526070",
       "market": "sh",
@@ -7408,6 +7426,15 @@
       "py": "zhongyaoetfhuataibairui",
       "abbr": "zyetfhtbr"
     },
+    "sh561530": {
+      "code": "561530",
+      "market": "sh",
+      "type": "基",
+      "name": "银行ETF银华",
+      "name_en": "",
+      "py": "yinhangetfyinhua",
+      "abbr": "yhetfyh"
+    },
     "sh561550": {
       "code": "561550",
       "market": "sh",
@@ -7498,6 +7525,15 @@
       "py": "a500honglidiboetfpingan",
       "abbr": "a500hldbetfpa"
     },
+    "sh561690": {
+      "code": "561690",
+      "market": "sh",
+      "type": "基",
+      "name": "300质量ETF农银",
+      "name_en": "",
+      "py": "300zhiliangetfnongyin",
+      "abbr": "300zletfny"
+    },
     "sh561700": {
       "code": "561700",
       "market": "sh",
@@ -7578,6 +7614,15 @@
       "name_en": "",
       "py": "yiliaoqixieetfhuataibairui",
       "abbr": "ylqxetfhtbr"
+    },
+    "sh561830": {
+      "code": "561830",
+      "market": "sh",
+      "type": "基",
+      "name": "有色ETF国泰海通",
+      "name_en": "",
+      "py": "youseetfguotaihaitong",
+      "abbr": "ysetfgtht"
     },
     "sh561870": {
       "code": "561870",
@@ -7740,6 +7785,15 @@
       "name_en": "",
       "py": "300xianjinliuetfhuabao",
       "abbr": "300xjletfhb"
+    },
+    "sh562180": {
+      "code": "562180",
+      "market": "sh",
+      "type": "基",
+      "name": "A500红利低波ETF招商",
+      "name_en": "",
+      "py": "a500honglidiboetfzhaoshang",
+      "abbr": "a500hldbetfzs"
     },
     "sh562300": {
       "code": "562300",
@@ -9685,6 +9739,15 @@
       "py": "kechuangxinpianshejietfyongying",
       "abbr": "kcxpsjetfyy"
     },
+    "sh589430": {
+      "code": "589430",
+      "market": "sh",
+      "type": "基",
+      "name": "科创芯片设计ETF华宝",
+      "name_en": "",
+      "py": "kechuangxinpianshejietfhuabao",
+      "abbr": "kcxpsjetfhb"
+    },
     "sh589460": {
       "code": "589460",
       "market": "sh",
@@ -9982,6 +10045,15 @@
       "py": "yiliaoetfjiashi",
       "abbr": "yletfjs"
     },
+    "sz158011": {
+      "code": "158011",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板软件ETF国泰",
+      "name_en": "",
+      "py": "chuangyebanruanjianetfguotai",
+      "abbr": "cybrjetfgt"
+    },
     "sz158012": {
       "code": "158012",
       "market": "sz",
@@ -9990,6 +10062,15 @@
       "name_en": "",
       "py": "yunjisuanetfnanfang",
       "abbr": "yjsetfnf"
+    },
+    "sz158013": {
+      "code": "158013",
+      "market": "sz",
+      "type": "基",
+      "name": "航空航天ETF易方达",
+      "name_en": "",
+      "py": "hangkonghangtianetfyifangda",
+      "abbr": "hkhtetfyfd"
     },
     "sz158017": {
       "code": "158017",
@@ -10008,6 +10089,33 @@
       "name_en": "",
       "py": "dianchietfyongying",
       "abbr": "dcetfyy"
+    },
+    "sz158023": {
+      "code": "158023",
+      "market": "sz",
+      "type": "基",
+      "name": "红利低波ETF万家",
+      "name_en": "",
+      "py": "honglidiboetfwanjia",
+      "abbr": "hldbetfwj"
+    },
+    "sz158027": {
+      "code": "158027",
+      "market": "sz",
+      "type": "基",
+      "name": "工业互联网ETF易方达",
+      "name_en": "",
+      "py": "gongyehulianwangetfyifangda",
+      "abbr": "gyhlwetfyfd"
+    },
+    "sz158028": {
+      "code": "158028",
+      "market": "sz",
+      "type": "基",
+      "name": "稀有金属ETF招商",
+      "name_en": "",
+      "py": "xiyoujinshuetfzhaoshang",
+      "abbr": "xyjsetfzs"
     },
     "sz159001": {
       "code": "159001",
@@ -19251,6 +19359,15 @@
       "name_en": "",
       "py": "nanfangrunzekejishujuzhongxinreit",
       "abbr": "nfrzkjsjzxreit"
+    },
+    "sz181001": {
+      "code": "181001",
+      "market": "sz",
+      "type": "基",
+      "name": "创金合信北京国资公司REIT",
+      "name_en": "",
+      "py": "chuangjinhexinbeijingguozigongsireit",
+      "abbr": "cjhxbjgzgsreit"
     }
   }
 }

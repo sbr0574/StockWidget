@@ -42,7 +42,7 @@ git worktree add --detach "$DATA_DIR" "origin/$DATA_BRANCH"
 mkdir -p "$DATA_DIR/resources"
 for file in "${FILES[@]}"; do
   if [[ ! -f "$DATA_DIR/resources/$file" ]]; then
-    cp "$ROOT/resources/$file" "$DATA_DIR/resources/$file"
+    cp "$ROOT/resources/data/$file" "$DATA_DIR/resources/$file"
   fi
 done
 

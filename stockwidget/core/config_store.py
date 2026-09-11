@@ -12,10 +12,15 @@ def config_paths() -> str:
     return os.path.join(os.getenv("APPDATA") or os.path.expanduser("~"), APP_NAME)
 
 
-def load_file(file_name: str, fallback: dict | None = None) -> dict:
+def data_cache_dir() -> str:
+    """下载的市场代码与状态清单独立存放，配置文件仍在应用目录。"""
+    return os.path.join(config_paths(), "data")
+
+
+def load_file(file_name: str, fallback: dict | None = None, *, directory: str | None = None) -> dict:
     """读取配置文件为 dict；文件不存在或解析失败时返回 fallback（默认 {}）。"""
     fallback = {} if fallback is None else fallback
-    path = os.path.join(config_paths(), file_name)
+    path = os.path.join(directory or config_paths(), file_name)
     try:
         with open(path, "r", encoding="utf-8") as file:
             data = json.load(file)
@@ -24,10 +29,11 @@ def load_file(file_name: str, fallback: dict | None = None) -> dict:
         return fallback
 
 
-def save_file(data: dict, file_name: str) -> None:
+def save_file(data: dict, file_name: str, *, directory: str | None = None) -> None:
     """原子化保存 dict 到配置文件（先写临时文件再替换，避免写一半损坏）。"""
-    os.makedirs(config_paths(), exist_ok=True)
-    config_file = os.path.join(config_paths(), file_name)
+    directory = directory or config_paths()
+    os.makedirs(directory, exist_ok=True)
+    config_file = os.path.join(directory, file_name)
     tmp_file = config_file + ".tmp"
     with open(tmp_file, "w", encoding="utf-8") as file:
         json.dump(data, file, ensure_ascii=False, indent=2)
