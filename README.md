@@ -75,6 +75,9 @@ stockwidget/
   ui/                        # 界面层：所有 Qt 组件与显示
     widget.py                #   盯盘浮窗主面板
     settings_dialog.py       #   设置面板
+    watchlist_editor.py      #   自选列表编辑、搜索与排序，信号提交修改
+    settings_style.py        #   设置面板主题与颜色预览
+    metric_pool.py           #   指标选择与拖动排序
     table_model.py           #   表格 Model 与 K 线 Delegate
     drag_mixin.py            #   拖拽 / 双击隐藏交互
     tray.py                  #   系统托盘
@@ -85,6 +88,8 @@ stockwidget/
     update_check.py          #   版本更新检查
   core/                      # 功能函数层：纯业务逻辑
     formatters.py            #   成交量 / 成交额格式化
+    quote_presentation.py    #   行情计算、展示文本与颜色角色（不修改原始行情）
+    metric_layout.py         #   指标定义、顺序与旧配置迁移
     code_search.py           #   代码搜索 / 建议
     watchlist.py             #   自选列表规范化
     config_store.py          #   配置读写
@@ -97,6 +102,10 @@ stockwidget/
 ```
 
 分层原则：`ui` 只负责显示与交互，`data` 只负责取数与解析，`core` 是可独立测试的纯函数，`platform` 隔离平台差异；各层通过 `app.py` 装配连接，避免职责互相缠绕。
+
+指标的名称、分组和默认显示状态统一定义在 `core/metric_layout.py`；运行时只维护 `visible_metrics` 有序列表，旧布尔字段仅在配置读写时转换。自选编辑组件通过 `watchlist_changed` 信号提交列表，不直接访问浮窗；成本解析由 `core/watchlist.py` 统一处理。
+
+运行回归测试：安装 `requirements-test.txt` 后执行 `python -m unittest discover -s tests -v`；无桌面环境时设置 `QT_QPA_PLATFORM=offscreen`。
 
 ## 🧰 下载与运行
 

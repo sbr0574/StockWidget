@@ -33,6 +33,20 @@ class ConfigStoreTests(unittest.TestCase):
         self.assertEqual(load_file("nope.json"), {})
         self.assertEqual(load_file("nope.json", {"d": 1}), {"d": 1})
 
+    def test_missing_file_does_not_share_mutable_default(self):
+        first = load_file("missing.json")
+        first["changed"] = True
+        self.assertEqual(load_file("missing.json"), {})
+
+    def test_non_object_json_returns_fallback(self):
+        directory = config_paths()
+        os.makedirs(directory, exist_ok=True)
+        for content in ("[]", "null", '"text"', "123"):
+            with self.subTest(content=content):
+                with open(os.path.join(directory, "bad.json"), "w", encoding="utf-8") as file:
+                    file.write(content)
+                self.assertEqual(load_file("bad.json", {"default": True}), {"default": True})
+
     def test_load_corrupt_returns_fallback(self):
         directory = config_paths()
         os.makedirs(directory, exist_ok=True)

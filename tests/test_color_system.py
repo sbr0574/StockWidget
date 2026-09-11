@@ -17,8 +17,8 @@ from stockwidget.ui.table_model import (
     COLOR_ROLE_UP,
     KLineDelegate,
     SimpleTableModel,
-    direction_color_role,
 )
+from stockwidget.core.quote_presentation import direction_color_role
 
 
 class ColorSystemTests(unittest.TestCase):

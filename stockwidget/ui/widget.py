@@ -8,23 +8,21 @@ from PySide6.QtGui import QFont, QAction, QColor
 from PySide6.QtWidgets import QApplication, QWidget, QMenu, QVBoxLayout, QLabel, QTableView, QHeaderView, QAbstractItemView, QFrame, QStyledItemDelegate
 
 from stockwidget.ui.table_model import (
-    COLOR_ROLE_TEXT,
     DEFAULT_DOWN_COLOR,
     DEFAULT_NEUTRAL_COLOR,
     DEFAULT_UP_COLOR,
     KLineDelegate,
     SimpleTableModel,
-    direction_color_role,
 )
 from stockwidget.ui.drag_mixin import DragBehaviorMixin
 from stockwidget.platform.hotkeys import GlobalHotkeyManager, HotkeyResult
 from stockwidget.data.quotes import request_quote
-from stockwidget.core.formatters import format_value, should_use_english_units
+from stockwidget.core.quote_presentation import QuoteDisplayOptions, format_quote
 from stockwidget.core.metric_layout import (
     METRIC_BY_ID,
     METRIC_SPECS,
     expand_metric_headers,
-    metric_id_for_header,
+    legacy_visibility,
     normalize_visible_metrics,
     visible_metrics_from_config,
 )
@@ -49,23 +47,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     click_through_hotkey_triggered = Signal()
     click_through_changed = Signal(bool)
     display_flags_changed = Signal()  # 显示指标/表头/网格/统一颜色等显示相关设置变化
-    data_ready = Signal(object)  # 后台线程请求完成后发回主线程: (ok, ret, data, error)
-    ALL_HEADERS = ["名称", "现价", "涨跌", "涨幅", "浮盈", "买一", "卖一", "委比", "成交量", "成交额", "均价", "K线"]
-    HEADER_ATTR_MAP = {
-        "名称": "name_visible",
-        "现价": "price_visible",
-        "涨跌": "change_visible",
-        "涨幅": "change_pct_visible",
-        "浮盈": "profit_visible",
-        "买一": "b1s1_visible",
-        "卖一": "b1s1_visible",
-        "委比": "commi_visible",
-        "成交量": "vol_visible",
-        "成交额": "amount_visible",
-        "均价": "avg_visible",
-        "K线": "kline_visible",
-    }
-
+    data_ready = Signal(object)  # (ok, data, error)
     def __init__(self, cfg: dict, codes_list: dict):
         super().__init__()
         self._on_change = (lambda: None)
@@ -82,7 +64,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         watchlist_cfg           = cfg.get("watchlist", {})
         self.watchlist: dict    = normalize_watchlist(watchlist_cfg, self.codes_list)
         # 加载面板配置
-        self.name_visible       = bool(cfg.get("name_visible", True))
         self.code_visible       = bool(cfg.get("code_visible", False))
         self.type_visible       = bool(cfg.get("type_visible", False))
         self.name_length        = int(cfg.get("name_length", -1))
@@ -90,7 +71,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if self.unit_mode not in ("cn", "en", "auto"):
             self.unit_mode = "auto"
         self.visible_metrics    = visible_metrics_from_config(cfg)
-        self._sync_metric_visibility_attrs()
         # 加载外观配置
         self.header_visible     = bool(cfg.get("header_visible", False))
         self.grid_visible       = bool(cfg.get("grid_visible", False))
@@ -139,7 +119,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.click_through_hotkey_triggered.connect(self.toggle_click_through)
         # 全局快捷键管理器:Windows 用官方 RegisterHotKey,Linux/X11 用 XGrabKey,Wayland 不支持
         self._hotkeys = GlobalHotkeyManager(self)
-        self._register_hotkey()
+        self._register_current()
 
         # UI
         self.panel = QWidget(self)
@@ -168,7 +148,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.message_label.setVisible(False)
         self._message_kind = None
         self.vbox.addWidget(self.message_label)
-        self._index_updating = False # 市场代码列表后台更新标志
         self._refresh_thread = None  # 后台刷新线程（避免网络请求阻塞 UI）
 
         # 首次报价到达前只显示紧凑提示，避免所有列撑出临时长条。
@@ -214,17 +193,10 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.set_click_through(self.click_through)
 
     # ----- 自选标的派生属性（由 watchlist 生成） -----
-    @property
-    def codes(self) -> list:
-        return list(self.watchlist.keys())
 
     @property
     def checked_codes(self) -> dict:
         return {c: dict(e) for c, e in self.watchlist.items() if e.get("checked")}
-
-    @property
-    def costs(self) -> dict:
-        return {c: e["cost"] for c, e in self.watchlist.items() if e.get("cost")}
 
     # 与 App 连接
     def set_open_settings_callback(self, fn): 
@@ -234,29 +206,18 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._on_change = fn or (lambda: None)
 
     def _notify_change(self):
-        cb = getattr(self, "_on_change", None)
-        if callable(cb): cb()
+        self._on_change()
 
     def current_config(self):
         return {
             "watchlist":            {c: dict(e) for c, e in self.watchlist.items()},
 
-            "name_visible":         self.name_visible,
             "code_visible":         self.code_visible,
             "type_visible":         self.type_visible,
             "name_length":          self.name_length,
             "unit_mode":            self.unit_mode,
             "visible_metrics":      list(self.visible_metrics),
-            "price_visible":        self.price_visible,
-            "change_visible":       self.change_visible,
-            "change_pct_visible":   self.change_pct_visible,
-            "profit_visible":       self.profit_visible,
-            "b1s1_visible":         self.b1s1_visible,
-            "commi_visible":        self.commi_visible,
-            "vol_visible":          self.vol_visible,
-            "amount_visible":       self.amount_visible,
-            "avg_visible":          self.avg_visible,
-            "kline_visible":        self.kline_visible,
+            **legacy_visibility(self.visible_metrics),
             
             "header_visible":   self.header_visible,
             "grid_visible":     self.grid_visible,
@@ -265,7 +226,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             "line_extra_px":    self.line_extra_px,
             "fg":               self.fg.name(QColor.HexRgb),
             "bg":               {"r": self.bg.red(), "g": self.bg.green(), "b": self.bg.blue(), "a": self.bg.alpha()},
-            "opacity_pct":      int(round(getattr(self, "opacity_pct", 90))),
+            "opacity_pct":      self.opacity_pct,
             "unicolor":         self.unicolor,
             "up_color":         self.up_color.name(QColor.HexRgb),
             "down_color":       self.down_color.name(QColor.HexRgb),
@@ -282,11 +243,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             "start_on_boot":    self.start_on_boot,
             "pos":              {"x": self.x(), "y": self.y()},
         }
-
-    def header_is_visible(self, header: str) -> bool:
-        header = str(header)
-        metric_id = metric_id_for_header(header)
-        return metric_id in self.visible_metrics if metric_id else False
 
     # ----- 外观/尺寸 -----
     def _sync_colors_to_views(self):
@@ -407,10 +363,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.message_label.setText("")
         self._message_kind = None
 
-    def set_index_updating(self, updating: bool):
-        """标记市场代码列表是否正在后台更新（期间保持进度提示不被清除）"""
-        self._index_updating = bool(updating)
-
     def _project_columns(self, full_rows: list[dict], color_roles: list[dict]):
         # 名称与其余指标统一按用户配置顺序展开。
         headers = expand_metric_headers(self.visible_metrics)
@@ -440,7 +392,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         else:
             self.k_column_visible_index = None
 
-        if not headers and not self._index_updating:
+        if not headers:
             self._show_message(
                 "请在设置面板中选择至少一个显示指标",
                 is_error=True,
@@ -450,141 +402,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self._clear_message()
 
         self._fit_to_contents()
-
-    def _format_data(
-        self,
-        code: str,
-        data: dict,
-        type: str,
-        display_code: str,
-        market: str = "",
-    ):
-        lot_size = 100 if market in {"sh", "sz", "bj"} else 1
-
-        # 名称显示
-        name = f"({type})" if type is not None and self.type_visible else ""
-        name += f"{display_code} " if self.code_visible else ""
-        if self.name_length == -1:
-            name += data["name"]
-        else:
-            name += data["name"][:self.name_length]
-
-        # 一档盘口数据
-        b1_label = ""
-        s1_label = ""
-        b1_color_sign = 0
-        s1_color_sign = 0
-        pur_1 = data["purchaser_price"][0]
-        sell_1 = data["seller_price"][0]
-        if pur_1 == sell_1 > 0:
-            # 集合竞价阶段
-            data["current_price"] = sell_1
-            paired = int(data["seller_vol"][0] / lot_size)
-            unpaired = int(
-                (data["purchaser_vol"][1] or (-data["seller_vol"][1]))
-                / lot_size
-            )
-            b1_label = f"{paired:d}"
-            s1_label = f"{unpaired:+d}"
-            b1_color_sign = (unpaired > 0) - (unpaired < 0)
-            s1_color_sign = b1_color_sign
-        else:
-            # 连续交易阶段（有买/卖盘口量时才显示，否则"-"）
-            pur_v1 = data["purchaser_vol"][0]
-            sell_v1 = data["seller_vol"][0]
-            buy_marker = "<" if pur_1 and pur_v1 and data["current_price"] == pur_1 else " "
-            sell_marker = ">" if sell_1 and sell_v1 and data["current_price"] == sell_1 else " "
-            b1_label = f"{int(pur_v1 / lot_size)}{buy_marker}" if (pur_1 and pur_v1) else "-"
-            s1_label = f"{sell_marker}{int(sell_v1 / lot_size)}" if (sell_1 and sell_v1) else "-"
-            b1_color_sign = 1 if (pur_1 and pur_v1) else 0
-            s1_color_sign = -1 if (sell_1 and sell_v1) else 0
-
-        # 盘前数据填充
-        if data["current_price"] == 0:
-            data["current_price"] = data["prev_close"]
-        if data["opening_price"] == 0:
-            data["opening_price"] = data["current_price"]
-            data["high_price"] = data["current_price"]
-            data["low_price"] = data["current_price"]
-
-        # 指标计算
-        change = data["current_price"] - data["prev_close"] if data["prev_close"] else 0.0
-        change_pct = (data["current_price"] / data["prev_close"] - 1) * 100 if data["prev_close"] else 0.0
-        avg = (data["deals_amt"] / data["deals_vol"]) if data["deals_vol"] > 0 else data["prev_close"]
-        p_sum, s_sum = sum(data["purchaser_vol"]), sum(data["seller_vol"])
-        committee = (100 * (p_sum - s_sum) / (p_sum + s_sum)) if (p_sum + s_sum) > 0 else 0.0
-        arrow = " "
-        if data["high_price"] > data["low_price"]:
-            if data["current_price"] == data["high_price"]: arrow = "↑"
-            elif data["current_price"] == data["low_price"]: arrow = "↓"
-        k_payload = {"k": (data["opening_price"], data["current_price"], data["high_price"], data["low_price"], data["prev_close"])}
-
-        precision = 3 if type == "基" or market == "us" else 2
-
-        # 浮盈计算（与成本价比较），仅显示百分比
-        cost = self.costs.get(code)
-        if cost is not None and cost > 0:
-            profit_pct = (data["current_price"] / cost - 1) * 100
-            profit_label = f"{profit_pct:+.2f}%"
-            profit_sign = (profit_pct > 0) - (profit_pct < 0)
-        else:
-            profit_label = "-"
-            profit_sign = 0
-
-        # 数据返回
-        is_index = type == "指"
-        english_units = should_use_english_units(
-            getattr(self, "unit_mode", "auto"), market
-        )
-        format_data = {
-            "名称": name,
-            "现价": f"{data["current_price"]:.{precision}f}{arrow}",
-            "涨跌": f"{change:+.{precision}f}",
-            "涨幅": f"{change_pct:+.2f}%",
-            "浮盈": profit_label,
-            "买一": b1_label,
-            "卖一": s1_label,
-            "委比": f"{committee:+.2f}%" if (p_sum + s_sum) > 0 else "-",
-            "成交量": (
-                "-" if is_index and not data["deals_vol"]
-                else format_value(
-                    data["deals_vol"],
-                    lot_size=lot_size,
-                    unit_cn=not english_units,
-                )
-            ),
-            "成交额": (
-                "-" if is_index and not data["deals_amt"]
-                else format_value(
-                    data["deals_amt"],
-                    lot_size=1,
-                    unit_cn=not english_units,
-                )
-            ),
-            "均价": f"{avg:.{precision}f}",
-            "K线": k_payload}
-        color_roles = {
-            "名称": COLOR_ROLE_TEXT,
-            "现价": direction_color_role(change),
-            "涨跌": direction_color_role(change),
-            "涨幅": direction_color_role(change),
-            "浮盈": direction_color_role(profit_sign),
-            "买一": direction_color_role(b1_color_sign),
-            "卖一": direction_color_role(s1_color_sign),
-            "委比": direction_color_role(committee),
-            "成交量": COLOR_ROLE_TEXT,
-            "成交额": COLOR_ROLE_TEXT,
-            "均价": direction_color_role(avg - data["prev_close"]),
-            "K线": COLOR_ROLE_TEXT}
-        # 指数不显示浮盈/买一卖一/委比/均价（均置为"-"）
-        if type == "指":
-            for key in ("浮盈", "买一", "卖一", "委比", "均价"):
-                format_data[key] = "-"
-                color_roles[key] = direction_color_role(0)
-        return format_data, color_roles
-
-    def _get_code_info(self, c: str) -> dict:
-        return self.codes_list.get(c, {})
 
     def _refresh_from_function(self):
         """定时入口：将网络请求丢到后台线程执行，避免阻塞 UI。
@@ -618,23 +435,29 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
         full_rows = []
         full_color_roles = []
+        options = QuoteDisplayOptions(
+            name_length=self.name_length,
+            code_visible=self.code_visible,
+            type_visible=self.type_visible,
+            unit_mode=self.unit_mode,
+        )
         for c, d in data.items():
             entry = self.watchlist.get(c) or {}
-            code_info = self._get_code_info(c)
+            code_info = self.codes_list.get(c, {})
             type_ = entry.get("type") or code_info.get("type")
             market = entry.get("market") or code_info.get("market") or ""
             display_code = entry.get("code") or code_info.get("code") or c
-            row, color_roles = self._format_data(
-                c, d, type_, display_code, market=market
+            row, color_roles = format_quote(
+                d, type_, display_code, market=market,
+                cost=entry.get("cost"), options=options,
             )
             full_rows.append(row)
             full_color_roles.append(color_roles)
 
-        if not self._index_updating:
-            if len(data) > 0:
-                self._clear_message()
-            else:
-                self._show_message("请在设置面板中添加自选股", is_error=True)
+        if data:
+            self._clear_message()
+        else:
+            self._show_message("请在设置面板中添加自选股", is_error=True)
         self._project_columns(full_rows, full_color_roles)
 
     # ----- 应用设置 -----
@@ -661,18 +484,12 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._refresh_from_function()
         self.display_flags_changed.emit()
 
-    def _sync_metric_visibility_attrs(self):
-        visible = set(self.visible_metrics)
-        for spec in METRIC_SPECS:
-            setattr(self, spec.legacy_attr, spec.metric_id in visible)
-
     def set_visible_metrics(self, metric_ids):
-        """一次性应用其余指标的显示状态和顺序。"""
+        """一次性应用指标的显示状态和顺序。"""
         normalized = normalize_visible_metrics(metric_ids)
         if normalized == self.visible_metrics:
             return
         self.visible_metrics = normalized
-        self._sync_metric_visibility_attrs()
         self._notify_change()
         self._refresh_from_function()
         self.display_flags_changed.emit()
@@ -692,23 +509,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             updated.remove(metric_id)
         self.set_visible_metrics(updated)
 
-    def set_flag(self, header, checked: bool):
-        if isinstance(header, int):
-            if 0 <= header < len(self.ALL_HEADERS):
-                header = self.ALL_HEADERS[header]
-            else:
-                return
-        header = str(header)
-        checked = bool(checked)
-        metric_id = metric_id_for_header(header)
-        if metric_id:
-            self.set_metric_visible(metric_id, checked)
-
-    def set_code_type(self, pure_num: bool):
-        self.short_code = bool(pure_num)
-        self._notify_change()
-        self._refresh_from_function()
-
     def set_name_length(self, name_len: int):
         # -1 全部显示, 0 不显示, >0 显示前 N 个字
         if name_len == -1 or name_len >= 0:
@@ -725,14 +525,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._notify_change()
         self._refresh_from_function()
         self.display_flags_changed.emit()
-
-    def set_b1s1_display(self, mode: str):
-        """mode: 'qty' | 'price' | 'both'"""
-        if mode not in ("qty", "price", "both"):
-            return
-        self.b1s1_display = mode
-        self._notify_change()
-        self._refresh_from_function()
 
     def set_header_visible(self, vis: bool):
         self.header_visible = bool(vis)
@@ -874,73 +666,46 @@ class FloatLabel(DragBehaviorMixin, QWidget):
                 self._keep_top_timer.stop()
         self._notify_change()
 
-    def set_hotkey_enabled(self, enabled: bool) -> HotkeyResult:
-        """启用/停用"显示/隐藏"快捷键。启用失败(如冲突)时回滚状态并返回失败原因。"""
-        enabled = bool(enabled)
-        if self.hotkey_enabled == enabled:
+    def _set_hotkey_option(self, attr: str, value, *, register: bool = True) -> HotkeyResult:
+        """统一修改快捷键配置，注册失败时恢复原值和原有注册。"""
+        old = getattr(self, attr)
+        if value == old:
             return HotkeyResult(True)
-        old = self.hotkey_enabled
-        self.hotkey_enabled = enabled
-        result = self._register_current()
+        setattr(self, attr, value)
+        result = self._register_current() if register else HotkeyResult(True)
         if not result:
-            self.hotkey_enabled = old
+            setattr(self, attr, old)
             self._register_current()
             return result
         self._notify_change()
         return result
+
+    def set_hotkey_enabled(self, enabled: bool) -> HotkeyResult:
+        return self._set_hotkey_option("hotkey_enabled", bool(enabled))
 
     def set_click_through_hotkey_enabled(self, enabled: bool) -> HotkeyResult:
-        """启用/停用"鼠标穿透"快捷键。启用失败(如冲突)时回滚状态并返回失败原因。"""
-        enabled = bool(enabled)
-        if self.hotkey_click_through_enabled == enabled:
-            return HotkeyResult(True)
-        old = self.hotkey_click_through_enabled
-        self.hotkey_click_through_enabled = enabled
-        result = self._register_current()
-        if not result:
-            self.hotkey_click_through_enabled = old
-            self._register_current()
-            return result
-        self._notify_change()
-        return result
+        return self._set_hotkey_option("hotkey_click_through_enabled", bool(enabled))
+
+    def update_hotkey(self, new_hotkey: str) -> HotkeyResult:
+        return self._set_hotkey_option(
+            "hotkey", new_hotkey.strip(), register=self.hotkey_enabled,
+        )
 
     def update_click_through_hotkey(self, new_hotkey: str) -> HotkeyResult:
-        """更新"鼠标穿透"快捷键。冲突/无效时不生效并回滚,返回失败原因。"""
-        new_hotkey = new_hotkey.strip()
-        if new_hotkey == self.hotkey_click_through:
-            return HotkeyResult(True)
-        if not self.hotkey_click_through_enabled:
-            # 未启用时直接保存,启用时再校验
-            self.hotkey_click_through = new_hotkey
-            self._notify_change()
-            return HotkeyResult(True)
-        old = self.hotkey_click_through
-        self.hotkey_click_through = new_hotkey
-        result = self._register_current()
-        if not result:
-            self.hotkey_click_through = old
-            self._register_current()
-            return result
-        self._notify_change()
-        return result
+        return self._set_hotkey_option(
+            "hotkey_click_through", new_hotkey.strip(),
+            register=self.hotkey_click_through_enabled,
+        )
 
     # ----- 交互 -----
     def contextMenuEvent(self, event):
         menu = QMenu(self)
         sub_cols = QMenu("显示指标", menu)
-        for name in self.ALL_HEADERS:
-            if name == "卖一":
-                continue
-            if name == "买一":
-                act = QAction("买一/卖一", sub_cols, checkable=True)
-                act.setChecked(self.header_is_visible("买一"))
-                act.toggled.connect(partial(self.set_flag, "买一"))
-                sub_cols.addAction(act)
-                continue
-            act = QAction(name, sub_cols, checkable=True)
-            act.setChecked(self.header_is_visible(name))
-            act.toggled.connect(partial(self.set_flag, name))
-            sub_cols.addAction(act)
+        for spec in METRIC_SPECS:
+            action = QAction(spec.label, sub_cols, checkable=True)
+            action.setChecked(spec.metric_id in self.visible_metrics)
+            action.toggled.connect(partial(self.set_metric_visible, spec.metric_id))
+            sub_cols.addAction(action)
         menu.addMenu(sub_cols)
 
         act_header = QAction("显示表头", menu, checkable=True)
@@ -1010,44 +775,24 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         """按当前 self.* 状态全量注册全局快捷键,返回第一个失败结果。"""
         self._hotkeys.unregister_all()
         if self.hotkey_enabled:
-            result = self._hotkeys.register(self.hotkey, lambda: self.hotkey_triggered.emit())
+            result = self._hotkeys.register(self.hotkey, self.hotkey_triggered.emit)
             if not result:
                 return result
         if self.hotkey_click_through_enabled:
             result = self._hotkeys.register(
                 self.hotkey_click_through,
-                lambda: self.click_through_hotkey_triggered.emit(),
+                self.click_through_hotkey_triggered.emit,
             )
             if not result:
                 return result
         return HotkeyResult(True)
-
-    def _register_hotkey(self):
-        """按当前状态注册全局快捷键(启动/切换时调用)。失败静默,不影响运行。"""
-        self._register_current()
-
-    def update_hotkey(self, new_hotkey: str) -> HotkeyResult:
-        """更新"显示/隐藏"快捷键。冲突/无效时不生效并回滚,返回失败原因。"""
-        new_hotkey = new_hotkey.strip()
-        if new_hotkey == self.hotkey:
-            return HotkeyResult(True)
-        if not self.hotkey_enabled:
-            # 未启用时直接保存,启用时再校验
-            self.hotkey = new_hotkey
-            self._notify_change()
-            return HotkeyResult(True)
-        old = self.hotkey
-        self.hotkey = new_hotkey
-        result = self._register_current()
-        if not result:
-            self.hotkey = old
-            self._register_current()
-            return result
-        self._notify_change()
-        return result
 
     def toggle_win(self):
         if self.isVisible():
             self.hide()
         else:
             self.show()
+            self.raise_()
+            self.activateWindow()
+            self.setFocus(Qt.ActiveWindowFocusReason)
+        self._notify_change()

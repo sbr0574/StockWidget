@@ -12,8 +12,8 @@ from stockwidget.core.watchlist import normalize_watchlist
 
 class FormatterTests(unittest.TestCase):
     def test_format_value_chinese_units(self):
-        self.assertEqual(format_value(100000, unit_cn=True), "1000")
-        self.assertEqual(format_value(123456, unit_cn=True), "1.23万")
+        self.assertEqual(format_value(100000, unit_cn=True), "10.00万")
+        self.assertEqual(format_value(123456, unit_cn=True), "12.35万")
         self.assertEqual(format_value(100000000, unit_cn=True), "1.00亿")
         self.assertEqual(format_value(1000000000000, unit_cn=True), "1.00万亿")
 
@@ -44,6 +44,12 @@ class FormatterTests(unittest.TestCase):
 
 
 class WatchlistTests(unittest.TestCase):
+    def test_invalid_costs_are_rejected_consistently(self):
+        for cost in (None, "", "invalid", 0, -1, "nan", "inf", float("-inf")):
+            with self.subTest(cost=cost):
+                entry = normalize_watchlist({"sh600519": {"cost": cost}})["sh600519"]
+                self.assertIsNone(entry["cost"])
+
     def test_normalize(self):
         watchlist = normalize_watchlist(
             {

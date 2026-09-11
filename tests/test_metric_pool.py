@@ -8,6 +8,8 @@ from PySide6.QtCore import QPoint, QRect
 from PySide6.QtWidgets import QApplication
 
 from stockwidget.core.metric_layout import (
+    METRIC_SPECS,
+    visible_metrics_from_config,
     METRIC_IDS,
     expand_metric_headers,
 )
@@ -108,8 +110,9 @@ class FloatLabelMetricLayoutTests(unittest.TestCase):
 
     @staticmethod
     def _row_and_roles():
-        row = {header: header for header in FloatLabel.ALL_HEADERS}
-        roles = {header: COLOR_ROLE_TEXT for header in FloatLabel.ALL_HEADERS}
+        headers = expand_metric_headers([spec.metric_id for spec in METRIC_SPECS])
+        row = {header: header for header in headers}
+        roles = {header: COLOR_ROLE_TEXT for header in headers}
         return row, roles
 
     def test_name_metric_migrates_first_and_projects_in_order(self):
@@ -146,7 +149,7 @@ class FloatLabelMetricLayoutTests(unittest.TestCase):
         self.assertEqual(window.pos(), saved)
         self.assertTrue(window.table.isHidden())
         row, roles = self._row_and_roles()
-        with patch.object(window, "_format_data", return_value=(row, roles)):
+        with patch("stockwidget.ui.widget.format_quote", return_value=(row, roles)):
             window._process_data((True, {"sh600519": {}}, None))
         self.qt_app.processEvents()
         self.assertEqual(window.pos(), saved)
@@ -174,7 +177,7 @@ class FloatLabelMetricLayoutTests(unittest.TestCase):
             expand_metric_headers(window.visible_metrics),
         )
 
-    def test_setting_order_syncs_legacy_flags_and_saves_once(self):
+    def test_setting_order_serializes_legacy_flags_and_saves_once(self):
         window = self._window({})
         save = Mock()
         window.set_on_change(save)
@@ -184,23 +187,28 @@ class FloatLabelMetricLayoutTests(unittest.TestCase):
         window.set_visible_metrics(["amount", "price"])
 
         self.assertEqual(window.visible_metrics, ["amount", "price"])
-        self.assertTrue(window.amount_visible)
-        self.assertTrue(window.price_visible)
-        self.assertFalse(window.change_pct_visible)
-        self.assertEqual(window.current_config()["visible_metrics"], ["amount", "price"])
+        self.assertIn("amount", window.visible_metrics)
+        self.assertIn("price", window.visible_metrics)
+        self.assertNotIn("change_pct", window.visible_metrics)
+        config = window.current_config()
+        self.assertEqual(config["visible_metrics"], ["amount", "price"])
+        self.assertTrue(config["amount_visible"])
+        self.assertTrue(config["price_visible"])
+        self.assertFalse(config["name_visible"])
+        self.assertEqual(visible_metrics_from_config(config), window.visible_metrics)
         save.assert_called_once_with()
         self.refresh.assert_called_once_with()
         self.assertEqual(changes, [True])
 
-    def test_right_click_compatibility_appends_reenabled_metric(self):
+    def test_reenabling_metric_appends_it_and_bid_ask_toggle_together(self):
         window = self._window({"visible_metrics": ["price"]})
 
-        window.set_flag("成交额", True)
-        window.set_flag("买一", True)
-        window.set_flag("卖一", False)
+        window.set_metric_visible("amount", True)
+        window.set_metric_visible("b1s1", True)
+        window.set_metric_visible("b1s1", False)
 
         self.assertEqual(window.visible_metrics, ["name", "price", "amount"])
-        self.assertFalse(window.b1s1_visible)
+        self.assertNotIn("b1s1", window.visible_metrics)
 
     def test_kline_delegate_moves_to_new_column(self):
         window = self._window(
@@ -228,7 +236,7 @@ class FloatLabelMetricLayoutTests(unittest.TestCase):
         self.assertFalse(window.message_label.isHidden())
         self.assertIn("至少一个显示指标", window.message_label.text())
 
-        window.set_flag("名称", True)
+        window.set_metric_visible("name", True)
         window._project_columns([], [])
 
         self.assertEqual(window.model._headers, ["名称"])

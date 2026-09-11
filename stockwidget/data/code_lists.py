@@ -2,21 +2,37 @@
 """分类代码列表的本地加载、状态检查和远端同步。"""
 
 from datetime import datetime, time as date_time, timedelta, timezone
+import json
 from threading import RLock
 
 import requests
+from PySide6.QtCore import QFile, QIODevice
 
 from stockwidget.constants import (
     CODES_RAW_URLS,
     CODES_STATUS_FILE,
     CODE_LIST_FILES,
 )
-from stockwidget.core.config_store import load_file, load_json_from_resource, save_file
+from stockwidget.core.config_store import load_file, save_file
 
 
 CODES_CHECK_HOUR = 9
 CODES_RETRY_SECONDS = 30 * 60
 _UTC8 = timezone(timedelta(hours=8))
+
+
+def load_json_from_resource(path: str) -> dict:
+    """读取内置代码表；缺失或损坏时让调用方回退到本地缓存。"""
+    file = QFile(path)
+    if not file.open(QIODevice.ReadOnly | QIODevice.Text):
+        return {}
+    try:
+        data = json.loads(bytes(file.readAll()).decode("utf-8"))
+        return data if isinstance(data, dict) else {}
+    except ValueError:
+        return {}
+    finally:
+        file.close()
 
 
 def _time_utc8(now: datetime | None = None) -> datetime:

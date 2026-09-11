@@ -152,14 +152,7 @@ class App(QApplication):
         return QIcon(":/StockWidget"+file_type)
 
     def toggle_win(self):
-        if self.win.isVisible():
-            self.win.hide()
-        else:
-            self.win.show()
-            self.win.raise_()
-            self.win.activateWindow()
-            self.win.setFocus(Qt.ActiveWindowFocusReason)
-        self.save_now()
+        self.win.toggle_win()
 
     def open_settings(self):
         if self.settings_dlg and self.settings_dlg.isVisible():

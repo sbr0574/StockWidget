@@ -32,11 +32,6 @@ METRIC_SPECS = (
 
 METRIC_BY_ID = {spec.metric_id: spec for spec in METRIC_SPECS}
 METRIC_IDS = tuple(METRIC_BY_ID)
-HEADER_TO_METRIC_ID = {
-    header: spec.metric_id
-    for spec in METRIC_SPECS
-    for header in spec.headers
-}
 DEFAULT_VISIBLE_METRICS = tuple(
     spec.metric_id for spec in METRIC_SPECS if spec.default_visible
 )
@@ -84,12 +79,8 @@ def expand_metric_headers(metric_ids: Sequence[str] | None) -> list[str]:
     return headers
 
 
-def metric_id_for_header(header: str) -> str | None:
-    return HEADER_TO_METRIC_ID.get(str(header))
-
-
 def legacy_visibility(metric_ids: Sequence[str] | None) -> dict[str, bool]:
-    """生成旧布尔字段，供过渡期配置和现有调用方继续使用。"""
+    """仅在保存配置时生成旧布尔字段；运行时以有序指标列表为准。"""
     visible = set(normalize_visible_metrics(metric_ids))
     return {
         spec.legacy_attr: spec.metric_id in visible

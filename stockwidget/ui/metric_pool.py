@@ -562,10 +562,10 @@ class MetricPoolWidget(QWidget):
         self._visible_metrics = updated
         # 移动后一律不保留选中状态
         self._rebuild_pools()
-        self._clear_pool_selections()
+        self.clear_selections()
         self.visible_metrics_changed.emit(list(self._visible_metrics))
 
-    def _clear_pool_selections(self):
+    def clear_selections(self):
         for pool in (self.available_pool, self.displayed_pool):
             pool.clearSelection()
             pool.setCurrentItem(None)
