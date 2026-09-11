@@ -1,7 +1,7 @@
 """自选标的添加悬浮面板。"""
 
 from PySide6.QtCore import (
-    QModelIndex, QPoint, QPointF, QRect, QRectF, QSize, QSignalBlocker, Qt,
+    QEvent, QModelIndex, QPoint, QPointF, QRect, QRectF, QSize, QSignalBlocker, Qt,
     QTimer, Signal,
 )
 from PySide6.QtGui import (
@@ -270,6 +270,37 @@ class FilterCheckRow(QWidget):
         self.selection_changed.emit()
 
 
+class CodeSearchInput(QLineEdit):
+    navigation_requested = Signal(int)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.composing = False
+
+    def inputMethodEvent(self, event):
+        self.composing = bool(event.preeditString())
+        super().inputMethodEvent(event)
+
+    def focusOutEvent(self, event):
+        super().focusOutEvent(event)
+        self.composing = False
+
+    def keyPressEvent(self, event):
+        if self.composing and event.key() in (
+            Qt.Key.Key_Up, Qt.Key.Key_Down, Qt.Key.Key_Return,
+            Qt.Key.Key_Enter, Qt.Key.Key_Escape,
+        ):
+            # 输入法通常先消费选词按键；透传时也不能触发结果选择或添加。
+            event.accept()
+            return
+        if (event.key() in (Qt.Key.Key_Up, Qt.Key.Key_Down)
+                and event.modifiers() == Qt.KeyboardModifier.NoModifier):
+            self.navigation_requested.emit(event.key())
+            event.accept()
+            return
+        super().keyPressEvent(event)
+
+
 class SearchResultList(QListView):
     entry_requested = Signal(QModelIndex)
 
@@ -381,7 +412,8 @@ class AddCodePanel(QFrame):
     entry_requested = Signal(object)
 
     def __init__(self, placeholder: str, parent=None):
-        super().__init__(parent, Qt.WindowType.Popup)
+        # 使用可激活的工具窗口，让 Windows 输入法获得搜索框所在窗口的焦点。
+        super().__init__(parent, Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint)
         self.setObjectName("add_code_panel")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setFrameShape(QFrame.Shape.StyledPanel)
@@ -397,7 +429,7 @@ class AddCodePanel(QFrame):
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(7)
 
-        self.search_input = QLineEdit(self)
+        self.search_input = CodeSearchInput(self)
         self.search_input.setObjectName("add_code_search_input")
         self.search_input.setPlaceholderText(placeholder)
         self.search_input.setToolTip(placeholder)
@@ -447,7 +479,8 @@ class AddCodePanel(QFrame):
         self.search_input.textChanged.connect(
             lambda _text: self.refresh_results(reset_page=True)
         )
-        self.search_input.returnPressed.connect(self._activate_first_available)
+        self.search_input.returnPressed.connect(self._activate_current_result)
+        self.search_input.navigation_requested.connect(self._navigate_results)
         self.category_filters.selection_changed.connect(
             lambda: self.refresh_results(reset_page=True)
         )
@@ -574,12 +607,38 @@ class AddCodePanel(QFrame):
         self.move(position)
         self.show()
         self.raise_()
-        QTimer.singleShot(0, self._focus_search_input)
+        self.activateWindow()
+        QTimer.singleShot(0, self.search_input, self._focus_search_input)
 
     def _focus_search_input(self):
         if self.isVisible():
-            self.search_input.setFocus(Qt.FocusReason.PopupFocusReason)
+            self.search_input.setFocus(Qt.FocusReason.OtherFocusReason)
             self.search_input.selectAll()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        QApplication.instance().installEventFilter(self)
+
+    def hideEvent(self, event):
+        QApplication.instance().removeEventFilter(self)
+        super().hideEvent(event)
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.Type.ApplicationDeactivate:
+            self.hide()
+        elif (event.type() == QEvent.Type.MouseButtonPress
+                and isinstance(obj, QWidget)
+                and obj is not self and not self.isAncestorOf(obj)):
+            self.hide()
+        elif obj is self.parentWidget() and event.type() == QEvent.Type.Hide:
+            self.hide()
+        return super().eventFilter(obj, event)
+
+    def _navigate_results(self, key):
+        # 复用列表的原生导航（含跳过已添加项），同时把输入焦点留在搜索框。
+        QApplication.sendEvent(
+            self.result_list, QKeyEvent(QEvent.Type.KeyPress, key, Qt.KeyboardModifier.NoModifier)
+        )
 
     def _previous_page(self):
         if self.current_result is not None and self.current_result.page > 1:
@@ -607,7 +666,7 @@ class AddCodePanel(QFrame):
         else:
             self.result_list.setCurrentIndex(QModelIndex())
 
-    def _activate_first_available(self):
+    def _activate_current_result(self):
         index = self.result_list.currentIndex()
         if not index.isValid():
             index = self._first_available_index()

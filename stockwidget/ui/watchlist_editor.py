@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QStyledItemDelegate, QStyle, QStyleOptionViewItem, QLineEdit, QCompleter,
     QHeaderView, QLabel,
 )
+from shiboken6 import isValid
 
 from stockwidget.core.code_search import build_search_index, search_suggestions
 from stockwidget.core.watchlist import parse_positive_cost
@@ -64,7 +65,7 @@ class CodeCompleterDelegate(QStyledItemDelegate):
         self._commit_editor(editor)
 
     def destroyEditor(self, editor, index):
-        if not editor.property("_code_editor_committed"):
+        if self.owner.is_active() and not editor.property("_code_editor_committed"):
             self.owner._cancel_code_editor(editor)
         super().destroyEditor(editor, index)
 
@@ -78,7 +79,7 @@ class CodeCompleterDelegate(QStyledItemDelegate):
         self.closeEditor.emit(editor, QAbstractItemDelegate.EndEditHint.NoHint)
 
     def _commit_editor(self, editor):
-        if editor.property("_code_editor_committed"):
+        if not self.owner.is_active() or editor.property("_code_editor_committed"):
             return
         editor.setProperty("_code_editor_committed", True)
         self.owner._commit_code_editor(editor)
@@ -134,8 +135,9 @@ class WatchlistEditor(QObject):
     watchlist_changed = Signal(object)
 
     def __init__(self, table, add_button, delete_button, top_button, watchlist, codes, parent):
-        super().__init__(parent)
+        super().__init__(table)
         self.list_codes = table
+        self._viewport = table.viewport()
         self.btn_add = add_button
         self.btn_del = delete_button
         self.btn_top = top_button
@@ -160,24 +162,30 @@ class WatchlistEditor(QObject):
     def set_theme(self, dark: bool):
         self.add_code_panel.set_theme(dark)
 
+    def is_active(self):
+        return isValid(self.list_codes) and isValid(self._viewport)
+
     def close(self):
         self.add_code_panel.hide()
         self._on_codes_changed(None)
 
     def eventFilter(self, obj, ev):
-        if obj is self.list_codes.viewport() and ev.type() == QEvent.Resize:
+        # 表格析构会先销毁模型，再销毁子对象；此时 Python 回调仍可能到达。
+        if not self.is_active() or obj is not self._viewport:
+            return False
+        if ev.type() == QEvent.Resize:
             self._refresh_empty_watchlist_hint()
-        if obj is self.list_codes.viewport() and ev.type() == QEvent.MouseButtonPress:
+        elif ev.type() == QEvent.MouseButtonPress:
             # 单击自选列表空白处：清除选中条目与焦点
             pos = ev.position().toPoint()
             if self.list_codes.itemAt(pos) is None:
                 self.list_codes.setCurrentCell(-1, -1)
-        if obj is self.list_codes.viewport() and ev.type() == QEvent.MouseButtonDblClick:
+        elif ev.type() == QEvent.MouseButtonDblClick:
             pos = ev.position().toPoint()
             if self.list_codes.itemAt(pos) is None:
                 self._start_quick_add()
                 return True
-        if obj is self.list_codes.viewport() and ev.type() == QEvent.Drop:
+        elif ev.type() == QEvent.Drop:
             self._handle_drop(ev)
             return True
         return super().eventFilter(obj, ev)
@@ -194,12 +202,11 @@ class WatchlistEditor(QObject):
             | QAbstractItemView.EditTrigger.EditKeyPressed
         )
         self.list_codes.setDropIndicatorShown(True)
-        self.list_codes.viewport().installEventFilter(self)
         self.list_codes.setItemDelegateForColumn(0, CenteredCheckBoxDelegate(self))
         self.list_codes.setItemDelegateForColumn(1, CodeCompleterDelegate(self))
 
         self.empty_watchlist_hint = QLabel(
-            "双击空白处添加条目", self.list_codes.viewport()
+            "双击空白处添加条目", self._viewport
         )
         self.empty_watchlist_hint.setObjectName("empty_watchlist_hint")
         self.empty_watchlist_hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -218,6 +225,7 @@ class WatchlistEditor(QObject):
         self._refresh_empty_watchlist_hint()
         # 打开面板时不预选任何条目
         self.list_codes.setCurrentCell(-1, -1)
+        self._viewport.installEventFilter(self)
 
     def refresh_code_search(self, codes):
         """代码表异步替换后刷新快速搜索和添加面板。"""
@@ -233,7 +241,9 @@ class WatchlistEditor(QObject):
             )
 
     def _refresh_empty_watchlist_hint(self, *_args):
-        self.empty_watchlist_hint.setGeometry(self.list_codes.viewport().rect())
+        if not self.is_active() or not isValid(self.empty_watchlist_hint):
+            return
+        self.empty_watchlist_hint.setGeometry(self._viewport.rect())
         self.empty_watchlist_hint.setVisible(self.list_codes.rowCount() == 0)
         self.empty_watchlist_hint.raise_()
 
@@ -260,7 +270,9 @@ class WatchlistEditor(QObject):
         ev.accept()
 
         def finish_drop():
-            if dragged_item is not None:
+            if not self.is_active():
+                return
+            if dragged_item is not None and isValid(dragged_item):
                 self.list_codes.setCurrentItem(
                     dragged_item,
                     QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows,
@@ -268,7 +280,7 @@ class WatchlistEditor(QObject):
                 self.list_codes.setFocus(Qt.MouseFocusReason)
             self._on_codes_changed(None)
 
-        QTimer.singleShot(0, finish_drop)
+        QTimer.singleShot(0, self, finish_drop)
 
     def _append_code_row(self, code: str = "", name: str = "", checked: bool = False, cost=None):
         self._insert_code_row(
@@ -405,6 +417,8 @@ class WatchlistEditor(QObject):
         return watchlist
 
     def _on_codes_changed(self, _item):
+        if not self.is_active():
+            return
         self._cleanup_code_rows()
         watchlist = self._collect_watchlist_from_list()
         self.watchlist_changed.emit(watchlist)
@@ -451,6 +465,20 @@ class WatchlistEditor(QObject):
         self.list_codes.setCurrentCell(0, 1)
         self._on_codes_changed(None)
 
+    def clear_watchlist(self):
+        self.add_code_panel.hide()
+        with QSignalBlocker(self.list_codes):
+            for editor in self.list_codes.findChildren(QLineEdit):
+                if isinstance(editor, CodeSearchEditor):
+                    editor.setProperty("_code_editor_committed", True)
+                    editor._code_completer.popup().hide()
+                self.list_codes.closeEditor(
+                    editor, QAbstractItemDelegate.EndEditHint.RevertModelCache
+                )
+            self.list_codes.setRowCount(0)
+        self._update_watchlist_action_buttons()
+        self._on_codes_changed(None)
+
     def _del_code(self):
         row = self.list_codes.currentRow()
         if row >= 0:
@@ -468,6 +496,8 @@ class WatchlistEditor(QObject):
     def _update_watchlist_action_buttons(self, *_args):
         """按自选列表选中状态更新置顶/删除按钮：
         无选中条目时删除按钮禁用；条目已在顶部时置顶按钮禁用。"""
+        if not all(isValid(widget) for widget in (self.list_codes, self.btn_del, self.btn_top)):
+            return
         row = self.list_codes.currentRow()
         self.btn_del.setEnabled(row >= 0)
         self.btn_top.setEnabled(row > 0)

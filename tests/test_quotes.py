@@ -9,6 +9,33 @@ from stockwidget.data.quotes import _em_secid, _sina_code
 
 
 class ExplicitMarketMetadataTests(unittest.TestCase):
+    def test_shanghai_futures_use_futures_provider_symbols(self):
+        for code, secid in (("au0", "113.aum"), ("au2610", "113.au2610"),
+                            ("sc0", "142.scm"), ("sc2610", "142.sc2610")):
+            with self.subTest(code=code):
+                future = {"market": "sh", "code": code, "type": "期"}
+                self.assertEqual(_sina_code(future), "nf_" + code.upper())
+                self.assertEqual(_em_secid(future), secid)
+
+    def test_shanghai_futures_sina_parser_and_volume(self):
+        parts = ["黄金连续", "150000"] + ["0"] * 26
+        parts[7], parts[10], parts[14] = "800", "790", "1234"
+        response = Mock(text='var hq_str_nf_AU0="' + ','.join(parts) + '";')
+        with patch.object(quotes.requests, "get", return_value=response):
+            data = quotes.request_sina({"au0": {"market": "sh", "code": "au0", "type": "期"}})
+        self.assertEqual(data["au0"]["current_price"], 800)
+        self.assertEqual(data["au0"]["prev_close"], 790)
+        self.assertEqual(data["au0"]["deals_vol"], 1234)
+
+    def test_shanghai_futures_eastmoney_volume_stays_in_contracts(self):
+        response = Mock()
+        response.json.return_value = {"data": {"diff": [
+            {"f12": "aum", "f13": 113, "f14": "黄金连续", "f5": 1234},
+        ]}}
+        with patch.object(quotes.requests, "get", return_value=response):
+            _, data = quotes.request_eastmoney({"au0": {"market": "sh", "code": "au0", "type": "期"}})
+        self.assertEqual(data["au0"]["deals_vol"], 1234)
+
     def test_same_raw_code_keeps_markets_distinct(self):
         shanghai = {"market": "sh", "code": "000001"}
         shenzhen = {"market": "sz", "code": "000001"}

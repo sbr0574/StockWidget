@@ -7,7 +7,7 @@ from stockwidget.ui.theme import accent_color, accent_rgba
 
 COLOR_SWATCH_SIZE = 12
 _FLAT_GROUPS = ("gb_data", "gb_data_setting", "gb_icon", "gb_fcn", "gb_opacity",
-                "gb_color", "gb_text", "gb_tabel", "gb_hotkeys", "gb_about")
+                "gb_color", "gb_text", "gb_tabel", "gb_hotkeys")
 
 def color_swatch_icon(color: QColor, device_pixel_ratio: float = 1.0) -> QIcon:
     """按屏幕像素比绘制无描边圆形色标，避免高 DPI 缩放发糊。"""
@@ -83,6 +83,9 @@ def build_settings_stylesheet(dark: bool) -> str:
         "QPushButton#btn_del",
         "QPushButton#btn_top",
         "QPushButton#btn_check_update",
+        "QPushButton#btn_clear_watchlist",
+        "QPushButton#btn_reset_appearance",
+        "QPushButton#btn_reset_settings",
         "QPushButton#btn_open_cache_dir",
     )
     icon_buttons = ",\n".join(icon_selectors)

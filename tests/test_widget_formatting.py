@@ -93,10 +93,10 @@ class WidgetFormattingTests(unittest.TestCase):
         self.assertEqual(row["成交量"], "1234")
 
     def test_futures_volume_is_not_divided_by_one_hundred(self):
-        row, _ = format_quote(
-            _quote(604495), "期", "au0", market=""
-        )
-        self.assertEqual(row["成交量"], "60.45万")
+        for market in ("", "sh"):
+            with self.subTest(market=market):
+                row, _ = format_quote(_quote(604495), "期", "au0", market=market)
+                self.assertEqual(row["成交量"], "60.45万")
 
     def test_explicit_unit_modes_override_market(self):
         row, _ = format_quote(

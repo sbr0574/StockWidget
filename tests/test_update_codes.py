@@ -75,6 +75,22 @@ def _us_directory_texts() -> tuple[str, str]:
 
 
 class UpdateCodeFilesTests(unittest.TestCase):
+    def test_shanghai_futures_market_preserves_contract_keys(self):
+        response = Mock()
+        response.json.return_value = [
+            {"symbol": "AU0", "name": "黄金连续"},
+            {"symbol": "SC2610", "name": "原油2610"},
+        ]
+        with (
+            patch.object(update_codes, "_futures_nodes", return_value=["shfe_au"]),
+            patch.object(update_codes.requests, "get", return_value=response),
+        ):
+            codes = update_codes._df_to_dict(update_codes.futures_info_all())
+        self.assertEqual(set(codes), {"au0", "sc2610"})
+        for entry in codes.values():
+            self.assertEqual(entry["market"], "sh")
+            self.assertEqual(entry["type"], "期")
+
     def test_long_running_tasks_are_scheduled_first(self):
         filenames = [task[0] for task in update_codes._tasks()]
         self.assertEqual(

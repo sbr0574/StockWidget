@@ -83,6 +83,7 @@ class SettingsDialog(QDialog):
         )
         self.watchlist_editor.watchlist_changed.connect(self.win.set_watchlist)
         self._bind_widgets()
+        self._setup_icon_choices()
         self._load_settings()
         self._apply_theme_stylesheet()
         QGuiApplication.styleHints().colorSchemeChanged.connect(self._apply_theme_stylesheet)
@@ -220,6 +221,9 @@ class SettingsDialog(QDialog):
         self.btn_open_cache_dir = self.ui.btn_open_cache_dir
         self.btn_check_update.clicked.connect(self._check_update_manually)
         self.btn_open_cache_dir.clicked.connect(self._open_cache_dir)
+        self.ui.btn_clear_watchlist.clicked.connect(self.watchlist_editor.clear_watchlist)
+        self.ui.btn_reset_appearance.clicked.connect(self._reset_appearance)
+        self.ui.btn_reset_settings.clicked.connect(self._reset_settings)
 
         self.cb_unicolor.toggled.connect(self._on_unicolor_toggled)
         color_setters = {
@@ -251,42 +255,54 @@ class SettingsDialog(QDialog):
         self.cb_grid.toggled.connect(self.win.set_grid_visible)
 
     def _load_settings(self):
-        self.sb_interval.setValue(self.win.refresh_seconds)
-        self.metric_pool.set_visible_metrics(self.win.visible_metrics)
-        self.name_settings_panel.sync_from(self.win)
-        self.unit_settings_panel.sync_from(self.win)
+        with ExitStack() as stack:
+            for widget in self.findChildren(QWidget):
+                stack.enter_context(QSignalBlocker(widget))
+            self.sb_interval.setValue(self.win.refresh_seconds)
+            self.metric_pool.set_visible_metrics(self.win.visible_metrics)
+            self.name_settings_panel.sync_from(self.win)
+            self.unit_settings_panel.sync_from(self.win)
 
-        self._set_checked_blocked(self.cb_unicolor, self.win.unicolor)
-        self._update_direction_color_controls()
-        self._refresh_color_buttons()
-        self.slider_bg_alpha.setValue(int(round(self.win.bg.alpha() / 2.55)))
-        self.label_bg_alpha.setText(f"{self.slider_bg_alpha.value()}%")
-        self.slider_all_alpha.setValue(int(round(self.win.windowOpacity() * 100)))
-        self.label_all_alpha.setText(f"{self.slider_all_alpha.value()}%")
+            self._set_checked_blocked(self.cb_unicolor, self.win.unicolor)
+            self._update_direction_color_controls()
+            self._refresh_color_buttons()
+            self.slider_bg_alpha.setValue(int(round(self.win.bg.alpha() / 2.55)))
+            self.label_bg_alpha.setText(f"{self.slider_bg_alpha.value()}%")
+            self.slider_all_alpha.setValue(self.win.opacity_pct)
+            self.label_all_alpha.setText(f"{self.slider_all_alpha.value()}%")
 
-        self.cmb_family.setCurrentText(self.win.font.family())
-        self.slider_font.setValue(self.win.font.pointSize())
-        self.label_font.setText(f"{self.win.font.pointSize()} pt")
-        self.slider_line.setValue(self.win.line_extra_px)
-        self.label_line.setText(f"+{self.slider_line.value()} px")
+            self.cmb_family.setCurrentText(self.win.font.family())
+            self.slider_font.setValue(self.win.font.pointSize())
+            self.label_font.setText(f"{self.win.font.pointSize()} pt")
+            self.slider_line.setValue(self.win.line_extra_px)
+            self.label_line.setText(f"+{self.slider_line.value()} px")
 
-        self.keyseq_hide.setKeySequence(QKeySequence(self.win.hotkey))
-        self.keyseq_hide.setEnabled(self.win.hotkey_enabled)
-        self.keyseq_click_through.setKeySequence(QKeySequence(self.win.hotkey_click_through))
-        self.keyseq_click_through.setEnabled(self.win.hotkey_click_through_enabled)
-        self.cb_hotkey_hide.setChecked(self.win.hotkey_enabled)
-        self.cb_hotkey_click_through.setChecked(self.win.hotkey_click_through_enabled)
-        self.cb_auto_start.setChecked(bool(self.win.start_on_boot))
-        self.cb_force_top.setChecked(self.win.force_top)
-        self.cb_click_through.setChecked(self.win.click_through)
-        self.cb_head.setChecked(self.win.header_visible)
-        self.cb_grid.setChecked(self.win.grid_visible)
+            self.keyseq_hide.setKeySequence(QKeySequence(self.win.hotkey))
+            self.keyseq_hide.setEnabled(self.win.hotkey_enabled)
+            self.keyseq_click_through.setKeySequence(QKeySequence(self.win.hotkey_click_through))
+            self.keyseq_click_through.setEnabled(self.win.hotkey_click_through_enabled)
+            self.cb_hotkey_hide.setChecked(self.win.hotkey_enabled)
+            self.cb_hotkey_click_through.setChecked(self.win.hotkey_click_through_enabled)
+            self.cb_auto_start.setChecked(bool(self.win.start_on_boot))
+            self.cb_force_top.setChecked(self.win.force_top)
+            self.cb_click_through.setChecked(self.win.click_through)
+            self.cb_head.setChecked(self.win.header_visible)
+            self.cb_grid.setChecked(self.win.grid_visible)
 
-        self._apply_platform_limits()
-        self._setup_icon_choices()
-        self._setup_source_buttons()
-        self._setup_about()
-        self.refresh_data_state()
+            self._apply_platform_limits()
+            self._setup_source_buttons()
+            self._setup_about()
+            self.refresh_data_state()
+
+    def _reset_appearance(self):
+        self.win.reset_appearance()
+        self._clear_custom_icon()
+        self._load_settings()
+
+    def _reset_settings(self):
+        self.win.reset_settings()
+        self._on_start_on_boot_toggled(self.win.start_on_boot)
+        self._load_settings()
 
     def _apply_platform_limits(self):
         """按当前平台禁用不支持的功能控件:
@@ -416,6 +432,10 @@ class SettingsDialog(QDialog):
         else:
             text = f"⚠️ 市场代码数据：缓存 ({d})"
         self.label_data_state.setText(text)
+        error = self.app.code_data_error() if self.app is not None else ""
+        self.label_data_state.setToolTip(
+            f"{error}\n继续使用本地缓存，30 分钟后自动重试。" if isinstance(error, str) and error else ""
+        )
 
     def refresh_code_search(self):
         self.watchlist_editor.refresh_code_search(self.win.codes_list)
@@ -559,7 +579,10 @@ class SettingsDialog(QDialog):
             self.app.save_now()
 
     def _on_start_on_boot_toggled(self, checked: bool):
-        self.app.set_start_on_boot(bool(checked))
+        self.win.start_on_boot = bool(checked)
+        if self.app is not None:
+            self.app.set_start_on_boot(bool(checked))
+            self.app.save_now()
 
 
 
@@ -654,17 +677,18 @@ class SettingsDialog(QDialog):
                 f'style="text-decoration:none; color:#4a90d9;">{escape(text)}</a>'
             )
 
-        version_line = f"当前版本 v{escape(str(app_version))}"
+        version_line = f"📦 当前程序版本："
         if latest_version:
             version_line += link(
-                github_links["releases"] + "/latest", f"（有更新 v{latest_version}）"
+                github_links["releases"] + "/latest", f"有更新 (v{escape(str(app_version))} -> v{latest_version})"
             )
+        else:
+            version_line += f"最新 (v{escape(str(app_version))})"
+        self.ui.label_version_state.setText(version_line)
         lines = [
-            version_line,
             f'本项目基于 {link(links["license"], "Apache-2.0 License")} 开源',
             "Copyright 2026 sbr0574",
-            "&nbsp;",
-            "支持：",
+            "",
             f'仓库地址：{link(github_links["project"], github_links["project"])}',
             f'镜像仓库：{link(gitee_links["project"], gitee_links["project"])}',
             f'发行下载：{link(links["releases"], links["releases"])}',
@@ -702,7 +726,7 @@ class SettingsDialog(QDialog):
 
     def _on_update_check_finished(self, result):
         self.btn_check_update.setEnabled(True)
-        self.btn_check_update.setText("检查更新")
+        self.btn_check_update.setText("检查程序更新")
         has_update, latest_version = result
         if self.app is not None:
             self.app._has_update = bool(has_update)

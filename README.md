@@ -69,6 +69,9 @@
 main.py                      # 程序入口
 StockWidget.spec             # PyInstaller 打包配置
 resources/                   # 静态资源
+  icons/                     #   应用与托盘图标
+  data/                      #   内置代码列表、更新状态与服务端名称缓存
+  resources.qrc              #   Qt 资源清单（保持原有虚拟资源名）
 stockwidget/
   app.py                     # 应用装配：连接各层、托盘、后台任务
   constants.py               # 全局常量（名称/版本/文件/地址）
@@ -105,7 +108,15 @@ stockwidget/
 
 指标的名称、分组和默认显示状态统一定义在 `core/metric_layout.py`；运行时只维护 `visible_metrics` 有序列表，旧布尔字段仅在配置读写时转换。自选编辑组件通过 `watchlist_changed` 信号提交列表，不直接访问浮窗；成本解析由 `core/watchlist.py` 统一处理。
 
+关于页集中展示市场代码同步状态，并提供清空自选列表、恢复默认外观和恢复默认设置三个按钮。外观恢复包括颜色、透明度、字体、行距、表头、网格及图标；设置恢复包括刷新间隔、行情源、指标及其显示选项、开机自启、置顶、穿透和快捷键。两种恢复操作均保留自选列表，默认值与首次启动共用。
+
 运行回归测试：安装 `requirements-test.txt` 后执行 `python -m unittest discover -s tests -v`；无桌面环境时设置 `QT_QPA_PLATFORM=offscreen`。
+
+配置文件保存在应用目录中，下载的代码列表和状态清单保存在其 `data/` 子目录：Windows 为 `%APPDATA%\StockWidget\data`，macOS/Linux 为 `~/StockWidget/data`。启动时会将旧位置的代码缓存迁移到新目录，迁移失败时仍可读取原文件。
+
+代码下载优先使用 GitHub，失败后切换 Gitee；Gitee 原始文件不可用时再尝试公开文件 API。后续文件优先复用已成功的数据源，避免逐个等待不可达源超时。连接等待为 3 秒、读取等待为 15 秒，分块下载期间会检查 60 秒耗时限制。整组下载失败时继续显示已有数据，30 分钟后重试，并复用同一远端批次中已下载到内存的文件；鼠标悬停设置中的“市场代码数据”状态可查看失败原因。
+
+服务端更新脚本默认写入 `resources/data/`；发布到 `codes-data` 分支时仍使用 `resources/*.json`，以兼容已发布客户端的下载地址。
 
 ## 🧰 下载与运行
 

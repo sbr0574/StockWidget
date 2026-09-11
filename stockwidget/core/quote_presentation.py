@@ -36,7 +36,7 @@ def format_quote(
     options: QuoteDisplayOptions = QuoteDisplayOptions(),
 ) -> tuple[dict, dict]:
     data = dict(data)
-    lot_size = 100 if market in {"sh", "sz", "bj"} else 1
+    lot_size = 100 if market in {"sh", "sz", "bj"} and security_type != "期" else 1
 
     # 名称显示
     name = f"({security_type})" if security_type is not None and options.type_visible else ""

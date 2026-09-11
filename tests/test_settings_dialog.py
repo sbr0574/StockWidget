@@ -107,8 +107,8 @@ class SettingsDialogTests(unittest.TestCase):
             window.deleteLater()
         self.qt_app.processEvents()
 
-    def _make_dialog(self, watchlist=None, codes=None, app=None):
-        cfg = {"watchlist": watchlist or {}}
+    def _make_dialog(self, watchlist=None, codes=None, app=None, **settings):
+        cfg = {"watchlist": watchlist or {}, **settings}
         window = FloatLabel(cfg, CODES if codes is None else codes)
         with patch.object(SettingsDialog, "_start_github_check"):
             dialog = SettingsDialog(window, window, app=app)
@@ -121,6 +121,108 @@ class SettingsDialogTests(unittest.TestCase):
         pool.scrollToItem(item)
         QTest.mouseClick(pool.viewport(), Qt.LeftButton, pos=pool.info_rect(item).center())
 
+    def test_about_contains_sync_status_and_nonflat_group(self):
+        dialog, _ = self._make_dialog()
+        self.assertEqual(dialog.label_data_state.parentWidget(), dialog.ui.gb_about)
+        self.assertFalse(dialog.ui.gb_about.isFlat())
+        self.assertEqual(dialog.label_data_state.palette().color(QPalette.ColorRole.WindowText), QColor("black"))
+        self.assertNotIn("QGroupBox#gb_about", build_settings_stylesheet(False))
+
+    def test_clear_watchlist_closes_editor_without_restoring_entries(self):
+        dialog, window = self._make_dialog({"sh600519": {"checked": False, "cost": 100}})
+        editor = self._start_code_editor(dialog)
+        editor.setText("sh501001")
+        changes = Mock()
+        window.set_on_change(changes)
+        before = window.current_config()
+        dialog.ui.btn_clear_watchlist.click()
+        self.qt_app.processEvents()
+        self.assertEqual(window.watchlist, {})
+        self.assertEqual(dialog.ui.list_codes.rowCount(), 0)
+        self.assertFalse(dialog.ui.btn_del.isEnabled())
+        self.assertFalse(dialog.ui.btn_top.isEnabled())
+        self.assertFalse(dialog.watchlist_editor.add_code_panel.isVisible())
+        self.assertEqual(window.current_config(), {**before, "watchlist": {}})
+        changes.assert_called_once()
+
+    def test_reset_appearance_preserves_settings_and_watchlist(self):
+        app = self._make_icon_app(choice="dark")
+        dialog, window = self._make_dialog(
+            {"sh600519": {"checked": False, "cost": 100}}, app=app,
+            fg="#123456", bg={"r": 30, "g": 40, "b": 50, "a": 100},
+            up_color="#123456", down_color="#abcdef", neutral_color="#654321",
+            opacity_pct=45, font_family="Arial", font_size=14, line_extra_px=9,
+            unicolor=False, header_visible=True, grid_visible=True,
+            refresh_seconds=10, data_source="eastmoney", visible_metrics=["price"],
+            hotkey="Ctrl+Alt+G",
+        )
+        _, defaults = self._make_dialog()
+        before = window.current_config()
+        appearance_keys = (
+            "fg", "bg", "up_color", "down_color", "neutral_color", "opacity_pct",
+            "font_family", "font_size", "line_extra_px", "unicolor", "header_visible", "grid_visible",
+        )
+        dialog.ui.btn_reset_appearance.click()
+        expected = {**before, **{key: defaults.current_config()[key] for key in appearance_keys}}
+        self.assertEqual(window.current_config(), expected)
+        self.assertEqual(dialog.slider_font.value(), 10)
+        self.assertEqual(dialog.slider_bg_alpha.value(), 75)
+        self.assertEqual(dialog.slider_all_alpha.value(), 90)
+        self.assertTrue(dialog.ui.btn_icon_default.isChecked())
+        self.assertEqual(app._icon_choice, "default")
+        self.assertEqual(app._custom_icon_path, "")
+        app.save_now.assert_called()
+
+    def test_reset_settings_preserves_appearance_and_watchlist(self):
+        app = self._make_icon_app(choice="dark")
+        dialog, window = self._make_dialog(
+            {"sh600519": {"checked": False, "cost": 100}}, app=app,
+            fg="#123456", opacity_pct=45, font_size=14, header_visible=True,
+            refresh_seconds=10, data_source="eastmoney", visible_metrics=["volume", "price"],
+            code_visible=True, type_visible=True, name_length=3, unit_mode="en",
+            start_on_boot=True, hotkey="Ctrl+Alt+G", hotkey_click_through="Ctrl+Alt+D",
+        )
+        _, defaults = self._make_dialog()
+        before = window.current_config()
+        # 模拟已经启用的系统功能，避免测试实际注册全局快捷键或改变鼠标穿透。
+        window.hotkey_enabled = window.hotkey_click_through_enabled = True
+        window.force_top = window.click_through = True
+        window._keep_top_timer.start()
+        with (
+            patch.object(window._hotkeys, "unregister_all") as unregister,
+            patch("stockwidget.ui.widget.apply_click_through") as click_through,
+        ):
+            dialog.ui.btn_reset_settings.click()
+        settings_keys = (
+            "refresh_seconds", "data_source", "visible_metrics", "code_visible", "type_visible",
+            "name_length", "unit_mode", "start_on_boot", "force_top", "click_through",
+            "hotkey", "hotkey_click_through", "hotkey_enabled", "hotkey_click_through_enabled",
+        )
+        expected = {**before, **{key: defaults.current_config()[key] for key in settings_keys}}
+        from stockwidget.core.metric_layout import legacy_visibility
+        expected.update(legacy_visibility(defaults.visible_metrics))
+        self.assertEqual(window.current_config(), expected)
+        self.assertEqual(window.timer.interval(), 2000)
+        self.assertFalse(window._keep_top_timer.isActive())
+        self.assertFalse(dialog.keyseq_hide.isEnabled())
+        self.assertFalse(dialog.cb_auto_start.isChecked())
+        self.assertTrue(dialog.rb_sina.isChecked())
+        self.assertEqual(dialog.metric_pool.visible_metrics, list(defaults.visible_metrics))
+        self.assertEqual(app._icon_choice, "dark")
+        unregister.assert_called_once()
+        click_through.assert_called_once_with(window, False)
+        app.set_start_on_boot.assert_called_once_with(False)
+        app.save_now.assert_called()
+
+    def test_reloading_settings_does_not_save_or_round_opacity(self):
+        dialog, window = self._make_dialog(bg={"r": 0, "g": 0, "b": 0, "a": 127})
+        changes = Mock()
+        window.set_on_change(changes)
+        for _ in range(2):
+            dialog._load_settings()
+        self.assertEqual(window.bg.alpha(), 127)
+        changes.assert_not_called()
+
     def _make_icon_app(self, choice="default", custom_path=""):
         app = Mock()
         app._icon_choice = choice
@@ -129,6 +231,7 @@ class SettingsDialogTests(unittest.TestCase):
         app._has_update = False
         app._latest_version = None
         app.code_data_state.return_value = ("cached", "")
+        app.code_data_error.return_value = ""
 
         def set_app_icon(icon_choice):
             app._icon_choice = icon_choice
@@ -200,6 +303,19 @@ class SettingsDialogTests(unittest.TestCase):
             self.assertIn("border: none", color_base_rule)
             self.assertIn("border-radius: 6px", color_base_rule)
             self.assertIn("padding: 3px", color_base_rule)
+
+    @patch.object(FloatLabel, "_refresh_from_function")
+    def test_data_state_tooltip_explains_failed_download_and_clears_on_success(self, refresh):
+        app = self._make_icon_app()
+        app.code_data_error.return_value = "stock_hk.json 更新失败；Gitee：HTTP 451"
+        dialog, _window = self._make_dialog(app=app)
+        self.assertIn("stock_hk.json", dialog.label_data_state.toolTip())
+        self.assertIn("30 分钟", dialog.label_data_state.toolTip())
+        app.code_data_state.return_value = ("current", "2026-09-09")
+        app.code_data_error.return_value = ""
+        dialog.refresh_data_state()
+        self.assertEqual(dialog.label_data_state.toolTip(), "")
+        self.assertIn("最新", dialog.label_data_state.text())
 
     def test_color_swatch_renders_at_device_pixel_ratio(self):
         icon = color_swatch_icon(QColor("#123456"), 2.0)
@@ -714,7 +830,7 @@ class SettingsDialogTests(unittest.TestCase):
         with patch(
             "stockwidget.ui.settings_dialog.QMessageBox.information"
         ) as info:
-            dialog._on_update_check_finished((False, "1.4.0"))
+            dialog._on_update_check_finished((False, "1.4.1"))
             info.assert_called_once()
 
         with patch(

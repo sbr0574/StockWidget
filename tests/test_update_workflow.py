@@ -3,6 +3,7 @@
 
 import unittest
 from pathlib import Path
+from xml.etree import ElementTree as ET
 
 from stockwidget.constants import CODE_LIST_FILES
 
@@ -47,6 +48,7 @@ class UpdateWorkflowTests(unittest.TestCase):
         self.assertNotIn("resources/resources_rc.py", text)
         self.assertNotIn("git add -A", text)
         self.assertIn("resources/cache_us_cn_aliases.json", text)
+        self.assertIn('cp "resources/data/$file"', text)
 
     def test_server_updater_scopes_credentials_and_added_files(self):
         text = UPDATER.read_text(encoding="utf-8")
@@ -57,9 +59,25 @@ class UpdateWorkflowTests(unittest.TestCase):
         self.assertNotIn("git add -A", text)
         self.assertNotIn("resources/resources_rc.py", text)
         self.assertIn("cache_us_cn_aliases.json", text)
+        self.assertIn('cp "$ROOT/resources/data/$file"', text)
 
 
 class PullRequestTestWorkflowTests(unittest.TestCase):
+    def test_packaged_resources_exist_and_preserve_virtual_names(self):
+        root = ET.parse(ROOT / "resources" / "resources.qrc").getroot()
+        aliases = {}
+        for node in root.iter("file"):
+            path = ROOT / "resources" / node.text
+            self.assertTrue(path.is_file(), path)
+            self.assertIn(path.parent.name, ("icons", "data"))
+            self.assertEqual(node.attrib["alias"], path.name)
+            aliases[node.attrib["alias"]] = path
+        self.assertTrue(set(CODE_LIST_FILES).issubset(aliases))
+        self.assertIn("StockWidget.ico", aliases)
+        spec = (ROOT / "StockWidget.spec").read_text(encoding="utf-8")
+        self.assertIn("resources/icons/StockWidget.ico", spec)
+        self.assertIn("resources/icons/StockWidget.icns", spec)
+
     def test_tests_are_tracked_and_run_for_main_pull_requests(self):
         ignored = {
             line.strip()

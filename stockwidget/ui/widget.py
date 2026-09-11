@@ -63,41 +63,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         # 加载自选标的配置（代码 -> {checked, cost, name, type}）
         watchlist_cfg           = cfg.get("watchlist", {})
         self.watchlist: dict    = normalize_watchlist(watchlist_cfg, self.codes_list)
-        # 加载面板配置
-        self.code_visible       = bool(cfg.get("code_visible", False))
-        self.type_visible       = bool(cfg.get("type_visible", False))
-        self.name_length        = int(cfg.get("name_length", -1))
-        self.unit_mode          = str(cfg.get("unit_mode", "auto"))
-        if self.unit_mode not in ("cn", "en", "auto"):
-            self.unit_mode = "auto"
-        self.visible_metrics    = visible_metrics_from_config(cfg)
-        # 加载外观配置
-        self.header_visible     = bool(cfg.get("header_visible", False))
-        self.grid_visible       = bool(cfg.get("grid_visible", False))
-        font_family             = cfg.get("font_family", default_font_family())
-        font_size               = int(cfg.get("font_size", 10))
-        self.font               = QFont(font_family, max(5, min(15, font_size)))
-        self.line_extra_px      = int(cfg.get("line_extra_px", 1))
-        self.fg                 = QColor(cfg.get("fg", "#FFFFFF"))
-        bg                      = cfg.get("bg", {"r":0,"g":0,"b":0,"a":191})
-        self.bg                 = QColor(bg["r"],bg["g"],bg["b"],bg["a"])
-        self.opacity_pct        = int(cfg.get("opacity_pct", 90))
-        self.unicolor           = bool(cfg.get("unicolor", True))
-        self.up_color           = _config_color(cfg.get("up_color"), DEFAULT_UP_COLOR)
-        self.down_color         = _config_color(cfg.get("down_color"), DEFAULT_DOWN_COLOR)
-        self.neutral_color      = _config_color(cfg.get("neutral_color"), DEFAULT_NEUTRAL_COLOR)
-        # 加载其他配置
-        self.refresh_seconds    = int(cfg.get("refresh_seconds", 2))
-        self.data_source        = str(cfg.get("data_source", "sina"))
-        if self.data_source not in ("sina", "eastmoney"):
-            self.data_source = "sina"
-        self.force_top          = bool(cfg.get("force_top", False))
-        self.click_through      = bool(cfg.get("click_through", False))
-        self.hotkey_enabled     = bool(cfg.get("hotkey_enabled", False))
-        self.hotkey             = cfg.get("hotkey", "Ctrl+Alt+F")
-        self.hotkey_click_through_enabled = bool(cfg.get("hotkey_click_through_enabled", False))
-        self.hotkey_click_through = cfg.get("hotkey_click_through", "Ctrl+Alt+C")
-        self.start_on_boot      = bool(cfg.get("start_on_boot", False))
+        self._load_appearance_config(cfg)
+        self._load_settings_config(cfg)
 
         # 平台能力限制:当前平台不支持时强制关闭对应功能
         # (如 Wayland 下无法实现全局快捷键/鼠标穿透,Linux 下强制置顶不可靠),
@@ -191,6 +158,64 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self._keep_top_timer.start()
 
         self.set_click_through(self.click_through)
+
+    def _load_appearance_config(self, cfg: dict):
+        self.header_visible     = bool(cfg.get("header_visible", False))
+        self.grid_visible       = bool(cfg.get("grid_visible", False))
+        font_family             = cfg.get("font_family", default_font_family())
+        font_size               = int(cfg.get("font_size", 10))
+        self.font               = QFont(font_family, max(5, min(15, font_size)))
+        self.line_extra_px      = int(cfg.get("line_extra_px", 1))
+        self.fg                 = QColor(cfg.get("fg", "#FFFFFF"))
+        bg                      = cfg.get("bg", {"r":0,"g":0,"b":0,"a":191})
+        self.bg                 = QColor(bg["r"],bg["g"],bg["b"],bg["a"])
+        self.opacity_pct        = int(cfg.get("opacity_pct", 90))
+        self.unicolor           = bool(cfg.get("unicolor", True))
+        self.up_color           = _config_color(cfg.get("up_color"), DEFAULT_UP_COLOR)
+        self.down_color         = _config_color(cfg.get("down_color"), DEFAULT_DOWN_COLOR)
+        self.neutral_color      = _config_color(cfg.get("neutral_color"), DEFAULT_NEUTRAL_COLOR)
+
+    def _load_settings_config(self, cfg: dict):
+        # 加载面板配置
+        self.code_visible       = bool(cfg.get("code_visible", False))
+        self.type_visible       = bool(cfg.get("type_visible", False))
+        self.name_length        = int(cfg.get("name_length", -1))
+        self.unit_mode          = str(cfg.get("unit_mode", "auto"))
+        if self.unit_mode not in ("cn", "en", "auto"):
+            self.unit_mode = "auto"
+        self.visible_metrics    = visible_metrics_from_config(cfg)
+        # 加载其他配置
+        self.refresh_seconds    = int(cfg.get("refresh_seconds", 2))
+        self.data_source        = str(cfg.get("data_source", "sina"))
+        if self.data_source not in ("sina", "eastmoney"):
+            self.data_source = "sina"
+        self.force_top          = bool(cfg.get("force_top", False))
+        self.click_through      = bool(cfg.get("click_through", False))
+        self.hotkey_enabled     = bool(cfg.get("hotkey_enabled", False))
+        self.hotkey             = cfg.get("hotkey", "Ctrl+Alt+F")
+        self.hotkey_click_through_enabled = bool(cfg.get("hotkey_click_through_enabled", False))
+        self.hotkey_click_through = cfg.get("hotkey_click_through", "Ctrl+Alt+C")
+        self.start_on_boot      = bool(cfg.get("start_on_boot", False))
+
+    def reset_appearance(self):
+        self._load_appearance_config({})
+        self._sync_colors_to_views()
+        self.k_delegate.set_point_size(self.font.pointSize())
+        self.table.horizontalHeader().setVisible(self.header_visible)
+        self.apply_style()
+        self.set_window_opacity_percent(self.opacity_pct)
+        self.display_flags_changed.emit()
+
+    def reset_settings(self):
+        self._load_settings_config({})
+        self._register_current()
+        self._keep_top_timer.stop()
+        apply_click_through(self, self.click_through)
+        self.click_through_changed.emit(self.click_through)
+        self.timer.setInterval(max(1, self.refresh_seconds) * 1000)
+        self._refresh_from_function()
+        self.display_flags_changed.emit()
+        self._notify_change()
 
     # ----- 自选标的派生属性（由 watchlist 生成） -----
 
@@ -321,7 +346,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.resize(self.panel.size())
 
     def _defer_fit(self):
-        QTimer.singleShot(0, self._fit_to_contents)
+        QTimer.singleShot(0, self.table, self._fit_to_contents)
 
     def _restore_position(self, pos_cfg):
         """多显示器恢复位置：保存位置落在任一屏幕内则原位恢复，否则回退到主屏默认位置。"""
@@ -406,11 +431,15 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def _refresh_from_function(self):
         """定时入口：将网络请求丢到后台线程执行，避免阻塞 UI。
         若上一轮请求尚未完成则跳过本次刷新，防止请求重叠。"""
+        checked_codes = self.checked_codes
+        if not checked_codes:
+            self._process_data((True, {}, None))
+            return
         if self._refresh_thread is not None and self._refresh_thread.is_alive():
             return
         self._refresh_thread = threading.Thread(
             target=self._fetch_data_worker,
-            args=(self.checked_codes,),
+            args=(checked_codes,),
             daemon=True,
         )
         self._refresh_thread.start()
@@ -429,6 +458,12 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def _process_data(self, payload):
         """主线程：处理请求结果并更新表格。payload = (ok, data, error)"""
         ok, data, error = payload
+        checked_codes = self.checked_codes
+        if not checked_codes:
+            ok, data = True, {}
+        elif ok:
+            # 请求期间可能删除、取消勾选或调整顺序，以当前自选列表为准。
+            data = {code: data[code] for code in checked_codes if code in data}
         if not ok:
             self._show_message(error or "请求失败", is_error=True)
             return

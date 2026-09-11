@@ -139,6 +139,7 @@ class FloatLabelMetricLayoutTests(unittest.TestCase):
         screen = self.qt_app.primaryScreen().availableGeometry()
         saved = QPoint(screen.right() - 25, screen.top() + 100)
         window = self._window({
+            "watchlist": {"sh600519": {"checked": True}},
             "pos": {"x": saved.x(), "y": saved.y()},
             "visible_metrics": ["price"],
             "name_visible": False,

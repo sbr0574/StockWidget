@@ -9,6 +9,13 @@ from stockwidget.app import App
 
 
 class AppCodeRefreshTests(unittest.TestCase):
+    def test_quit_uses_qt_event_loop_shutdown(self):
+        app = SimpleNamespace(tray=Mock(), save_now=Mock(), quit=Mock())
+        App.quit_app(app)
+        app.tray.hide.assert_called_once_with()
+        app.save_now.assert_called_once_with()
+        app.quit.assert_called_once_with()
+
     def test_schedule_refresh_uses_milliseconds(self):
         app = SimpleNamespace(_codes_retry_timer=Mock())
 

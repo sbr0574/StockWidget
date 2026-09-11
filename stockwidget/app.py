@@ -267,10 +267,13 @@ class App(QApplication):
         """市场代码数据状态与更新日期。"""
         return self.code_manager.state()
 
+    def code_data_error(self) -> str:
+        return self.code_manager.last_error()
+
     def quit_app(self):
         self.tray.hide()
         self.save_now()
-        sys.exit(0)
+        self.quit()
 
     def save_now(self):
         cfg = self.win.current_config()
@@ -313,4 +316,5 @@ class App(QApplication):
     def set_start_on_boot(self, enabled: bool):
         """启用或禁用开机自启（Windows/Linux/macOS），由平台支持层统一实现。"""
         self._start_on_boot = enabled
+        self.win.start_on_boot = bool(enabled)
         set_start_on_boot(enabled, APP_NAME)
