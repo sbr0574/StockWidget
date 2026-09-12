@@ -15,6 +15,7 @@ from stockwidget.ui.table_model import (
     SimpleTableModel,
 )
 from stockwidget.ui.drag_mixin import DragBehaviorMixin
+from stockwidget.ui.table_header import SortIndicatorStyle
 from stockwidget.platform.hotkeys import GlobalHotkeyManager, HotkeyResult
 from stockwidget.data.quotes import request_quote
 from stockwidget.core.quote_presentation import QuoteDisplayOptions, format_quote
@@ -117,14 +118,16 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.table.verticalHeader().setVisible(False)
         self.table.verticalHeader().setMinimumSectionSize(1)
         self.table.verticalHeader().setDefaultSectionSize(1)
-        self.table.horizontalHeader().setVisible(self.header_visible)
-        self.table.horizontalHeader().setStretchLastSection(False)
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionsClickable(True)
-        self.table.horizontalHeader().setSortIndicatorShown(False)
-        self.table.horizontalHeader().sectionClicked.connect(self._on_header_clicked)
+        header = self.table.horizontalHeader()
+        header.setVisible(self.header_visible)
+        header.setStretchLastSection(False)
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        header.setStyle(SortIndicatorStyle(header))
+        header.setSectionsClickable(True)
+        header.setSortIndicatorShown(False)
+        header.sectionClicked.connect(self._on_header_clicked)
         self.table.setFont(self.font)
-        self.table.horizontalHeader().setFont(self.font)
+        header.setFont(self.font)
         self.table.setTextElideMode(Qt.ElideNone)
         self.message_label = QLabel("", self.panel)
         self.message_label.setStyleSheet("padding: 2px 4px;")
@@ -147,8 +150,12 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.table.hide()
         self._show_message("加载中…", kind="loading")
 
-        # 表头保留原生点击事件用于排序；其余区域仍支持拖动浮窗。
-        for w in (self.panel, self.table, self.table.viewport()):
+        # 点击与拖动统一判定，表头只有在未发生拖动时才触发排序。
+        self._init_drag(header)
+        for w in (
+            self.panel, self.table, self.table.viewport(),
+            header.viewport(),
+        ):
             w.installEventFilter(self)
 
         self.apply_style()
@@ -156,7 +163,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._fit_to_contents()
 
         self._restore_position(cfg.get("pos"))
-        self._init_drag()
 
         # 定时刷新数据
         self.data_ready.connect(self._process_data)
@@ -302,6 +308,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.table.horizontalHeader().viewport().update()
 
     def apply_style(self):
+        # 先更新字体，再让样式表解析表头字重，避免尺寸计算与绘制使用不同字号。
+        self.table.setFont(self.font)
+        self.table.horizontalHeader().setFont(self.font)
         r,g,b,a = self.bg.red(), self.bg.green(), self.bg.blue(), self.bg.alpha()
         fg_r, fg_g, fg_b = self.fg.red(), self.fg.green(), self.fg.blue()
         line_col = f"rgba({fg_r},{fg_g},{fg_b},80)"
@@ -332,9 +341,12 @@ class FloatLabel(DragBehaviorMixin, QWidget):
                 color: {self.fg.name()};
                 padding: 2px 4px;
             }}
+            QHeaderView::up-arrow, QHeaderView::down-arrow {{
+                width: 5px;
+                height: 4px;
+                margin-right: 1px;
+            }}
         """)
-        self.table.setFont(self.font)
-        self.table.horizontalHeader().setFont(self.font)
         self._defer_fit()
 
     def _apply_row_heights(self):
@@ -584,15 +596,12 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         )
         if header_name not in SORTABLE_HEADERS:
             return
-        if self.sort_header == header_name:
-            order = (
-                Qt.SortOrder.AscendingOrder
-                if self.sort_order == Qt.SortOrder.DescendingOrder
-                else Qt.SortOrder.DescendingOrder
-            )
+        if self.sort_header != header_name:
+            self.set_sort(header_name, Qt.SortOrder.DescendingOrder)
+        elif self.sort_order == Qt.SortOrder.DescendingOrder:
+            self.set_sort(header_name, Qt.SortOrder.AscendingOrder)
         else:
-            order = Qt.SortOrder.DescendingOrder
-        self.set_sort(header_name, order)
+            self.clear_sort()
 
     # ----- 应用设置 -----
     def set_watchlist(self, watchlist: dict):

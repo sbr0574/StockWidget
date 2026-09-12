@@ -8,15 +8,22 @@
 """
 
 from PySide6.QtCore import Qt, QEvent
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QApplication, QWidget
 
 
 class DragBehaviorMixin:
     """拖拽移动 + 双击隐藏。Wayland 下用 startSystemMove，其余平台手动 move。"""
 
-    def _init_drag(self):
+    def _init_drag(self, clickable_header=None):
+        self._clickable_header = clickable_header
+        self._reset_drag()
+
+    def _reset_drag(self):
         self._drag_pos = None
+        self._drag_start_pos = None
+        self._dragging = False
         self._system_moving = False
+        self._pressed_header_section = -1
 
     # ----- 拖拽实现 -----
     def _drag_press(self, e):
@@ -24,23 +31,27 @@ class DragBehaviorMixin:
         Wayland 下先记全局坐标，待移动超过阈值后再交给合成器（startSystemMove），
         这样普通单击/双击（隐藏浮窗）不受影响。
         """
-        if self._wayland_drag:
-            self._drag_pos = e.globalPosition().toPoint()
-            self._system_moving = False
-        else:
-            self._drag_pos = e.globalPosition().toPoint() - self.frameGeometry().topLeft()
+        self._reset_drag()
+        self._drag_start_pos = e.globalPosition().toPoint()
+        self._drag_pos = self._drag_start_pos - self.frameGeometry().topLeft()
         self.setFocus(Qt.MouseFocusReason)
 
+    def _is_drag(self, e):
+        return self._dragging or (
+            self._drag_start_pos is not None
+            and (e.globalPosition().toPoint() - self._drag_start_pos).manhattanLength()
+            >= QApplication.startDragDistance()
+        )
+
     def _drag_move(self, e):
-        """按住左键移动：Wayland 用系统级拖动，其余平台（X11/Windows）手动 move。"""
-        if getattr(self, "_drag_pos", None) is None or not (e.buttons() & Qt.LeftButton):
+        """超过系统拖动阈值后移动浮窗，避免单击时轻微抖动触发拖动。"""
+        if self._drag_pos is None or not (e.buttons() & Qt.LeftButton):
             return
+        if not self._is_drag(e):
+            return
+        self._dragging = True
         if self._wayland_drag:
             if self._system_moving:
-                return
-            # 移动超过阈值才触发系统级拖动，避免把单击误判为拖动
-            pos = e.globalPosition().toPoint()
-            if (pos - self._drag_pos).manhattanLength() <= 4:
                 return
             self._system_moving = True
             win = self.windowHandle()
@@ -51,10 +62,19 @@ class DragBehaviorMixin:
         self._ensure_on_top()
 
     def _drag_release(self):
-        self._drag_pos = None
-        self._system_moving = False
+        dragged = self._dragging
+        self._reset_drag()
         self._ensure_on_top()
-        self._notify_change()
+        if dragged:
+            self._notify_change()
+
+    def _header_section_at(self, obj, ev):
+        header = self._clickable_header
+        if header is not None and obj is header.viewport() and header.sectionsClickable():
+            pos = ev.position().toPoint()
+            if obj.rect().contains(pos):
+                return header.logicalIndexAt(pos)
+        return -1
 
     # ----- 鼠标事件 -----
     def mousePressEvent(self, e):
@@ -70,24 +90,29 @@ class DragBehaviorMixin:
 
     def mouseDoubleClickEvent(self, e):
         if e.button() == Qt.LeftButton:
-            self._drag_pos = None
-            self._system_moving = False
+            self._reset_drag()
             self.hide()
 
     # ----- 子控件事件过滤（表格区域同样支持拖拽/双击隐藏）-----
     def eventFilter(self, obj, ev):
-        if ev.type() == QEvent.MouseButtonDblClick and hasattr(ev, "button") and ev.button() == Qt.LeftButton:
-            self._drag_pos = None
-            self._system_moving = False
-            self.hide()
+        if ev.type() == QEvent.MouseButtonDblClick and ev.button() == Qt.LeftButton:
+            self.mouseDoubleClickEvent(ev)
             return True
-        if ev.type() == QEvent.MouseButtonPress and hasattr(ev, "button") and ev.button() == Qt.LeftButton:
+        if ev.type() == QEvent.MouseButtonPress and ev.button() == Qt.LeftButton:
             self._drag_press(ev)
+            self._pressed_header_section = self._header_section_at(obj, ev)
             return True
-        if ev.type() == QEvent.MouseMove and hasattr(ev, "buttons") and (ev.buttons() & Qt.LeftButton) and getattr(self, "_drag_pos", None):
+        if ev.type() == QEvent.MouseMove and (ev.buttons() & Qt.LeftButton) and self._drag_pos is not None:
             self._drag_move(ev)
             return True
-        if ev.type() == QEvent.MouseButtonRelease and hasattr(ev, "button") and ev.button() == Qt.LeftButton:
+        if ev.type() == QEvent.MouseButtonRelease and ev.button() == Qt.LeftButton:
+            section = self._pressed_header_section
+            clicked = (
+                section >= 0 and not self._is_drag(ev)
+                and section == self._header_section_at(obj, ev)
+            )
             self._drag_release()
+            if clicked:
+                self._clickable_header.sectionClicked.emit(section)
             return True
         return QWidget.eventFilter(self, obj, ev)
