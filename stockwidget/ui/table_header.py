@@ -35,7 +35,7 @@ class SortIndicatorStyle(QProxyStyle):
 
         # 使用样式表已解析的字体与对齐方式；列变宽时，箭头仍紧跟文字。
         text_rect = self.itemTextRect(painter.fontMetrics(), rect, flags, enabled, text)
-        arrow_rect = QRectF(text_rect.right() + 2, text_rect.center().y() - 2, 5, 4)
+        arrow_rect = QRectF(text_rect.right() + 3, text_rect.center().y() - 2, 5, 4)
         center = arrow_rect.center()
         half_width = arrow_rect.width() / 2
         half_height = arrow_rect.height() / 2
