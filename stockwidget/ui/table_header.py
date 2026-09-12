@@ -19,15 +19,27 @@ class SortIndicatorStyle(QProxyStyle):
         return super().sizeFromContents(contents_type, option, size, widget)
 
     def drawPrimitive(self, element, option, painter, widget=None):
+        # 原生箭头锚定列边界；改在文字绘制后按实际文字位置绘制。
         if element != QStyle.PE_IndicatorHeaderArrow:
             return super().drawPrimitive(element, option, painter, widget)
 
-        rect = QRectF(option.rect)
-        center = rect.center()
-        half_width = min(8.0, rect.width()) / 2
-        half_height = min(5.0, rect.height()) / 2
-        # Qt 的 SortUp 表示降序，箭头尖端应朝下。
-        direction = 1 if option.sortIndicator == QStyleOptionHeader.SortUp else -1
+    def drawItemText(self, painter, rect, flags, palette, enabled, text, text_role=QPalette.NoRole):
+        super().drawItemText(painter, rect, flags, palette, enabled, text, text_role)
+        header = self.parent()
+        if (
+            text_role != QPalette.ButtonText
+            or not header.isSortIndicatorShown()
+            or header.logicalIndexAt(rect.center()) != header.sortIndicatorSection()
+        ):
+            return
+
+        # 使用样式表已解析的字体与对齐方式；列变宽时，箭头仍紧跟文字。
+        text_rect = self.itemTextRect(painter.fontMetrics(), rect, flags, enabled, text)
+        arrow_rect = QRectF(text_rect.right() + 2, text_rect.center().y() - 2, 5, 4)
+        center = arrow_rect.center()
+        half_width = arrow_rect.width() / 2
+        half_height = arrow_rect.height() / 2
+        direction = 1 if header.sortIndicatorOrder() == Qt.DescendingOrder else -1
         base_y = center.y() - direction * half_height
         arrow = QPolygonF([
             QPointF(center.x() - half_width, base_y),
@@ -37,6 +49,6 @@ class SortIndicatorStyle(QProxyStyle):
         painter.save()
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(Qt.NoPen)
-        painter.setBrush(option.palette.brush(QPalette.ButtonText))
+        painter.setBrush(palette.brush(text_role))
         painter.drawPolygon(arrow)
         painter.restore()

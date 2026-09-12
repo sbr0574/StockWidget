@@ -341,11 +341,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
                 color: {self.fg.name()};
                 padding: 2px 4px;
             }}
-            QHeaderView::up-arrow, QHeaderView::down-arrow {{
-                width: 5px;
-                height: 4px;
-                margin-right: 1px;
-            }}
         """)
         self._defer_fit()
 

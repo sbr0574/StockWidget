@@ -9,7 +9,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtCore import QEvent, QPoint, QRect, Qt
 from PySide6.QtGui import QColor, QMouseEvent
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QStyle, QStyleOptionHeader
+from PySide6.QtWidgets import QApplication
 from shiboken6 import delete
 
 from stockwidget.ui.widget import FloatLabel
@@ -110,6 +110,28 @@ class WidgetHeaderTests(unittest.TestCase):
             for index, name in enumerate(self.window.model._headers)
         }
 
+    def _sort_arrow_bounds(self, baseline, snapshot):
+        self.assertEqual(snapshot.size(), baseline.size())
+        changed = [
+            (x, y)
+            for y in range(snapshot.height())
+            for x in range(snapshot.width())
+            if snapshot.pixelColor(x, y) != baseline.pixelColor(x, y)
+        ]
+        self.assertTrue(changed, "排序后应显示箭头")
+        rect = QRect(
+            QPoint(min(x for x, _ in changed), min(y for _, y in changed)),
+            QPoint(max(x for x, _ in changed), max(y for _, y in changed)),
+        )
+        scale = snapshot.devicePixelRatio()
+        self.assertLessEqual(rect.width(), 6 * scale)
+        self.assertLessEqual(rect.height(), 5 * scale)
+        # 变化只能出现在原有留白中，不能移动、截断或覆盖表头文字。
+        for y in range(rect.top(), rect.bottom() + 1):
+            for x in range(rect.left(), rect.right() + 1):
+                self.assertEqual(baseline.pixelColor(x, y).name(), "#000000")
+        return rect
+
     def test_sort_does_not_expand_columns_or_clip_header_text(self):
         self.window.visible_metrics = ["name", "price", "change_pct"]
         for font_size in (5, 10, 15):
@@ -126,15 +148,45 @@ class WidgetHeaderTests(unittest.TestCase):
                     self.assertEqual(self._column_widths(), widths)
                     self.assertEqual(self.window.width(), window_width)
                     snapshot = self.header.viewport().grab().toImage()
-                    scale = snapshot.devicePixelRatio()
-                    for index in range(self.header.count()):
-                        # 除右侧箭头留白之外，完整表头文字应与未排序时的渲染一致。
-                        rect = QRect(
-                            round(self.header.sectionViewportPosition(index) * scale), 0,
-                            round((self.header.sectionSize(index) - 6) * scale),
-                            snapshot.height(),
+                    if self.header.isSortIndicatorShown():
+                        self._sort_arrow_bounds(baseline, snapshot)
+                    else:
+                        self.assertEqual(snapshot, baseline)
+
+    def test_sort_arrow_stays_next_to_label_in_wide_columns(self):
+        self.window.visible_metrics = ["name", "price", "change_pct"]
+        self.window._last_full_rows[0].update({
+            "现价": "1234567890.12", "涨幅": "+1234567890.12%",
+        })
+        for font_size in (5, 10, 15):
+            self.window.clear_sort()
+            self.window.set_font_size(font_size)
+            self.window._reproject_cached_data()
+            self.app.processEvents()
+            baseline = self.header.viewport().grab().toImage()
+            widths = self._column_widths()
+            scale = baseline.devicePixelRatio()
+            for name in ("现价", "涨幅"):
+                for order in (Qt.DescendingOrder, Qt.AscendingOrder):
+                    with self.subTest(font_size=font_size, name=name, order=order):
+                        self.window.set_sort(name, order)
+                        self.app.processEvents()
+                        snapshot = self.header.viewport().grab().toImage()
+                        arrow = self._sort_arrow_bounds(baseline, snapshot)
+                        section = self.header.sortIndicatorSection()
+                        left = round(self.header.sectionViewportPosition(section) * scale)
+                        right = left + round(self.header.sectionSize(section) * scale)
+                        # 从未排序的截图提取实际文字边界，验证箭头与文字间距固定。
+                        text_right = max(
+                            x for y in range(baseline.height() - round(2 * scale))
+                            for x in range(left, right)
+                            if baseline.pixelColor(x, y).red() > 0
                         )
-                        self.assertEqual(snapshot.copy(rect), baseline.copy(rect))
+                        gap = (arrow.left() - text_right - 1) / scale
+                        self.assertGreaterEqual(gap, 1)
+                        self.assertLessEqual(gap, 3)
+                        self.assertLess(arrow.right(), right)
+                        self.assertEqual(self._column_widths(), widths)
 
     def test_sort_keeps_metric_widths_when_name_is_temporarily_added(self):
         widths = self._column_widths()
@@ -233,27 +285,20 @@ class WidgetHeaderTests(unittest.TestCase):
         self.assertEqual(self.window.sort_order, Qt.DescendingOrder)
 
     def test_rendered_sort_arrow_matches_text_color_and_direction(self):
+        self.window.visible_metrics = ["name", "price", "change_pct"]
         for color in ("#ed952a", "#ffffff", "#3768bc"):
             self.window.set_fg_color(QColor(color))
+            self.window.clear_sort()
+            self.window._reproject_cached_data()
+            self.app.processEvents()
+            baseline = self.header.viewport().grab().toImage()
             for order in (Qt.DescendingOrder, Qt.AscendingOrder):
                 with self.subTest(color=color, order=order):
                     self.window.set_sort("现价", order)
                     self.app.processEvents()
-                    section = self.header.sortIndicatorSection()
-                    option = QStyleOptionHeader()
-                    self.header.initStyleOption(option)
-                    self.header.initStyleOptionForIndex(option, section)
-                    option.rect = QRect(
-                        self.header.sectionViewportPosition(section), 0,
-                        self.header.sectionSize(section), self.header.height(),
-                    )
-                    rect = self.header.style().subElementRect(QStyle.SE_HeaderArrow, option, self.header)
-                    snapshot = self.header.viewport().grab()
-                    scale = snapshot.devicePixelRatio()
-                    image = snapshot.toImage().copy(QRect(
-                        round(rect.x() * scale), round(rect.y() * scale),
-                        round(rect.width() * scale), round(rect.height() * scale),
-                    ))
+                    snapshot = self.header.viewport().grab().toImage()
+                    rect = self._sort_arrow_bounds(baseline, snapshot)
+                    image = snapshot.copy(rect)
                     rows = [
                         sum(image.pixelColor(x, y).name() == color for x in range(image.width()))
                         for y in range(image.height())
