@@ -20,8 +20,7 @@ from stockwidget.constants import APP_VERSION
 from stockwidget.core.config_store import config_paths
 from stockwidget.ui.widget import FloatLabel
 from stockwidget.ui.metric_pool import MetricPoolWidget
-from stockwidget.ui.name_settings_panel import NameSettingsPanel
-from stockwidget.ui.unit_settings_panel import UnitSettingsPanel
+from stockwidget.ui.metric_settings_panel import NameSettingsPanel, UnitSettingsPanel
 from stockwidget.ui.watchlist_editor import WatchlistEditor
 from stockwidget.ui.settings_style import build_settings_stylesheet, color_swatch_icon
 from stockwidget.platform.capabilities import (
@@ -82,7 +81,7 @@ class SettingsDialog(QDialog):
             self.win.watchlist, self.win.codes_list, self,
         )
         self.watchlist_editor.watchlist_changed.connect(self.win.set_watchlist)
-        self._bind_widgets()
+        self._connect_controls()
         self._setup_icon_choices()
         self._load_settings()
         self._apply_theme_stylesheet()
@@ -136,53 +135,22 @@ class SettingsDialog(QDialog):
             button.setToolTip(f"{title}: {color_name}")
             button.setIcon(color_swatch_icon(color, button.devicePixelRatioF()))
 
-    def _bind_widgets(self):
-        self.sb_interval = self.ui.sb_interval
-        self.rb_sina = self.ui.rb_sina
-        self.rb_em = self.ui.rb_em
+    def _connect_controls(self):
+        """连接设置控件与浮窗状态，静态控件统一从 self.ui 访问。"""
         self._source_buttons = {
-            "sina": self.rb_sina,
-            "eastmoney": self.rb_em,
+            "sina": self.ui.rb_sina,
+            "eastmoney": self.ui.rb_em,
         }
-        self.label_data_state = self.ui.label_data_state
 
-        self.cb_unicolor = self.ui.cb_unicolor
-        self.btn_fg = self.ui.btn_fg_color
-        self.btn_bg = self.ui.btn_bg_color
-        self.btn_up = self.ui.btn_up_color
-        self.btn_down = self.ui.btn_down_color
-        self.btn_neutral = self.ui.btn_neutral_color
         self._color_buttons = (
-            (self.btn_bg, "bg", "背景颜色"),
-            (self.btn_fg, "fg", "文字颜色"),
-            (self.btn_up, "up_color", "上涨颜色"),
-            (self.btn_down, "down_color", "下跌颜色"),
-            (self.btn_neutral, "neutral_color", "中性颜色"),
+            (self.ui.btn_bg_color, "bg", "背景颜色"),
+            (self.ui.btn_fg_color, "fg", "文字颜色"),
+            (self.ui.btn_up_color, "up_color", "上涨颜色"),
+            (self.ui.btn_down_color, "down_color", "下跌颜色"),
+            (self.ui.btn_neutral_color, "neutral_color", "中性颜色"),
         )
-        self.slider_bg_alpha = self.ui.slider_bg_alpha
-        self.slider_all_alpha = self.ui.slider_all_alpha
-        self.label_bg_alpha = self.ui.label_bg_alpha
-        self.label_all_alpha = self.ui.label_all_alpha
-        self.label_all = self.ui.label_all
 
-        self.cmb_family = self.ui.cmb_font
-        self.slider_font = self.ui.slider_font_size
-        self.slider_line = self.ui.slider_line_interval
-        self.label_font = self.ui.label_current_font_size
-        self.label_line = self.ui.label_current_line_interval
-
-        self.cb_auto_start = self.ui.cb_auto_start
-        self.cb_force_top = self.ui.cb_force_top
-        self.cb_click_through = self.ui.cb_click_through
-        self.cb_head = self.ui.cb_head
-        self.cb_grid = self.ui.cb_grid
-
-        self.cb_hotkey_hide = self.ui.cb_hotkey_hide
-        self.cb_hotkey_click_through = self.ui.cb_hotkey_click_through
-        self.keyseq_hide = self.ui.keyseq_hide
-        self.keyseq_click_through = self.ui.keyseq_click_through
-
-        self.sb_interval.valueChanged.connect(self.win.set_refresh_interval)
+        self.ui.sb_interval.valueChanged.connect(self.win.set_refresh_interval)
         for source, button in self._source_buttons.items():
             button.toggled.connect(partial(self._on_source_toggled, source))
 
@@ -217,15 +185,13 @@ class SettingsDialog(QDialog):
             self.metric_pool.clear_selections
         )
 
-        self.btn_check_update = self.ui.btn_check_update
-        self.btn_open_cache_dir = self.ui.btn_open_cache_dir
-        self.btn_check_update.clicked.connect(self._check_update_manually)
-        self.btn_open_cache_dir.clicked.connect(self._open_cache_dir)
+        self.ui.btn_check_update.clicked.connect(self._check_update_manually)
+        self.ui.btn_open_cache_dir.clicked.connect(self._open_cache_dir)
         self.ui.btn_clear_watchlist.clicked.connect(self.watchlist_editor.clear_watchlist)
         self.ui.btn_reset_appearance.clicked.connect(self._reset_appearance)
         self.ui.btn_reset_settings.clicked.connect(self._reset_settings)
 
-        self.cb_unicolor.toggled.connect(self._on_unicolor_toggled)
+        self.ui.cb_unicolor.toggled.connect(self._on_unicolor_toggled)
         color_setters = {
             "bg": self.win.set_bg_rgb_keep_alpha,
             "fg": self.win.set_fg_color,
@@ -235,59 +201,59 @@ class SettingsDialog(QDialog):
         }
         for button, attr, title in self._color_buttons:
             button.clicked.connect(partial(self._pick_color, attr, title, color_setters[attr]))
-        self.slider_bg_alpha.valueChanged.connect(self.apply_bg_alpha)
-        self.slider_all_alpha.valueChanged.connect(self.apply_win_opacity)
+        self.ui.slider_bg_alpha.valueChanged.connect(self.apply_bg_alpha)
+        self.ui.slider_all_alpha.valueChanged.connect(self.apply_win_opacity)
 
-        self.cmb_family.currentTextChanged.connect(self.win.set_font_family)
-        self.slider_font.valueChanged.connect(self.apply_font_size)
-        self.slider_line.valueChanged.connect(self._on_line_changed)
-        self.keyseq_hide.editingFinished.connect(self._on_hotkey_changed)
-        self.keyseq_click_through.editingFinished.connect(self._on_click_through_hotkey_changed)
-        self.cb_auto_start.toggled.connect(self._on_start_on_boot_toggled)
-        self.cb_force_top.toggled.connect(self.win.set_force_top)
-        self.cb_click_through.toggled.connect(self.win.set_click_through)
+        self.ui.cmb_font.currentTextChanged.connect(self.win.set_font_family)
+        self.ui.slider_font_size.valueChanged.connect(self.apply_font_size)
+        self.ui.slider_line_interval.valueChanged.connect(self._on_line_changed)
+        self.ui.keyseq_hide.editingFinished.connect(self._on_hotkey_changed)
+        self.ui.keyseq_click_through.editingFinished.connect(self._on_click_through_hotkey_changed)
+        self.ui.cb_auto_start.toggled.connect(self._on_start_on_boot_toggled)
+        self.ui.cb_force_top.toggled.connect(self.win.set_force_top)
+        self.ui.cb_click_through.toggled.connect(self.win.set_click_through)
         self.win.click_through_changed.connect(self._sync_click_through_from_win)
         # 浮窗右键菜单等外部途径修改显示指标时，同步设置窗口复选框
         self.win.display_flags_changed.connect(self._sync_display_flags_from_win)
-        self.cb_hotkey_hide.toggled.connect(self._on_hotkey_hide_enabled_toggled)
-        self.cb_hotkey_click_through.toggled.connect(self._on_click_through_hotkey_enabled_toggled)
-        self.cb_head.toggled.connect(self.win.set_header_visible)
-        self.cb_grid.toggled.connect(self.win.set_grid_visible)
+        self.ui.cb_hotkey_hide.toggled.connect(self._on_hotkey_hide_enabled_toggled)
+        self.ui.cb_hotkey_click_through.toggled.connect(self._on_click_through_hotkey_enabled_toggled)
+        self.ui.cb_head.toggled.connect(self.win.set_header_visible)
+        self.ui.cb_grid.toggled.connect(self.win.set_grid_visible)
 
     def _load_settings(self):
         with ExitStack() as stack:
             for widget in self.findChildren(QWidget):
                 stack.enter_context(QSignalBlocker(widget))
-            self.sb_interval.setValue(self.win.refresh_seconds)
+            self.ui.sb_interval.setValue(self.win.refresh_seconds)
             self.metric_pool.set_visible_metrics(self.win.visible_metrics)
             self.name_settings_panel.sync_from(self.win)
             self.unit_settings_panel.sync_from(self.win)
 
-            self._set_checked_blocked(self.cb_unicolor, self.win.unicolor)
+            self._set_checked_blocked(self.ui.cb_unicolor, self.win.unicolor)
             self._update_direction_color_controls()
             self._refresh_color_buttons()
-            self.slider_bg_alpha.setValue(int(round(self.win.bg.alpha() / 2.55)))
-            self.label_bg_alpha.setText(f"{self.slider_bg_alpha.value()}%")
-            self.slider_all_alpha.setValue(self.win.opacity_pct)
-            self.label_all_alpha.setText(f"{self.slider_all_alpha.value()}%")
+            self.ui.slider_bg_alpha.setValue(int(round(self.win.bg.alpha() / 2.55)))
+            self.ui.label_bg_alpha.setText(f"{self.ui.slider_bg_alpha.value()}%")
+            self.ui.slider_all_alpha.setValue(self.win.opacity_pct)
+            self.ui.label_all_alpha.setText(f"{self.ui.slider_all_alpha.value()}%")
 
-            self.cmb_family.setCurrentText(self.win.font.family())
-            self.slider_font.setValue(self.win.font.pointSize())
-            self.label_font.setText(f"{self.win.font.pointSize()} pt")
-            self.slider_line.setValue(self.win.line_extra_px)
-            self.label_line.setText(f"+{self.slider_line.value()} px")
+            self.ui.cmb_font.setCurrentText(self.win.font.family())
+            self.ui.slider_font_size.setValue(self.win.font.pointSize())
+            self.ui.label_current_font_size.setText(f"{self.win.font.pointSize()} pt")
+            self.ui.slider_line_interval.setValue(self.win.line_extra_px)
+            self.ui.label_current_line_interval.setText(f"+{self.ui.slider_line_interval.value()} px")
 
-            self.keyseq_hide.setKeySequence(QKeySequence(self.win.hotkey))
-            self.keyseq_hide.setEnabled(self.win.hotkey_enabled)
-            self.keyseq_click_through.setKeySequence(QKeySequence(self.win.hotkey_click_through))
-            self.keyseq_click_through.setEnabled(self.win.hotkey_click_through_enabled)
-            self.cb_hotkey_hide.setChecked(self.win.hotkey_enabled)
-            self.cb_hotkey_click_through.setChecked(self.win.hotkey_click_through_enabled)
-            self.cb_auto_start.setChecked(bool(self.win.start_on_boot))
-            self.cb_force_top.setChecked(self.win.force_top)
-            self.cb_click_through.setChecked(self.win.click_through)
-            self.cb_head.setChecked(self.win.header_visible)
-            self.cb_grid.setChecked(self.win.grid_visible)
+            self.ui.keyseq_hide.setKeySequence(QKeySequence(self.win.hotkey))
+            self.ui.keyseq_hide.setEnabled(self.win.hotkey_enabled)
+            self.ui.keyseq_click_through.setKeySequence(QKeySequence(self.win.hotkey_click_through))
+            self.ui.keyseq_click_through.setEnabled(self.win.hotkey_click_through_enabled)
+            self.ui.cb_hotkey_hide.setChecked(self.win.hotkey_enabled)
+            self.ui.cb_hotkey_click_through.setChecked(self.win.hotkey_click_through_enabled)
+            self.ui.cb_auto_start.setChecked(bool(self.win.start_on_boot))
+            self.ui.cb_force_top.setChecked(self.win.force_top)
+            self.ui.cb_click_through.setChecked(self.win.click_through)
+            self.ui.cb_head.setChecked(self.win.header_visible)
+            self.ui.cb_grid.setChecked(self.win.grid_visible)
 
             self._apply_platform_limits()
             self._setup_source_buttons()
@@ -310,29 +276,29 @@ class SettingsDialog(QDialog):
         - Linux 下:强制置顶不可用(raise_ 受窗口管理器/合成器限制)。
         """
         if not hotkeys_supported():
-            for w in (self.cb_hotkey_hide, self.cb_hotkey_click_through,
-                      self.keyseq_hide, self.keyseq_click_through):
+            for w in (self.ui.cb_hotkey_hide, self.ui.cb_hotkey_click_through,
+                      self.ui.keyseq_hide, self.ui.keyseq_click_through):
                 w.setEnabled(False)
                 w.setToolTip(unsupported_tooltip("全局快捷键"))
         if not click_through_supported():
-            self.cb_click_through.setEnabled(False)
-            self.cb_click_through.setToolTip(unsupported_tooltip("鼠标穿透"))
+            self.ui.cb_click_through.setEnabled(False)
+            self.ui.cb_click_through.setToolTip(unsupported_tooltip("鼠标穿透"))
             # 鼠标穿透不可用（如 macOS）时，其快捷键一并关闭
-            for w in (self.cb_hotkey_click_through, self.keyseq_click_through):
+            for w in (self.ui.cb_hotkey_click_through, self.ui.keyseq_click_through):
                 w.setEnabled(False)
                 w.setToolTip(unsupported_tooltip("鼠标穿透"))
         if not opacity_supported():
             # 整体不透明度滑块:Wayland 平台插件不支持设置窗口透明度
-            for w in (self.slider_all_alpha, self.label_all, self.label_all_alpha):
+            for w in (self.ui.slider_all_alpha, self.ui.label_all, self.ui.label_all_alpha):
                 w.setEnabled(False)
-            self.slider_all_alpha.setToolTip(unsupported_tooltip("整体不透明度"))
+            self.ui.slider_all_alpha.setToolTip(unsupported_tooltip("整体不透明度"))
         if not force_top_supported():
             # 强制置顶:仅 Windows 支持
-            self.cb_force_top.setEnabled(False)
-            self.cb_force_top.setToolTip(unsupported_tooltip("强制置顶", suggest_x11=False))
+            self.ui.cb_force_top.setEnabled(False)
+            self.ui.cb_force_top.setToolTip(unsupported_tooltip("强制置顶", suggest_x11=False))
         if not start_on_boot_supported():
-            self.cb_auto_start.setEnabled(False)
-            self.cb_auto_start.setToolTip(unsupported_tooltip("开机自启"))
+            self.ui.cb_auto_start.setEnabled(False)
+            self.ui.cb_auto_start.setToolTip(unsupported_tooltip("开机自启"))
 
     def _setup_icon_choices(self):
         self.icon_buttons = {
@@ -431,9 +397,9 @@ class SettingsDialog(QDialog):
             text = f"✅ 市场代码数据：最新 ({d})"
         else:
             text = f"⚠️ 市场代码数据：缓存 ({d})"
-        self.label_data_state.setText(text)
+        self.ui.label_data_state.setText(text)
         error = self.app.code_data_error() if self.app is not None else ""
-        self.label_data_state.setToolTip(
+        self.ui.label_data_state.setToolTip(
             f"{error}\n继续使用本地缓存，30 分钟后自动重试。" if isinstance(error, str) and error else ""
         )
 
@@ -507,7 +473,6 @@ class SettingsDialog(QDialog):
             if obj is self:
                 self.setFocus()
 
-
     def _on_source_toggled(self, source: str, checked: bool):
         if checked:
             self.win.set_data_source(source)
@@ -515,9 +480,9 @@ class SettingsDialog(QDialog):
     def _update_direction_color_controls(self):
         enabled = not self.win.unicolor
         for widget in (
-            self.btn_up,
-            self.btn_down,
-            self.btn_neutral,
+            self.ui.btn_up_color,
+            self.ui.btn_down_color,
+            self.ui.btn_neutral_color,
         ):
             widget.setEnabled(enabled)
 
@@ -550,12 +515,11 @@ class SettingsDialog(QDialog):
         panel.show_for(anchor)
 
     def _on_hotkey_changed(self):
-        new_hotkey = self.keyseq_hide.keySequence().toString()
+        new_hotkey = self.ui.keyseq_hide.keySequence().toString()
         result = self.win.update_hotkey(new_hotkey)
         if not result:
-            self.keyseq_hide.setKeySequence(QKeySequence(self.win.hotkey))
+            self.ui.keyseq_hide.setKeySequence(QKeySequence(self.win.hotkey))
             QMessageBox.warning(self, "快捷键无效", _hotkey_error_message(result))
-
 
     def _on_icon_button_toggled(self, key: str, checked: bool):
         if not checked:
@@ -584,9 +548,6 @@ class SettingsDialog(QDialog):
             self.app.set_start_on_boot(bool(checked))
             self.app.save_now()
 
-
-
-
     def _pick_color(self, attr, title, setter):
         base = QColor(getattr(self.win, attr))
         base.setAlpha(255)
@@ -596,24 +557,24 @@ class SettingsDialog(QDialog):
             self._refresh_color_buttons()
 
     def apply_bg_alpha(self, v: int):
-        self.label_bg_alpha.setText(f"{v}%")
+        self.ui.label_bg_alpha.setText(f"{v}%")
         self.win.set_bg_alpha_percent(v)
 
     def apply_win_opacity(self, v: int):
-        self.label_all_alpha.setText(f"{v}%")
+        self.ui.label_all_alpha.setText(f"{v}%")
         self.win.set_window_opacity_percent(v)
 
     def apply_font_size(self, v: int):
-        self.label_font.setText(f"{v} pt")
+        self.ui.label_current_font_size.setText(f"{v} pt")
         self.win.set_font_size(v)
 
     def _on_line_changed(self, v: int):
-        self.label_line.setText(f"+{v} px")
+        self.ui.label_current_line_interval.setText(f"+{v} px")
         self.win.set_line_extra(v)
 
     def _sync_click_through_from_win(self, checked: bool):
         """浮窗鼠标穿透状态变化（如快捷键触发）时同步设置窗口复选框"""
-        self._set_checked_blocked(self.cb_click_through, checked)
+        self._set_checked_blocked(self.ui.cb_click_through, checked)
 
     @staticmethod
     def _set_checked_blocked(widget, checked: bool):
@@ -626,37 +587,36 @@ class SettingsDialog(QDialog):
         self.metric_pool.set_visible_metrics(self.win.visible_metrics)
         self.name_settings_panel.sync_from(self.win)
         self.unit_settings_panel.sync_from(self.win)
-        self._set_checked_blocked(self.cb_head, self.win.header_visible)
-        self._set_checked_blocked(self.cb_grid, self.win.grid_visible)
-        self._set_checked_blocked(self.cb_unicolor, self.win.unicolor)
+        self._set_checked_blocked(self.ui.cb_head, self.win.header_visible)
+        self._set_checked_blocked(self.ui.cb_grid, self.win.grid_visible)
+        self._set_checked_blocked(self.ui.cb_unicolor, self.win.unicolor)
         self._update_direction_color_controls()
         self._refresh_color_buttons()
 
-
     def _on_hotkey_hide_enabled_toggled(self, checked: bool):
-        self.keyseq_hide.setEnabled(bool(checked))
+        self.ui.keyseq_hide.setEnabled(bool(checked))
         result = self.win.set_hotkey_enabled(bool(checked))
         if not result:
             # 启用失败(如冲突):回滚复选框与输入框状态,并提示用户
-            self.keyseq_hide.setEnabled(False)
-            self._set_checked_blocked(self.cb_hotkey_hide, False)
+            self.ui.keyseq_hide.setEnabled(False)
+            self._set_checked_blocked(self.ui.cb_hotkey_hide, False)
             QMessageBox.warning(self, "快捷键无效", _hotkey_error_message(result))
 
     def _on_click_through_hotkey_enabled_toggled(self, checked: bool):
-        self.keyseq_click_through.setEnabled(bool(checked))
+        self.ui.keyseq_click_through.setEnabled(bool(checked))
         result = self.win.set_click_through_hotkey_enabled(bool(checked))
         if not result:
             # 启用失败(如冲突):回滚复选框与输入框状态,并提示用户
-            self.keyseq_click_through.setEnabled(False)
-            self._set_checked_blocked(self.cb_hotkey_click_through, False)
+            self.ui.keyseq_click_through.setEnabled(False)
+            self._set_checked_blocked(self.ui.cb_hotkey_click_through, False)
             QMessageBox.warning(self, "快捷键无效", _hotkey_error_message(result))
 
     def _on_click_through_hotkey_changed(self):
-        new_hotkey = self.keyseq_click_through.keySequence().toString()
+        new_hotkey = self.ui.keyseq_click_through.keySequence().toString()
         result = self.win.update_click_through_hotkey(new_hotkey)
         if not result:
             # 冲突/无效:回滚输入框显示,并提示用户
-            self.keyseq_click_through.setKeySequence(QKeySequence(self.win.hotkey_click_through))
+            self.ui.keyseq_click_through.setKeySequence(QKeySequence(self.win.hotkey_click_through))
             QMessageBox.warning(self, "快捷键无效", _hotkey_error_message(result))
 
     def _setup_about(self):
@@ -677,7 +637,7 @@ class SettingsDialog(QDialog):
                 f'style="text-decoration:none; color:#4a90d9;">{escape(text)}</a>'
             )
 
-        version_line = f"📦 当前程序版本："
+        version_line = "📦 当前程序版本："
         if latest_version:
             version_line += link(
                 github_links["releases"] + "/latest", f"有更新 (v{escape(str(app_version))} -> v{latest_version})"
@@ -687,8 +647,7 @@ class SettingsDialog(QDialog):
         self.ui.label_version_state.setText(version_line)
         lines = [
             f'本项目基于 {link(links["license"], "Apache-2.0 License")} 开源',
-            "Copyright 2026 sbr0574",
-            "",
+            "Copyright 2026 sbr0574<br>",
             f'仓库地址：{link(github_links["project"], github_links["project"])}',
             f'镜像仓库：{link(gitee_links["project"], gitee_links["project"])}',
             f'发行下载：{link(links["releases"], links["releases"])}',
@@ -707,8 +666,8 @@ class SettingsDialog(QDialog):
 
     def _check_update_manually(self):
         """后台检查更新，完成后弹窗提示结果。"""
-        self.btn_check_update.setEnabled(False)
-        self.btn_check_update.setText("检查中…")
+        self.ui.btn_check_update.setEnabled(False)
+        self.ui.btn_check_update.setText("检查中…")
 
         def _worker():
             try:
@@ -725,8 +684,8 @@ class SettingsDialog(QDialog):
         threading.Thread(target=_worker, daemon=True).start()
 
     def _on_update_check_finished(self, result):
-        self.btn_check_update.setEnabled(True)
-        self.btn_check_update.setText("检查程序更新")
+        self.ui.btn_check_update.setEnabled(True)
+        self.ui.btn_check_update.setText("检查程序更新")
         has_update, latest_version = result
         if self.app is not None:
             self.app._has_update = bool(has_update)

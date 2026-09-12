@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QPoint, QSize, Qt
-from PySide6.QtGui import QColor, QIcon, QPalette, QPixmap
+from PySide6.QtGui import QColor, QIcon, QPalette, QPixmap, QTextDocument
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QAbstractItemDelegate
 
@@ -123,10 +123,38 @@ class SettingsDialogTests(unittest.TestCase):
 
     def test_about_contains_sync_status_and_nonflat_group(self):
         dialog, _ = self._make_dialog()
-        self.assertEqual(dialog.label_data_state.parentWidget(), dialog.ui.gb_about)
+        self.assertEqual(dialog.ui.label_data_state.parentWidget(), dialog.ui.gb_about)
         self.assertFalse(dialog.ui.gb_about.isFlat())
-        self.assertEqual(dialog.label_data_state.palette().color(QPalette.ColorRole.WindowText), QColor("black"))
         self.assertNotIn("QGroupBox#gb_about", build_settings_stylesheet(False))
+
+    def test_about_status_text_follows_light_and_dark_palettes(self):
+        dialog, _ = self._make_dialog()
+        original = self.qt_app.palette()
+        try:
+            for foreground, background in (("#eeeeee", "#222222"), ("#222222", "#eeeeee")):
+                palette = QPalette(original)
+                palette.setColor(QPalette.WindowText, QColor(foreground))
+                palette.setColor(QPalette.Window, QColor(background))
+                self.qt_app.setPalette(palette)
+                self.qt_app.processEvents()
+                dialog.refresh_about()
+                dialog.refresh_data_state()
+                for label in (dialog.ui.label_version_state, dialog.ui.label_data_state,
+                              dialog.ui.label_about_info):
+                    self.assertEqual(label.palette().color(QPalette.WindowText), QColor(foreground))
+        finally:
+            self.qt_app.setPalette(original)
+
+    def test_about_has_blank_line_after_copyright_and_fits_label(self):
+        dialog, _ = self._make_dialog()
+        label = dialog.ui.label_about_info
+        document = QTextDocument()
+        document.setDefaultFont(label.font())
+        document.setDocumentMargin(0)
+        document.setHtml(label.text())
+        document.setTextWidth(label.contentsRect().width())
+        self.assertIn("Copyright 2026 sbr0574\n\n仓库地址", document.toPlainText())
+        self.assertLessEqual(document.size().height(), label.contentsRect().height())
 
     def test_clear_watchlist_closes_editor_without_restoring_entries(self):
         dialog, window = self._make_dialog({"sh600519": {"checked": False, "cost": 100}})
@@ -165,9 +193,9 @@ class SettingsDialogTests(unittest.TestCase):
         dialog.ui.btn_reset_appearance.click()
         expected = {**before, **{key: defaults.current_config()[key] for key in appearance_keys}}
         self.assertEqual(window.current_config(), expected)
-        self.assertEqual(dialog.slider_font.value(), 10)
-        self.assertEqual(dialog.slider_bg_alpha.value(), 75)
-        self.assertEqual(dialog.slider_all_alpha.value(), 90)
+        self.assertEqual(dialog.ui.slider_font_size.value(), 10)
+        self.assertEqual(dialog.ui.slider_bg_alpha.value(), 75)
+        self.assertEqual(dialog.ui.slider_all_alpha.value(), 90)
         self.assertTrue(dialog.ui.btn_icon_default.isChecked())
         self.assertEqual(app._icon_choice, "default")
         self.assertEqual(app._custom_icon_path, "")
@@ -204,9 +232,9 @@ class SettingsDialogTests(unittest.TestCase):
         self.assertEqual(window.current_config(), expected)
         self.assertEqual(window.timer.interval(), 2000)
         self.assertFalse(window._keep_top_timer.isActive())
-        self.assertFalse(dialog.keyseq_hide.isEnabled())
-        self.assertFalse(dialog.cb_auto_start.isChecked())
-        self.assertTrue(dialog.rb_sina.isChecked())
+        self.assertFalse(dialog.ui.keyseq_hide.isEnabled())
+        self.assertFalse(dialog.ui.cb_auto_start.isChecked())
+        self.assertTrue(dialog.ui.rb_sina.isChecked())
         self.assertEqual(dialog.metric_pool.visible_metrics, list(defaults.visible_metrics))
         self.assertEqual(app._icon_choice, "dark")
         unregister.assert_called_once()
@@ -309,13 +337,13 @@ class SettingsDialogTests(unittest.TestCase):
         app = self._make_icon_app()
         app.code_data_error.return_value = "stock_hk.json 更新失败；Gitee：HTTP 451"
         dialog, _window = self._make_dialog(app=app)
-        self.assertIn("stock_hk.json", dialog.label_data_state.toolTip())
-        self.assertIn("30 分钟", dialog.label_data_state.toolTip())
+        self.assertIn("stock_hk.json", dialog.ui.label_data_state.toolTip())
+        self.assertIn("30 分钟", dialog.ui.label_data_state.toolTip())
         app.code_data_state.return_value = ("current", "2026-09-09")
         app.code_data_error.return_value = ""
         dialog.refresh_data_state()
-        self.assertEqual(dialog.label_data_state.toolTip(), "")
-        self.assertIn("最新", dialog.label_data_state.text())
+        self.assertEqual(dialog.ui.label_data_state.toolTip(), "")
+        self.assertIn("最新", dialog.ui.label_data_state.text())
 
     def test_color_swatch_renders_at_device_pixel_ratio(self):
         icon = color_swatch_icon(QColor("#123456"), 2.0)
@@ -859,25 +887,25 @@ class SettingsDialogTests(unittest.TestCase):
         self.assertEqual(window.up_color.name(), "#dd2100")
         self.assertEqual(window.down_color.name(), "#019933")
         self.assertEqual(window.neutral_color.name(), "#494949")
-        self.assertTrue(dialog.cb_unicolor.isChecked())
+        self.assertTrue(dialog.ui.cb_unicolor.isChecked())
         self.assertEqual(
-            dialog.cb_unicolor.minimumWidth(), dialog.cb_unicolor.maximumWidth()
+            dialog.ui.cb_unicolor.minimumWidth(), dialog.ui.cb_unicolor.maximumWidth()
         )
         self.assertGreaterEqual(
-            dialog.cb_unicolor.minimumWidth(), dialog.cb_unicolor.sizeHint().width()
+            dialog.ui.cb_unicolor.minimumWidth(), dialog.ui.cb_unicolor.sizeHint().width()
         )
-        self.assertTrue(dialog.btn_bg.isEnabled())
-        self.assertTrue(dialog.btn_fg.isEnabled())
-        self.assertFalse(dialog.btn_up.isEnabled())
-        self.assertFalse(dialog.btn_down.isEnabled())
-        self.assertFalse(dialog.btn_neutral.isEnabled())
+        self.assertTrue(dialog.ui.btn_bg_color.isEnabled())
+        self.assertTrue(dialog.ui.btn_fg_color.isEnabled())
+        self.assertFalse(dialog.ui.btn_up_color.isEnabled())
+        self.assertFalse(dialog.ui.btn_down_color.isEnabled())
+        self.assertFalse(dialog.ui.btn_neutral_color.isEnabled())
 
         color_buttons = (
-            (dialog.btn_fg, "文字", window.fg),
-            (dialog.btn_bg, "背景", window.bg),
-            (dialog.btn_up, "上涨", window.up_color),
-            (dialog.btn_down, "下跌", window.down_color),
-            (dialog.btn_neutral, "中性", window.neutral_color),
+            (dialog.ui.btn_fg_color, "文字", window.fg),
+            (dialog.ui.btn_bg_color, "背景", window.bg),
+            (dialog.ui.btn_up_color, "上涨", window.up_color),
+            (dialog.ui.btn_down_color, "下跌", window.down_color),
+            (dialog.ui.btn_neutral_color, "中性", window.neutral_color),
         )
         for button, text, color in color_buttons:
             self.assertTrue(button.isFlat())
@@ -890,8 +918,8 @@ class SettingsDialogTests(unittest.TestCase):
             self.assertEqual(center.name(), QColor(color).name())
             self.assertEqual(image.pixelColor(0, 0).alpha(), 0)
 
-        disabled_icon = dialog.btn_up.icon().pixmap(
-            dialog.btn_up.iconSize(), QIcon.Mode.Disabled
+        disabled_icon = dialog.ui.btn_up_color.icon().pixmap(
+            dialog.ui.btn_up_color.iconSize(), QIcon.Mode.Disabled
         ).toImage()
         disabled_center = disabled_icon.pixelColor(
             disabled_icon.width() // 2, disabled_icon.height() // 2
@@ -911,21 +939,21 @@ class SettingsDialogTests(unittest.TestCase):
             "stockwidget.ui.settings_dialog.QColorDialog.getColor",
             return_value=QColor("#123456"),
         ):
-            dialog.btn_fg.click()
-        updated_icon = dialog.btn_fg.icon().pixmap(dialog.btn_fg.iconSize()).toImage()
+            dialog.ui.btn_fg_color.click()
+        updated_icon = dialog.ui.btn_fg_color.icon().pixmap(dialog.ui.btn_fg_color.iconSize()).toImage()
         updated_center = updated_icon.pixelColor(
             updated_icon.width() // 2, updated_icon.height() // 2
         )
         self.assertEqual(updated_center.name(), "#123456")
-        self.assertIn("#123456", dialog.btn_fg.toolTip())
+        self.assertIn("#123456", dialog.ui.btn_fg_color.toolTip())
 
-        dialog.cb_unicolor.setChecked(False)
+        dialog.ui.cb_unicolor.setChecked(False)
         self.qt_app.processEvents()
 
         self.assertFalse(window.unicolor)
-        self.assertTrue(dialog.btn_up.isEnabled())
-        self.assertTrue(dialog.btn_down.isEnabled())
-        self.assertTrue(dialog.btn_neutral.isEnabled())
+        self.assertTrue(dialog.ui.btn_up_color.isEnabled())
+        self.assertTrue(dialog.ui.btn_down_color.isEnabled())
+        self.assertTrue(dialog.ui.btn_neutral_color.isEnabled())
         config = window.current_config()
         self.assertFalse(config["unicolor"])
         self.assertEqual(config["up_color"], window.up_color.name())
