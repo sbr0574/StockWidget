@@ -81,6 +81,7 @@ stockwidget/
     watchlist_editor.py      #   自选列表编辑、搜索与排序，信号提交修改
     settings_style.py        #   设置面板主题与颜色预览
     metric_pool.py           #   指标选择与拖动排序
+    metric_settings_panel.py #   名称、数值单位设置弹窗及共用交互
     table_model.py           #   表格 Model 与 K 线 Delegate
     drag_mixin.py            #   拖拽 / 双击隐藏交互
     tray.py                  #   系统托盘
