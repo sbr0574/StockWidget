@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QPoint, QRect
+from PySide6.QtCore import QPoint, QRect, Qt
 from PySide6.QtWidgets import QApplication
 
 from stockwidget.core.metric_layout import (
@@ -150,7 +150,7 @@ class FloatLabelMetricLayoutTests(unittest.TestCase):
         self.assertEqual(window.pos(), saved)
         self.assertTrue(window.table.isHidden())
         row, roles = self._row_and_roles()
-        with patch("stockwidget.ui.widget.format_quote", return_value=(row, roles)):
+        with patch("stockwidget.ui.widget.format_quote", return_value=(row, roles, {})):
             window._process_data((True, {"sh600519": {}}, None))
         self.qt_app.processEvents()
         self.assertEqual(window.pos(), saved)
@@ -242,6 +242,76 @@ class FloatLabelMetricLayoutTests(unittest.TestCase):
 
         self.assertEqual(window.model._headers, ["名称"])
         self.assertTrue(window.message_label.isHidden())
+
+    def test_sort_forces_name_temporarily_and_restores_watchlist_order(self):
+        window = self._window(
+            {"name_visible": False, "visible_metrics": ["price", "change_pct"]}
+        )
+        row1, roles1 = self._row_and_roles()
+        row2, roles2 = self._row_and_roles()
+        row1["名称"], row1["现价"], row1["涨幅"] = "A", "10.00", "+1.00%"
+        row2["名称"], row2["现价"], row2["涨幅"] = "B", "20.00", "+2.00%"
+        window._last_full_rows = [row1, row2]
+        window._last_color_roles = [roles1, roles2]
+        window._last_sort_values = [
+            {"现价": 10.0, "涨幅": 1.0},
+            {"现价": 20.0, "涨幅": 2.0},
+        ]
+
+        window.set_sort("现价", Qt.SortOrder.DescendingOrder)
+
+        self.assertEqual(window.model._headers, ["名称", "现价", "涨幅"])
+        self.assertEqual(window.model._rows[0][0], "B")
+        self.assertNotIn("name", window.visible_metrics)
+
+        window.clear_sort()
+
+        self.assertEqual(window.model._headers, ["现价", "涨幅"])
+        self.assertEqual(window.model._rows[0][0], "10.00")
+
+    def test_missing_sort_values_stay_at_bottom_in_both_directions(self):
+        window = self._window(
+            {"name_visible": True, "visible_metrics": ["name", "profit"]}
+        )
+        base_row, base_roles = self._row_and_roles()
+        rows = []
+        roles = []
+        for name, profit in (("A", "+3.00%"), ("B", "-"), ("C", "-1.00%")):
+            row = dict(base_row)
+            row["名称"] = name
+            row["浮盈"] = profit
+            rows.append(row)
+            roles.append(dict(base_roles))
+        window._last_full_rows = rows
+        window._last_color_roles = roles
+        window._last_sort_values = [
+            {"浮盈": 3.0}, {"浮盈": None}, {"浮盈": -1.0},
+        ]
+
+        window.set_sort("浮盈", Qt.SortOrder.AscendingOrder)
+        self.assertEqual([r[0] for r in window.model._rows], ["C", "A", "B"])
+
+        window.set_sort("浮盈", Qt.SortOrder.DescendingOrder)
+        self.assertEqual([r[0] for r in window.model._rows], ["A", "C", "B"])
+
+    def test_header_click_only_sorts_supported_metrics(self):
+        window = self._window(
+            {"name_visible": True, "visible_metrics": ["name", "price", "kline"]}
+        )
+        row, roles = self._row_and_roles()
+        window._last_full_rows = [row]
+        window._last_color_roles = [roles]
+        window._last_sort_values = [{"现价": 1.0}]
+        window._project_columns([row], [roles], [{"现价": 1.0}])
+
+        window._on_header_clicked(window.model._headers.index("K线"))
+        self.assertIsNone(window.sort_header)
+
+        window._on_header_clicked(window.model._headers.index("现价"))
+        self.assertEqual(window.sort_header, "现价")
+        self.assertEqual(window.sort_order, Qt.SortOrder.DescendingOrder)
+        window._on_header_clicked(window.model._headers.index("现价"))
+        self.assertEqual(window.sort_order, Qt.SortOrder.AscendingOrder)
 
 
 if __name__ == "__main__":
