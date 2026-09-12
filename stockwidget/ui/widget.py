@@ -21,6 +21,7 @@ from stockwidget.core.quote_presentation import QuoteDisplayOptions, format_quot
 from stockwidget.core.metric_layout import (
     METRIC_BY_ID,
     METRIC_SPECS,
+    NAME_METRIC_ID,
     expand_metric_headers,
     legacy_visibility,
     normalize_visible_metrics,
@@ -37,6 +38,11 @@ from stockwidget.platform.capabilities import (
 from stockwidget.platform.click_through import apply_click_through
 
 
+SORTABLE_HEADERS = (
+    "现价", "涨跌", "涨幅", "浮盈", "委比", "成交量", "成交额", "均价",
+)
+
+
 def _config_color(value, default: QColor) -> QColor:
     color = QColor(value) if isinstance(value, (QColor, str)) else QColor()
     return color if color.isValid() else QColor(default)
@@ -48,6 +54,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     click_through_changed = Signal(bool)
     display_flags_changed = Signal()  # 显示指标/表头/网格/统一颜色等显示相关设置变化
     data_ready = Signal(object)  # (ok, data, error)
+
     def __init__(self, cfg: dict, codes_list: dict):
         super().__init__()
         self._on_change = (lambda: None)
@@ -61,10 +68,17 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
         self.codes_list: dict = codes_list
         # 加载自选标的配置（代码 -> {checked, cost, name, type}）
-        watchlist_cfg           = cfg.get("watchlist", {})
-        self.watchlist: dict    = normalize_watchlist(watchlist_cfg, self.codes_list)
+        watchlist_cfg = cfg.get("watchlist", {})
+        self.watchlist: dict = normalize_watchlist(watchlist_cfg, self.codes_list)
         self._load_appearance_config(cfg)
         self._load_settings_config(cfg)
+
+        # 排序是浮窗运行时的视图状态，不改变或持久化自选列表顺序。
+        self.sort_header = None
+        self.sort_order = Qt.SortOrder.DescendingOrder
+        self._last_full_rows = []
+        self._last_color_roles = []
+        self._last_sort_values = []
 
         # 平台能力限制:当前平台不支持时强制关闭对应功能
         # (如 Wayland 下无法实现全局快捷键/鼠标穿透,Linux 下强制置顶不可靠),
@@ -106,9 +120,11 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.table.horizontalHeader().setVisible(self.header_visible)
         self.table.horizontalHeader().setStretchLastSection(False)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionsClickable(True)
+        self.table.horizontalHeader().setSortIndicatorShown(False)
+        self.table.horizontalHeader().sectionClicked.connect(self._on_header_clicked)
         self.table.setFont(self.font)
         self.table.horizontalHeader().setFont(self.font)
-        self.table.horizontalHeader().setAttribute(Qt.WA_TransparentForMouseEvents, True)
         self.table.setTextElideMode(Qt.ElideNone)
         self.message_label = QLabel("", self.panel)
         self.message_label.setStyleSheet("padding: 2px 4px;")
@@ -131,7 +147,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.table.hide()
         self._show_message("加载中…", kind="loading")
 
-        for w in (self.panel, self.table, self.table.viewport(), self.table.horizontalHeader()):
+        # 表头保留原生点击事件用于排序；其余区域仍支持拖动浮窗。
+        for w in (self.panel, self.table, self.table.viewport()):
             w.installEventFilter(self)
 
         self.apply_style()
@@ -160,42 +177,42 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.set_click_through(self.click_through)
 
     def _load_appearance_config(self, cfg: dict):
-        self.header_visible     = bool(cfg.get("header_visible", False))
-        self.grid_visible       = bool(cfg.get("grid_visible", False))
-        font_family             = cfg.get("font_family", default_font_family())
-        font_size               = int(cfg.get("font_size", 10))
-        self.font               = QFont(font_family, max(5, min(15, font_size)))
-        self.line_extra_px      = int(cfg.get("line_extra_px", 1))
-        self.fg                 = QColor(cfg.get("fg", "#FFFFFF"))
-        bg                      = cfg.get("bg", {"r":0,"g":0,"b":0,"a":191})
-        self.bg                 = QColor(bg["r"],bg["g"],bg["b"],bg["a"])
-        self.opacity_pct        = int(cfg.get("opacity_pct", 90))
-        self.unicolor           = bool(cfg.get("unicolor", True))
-        self.up_color           = _config_color(cfg.get("up_color"), DEFAULT_UP_COLOR)
-        self.down_color         = _config_color(cfg.get("down_color"), DEFAULT_DOWN_COLOR)
-        self.neutral_color      = _config_color(cfg.get("neutral_color"), DEFAULT_NEUTRAL_COLOR)
+        self.header_visible = bool(cfg.get("header_visible", False))
+        self.grid_visible = bool(cfg.get("grid_visible", False))
+        font_family = cfg.get("font_family", default_font_family())
+        font_size = int(cfg.get("font_size", 10))
+        self.font = QFont(font_family, max(5, min(15, font_size)))
+        self.line_extra_px = int(cfg.get("line_extra_px", 1))
+        self.fg = QColor(cfg.get("fg", "#FFFFFF"))
+        bg = cfg.get("bg", {"r":0,"g":0,"b":0,"a":191})
+        self.bg = QColor(bg["r"],bg["g"],bg["b"],bg["a"])
+        self.opacity_pct = int(cfg.get("opacity_pct", 90))
+        self.unicolor = bool(cfg.get("unicolor", True))
+        self.up_color = _config_color(cfg.get("up_color"), DEFAULT_UP_COLOR)
+        self.down_color = _config_color(cfg.get("down_color"), DEFAULT_DOWN_COLOR)
+        self.neutral_color = _config_color(cfg.get("neutral_color"), DEFAULT_NEUTRAL_COLOR)
 
     def _load_settings_config(self, cfg: dict):
         # 加载面板配置
-        self.code_visible       = bool(cfg.get("code_visible", False))
-        self.type_visible       = bool(cfg.get("type_visible", False))
-        self.name_length        = int(cfg.get("name_length", -1))
-        self.unit_mode          = str(cfg.get("unit_mode", "auto"))
+        self.code_visible = bool(cfg.get("code_visible", False))
+        self.type_visible = bool(cfg.get("type_visible", False))
+        self.name_length = int(cfg.get("name_length", -1))
+        self.unit_mode = str(cfg.get("unit_mode", "auto"))
         if self.unit_mode not in ("cn", "en", "auto"):
             self.unit_mode = "auto"
-        self.visible_metrics    = visible_metrics_from_config(cfg)
+        self.visible_metrics = visible_metrics_from_config(cfg)
         # 加载其他配置
-        self.refresh_seconds    = int(cfg.get("refresh_seconds", 2))
-        self.data_source        = str(cfg.get("data_source", "sina"))
+        self.refresh_seconds = int(cfg.get("refresh_seconds", 2))
+        self.data_source = str(cfg.get("data_source", "sina"))
         if self.data_source not in ("sina", "eastmoney"):
             self.data_source = "sina"
-        self.force_top          = bool(cfg.get("force_top", False))
-        self.click_through      = bool(cfg.get("click_through", False))
-        self.hotkey_enabled     = bool(cfg.get("hotkey_enabled", False))
-        self.hotkey             = cfg.get("hotkey", "Ctrl+Alt+F")
+        self.force_top = bool(cfg.get("force_top", False))
+        self.click_through = bool(cfg.get("click_through", False))
+        self.hotkey_enabled = bool(cfg.get("hotkey_enabled", False))
+        self.hotkey = cfg.get("hotkey", "Ctrl+Alt+F")
         self.hotkey_click_through_enabled = bool(cfg.get("hotkey_click_through_enabled", False))
         self.hotkey_click_through = cfg.get("hotkey_click_through", "Ctrl+Alt+C")
-        self.start_on_boot      = bool(cfg.get("start_on_boot", False))
+        self.start_on_boot = bool(cfg.get("start_on_boot", False))
 
     def reset_appearance(self):
         self._load_appearance_config({})
@@ -208,6 +225,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     def reset_settings(self):
         self._load_settings_config({})
+        self.clear_sort()
         self._register_current()
         self._keep_top_timer.stop()
         apply_click_through(self, self.click_through)
@@ -224,10 +242,10 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         return {c: dict(e) for c, e in self.watchlist.items() if e.get("checked")}
 
     # 与 App 连接
-    def set_open_settings_callback(self, fn): 
+    def set_open_settings_callback(self, fn):
         self._open_settings_cb = fn
 
-    def set_on_change(self, fn): 
+    def set_on_change(self, fn):
         self._on_change = fn or (lambda: None)
 
     def _notify_change(self):
@@ -235,38 +253,38 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     def current_config(self):
         return {
-            "watchlist":            {c: dict(e) for c, e in self.watchlist.items()},
+            "watchlist": {c: dict(e) for c, e in self.watchlist.items()},
 
-            "code_visible":         self.code_visible,
-            "type_visible":         self.type_visible,
-            "name_length":          self.name_length,
-            "unit_mode":            self.unit_mode,
-            "visible_metrics":      list(self.visible_metrics),
+            "code_visible": self.code_visible,
+            "type_visible": self.type_visible,
+            "name_length": self.name_length,
+            "unit_mode": self.unit_mode,
+            "visible_metrics": list(self.visible_metrics),
             **legacy_visibility(self.visible_metrics),
-            
-            "header_visible":   self.header_visible,
-            "grid_visible":     self.grid_visible,
-            "font_family":      self.font.family(),
-            "font_size":        self.font.pointSize(),
-            "line_extra_px":    self.line_extra_px,
-            "fg":               self.fg.name(QColor.HexRgb),
-            "bg":               {"r": self.bg.red(), "g": self.bg.green(), "b": self.bg.blue(), "a": self.bg.alpha()},
-            "opacity_pct":      self.opacity_pct,
-            "unicolor":         self.unicolor,
-            "up_color":         self.up_color.name(QColor.HexRgb),
-            "down_color":       self.down_color.name(QColor.HexRgb),
-            "neutral_color":    self.neutral_color.name(QColor.HexRgb),
 
-            "refresh_seconds":  self.refresh_seconds,
-            "data_source":      self.data_source,
-            "force_top":        self.force_top,
-            "click_through":    self.click_through,
-            "hotkey_enabled":   self.hotkey_enabled,
-            "hotkey":           self.hotkey,
+            "header_visible": self.header_visible,
+            "grid_visible": self.grid_visible,
+            "font_family": self.font.family(),
+            "font_size": self.font.pointSize(),
+            "line_extra_px": self.line_extra_px,
+            "fg": self.fg.name(QColor.HexRgb),
+            "bg": {"r": self.bg.red(), "g": self.bg.green(), "b": self.bg.blue(), "a": self.bg.alpha()},
+            "opacity_pct": self.opacity_pct,
+            "unicolor": self.unicolor,
+            "up_color": self.up_color.name(QColor.HexRgb),
+            "down_color": self.down_color.name(QColor.HexRgb),
+            "neutral_color": self.neutral_color.name(QColor.HexRgb),
+
+            "refresh_seconds": self.refresh_seconds,
+            "data_source": self.data_source,
+            "force_top": self.force_top,
+            "click_through": self.click_through,
+            "hotkey_enabled": self.hotkey_enabled,
+            "hotkey": self.hotkey,
             "hotkey_click_through_enabled": self.hotkey_click_through_enabled,
             "hotkey_click_through": self.hotkey_click_through,
-            "start_on_boot":    self.start_on_boot,
-            "pos":              {"x": self.x(), "y": self.y()},
+            "start_on_boot": self.start_on_boot,
+            "pos": {"x": self.x(), "y": self.y()},
         }
 
     # ----- 外观/尺寸 -----
@@ -335,11 +353,11 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         rows = self.model.rowCount()
         self.table.verticalHeader().setFixedWidth(0)
         total_w = 2*self.table.frameWidth()
-        for c in range(cols): 
+        for c in range(cols):
             total_w += self.table.columnWidth(c)
         hh = self.table.horizontalHeader().height() if self.table.horizontalHeader().isVisible() else 0
         total_h = hh + 2*self.table.frameWidth()
-        for r in range(rows): 
+        for r in range(rows):
             total_h += self.table.rowHeight(r)
         self.table.setFixedSize(max(1,total_w), max(1,total_h))
         self.panel.adjustSize()
@@ -388,9 +406,32 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.message_label.setText("")
         self._message_kind = None
 
-    def _project_columns(self, full_rows: list[dict], color_roles: list[dict]):
-        # 名称与其余指标统一按用户配置顺序展开。
-        headers = expand_metric_headers(self.visible_metrics)
+    def _effective_visible_metrics(self):
+        """排序期间强制显示名称，但不改写用户保存的指标显示配置。"""
+        metrics = list(self.visible_metrics)
+        if self.sort_header is not None and NAME_METRIC_ID not in metrics:
+            metrics.insert(0, NAME_METRIC_ID)
+        return metrics
+
+    def _sorted_row_indices(self, sort_values: list[dict]):
+        indices = list(range(len(sort_values)))
+        if self.sort_header not in SORTABLE_HEADERS:
+            return indices
+
+        valid = [i for i in indices if sort_values[i].get(self.sort_header) is not None]
+        missing = [i for i in indices if sort_values[i].get(self.sort_header) is None]
+        reverse = self.sort_order == Qt.SortOrder.DescendingOrder
+        valid.sort(key=lambda i: sort_values[i][self.sort_header], reverse=reverse)
+        return valid + missing
+
+    def _project_columns(self, full_rows: list[dict], color_roles: list[dict], sort_values=None):
+        sort_values = sort_values or [{} for _ in full_rows]
+        indices = self._sorted_row_indices(sort_values)
+        full_rows = [full_rows[i] for i in indices]
+        color_roles = [color_roles[i] for i in indices]
+
+        # 名称与其余指标统一按用户配置顺序展开；排序期间名称被临时补到首列。
+        headers = expand_metric_headers(self._effective_visible_metrics())
 
         proj_rows, projected_roles = [], []
         for r, row in enumerate(full_rows):
@@ -417,6 +458,13 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         else:
             self.k_column_visible_index = None
 
+        header = self.table.horizontalHeader()
+        if self.sort_header in headers:
+            header.setSortIndicator(headers.index(self.sort_header), self.sort_order)
+            header.setSortIndicatorShown(True)
+        else:
+            header.setSortIndicatorShown(False)
+
         if not headers:
             self._show_message(
                 "请在设置面板中选择至少一个显示指标",
@@ -427,6 +475,13 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self._clear_message()
 
         self._fit_to_contents()
+
+    def _reproject_cached_data(self):
+        self._project_columns(
+            self._last_full_rows,
+            self._last_color_roles,
+            self._last_sort_values,
+        )
 
     def _refresh_from_function(self):
         """定时入口：将网络请求丢到后台线程执行，避免阻塞 UI。
@@ -470,6 +525,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
         full_rows = []
         full_color_roles = []
+        sort_values = []
         options = QuoteDisplayOptions(
             name_length=self.name_length,
             code_visible=self.code_visible,
@@ -482,18 +538,61 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             type_ = entry.get("type") or code_info.get("type")
             market = entry.get("market") or code_info.get("market") or ""
             display_code = entry.get("code") or code_info.get("code") or c
-            row, color_roles = format_quote(
+            row, color_roles, row_sort_values = format_quote(
                 d, type_, display_code, market=market,
                 cost=entry.get("cost"), options=options,
+                include_sort=True,
             )
             full_rows.append(row)
             full_color_roles.append(color_roles)
+            sort_values.append(row_sort_values)
+
+        self._last_full_rows = full_rows
+        self._last_color_roles = full_color_roles
+        self._last_sort_values = sort_values
 
         if data:
             self._clear_message()
         else:
             self._show_message("请在设置面板中添加自选股", is_error=True)
-        self._project_columns(full_rows, full_color_roles)
+        self._project_columns(full_rows, full_color_roles, sort_values)
+
+    # ----- 排序 -----
+    def set_sort(self, header: str, order):
+        if header not in SORTABLE_HEADERS:
+            return
+        visible_headers = expand_metric_headers(self.visible_metrics)
+        if header not in visible_headers:
+            return
+        order = Qt.SortOrder(order)
+        if self.sort_header == header and self.sort_order == order:
+            return
+        self.sort_header = header
+        self.sort_order = order
+        self._reproject_cached_data()
+
+    def clear_sort(self):
+        if self.sort_header is None:
+            return
+        self.sort_header = None
+        self.table.horizontalHeader().setSortIndicatorShown(False)
+        self._reproject_cached_data()
+
+    def _on_header_clicked(self, section: int):
+        header_name = self.model.headerData(
+            section, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole
+        )
+        if header_name not in SORTABLE_HEADERS:
+            return
+        if self.sort_header == header_name:
+            order = (
+                Qt.SortOrder.AscendingOrder
+                if self.sort_order == Qt.SortOrder.DescendingOrder
+                else Qt.SortOrder.DescendingOrder
+            )
+        else:
+            order = Qt.SortOrder.DescendingOrder
+        self.set_sort(header_name, order)
 
     # ----- 应用设置 -----
     def set_watchlist(self, watchlist: dict):
@@ -525,6 +624,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if normalized == self.visible_metrics:
             return
         self.visible_metrics = normalized
+        if self.sort_header is not None and self.sort_header not in expand_metric_headers(normalized):
+            self.sort_header = None
+            self.table.horizontalHeader().setSortIndicatorShown(False)
         self._notify_change()
         self._refresh_from_function()
         self.display_flags_changed.emit()
@@ -743,6 +845,37 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             sub_cols.addAction(action)
         menu.addMenu(sub_cols)
 
+        sort_menu = QMenu("排序", menu)
+        visible_headers = set(expand_metric_headers(self.visible_metrics))
+        for header_name in SORTABLE_HEADERS:
+            metric_menu = QMenu(header_name, sort_menu)
+            metric_menu.setEnabled(header_name in visible_headers)
+            asc = QAction("升序", metric_menu, checkable=True)
+            desc = QAction("降序", metric_menu, checkable=True)
+            asc.setChecked(
+                self.sort_header == header_name
+                and self.sort_order == Qt.SortOrder.AscendingOrder
+            )
+            desc.setChecked(
+                self.sort_header == header_name
+                and self.sort_order == Qt.SortOrder.DescendingOrder
+            )
+            asc.triggered.connect(
+                partial(self.set_sort, header_name, Qt.SortOrder.AscendingOrder)
+            )
+            desc.triggered.connect(
+                partial(self.set_sort, header_name, Qt.SortOrder.DescendingOrder)
+            )
+            metric_menu.addAction(asc)
+            metric_menu.addAction(desc)
+            sort_menu.addMenu(metric_menu)
+        sort_menu.addSeparator()
+        clear_action = QAction("恢复自选顺序", sort_menu)
+        clear_action.setEnabled(self.sort_header is not None)
+        clear_action.triggered.connect(self.clear_sort)
+        sort_menu.addAction(clear_action)
+        menu.addMenu(sort_menu)
+
         act_header = QAction("显示表头", menu, checkable=True)
         act_header.setChecked(self.header_visible)
         act_header.toggled.connect(self.set_header_visible)
@@ -770,13 +903,13 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         menu.addAction(QAction("隐藏浮窗", menu, triggered=self.hide))
         menu.exec(event.globalPos())
 
-    def closeEvent(self, event): 
+    def closeEvent(self, event):
         event.ignore()
         self.hide()
 
     def showEvent(self, event):
         super().showEvent(event)
-        if self.timer and not self.timer.isActive(): 
+        if self.timer and not self.timer.isActive():
             self.timer.start()
         if self.force_top and self._keep_top_timer and not self._keep_top_timer.isActive():
             self._keep_top_timer.start()
@@ -785,7 +918,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     def hideEvent(self, event):
         super().hideEvent(event)
-        if self.timer and self.timer.isActive(): 
+        if self.timer and self.timer.isActive():
             self.timer.stop()
         if self._keep_top_timer and self._keep_top_timer.isActive():
             self._keep_top_timer.stop()
@@ -815,8 +948,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
                 return result
         if self.hotkey_click_through_enabled:
             result = self._hotkeys.register(
-                self.hotkey_click_through,
-                self.click_through_hotkey_triggered.emit,
+                self.hotkey_click_through, self.click_through_hotkey_triggered.emit,
             )
             if not result:
                 return result
