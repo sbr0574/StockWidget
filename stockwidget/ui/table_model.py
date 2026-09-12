@@ -2,25 +2,15 @@ from PySide6.QtCore import Qt, QRect, QAbstractTableModel, QModelIndex
 from PySide6.QtGui import QColor, QPainter, QPen, QBrush
 from PySide6.QtWidgets import QStyledItemDelegate
 
+from stockwidget.core.quote_presentation import (
+    COLOR_ROLE_TEXT, COLOR_ROLE_UP, COLOR_ROLE_DOWN, COLOR_ROLE_NEUTRAL,
+)
+
 # ----- 颜色配置 -----
 DEFAULT_TEXT_COLOR = QColor("#FFFFFF")
 DEFAULT_UP_COLOR = QColor("#dd2100")
 DEFAULT_DOWN_COLOR = QColor("#019933")
 DEFAULT_NEUTRAL_COLOR = QColor("#494949")
-
-COLOR_ROLE_TEXT = "text"
-COLOR_ROLE_UP = "up"
-COLOR_ROLE_DOWN = "down"
-COLOR_ROLE_NEUTRAL = "neutral"
-
-
-def direction_color_role(value) -> str:
-    """把正负方向转换为明确颜色角色，避免 0 同时表示普通文本和平盘。"""
-    if value > 0:
-        return COLOR_ROLE_UP
-    if value < 0:
-        return COLOR_ROLE_DOWN
-    return COLOR_ROLE_NEUTRAL
 
 
 class SimpleTableModel(QAbstractTableModel):

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-31",
+  "last_update": "2026-09-11",
   "codes": {
     "bj810011": {
       "code": "810011",
@@ -252,6 +252,15 @@
       "name_en": "",
       "py": "*sttianye",
       "abbr": "*stty"
+    },
+    "bj920025": {
+      "code": "920025",
+      "market": "bj",
+      "type": "京",
+      "name": "凯达重工",
+      "name_en": "",
+      "py": "kaidazhonggong",
+      "abbr": "kdzg"
     },
     "bj920026": {
       "code": "920026",
@@ -671,10 +680,10 @@
       "code": "920096",
       "market": "bj",
       "type": "京",
-      "name": "嘉晨智能",
+      "name": "XD嘉晨智",
       "name_en": "",
-      "py": "jiachenzhineng",
-      "abbr": "jczn"
+      "py": "xdjiachenzhi",
+      "abbr": "xdjcz"
     },
     "bj920098": {
       "code": "920098",
@@ -1252,6 +1261,15 @@
       "py": "zhenhonggufen",
       "abbr": "zhgf"
     },
+    "bj920201": {
+      "code": "920201",
+      "market": "bj",
+      "type": "京",
+      "name": "百瑞吉",
+      "name_en": "",
+      "py": "bairuiji",
+      "abbr": "brj"
+    },
     "bj920204": {
       "code": "920204",
       "market": "bj",
@@ -1368,6 +1386,15 @@
       "name_en": "",
       "py": "meidengkeji",
       "abbr": "mdkj"
+    },
+    "bj920229": {
+      "code": "920229",
+      "market": "bj",
+      "type": "京",
+      "name": "世纪数码",
+      "name_en": "",
+      "py": "shijishuma",
+      "abbr": "sjsm"
     },
     "bj920230": {
       "code": "920230",
@@ -1611,6 +1638,15 @@
       "name_en": "",
       "py": "huahuizhineng",
       "abbr": "hhzn"
+    },
+    "bj920298": {
+      "code": "920298",
+      "market": "bj",
+      "type": "京",
+      "name": "腾信精密",
+      "name_en": "",
+      "py": "tengxinjingmi",
+      "abbr": "txjm"
     },
     "bj920299": {
       "code": "920299",

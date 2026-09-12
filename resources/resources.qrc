@@ -1,21 +1,21 @@
 <RCC>
     <qresource prefix="/">
-        <file>StockWidget.ico</file>
-        <file>DarkSW.ico</file>
-        <file>LightGlass.ico</file>
-        <file>DarkGlass.ico</file>
-        <file>StockWidget.icns</file>
-        <file>DarkSW.icns</file>
-        <file>LightGlass.icns</file>
-        <file>DarkGlass.icns</file>
-        <file>stock_sh.json</file>
-        <file>stock_sz.json</file>
-        <file>stock_bj.json</file>
-        <file>fund_cn.json</file>
-        <file>stock_hk.json</file>
-        <file>stock_us.json</file>
-        <file>index_cn.json</file>
-        <file>index_global.json</file>
-        <file>futures_sh.json</file>
+        <file alias="StockWidget.ico">icons/StockWidget.ico</file>
+        <file alias="DarkSW.ico">icons/DarkSW.ico</file>
+        <file alias="LightGlass.ico">icons/LightGlass.ico</file>
+        <file alias="DarkGlass.ico">icons/DarkGlass.ico</file>
+        <file alias="StockWidget.icns">icons/StockWidget.icns</file>
+        <file alias="DarkSW.icns">icons/DarkSW.icns</file>
+        <file alias="LightGlass.icns">icons/LightGlass.icns</file>
+        <file alias="DarkGlass.icns">icons/DarkGlass.icns</file>
+        <file alias="stock_sh.json">data/stock_sh.json</file>
+        <file alias="stock_sz.json">data/stock_sz.json</file>
+        <file alias="stock_bj.json">data/stock_bj.json</file>
+        <file alias="fund_cn.json">data/fund_cn.json</file>
+        <file alias="stock_hk.json">data/stock_hk.json</file>
+        <file alias="stock_us.json">data/stock_us.json</file>
+        <file alias="index_cn.json">data/index_cn.json</file>
+        <file alias="index_global.json">data/index_global.json</file>
+        <file alias="futures_sh.json">data/futures_sh.json</file>
     </qresource>
 </RCC>

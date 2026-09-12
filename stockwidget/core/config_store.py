@@ -4,54 +4,37 @@
 import json
 import os
 
-from PySide6.QtCore import QFile, QIODevice
-
 from stockwidget.constants import APP_NAME
+
 
 def config_paths() -> str:
     """配置文件所在目录：Windows 用 %APPDATA%，其余平台用用户主目录。"""
     return os.path.join(os.getenv("APPDATA") or os.path.expanduser("~"), APP_NAME)
 
 
-def load_file(file_name: str, fallback: dict = {}) -> dict:
+def data_cache_dir() -> str:
+    """下载的市场代码与状态清单独立存放，配置文件仍在应用目录。"""
+    return os.path.join(config_paths(), "data")
+
+
+def load_file(file_name: str, fallback: dict | None = None, *, directory: str | None = None) -> dict:
     """读取配置文件为 dict；文件不存在或解析失败时返回 fallback（默认 {}）。"""
-    path = os.path.join(config_paths(), file_name)
-    if not os.path.exists(path):
-        return fallback
+    fallback = {} if fallback is None else fallback
+    path = os.path.join(directory or config_paths(), file_name)
     try:
         with open(path, "r", encoding="utf-8") as file:
-            return json.load(file)
-    except (OSError, json.JSONDecodeError):
+            data = json.load(file)
+            return data if isinstance(data, dict) else fallback
+    except (OSError, ValueError):
         return fallback
 
 
-def save_file(data: dict, file_name: str) -> None:
+def save_file(data: dict, file_name: str, *, directory: str | None = None) -> None:
     """原子化保存 dict 到配置文件（先写临时文件再替换，避免写一半损坏）。"""
-    os.makedirs(config_paths(), exist_ok=True)
-    config_file = os.path.join(config_paths(), file_name)
+    directory = directory or config_paths()
+    os.makedirs(directory, exist_ok=True)
+    config_file = os.path.join(directory, file_name)
     tmp_file = config_file + ".tmp"
     with open(tmp_file, "w", encoding="utf-8") as file:
         json.dump(data, file, ensure_ascii=False, indent=2)
     os.replace(tmp_file, config_file)
-
-
-def load_json_from_resource(path: str, fallback: dict = {}) -> dict:
-    """
-    从 Qt 资源系统读取 JSON 文件
-    Args:
-        path (str): 文件地址如``':/stock_sh.json'``
-
-    Returns:
-        out (dict)
-    """
-    try:
-        file = QFile(path)
-        if not file.open(QIODevice.ReadOnly | QIODevice.Text):
-            return fallback
-        content = file.readAll()
-        file.close()
-
-        text = bytes(content).decode('utf-8')
-        return json.loads(text)
-    except:
-        return fallback

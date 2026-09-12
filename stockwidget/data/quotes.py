@@ -78,6 +78,8 @@ def _sina_code(instrument: dict) -> str:
     code = str(instrument.get("code", "") or "").strip().lower()
     if not code:
         return ""
+    if instrument.get("type") == "期":
+        return "nf_" + code.upper()
     if market in {"sh", "sz", "bj"}:
         return market + code
     if market == "hk":
@@ -101,6 +103,8 @@ def _em_secid(instrument: dict) -> str:
     c = str(instrument.get("code", "") or "").strip().lower()
     if not c:
         return ""
+    if instrument.get("type") == "期":
+        m = ""
     if m == "sh":
         return "1." + c
     if m == "sz":
@@ -272,7 +276,9 @@ def request_sina(instruments: dict[str, dict]) -> dict:
         canonical_key, instrument = request_info
         market = str(instrument.get("market", "") or "").strip().lower()
         is_index = str(instrument.get("type", "") or "").strip() == "指"
-        if market == "hk":
+        if instrument.get("type") == "期":
+            entry = _parse_sina_futures(parts)
+        elif market == "hk":
             entry = _parse_sina_hk(parts, is_index=is_index)
         elif market == "us":
             entry = _parse_sina_us(parts, is_index=is_index)
@@ -333,7 +339,8 @@ def request_eastmoney(instruments: dict[str, dict]) -> Tuple[list, dict]:
             continue
         key, instrument = request_info
         vol = _as_float(d.get("f5"))
-        if str(instrument.get("market", "") or "").strip().lower() in {"sh", "sz", "bj"}:
+        if (instrument.get("type") != "期"
+                and str(instrument.get("market", "") or "").strip().lower() in {"sh", "sz", "bj"}):
             vol = vol * 100   # 东财 A股 f5 单位是“手”，新浪为“股”，统一为股
         entry = _new_entry(
             name=d.get("f14"),

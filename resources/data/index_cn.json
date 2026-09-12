@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-31",
+  "last_update": "2026-09-11",
   "codes": {
     "sh000001": {
       "code": "000001",
@@ -6548,10 +6548,10 @@
       "code": "480059",
       "market": "sz",
       "type": "指",
-      "name": "航空出行R",
+      "name": "国证航空R",
       "name_en": "",
-      "py": "hangkongchuxingr",
-      "abbr": "hkcxr"
+      "py": "guozhenghangkongr",
+      "abbr": "gzhkr"
     },
     "sz480063": {
       "code": "480063",
@@ -8245,6 +8245,24 @@
       "py": "chuangyebanyiliao",
       "abbr": "cybyl"
     },
+    "sz970083": {
+      "code": "970083",
+      "market": "sz",
+      "type": "指",
+      "name": "创业板算力",
+      "name_en": "",
+      "py": "chuangyebansuanli",
+      "abbr": "cybsl"
+    },
+    "sz97008301": {
+      "code": "97008301",
+      "market": "sz",
+      "type": "指",
+      "name": "创业板算力R",
+      "name_en": "",
+      "py": "chuangyebansuanlir",
+      "abbr": "cybslr"
+    },
     "sz970084": {
       "code": "970084",
       "market": "sz",
@@ -8299,6 +8317,24 @@
       "py": "chuangyebantongxinr",
       "abbr": "cybtxr"
     },
+    "sz970089": {
+      "code": "970089",
+      "market": "sz",
+      "type": "指",
+      "name": "创业板消费电子",
+      "name_en": "",
+      "py": "chuangyebanxiaofeidianzi",
+      "abbr": "cybxfdz"
+    },
+    "sz97008901": {
+      "code": "97008901",
+      "market": "sz",
+      "type": "指",
+      "name": "创业板消费电子R",
+      "name_en": "",
+      "py": "chuangyebanxiaofeidianzir",
+      "abbr": "cybxfdzr"
+    },
     "sz970095": {
       "code": "970095",
       "market": "sz",
@@ -8316,6 +8352,24 @@
       "name_en": "",
       "py": "chuangyebanaiyingyongr",
       "abbr": "cybaiyyr"
+    },
+    "sz970096": {
+      "code": "970096",
+      "market": "sz",
+      "type": "指",
+      "name": "创业板芯片",
+      "name_en": "",
+      "py": "chuangyebanxinpian",
+      "abbr": "cybxp"
+    },
+    "sz97009601": {
+      "code": "97009601",
+      "market": "sz",
+      "type": "指",
+      "name": "创业板芯片R",
+      "name_en": "",
+      "py": "chuangyebanxinpianr",
+      "abbr": "cybxpr"
     },
     "sz970097": {
       "code": "970097",
@@ -8798,10 +8852,10 @@
       "code": "980059",
       "market": "sz",
       "type": "指",
-      "name": "航空出行",
+      "name": "国证航空",
       "name_en": "",
-      "py": "hangkongchuxing",
-      "abbr": "hkcx"
+      "py": "guozhenghangkong",
+      "abbr": "gzhk"
     },
     "sz980063": {
       "code": "980063",

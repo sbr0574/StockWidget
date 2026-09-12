@@ -69,12 +69,19 @@
 main.py                      # 程序入口
 StockWidget.spec             # PyInstaller 打包配置
 resources/                   # 静态资源
+  icons/                     #   应用与托盘图标
+  data/                      #   内置代码列表、更新状态与服务端名称缓存
+  resources.qrc              #   Qt 资源清单（保持原有虚拟资源名）
 stockwidget/
   app.py                     # 应用装配：连接各层、托盘、后台任务
   constants.py               # 全局常量（名称/版本/文件/地址）
   ui/                        # 界面层：所有 Qt 组件与显示
     widget.py                #   盯盘浮窗主面板
     settings_dialog.py       #   设置面板
+    watchlist_editor.py      #   自选列表编辑、搜索与排序，信号提交修改
+    settings_style.py        #   设置面板主题与颜色预览
+    metric_pool.py           #   指标选择与拖动排序
+    metric_settings_panel.py #   名称、数值单位设置弹窗及共用交互
     table_model.py           #   表格 Model 与 K 线 Delegate
     drag_mixin.py            #   拖拽 / 双击隐藏交互
     tray.py                  #   系统托盘
@@ -85,6 +92,8 @@ stockwidget/
     update_check.py          #   版本更新检查
   core/                      # 功能函数层：纯业务逻辑
     formatters.py            #   成交量 / 成交额格式化
+    quote_presentation.py    #   行情计算、展示文本与颜色角色（不修改原始行情）
+    metric_layout.py         #   指标定义、顺序与旧配置迁移
     code_search.py           #   代码搜索 / 建议
     watchlist.py             #   自选列表规范化
     config_store.py          #   配置读写
@@ -97,6 +106,18 @@ stockwidget/
 ```
 
 分层原则：`ui` 只负责显示与交互，`data` 只负责取数与解析，`core` 是可独立测试的纯函数，`platform` 隔离平台差异；各层通过 `app.py` 装配连接，避免职责互相缠绕。
+
+指标的名称、分组和默认显示状态统一定义在 `core/metric_layout.py`；运行时只维护 `visible_metrics` 有序列表，旧布尔字段仅在配置读写时转换。自选编辑组件通过 `watchlist_changed` 信号提交列表，不直接访问浮窗；成本解析由 `core/watchlist.py` 统一处理。
+
+关于页集中展示市场代码同步状态，并提供清空自选列表、恢复默认外观和恢复默认设置三个按钮。外观恢复包括颜色、透明度、字体、行距、表头、网格及图标；设置恢复包括刷新间隔、行情源、指标及其显示选项、开机自启、置顶、穿透和快捷键。两种恢复操作均保留自选列表，默认值与首次启动共用。
+
+运行回归测试：安装 `requirements-test.txt` 后执行 `python -m unittest discover -s tests -v`；无桌面环境时设置 `QT_QPA_PLATFORM=offscreen`。
+
+配置文件保存在应用目录中，下载的代码列表和状态清单保存在其 `data/` 子目录：Windows 为 `%APPDATA%\StockWidget\data`，macOS/Linux 为 `~/StockWidget/data`。启动时会将旧位置的代码缓存迁移到新目录，迁移失败时仍可读取原文件。
+
+代码下载优先使用 GitHub，失败后切换 Gitee；Gitee 原始文件不可用时再尝试公开文件 API。后续文件优先复用已成功的数据源，避免逐个等待不可达源超时。连接等待为 3 秒、读取等待为 15 秒，分块下载期间会检查 60 秒耗时限制。整组下载失败时继续显示已有数据，30 分钟后重试，并复用同一远端批次中已下载到内存的文件；鼠标悬停设置中的“市场代码数据”状态可查看失败原因。
+
+服务端更新脚本默认写入 `resources/data/`；发布到 `codes-data` 分支时仍使用 `resources/*.json`，以兼容已发布客户端的下载地址。
 
 ## 🧰 下载与运行
 

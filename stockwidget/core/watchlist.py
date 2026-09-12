@@ -1,6 +1,17 @@
 # -*- coding: utf-8 -*-
 """自选列表（watchlist）的规范化逻辑。"""
 
+from math import isfinite
+
+
+def parse_positive_cost(value) -> float | None:
+    """成本只接受有限正数，供配置读取与界面编辑共用。"""
+    try:
+        cost = float(value)
+    except (TypeError, ValueError):
+        return None
+    return cost if isfinite(cost) and cost > 0 else None
+
 
 def normalize_watchlist(watchlist: dict, codes: dict | None = None) -> dict:
     """规范化自选列表，并从代码表补齐旧配置缺少的证券元数据。"""
@@ -12,10 +23,7 @@ def normalize_watchlist(watchlist: dict, codes: dict | None = None) -> dict:
         entry = dict((codes or {}).get(key) or {})
         entry.update(info or {})
         entry["checked"] = bool(entry.get("checked", True))
-        try:
-            val = float(entry["cost"]) if entry.get("cost") not in (None, "") else None
-        except (TypeError, ValueError):
-            val = None
+        val = parse_positive_cost(entry.get("cost"))
         if val is not None and val.is_integer():
             val = int(val)
         entry["cost"] = val

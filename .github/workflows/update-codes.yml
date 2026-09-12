@@ -50,7 +50,7 @@ jobs:
             index_cn.json index_global.json \
             futures_sh.json codes_update_status.json; do
             if [[ ! -f "$DATA_DIR/resources/$file" ]]; then
-              cp "resources/$file" "$DATA_DIR/resources/$file"
+              cp "resources/data/$file" "$DATA_DIR/resources/$file"
             fi
           done
           echo "DATA_DIR=$DATA_DIR" >> "$GITHUB_ENV"

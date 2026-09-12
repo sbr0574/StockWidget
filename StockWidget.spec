@@ -8,7 +8,7 @@
 
 import sys
 
-APP_VERSION = "1.4.0"
+APP_VERSION = "1.4.1"
 
 datas = []
 
@@ -44,7 +44,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=(['resources/StockWidget.ico'] if sys.platform == 'win32' else []),
+    icon=(['resources/icons/StockWidget.ico'] if sys.platform == 'win32' else []),
     version=('version_info.txt' if sys.platform == 'win32' else None),
 )
 coll = COLLECT(
@@ -57,12 +57,11 @@ coll = COLLECT(
     name='StockWidget',
 )
 
-# macOS：把 one-dir 产物封装为 .app 应用包（在其它平台为 no-op）。
 if sys.platform == 'darwin':
     app = BUNDLE(
         coll,
         name='StockWidget.app',
-        icon='resources/StockWidget.icns',
+        icon='resources/icons/StockWidget.icns',
         bundle_identifier='com.sbr0574.StockWidget',
         version=APP_VERSION,
         info_plist={

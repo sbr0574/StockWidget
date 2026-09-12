@@ -71,7 +71,7 @@
         <x>10</x>
         <y>55</y>
         <width>300</width>
-        <height>235</height>
+        <height>256</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -211,22 +211,6 @@
       </property>
       <property name="flat">
        <bool>true</bool>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_data_state">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>295</y>
-        <width>300</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">color: rgb(128,128,128)</string>
-      </property>
-      <property name="text">
-       <string>❌ 市场代码数据：离线 (20260831)</string>
       </property>
      </widget>
     </widget>
@@ -1169,15 +1153,34 @@
       <set>Qt::AlignmentFlag::AlignCenter</set>
      </property>
      <property name="flat">
-      <bool>true</bool>
+      <bool>false</bool>
      </property>
+     <widget class="QLabel" name="label_version_state">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>22</y>
+        <width>501</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>📦 当前程序版本</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::TextFormat::RichText</enum>
+      </property>
+      <property name="openExternalLinks">
+       <bool>true</bool>
+      </property>
+     </widget>
      <widget class="QLabel" name="label_about_info">
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>30</y>
+        <y>116</y>
         <width>501</width>
-        <height>236</height>
+        <height>155</height>
        </rect>
       </property>
       <property name="text">
@@ -1200,13 +1203,13 @@
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>280</y>
-        <width>100</width>
+        <y>74</y>
+        <width>130</width>
         <height>26</height>
        </rect>
       </property>
       <property name="text">
-       <string>检查更新</string>
+       <string>检查程序更新</string>
       </property>
       <property name="autoDefault">
        <bool>false</bool>
@@ -1218,14 +1221,93 @@
      <widget class="QPushButton" name="btn_open_cache_dir">
       <property name="geometry">
        <rect>
-        <x>130</x>
-        <y>280</y>
-        <width>130</width>
+        <x>20</x>
+        <y>282</y>
+        <width>117</width>
         <height>26</height>
        </rect>
       </property>
       <property name="text">
        <string>打开缓存目录</string>
+      </property>
+      <property name="autoDefault">
+       <bool>false</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_data_state">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>46</y>
+        <width>501</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>市场代码数据</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn_clear_watchlist">
+      <property name="geometry">
+       <rect>
+        <x>148</x>
+        <y>282</y>
+        <width>117</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>清空自选列表</string>
+      </property>
+      <property name="toolTip">
+       <string>清除所有自选条目及成本</string>
+      </property>
+      <property name="autoDefault">
+       <bool>false</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn_reset_appearance">
+      <property name="geometry">
+       <rect>
+        <x>276</x>
+        <y>282</y>
+        <width>117</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>恢复默认外观</string>
+      </property>
+      <property name="toolTip">
+       <string>恢复颜色、透明度、字体、行距、表头、网格和图标</string>
+      </property>
+      <property name="autoDefault">
+       <bool>false</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn_reset_settings">
+      <property name="geometry">
+       <rect>
+        <x>404</x>
+        <y>282</y>
+        <width>117</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>恢复默认设置</string>
+      </property>
+      <property name="toolTip">
+       <string>恢复刷新间隔、数据源、指标、功能开关和快捷键</string>
       </property>
       <property name="autoDefault">
        <bool>false</bool>

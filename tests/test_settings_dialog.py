@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QPoint, QSize, Qt
-from PySide6.QtGui import QColor, QIcon, QPalette, QPixmap
+from PySide6.QtGui import QColor, QIcon, QPalette, QPixmap, QTextDocument
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QAbstractItemDelegate
 
@@ -21,13 +21,10 @@ from stockwidget.ui.add_code_panel import (
     RESULT_ROW_HEIGHT,
     SearchResultDelegate,
 )
-from stockwidget.ui.settings_dialog import (
-    CodeSearchEditor,
-    SettingsDialog,
-    _COLOR_SWATCH_SIZE,
-    _SEARCH_PLACEHOLDER,
-    _build_settings_stylesheet,
-    _color_swatch_icon,
+from stockwidget.ui.settings_dialog import SettingsDialog
+from stockwidget.ui.watchlist_editor import CodeSearchEditor, SEARCH_PLACEHOLDER
+from stockwidget.ui.settings_style import (
+    COLOR_SWATCH_SIZE, build_settings_stylesheet, color_swatch_icon,
 )
 from stockwidget.ui.widget import FloatLabel
 
@@ -97,10 +94,10 @@ class SettingsDialogTests(unittest.TestCase):
 
     def tearDown(self):
         for dialog, window in reversed(self._windows):
-            for editor in dialog.list_codes.findChildren(CodeSearchEditor):
+            for editor in dialog.watchlist_editor.list_codes.findChildren(CodeSearchEditor):
                 editor.setProperty("_code_editor_committed", True)
                 editor._code_completer.popup().hide()
-                dialog.list_codes.closeEditor(
+                dialog.watchlist_editor.list_codes.closeEditor(
                     editor, QAbstractItemDelegate.EndEditHint.NoHint
                 )
             self.qt_app.processEvents()
@@ -110,8 +107,8 @@ class SettingsDialogTests(unittest.TestCase):
             window.deleteLater()
         self.qt_app.processEvents()
 
-    def _make_dialog(self, watchlist=None, codes=None, app=None):
-        cfg = {"watchlist": watchlist or {}}
+    def _make_dialog(self, watchlist=None, codes=None, app=None, **settings):
+        cfg = {"watchlist": watchlist or {}, **settings}
         window = FloatLabel(cfg, CODES if codes is None else codes)
         with patch.object(SettingsDialog, "_start_github_check"):
             dialog = SettingsDialog(window, window, app=app)
@@ -124,6 +121,136 @@ class SettingsDialogTests(unittest.TestCase):
         pool.scrollToItem(item)
         QTest.mouseClick(pool.viewport(), Qt.LeftButton, pos=pool.info_rect(item).center())
 
+    def test_about_contains_sync_status_and_nonflat_group(self):
+        dialog, _ = self._make_dialog()
+        self.assertEqual(dialog.ui.label_data_state.parentWidget(), dialog.ui.gb_about)
+        self.assertFalse(dialog.ui.gb_about.isFlat())
+        self.assertNotIn("QGroupBox#gb_about", build_settings_stylesheet(False))
+
+    def test_about_status_text_follows_light_and_dark_palettes(self):
+        dialog, _ = self._make_dialog()
+        original = self.qt_app.palette()
+        try:
+            for foreground, background in (("#eeeeee", "#222222"), ("#222222", "#eeeeee")):
+                palette = QPalette(original)
+                palette.setColor(QPalette.WindowText, QColor(foreground))
+                palette.setColor(QPalette.Window, QColor(background))
+                self.qt_app.setPalette(palette)
+                self.qt_app.processEvents()
+                dialog.refresh_about()
+                dialog.refresh_data_state()
+                for label in (dialog.ui.label_version_state, dialog.ui.label_data_state,
+                              dialog.ui.label_about_info):
+                    self.assertEqual(label.palette().color(QPalette.WindowText), QColor(foreground))
+        finally:
+            self.qt_app.setPalette(original)
+
+    def test_about_has_blank_line_after_copyright_and_fits_label(self):
+        dialog, _ = self._make_dialog()
+        label = dialog.ui.label_about_info
+        document = QTextDocument()
+        document.setDefaultFont(label.font())
+        document.setDocumentMargin(0)
+        document.setHtml(label.text())
+        document.setTextWidth(label.contentsRect().width())
+        self.assertIn("Copyright 2026 sbr0574\n\n仓库地址", document.toPlainText())
+        self.assertLessEqual(document.size().height(), label.contentsRect().height())
+
+    def test_clear_watchlist_closes_editor_without_restoring_entries(self):
+        dialog, window = self._make_dialog({"sh600519": {"checked": False, "cost": 100}})
+        editor = self._start_code_editor(dialog)
+        editor.setText("sh501001")
+        changes = Mock()
+        window.set_on_change(changes)
+        before = window.current_config()
+        dialog.ui.btn_clear_watchlist.click()
+        self.qt_app.processEvents()
+        self.assertEqual(window.watchlist, {})
+        self.assertEqual(dialog.ui.list_codes.rowCount(), 0)
+        self.assertFalse(dialog.ui.btn_del.isEnabled())
+        self.assertFalse(dialog.ui.btn_top.isEnabled())
+        self.assertFalse(dialog.watchlist_editor.add_code_panel.isVisible())
+        self.assertEqual(window.current_config(), {**before, "watchlist": {}})
+        changes.assert_called_once()
+
+    def test_reset_appearance_preserves_settings_and_watchlist(self):
+        app = self._make_icon_app(choice="dark")
+        dialog, window = self._make_dialog(
+            {"sh600519": {"checked": False, "cost": 100}}, app=app,
+            fg="#123456", bg={"r": 30, "g": 40, "b": 50, "a": 100},
+            up_color="#123456", down_color="#abcdef", neutral_color="#654321",
+            opacity_pct=45, font_family="Arial", font_size=14, line_extra_px=9,
+            unicolor=False, header_visible=True, grid_visible=True,
+            refresh_seconds=10, data_source="eastmoney", visible_metrics=["price"],
+            hotkey="Ctrl+Alt+G",
+        )
+        _, defaults = self._make_dialog()
+        before = window.current_config()
+        appearance_keys = (
+            "fg", "bg", "up_color", "down_color", "neutral_color", "opacity_pct",
+            "font_family", "font_size", "line_extra_px", "unicolor", "header_visible", "grid_visible",
+        )
+        dialog.ui.btn_reset_appearance.click()
+        expected = {**before, **{key: defaults.current_config()[key] for key in appearance_keys}}
+        self.assertEqual(window.current_config(), expected)
+        self.assertEqual(dialog.ui.slider_font_size.value(), 10)
+        self.assertEqual(dialog.ui.slider_bg_alpha.value(), 75)
+        self.assertEqual(dialog.ui.slider_all_alpha.value(), 90)
+        self.assertTrue(dialog.ui.btn_icon_default.isChecked())
+        self.assertEqual(app._icon_choice, "default")
+        self.assertEqual(app._custom_icon_path, "")
+        app.save_now.assert_called()
+
+    def test_reset_settings_preserves_appearance_and_watchlist(self):
+        app = self._make_icon_app(choice="dark")
+        dialog, window = self._make_dialog(
+            {"sh600519": {"checked": False, "cost": 100}}, app=app,
+            fg="#123456", opacity_pct=45, font_size=14, header_visible=True,
+            refresh_seconds=10, data_source="eastmoney", visible_metrics=["volume", "price"],
+            code_visible=True, type_visible=True, name_length=3, unit_mode="en",
+            start_on_boot=True, hotkey="Ctrl+Alt+G", hotkey_click_through="Ctrl+Alt+D",
+        )
+        _, defaults = self._make_dialog()
+        before = window.current_config()
+        # 模拟已经启用的系统功能，避免测试实际注册全局快捷键或改变鼠标穿透。
+        window.hotkey_enabled = window.hotkey_click_through_enabled = True
+        window.force_top = window.click_through = True
+        window._keep_top_timer.start()
+        with (
+            patch.object(window._hotkeys, "unregister_all") as unregister,
+            patch("stockwidget.ui.widget.apply_click_through") as click_through,
+        ):
+            dialog.ui.btn_reset_settings.click()
+        settings_keys = (
+            "refresh_seconds", "data_source", "visible_metrics", "code_visible", "type_visible",
+            "name_length", "unit_mode", "start_on_boot", "force_top", "click_through",
+            "hotkey", "hotkey_click_through", "hotkey_enabled", "hotkey_click_through_enabled",
+        )
+        expected = {**before, **{key: defaults.current_config()[key] for key in settings_keys}}
+        from stockwidget.core.metric_layout import legacy_visibility
+        expected.update(legacy_visibility(defaults.visible_metrics))
+        self.assertEqual(window.current_config(), expected)
+        self.assertEqual(window.timer.interval(), 2000)
+        self.assertFalse(window._keep_top_timer.isActive())
+        self.assertFalse(dialog.ui.keyseq_hide.isEnabled())
+        self.assertFalse(dialog.ui.cb_auto_start.isChecked())
+        self.assertTrue(dialog.ui.rb_sina.isChecked())
+        self.assertEqual(dialog.metric_pool.visible_metrics, list(defaults.visible_metrics))
+        self.assertEqual(app._icon_choice, "dark")
+        unregister.assert_called_once()
+        click_through.assert_called_once_with(window, False)
+        app.set_start_on_boot.assert_called_once_with(False)
+        app.save_now.assert_called()
+
+    def test_reloading_settings_does_not_save_or_round_opacity(self):
+        dialog, window = self._make_dialog(bg={"r": 0, "g": 0, "b": 0, "a": 127})
+        changes = Mock()
+        window.set_on_change(changes)
+        for _ in range(2):
+            dialog._load_settings()
+        self.assertEqual(window.bg.alpha(), 127)
+        changes.assert_not_called()
+
     def _make_icon_app(self, choice="default", custom_path=""):
         app = Mock()
         app._icon_choice = choice
@@ -132,6 +259,7 @@ class SettingsDialogTests(unittest.TestCase):
         app._has_update = False
         app._latest_version = None
         app.code_data_state.return_value = ("cached", "")
+        app.code_data_error.return_value = ""
 
         def set_app_icon(icon_choice):
             app._icon_choice = icon_choice
@@ -154,15 +282,15 @@ class SettingsDialogTests(unittest.TestCase):
         return app
 
     def _start_code_editor(self, dialog):
-        dialog._start_quick_add()
+        dialog.watchlist_editor._start_quick_add()
         self.qt_app.processEvents()
-        editor = dialog.list_codes.findChild(CodeSearchEditor)
+        editor = dialog.watchlist_editor.list_codes.findChild(CodeSearchEditor)
         self.assertIsNotNone(editor)
         return editor
 
     def test_watchlist_action_buttons_share_color_button_style(self):
-        regular = _build_settings_stylesheet(dark=False)
-        dark = _build_settings_stylesheet(dark=True)
+        regular = build_settings_stylesheet(dark=False)
+        dark = build_settings_stylesheet(dark=True)
 
         for stylesheet in (regular, dark):
             for selector in ("btn_add", "btn_del", "btn_top"):
@@ -204,13 +332,26 @@ class SettingsDialogTests(unittest.TestCase):
             self.assertIn("border-radius: 6px", color_base_rule)
             self.assertIn("padding: 3px", color_base_rule)
 
+    @patch.object(FloatLabel, "_refresh_from_function")
+    def test_data_state_tooltip_explains_failed_download_and_clears_on_success(self, refresh):
+        app = self._make_icon_app()
+        app.code_data_error.return_value = "stock_hk.json 更新失败；Gitee：HTTP 451"
+        dialog, _window = self._make_dialog(app=app)
+        self.assertIn("stock_hk.json", dialog.ui.label_data_state.toolTip())
+        self.assertIn("30 分钟", dialog.ui.label_data_state.toolTip())
+        app.code_data_state.return_value = ("current", "2026-09-09")
+        app.code_data_error.return_value = ""
+        dialog.refresh_data_state()
+        self.assertEqual(dialog.ui.label_data_state.toolTip(), "")
+        self.assertIn("最新", dialog.ui.label_data_state.text())
+
     def test_color_swatch_renders_at_device_pixel_ratio(self):
-        icon = _color_swatch_icon(QColor("#123456"), 2.0)
-        pixmap = icon.pixmap(QSize(_COLOR_SWATCH_SIZE, _COLOR_SWATCH_SIZE), 2.0)
+        icon = color_swatch_icon(QColor("#123456"), 2.0)
+        pixmap = icon.pixmap(QSize(COLOR_SWATCH_SIZE, COLOR_SWATCH_SIZE), 2.0)
 
         self.assertEqual(pixmap.devicePixelRatio(), 2.0)
-        self.assertEqual(pixmap.width(), _COLOR_SWATCH_SIZE * 2)
-        self.assertEqual(pixmap.height(), _COLOR_SWATCH_SIZE * 2)
+        self.assertEqual(pixmap.width(), COLOR_SWATCH_SIZE * 2)
+        self.assertEqual(pixmap.height(), COLOR_SWATCH_SIZE * 2)
         image = pixmap.toImage()
         center = image.pixelColor(image.width() // 2, image.height() // 2)
         self.assertEqual(center.name(), "#123456")
@@ -242,13 +383,13 @@ class SettingsDialogTests(unittest.TestCase):
                     })
                 dialog.show()
                 self.qt_app.processEvents()
-                table = dialog.list_codes
+                table = dialog.watchlist_editor.list_codes
                 table.setCurrentCell(0, 1)
                 dragged = table.item(0, 1)
                 event = Mock()
                 event.source.return_value = table
                 event.position.return_value.toPoint.return_value = table.visualItemRect(table.item(target, 1)).center()
-                dialog._handle_drop(event)
+                dialog.watchlist_editor._handle_drop(event)
                 self.assertEqual(table.selectedItems(), [])
                 event.setDropAction.assert_called_once_with(Qt.CopyAction)
                 self.qt_app.processEvents()
@@ -257,8 +398,8 @@ class SettingsDialogTests(unittest.TestCase):
                 self.assertEqual(table.currentRow(), target)
                 self.assertEqual(table.rowCount(), 2)
                 self.assertTrue(table.hasFocus())
-                self.assertTrue(dialog.btn_del.isEnabled())
-                self.assertEqual(dialog.btn_top.isEnabled(), target > 0)
+                self.assertTrue(dialog.watchlist_editor.btn_del.isEnabled())
+                self.assertEqual(dialog.watchlist_editor.btn_top.isEnabled(), target > 0)
 
     def test_general_layout_and_about_tab(self):
         dialog, _window = self._make_dialog()
@@ -352,7 +493,7 @@ class SettingsDialogTests(unittest.TestCase):
             dialog.metric_pool.visible_metrics,
             ["name", "price", "change_pct"],
         )
-        self.assertTrue(window.name_visible)
+        self.assertIn("name", window.visible_metrics)
         displayed_ids = [
             dialog.metric_pool.displayed_pool.item(row).data(
                 Qt.ItemDataRole.UserRole
@@ -382,7 +523,7 @@ class SettingsDialogTests(unittest.TestCase):
             dialog.metric_pool.move_metric(
                 "displayed", "available", "name", 0
             )
-        self.assertFalse(window.name_visible)
+        self.assertNotIn("name", window.visible_metrics)
         self.assertEqual(
             window.visible_metrics,
             ["kline", "price", "change_pct"],
@@ -468,19 +609,19 @@ class SettingsDialogTests(unittest.TestCase):
         }
         dialog, _window = self._make_dialog(watchlist)
 
-        self.assertFalse(dialog.btn_del.isEnabled())
-        self.assertFalse(dialog.btn_top.isEnabled())
+        self.assertFalse(dialog.watchlist_editor.btn_del.isEnabled())
+        self.assertFalse(dialog.watchlist_editor.btn_top.isEnabled())
 
-        dialog.list_codes.setCurrentCell(1, 1)
+        dialog.watchlist_editor.list_codes.setCurrentCell(1, 1)
         self.qt_app.processEvents()
-        self.assertTrue(dialog.btn_del.isEnabled())
-        self.assertTrue(dialog.btn_top.isEnabled())
+        self.assertTrue(dialog.watchlist_editor.btn_del.isEnabled())
+        self.assertTrue(dialog.watchlist_editor.btn_top.isEnabled())
 
         # 点击空白处后取消选中，删除与置顶按钮均禁用
-        dialog.list_codes.setCurrentCell(-1, -1)
+        dialog.watchlist_editor.list_codes.setCurrentCell(-1, -1)
         self.qt_app.processEvents()
-        self.assertFalse(dialog.btn_del.isEnabled())
-        self.assertFalse(dialog.btn_top.isEnabled())
+        self.assertFalse(dialog.watchlist_editor.btn_del.isEnabled())
+        self.assertFalse(dialog.watchlist_editor.btn_top.isEnabled())
 
     def test_outside_press_clears_watchlist_and_metric_selections(self):
         watchlist = {
@@ -502,20 +643,20 @@ class SettingsDialogTests(unittest.TestCase):
         dialog, _window = self._make_dialog(watchlist)
         displayed = dialog.metric_pool.displayed_pool
 
-        dialog.list_codes.setCurrentCell(1, 1)
+        dialog.watchlist_editor.list_codes.setCurrentCell(1, 1)
         displayed.setCurrentItem(displayed.item(1))
         self.qt_app.processEvents()
-        self.assertEqual(dialog.list_codes.currentRow(), 1)
-        self.assertTrue(dialog.btn_del.isEnabled())
+        self.assertEqual(dialog.watchlist_editor.list_codes.currentRow(), 1)
+        self.assertTrue(dialog.watchlist_editor.btn_del.isEnabled())
         self.assertIsNotNone(displayed.currentItem())
 
         # 点击设置页其他区域（空白处）→ 自选列表与指标池选中全部清除
         dialog._handle_outside_press(dialog.ui.gb_color)
         self.qt_app.processEvents()
 
-        self.assertEqual(dialog.list_codes.currentRow(), -1)
-        self.assertFalse(dialog.btn_del.isEnabled())
-        self.assertFalse(dialog.btn_top.isEnabled())
+        self.assertEqual(dialog.watchlist_editor.list_codes.currentRow(), -1)
+        self.assertFalse(dialog.watchlist_editor.btn_del.isEnabled())
+        self.assertFalse(dialog.watchlist_editor.btn_top.isEnabled())
         self.assertIsNone(displayed.currentItem())
 
     def test_press_inside_pool_clears_watchlist_and_other_pool(self):
@@ -532,16 +673,16 @@ class SettingsDialogTests(unittest.TestCase):
         displayed = dialog.metric_pool.displayed_pool
         available = dialog.metric_pool.available_pool
 
-        dialog.list_codes.setCurrentCell(0, 1)
+        dialog.watchlist_editor.list_codes.setCurrentCell(0, 1)
         displayed.setCurrentItem(displayed.item(1))
         self.qt_app.processEvents()
 
         dialog._handle_outside_press(available.viewport())
         self.qt_app.processEvents()
 
-        self.assertEqual(dialog.list_codes.currentRow(), -1)
+        self.assertEqual(dialog.watchlist_editor.list_codes.currentRow(), -1)
         self.assertIsNone(displayed.currentItem())
-        self.assertFalse(dialog.btn_del.isEnabled())
+        self.assertFalse(dialog.watchlist_editor.btn_del.isEnabled())
 
     def test_press_on_delete_or_top_button_keeps_selection(self):
         watchlist = {
@@ -561,15 +702,15 @@ class SettingsDialogTests(unittest.TestCase):
             },
         }
         dialog, _window = self._make_dialog(watchlist)
-        dialog.list_codes.setCurrentCell(1, 1)
+        dialog.watchlist_editor.list_codes.setCurrentCell(1, 1)
         self.qt_app.processEvents()
 
-        dialog._handle_outside_press(dialog.btn_del)
-        dialog._handle_outside_press(dialog.btn_top)
+        dialog._handle_outside_press(dialog.watchlist_editor.btn_del)
+        dialog._handle_outside_press(dialog.watchlist_editor.btn_top)
         self.qt_app.processEvents()
 
-        self.assertEqual(dialog.list_codes.currentRow(), 1)
-        self.assertTrue(dialog.btn_del.isEnabled())
+        self.assertEqual(dialog.watchlist_editor.list_codes.currentRow(), 1)
+        self.assertTrue(dialog.watchlist_editor.btn_del.isEnabled())
 
     def test_clickable_metric_chips_have_i_badge_and_tooltip(self):
         dialog, _window = self._make_dialog()
@@ -637,7 +778,7 @@ class SettingsDialogTests(unittest.TestCase):
         self.qt_app.processEvents()
 
         self.assertFalse(dialog.name_settings_panel.isVisible())
-        self.assertFalse(window.name_visible)
+        self.assertNotIn("name", window.visible_metrics)
         self.assertEqual(displayed.currentItem(), None)
 
     def test_clickable_chip_loses_selection_when_panel_closes(self):
@@ -717,7 +858,7 @@ class SettingsDialogTests(unittest.TestCase):
         with patch(
             "stockwidget.ui.settings_dialog.QMessageBox.information"
         ) as info:
-            dialog._on_update_check_finished((False, "1.4.0"))
+            dialog._on_update_check_finished((False, "1.4.1"))
             info.assert_called_once()
 
         with patch(
@@ -746,25 +887,25 @@ class SettingsDialogTests(unittest.TestCase):
         self.assertEqual(window.up_color.name(), "#dd2100")
         self.assertEqual(window.down_color.name(), "#019933")
         self.assertEqual(window.neutral_color.name(), "#494949")
-        self.assertTrue(dialog.cb_unicolor.isChecked())
+        self.assertTrue(dialog.ui.cb_unicolor.isChecked())
         self.assertEqual(
-            dialog.cb_unicolor.minimumWidth(), dialog.cb_unicolor.maximumWidth()
+            dialog.ui.cb_unicolor.minimumWidth(), dialog.ui.cb_unicolor.maximumWidth()
         )
         self.assertGreaterEqual(
-            dialog.cb_unicolor.minimumWidth(), dialog.cb_unicolor.sizeHint().width()
+            dialog.ui.cb_unicolor.minimumWidth(), dialog.ui.cb_unicolor.sizeHint().width()
         )
-        self.assertTrue(dialog.btn_bg.isEnabled())
-        self.assertTrue(dialog.btn_fg.isEnabled())
-        self.assertFalse(dialog.btn_up.isEnabled())
-        self.assertFalse(dialog.btn_down.isEnabled())
-        self.assertFalse(dialog.btn_neutral.isEnabled())
+        self.assertTrue(dialog.ui.btn_bg_color.isEnabled())
+        self.assertTrue(dialog.ui.btn_fg_color.isEnabled())
+        self.assertFalse(dialog.ui.btn_up_color.isEnabled())
+        self.assertFalse(dialog.ui.btn_down_color.isEnabled())
+        self.assertFalse(dialog.ui.btn_neutral_color.isEnabled())
 
         color_buttons = (
-            (dialog.btn_fg, "文字", window.fg),
-            (dialog.btn_bg, "背景", window.bg),
-            (dialog.btn_up, "上涨", window.up_color),
-            (dialog.btn_down, "下跌", window.down_color),
-            (dialog.btn_neutral, "中性", window.neutral_color),
+            (dialog.ui.btn_fg_color, "文字", window.fg),
+            (dialog.ui.btn_bg_color, "背景", window.bg),
+            (dialog.ui.btn_up_color, "上涨", window.up_color),
+            (dialog.ui.btn_down_color, "下跌", window.down_color),
+            (dialog.ui.btn_neutral_color, "中性", window.neutral_color),
         )
         for button, text, color in color_buttons:
             self.assertTrue(button.isFlat())
@@ -777,8 +918,8 @@ class SettingsDialogTests(unittest.TestCase):
             self.assertEqual(center.name(), QColor(color).name())
             self.assertEqual(image.pixelColor(0, 0).alpha(), 0)
 
-        disabled_icon = dialog.btn_up.icon().pixmap(
-            dialog.btn_up.iconSize(), QIcon.Mode.Disabled
+        disabled_icon = dialog.ui.btn_up_color.icon().pixmap(
+            dialog.ui.btn_up_color.iconSize(), QIcon.Mode.Disabled
         ).toImage()
         disabled_center = disabled_icon.pixelColor(
             disabled_icon.width() // 2, disabled_icon.height() // 2
@@ -798,21 +939,21 @@ class SettingsDialogTests(unittest.TestCase):
             "stockwidget.ui.settings_dialog.QColorDialog.getColor",
             return_value=QColor("#123456"),
         ):
-            dialog.pick_fg()
-        updated_icon = dialog.btn_fg.icon().pixmap(dialog.btn_fg.iconSize()).toImage()
+            dialog.ui.btn_fg_color.click()
+        updated_icon = dialog.ui.btn_fg_color.icon().pixmap(dialog.ui.btn_fg_color.iconSize()).toImage()
         updated_center = updated_icon.pixelColor(
             updated_icon.width() // 2, updated_icon.height() // 2
         )
         self.assertEqual(updated_center.name(), "#123456")
-        self.assertIn("#123456", dialog.btn_fg.toolTip())
+        self.assertIn("#123456", dialog.ui.btn_fg_color.toolTip())
 
-        dialog.cb_unicolor.setChecked(False)
+        dialog.ui.cb_unicolor.setChecked(False)
         self.qt_app.processEvents()
 
         self.assertFalse(window.unicolor)
-        self.assertTrue(dialog.btn_up.isEnabled())
-        self.assertTrue(dialog.btn_down.isEnabled())
-        self.assertTrue(dialog.btn_neutral.isEnabled())
+        self.assertTrue(dialog.ui.btn_up_color.isEnabled())
+        self.assertTrue(dialog.ui.btn_down_color.isEnabled())
+        self.assertTrue(dialog.ui.btn_neutral_color.isEnabled())
         config = window.current_config()
         self.assertFalse(config["unicolor"])
         self.assertEqual(config["up_color"], window.up_color.name())
@@ -855,7 +996,7 @@ class SettingsDialogTests(unittest.TestCase):
         dialog, _window = self._make_dialog()
         editor = self._start_code_editor(dialog)
 
-        self.assertEqual(editor.placeholderText(), _SEARCH_PLACEHOLDER)
+        self.assertEqual(editor.placeholderText(), SEARCH_PLACEHOLDER)
         self.assertFalse(hasattr(editor, "category_combo"))
 
         expected = {
@@ -865,9 +1006,9 @@ class SettingsDialogTests(unittest.TestCase):
             "铝合金": "ad0",
         }
         for query, key in expected.items():
-            dialog._update_suggestions(editor, query)
+            dialog.watchlist_editor._update_suggestions(editor, query)
             self.assertEqual(
-                dialog.suggestion_model.item(0).data(ENTRY_ROLE)["key"], key
+                dialog.watchlist_editor.suggestion_model.item(0).data(ENTRY_ROLE)["key"], key
             )
 
     def test_empty_hint_is_visible_and_does_not_block_double_click(self):
@@ -875,7 +1016,7 @@ class SettingsDialogTests(unittest.TestCase):
         dialog.show()
         self.qt_app.processEvents()
 
-        hint = dialog.empty_watchlist_hint
+        hint = dialog.watchlist_editor.empty_watchlist_hint
         self.assertEqual(hint.text(), "双击空白处添加条目")
         self.assertFalse(hint.isHidden())
         self.assertTrue(
@@ -883,15 +1024,15 @@ class SettingsDialogTests(unittest.TestCase):
         )
 
         QTest.mouseDClick(
-            dialog.list_codes.viewport(),
+            dialog.watchlist_editor.list_codes.viewport(),
             Qt.MouseButton.LeftButton,
             pos=QPoint(20, 80),
         )
         self.qt_app.processEvents()
 
-        self.assertEqual(dialog.list_codes.rowCount(), 1)
+        self.assertEqual(dialog.watchlist_editor.list_codes.rowCount(), 1)
         self.assertTrue(hint.isHidden())
-        self.assertIsNotNone(dialog.list_codes.findChild(CodeSearchEditor))
+        self.assertIsNotNone(dialog.watchlist_editor.list_codes.findChild(CodeSearchEditor))
 
     def test_add_button_opens_panel_without_creating_a_row(self):
         dialog, _window = self._make_dialog()
@@ -899,13 +1040,13 @@ class SettingsDialogTests(unittest.TestCase):
         dialog.show()
         self.qt_app.processEvents()
 
-        dialog.btn_add.click()
+        dialog.watchlist_editor.btn_add.click()
         self.qt_app.processEvents()
 
-        panel = dialog.add_code_panel
-        self.assertEqual(dialog.list_codes.rowCount(), 0)
+        panel = dialog.watchlist_editor.add_code_panel
+        self.assertEqual(dialog.watchlist_editor.list_codes.rowCount(), 0)
         self.assertTrue(panel.isVisible())
-        self.assertEqual(panel.search_input.placeholderText(), _SEARCH_PLACEHOLDER)
+        self.assertEqual(panel.search_input.placeholderText(), SEARCH_PLACEHOLDER)
         self.assertEqual(
             [box.text() for box in panel.category_filters.option_checkboxes.values()],
             ["股票", "基金", "指数", "期货"],
@@ -914,8 +1055,8 @@ class SettingsDialogTests(unittest.TestCase):
             [box.text() for box in panel.region_filters.option_checkboxes.values()],
             ["沪", "深", "京", "港", "美", "其他"],
         )
-        button_bottom = dialog.btn_add.mapToGlobal(
-            QPoint(0, dialog.btn_add.height())
+        button_bottom = dialog.watchlist_editor.btn_add.mapToGlobal(
+            QPoint(0, dialog.watchlist_editor.btn_add.height())
         ).y()
         self.assertGreaterEqual(panel.y(), button_bottom)
         self.assertEqual(panel.search_input.styleSheet(), "")
@@ -969,37 +1110,37 @@ class SettingsDialogTests(unittest.TestCase):
         }
         dialog, window = self._make_dialog(watchlist)
 
-        self.assertEqual(dialog.btn_top.text(), "置顶")
-        self.assertIs(dialog.btn_top.parentWidget(), dialog.ui.gb_list)
+        self.assertEqual(dialog.watchlist_editor.btn_top.text(), "置顶")
+        self.assertIs(dialog.watchlist_editor.btn_top.parentWidget(), dialog.ui.gb_list)
         self.assertLessEqual(
-            dialog.btn_top.geometry().right(), dialog.ui.gb_list.width()
+            dialog.watchlist_editor.btn_top.geometry().right(), dialog.ui.gb_list.width()
         )
-        self.assertLess(dialog.btn_top.iconSize().width(), 20)
+        self.assertLess(dialog.watchlist_editor.btn_top.iconSize().width(), 20)
         # 没有选中条目时按钮禁用
-        self.assertFalse(dialog.btn_top.isEnabled())
+        self.assertFalse(dialog.watchlist_editor.btn_top.isEnabled())
 
-        dialog.list_codes.setCurrentCell(2, 1)
-        self.assertTrue(dialog.btn_top.isEnabled())
+        dialog.watchlist_editor.list_codes.setCurrentCell(2, 1)
+        self.assertTrue(dialog.watchlist_editor.btn_top.isEnabled())
 
-        dialog.btn_top.click()
+        dialog.watchlist_editor.btn_top.click()
 
         self.assertEqual(
-            dialog.list_codes.item(0, 1).data(Qt.ItemDataRole.UserRole),
+            dialog.watchlist_editor.list_codes.item(0, 1).data(Qt.ItemDataRole.UserRole),
             "sh000001",
         )
         self.assertEqual(
-            dialog.list_codes.item(1, 1).data(Qt.ItemDataRole.UserRole),
+            dialog.watchlist_editor.list_codes.item(1, 1).data(Qt.ItemDataRole.UserRole),
             "sh600519",
         )
         self.assertEqual(
             list(window.watchlist), ["sh000001", "sh600519", "sh501001"]
         )
         # 置顶后当前行回到顶部，按钮随之禁用
-        self.assertEqual(dialog.list_codes.currentRow(), 0)
-        self.assertFalse(dialog.btn_top.isEnabled())
+        self.assertEqual(dialog.watchlist_editor.list_codes.currentRow(), 0)
+        self.assertFalse(dialog.watchlist_editor.btn_top.isEnabled())
 
         # 已在顶部的行再点置顶不产生变化
-        dialog._top_code()
+        dialog.watchlist_editor._top_code()
         self.assertEqual(
             list(window.watchlist), ["sh000001", "sh600519", "sh501001"]
         )
@@ -1007,18 +1148,18 @@ class SettingsDialogTests(unittest.TestCase):
     def test_opening_panel_cancels_unfinished_quick_add_row(self):
         dialog, _window = self._make_dialog()
         self._start_code_editor(dialog)
-        self.assertEqual(dialog.list_codes.rowCount(), 1)
+        self.assertEqual(dialog.watchlist_editor.list_codes.rowCount(), 1)
 
-        dialog._show_add_code_panel()
+        dialog.watchlist_editor._show_add_code_panel()
         self.qt_app.processEvents()
 
-        self.assertEqual(dialog.list_codes.rowCount(), 0)
-        self.assertTrue(dialog.add_code_panel.isVisible())
-        self.assertFalse(dialog.empty_watchlist_hint.isHidden())
+        self.assertEqual(dialog.watchlist_editor.list_codes.rowCount(), 0)
+        self.assertTrue(dialog.watchlist_editor.add_code_panel.isVisible())
+        self.assertFalse(dialog.watchlist_editor.empty_watchlist_hint.isHidden())
 
     def test_filter_select_all_checkbox_uses_three_states(self):
         dialog, _window = self._make_dialog()
-        filters = dialog.add_code_panel.category_filters
+        filters = dialog.watchlist_editor.add_code_panel.category_filters
         fund = filters.option_checkboxes["fund"]
 
         fund.setChecked(False)
@@ -1043,8 +1184,8 @@ class SettingsDialogTests(unittest.TestCase):
             for code in range(21)
         }
         dialog, _window = self._make_dialog(codes=codes)
-        panel = dialog.add_code_panel
-        dialog._show_add_code_panel()
+        panel = dialog.watchlist_editor.add_code_panel
+        dialog.watchlist_editor._show_add_code_panel()
 
         self.assertEqual(panel.current_result.total, 21)
         self.assertEqual(panel.current_result.page_count, 3)
@@ -1077,12 +1218,12 @@ class SettingsDialogTests(unittest.TestCase):
         dialog, window = self._make_dialog()
         save_callback = Mock()
         window.set_on_change(save_callback)
-        dialog._show_add_code_panel()
-        panel = dialog.add_code_panel
+        dialog.watchlist_editor._show_add_code_panel()
+        panel = dialog.watchlist_editor.add_code_panel
 
         panel._activate_index(panel.result_model.index(0, 0))
 
-        self.assertEqual(dialog.list_codes.rowCount(), 1)
+        self.assertEqual(dialog.watchlist_editor.list_codes.rowCount(), 1)
         self.assertIn("sh600519", window.watchlist)
         self.assertEqual(window.watchlist["sh600519"]["market"], "sh")
         self.assertEqual(window.watchlist["sh600519"]["code"], "600519")
@@ -1107,17 +1248,17 @@ class SettingsDialogTests(unittest.TestCase):
             }
         }
         dialog, window = self._make_dialog(watchlist)
-        dialog._show_add_code_panel()
-        panel = dialog.add_code_panel
+        dialog.watchlist_editor._show_add_code_panel()
+        panel = dialog.watchlist_editor.add_code_panel
 
         panel._activate_index(panel.result_model.index(0, 0))
 
         self.assertEqual(
-            dialog.list_codes.item(0, 1).data(Qt.ItemDataRole.UserRole),
+            dialog.watchlist_editor.list_codes.item(0, 1).data(Qt.ItemDataRole.UserRole),
             "sh600519",
         )
         self.assertEqual(
-            dialog.list_codes.item(1, 1).data(Qt.ItemDataRole.UserRole),
+            dialog.watchlist_editor.list_codes.item(1, 1).data(Qt.ItemDataRole.UserRole),
             "sh501001",
         )
         self.assertEqual(list(window.watchlist), ["sh600519", "sh501001"])
@@ -1138,15 +1279,15 @@ class SettingsDialogTests(unittest.TestCase):
         dialog, _window = self._make_dialog(watchlist)
         editor = self._start_code_editor(dialog)
 
-        dialog._update_suggestions(editor, "茅台")
-        item = dialog.suggestion_model.item(0)
+        dialog.watchlist_editor._update_suggestions(editor, "茅台")
+        item = dialog.watchlist_editor.suggestion_model.item(0)
         self.assertEqual(item.text(), "（已添加）沪/600519/贵州茅台")
         self.assertTrue(item.data(ADDED_ROLE))
         self.assertFalse(item.flags() & Qt.ItemFlag.ItemIsEnabled)
         self.assertFalse(item.flags() & Qt.ItemFlag.ItemIsSelectable)
 
         completion_index = editor._code_completer.completionModel().index(0, 0)
-        self.assertFalse(dialog._apply_suggestion(editor, completion_index))
+        self.assertFalse(dialog.watchlist_editor._apply_suggestion(editor, completion_index))
         self.assertIsNone(editor.property("_selected_entry"))
         self.assertFalse(editor._code_completer.popup().currentIndex().isValid())
 
@@ -1165,29 +1306,29 @@ class SettingsDialogTests(unittest.TestCase):
         editor = self._start_code_editor(dialog)
         editor.setText("600519")
 
-        dialog.list_codes.itemDelegateForColumn(1)._commit_editor(editor)
+        dialog.watchlist_editor.list_codes.itemDelegateForColumn(1)._commit_editor(editor)
 
-        self.assertEqual(dialog.list_codes.rowCount(), 1)
+        self.assertEqual(dialog.watchlist_editor.list_codes.rowCount(), 1)
         self.assertEqual(
-            dialog.list_codes.item(0, 1).data(Qt.ItemDataRole.UserRole),
+            dialog.watchlist_editor.list_codes.item(0, 1).data(Qt.ItemDataRole.UserRole),
             "sh600519",
         )
-        self.assertEqual(dialog.list_codes.item(0, 2).text(), "123")
+        self.assertEqual(dialog.watchlist_editor.list_codes.item(0, 2).text(), "123")
 
     def test_popup_uses_table_width_and_expands_for_long_result(self):
         dialog, _window = self._make_dialog()
         editor = self._start_code_editor(dialog)
         base_width = (
-            dialog.list_codes.columnWidth(1)
-            + dialog.list_codes.columnWidth(2)
+            dialog.watchlist_editor.list_codes.columnWidth(1)
+            + dialog.watchlist_editor.list_codes.columnWidth(2)
         )
 
-        dialog._update_suggestions(editor, "茅台")
+        dialog.watchlist_editor._update_suggestions(editor, "茅台")
         popup = editor._code_completer.popup()
         self.assertEqual(popup.minimumWidth(), base_width)
         self.assertEqual(popup.maximumWidth(), base_width)
 
-        dialog._update_suggestions(editor, "特别长证券名称")
+        dialog.watchlist_editor._update_suggestions(editor, "特别长证券名称")
         self.assertGreater(popup.minimumWidth(), base_width)
         self.assertEqual(popup.minimumWidth(), popup.maximumWidth())
 
