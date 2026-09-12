@@ -34,7 +34,8 @@ def format_quote(
     market: str = "",
     cost: float | None = None,
     options: QuoteDisplayOptions = QuoteDisplayOptions(),
-) -> tuple[dict, dict]:
+    include_sort: bool = False,
+):
     data = dict(data)
     lot_size = 100 if market in {"sh", "sz", "bj"} and security_type != "期" else 1
 
@@ -97,6 +98,7 @@ def format_quote(
     precision = 3 if security_type == "基" or market == "us" else 2
 
     # 浮盈计算（与成本价比较），仅显示百分比
+    profit_pct = None
     if cost is not None and cost > 0:
         profit_pct = (data["current_price"] / cost - 1) * 100
         profit_label = f"{profit_pct:+.2f}%"
@@ -109,7 +111,7 @@ def format_quote(
     english_units = should_use_english_units(options.unit_mode, market)
     format_data = {
         "名称": name,
-        "现价": f"{data["current_price"]:.{precision}f}{arrow}",
+        "现价": f"{data['current_price']:.{precision}f}{arrow}",
         "涨跌": f"{change:+.{precision}f}",
         "涨幅": f"{change_pct:+.2f}%",
         "浮盈": profit_label,
@@ -149,9 +151,30 @@ def format_quote(
         "均价": direction_color_role(avg - data["prev_close"]),
         "K线": COLOR_ROLE_TEXT,
     }
+    sort_values = {
+        "现价": data["current_price"],
+        "涨跌": change,
+        "涨幅": change_pct,
+        "浮盈": profit_pct,
+        "委比": committee if (p_sum + s_sum) > 0 else None,
+        "成交量": data["deals_vol"],
+        "成交额": data["deals_amt"],
+        "均价": avg,
+    }
+
     # 指数不显示浮盈/买一卖一/委比/均价（均置为"-"）
     if is_index:
         for key in ("浮盈", "买一", "卖一", "委比", "均价"):
             format_data[key] = "-"
             color_roles[key] = direction_color_role(0)
+        sort_values["浮盈"] = None
+        sort_values["委比"] = None
+        sort_values["均价"] = None
+        if not data["deals_vol"]:
+            sort_values["成交量"] = None
+        if not data["deals_amt"]:
+            sort_values["成交额"] = None
+
+    if include_sort:
+        return format_data, color_roles, sort_values
     return format_data, color_roles

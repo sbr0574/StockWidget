@@ -55,7 +55,7 @@ class SimpleTableModel(QAbstractTableModel):
 
     def rowCount(self, parent=QModelIndex()):
         return len(self._rows)
-    
+
     def columnCount(self, parent=QModelIndex()):
         return len(self._headers)
 
@@ -211,7 +211,7 @@ class KLineDelegate(QStyledItemDelegate):
         if y_l > bot:
             # 下影线
             painter.drawLine(x, bot, x, y_l)
-        if c < o: 
+        if c < o:
             # 填充实体（空阳线）
             painter.fillRect(body_x, top, body_w, body_h, QBrush(kcolor))
 
