@@ -381,6 +381,12 @@ class CodeCacheTests(unittest.TestCase):
         env = patch.dict(os.environ, {"APPDATA": self.temp.name})
         env.start()
         self.addCleanup(env.stop)
+        # 缓存路径和迁移测试不应受内置代码表更新影响。
+        resources = patch(
+            "stockwidget.data.code_lists.load_json_from_resource", return_value={}
+        )
+        resources.start()
+        self.addCleanup(resources.stop)
 
     def test_legacy_cache_is_migrated_without_moving_configuration(self):
         payload = _payload("stock_sh.json", "2026-09-09")
