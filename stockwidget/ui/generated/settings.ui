@@ -65,7 +65,7 @@
      <property name="checkable">
       <bool>false</bool>
      </property>
-     <widget class="QTableWidget" name="list_codes">
+     <widget class="WatchlistTable" name="list_codes">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -1321,6 +1321,11 @@
   </widget>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>WatchlistTable</class>
+   <extends>QTableWidget</extends>
+   <header>stockwidget.ui.watchlist_table</header>
+  </customwidget>
   <customwidget>
    <class>CustomIconButton</class>
    <extends>QPushButton</extends>

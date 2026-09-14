@@ -1,7 +1,7 @@
 """自选表格的编辑、搜索、排序和添加面板，通过信号提交完整自选列表。"""
 
 from PySide6.QtCore import (
-    Qt, QPoint, QEvent, QTimer, QItemSelectionModel, QModelIndex, QObject,
+    Qt, QPoint, QEvent, QItemSelectionModel, QModelIndex, QObject,
     QSignalBlocker, Signal,
 )
 from PySide6.QtGui import QGuiApplication, QStandardItem, QStandardItemModel
@@ -248,12 +248,7 @@ class WatchlistEditor(QObject):
         self.empty_watchlist_hint.raise_()
 
     def _handle_drop(self, ev):
-        """拖动调整顺序：将拖动的行移动到目标位置。
-        1. 用 CopyAction（而非 MoveAction）结束拖放，让 drag->exec() 不返回
-           MoveAction，从而不触发 startDrag() 里的 clearOrRemove()；
-        2. 暂时清空选中，等拖放清理完成后恢复拖动行的高亮与焦点。
-        否则源行会被二次删除，表现为拖拽后丢一行。
-        """
+        """移动整行并提交一次；WatchlistTable 的拖放源不再删除源行。"""
         src_row = self.list_codes.currentRow()
         pos = ev.position().toPoint()
         target_row = self.list_codes.rowAt(pos.y())
@@ -264,23 +259,14 @@ class WatchlistEditor(QObject):
             target_row = self.list_codes.rowCount() - 1
         if target_row != src_row:
             self._move_row(src_row, target_row)
-        dragged_item = self.list_codes.item(target_row, 1)
-        self.list_codes.clearSelection()
-        ev.setDropAction(Qt.CopyAction)
+        self.list_codes.setCurrentCell(
+            target_row, 1,
+            QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows,
+        )
+        self.list_codes.setFocus(Qt.MouseFocusReason)
+        ev.setDropAction(Qt.MoveAction)
         ev.accept()
-
-        def finish_drop():
-            if not self.is_active():
-                return
-            if dragged_item is not None and isValid(dragged_item):
-                self.list_codes.setCurrentItem(
-                    dragged_item,
-                    QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows,
-                )
-                self.list_codes.setFocus(Qt.MouseFocusReason)
-            self._on_codes_changed(None)
-
-        QTimer.singleShot(0, self, finish_drop)
+        self._on_codes_changed(None)
 
     def _append_code_row(self, code: str = "", name: str = "", checked: bool = False, cost=None):
         self._insert_code_row(

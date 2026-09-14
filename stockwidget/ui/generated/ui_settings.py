@@ -19,9 +19,10 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QDial
     QFontComboBox, QGridLayout, QGroupBox, QHBoxLayout,
     QHeaderView, QKeySequenceEdit, QLabel, QPushButton,
     QRadioButton, QSizePolicy, QSlider, QSpinBox,
-    QTabWidget, QTableWidget, QTableWidgetItem, QWidget)
+    QTabWidget, QTableWidgetItem, QWidget)
 
 from stockwidget.ui.icon_button import CustomIconButton
+from stockwidget.ui.watchlist_table import WatchlistTable
 
 class Ui_SettingDialog(object):
     def setupUi(self, SettingDialog):
@@ -42,7 +43,7 @@ class Ui_SettingDialog(object):
         self.gb_list.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
         self.gb_list.setFlat(False)
         self.gb_list.setCheckable(False)
-        self.list_codes = QTableWidget(self.gb_list)
+        self.list_codes = WatchlistTable(self.gb_list)
         if (self.list_codes.columnCount() < 3):
             self.list_codes.setColumnCount(3)
         self.list_codes.setObjectName(u"list_codes")

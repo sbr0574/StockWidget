@@ -373,7 +373,7 @@ class SettingsDialogTests(unittest.TestCase):
         finally:
             self.qt_app.setPalette(original)
 
-    def test_drop_restores_dragged_row_selection_after_cleanup(self):
+    def test_drop_preserves_dragged_row_selection(self):
         for target in (0, 1):
             with self.subTest(target=target):
                 with patch.object(FloatLabel, "_refresh_from_function"):
@@ -390,8 +390,7 @@ class SettingsDialogTests(unittest.TestCase):
                 event.source.return_value = table
                 event.position.return_value.toPoint.return_value = table.visualItemRect(table.item(target, 1)).center()
                 dialog.watchlist_editor._handle_drop(event)
-                self.assertEqual(table.selectedItems(), [])
-                event.setDropAction.assert_called_once_with(Qt.CopyAction)
+                event.setDropAction.assert_called_once_with(Qt.MoveAction)
                 self.qt_app.processEvents()
                 self.assertIs(table.currentItem(), dragged)
                 self.assertIn(dragged, table.selectedItems())
