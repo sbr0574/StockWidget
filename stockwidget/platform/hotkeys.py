@@ -2,19 +2,19 @@
 """
 跨平台全局快捷键管理器
 
-- Windows: 基于官方 RegisterHotKey API + QAbstractNativeEventFilter 监听 WM_HOTKEY。
-           相比第三方 keyboard 库,零额外依赖、更稳定、不易被杀毒软件误报。
-           注册失败时可区分"被其他程序占用"(ERROR_HOTKEY_ALREADY_REGISTERED),
-           冲突时 RegisterHotKey 不会抢占,不会影响其他应用。
-- macOS:   基于官方 Carbon RegisterEventHotKey API(通过 ctypes 调用,零额外依赖)。
-           这是系统推荐的"注册式"全局快捷键方案:把组合键直接注册给系统,
-           按键事件经 InstallEventHandler 安装的 Carbon 处理器回传,在主线程回调。
-           相比"监听式"CGEventTap,无需"辅助功能/输入监控"授权,也不会在终端
-           打印 TSM AdjustCapsLockLED... 之类的输入监听日志。
-- 其他:    静默返回不支持(unsupported),不影响程序运行。
-- 保护:    `register()` 前先经 `is_reserved()` 黑名单拦截系统/通用快捷键
-           (如 Ctrl+C/V/A、Alt+Tab、Ctrl+Alt+Del、Win 组合等),返回
-           reason='reserved',避免注册后影响其他应用正常使用。
+- Windows: RegisterHotKey 注册，Qt 原生事件过滤器接收 WM_HOTKEY。
+- macOS: Carbon RegisterEventHotKey 注册，事件处理器在主线程分发回调。
+- Linux/X11: XGrabKey 注册，QSocketNotifier 从同一 Xlib 连接读取按键事件。
+  冲突通过 XSync 后的 BadAccess 异步错误判断；失败时释放本次已抓取的组合，
+  注册结束后恢复原错误处理器。支持 CapsLock/NumLock 等锁定状态。
+- Wayland 及其他不支持的平台: 返回 unsupported。
+
+所有原生调用使用 ctypes，无额外键盘监听依赖。仅预先拦截 Windows 的
+Ctrl+Alt+Del 安全序列；其他组合交给平台注册接口判断，不按常用程度禁止。
+Windows 和 Linux/X11 允许单独使用 F1–F12，macOS 仍要求搭配修饰键。
+字母等其他主键在所有平台上都需要修饰键。
+HotkeyResult 区分冲突、无效、保留、不支持和其他失败。
+设置页负责展示结果；失败的配置可保留并修改，不在此处弹窗。
 
 用法示例:
     mgr = GlobalHotkeyManager(parent)
@@ -25,7 +25,6 @@
 """
 
 import ctypes
-import struct
 import sys
 
 # 先判断系统类型,再按需 import 平台相关模块
@@ -34,7 +33,7 @@ if sys.platform == "win32":
 else:
     wintypes = None
 
-from PySide6.QtCore import QAbstractNativeEventFilter, QCoreApplication, QObject
+from PySide6.QtCore import QAbstractNativeEventFilter, QCoreApplication, QObject, QSocketNotifier
 from stockwidget.platform.capabilities import session_type
 
 # ---------------------------------------------------------------------------
@@ -45,7 +44,7 @@ class HotkeyResult:
     """快捷键注册结果。`ok` 为是否成功,`reason` 为失败原因:
     - 'conflict'    : 已被其他程序占用(热键冲突)
     - 'invalid'     : 快捷键无法解析(缺修饰键 / 键不支持)
-    - 'reserved'    : 系统/通用快捷键,为避免影响其他应用而禁止注册
+    - 'reserved'    : 当前平台明确保留的特殊组合（Windows Ctrl+Alt+Del）
     - 'unsupported' : 当前平台暂未实现
     - 'failed'      : 其他系统错误
     """
@@ -208,14 +207,17 @@ else:
 
 
 # ---------------------------------------------------------------------------
-# 快捷键字符串解析(两种平台共享拆分逻辑)
+# 快捷键字符串解析（各平台共享拆分逻辑）
 # ---------------------------------------------------------------------------
 
-def _split_hotkey(hotkey: str):
+_UNMODIFIED_FUNCTION_KEYS = frozenset(f"f{i}" for i in range(1, 13))
+
+
+def _split_hotkey(hotkey: str, *, allow_unmodified_function_keys: bool = False):
     """把 'Ctrl+Alt+F' 解析为 (修饰键集合, 主键名);无法解析返回 None。
 
     修饰键集合元素为规范化名字: ctrl / alt / shift / meta。
-    RegisterHotKey / RegisterEventHotKey 都要求至少一个修饰键,否则视为无效。
+    默认要求修饰键；Windows/X11 解析时显式允许无修饰键的 F1–F12。
     """
     if not hotkey:
         return None
@@ -237,7 +239,9 @@ def _split_hotkey(hotkey: str):
             if key is not None:
                 return None  # 出现多个主键,视为无效
             key = part
-    if key is None or not mods:
+    if key is None:
+        return None
+    if not mods and not (allow_unmodified_function_keys and key in _UNMODIFIED_FUNCTION_KEYS):
         return None
     return mods, key
 
@@ -264,7 +268,7 @@ def _vk_windows(key: str):
 
 def _parse_hotkey(hotkey: str):
     """Windows 用解析:返回 (modifiers, vk);无效返回 None。"""
-    parts = _split_hotkey(hotkey)
+    parts = _split_hotkey(hotkey, allow_unmodified_function_keys=True)
     if parts is None:
         return None
     mods, key = parts
@@ -308,51 +312,22 @@ def _parse_hotkey_macos(hotkey: str):
 
 
 # ---------------------------------------------------------------------------
-# 保留组合黑名单(避免影响其他应用)
+# 平台明确保留的特殊组合
 # ---------------------------------------------------------------------------
 
-# 系统硬保留/特殊组合(无论是否有程序占用都禁止注册)
-# 以 (修饰键集合, 主键) 元组匹配,确保 Alt+F4 与 Ctrl+Esc 等精确定位
-_RESERVED_EXACT = {
-    (frozenset({"ctrl", "alt"}), "del"),    # Ctrl+Alt+Del 安全注意序列
-    (frozenset({"alt"}), "tab"),            # 切换窗口
-    (frozenset({"alt"}), "esc"),            # 切换窗口
-    (frozenset({"alt"}), "space"),          # 窗口系统菜单
-    (frozenset({"alt"}), "f4"),             # 关闭窗口
-    (frozenset({"ctrl"}), "esc"),           # 开始菜单
-    (frozenset({"ctrl", "shift"}), "esc"),  # 任务管理器
-}
-
-
-def _is_generic_key(key: str) -> bool:
-    """是否为通用快捷键常用的主键:单字母 / 数字 / 空格。"""
-    return (len(key) == 1 and (key.isalpha() or key.isdigit())) or key == "space"
-
-
 def is_reserved(hotkey: str) -> bool:
-    """判断该快捷键是否为"系统保留/通用快捷键",为避免影响其他应用应禁止注册。
+    """只拦截 Windows 的安全注意序列，不把常用应用快捷键视为系统保留。
 
-    规则(跨平台,在 Windows 与 macOS 上均生效):
-    - 含 Win/Meta 键的组合(系统级,且多为系统保留)
-    - 系统硬保留组合(Ctrl+Alt+Del、Alt+Tab、Alt+F4、Ctrl+Esc、Ctrl+Shift+Esc 等)
-    - 恰好一个修饰键(Ctrl 或 Alt)+ 通用主键(单字母/数字/空格):
-      如 Ctrl+C/V/X/A/S、Ctrl+Space(输入法切换)、Alt+F4 等
-    - Ctrl+Shift + 通用主键:如 Ctrl+Shift+S/T/Z(另存为/恢复标签/撤销)
-    - Ctrl+Alt + 主键:放行(这类组合应用很少占用,是安全的自定义空间)
+    Linux 的窗口管理器绑定、macOS 和 Windows 的其他系统快捷键是否可用，
+    由原生注册接口判断。Windows 的限制不套用到其他平台。
     """
+    if sys.platform != "win32":
+        return False
     parts = _split_hotkey(hotkey)
     if parts is None:
         return False
     mods, key = parts
-    if "meta" in mods:
-        return True
-    if (frozenset(mods), key) in _RESERVED_EXACT:
-        return True
-    if len(mods) == 1 and ("ctrl" in mods or "alt" in mods):
-        return _is_generic_key(key)
-    if mods == {"ctrl", "shift"}:
-        return _is_generic_key(key)
-    return False
+    return mods == {"ctrl", "alt"} and key in {"del", "delete"}
 
 
 # ---------------------------------------------------------------------------
@@ -392,7 +367,7 @@ X11_MOD5_MASK = 1 << 7   # ScrollLock 所在位
 # 大小写锁/数字锁等"锁键"修饰位,匹配事件状态时忽略
 X11_IGNORE_MASK = X11_LOCK_MASK | X11_MOD2_MASK | X11_MOD5_MASK
 
-XCB_KEY_PRESS = 2        # xcb_key_press_event_t 的 response_type
+X_KEY_PRESS = 2
 GrabModeAsync = 1
 BadAccess = 10           # 其他程序已抓取同一组合时 XGrabKey 产生的错误码
 
@@ -437,29 +412,35 @@ def _keysym_name(key: str) -> str:
     return _X11_KEYSYM_NAMES.get(key, key)
 
 
-class _X11HotkeyEventFilter(QAbstractNativeEventFilter):
-    """监听 X11 键盘事件,命中已抓取的全局快捷键时分发回调。"""
+class _XKeyEvent(ctypes.Structure):
+    _fields_ = [
+        ("type", ctypes.c_int), ("serial", ctypes.c_ulong),
+        ("send_event", ctypes.c_int), ("display", ctypes.c_void_p),
+        ("window", ctypes.c_ulong), ("root", ctypes.c_ulong),
+        ("subwindow", ctypes.c_ulong), ("time", ctypes.c_ulong),
+        ("x", ctypes.c_int), ("y", ctypes.c_int),
+        ("x_root", ctypes.c_int), ("y_root", ctypes.c_int),
+        ("state", ctypes.c_uint), ("keycode", ctypes.c_uint),
+        ("same_screen", ctypes.c_int),
+    ]
 
-    def __init__(self, owner):
-        super().__init__()
-        self._owner = owner
 
-    def nativeEventFilter(self, eventType, message):
-        try:
-            if bytes(eventType) != b"xcb_generic_event_t":
-                return False, 0
-            ptr = int(message)
-            if ptr == 0:
-                return False, 0
-            data = ctypes.string_at(ptr, 32)
-            if data[0] == XCB_KEY_PRESS:
-                keycode = data[1]
-                state = struct.unpack_from("<H", data, 28)[0]
-                if self._owner._dispatch_x11(keycode, state):
-                    return True, 0
-        except Exception:
-            pass
-        return False, 0
+class _XEvent(ctypes.Union):
+    _fields_ = [("type", ctypes.c_int), ("xkey", _XKeyEvent),
+                ("pad", ctypes.c_long * 24)]
+
+
+class _XErrorEvent(ctypes.Structure):
+    _fields_ = [
+        ("type", ctypes.c_int), ("display", ctypes.c_void_p),
+        ("resourceid", ctypes.c_ulong), ("serial", ctypes.c_ulong),
+        ("error_code", ctypes.c_ubyte), ("request_code", ctypes.c_ubyte),
+        ("minor_code", ctypes.c_ubyte),
+    ]
+
+
+_XErrorHandler = ctypes.CFUNCTYPE(
+    ctypes.c_int, ctypes.c_void_p, ctypes.POINTER(_XErrorEvent))
 
 
 # ---------------------------------------------------------------------------
@@ -472,7 +453,7 @@ class GlobalHotkeyManager(QObject):
     - Windows: 官方 RegisterHotKey,热键回调直接进入 Qt 事件循环(主线程)。
     - macOS:   Carbon RegisterEventHotKey,事件经 InstallEventHandler 安装的处理器
                在应用主运行循环(NSApplication)中派发,回调在主线程执行。
-    - Linux/X11: XGrabKey 抓取全局组合键,经 X11 事件过滤器分发。
+    - Linux/X11: XGrabKey 抓取全局组合键,由 QSocketNotifier 读取同一连接的事件。
     - 其他(如 Wayland): register 返回 'unsupported',不影响程序运行。
     """
 
@@ -490,12 +471,12 @@ class GlobalHotkeyManager(QObject):
         self._x11_display = None
         self._x11_root = 0
         self._x11_grabs = {}      # keycode -> [(core_modmask, callback, [modmask,...])]
-        self._x11_filter = None
+        self._x11_notifier = None
 
     # ----- 公共接口 -----
     def register(self, hotkey: str, callback) -> HotkeyResult:
         """注册全局快捷键。返回 HotkeyResult,冲突/无效/保留/不支持时 ok=False。"""
-        # 先拦截系统/通用快捷键,避免注册后影响其他应用正常使用
+        # 仅拦截当前平台明确保留的特殊组合，其余以原生注册结果为准。
         if is_reserved(hotkey):
             return HotkeyResult(False, "reserved")
         system = sys.platform
@@ -579,20 +560,21 @@ class GlobalHotkeyManager(QObject):
             lib.XGrabKey.restype = ctypes.c_int
             lib.XUngrabKey.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_uint, ctypes.c_ulong]
             lib.XSync.argtypes = [ctypes.c_void_p, ctypes.c_int]
+            lib.XSetErrorHandler.argtypes = [ctypes.c_void_p]
+            lib.XSetErrorHandler.restype = ctypes.c_void_p
+            lib.XConnectionNumber.argtypes = [ctypes.c_void_p]
+            lib.XConnectionNumber.restype = ctypes.c_int
+            lib.XPending.argtypes = [ctypes.c_void_p]
+            lib.XPending.restype = ctypes.c_int
+            lib.XNextEvent.argtypes = [ctypes.c_void_p, ctypes.POINTER(_XEvent)]
+            lib.XCloseDisplay.argtypes = [ctypes.c_void_p]
 
-            # 安装空错误处理器,吞掉 BadAccess(组合键已被其他程序占用)等错误,
-            # 避免 X 默认错误处理器终止整个进程。
-            XErrorHandler = ctypes.CFUNCTYPE(
-                ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p)
-
-            @XErrorHandler
-            def _err_handler(display, event):
-                return 0
-
-            self._x11_error_handler_cb = _err_handler
-            lib.XSetErrorHandler.argtypes = [XErrorHandler]
-            lib.XSetErrorHandler.restype = XErrorHandler
-            self._x11_error_handler = lib.XSetErrorHandler(_err_handler)
+            # XOpenDisplay 的连接不属于 Qt，Qt 的 nativeEventFilter 收不到它的事件。
+            notifier = QSocketNotifier(lib.XConnectionNumber(dpy), QSocketNotifier.Read, self)
+            notifier.setEnabled(False)
+            notifier.activated.connect(self._read_x11_events)
+            self._x11_notifier = notifier
+            self.destroyed.connect(lambda _obj=None: lib.XCloseDisplay(dpy))
 
             self._x11_lib = lib
             self._x11_display = dpy
@@ -602,13 +584,11 @@ class GlobalHotkeyManager(QObject):
             return None
 
     def _register_x11(self, hotkey: str, callback) -> HotkeyResult:
-        parsed = _split_hotkey(hotkey)
+        parsed = _split_hotkey(hotkey, allow_unmodified_function_keys=True)
         if parsed is None:
             return HotkeyResult(False, "invalid")
         mods, key = parsed
         modmask = _mods_x11(mods)
-        if modmask == 0:
-            return HotkeyResult(False, "invalid")
         try:
             lib = self._ensure_x11()
             if lib is None:
@@ -619,6 +599,8 @@ class GlobalHotkeyManager(QObject):
             keycode = lib.XKeysymToKeycode(self._x11_display, keysym)
             if keycode == 0:
                 return HotkeyResult(False, "invalid")
+            if any(core == modmask for core, _, _ in self._x11_grabs.get(keycode, [])):
+                return HotkeyResult(False, "conflict")
 
             # 一次抓取"核心修饰 + 大小写锁/数字锁/滚动锁"的 8 种组合,
             # 保证在 CapsLock/NumLock 等锁定状态下也能触发。
@@ -630,21 +612,52 @@ class GlobalHotkeyManager(QObject):
                     if i & (1 << j):
                         extra |= bit
                 m = modmask | extra
-                if lib.XGrabKey(self._x11_display, keycode, m, self._x11_root,
-                                True, GrabModeAsync, GrabModeAsync) != 0:
-                    return HotkeyResult(False, "conflict")
                 combos.append(m)
-            lib.XSync(self._x11_display, False)
 
-            if self._x11_filter is None:
-                self._x11_filter = _X11HotkeyEventFilter(self)
-                app = QCoreApplication.instance()
-                if app is not None:
-                    app.installNativeEventFilter(self._x11_filter)
+            # XGrabKey 没有同步的成功/冲突返回值；错误要等 XSync 后读取。
+            # 错误处理器是进程全局的，只在注册期间替换，并转发其他连接的错误。
+            lib.XSync(self._x11_display, False)
+            errors = []
+            previous = None
+
+            @_XErrorHandler
+            def on_error(display, event):
+                if display == self._x11_display and event.contents.request_code == 33:
+                    errors.append(event.contents.error_code)
+                    return 0
+                if previous:
+                    return _XErrorHandler(previous)(display, event)
+                return 0
+
+            previous = lib.XSetErrorHandler(ctypes.cast(on_error, ctypes.c_void_p))
+            try:
+                for m in combos:
+                    lib.XGrabKey(self._x11_display, keycode, m, self._x11_root,
+                                 False, GrabModeAsync, GrabModeAsync)
+                lib.XSync(self._x11_display, False)
+                if errors:
+                    # 某个锁键组合冲突时也要释放已成功抓取的其他组合。
+                    for m in combos:
+                        lib.XUngrabKey(self._x11_display, keycode, m, self._x11_root)
+                    lib.XSync(self._x11_display, False)
+                    return HotkeyResult(False, "conflict" if BadAccess in errors else "failed")
+            finally:
+                lib.XSetErrorHandler(previous)
+
             self._x11_grabs.setdefault(keycode, []).append((modmask, callback, combos))
+            self._x11_notifier.setEnabled(True)
+            # XSync 可能已把事件读入 Xlib 缓冲区，不能只等 fd 再次就绪。
+            self._read_x11_events()
             return HotkeyResult(True)
         except Exception:
             return HotkeyResult(False, "failed")
+
+    def _read_x11_events(self, *_args):
+        while self._x11_lib.XPending(self._x11_display):
+            event = _XEvent()
+            self._x11_lib.XNextEvent(self._x11_display, ctypes.byref(event))
+            if event.type == X_KEY_PRESS:
+                self._dispatch_x11(event.xkey.keycode, event.xkey.state)
 
     def _unregister_all_x11(self):
         try:
@@ -656,6 +669,8 @@ class GlobalHotkeyManager(QObject):
                         self._x11_lib.XUngrabKey(self._x11_display, keycode, m, self._x11_root)
             self._x11_grabs.clear()
             self._x11_lib.XSync(self._x11_display, False)
+            self._x11_notifier.setEnabled(False)
+            self._read_x11_events()
         except Exception:
             pass
 

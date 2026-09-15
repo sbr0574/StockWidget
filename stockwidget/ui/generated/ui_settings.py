@@ -17,10 +17,11 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QDialog,
     QFontComboBox, QGridLayout, QGroupBox, QHBoxLayout,
-    QHeaderView, QKeySequenceEdit, QLabel, QPushButton,
-    QRadioButton, QSizePolicy, QSlider, QSpinBox,
-    QTabWidget, QTableWidgetItem, QWidget)
+    QHeaderView, QLabel, QPushButton, QRadioButton,
+    QSizePolicy, QSlider, QSpinBox, QTabWidget,
+    QTableWidgetItem, QWidget)
 
+from stockwidget.ui.hotkey_sequence_edit import HotkeySequenceEdit
 from stockwidget.ui.icon_button import CustomIconButton
 from stockwidget.ui.watchlist_table import WatchlistTable
 
@@ -389,13 +390,13 @@ class Ui_SettingDialog(object):
         self.cb_hotkey_hide = QCheckBox(self.gb_hotkeys)
         self.cb_hotkey_hide.setObjectName(u"cb_hotkey_hide")
         self.cb_hotkey_hide.setGeometry(QRect(10, 25, 131, 24))
-        self.keyseq_hide = QKeySequenceEdit(self.gb_hotkeys)
+        self.keyseq_hide = HotkeySequenceEdit(self.gb_hotkeys)
         self.keyseq_hide.setObjectName(u"keyseq_hide")
         self.keyseq_hide.setGeometry(QRect(30, 50, 141, 25))
         self.cb_hotkey_click_through = QCheckBox(self.gb_hotkeys)
         self.cb_hotkey_click_through.setObjectName(u"cb_hotkey_click_through")
         self.cb_hotkey_click_through.setGeometry(QRect(10, 80, 131, 24))
-        self.keyseq_click_through = QKeySequenceEdit(self.gb_hotkeys)
+        self.keyseq_click_through = HotkeySequenceEdit(self.gb_hotkeys)
         self.keyseq_click_through.setObjectName(u"keyseq_click_through")
         self.keyseq_click_through.setGeometry(QRect(30, 105, 141, 25))
         self.gb_opacity = QGroupBox(self.general)

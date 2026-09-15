@@ -9,9 +9,9 @@ from unittest.mock import Mock, patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QPoint, QSize, Qt
-from PySide6.QtGui import QColor, QIcon, QPalette, QPixmap, QTextDocument
+from PySide6.QtGui import QColor, QIcon, QPalette, QPixmap, QTextDocument, QKeySequence
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QAbstractItemDelegate
+from PySide6.QtWidgets import QApplication, QAbstractItemDelegate, QScrollArea
 
 from stockwidget.ui.add_code_panel import (
     ADDED_ROLE,
@@ -27,6 +27,7 @@ from stockwidget.ui.settings_style import (
     COLOR_SWATCH_SIZE, build_settings_stylesheet, color_swatch_icon,
 )
 from stockwidget.ui.widget import FloatLabel
+from stockwidget.platform.hotkeys import HotkeyResult
 
 
 CODES = {
@@ -155,6 +156,51 @@ class SettingsDialogTests(unittest.TestCase):
         document.setTextWidth(label.contentsRect().width())
         self.assertIn("Copyright 2026 sbr0574\n\n仓库地址", document.toPlainText())
         self.assertLessEqual(document.size().height(), label.contentsRect().height())
+
+    def test_linux_about_uses_smaller_font_and_fits_without_scrolling(self):
+        with patch("stockwidget.ui.settings_dialog.sys.platform", "linux"):
+            dialog, _ = self._make_dialog()
+        dialog.ui.tab_widget.setCurrentWidget(dialog.ui.about)
+        dialog.show()
+        self.qt_app.processEvents()
+        label = dialog.ui.label_about_info
+        self.assertEqual(label.font().pixelSize(), 12)
+        self.assertFalse(dialog.ui.about.findChildren(QScrollArea))
+        self.assertIn("问题反馈", label.text())
+        document = QTextDocument()
+        document.setDefaultFont(label.font())
+        document.setDocumentMargin(0)
+        document.setHtml(label.text())
+        document.setTextWidth(label.contentsRect().width())
+        self.assertLessEqual(document.size().height(), label.contentsRect().height())
+        self.assertLess(label.geometry().bottom(), dialog.ui.btn_open_cache_dir.y())
+
+    def test_failed_hotkeys_stay_editable_and_show_inline_result(self):
+        with patch("stockwidget.ui.settings_dialog.hotkeys_supported", return_value=True), patch(
+            "stockwidget.ui.settings_dialog.click_through_supported", return_value=True
+        ):
+            dialog, window = self._make_dialog()
+        for key, checkbox, editor in dialog._hotkey_rows:
+            with self.subTest(key=key), patch.object(window._hotkeys, "register") as register, patch(
+                "stockwidget.ui.settings_dialog.QMessageBox.warning"
+            ) as warning:
+                register.return_value = HotkeyResult(False, "conflict")
+                checkbox.setChecked(True)
+                status = dialog._hotkey_status[key]
+                self.assertTrue(checkbox.isChecked())
+                self.assertTrue(editor.isEnabled())
+                self.assertFalse(status.isHidden())
+                self.assertFalse(status.active)
+                self.assertIn("占用", status.toolTip())
+                register.return_value = HotkeyResult(True)
+                editor.setKeySequence(QKeySequence("Ctrl+Alt+X"))
+                editor.editingFinished.emit()
+                self.assertEqual(getattr(window, key), "Ctrl+Alt+X")
+                self.assertTrue(status.active)
+                checkbox.setChecked(False)
+                self.assertTrue(status.isHidden())
+                self.assertFalse(editor.isEnabled())
+                warning.assert_not_called()
 
     def test_clear_watchlist_closes_editor_without_restoring_entries(self):
         dialog, window = self._make_dialog({"sh600519": {"checked": False, "cost": 100}})

@@ -4,6 +4,8 @@
 import ctypes
 import sys
 
+from PySide6.QtGui import QGuiApplication
+
 from stockwidget.platform.capabilities import is_x11
 
 # X11 相关库与显示连接的缓存（延迟初始化，复用同一连接）
@@ -52,38 +54,39 @@ def _click_through_x11(widget, enable: bool) -> None:
     """
     global _x11_xlib, _x11_xext, _x11_shape_display
     try:
-        if _x11_xext is None:
-            _x11_xlib = ctypes.CDLL("libX11.so.6")
-            _x11_xext = ctypes.CDLL("libXext.so.6")
-            xlib = _x11_xlib
-            xext = _x11_xext
+        if not _x11_shape_display:
+            xlib = ctypes.CDLL("libX11.so.6")
+            xext = ctypes.CDLL("libXext.so.6")
             xlib.XOpenDisplay.restype = ctypes.c_void_p
             xlib.XOpenDisplay.argtypes = [ctypes.c_char_p]
-            _x11_shape_display = xlib.XOpenDisplay(None)  # 使用 $DISPLAY
-            if not _x11_shape_display:
-                return
             xext.XShapeCombineRectangles.argtypes = [
                 ctypes.c_void_p, ctypes.c_ulong, ctypes.c_int,
                 ctypes.c_int, ctypes.c_int, ctypes.c_void_p,
-                ctypes.c_int, ctypes.c_int]
+                ctypes.c_int, ctypes.c_int, ctypes.c_int]
+            xext.XShapeCombineRectangles.restype = None
             xext.XShapeCombineMask.argtypes = [
                 ctypes.c_void_p, ctypes.c_ulong, ctypes.c_int,
                 ctypes.c_int, ctypes.c_int, ctypes.c_ulong, ctypes.c_int]
+            xext.XShapeCombineMask.restype = None
             xlib.XSync.argtypes = [ctypes.c_void_p, ctypes.c_int]
-        if _x11_shape_display is None:
-            return
+            dpy = xlib.XOpenDisplay(None)  # 使用 $DISPLAY；失败时允许下次重试
+            if not dpy:
+                return
+            _x11_xlib, _x11_xext, _x11_shape_display = xlib, xext, dpy
         dpy = _x11_shape_display
         win = ctypes.c_ulong(int(widget.winId()))
+        # 窗口由 Qt 的另一条连接创建，先确保服务器已经收到创建/映射请求。
+        QGuiApplication.sync()
         ShapeInput = 2  # XInputShape
         ShapeSet = 0
         if enable:
             # 0 个矩形 + ShapeSet -> 输入区域为空 -> 鼠标穿透
             _x11_xext.XShapeCombineRectangles(
-                dpy, win, ShapeInput, 0, 0, None, 0, ShapeSet)
+                dpy, win, ShapeInput, 0, 0, None, 0, ShapeSet, 0)  # Unsorted
         else:
             # mask 为 None + ShapeSet -> 恢复默认输入区域（整个窗口）
             _x11_xext.XShapeCombineMask(
-                dpy, win, ShapeInput, 0, 0, None, ShapeSet)
+                dpy, win, ShapeInput, 0, 0, 0, ShapeSet)  # X11 None 是整数 0
         _x11_xlib.XSync(dpy, False)
     except Exception:
         pass
