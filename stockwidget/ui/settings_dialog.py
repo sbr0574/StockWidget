@@ -22,7 +22,7 @@ from stockwidget.ui.widget import FloatLabel
 from stockwidget.ui.metric_pool import MetricPoolWidget
 from stockwidget.ui.metric_settings_panel import NameSettingsPanel, UnitSettingsPanel
 from stockwidget.ui.watchlist_editor import WatchlistEditor
-from stockwidget.ui.settings_style import build_settings_stylesheet, color_swatch_icon
+from stockwidget.ui.settings_style import LINUX_FONT_RULES, build_settings_stylesheet, color_swatch_icon
 from stockwidget.ui.hotkey_status import HotkeyStatus
 from stockwidget.platform.hotkeys import HotkeyResult
 from stockwidget.platform.capabilities import (
@@ -78,13 +78,8 @@ class SettingsDialog(QDialog):
         # 避免 Tool 窗口的小号红黄绿按钮与小标题。
         if sys.platform == "linux":
             self.setWindowFlags(self.windowFlags() | Qt.WindowType.Tool)
-            # 控件使用逻辑像素布局，统一字号并继续交由 Qt 做高 DPI 缩放。
-            font = self.font()
-            font.setPixelSize(13)
-            self.setFont(font)
-            about_font = self.ui.gb_about.font()
-            about_font.setPixelSize(12)
-            self.ui.gb_about.setFont(about_font)
+            # 在指标池按文字宽度计算尺寸前应用字号，最终主题仍保留这些规则。
+            self.setStyleSheet(LINUX_FONT_RULES)
         self._init_hotkey_status()
         self._init_metric_pool()
         self.setModal(False)
@@ -155,7 +150,7 @@ class SettingsDialog(QDialog):
 
     def _apply_theme_stylesheet(self, *_args):
         dark = QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
-        self.setStyleSheet(build_settings_stylesheet(dark))
+        self.setStyleSheet(build_settings_stylesheet(dark, linux_fonts=sys.platform == "linux"))
         for component in (self.metric_pool, self.watchlist_editor,
                           self.name_settings_panel, self.unit_settings_panel):
             component.set_theme(dark)
