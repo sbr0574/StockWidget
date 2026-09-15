@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-11",
+  "last_update": "2026-09-15",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -4110,7 +4110,7 @@
       "market": "hk",
       "type": "港",
       "name": "意力國際",
-      "name_en": "IMAGI INT'L-500",
+      "name_en": "IMAGI INT'L",
       "py": "yiliguoji",
       "abbr": "ylgj"
     },
@@ -7053,7 +7053,7 @@
       "market": "hk",
       "type": "港",
       "name": "亞洲策略科技",
-      "name_en": "ASIA STRAT-1K",
+      "name_en": "ASIA STRAT TECH",
       "py": "yazhoucelvekeji",
       "abbr": "yzclkj"
     },
@@ -18397,24 +18397,6 @@
       "py": "beijingtiyuwenhua",
       "abbr": "bjtywh"
     },
-    "hk02909": {
-      "code": "02909",
-      "market": "hk",
-      "type": "港",
-      "name": "意力國際(八千)",
-      "name_en": "IMAGI INT'L-8K",
-      "py": "yiliguoji(baqian)",
-      "abbr": "ylgj(bq)"
-    },
-    "hk02910": {
-      "code": "02910",
-      "market": "hk",
-      "type": "港",
-      "name": "亞洲策略(一萬)",
-      "name_en": "ASIA STRAT-10K",
-      "py": "yazhoucelve(yiwan)",
-      "abbr": "yzcl(yw)"
-    },
     "hk02912": {
       "code": "02912",
       "market": "hk",
@@ -18477,6 +18459,33 @@
       "name_en": "CAPITAL IND FIN",
       "py": "shouhuichanyejinrong",
       "abbr": "shcyjr"
+    },
+    "hk02922": {
+      "code": "02922",
+      "market": "hk",
+      "type": "港",
+      "name": "偉祿科技股份",
+      "name_en": "REALORD TECH",
+      "py": "weilukejigufen",
+      "abbr": "wlkjgf"
+    },
+    "hk02923": {
+      "code": "02923",
+      "market": "hk",
+      "type": "港",
+      "name": "世紀集團國際",
+      "name_en": "CENTURY GP INTL",
+      "py": "shijijituanguoji",
+      "abbr": "sjjtgj"
+    },
+    "hk02925": {
+      "code": "02925",
+      "market": "hk",
+      "type": "港",
+      "name": "金泰能源控股",
+      "name_en": "JINTAI ENERGY H",
+      "py": "jintainengyuankonggu",
+      "abbr": "jtnykg"
     },
     "hk03001": {
       "code": "03001",
@@ -18585,6 +18594,15 @@
       "name_en": "AMUNDI HK35",
       "py": "donghuixianggang35",
       "abbr": "dhxg35"
+    },
+    "hk03014": {
+      "code": "03014",
+      "market": "hk",
+      "type": "基",
+      "name": "GX銅礦產業",
+      "name_en": "GXCOPPERMINER",
+      "py": "gxtongkuangchanye",
+      "abbr": "gxtkcy"
     },
     "hk03015": {
       "code": "03015",
@@ -20034,6 +20052,15 @@
       "name_en": "PA TECHSELECT",
       "py": "pingankejijingxuan",
       "abbr": "pakjjx"
+    },
+    "hk03408": {
+      "code": "03408",
+      "market": "hk",
+      "type": "基",
+      "name": "GX KOSPI 200",
+      "name_en": "GX KOSPI 200",
+      "py": "",
+      "abbr": ""
     },
     "hk03410": {
       "code": "03410",
@@ -26245,15 +26272,6 @@
       "py": "jinyeguojijituan",
       "abbr": "jygjjt"
     },
-    "hk08580": {
-      "code": "08580",
-      "market": "hk",
-      "type": "港",
-      "name": "吉輝控股股權",
-      "name_en": "KPM HOLDING RTS",
-      "py": "jihuikongguguquan",
-      "abbr": "jhkggq"
-    },
     "hk08601": {
       "code": "08601",
       "market": "hk",
@@ -26505,6 +26523,15 @@
       "name_en": "A CICC USD-U",
       "py": "azhongjinmeiyuan-u",
       "abbr": "azjmy-u"
+    },
+    "hk09014": {
+      "code": "09014",
+      "market": "hk",
+      "type": "基",
+      "name": "GX銅礦產業-U",
+      "name_en": "GXCOPPERMINER-U",
+      "py": "gxtongkuangchanye-u",
+      "abbr": "gxtkcy-u"
     },
     "hk09031": {
       "code": "09031",
@@ -26919,6 +26946,15 @@
       "name_en": "PA TECHSELECT-U",
       "py": "pingankejijingxuan-u",
       "abbr": "pakjjx-u"
+    },
+    "hk09408": {
+      "code": "09408",
+      "market": "hk",
+      "type": "基",
+      "name": "GX KOSPI 200-U",
+      "name_en": "GX KOSPI 200-U",
+      "py": "",
+      "abbr": ""
     },
     "hk09411": {
       "code": "09411",

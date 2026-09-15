@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-11",
+  "last_update": "2026-09-15",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -3069,6 +3069,15 @@
       "name_en": "",
       "py": "yinhangetfpenghua",
       "abbr": "yhetfph"
+    },
+    "sh512740": {
+      "code": "512740",
+      "market": "sh",
+      "type": "基",
+      "name": "汽车零部件ETF广发",
+      "name_en": "",
+      "py": "qichelingbujianetfguangfa",
+      "abbr": "qclbjetfgf"
     },
     "sh512750": {
       "code": "512750",
@@ -7786,6 +7795,24 @@
       "py": "300xianjinliuetfhuabao",
       "abbr": "300xjletfhb"
     },
+    "sh562150": {
+      "code": "562150",
+      "market": "sh",
+      "type": "基",
+      "name": "红利质量ETF鹏华",
+      "name_en": "",
+      "py": "honglizhiliangetfpenghua",
+      "abbr": "hlzletfph"
+    },
+    "sh562170": {
+      "code": "562170",
+      "market": "sh",
+      "type": "基",
+      "name": "沪深300现金流ETF易方达",
+      "name_en": "",
+      "py": "hushen300xianjinliuetfyifangda",
+      "abbr": "hs300xjletfyfd"
+    },
     "sh562180": {
       "code": "562180",
       "market": "sh",
@@ -10117,6 +10144,15 @@
       "py": "xiyoujinshuetfzhaoshang",
       "abbr": "xyjsetfzs"
     },
+    "sz158032": {
+      "code": "158032",
+      "market": "sz",
+      "type": "基",
+      "name": "化工ETF景顺",
+      "name_en": "",
+      "py": "huagongetfjingshun",
+      "abbr": "hgetfjs"
+    },
     "sz159001": {
       "code": "159001",
       "market": "sz",
@@ -10287,6 +10323,15 @@
       "name_en": "",
       "py": "yangzhietfwanjia",
       "abbr": "yzetfwj"
+    },
+    "sz159025": {
+      "code": "159025",
+      "market": "sz",
+      "type": "基",
+      "name": "家电ETF华安",
+      "name_en": "",
+      "py": "jiadianetfhuaan",
+      "abbr": "jdetfha"
     },
     "sz159026": {
       "code": "159026",
@@ -13460,10 +13505,10 @@
       "code": "159545",
       "market": "sz",
       "type": "基",
-      "name": "恒生红利低波ETF易方达",
+      "name": "港股通红利低波ETF易方达",
       "name_en": "",
-      "py": "hengshenghonglidiboetfyifangda",
-      "abbr": "hshldbetfyfd"
+      "py": "ganggutonghonglidiboetfyifangda",
+      "abbr": "ggthldbetfyfd"
     },
     "sz159546": {
       "code": "159546",
@@ -14792,10 +14837,10 @@
       "code": "159726",
       "market": "sz",
       "type": "基",
-      "name": "港股通高股息ETF华夏",
+      "name": "港股通红利ETF华夏",
       "name_en": "",
-      "py": "ganggutonggaoguxietfhuaxia",
-      "abbr": "ggtggxetfhx"
+      "py": "ganggutonghonglietfhuaxia",
+      "abbr": "ggthletfhx"
     },
     "sz159728": {
       "code": "159728",

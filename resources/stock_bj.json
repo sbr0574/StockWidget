@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-11",
+  "last_update": "2026-09-15",
   "codes": {
     "bj810011": {
       "code": "810011",
@@ -680,10 +680,10 @@
       "code": "920096",
       "market": "bj",
       "type": "京",
-      "name": "XD嘉晨智",
+      "name": "嘉晨智能",
       "name_en": "",
-      "py": "xdjiachenzhi",
-      "abbr": "xdjcz"
+      "py": "jiachenzhineng",
+      "abbr": "jczn"
     },
     "bj920098": {
       "code": "920098",
@@ -1269,6 +1269,15 @@
       "name_en": "",
       "py": "bairuiji",
       "abbr": "brj"
+    },
+    "bj920202": {
+      "code": "920202",
+      "market": "bj",
+      "type": "京",
+      "name": "安达股份",
+      "name_en": "",
+      "py": "andagufen",
+      "abbr": "adgf"
     },
     "bj920204": {
       "code": "920204",
@@ -2408,10 +2417,10 @@
       "code": "920663",
       "market": "bj",
       "type": "京",
-      "name": "明阳科技",
+      "name": "XD明阳科",
       "name_en": "",
-      "py": "mingyangkeji",
-      "abbr": "mykj"
+      "py": "xdmingyangke",
+      "abbr": "xdmyk"
     },
     "bj920665": {
       "code": "920665",

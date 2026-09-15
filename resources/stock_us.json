@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-11",
+  "last_update": "2026-09-15",
   "codes": {
     "usa": {
       "code": "a",
@@ -657,6 +657,15 @@
       "name_en": "Airbnb, Inc. - Class A Common Stock",
       "py": "aibiying",
       "abbr": "aby"
+    },
+    "usabnd": {
+      "code": "abnd",
+      "market": "us",
+      "type": "美",
+      "name": "American Century Core Plus Income ETF",
+      "name_en": "American Century Core Plus Income ETF",
+      "py": "",
+      "abbr": ""
     },
     "usabos": {
       "code": "abos",
@@ -2410,6 +2419,24 @@
       "type": "美",
       "name": "Advanced Flower Capital Inc. - Common Stock",
       "name_en": "Advanced Flower Capital Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usafdm": {
+      "code": "afdm",
+      "market": "us",
+      "type": "美",
+      "name": "First Trust Active Factor International ETF",
+      "name_en": "First Trust Active Factor International ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usafem": {
+      "code": "afem",
+      "market": "us",
+      "type": "美",
+      "name": "First Trust Active Factor Emerging Markets ETF",
+      "name_en": "First Trust Active Factor Emerging Markets ETF",
       "py": "",
       "abbr": ""
     },
@@ -7954,15 +7981,6 @@
       "type": "美",
       "name": "Amtech Systems, Inc. - Common Stock",
       "name_en": "Amtech Systems, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usatai": {
-      "code": "atai",
-      "market": "us",
-      "type": "美",
-      "name": "AtaiBeckley Inc. - Common Stock",
-      "name_en": "AtaiBeckley Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -16804,6 +16822,15 @@
       "py": "bolingdunbaihuo",
       "abbr": "bldbh"
     },
+    "usburu": {
+      "code": "buru",
+      "market": "us",
+      "type": "美",
+      "name": "Nuburu, Inc. Common Stock",
+      "name_en": "Nuburu, Inc. Common Stock",
+      "py": "",
+      "abbr": ""
+    },
     "usbusa": {
       "code": "busa",
       "market": "us",
@@ -17834,8 +17861,8 @@
       "code": "capa",
       "market": "us",
       "type": "美",
-      "name": "Defiance AI Capacitors Leaders ETF",
-      "name_en": "Defiance AI Capacitors Leaders ETF",
+      "name": "Defiance AI Capacitors & MLCC ETF",
+      "name_en": "Defiance AI Capacitors & MLCC ETF",
       "py": "",
       "abbr": ""
     },
@@ -28999,6 +29026,15 @@
       "py": "",
       "abbr": ""
     },
+    "usdmxu": {
+      "code": "dmxu",
+      "market": "us",
+      "type": "美",
+      "name": "Xtrackers Bloomberg Developed Markets ex US Equity ETF",
+      "name_en": "Xtrackers Bloomberg Developed Markets ex US Equity ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usdna": {
       "code": "dna",
       "market": "us",
@@ -30949,15 +30985,6 @@
       "type": "美",
       "name": "Global X Rare Earth & Critical Materials ETF",
       "name_en": "Global X Rare Earth & Critical Materials ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "useasg": {
-      "code": "easg",
-      "market": "us",
-      "type": "美",
-      "name": "Xtrackers MSCI EAFE Selection Equity ETF",
-      "name_en": "Xtrackers MSCI EAFE Selection Equity ETF",
       "py": "",
       "abbr": ""
     },
@@ -41729,8 +41756,8 @@
       "code": "fusi",
       "market": "us",
       "type": "美",
-      "name": "American Century Multisector Floating Income ETF",
-      "name_en": "American Century Multisector Floating Income ETF",
+      "name": "American Century Ultrashort Income ETF",
+      "name_en": "American Century Ultrashort Income ETF",
       "py": "",
       "abbr": ""
     },
@@ -43264,6 +43291,15 @@
       "py": "",
       "abbr": ""
     },
+    "usgemq": {
+      "code": "gemq",
+      "market": "us",
+      "type": "美",
+      "name": "Goldman Sachs Data Enhanced Emerging Markets Equity ETF",
+      "name_en": "Goldman Sachs Data Enhanced Emerging Markets Equity ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usgen": {
       "code": "gen",
       "market": "us",
@@ -43549,15 +43585,6 @@
       "type": "美",
       "name": "Greenfire Resources Ltd. Common Shares",
       "name_en": "Greenfire Resources Ltd. Common Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usgfrr": {
-      "code": "gfrr",
-      "market": "us",
-      "type": "美",
-      "name": "Greenfire Resources Ltd. Rights (expiring September 15, 2026) Rights",
-      "name_en": "Greenfire Resources Ltd. Rights (expiring September 15, 2026) Rights",
       "py": "",
       "abbr": ""
     },
@@ -48997,6 +49024,15 @@
       "py": "honglixinggang",
       "abbr": "hlxg"
     },
+    "ushlsq": {
+      "code": "hlsq",
+      "market": "us",
+      "type": "美",
+      "name": "Tessera Defense and Homeland Security Inc. Common Stock",
+      "name_en": "Tessera Defense and Homeland Security Inc. Common Stock",
+      "py": "",
+      "abbr": ""
+    },
     "ushlt": {
       "code": "hlt",
       "market": "us",
@@ -50756,8 +50792,8 @@
       "code": "hysa",
       "market": "us",
       "type": "美",
-      "name": "BondBloxx USD High Yield Bond Sector Rotation ETF",
-      "name_en": "BondBloxx USD High Yield Bond Sector Rotation ETF",
+      "name": "BondBloxx High Yield Income ETF",
+      "name_en": "BondBloxx High Yield Income ETF",
       "py": "",
       "abbr": ""
     },
@@ -59478,7 +59514,7 @@
       "market": "us",
       "type": "美",
       "name": "卡夫亨氏",
-      "name_en": "The Kraft Heinz Company - Common Stock",
+      "name_en": "The Kraft Heinz Company Common Stock",
       "py": "kafuhengshi",
       "abbr": "kfhs"
     },
@@ -67573,6 +67609,15 @@
       "py": "",
       "abbr": ""
     },
+    "usmlcc": {
+      "code": "mlcc",
+      "market": "us",
+      "type": "美",
+      "name": "Global X MLCC & Electronic Components ETF",
+      "name_en": "Global X MLCC & Electronic Components ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usmlci": {
       "code": "mlci",
       "market": "us",
@@ -70174,15 +70219,6 @@
       "py": "",
       "abbr": ""
     },
-    "usmusi": {
-      "code": "musi",
-      "market": "us",
-      "type": "美",
-      "name": "American Century Multisector Income ETF",
-      "name_en": "American Century Multisector Income ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usmusq": {
       "code": "musq",
       "market": "us",
@@ -72250,6 +72286,15 @@
       "type": "美",
       "name": "Innovator Growth-100 Power Buffer ETF - February",
       "name_en": "Innovator Growth-100 Power Buffer ETF - February",
+      "py": "",
+      "abbr": ""
+    },
+    "usnfegp": {
+      "code": "nfegp",
+      "market": "us",
+      "type": "美",
+      "name": "New Fortress Energy Inc. - Series A Mandatorily Convertible Preferred Stock",
+      "name_en": "New Fortress Energy Inc. - Series A Mandatorily Convertible Preferred Stock",
       "py": "",
       "abbr": ""
     },
@@ -76042,12 +76087,39 @@
       "py": "",
       "abbr": ""
     },
+    "usoclt": {
+      "code": "oclt",
+      "market": "us",
+      "type": "美",
+      "name": "OceanLight Acquisition Corporation - Ordinary Shares",
+      "name_en": "OceanLight Acquisition Corporation - Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "usocltr": {
+      "code": "ocltr",
+      "market": "us",
+      "type": "美",
+      "name": "OceanLight Acquisition Corporation - Rights",
+      "name_en": "OceanLight Acquisition Corporation - Rights",
+      "py": "",
+      "abbr": ""
+    },
     "usocltu": {
       "code": "ocltu",
       "market": "us",
       "type": "美",
       "name": "OceanLight Acquisition Corporation - Units",
       "name_en": "OceanLight Acquisition Corporation - Units",
+      "py": "",
+      "abbr": ""
+    },
+    "usocltw": {
+      "code": "ocltw",
+      "market": "us",
+      "type": "美",
+      "name": "OceanLight Acquisition Corporation - Warrants",
+      "name_en": "OceanLight Acquisition Corporation - Warrants",
       "py": "",
       "abbr": ""
     },
@@ -81055,15 +81127,6 @@
       "py": "feilipu",
       "abbr": "flp"
     },
-    "usphge": {
-      "code": "phge",
-      "market": "us",
-      "type": "美",
-      "name": "BiomX Inc. Common Stock",
-      "name_en": "BiomX Inc. Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "usphi": {
       "code": "phi",
       "market": "us",
@@ -83102,8 +83165,8 @@
       "code": "prae",
       "market": "us",
       "type": "美",
-      "name": "PlanRock Alternative Growth ETF",
-      "name_en": "PlanRock Alternative Growth ETF",
+      "name": "PlanRock Equity Plus Alternatives ETF",
+      "name_en": "PlanRock Equity Plus Alternatives ETF",
       "py": "",
       "abbr": ""
     },
@@ -88522,24 +88585,6 @@
       "type": "美",
       "name": "ALPS Dynamic US Dividend Advantage ETF",
       "name_en": "ALPS Dynamic US Dividend Advantage ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usrfdi": {
-      "code": "rfdi",
-      "market": "us",
-      "type": "美",
-      "name": "First Trust RiverFront Dynamic Developed International ETF",
-      "name_en": "First Trust RiverFront Dynamic Developed International ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usrfem": {
-      "code": "rfem",
-      "market": "us",
-      "type": "美",
-      "name": "First Trust RiverFront Dynamic Emerging Markets ETF",
-      "name_en": "First Trust RiverFront Dynamic Emerging Markets ETF",
       "py": "",
       "abbr": ""
     },
@@ -102318,7 +102363,7 @@
       "market": "us",
       "type": "美",
       "name": "梯瓦制药",
-      "name_en": "Teva Pharmaceutical Industries Limited American Depositary Shares",
+      "name_en": "Teva Pharmaceutical Industries Limited Ordinary Shares",
       "py": "tiwazhiyao",
       "abbr": "twzy"
     },
@@ -103228,6 +103273,15 @@
       "type": "美",
       "name": "Titan Machinery Inc. - Common Stock",
       "name_en": "Titan Machinery Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "ustize": {
+      "code": "tize",
+      "market": "us",
+      "type": "美",
+      "name": "TCW Securitized Income ETF",
+      "name_en": "TCW Securitized Income ETF",
       "py": "",
       "abbr": ""
     },
