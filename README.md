@@ -23,103 +23,67 @@
 
 ---
 
+## 🖼️ 界面一览
+
+> **极简显示效果**
+
+<img width="127" height="90" alt="image" src="https://github.com/user-attachments/assets/69ce08a7-6b55-41e8-bbab-e47b64d6e8a0" />
+
+> **设置面板———支持自动浅色/深色模式切换**
+
+<img width="393" height="279" alt="image" src="https://github.com/user-attachments/assets/5ec0170a-bc7a-495d-be36-d62812d4b155" />
+<img width="393" height="279" alt="image" src="https://github.com/user-attachments/assets/ea60a6c2-970a-4e29-83d8-600847c21fee" />
+
+> **自选股添加**
+
+<img width="393" height="345" alt="image" src="https://github.com/user-attachments/assets/1083c49d-6ec1-41c9-8abd-44ecc97737c6" />
+
+> **快捷添加自选（双击表格空白/双击条目编辑）**
+
+<img width="393" height="332" alt="image" src="https://github.com/user-attachments/assets/cde49b06-2e14-40b8-9ff5-afe828781fbf" />
+
+> **浮窗样式与功能设置**
+
+<img width="393" height="279" alt="image" src="https://github.com/user-attachments/assets/16e94332-97ee-4707-a917-f55b440a94a8" />
+
+
 ## ✨ 功能概览
 
 * **透明无框浮窗**：
 
-  * 置顶显示（默认置顶策略在任务栏等位置存在置顶冲突，可在设置中开启**强制置顶**）
-  * 拖拽任意区域即可移动
-  * **双击**浮窗可隐藏
-  * 右键展示设置菜单
-  * 可选鼠标穿透
-* **系统托盘**：左键切换显示/隐藏；右键菜单含“设置 / 退出”。
-* **全局快捷键**：`Ctrl+Alt+F` 显示/隐藏浮窗，`Ctrl+Alt+C` 切换鼠标穿透（均可在设置中自定义）。
-* **表格展示**（可选列）：`名称 | 现价（默认） | 涨跌值 | 涨跌幅（默认） | 浮盈 | 买一卖一数量 | 委比 | 成交量 | 成交额 | 均价 | K线`
+  * 置顶显示
+  * 拖拽移动
+  * **双击**可隐藏
+  * 快速排序
+  * 右键快捷设置菜单
+  * 可开启鼠标穿透
+* **全局快捷键**（需要在设置中启用，可自定义修改）：
 
-  * **现价触及当日最高/最低**时显示 `↑ / ↓`
+  * `Ctrl+Alt+F` 显示/隐藏浮窗
+  * `Ctrl+Alt+C` 开启/关闭鼠标穿透
+* **显示指标**（在设置中拖动指标，可自定义显示内容和顺序）：
+
+  * 名称（点击ⓘ设置市场、代码显示及名称显示字数）
+  * 现价（默认，**现价触及当日最高/最低**时显示 `↑ / ↓`）
+  * 涨跌值
+  * 涨跌幅（默认）
+  * 浮盈
+  * 买一卖一数量
+  * 委比
+  * 成交量（点击ⓘ设置数字单位）
+  * 成交额（点击ⓘ设置数字单位）
+  * 均价
+  * K线（当日）
+* **指标排序**：显示表头后，单击表头开启排序，重复点击按“**降序-升序-不排序**”循环，支持排序的列有**现价、涨跌、涨幅、浮盈、成交量、成交额、均价、委比**。右键菜单也可快捷排序。
+* **颜色设置**：可分别设置背景、文字、上涨、下跌和中性颜色；**背景可调不透明度**，且可单独设置**窗口整体不透明度**。
 * **统一颜色**：默认开启，所有内容使用文字颜色；关闭后可分别设置**上涨、下跌和中性颜色**。
-* **浮窗颜色**：可分别设置背景、文字、上涨、下跌和中性颜色；**背景可透明**，且可单独设置**整体不透明度**。
-* **列开关与表头显示**：右键浮窗 → “显示列”“显示表头”即时生效。
-* **字体与行距**：字号 **5–15 pt**；行距为额外像素（行高 = 字高 + 行距），**K 线尺寸随字号同步缩放**。
-* **刷新间隔**：可选 **1-15** 秒。
-* **股票代码管理**：设置面板内用列表**增加/删除/上移/下移/置顶**，每日首次启动自动从 GitHub/Gitee 下载由 Actions 更新的全市场代码列表；双击列表空白区域可在全部标的中快速搜索，点击增加按钮可按**股票、基金、指数、期货**及**沪、深、京、港、美、其他**组合筛选并分页添加；搜索支持由空格分隔的**数字代码、名称、拼音或缩写**关键词，双击已有条目可修改。
-* **自动保存**：所有设置即时保存至配置文件（Windows：`%APPDATA%\StockWidget\stock_widget_config.json`；macOS/Linux：`~/StockWidget/stock_widget_config.json`）；浮窗隐藏时**暂停刷新**，显示时自动恢复。
-* **自动检查更新**：启动时优先检查 GitHub Releases，GitHub 不可用时切换 Gitee，有新版本时提示下载。
+* **自选列表管理**：程序内置全市场代码数据，并定期更新；双击列表空白区域可快速添加，点击增加按钮可按**股票、基金、指数、期货**及**沪、深、京、港、美、其他**组合筛选并分页添加；搜索支持由空格分隔的**数字代码、名称、拼音或缩写**关键词，双击已有条目可修改。
+* **程序图标**：自带4个图标可选，选择即时生效；也可上传自定义图片、图标作为程序图标。
 
----
 
-## 🖼️ 界面一览
+## 常见问题
 
-> 📷 **极简显示效果**
-<img width="127" height="90" alt="image" src="https://github.com/user-attachments/assets/69ce08a7-6b55-41e8-bbab-e47b64d6e8a0" />
-
-> 📷 **设置面板**
-<img width="1180" height="836" alt="image" src="https://github.com/user-attachments/assets/5ec0170a-bc7a-495d-be36-d62812d4b155" />
-<img width="1180" height="836" alt="image" src="https://github.com/user-attachments/assets/ea60a6c2-970a-4e29-83d8-600847c21fee" />
-<img width="1180" height="1036" alt="image" src="https://github.com/user-attachments/assets/1083c49d-6ec1-41c9-8abd-44ecc97737c6" />
-<img width="1180" height="997" alt="image" src="https://github.com/user-attachments/assets/cde49b06-2e14-40b8-9ff5-afe828781fbf" />
-
-<img width="1180" height="836" alt="image" src="https://github.com/user-attachments/assets/16e94332-97ee-4707-a917-f55b440a94a8" />
-
----
-
-## 📁 项目结构
-
-代码按职责分层，前端（界面）与后端（数据/逻辑）分离：
-
-```
-main.py                      # 程序入口
-StockWidget.spec             # PyInstaller 打包配置
-resources/                   # 静态资源
-  icons/                     #   应用与托盘图标
-  data/                      #   内置代码列表、更新状态与服务端名称缓存
-  resources.qrc              #   Qt 资源清单（保持原有虚拟资源名）
-stockwidget/
-  app.py                     # 应用装配：连接各层、托盘、后台任务
-  constants.py               # 全局常量（名称/版本/文件/地址）
-  ui/                        # 界面层：所有 Qt 组件与显示
-    widget.py                #   盯盘浮窗主面板
-    settings_dialog.py       #   设置面板
-    watchlist_editor.py      #   自选列表编辑、搜索与排序，信号提交修改
-    settings_style.py        #   设置面板主题与颜色预览
-    metric_pool.py           #   指标选择与拖动排序
-    metric_settings_panel.py #   名称、数值单位设置弹窗及共用交互
-    table_model.py           #   表格 Model 与 K 线 Delegate
-    drag_mixin.py            #   拖拽 / 双击隐藏交互
-    tray.py                  #   系统托盘
-    generated/               #   Qt Designer / pyside6-uic 生成文件
-  data/                      # 数据层：行情请求与整理
-    quotes.py                #   行情请求与解析（新浪 / 东财）
-    code_lists.py            #   代码列表下载 / 缓存 / 兜底
-    update_check.py          #   版本更新检查
-  core/                      # 功能函数层：纯业务逻辑
-    formatters.py            #   成交量 / 成交额格式化
-    quote_presentation.py    #   行情计算、展示文本与颜色角色（不修改原始行情）
-    metric_layout.py         #   指标定义、顺序与旧配置迁移
-    code_search.py           #   代码搜索 / 建议
-    watchlist.py             #   自选列表规范化
-    config_store.py          #   配置读写
-    geometry.py              #   多显示器位置恢复
-  platform/                  # 平台适配层：跨平台原生实现
-    capabilities.py          #   能力探测（X11/Wayland 等）
-    click_through.py         #   鼠标穿透
-    autostart.py             #   开机自启
-    hotkeys.py               #   全局快捷键
-```
-
-分层原则：`ui` 只负责显示与交互，`data` 只负责取数与解析，`core` 是可独立测试的纯函数，`platform` 隔离平台差异；各层通过 `app.py` 装配连接，避免职责互相缠绕。
-
-指标的名称、分组和默认显示状态统一定义在 `core/metric_layout.py`；运行时只维护 `visible_metrics` 有序列表，旧布尔字段仅在配置读写时转换。自选编辑组件通过 `watchlist_changed` 信号提交列表，不直接访问浮窗；成本解析由 `core/watchlist.py` 统一处理。
-
-关于页集中展示市场代码同步状态，并提供清空自选列表、恢复默认外观和恢复默认设置三个按钮。外观恢复包括颜色、透明度、字体、行距、表头、网格及图标；设置恢复包括刷新间隔、行情源、指标及其显示选项、开机自启、置顶、穿透和快捷键。两种恢复操作均保留自选列表，默认值与首次启动共用。
-
-运行回归测试：安装 `requirements-test.txt` 后执行 `python -m unittest discover -s tests -v`；无桌面环境时设置 `QT_QPA_PLATFORM=offscreen`。
-
-配置文件保存在应用目录中，下载的代码列表和状态清单保存在其 `data/` 子目录：Windows 为 `%APPDATA%\StockWidget\data`，macOS/Linux 为 `~/StockWidget/data`。启动时会将旧位置的代码缓存迁移到新目录，迁移失败时仍可读取原文件。
-
-代码下载优先使用 GitHub，失败后切换 Gitee；Gitee 原始文件不可用时再尝试公开文件 API。后续文件优先复用已成功的数据源，避免逐个等待不可达源超时。连接等待为 3 秒、读取等待为 15 秒，分块下载期间会检查 60 秒耗时限制。整组下载失败时继续显示已有数据，30 分钟后重试，并复用同一远端批次中已下载到内存的文件；鼠标悬停设置中的“市场代码数据”状态可查看失败原因。
-
-服务端更新脚本默认写入 `resources/data/`；发布到 `codes-data` 分支时仍使用 `resources/*.json`，以兼容已发布客户端的下载地址。
+* **Windows下任务栏与浮窗置顶冲突**：在设置中打开**强制置顶**即可，开启后浮窗同时会阻挡截屏等其他置顶窗口。
 
 ## 🧰 下载与运行
 
@@ -128,8 +92,8 @@ stockwidget/
 | 平台 | 发布包 | 使用方式 |
 | --- | --- | --- |
 | Windows 10/11 | `StockWidget-Windows-<版本号>.zip` | 解压后运行 `StockWidget.exe` |
-| macOS | `StockWidget-macOS-<版本号>.zip` | 解压后将 `StockWidget.app` 拖入“应用程序” |
-| Linux（Ubuntu/Debian） | `StockWidget-Linux-<版本号>.zip` | 解压后安装其中的 `.deb` 包 |
+| macOS | `StockWidget-macOS-<版本号>.zip` | 解压后将 `StockWidget.app` 拷贝至“应用程序”文件夹并运行 |
+| Linux | `StockWidget-Linux-<版本号>.zip` | 解压后在文件夹内终端运行`./StockWidget`；Linux还提供`.deb`和`.rpm`安装包，按需使用 |
 
 ### 源码运行
 
@@ -146,32 +110,14 @@ pyside6-rcc resources/resources.qrc -o resources/resources_rc.py
 python main.py
 ```
 
----
-
-## 🖱️ 操作速览
-
-* **拖动窗口**：按住窗口任意位置拖动。
-* **表头排序**：点击可排序指标，按“降序 → 升序 → 恢复自选顺序”循环；按住表头仍可拖动窗口。
-* **双击浮窗**：隐藏。
-* **右键浮窗**：快捷菜单。
-* **全局快捷键**：
-
-  * `Ctrl+Alt+F`：显示/隐藏浮窗
-  * `Ctrl+Alt+C`：切换鼠标穿透
-* **系统托盘**：
-
-  * 左键：显示/隐藏浮窗
-  * 右键：设置 / 退出
-
----
 
 ## 🌐 数据来源 & 网络
 
-* 行情通过 `requests` 从 **新浪财经**接口（`hq.sinajs.cn`）获取；沪深股票和基金代码列表直接从交易所官方接口更新，其他市场沿用东财或新浪接口。
-* 程序仅发起 GET 请求，不包含任何账户/交易操作；请根据自身网络环境决定是否使用代理或更换数据源。
+* 行情信息通过 `requests` 从 **新浪财经**或**东方财富**接口获取，数据不可避免存在一定延迟，仅供参考。
+* 程序仅显示行情数据，不包含任何账户/交易操作。
+* 请根据自身网络环境决定是否使用代理或更换数据源。
 * 浮窗隐藏时会暂停刷新，显示后自动恢复，减少不必要的请求。
 
----
 
 ## 📜 许可
 
