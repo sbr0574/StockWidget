@@ -202,7 +202,7 @@ class SettingsDialogTests(unittest.TestCase):
                     self.qt_app.processEvents()
                     for control in controls:
                         with self.subTest(control=control.objectName() or type(control).__name__):
-                            self.assertEqual(control.font().pixelSize(), 13)
+                            self.assertEqual(control.font().pixelSize(), 12)
                     for control in (dialog.ui.label_about_info, dialog.ui.label_version_state,
                                     dialog.ui.label_data_state, dialog.ui.btn_open_cache_dir):
                         with self.subTest(about_control=control.objectName()):
