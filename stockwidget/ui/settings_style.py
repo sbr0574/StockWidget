@@ -7,8 +7,7 @@ from stockwidget.ui.theme import accent_color, accent_rgba
 
 COLOR_SWATCH_SIZE = 12
 LINUX_FONT_RULES = """
-QWidget { font-size: 13px; }
-QGroupBox#gb_about, QGroupBox#gb_about QWidget { font-size: 12px; }
+QWidget { font-size: 12px; }
 """
 _FLAT_GROUPS = ("gb_data", "gb_data_setting", "gb_icon", "gb_fcn", "gb_opacity",
                 "gb_color", "gb_text", "gb_tabel", "gb_hotkeys")
