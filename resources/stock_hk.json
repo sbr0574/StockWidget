@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-15",
+  "last_update": "2026-09-16",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -1284,7 +1284,7 @@
       "market": "hk",
       "type": "港",
       "name": "青島啤酒股份",
-      "name_en": "TSINGTAO BREW",
+      "name_en": "TSINGTAO BR-500",
       "py": "qingdaopijiugufen",
       "abbr": "qdpjgf"
     },
@@ -18486,6 +18486,15 @@
       "name_en": "JINTAI ENERGY H",
       "py": "jintainengyuankonggu",
       "abbr": "jtnykg"
+    },
+    "hk02929": {
+      "code": "02929",
+      "market": "hk",
+      "type": "港",
+      "name": "青島啤酒(二千)",
+      "name_en": "TSINGTAO BR-2K",
+      "py": "qingdaopijiu(erqian)",
+      "abbr": "qdpj(eq)"
     },
     "hk03001": {
       "code": "03001",

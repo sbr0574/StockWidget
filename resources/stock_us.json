@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-15",
+  "last_update": "2026-09-16",
   "codes": {
     "usa": {
       "code": "a",
@@ -1078,15 +1078,6 @@
       "type": "美",
       "name": "Archer Aviation Inc. Class A Common Stock",
       "name_en": "Archer Aviation Inc. Class A Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usachr_ws": {
-      "code": "achr_ws",
-      "market": "us",
-      "type": "美",
-      "name": "Archer Aviation Inc. Redeemable Warrants, each whole warrant exercisable for one Class A common stock at an exercise price of $11.50",
-      "name_en": "Archer Aviation Inc. Redeemable Warrants, each whole warrant exercisable for one Class A common stock at an exercise price of $11.50",
       "py": "",
       "abbr": ""
     },
@@ -7981,6 +7972,15 @@
       "type": "美",
       "name": "Amtech Systems, Inc. - Common Stock",
       "name_en": "Amtech Systems, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usat": {
+      "code": "at",
+      "market": "us",
+      "type": "美",
+      "name": "Defiance Robotics Actuators ETF",
+      "name_en": "Defiance Robotics Actuators ETF",
       "py": "",
       "abbr": ""
     },
@@ -24607,6 +24607,15 @@
       "py": "",
       "abbr": ""
     },
+    "uscsep": {
+      "code": "csep",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi U.S. Equities 15% Structured Buffer ETF - September Series",
+      "name_en": "Corgi U.S. Equities 15% Structured Buffer ETF - September Series",
+      "py": "",
+      "abbr": ""
+    },
     "uscsex": {
       "code": "csex",
       "market": "us",
@@ -25171,6 +25180,15 @@
       "type": "美",
       "name": "CTS Corporation Common Stock",
       "name_en": "CTS Corporation Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usctse": {
+      "code": "ctse",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi U.S. Equities 30% Structured Buffer ETF - September Series",
+      "name_en": "Corgi U.S. Equities 30% Structured Buffer ETF - September Series",
       "py": "",
       "abbr": ""
     },
@@ -33100,6 +33118,15 @@
       "type": "美",
       "name": "Sophus Capital Emerging Market Small Cap ETF",
       "name_en": "Sophus Capital Emerging Market Small Cap ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usemse": {
+      "code": "emse",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi Emerging Markets Equities 15% Structured Buffer ETF - September Series",
+      "name_en": "Corgi Emerging Markets Equities 15% Structured Buffer ETF - September Series",
       "py": "",
       "abbr": ""
     },
@@ -49807,6 +49834,15 @@
       "py": "",
       "abbr": ""
     },
+    "ushsep": {
+      "code": "hsep",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi U.S. Equities 100% Structured Buffer ETF - September Series",
+      "name_en": "Corgi U.S. Equities 100% Structured Buffer ETF - September Series",
+      "py": "",
+      "abbr": ""
+    },
     "ushshp": {
       "code": "hshp",
       "market": "us",
@@ -52270,6 +52306,15 @@
       "type": "美",
       "name": "iShares Self-Driving EV and Tech ETF",
       "name_en": "iShares Self-Driving EV and Tech ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usidse": {
+      "code": "idse",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi International Developed Equities 15% Structured Buffer ETF - September Series",
+      "name_en": "Corgi International Developed Equities 15% Structured Buffer ETF - September Series",
       "py": "",
       "abbr": ""
     },
@@ -59050,6 +59095,15 @@
       "py": "",
       "abbr": ""
     },
+    "uskchp": {
+      "code": "kchp",
+      "market": "us",
+      "type": "美",
+      "name": "KICK Korea Semiconductor Index ETF",
+      "name_en": "KICK Korea Semiconductor Index ETF",
+      "py": "",
+      "abbr": ""
+    },
     "uskchv": {
       "code": "kchv",
       "market": "us",
@@ -63520,6 +63574,15 @@
       "type": "美",
       "name": "Long Pond Real Estate Select ETF",
       "name_en": "Long Pond Real Estate Select ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "uslpsv": {
+      "code": "lpsv",
+      "market": "us",
+      "type": "美",
+      "name": "Lone Peak SMID Value ETF",
+      "name_en": "Lone Peak SMID Value ETF",
       "py": "",
       "abbr": ""
     },
@@ -74584,6 +74647,15 @@
       "py": "",
       "abbr": ""
     },
+    "usnuib": {
+      "code": "nuib",
+      "market": "us",
+      "type": "美",
+      "name": "Nuveen Impact Bond ETF",
+      "name_en": "Nuveen Impact Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usnuif": {
       "code": "nuif",
       "market": "us",
@@ -79927,6 +79999,15 @@
       "type": "美",
       "name": "Principal Equity Premium Income ETF",
       "name_en": "Principal Equity Premium Income ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "uspcpc": {
+      "code": "pcpc",
+      "market": "us",
+      "type": "美",
+      "name": "Porter & Company Property & Casualty Index ETF",
+      "name_en": "Porter & Company Property & Casualty Index ETF",
       "py": "",
       "abbr": ""
     },
@@ -86446,6 +86527,15 @@
       "py": "",
       "abbr": ""
     },
+    "usqqse": {
+      "code": "qqse",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi Growth & Technology 15% Structured Buffer ETF - September Series",
+      "name_en": "Corgi Growth & Technology 15% Structured Buffer ETF - September Series",
+      "py": "",
+      "abbr": ""
+    },
     "usqqup": {
       "code": "qqup",
       "market": "us",
@@ -86542,6 +86632,15 @@
       "type": "美",
       "name": "QuantumScape Corporation - Common Stock",
       "name_en": "QuantumScape Corporation - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usqse": {
+      "code": "qse",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi Growth & Technology 10% Structured Buffer ETF - September Series",
+      "name_en": "Corgi Growth & Technology 10% Structured Buffer ETF - September Series",
       "py": "",
       "abbr": ""
     },
@@ -89776,12 +89875,30 @@
       "py": "",
       "abbr": ""
     },
+    "usrnaq": {
+      "code": "rnaq",
+      "market": "us",
+      "type": "美",
+      "name": "Rainier Acquisition Corporation - Class A Ordinary Shares",
+      "name_en": "Rainier Acquisition Corporation - Class A Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
     "usrnaqu": {
       "code": "rnaqu",
       "market": "us",
       "type": "美",
       "name": "Rainier Acquisition Corporation - Units",
       "name_en": "Rainier Acquisition Corporation - Units",
+      "py": "",
+      "abbr": ""
+    },
+    "usrnaqw": {
+      "code": "rnaqw",
+      "market": "us",
+      "type": "美",
+      "name": "Rainier Acquisition Corporation - Warrants",
+      "name_en": "Rainier Acquisition Corporation - Warrants",
       "py": "",
       "abbr": ""
     },
@@ -91774,6 +91891,15 @@
       "py": "",
       "abbr": ""
     },
+    "ussali": {
+      "code": "sali",
+      "market": "us",
+      "type": "美",
+      "name": "Schroders US Autocallable Ladder Income ETF",
+      "name_en": "Schroders US Autocallable Ladder Income ETF",
+      "py": "",
+      "abbr": ""
+    },
     "ussam": {
       "code": "sam",
       "market": "us",
@@ -93025,6 +93151,15 @@
       "py": "",
       "abbr": ""
     },
+    "usscse": {
+      "code": "scse",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi U.S. Small-Cap 15% Structured Buffer ETF - September Series",
+      "name_en": "Corgi U.S. Small-Cap 15% Structured Buffer ETF - September Series",
+      "py": "",
+      "abbr": ""
+    },
     "ussctx": {
       "code": "sctx",
       "market": "us",
@@ -93688,6 +93823,15 @@
       "type": "美",
       "name": "Senseonics Holdings, Inc. - Common Stock",
       "name_en": "Senseonics Holdings, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "ussepc": {
+      "code": "sepc",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi U.S. Equities 10% Structured Buffer ETF - September Series",
+      "name_en": "Corgi U.S. Equities 10% Structured Buffer ETF - September Series",
       "py": "",
       "abbr": ""
     },
@@ -116890,6 +117034,15 @@
       "type": "美",
       "name": "Franklin U.S. Dividend Booster Index ETF",
       "name_en": "Franklin U.S. Dividend Booster Index ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usxusm": {
+      "code": "xusm",
+      "market": "us",
+      "type": "美",
+      "name": "MarketDesk International Momentum ETF",
+      "name_en": "MarketDesk International Momentum ETF",
       "py": "",
       "abbr": ""
     },

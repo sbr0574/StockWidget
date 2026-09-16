@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-11",
+  "last_update": "2026-09-16",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -26420,10 +26420,10 @@
       "code": "301699",
       "market": "sz",
       "type": "创",
-      "name": "C洛轴股份",
+      "name": "洛轴股份",
       "name_en": "",
-      "py": "cluozhougufen",
-      "abbr": "clzgf"
+      "py": "luozhougufen",
+      "abbr": "lzgf"
     },
     "sz301707": {
       "code": "301707",

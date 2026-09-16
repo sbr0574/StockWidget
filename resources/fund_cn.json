@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-15",
+  "last_update": "2026-09-16",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -7498,6 +7498,15 @@
       "py": "xiaofeidianzietfpingan",
       "abbr": "xfdzetfpa"
     },
+    "sh561610": {
+      "code": "561610",
+      "market": "sh",
+      "type": "基",
+      "name": "绿色电力ETF鑫元",
+      "name_en": "",
+      "py": "lvsedianlietfxinyuan",
+      "abbr": "lsdletfxy"
+    },
     "sh561620": {
       "code": "561620",
       "market": "sh",
@@ -7794,6 +7803,15 @@
       "name_en": "",
       "py": "300xianjinliuetfhuabao",
       "abbr": "300xjletfhb"
+    },
+    "sh562110": {
+      "code": "562110",
+      "market": "sh",
+      "type": "基",
+      "name": "云计算50ETF东方红",
+      "name_en": "",
+      "py": "yunjisuan50etfdongfanghong",
+      "abbr": "yjs50etfdfh"
     },
     "sh562150": {
       "code": "562150",
@@ -10152,6 +10170,24 @@
       "name_en": "",
       "py": "huagongetfjingshun",
       "abbr": "hgetfjs"
+    },
+    "sz158038": {
+      "code": "158038",
+      "market": "sz",
+      "type": "基",
+      "name": "粮食ETF富国",
+      "name_en": "",
+      "py": "liangshietffuguo",
+      "abbr": "lsetffg"
+    },
+    "sz158061": {
+      "code": "158061",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板算力ETF天弘",
+      "name_en": "",
+      "py": "chuangyebansuanlietftianhong",
+      "abbr": "cybsletfth"
     },
     "sz159001": {
       "code": "159001",

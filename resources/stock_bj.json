@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-15",
+  "last_update": "2026-09-16",
   "codes": {
     "bj810011": {
       "code": "810011",
@@ -1292,10 +1292,10 @@
       "code": "920206",
       "market": "bj",
       "type": "京",
-      "name": "彩客科技",
+      "name": "XD彩客科",
       "name_en": "",
-      "py": "caikekeji",
-      "abbr": "ckkj"
+      "py": "xdcaikeke",
+      "abbr": "xdckk"
     },
     "bj920207": {
       "code": "920207",
@@ -1652,10 +1652,10 @@
       "code": "920298",
       "market": "bj",
       "type": "京",
-      "name": "腾信精密",
+      "name": "N腾信",
       "name_en": "",
-      "py": "tengxinjingmi",
-      "abbr": "txjm"
+      "py": "ntengxin",
+      "abbr": "ntx"
     },
     "bj920299": {
       "code": "920299",
@@ -2165,10 +2165,10 @@
       "code": "920527",
       "market": "bj",
       "type": "京",
-      "name": "夜光明",
+      "name": "XD夜光明",
       "name_en": "",
-      "py": "yeguangming",
-      "abbr": "ygm"
+      "py": "xdyeguangming",
+      "abbr": "xdygm"
     },
     "bj920533": {
       "code": "920533",
@@ -2417,10 +2417,10 @@
       "code": "920663",
       "market": "bj",
       "type": "京",
-      "name": "XD明阳科",
+      "name": "明阳科技",
       "name_en": "",
-      "py": "xdmingyangke",
-      "abbr": "xdmyk"
+      "py": "mingyangkeji",
+      "abbr": "mykj"
     },
     "bj920665": {
       "code": "920665",
