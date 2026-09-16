@@ -64,11 +64,14 @@ mkdir -p "%{buildroot}/usr/share/applications" "%{buildroot}/usr/share/doc/stock
 cp -a "%{_sourcedir}/StockWidget" "%{buildroot}/opt/StockWidget"
 cp "%{_sourcedir}/README.md" "%{_sourcedir}/LICENSE" "%{_sourcedir}/NOTICE" "%{buildroot}/usr/share/doc/stockwidget/"
 ln -s /opt/StockWidget/StockWidget "%{buildroot}/usr/bin/stockwidget"
+install -Dm644 "%{_sourcedir}/StockWidget/_internal/icons/StockWidget.png" \
+  "%{buildroot}/usr/share/pixmaps/stockwidget.png"
 cat > "%{buildroot}/usr/share/applications/stockwidget.desktop" <<'DESKTOP'
 [Desktop Entry]
 Name=StockWidget
 Comment=Transparent desktop stock quote widget
 Exec=/opt/StockWidget/StockWidget
+Icon=stockwidget
 Type=Application
 Terminal=false
 Categories=Utility;
@@ -79,6 +82,7 @@ DESKTOP
 /opt/StockWidget
 /usr/bin/stockwidget
 /usr/share/applications/stockwidget.desktop
+/usr/share/pixmaps/stockwidget.png
 %dir /usr/share/doc/stockwidget
 %doc /usr/share/doc/stockwidget/README.md
 %license /usr/share/doc/stockwidget/LICENSE
