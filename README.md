@@ -1,6 +1,6 @@
 # StockWidget
 
-极简透明盯盘 Widget 浮窗，实时显示自选股行情，支持沪深京股票基金、港股、美股、全球主要指数、期货（上期所），兼容**Windows、macOS、Linux**多平台。支持调整浮窗样式、双击隐藏浮窗、鼠标穿透，配置自动保存。
+简洁实时行情显示工具，浮窗支持自定义样式、双击隐藏、鼠标穿透。覆盖沪深京市场、港股、美股股票基金，全球主要指数和期货（上期所）数据，兼容**Windows、macOS、Linux**多平台。
 
 [![Release](https://img.shields.io/badge/下载-Releases-blue?style=flat-square&logo=github)](https://github.com/sbr0574/StockWidget/releases) [![Version](https://img.shields.io/github/v/tag/sbr0574/StockWidget?sort=semver&label=版本&style=flat-square)](https://github.com/sbr0574/StockWidget/tags) ![License](https://img.shields.io/badge/License-Apache--2.0-lightgrey?style=flat-square)
 
@@ -12,13 +12,14 @@
 
 * **作者**：`sbr0574`
 * **仓库地址**：https://github.com/sbr0574/StockWidget
-* 本项目的**唯一发布渠道**为上方 GitHub 仓库的 [Releases](https://github.com/sbr0574/StockWidget/releases)，其它网站提供的下载链接请谨慎使用。
+* **镜像仓库**: https://gitee.com/sbr0574/StockWidget
+* StockWidget的**唯一发布渠道**为上方 GitHub/Gitee 仓库的 [Releases](https://github.com/sbr0574/StockWidget/releases)，其它渠道提供的下载请谨慎使用。
 * 本项目基于 **Apache License 2.0** 开源。任何人对本项目进行**再分发**（转载源码、镜像下载、打包发布等）时，**必须**：
 
   * 保留 `LICENSE` 与 `NOTICE` 文件；
   * 保留版权与署名信息（详见 `NOTICE`）；
   * 注明原作者与仓库地址：https://github.com/sbr0574/StockWidget
-* 如发现第三方网站转载时未注明上述信息，可先联系对方补充；若对方拒绝，其行为已违反 Apache 2.0 第 4 节（Redistribution）的条款，作者有权要求其停止分发。
+* 如发现第三方网站转载时未注明上述信息，可要求对方补充。
 
 ---
 
@@ -53,11 +54,12 @@
 <img width="127" height="90" alt="image" src="https://github.com/user-attachments/assets/69ce08a7-6b55-41e8-bbab-e47b64d6e8a0" />
 
 > 📷 **设置面板**
-<img width="360" height="259" alt="image" src="https://github.com/user-attachments/assets/99e9e5e9-79fb-4708-a75a-3210923d64f4" />
-<img width="360" height="259" alt="image" src="https://github.com/user-attachments/assets/ec371889-3046-423f-b07c-9a34df018a6f" />
+<img width="1180" height="836" alt="image" src="https://github.com/user-attachments/assets/5ec0170a-bc7a-495d-be36-d62812d4b155" />
+<img width="1180" height="836" alt="image" src="https://github.com/user-attachments/assets/ea60a6c2-970a-4e29-83d8-600847c21fee" />
+<img width="1180" height="1036" alt="image" src="https://github.com/user-attachments/assets/1083c49d-6ec1-41c9-8abd-44ecc97737c6" />
+<img width="1180" height="997" alt="image" src="https://github.com/user-attachments/assets/cde49b06-2e14-40b8-9ff5-afe828781fbf" />
 
-> 📷 **显示全部指标+涨跌颜色**
-<img width="426" height="57" alt="image" src="https://github.com/user-attachments/assets/95fa0e99-0b0c-4fed-803d-aa3b78324b2f" />
+<img width="1180" height="836" alt="image" src="https://github.com/user-attachments/assets/16e94332-97ee-4707-a917-f55b440a94a8" />
 
 ---
 
