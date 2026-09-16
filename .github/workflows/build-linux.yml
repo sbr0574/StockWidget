@@ -19,10 +19,10 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install Linux system dependencies (Qt)
+      - name: Install Linux system and packaging dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libdbus-1-3 libfontconfig1 libxcb-cursor0
+          sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libdbus-1-3 libfontconfig1 libxcb-cursor0 rpm zip unzip
 
       - name: Install Python dependencies
         run: |
@@ -52,29 +52,44 @@ jobs:
         run: |
           bash .github/scripts/package-deb.sh
 
-      - name: Create release zip
+      - name: Package .rpm
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: bash .github/scripts/package-rpm.sh
+
+      - name: Create PyInstaller release zip
         env:
           RELEASE_VERSION: ${{ steps.version.outputs.value }}
         run: |
-          shopt -s nullglob
-          deb_files=(StockWidget-linux_*.deb)
-          if (( ${#deb_files[@]} != 1 )); then
-            echo "Expected exactly one .deb package, found ${#deb_files[@]}" >&2
-            exit 1
-          fi
-
           staging="$RUNNER_TEMP/StockWidget-Linux-$RELEASE_VERSION"
           mkdir "$staging"
-          cp README.md LICENSE NOTICE "${deb_files[0]}" "$staging/"
+          cp -a dist/StockWidget/. "$staging/"
+          cp README.md LICENSE NOTICE "$staging/"
+          test -x "$staging/StockWidget"
 
-          deb_name="$(basename "${deb_files[0]}")"
           archive="$GITHUB_WORKSPACE/StockWidget-Linux-$RELEASE_VERSION.zip"
           cd "$staging"
-          zip -q "$archive" README.md LICENSE NOTICE "$deb_name"
+          # Preserve the shared-library symlinks used by PyInstaller.
+          zip -q -r -y "$archive" .
+          unzip -tq "$archive"
 
-      - name: Upload artifact
+      - name: Upload PyInstaller zip
         uses: actions/upload-artifact@v7
         with:
           path: StockWidget-Linux-${{ steps.version.outputs.value }}.zip
+          if-no-files-found: error
+          archive: false
+
+      - name: Upload Debian package
+        uses: actions/upload-artifact@v7
+        with:
+          path: StockWidget-linux_*.deb
+          if-no-files-found: error
+          archive: false
+
+      - name: Upload RPM package
+        uses: actions/upload-artifact@v7
+        with:
+          path: StockWidget-linux_*.rpm
           if-no-files-found: error
           archive: false

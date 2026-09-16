@@ -6,6 +6,9 @@ from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from stockwidget.ui.theme import accent_color, accent_rgba
 
 COLOR_SWATCH_SIZE = 12
+LINUX_FONT_RULES = """
+QWidget { font-size: 12px; }
+"""
 _FLAT_GROUPS = ("gb_data", "gb_data_setting", "gb_icon", "gb_fcn", "gb_opacity",
                 "gb_color", "gb_text", "gb_tabel", "gb_hotkeys")
 
@@ -32,8 +35,12 @@ def color_swatch_icon(color: QColor, device_pixel_ratio: float = 1.0) -> QIcon:
 
 
 
-def build_settings_stylesheet(dark: bool) -> str:
+def build_settings_stylesheet(dark: bool, *, linux_fonts: bool = False) -> str:
     """按系统深浅色生成设置窗口样式表"""
+    # 在设置窗口的样式表中直接匹配每个子控件，覆盖 Linux 桌面主题的字号。
+    # 仅对父窗口 setFont 无法覆盖子控件的样式字体；后创建的编辑器也要匹配。
+    # 保留字体家族与字重，Qt 继续按屏幕像素比缩放这些逻辑像素。
+    font_rules = LINUX_FONT_RULES if linux_fonts else ""
     if dark:
         sep = "rgba(255, 255, 255, 0.35)"
         header_bg, header_line = "rgba(255, 255, 255, 0.10)", "rgba(255, 255, 255, 0.30)"
@@ -149,6 +156,7 @@ QPushButton#btn_icon_custom {{
 """
 
     return f"""
+{font_rules}
 {flat_boxes} {{
     border: none;
     border-top: 1px solid {sep};

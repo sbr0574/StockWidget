@@ -808,18 +808,17 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._notify_change()
 
     def _set_hotkey_option(self, attr: str, value, *, register: bool = True) -> HotkeyResult:
-        """统一修改快捷键配置，注册失败时恢复原值和原有注册。"""
+        """保留用户设置；注册失败仍允许修改，并单独记录每个快捷键的生效状态。"""
         old = getattr(self, attr)
-        if value == old:
+        key = "hotkey_click_through" if attr.startswith("hotkey_click_through") else "hotkey"
+        if value == old and self.hotkey_results.get(key, HotkeyResult(True)):
             return HotkeyResult(True)
         setattr(self, attr, value)
-        result = self._register_current() if register else HotkeyResult(True)
-        if not result:
-            setattr(self, attr, old)
+        if register:
             self._register_current()
-            return result
-        self._notify_change()
-        return result
+        if value != old:
+            self._notify_change()
+        return self.hotkey_results.get(key, HotkeyResult(True)) if register else HotkeyResult(True)
 
     def set_hotkey_enabled(self, enabled: bool) -> HotkeyResult:
         return self._set_hotkey_option("hotkey_enabled", bool(enabled))
@@ -944,16 +943,17 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.raise_()
 
     def _register_current(self) -> HotkeyResult:
-        """按当前 self.* 状态全量注册全局快捷键,返回第一个失败结果。"""
+        """分别注册两个快捷键，某个失败不妨碍另一个生效。"""
         self._hotkeys.unregister_all()
+        self.hotkey_results = {}
         if self.hotkey_enabled:
-            result = self._hotkeys.register(self.hotkey, self.hotkey_triggered.emit)
-            if not result:
-                return result
+            self.hotkey_results["hotkey"] = self._hotkeys.register(
+                self.hotkey, self.hotkey_triggered.emit)
         if self.hotkey_click_through_enabled:
-            result = self._hotkeys.register(
+            self.hotkey_results["hotkey_click_through"] = self._hotkeys.register(
                 self.hotkey_click_through, self.click_through_hotkey_triggered.emit,
             )
+        for result in self.hotkey_results.values():
             if not result:
                 return result
         return HotkeyResult(True)

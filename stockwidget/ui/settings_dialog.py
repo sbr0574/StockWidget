@@ -22,7 +22,9 @@ from stockwidget.ui.widget import FloatLabel
 from stockwidget.ui.metric_pool import MetricPoolWidget
 from stockwidget.ui.metric_settings_panel import NameSettingsPanel, UnitSettingsPanel
 from stockwidget.ui.watchlist_editor import WatchlistEditor
-from stockwidget.ui.settings_style import build_settings_stylesheet, color_swatch_icon
+from stockwidget.ui.settings_style import LINUX_FONT_RULES, build_settings_stylesheet, color_swatch_icon
+from stockwidget.ui.hotkey_status import HotkeyStatus
+from stockwidget.platform.hotkeys import HotkeyResult
 from stockwidget.platform.capabilities import (
     hotkeys_supported,
     click_through_supported,
@@ -41,14 +43,16 @@ from stockwidget.data.update_check import (
 def _hotkey_error_message(result) -> str:
     """把 HotkeyResult 转成用户可读的中文提示。"""
     if result.reason == "conflict":
-        return "该快捷键已被其他程序占用,请更换后重试。"
+        return "快捷键已占用，请更换"
     if result.reason == "reserved":
-        return "该快捷键为系统或通用快捷键(如复制、粘贴、保存等),为避免影响其他应用,请更换为 Ctrl+Alt+某键 之类的组合。"
+        return "系统保留快捷键，请更换"
     if result.reason == "invalid":
-        return "快捷键无效,需包含至少一个修饰键(Ctrl/Alt/Shift/Win)和一个主键。"
+        if sys.platform in ("win32", "linux"):
+            return "请用组合键或 F1–F12"
+        return "请使用修饰键 + 主键"
     if result.reason == "unsupported":
-        return "当前平台暂不支持全局快捷键。"
-    return "快捷键注册失败,请更换后重试。"
+        return "当前平台不支持"
+    return "注册失败，请重试"
 
 
 _ICON_FILE_FILTER = (
@@ -74,6 +78,9 @@ class SettingsDialog(QDialog):
         # 避免 Tool 窗口的小号红黄绿按钮与小标题。
         if sys.platform == "linux":
             self.setWindowFlags(self.windowFlags() | Qt.WindowType.Tool)
+            # 在指标池按文字宽度计算尺寸前应用字号，最终主题仍保留这些规则。
+            self.setStyleSheet(LINUX_FONT_RULES)
+        self._init_hotkey_status()
         self._init_metric_pool()
         self.setModal(False)
         self.watchlist_editor = WatchlistEditor(
@@ -92,6 +99,28 @@ class SettingsDialog(QDialog):
         self._start_github_check()
         # 全局监听鼠标按下：点击设置页空白/其他区域时清除自选列表与指标池的选中
         QApplication.instance().installEventFilter(self)
+
+    def _init_hotkey_status(self):
+        self._hotkey_rows = (
+            ("hotkey", self.ui.cb_hotkey_hide, self.ui.keyseq_hide),
+            ("hotkey_click_through", self.ui.cb_hotkey_click_through,
+             self.ui.keyseq_click_through),
+        )
+        self._hotkey_status = {}
+        for key, _checkbox, editor in self._hotkey_rows:
+            editor.setMaximumSequenceLength(1)
+            status = HotkeyStatus(editor.parentWidget())
+            status.setObjectName(key + "_status")
+            status.move(editor.geometry().right() + 9, editor.y() + 2)
+            self._hotkey_status[key] = status
+
+    def _refresh_hotkey_status(self):
+        for key, checkbox, editor in self._hotkey_rows:
+            status = self._hotkey_status[key]
+            status.setVisible(checkbox.isChecked() and checkbox.isEnabled())
+            result = self.win.hotkey_results.get(key, HotkeyResult(False, "failed"))
+            message = "已生效" if result else _hotkey_error_message(result)
+            status.set_result(result, message)
 
     def _init_metric_pool(self):
         """用动态双池替换固定指标复选框区域。"""
@@ -121,7 +150,7 @@ class SettingsDialog(QDialog):
 
     def _apply_theme_stylesheet(self, *_args):
         dark = QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
-        self.setStyleSheet(build_settings_stylesheet(dark))
+        self.setStyleSheet(build_settings_stylesheet(dark, linux_fonts=sys.platform == "linux"))
         for component in (self.metric_pool, self.watchlist_editor,
                           self.name_settings_panel, self.unit_settings_panel):
             component.set_theme(dark)
@@ -256,6 +285,7 @@ class SettingsDialog(QDialog):
             self.ui.cb_grid.setChecked(self.win.grid_visible)
 
             self._apply_platform_limits()
+            self._refresh_hotkey_status()
             self._setup_source_buttons()
             self._setup_about()
             self.refresh_data_state()
@@ -516,10 +546,8 @@ class SettingsDialog(QDialog):
 
     def _on_hotkey_changed(self):
         new_hotkey = self.ui.keyseq_hide.keySequence().toString()
-        result = self.win.update_hotkey(new_hotkey)
-        if not result:
-            self.ui.keyseq_hide.setKeySequence(QKeySequence(self.win.hotkey))
-            QMessageBox.warning(self, "快捷键无效", _hotkey_error_message(result))
+        self.win.update_hotkey(new_hotkey)
+        self._refresh_hotkey_status()
 
     def _on_icon_button_toggled(self, key: str, checked: bool):
         if not checked:
@@ -595,29 +623,18 @@ class SettingsDialog(QDialog):
 
     def _on_hotkey_hide_enabled_toggled(self, checked: bool):
         self.ui.keyseq_hide.setEnabled(bool(checked))
-        result = self.win.set_hotkey_enabled(bool(checked))
-        if not result:
-            # 启用失败(如冲突):回滚复选框与输入框状态,并提示用户
-            self.ui.keyseq_hide.setEnabled(False)
-            self._set_checked_blocked(self.ui.cb_hotkey_hide, False)
-            QMessageBox.warning(self, "快捷键无效", _hotkey_error_message(result))
+        self.win.set_hotkey_enabled(bool(checked))
+        self._refresh_hotkey_status()
 
     def _on_click_through_hotkey_enabled_toggled(self, checked: bool):
         self.ui.keyseq_click_through.setEnabled(bool(checked))
-        result = self.win.set_click_through_hotkey_enabled(bool(checked))
-        if not result:
-            # 启用失败(如冲突):回滚复选框与输入框状态,并提示用户
-            self.ui.keyseq_click_through.setEnabled(False)
-            self._set_checked_blocked(self.ui.cb_hotkey_click_through, False)
-            QMessageBox.warning(self, "快捷键无效", _hotkey_error_message(result))
+        self.win.set_click_through_hotkey_enabled(bool(checked))
+        self._refresh_hotkey_status()
 
     def _on_click_through_hotkey_changed(self):
         new_hotkey = self.ui.keyseq_click_through.keySequence().toString()
-        result = self.win.update_click_through_hotkey(new_hotkey)
-        if not result:
-            # 冲突/无效:回滚输入框显示,并提示用户
-            self.ui.keyseq_click_through.setKeySequence(QKeySequence(self.win.hotkey_click_through))
-            QMessageBox.warning(self, "快捷键无效", _hotkey_error_message(result))
+        self.win.update_click_through_hotkey(new_hotkey)
+        self._refresh_hotkey_status()
 
     def _setup_about(self):
         label = self.ui.label_about_info

@@ -65,7 +65,7 @@
      <property name="checkable">
       <bool>false</bool>
      </property>
-     <widget class="QTableWidget" name="list_codes">
+     <widget class="WatchlistTable" name="list_codes">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -1005,7 +1005,7 @@
        <string>显示/隐藏浮窗</string>
       </property>
      </widget>
-     <widget class="QKeySequenceEdit" name="keyseq_hide">
+     <widget class="HotkeySequenceEdit" name="keyseq_hide">
       <property name="geometry">
        <rect>
         <x>30</x>
@@ -1028,7 +1028,7 @@
        <string>鼠标穿透</string>
       </property>
      </widget>
-     <widget class="QKeySequenceEdit" name="keyseq_click_through">
+     <widget class="HotkeySequenceEdit" name="keyseq_click_through">
       <property name="geometry">
        <rect>
         <x>30</x>
@@ -1321,6 +1321,16 @@
   </widget>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>HotkeySequenceEdit</class>
+   <extends>QKeySequenceEdit</extends>
+   <header>stockwidget.ui.hotkey_sequence_edit</header>
+  </customwidget>
+  <customwidget>
+   <class>WatchlistTable</class>
+   <extends>QTableWidget</extends>
+   <header>stockwidget.ui.watchlist_table</header>
+  </customwidget>
   <customwidget>
    <class>CustomIconButton</class>
    <extends>QPushButton</extends>

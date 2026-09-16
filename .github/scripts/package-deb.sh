@@ -24,11 +24,15 @@ mkdir -p "$PKG/usr/share/doc/stockwidget"
 cp -a README.md LICENSE NOTICE "$PKG/usr/share/doc/stockwidget/"
 
 # 应用菜单入口
+# 桌面环境从系统图标主题读取菜单图标，不使用程序内嵌的 Qt 资源。
+install -Dm644 dist/StockWidget/_internal/icons/StockWidget.png \
+  "$PKG/usr/share/pixmaps/stockwidget.png"
 cat > "$PKG/usr/share/applications/stockwidget.desktop" <<'EOF'
 [Desktop Entry]
 Name=StockWidget
 Comment=极简透明盯盘 Widget 浮窗
 Exec=/opt/StockWidget/StockWidget
+Icon=stockwidget
 Type=Application
 Terminal=false
 Categories=Utility;

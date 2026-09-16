@@ -9,9 +9,9 @@ from unittest.mock import Mock, patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QPoint, QSize, Qt
-from PySide6.QtGui import QColor, QIcon, QPalette, QPixmap, QTextDocument
+from PySide6.QtGui import QColor, QIcon, QPalette, QPixmap, QTextDocument, QKeySequence
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QAbstractItemDelegate
+from PySide6.QtWidgets import QApplication, QAbstractItemDelegate, QScrollArea
 
 from stockwidget.ui.add_code_panel import (
     ADDED_ROLE,
@@ -27,6 +27,7 @@ from stockwidget.ui.settings_style import (
     COLOR_SWATCH_SIZE, build_settings_stylesheet, color_swatch_icon,
 )
 from stockwidget.ui.widget import FloatLabel
+from stockwidget.platform.hotkeys import HotkeyResult
 
 
 CODES = {
@@ -155,6 +156,115 @@ class SettingsDialogTests(unittest.TestCase):
         document.setTextWidth(label.contentsRect().width())
         self.assertIn("Copyright 2026 sbr0574\n\n仓库地址", document.toPlainText())
         self.assertLessEqual(document.size().height(), label.contentsRect().height())
+
+    def test_linux_about_uses_smaller_font_and_fits_without_scrolling(self):
+        with patch("stockwidget.ui.settings_dialog.sys.platform", "linux"):
+            dialog, _ = self._make_dialog()
+        dialog.ui.tab_widget.setCurrentWidget(dialog.ui.about)
+        dialog.show()
+        self.qt_app.processEvents()
+        label = dialog.ui.label_about_info
+        self.assertEqual(label.font().pixelSize(), 12)
+        self.assertFalse(dialog.ui.about.findChildren(QScrollArea))
+        self.assertIn("问题反馈", label.text())
+        document = QTextDocument()
+        document.setDefaultFont(label.font())
+        document.setDocumentMargin(0)
+        document.setHtml(label.text())
+        document.setTextWidth(label.contentsRect().width())
+        self.assertLessEqual(document.size().height(), label.contentsRect().height())
+        self.assertLess(label.geometry().bottom(), dialog.ui.btn_open_cache_dir.y())
+
+    def test_linux_fonts_override_desktop_styles_for_controls_and_rich_text(self):
+        original_stylesheet = self.qt_app.styleSheet()
+        # 模拟桌面主题对子控件指定大字号：仅在父窗口 setFont 不会覆盖它。
+        self.qt_app.setStyleSheet("QWidget { font-size: 20px; }")
+        try:
+            with patch("stockwidget.ui.settings_dialog.sys.platform", "linux"):
+                dialog, _ = self._make_dialog({"sh600519": {"checked": True}})
+                dialog.show()
+                self.qt_app.processEvents()
+                editor = self._start_code_editor(dialog)
+                controls = (
+                    dialog.ui.btn_add, dialog.ui.cb_auto_start, dialog.ui.rb_sina,
+                    dialog.ui.label_source, dialog.ui.sb_interval,
+                    dialog.ui.cmb_font, dialog.ui.keyseq_hide,
+                    dialog.ui.list_codes, dialog.ui.list_codes.horizontalHeader(),
+                    dialog.metric_pool.displayed_pool, editor,
+                    dialog.name_settings_panel.cmb_namelen, dialog.name_settings_panel.cb_code,
+                    dialog.watchlist_editor.add_code_panel.search_input,
+                    dialog.watchlist_editor.add_code_panel.result_list,
+                    dialog.watchlist_editor.add_code_panel.next_button,
+                )
+                for _ in range(2):
+                    # 切换主题后，以及延迟创建的表格编辑器，也必须使用同一字号。
+                    dialog._apply_theme_stylesheet()
+                    self.qt_app.processEvents()
+                    for control in controls:
+                        with self.subTest(control=control.objectName() or type(control).__name__):
+                            self.assertEqual(control.font().pixelSize(), 12)
+                    for control in (dialog.ui.label_about_info, dialog.ui.label_version_state,
+                                    dialog.ui.label_data_state, dialog.ui.btn_open_cache_dir):
+                        with self.subTest(about_control=control.objectName()):
+                            self.assertEqual(control.font().pixelSize(), 12)
+                label = dialog.ui.label_about_info
+                document = QTextDocument()
+                document.setDefaultFont(label.font())
+                document.setDocumentMargin(0)
+                document.setHtml(label.text())
+                document.setTextWidth(label.contentsRect().width())
+                self.assertLessEqual(document.size().height(), label.height())
+                self.assertFalse(dialog.ui.about.findChildren(QScrollArea))
+                # 具有独立设计字号的图形按钮、空列表提示仍保留原样。
+                self.assertEqual(dialog.ui.btn_icon_custom.font().pixelSize(), 22)
+                self.assertEqual(dialog.watchlist_editor.empty_watchlist_hint.font().pixelSize(), 18)
+        finally:
+            self.qt_app.setStyleSheet(original_stylesheet)
+
+    def test_linux_font_rules_do_not_override_other_platforms_or_float_window(self):
+        original_stylesheet = self.qt_app.styleSheet()
+        self.qt_app.setStyleSheet("QWidget { font-size: 20px; }")
+        try:
+            for system in ("win32", "darwin", "linux"):
+                with self.subTest(system=system), patch(
+                    "stockwidget.ui.settings_dialog.sys.platform", system
+                ):
+                    dialog, window = self._make_dialog()
+                    dialog.show()
+                    self.qt_app.processEvents()
+                    self.assertEqual(window.table.font().pixelSize(), 20)
+                    if system != "linux":
+                        self.assertEqual(dialog.ui.btn_add.font().pixelSize(), 20)
+                        self.assertEqual(dialog.ui.label_about_info.font().pixelSize(), 20)
+        finally:
+            self.qt_app.setStyleSheet(original_stylesheet)
+
+    def test_failed_hotkeys_stay_editable_and_show_inline_result(self):
+        with patch("stockwidget.ui.settings_dialog.hotkeys_supported", return_value=True), patch(
+            "stockwidget.ui.settings_dialog.click_through_supported", return_value=True
+        ):
+            dialog, window = self._make_dialog()
+        for key, checkbox, editor in dialog._hotkey_rows:
+            with self.subTest(key=key), patch.object(window._hotkeys, "register") as register, patch(
+                "stockwidget.ui.settings_dialog.QMessageBox.warning"
+            ) as warning:
+                register.return_value = HotkeyResult(False, "conflict")
+                checkbox.setChecked(True)
+                status = dialog._hotkey_status[key]
+                self.assertTrue(checkbox.isChecked())
+                self.assertTrue(editor.isEnabled())
+                self.assertFalse(status.isHidden())
+                self.assertFalse(status.active)
+                self.assertIn("占用", status.toolTip())
+                register.return_value = HotkeyResult(True)
+                editor.setKeySequence(QKeySequence("Ctrl+Alt+X"))
+                editor.editingFinished.emit()
+                self.assertEqual(getattr(window, key), "Ctrl+Alt+X")
+                self.assertTrue(status.active)
+                checkbox.setChecked(False)
+                self.assertTrue(status.isHidden())
+                self.assertFalse(editor.isEnabled())
+                warning.assert_not_called()
 
     def test_clear_watchlist_closes_editor_without_restoring_entries(self):
         dialog, window = self._make_dialog({"sh600519": {"checked": False, "cost": 100}})
@@ -373,7 +483,7 @@ class SettingsDialogTests(unittest.TestCase):
         finally:
             self.qt_app.setPalette(original)
 
-    def test_drop_restores_dragged_row_selection_after_cleanup(self):
+    def test_drop_preserves_dragged_row_selection(self):
         for target in (0, 1):
             with self.subTest(target=target):
                 with patch.object(FloatLabel, "_refresh_from_function"):
@@ -390,8 +500,7 @@ class SettingsDialogTests(unittest.TestCase):
                 event.source.return_value = table
                 event.position.return_value.toPoint.return_value = table.visualItemRect(table.item(target, 1)).center()
                 dialog.watchlist_editor._handle_drop(event)
-                self.assertEqual(table.selectedItems(), [])
-                event.setDropAction.assert_called_once_with(Qt.CopyAction)
+                event.setDropAction.assert_called_once_with(Qt.MoveAction)
                 self.qt_app.processEvents()
                 self.assertIs(table.currentItem(), dragged)
                 self.assertIn(dragged, table.selectedItems())

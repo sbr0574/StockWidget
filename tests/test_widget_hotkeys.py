@@ -1,4 +1,4 @@
-"""快捷键配置共用接口的成功、停用和失败回滚行为。"""
+"""快捷键配置与各自注册结果独立保存，失败后仍能编辑和重试。"""
 
 import os
 import unittest
@@ -40,38 +40,55 @@ class WidgetHotkeyTests(unittest.TestCase):
         self.manager.register.assert_not_called()
         self.assertEqual(self.saved.call_count, 2)
 
-    def test_failed_update_restores_both_registered_hotkeys(self):
+    def test_failed_update_keeps_requested_key_and_registers_other_hotkey(self):
         self.window.hotkey_enabled = True
         self.window.hotkey_click_through_enabled = True
         self.manager.register.side_effect = [
-            HotkeyResult(False, "conflict"), HotkeyResult(True), HotkeyResult(True),
+            HotkeyResult(False, "conflict"), HotkeyResult(True),
         ]
 
         result = self.window.update_hotkey("Ctrl+Alt+X")
 
         self.assertEqual(result.reason, "conflict")
-        self.assertEqual(self.window.hotkey, "Ctrl+Alt+F")
+        self.assertEqual(self.window.hotkey, "Ctrl+Alt+X")
         self.assertEqual(
             [c.args[0] for c in self.manager.register.call_args_list],
-            ["Ctrl+Alt+X", "Ctrl+Alt+F", "Ctrl+Alt+C"],
+            ["Ctrl+Alt+X", "Ctrl+Alt+C"],
         )
-        self.saved.assert_not_called()
+        self.assertFalse(self.window.hotkey_results["hotkey"])
+        self.assertTrue(self.window.hotkey_results["hotkey_click_through"])
+        self.saved.assert_called_once_with()
 
     def test_failed_enable_preserves_other_hotkey(self):
         self.window.hotkey_enabled = True
         self.manager.register.side_effect = [
-            HotkeyResult(True), HotkeyResult(False, "conflict"), HotkeyResult(True),
+            HotkeyResult(True), HotkeyResult(False, "conflict"),
         ]
 
         self.assertFalse(self.window.set_click_through_hotkey_enabled(True))
 
-        self.assertFalse(self.window.hotkey_click_through_enabled)
+        self.assertTrue(self.window.hotkey_click_through_enabled)
         self.assertTrue(self.window.hotkey_enabled)
         self.assertEqual(
             [c.args[0] for c in self.manager.register.call_args_list],
-            ["Ctrl+Alt+F", "Ctrl+Alt+C", "Ctrl+Alt+F"],
+            ["Ctrl+Alt+F", "Ctrl+Alt+C"],
         )
-        self.saved.assert_not_called()
+        self.saved.assert_called_once_with()
+
+    def test_unchanged_failed_key_can_retry_and_disabling_clears_failure(self):
+        self.manager.register.side_effect = [HotkeyResult(False, "conflict"), HotkeyResult(True)]
+        self.assertFalse(self.window.set_hotkey_enabled(True))
+        self.assertTrue(self.window.update_hotkey(self.window.hotkey))
+        self.assertEqual(self.manager.register.call_count, 2)
+        self.saved.assert_called_once_with()
+        self.assertTrue(self.window.set_hotkey_enabled(False))
+        self.assertNotIn("hotkey", self.window.hotkey_results)
+
+    def test_other_failure_does_not_change_successful_update_result(self):
+        self.window.hotkey_enabled = self.window.hotkey_click_through_enabled = True
+        self.manager.register.side_effect = [HotkeyResult(False, "conflict"), HotkeyResult(True)]
+        self.assertTrue(self.window.update_click_through_hotkey("Ctrl+Alt+X"))
+        self.assertFalse(self.window.hotkey_results["hotkey"])
 
     def test_successful_enable_saves_once_and_repeated_value_is_noop(self):
         self.manager.register.return_value = HotkeyResult(True)
