@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-16",
+  "last_update": "2026-09-17",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -13956,7 +13956,7 @@
       "market": "hk",
       "type": "港",
       "name": "天成控股",
-      "name_en": "TIAN CHENG HLDG",
+      "name_en": "TIAN CHENG-NEW",
       "py": "tianchengkonggu",
       "abbr": "tckg"
     },
@@ -18411,7 +18411,7 @@
       "market": "hk",
       "type": "港",
       "name": "天成控股",
-      "name_en": "TIAN CHENG HLDG",
+      "name_en": "TIAN CHENG-OLD",
       "py": "tianchengkonggu",
       "abbr": "tckg"
     },
@@ -18486,6 +18486,15 @@
       "name_en": "JINTAI ENERGY H",
       "py": "jintainengyuankonggu",
       "abbr": "jtnykg"
+    },
+    "hk02928": {
+      "code": "02928",
+      "market": "hk",
+      "type": "港",
+      "name": "港仔機器人股權",
+      "name_en": "HK ROBOTICS RTS",
+      "py": "gangzaijiqirenguquan",
+      "abbr": "gzjqrgq"
     },
     "hk02929": {
       "code": "02929",
@@ -20574,6 +20583,15 @@
       "name_en": "EFUND AI",
       "py": "yifangdaai",
       "abbr": "yfdai"
+    },
+    "hk03499": {
+      "code": "03499",
+      "market": "hk",
+      "type": "基",
+      "name": "南方AI瓶頸",
+      "name_en": "CSOP AI BOTTLNK",
+      "py": "nanfangaipingjing",
+      "abbr": "nfaipj"
     },
     "hk03509": {
       "code": "03509",
@@ -26280,6 +26298,15 @@
       "name_en": "GOLDEN LEAF INT",
       "py": "jinyeguojijituan",
       "abbr": "jygjjt"
+    },
+    "hk08581": {
+      "code": "08581",
+      "market": "hk",
+      "type": "港",
+      "name": "港娛國際股權",
+      "name_en": "HK ENT INTL RTS",
+      "py": "gangyuguojiguquan",
+      "abbr": "gygjgq"
     },
     "hk08601": {
       "code": "08601",

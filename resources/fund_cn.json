@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-16",
+  "last_update": "2026-09-17",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -4518,6 +4518,15 @@
       "name_en": "",
       "py": "zhinengxiaofeietfboshi",
       "abbr": "znxfetfbs"
+    },
+    "sh515940": {
+      "code": "515940",
+      "market": "sh",
+      "type": "基",
+      "name": "电网设备ETF南方",
+      "name_en": "",
+      "py": "dianwangshebeietfnanfang",
+      "abbr": "dwsbetfnf"
     },
     "sh515950": {
       "code": "515950",
@@ -9811,6 +9820,15 @@
       "py": "kechuangzongzhietfgongyin",
       "abbr": "kczzetfgy"
     },
+    "sh589510": {
+      "code": "589510",
+      "market": "sh",
+      "type": "基",
+      "name": "科创新材料ETF易方达",
+      "name_en": "",
+      "py": "kechuangxincailiaoetfyifangda",
+      "abbr": "kcxcletfyfd"
+    },
     "sh589520": {
       "code": "589520",
       "market": "sh",
@@ -10179,6 +10197,15 @@
       "name_en": "",
       "py": "liangshietffuguo",
       "abbr": "lsetffg"
+    },
+    "sz158041": {
+      "code": "158041",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板算力ETF华夏",
+      "name_en": "",
+      "py": "chuangyebansuanlietfhuaxia",
+      "abbr": "cybsletfhx"
     },
     "sz158061": {
       "code": "158061",

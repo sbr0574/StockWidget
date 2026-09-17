@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-16",
+  "last_update": "2026-09-17",
   "codes": {
     "usa": {
       "code": "a",
@@ -3328,6 +3328,15 @@
       "type": "美",
       "name": "Bitzero Holdings Inc. - Common Shares",
       "name_en": "Bitzero Holdings Inc. - Common Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "usaich": {
+      "code": "aich",
+      "market": "us",
+      "type": "美",
+      "name": "China AI ETF",
+      "name_en": "China AI ETF",
       "py": "",
       "abbr": ""
     },
@@ -7468,6 +7477,15 @@
       "type": "美",
       "name": "Associated Banc-Corp 6.625% Fixed-Rate Reset Subordinated Notes due 2033",
       "name_en": "Associated Banc-Corp 6.625% Fixed-Rate Reset Subordinated Notes due 2033",
+      "py": "",
+      "abbr": ""
+    },
+    "usasbh": {
+      "code": "asbh",
+      "market": "us",
+      "type": "美",
+      "name": "American Savings Bank, N.A. Common Stock",
+      "name_en": "American Savings Bank, N.A. Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -15967,6 +15985,15 @@
       "py": "",
       "abbr": ""
     },
+    "usbsma": {
+      "code": "bsma",
+      "market": "us",
+      "type": "美",
+      "name": "Invesco BulletShares 2036 Municipal Bond ETF",
+      "name_en": "Invesco BulletShares 2036 Municipal Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usbsmc": {
       "code": "bsmc",
       "market": "us",
@@ -16747,6 +16774,15 @@
       "type": "美",
       "name": "BlackRock Utility, Infrastructure & Power Opportunities Trust",
       "name_en": "BlackRock Utility, Infrastructure & Power Opportunities Trust",
+      "py": "",
+      "abbr": ""
+    },
+    "usbuil": {
+      "code": "buil",
+      "market": "us",
+      "type": "美",
+      "name": "Rebuild America ETF",
+      "name_en": "Rebuild America ETF",
       "py": "",
       "abbr": ""
     },
@@ -37342,15 +37378,6 @@
       "py": "sijijiaoyu",
       "abbr": "sjjy"
     },
-    "usfeed": {
-      "code": "feed",
-      "market": "us",
-      "type": "美",
-      "name": "ENvue Medical, Inc. - Common Stock",
-      "name_en": "ENvue Medical, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "usfege": {
       "code": "fege",
       "market": "us",
@@ -54991,6 +55018,15 @@
       "py": "",
       "abbr": ""
     },
+    "usiqgr": {
+      "code": "iqgr",
+      "market": "us",
+      "type": "美",
+      "name": "Astoria International Quality Growth Kings ETF",
+      "name_en": "Astoria International Quality Growth Kings ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usiqhi": {
       "code": "iqhi",
       "market": "us",
@@ -57583,6 +57619,15 @@
       "py": "",
       "abbr": ""
     },
+    "usjint": {
+      "code": "jint",
+      "market": "us",
+      "type": "美",
+      "name": "Janus Henderson International Core Alpha ETF",
+      "name_en": "Janus Henderson International Core Alpha ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usjire": {
       "code": "jire",
       "market": "us",
@@ -59468,8 +59513,8 @@
       "code": "kfii",
       "market": "us",
       "type": "美",
-      "name": "K&F Growth Acquisition Corp. II - Class A Ordinary shares",
-      "name_en": "K&F Growth Acquisition Corp. II - Class A Ordinary shares",
+      "name": "K - Class A Ordinary shares",
+      "name_en": "K - Class A Ordinary shares",
       "py": "",
       "abbr": ""
     },
@@ -59477,8 +59522,8 @@
       "code": "kfiir",
       "market": "us",
       "type": "美",
-      "name": "K&F Growth Acquisition Corp. II - Rights",
-      "name_en": "K&F Growth Acquisition Corp. II - Rights",
+      "name": "K - Rights",
+      "name_en": "K - Rights",
       "py": "",
       "abbr": ""
     },
@@ -59486,8 +59531,8 @@
       "code": "kfiiu",
       "market": "us",
       "type": "美",
-      "name": "K&F Growth Acquisition Corp. II - Unit",
-      "name_en": "K&F Growth Acquisition Corp. II - Unit",
+      "name": "K - Unit",
+      "name_en": "K - Unit",
       "py": "",
       "abbr": ""
     },
@@ -97129,15 +97174,6 @@
       "py": "",
       "abbr": ""
     },
-    "ussobr": {
-      "code": "sobr",
-      "market": "us",
-      "type": "美",
-      "name": "SOBR Safe, Inc. - Common Stock",
-      "name_en": "SOBR Safe, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "ussoc": {
       "code": "soc",
       "market": "us",
@@ -105305,8 +105341,8 @@
       "code": "trt",
       "market": "us",
       "type": "美",
-      "name": "Trio-Tech International Common Stock",
-      "name_en": "Trio-Tech International Common Stock",
+      "name": "Trio-Tech International - Common Stock",
+      "name_en": "Trio-Tech International - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -112860,6 +112896,15 @@
       "name_en": "WESCO International, Inc. Common Stock",
       "py": "xikeguoji",
       "abbr": "xkgj"
+    },
+    "uswccb": {
+      "code": "wccb",
+      "market": "us",
+      "type": "美",
+      "name": "West Coast Community Bancorp - Common Stock",
+      "name_en": "West Coast Community Bancorp - Common Stock",
+      "py": "",
+      "abbr": ""
     },
     "uswceo": {
       "code": "wceo",
