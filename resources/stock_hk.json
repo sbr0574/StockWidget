@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-17",
+  "last_update": "2026-09-18",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -5405,10 +5405,10 @@
       "code": "00770",
       "market": "hk",
       "type": "港",
-      "name": "SHANGHAI GROWTH",
-      "name_en": "SHANGHAI GROWTH",
-      "py": "",
-      "abbr": ""
+      "name": "楠爵資本",
+      "name_en": "EMINENCE CAP GP",
+      "py": "nanjueziben",
+      "abbr": "njzb"
     },
     "hk00771": {
       "code": "00771",
@@ -11940,7 +11940,7 @@
       "market": "hk",
       "type": "港",
       "name": "花樣年控股",
-      "name_en": "FANTASIA-NEW",
+      "name_en": "FANTASIA",
       "py": "huayangniankonggu",
       "abbr": "hynkg"
     },
@@ -18379,15 +18379,6 @@
       "py": "zijinkuangye",
       "abbr": "zjky"
     },
-    "hk02901": {
-      "code": "02901",
-      "market": "hk",
-      "type": "港",
-      "name": "花樣年控股",
-      "name_en": "FANTASIA-OLD",
-      "py": "huayangniankonggu",
-      "abbr": "hynkg"
-    },
     "hk02908": {
       "code": "02908",
       "market": "hk",
@@ -18486,6 +18477,15 @@
       "name_en": "JINTAI ENERGY H",
       "py": "jintainengyuankonggu",
       "abbr": "jtnykg"
+    },
+    "hk02927": {
+      "code": "02927",
+      "market": "hk",
+      "type": "港",
+      "name": "港灣數字股權",
+      "name_en": "HARBOUR D RTS",
+      "py": "gangwanshuziguquan",
+      "abbr": "gwszgq"
     },
     "hk02928": {
       "code": "02928",
@@ -26920,42 +26920,6 @@
       "py": "aboshimeiyuan-u",
       "abbr": "absmy-u"
     },
-    "hk09311": {
-      "code": "09311",
-      "market": "hk",
-      "type": "基",
-      "name": "XI二南CO-U",
-      "name_en": "XI2CSOPCOIN-U",
-      "py": "xiernanco-u",
-      "abbr": "xienco-u"
-    },
-    "hk09366": {
-      "code": "09366",
-      "market": "hk",
-      "type": "基",
-      "name": "XI二南特斯-U",
-      "name_en": "XI2CSOPTSLA-U",
-      "py": "xiernantesi-u",
-      "abbr": "xients-u"
-    },
-    "hk09388": {
-      "code": "09388",
-      "market": "hk",
-      "type": "基",
-      "name": "XI二南英偉-U",
-      "name_en": "XI2CSOPNVDA-U",
-      "py": "xiernanyingwei-u",
-      "abbr": "xienyw-u"
-    },
-    "hk09399": {
-      "code": "09399",
-      "market": "hk",
-      "type": "基",
-      "name": "XI二南策略-U",
-      "name_en": "XI2CSOPMSTR-U",
-      "py": "xiernancelve-u",
-      "abbr": "xiencl-u"
-    },
     "hk09403": {
       "code": "09403",
       "market": "hk",
@@ -27468,60 +27432,6 @@
       "name_en": "SF INTRA-CITY",
       "py": "shunfengtongcheng",
       "abbr": "sftc"
-    },
-    "hk09711": {
-      "code": "09711",
-      "market": "hk",
-      "type": "基",
-      "name": "XL二南CO-U",
-      "name_en": "XL2CSOPCOIN-U",
-      "py": "xlernanco-u",
-      "abbr": "xlenco-u"
-    },
-    "hk09747": {
-      "code": "09747",
-      "market": "hk",
-      "type": "基",
-      "name": "XL二南三星-U",
-      "name_en": "XL2CSOPSMSN-U",
-      "py": "xlernansanxing-u",
-      "abbr": "xlensx-u"
-    },
-    "hk09766": {
-      "code": "09766",
-      "market": "hk",
-      "type": "基",
-      "name": "XL二南特斯-U",
-      "name_en": "XL2CSOPTSLA-U",
-      "py": "xlernantesi-u",
-      "abbr": "xlents-u"
-    },
-    "hk09777": {
-      "code": "09777",
-      "market": "hk",
-      "type": "基",
-      "name": "XL二南巴郡-U",
-      "name_en": "XL2CSOPBRKB-U",
-      "py": "xlernanbajun-u",
-      "abbr": "xlenbj-u"
-    },
-    "hk09788": {
-      "code": "09788",
-      "market": "hk",
-      "type": "基",
-      "name": "XL二南英偉-U",
-      "name_en": "XL2CSOPNVDA-U",
-      "py": "xlernanyingwei-u",
-      "abbr": "xlenyw-u"
-    },
-    "hk09799": {
-      "code": "09799",
-      "market": "hk",
-      "type": "基",
-      "name": "XL二南策略-U",
-      "name_en": "XL2CSOPMSTR-U",
-      "py": "xlernancelve-u",
-      "abbr": "xlencl-u"
     },
     "hk09801": {
       "code": "09801",

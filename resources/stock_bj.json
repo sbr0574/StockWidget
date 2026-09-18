@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-17",
+  "last_update": "2026-09-18",
   "codes": {
     "bj810011": {
       "code": "810011",
@@ -581,10 +581,10 @@
       "code": "920081",
       "market": "bj",
       "type": "京",
-      "name": "XD欧伦电",
+      "name": "欧伦电气",
       "name_en": "",
-      "py": "xdoulundian",
-      "abbr": "xdold"
+      "py": "oulundianqi",
+      "abbr": "oldq"
     },
     "bj920082": {
       "code": "920082",
@@ -964,6 +964,15 @@
       "py": "haichangzhineng",
       "abbr": "hczn"
     },
+    "bj920157": {
+      "code": "920157",
+      "market": "bj",
+      "type": "京",
+      "name": "宇特光电",
+      "name_en": "",
+      "py": "yuteguangdian",
+      "abbr": "ytgd"
+    },
     "bj920158": {
       "code": "920158",
       "market": "bj",
@@ -1085,10 +1094,10 @@
       "code": "920176",
       "market": "bj",
       "type": "京",
-      "name": "维琪科技",
+      "name": "XD维琪科",
       "name_en": "",
-      "py": "weiqikeji",
-      "abbr": "wqkj"
+      "py": "xdweiqike",
+      "abbr": "xdwqk"
     },
     "bj920177": {
       "code": "920177",
@@ -1139,10 +1148,10 @@
       "code": "920183",
       "market": "bj",
       "type": "京",
-      "name": "海菲曼",
+      "name": "XD海菲曼",
       "name_en": "",
-      "py": "haifeiman",
-      "abbr": "hfm"
+      "py": "xdhaifeiman",
+      "abbr": "xdhfm"
     },
     "bj920184": {
       "code": "920184",
@@ -1976,10 +1985,10 @@
       "code": "920445",
       "market": "bj",
       "type": "京",
-      "name": "龙竹科技",
+      "name": "XD龙竹科",
       "name_en": "",
-      "py": "longzhukeji",
-      "abbr": "lzkj"
+      "py": "xdlongzhuke",
+      "abbr": "xdlzk"
     },
     "bj920454": {
       "code": "920454",

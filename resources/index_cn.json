@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-11",
+  "last_update": "2026-09-18",
   "codes": {
     "sh000001": {
       "code": "000001",
@@ -8299,6 +8299,24 @@
       "py": "chuangyebanjiqirenr",
       "abbr": "cybjqrr"
     },
+    "sz970087": {
+      "code": "970087",
+      "market": "sz",
+      "type": "指",
+      "name": "创业板生物科技",
+      "name_en": "",
+      "py": "chuangyebanshengwukeji",
+      "abbr": "cybswkj"
+    },
+    "sz97008701": {
+      "code": "97008701",
+      "market": "sz",
+      "type": "指",
+      "name": "创业板生物科技R",
+      "name_en": "",
+      "py": "chuangyebanshengwukejir",
+      "abbr": "cybswkjr"
+    },
     "sz970088": {
       "code": "970088",
       "market": "sz",
@@ -8991,6 +9009,15 @@
       "name_en": "",
       "py": "chuangxinyao",
       "abbr": "cxy"
+    },
+    "sz98008601": {
+      "code": "98008601",
+      "market": "sz",
+      "type": "指",
+      "name": "创新药精选R",
+      "name_en": "",
+      "py": "chuangxinyaojingxuanr",
+      "abbr": "cxyjxr"
     },
     "sz980087": {
       "code": "980087",
@@ -10701,6 +10728,78 @@
       "name_en": "",
       "py": "ganggutongdianlir",
       "abbr": "ggtdlr"
+    },
+    "sz987036": {
+      "code": "987036",
+      "market": "sz",
+      "type": "指",
+      "name": "港股通AI应用",
+      "name_en": "",
+      "py": "ganggutongaiyingyong",
+      "abbr": "ggtaiyy"
+    },
+    "sz98703600": {
+      "code": "98703600",
+      "market": "sz",
+      "type": "指",
+      "name": "港股通AI应用(人民币)",
+      "name_en": "",
+      "py": "ganggutongaiyingyong(renminbi)",
+      "abbr": "ggtaiyy(rmb)"
+    },
+    "sz98703601": {
+      "code": "98703601",
+      "market": "sz",
+      "type": "指",
+      "name": "港股通AI应用R(人民币)",
+      "name_en": "",
+      "py": "ganggutongaiyingyongr(renminbi)",
+      "abbr": "ggtaiyyr(rmb)"
+    },
+    "sz98703611": {
+      "code": "98703611",
+      "market": "sz",
+      "type": "指",
+      "name": "港股通AI应用R",
+      "name_en": "",
+      "py": "ganggutongaiyingyongr",
+      "abbr": "ggtaiyyr"
+    },
+    "sz987038": {
+      "code": "987038",
+      "market": "sz",
+      "type": "指",
+      "name": "港股通红利价值",
+      "name_en": "",
+      "py": "ganggutonghonglijiazhi",
+      "abbr": "ggthljz"
+    },
+    "sz98703800": {
+      "code": "98703800",
+      "market": "sz",
+      "type": "指",
+      "name": "港股通红利价值(人民币)",
+      "name_en": "",
+      "py": "ganggutonghonglijiazhi(renminbi)",
+      "abbr": "ggthljz(rmb)"
+    },
+    "sz98703801": {
+      "code": "98703801",
+      "market": "sz",
+      "type": "指",
+      "name": "港股通红利价值R(人民币)",
+      "name_en": "",
+      "py": "ganggutonghonglijiazhir(renminbi)",
+      "abbr": "ggthljzr(rmb)"
+    },
+    "sz98703811": {
+      "code": "98703811",
+      "market": "sz",
+      "type": "指",
+      "name": "港股通红利价值R",
+      "name_en": "",
+      "py": "ganggutonghonglijiazhir",
+      "abbr": "ggthljzr"
     },
     "sz988006": {
       "code": "988006",

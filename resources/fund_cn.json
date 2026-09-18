@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-17",
+  "last_update": "2026-09-18",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -4599,6 +4599,15 @@
       "name_en": "",
       "py": "huagongetfhuabao",
       "abbr": "hgetfhb"
+    },
+    "sh516040": {
+      "code": "516040",
+      "market": "sh",
+      "type": "基",
+      "name": "300现金流ETF华夏",
+      "name_en": "",
+      "py": "300xianjinliuetfhuaxia",
+      "abbr": "300xjletfhx"
     },
     "sh516050": {
       "code": "516050",
@@ -10153,6 +10162,15 @@
       "py": "dianchietfyongying",
       "abbr": "dcetfyy"
     },
+    "sz158022": {
+      "code": "158022",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板综增强ETF国联",
+      "name_en": "",
+      "py": "chuangyebanzongzengqiangetfguolian",
+      "abbr": "cybzzqetfgl"
+    },
     "sz158023": {
       "code": "158023",
       "market": "sz",
@@ -10206,6 +10224,15 @@
       "name_en": "",
       "py": "chuangyebansuanlietfhuaxia",
       "abbr": "cybsletfhx"
+    },
+    "sz158050": {
+      "code": "158050",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板算力ETF易方达",
+      "name_en": "",
+      "py": "chuangyebansuanlietfyifangda",
+      "abbr": "cybsletfyfd"
     },
     "sz158061": {
       "code": "158061",

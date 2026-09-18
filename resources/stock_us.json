@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-17",
+  "last_update": "2026-09-18",
   "codes": {
     "usa": {
       "code": "a",
@@ -5839,15 +5839,6 @@
       "type": "美",
       "name": "Annovis Bio, Inc. Common Stock",
       "name_en": "Annovis Bio, Inc. Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usany": {
-      "code": "any",
-      "market": "us",
-      "type": "美",
-      "name": "Sphere 3D Corp. - Common Shares",
-      "name_en": "Sphere 3D Corp. - Common Shares",
       "py": "",
       "abbr": ""
     },
@@ -16286,8 +16277,8 @@
       "code": "btcc",
       "market": "us",
       "type": "美",
-      "name": "Grayscale Bitcoin Covered Call ETF",
-      "name_en": "Grayscale Bitcoin Covered Call ETF",
+      "name": "Grayscale Bitcoin High Income ETF",
+      "name_en": "Grayscale Bitcoin High Income ETF",
       "py": "",
       "abbr": ""
     },
@@ -18190,6 +18181,24 @@
       "py": "",
       "abbr": ""
     },
+    "uscatl": {
+      "code": "catl",
+      "market": "us",
+      "type": "美",
+      "name": "Catalyst Acquisition Corp. - Class A Ordinary Share",
+      "name_en": "Catalyst Acquisition Corp. - Class A Ordinary Share",
+      "py": "",
+      "abbr": ""
+    },
+    "uscatlr": {
+      "code": "catlr",
+      "market": "us",
+      "type": "美",
+      "name": "Catalyst Acquisition Corp. - Rights",
+      "name_en": "Catalyst Acquisition Corp. - Rights",
+      "py": "",
+      "abbr": ""
+    },
     "uscatlu": {
       "code": "catlu",
       "market": "us",
@@ -19980,6 +19989,15 @@
       "name_en": "Compugen Ltd. - Ordinary Shares",
       "py": "compugenyiliao",
       "abbr": "compugenyl"
+    },
+    "uscgfs": {
+      "code": "cgfs",
+      "market": "us",
+      "type": "美",
+      "name": "CG Flagship Equity ETF",
+      "name_en": "CG Flagship Equity ETF",
+      "py": "",
+      "abbr": ""
     },
     "uscgge": {
       "code": "cgge",
@@ -29620,6 +29638,15 @@
       "py": "",
       "abbr": ""
     },
+    "usdrk": {
+      "code": "drk",
+      "market": "us",
+      "type": "美",
+      "name": "DarkHorse Technologies Inc. - Common Shares",
+      "name_en": "DarkHorse Technologies Inc. - Common Shares",
+      "py": "",
+      "abbr": ""
+    },
     "usdrky": {
       "code": "drky",
       "market": "us",
@@ -34538,8 +34565,8 @@
       "code": "etco",
       "market": "us",
       "type": "美",
-      "name": "Grayscale Ethereum Covered Call ETF",
-      "name_en": "Grayscale Ethereum Covered Call ETF",
+      "name": "Grayscale Ethereum High Income ETF",
+      "name_en": "Grayscale Ethereum High Income ETF",
       "py": "",
       "abbr": ""
     },
@@ -50230,6 +50257,15 @@
       "py": "",
       "abbr": ""
     },
+    "ushumm": {
+      "code": "humm",
+      "market": "us",
+      "type": "美",
+      "name": "800VDC AI Datacenter Ecosystem ETF",
+      "name_en": "800VDC AI Datacenter Ecosystem ETF",
+      "py": "",
+      "abbr": ""
+    },
     "ushumn": {
       "code": "humn",
       "market": "us",
@@ -50544,6 +50580,15 @@
       "name_en": "Hyster-Yale, Inc. Class A common stock",
       "py": "haisite-yelu",
       "abbr": "hst-yl"
+    },
+    "ushyac_u": {
+      "code": "hyac_u",
+      "market": "us",
+      "type": "美",
+      "name": "Haymaker Acquisition Corp V Units, each consisting of one Class A ordinary share and one-third of one redeemable warrant",
+      "name_en": "Haymaker Acquisition Corp V Units, each consisting of one Class A ordinary share and one-third of one redeemable warrant",
+      "py": "",
+      "abbr": ""
     },
     "ushybb": {
       "code": "hybb",
@@ -59513,8 +59558,8 @@
       "code": "kfii",
       "market": "us",
       "type": "美",
-      "name": "K - Class A Ordinary shares",
-      "name_en": "K - Class A Ordinary shares",
+      "name": "K&F Growth Acquisition Corp. II - Class A Ordinary shares",
+      "name_en": "K&F Growth Acquisition Corp. II - Class A Ordinary shares",
       "py": "",
       "abbr": ""
     },
@@ -59522,8 +59567,8 @@
       "code": "kfiir",
       "market": "us",
       "type": "美",
-      "name": "K - Rights",
-      "name_en": "K - Rights",
+      "name": "K&F Growth Acquisition Corp. II - Rights",
+      "name_en": "K&F Growth Acquisition Corp. II - Rights",
       "py": "",
       "abbr": ""
     },
@@ -59531,8 +59576,8 @@
       "code": "kfiiu",
       "market": "us",
       "type": "美",
-      "name": "K - Unit",
-      "name_en": "K - Unit",
+      "name": "K&F Growth Acquisition Corp. II - Unit",
+      "name_en": "K&F Growth Acquisition Corp. II - Unit",
       "py": "",
       "abbr": ""
     },
@@ -60928,15 +60973,6 @@
       "type": "美",
       "name": "Pasithea Therapeutics Corp. - Common Stock",
       "name_en": "Pasithea Therapeutics Corp. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "uskttaw": {
-      "code": "kttaw",
-      "market": "us",
-      "type": "美",
-      "name": "Pasithea Therapeutics Corp. - Warrant",
-      "name_en": "Pasithea Therapeutics Corp. - Warrant",
       "py": "",
       "abbr": ""
     },
@@ -68221,6 +68257,15 @@
       "py": "",
       "abbr": ""
     },
+    "usmngz": {
+      "code": "mngz",
+      "market": "us",
+      "type": "美",
+      "name": "Yorkville America 2X Long MANGOS Plus Daily Target ETF",
+      "name_en": "Yorkville America 2X Long MANGOS Plus Daily Target ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usmnkd": {
       "code": "mnkd",
       "market": "us",
@@ -69733,12 +69778,30 @@
       "py": "",
       "abbr": ""
     },
+    "usmtak": {
+      "code": "mtak",
+      "market": "us",
+      "type": "美",
+      "name": "Market Technology Acquisition Corp - Class A Ordinary Shares",
+      "name_en": "Market Technology Acquisition Corp - Class A Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
     "usmtaku": {
       "code": "mtaku",
       "market": "us",
       "type": "美",
       "name": "Market Technology Acquisition Corp - Unit",
       "name_en": "Market Technology Acquisition Corp - Unit",
+      "py": "",
+      "abbr": ""
+    },
+    "usmtakw": {
+      "code": "mtakw",
+      "market": "us",
+      "type": "美",
+      "name": "Market Technology Acquisition Corp - Warrants",
+      "name_en": "Market Technology Acquisition Corp - Warrants",
       "py": "",
       "abbr": ""
     },
@@ -85087,6 +85150,15 @@
       "py": "",
       "abbr": ""
     },
+    "uspwrx": {
+      "code": "pwrx",
+      "market": "us",
+      "type": "美",
+      "name": "Westwood Salient Enhanced Power & Infrastructure ETF",
+      "name_en": "Westwood Salient Enhanced Power & Infrastructure ETF",
+      "py": "",
+      "abbr": ""
+    },
     "uspwrz": {
       "code": "pwrz",
       "market": "us",
@@ -89368,15 +89440,6 @@
       "type": "美",
       "name": "Rithm Capital Corp. 8.750% Series F Fixed-Rate Reset Cumulative Redeemable Preferred Stock",
       "name_en": "Rithm Capital Corp. 8.750% Series F Fixed-Rate Reset Cumulative Redeemable Preferred Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usritr": {
-      "code": "ritr",
-      "market": "us",
-      "type": "美",
-      "name": "Reitar Logtech Holdings Limited - Ordinary shares",
-      "name_en": "Reitar Logtech Holdings Limited - Ordinary shares",
       "py": "",
       "abbr": ""
     },
@@ -101971,6 +102034,15 @@
       "py": "",
       "abbr": ""
     },
+    "ustdna": {
+      "code": "tdna",
+      "market": "us",
+      "type": "美",
+      "name": "T. Rowe Price Biotech ETF",
+      "name_en": "T. Rowe Price Biotech ETF",
+      "py": "",
+      "abbr": ""
+    },
     "ustdoc": {
       "code": "tdoc",
       "market": "us",
@@ -103600,12 +103672,30 @@
       "py": "",
       "abbr": ""
     },
+    "ustlac": {
+      "code": "tlac",
+      "market": "us",
+      "type": "美",
+      "name": "Three Lions Acquisition Corp. - Ordinary Shares",
+      "name_en": "Three Lions Acquisition Corp. - Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
     "ustlacu": {
       "code": "tlacu",
       "market": "us",
       "type": "美",
       "name": "Three Lions Acquisition Corp. - Units",
       "name_en": "Three Lions Acquisition Corp. - Units",
+      "py": "",
+      "abbr": ""
+    },
+    "ustlacw": {
+      "code": "tlacw",
+      "market": "us",
+      "type": "美",
+      "name": "Three Lions Acquisition Corp. - Warrants",
+      "name_en": "Three Lions Acquisition Corp. - Warrants",
       "py": "",
       "abbr": ""
     },
@@ -104029,6 +104119,15 @@
       "type": "美",
       "name": "Toyota Motor Corporation ADRhedged",
       "name_en": "Toyota Motor Corporation ADRhedged",
+      "py": "",
+      "abbr": ""
+    },
+    "ustmid": {
+      "code": "tmid",
+      "market": "us",
+      "type": "美",
+      "name": "T. Rowe Price Mid Cap Equity Research ETF",
+      "name_en": "T. Rowe Price Mid Cap Equity Research ETF",
       "py": "",
       "abbr": ""
     },
@@ -105685,6 +105784,15 @@
       "type": "美",
       "name": "Touchstone Securitized Income ETF",
       "name_en": "Touchstone Securitized Income ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "ustsee": {
+      "code": "tsee",
+      "market": "us",
+      "type": "美",
+      "name": "T. Rowe Price Small Cap ETF",
+      "name_en": "T. Rowe Price Small Cap ETF",
       "py": "",
       "abbr": ""
     },
