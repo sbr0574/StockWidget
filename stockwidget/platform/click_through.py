@@ -7,6 +7,7 @@ import sys
 from PySide6.QtGui import QGuiApplication
 
 from stockwidget.platform.capabilities import is_x11
+from stockwidget.platform.windows import get_user32
 
 # X11 相关库与显示连接的缓存（延迟初始化，复用同一连接）
 _x11_xlib = None
@@ -32,10 +33,11 @@ def _click_through_windows(widget, enable: bool) -> None:
         SWP_NOSIZE = 0x0001
         SWP_NOMOVE = 0x0002
         SWP_NOZORDER = 0x0004
+        SWP_NOACTIVATE = 0x0010
         SWP_FRAMECHANGED = 0x0020
 
         hwnd = int(widget.winId())
-        user32 = ctypes.windll.user32
+        user32 = get_user32()
         exstyle = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
         if enable:
             exstyle |= WS_EX_LAYERED | WS_EX_TRANSPARENT
@@ -43,7 +45,8 @@ def _click_through_windows(widget, enable: bool) -> None:
             exstyle &= ~WS_EX_TRANSPARENT
         user32.SetWindowLongW(hwnd, GWL_EXSTYLE, exstyle)
         user32.SetWindowPos(hwnd, 0, 0, 0, 0, 0,
-                            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED)
+                            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER
+                            | SWP_NOACTIVATE | SWP_FRAMECHANGED)
     except Exception:
         pass
 

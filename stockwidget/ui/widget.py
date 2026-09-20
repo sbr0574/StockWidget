@@ -37,6 +37,7 @@ from stockwidget.platform.capabilities import (
     default_font_family,
 )
 from stockwidget.platform.click_through import apply_click_through
+from stockwidget.platform.windows import ensure_topmost
 
 
 SORTABLE_HEADERS = (
@@ -784,6 +785,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             return
         self.click_through = enable
         apply_click_through(self, self.click_through)
+        self._ensure_on_top()
         self.click_through_changed.emit(self.click_through)
         self._notify_change()
 
@@ -918,6 +920,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self._keep_top_timer.start()
         apply_click_through(self, self.click_through)
         self._defer_fit()
+        self._ensure_on_top()
 
     def hideEvent(self, event):
         super().hideEvent(event)
@@ -929,8 +932,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def _ensure_on_top(self):
         if not self.force_top or not self.isVisible():
             return
-        if self.click_through:
-            return
         try:
             aw = QApplication.activeWindow()
             popup = QApplication.activePopupWidget()
@@ -940,7 +941,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
                 return
         except Exception:
             pass
-        self.raise_()
+        ensure_topmost(self)
 
     def _register_current(self) -> HotkeyResult:
         """分别注册两个快捷键，某个失败不妨碍另一个生效。"""
