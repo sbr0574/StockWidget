@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-18",
+  "last_update": "2026-09-21",
   "codes": {
     "bj810011": {
       "code": "810011",
@@ -1094,10 +1094,10 @@
       "code": "920176",
       "market": "bj",
       "type": "京",
-      "name": "XD维琪科",
+      "name": "维琪科技",
       "name_en": "",
-      "py": "xdweiqike",
-      "abbr": "xdwqk"
+      "py": "weiqikeji",
+      "abbr": "wqkj"
     },
     "bj920177": {
       "code": "920177",
@@ -1148,10 +1148,10 @@
       "code": "920183",
       "market": "bj",
       "type": "京",
-      "name": "XD海菲曼",
+      "name": "海菲曼",
       "name_en": "",
-      "py": "xdhaifeiman",
-      "abbr": "xdhfm"
+      "py": "haifeiman",
+      "abbr": "hfm"
     },
     "bj920184": {
       "code": "920184",
@@ -1328,10 +1328,10 @@
       "code": "920211",
       "market": "bj",
       "type": "京",
-      "name": "新睿电子",
+      "name": "XD新睿电",
       "name_en": "",
-      "py": "xinruidianzi",
-      "abbr": "xrdz"
+      "py": "xdxinruidian",
+      "abbr": "xdxrd"
     },
     "bj920212": {
       "code": "920212",
@@ -1985,10 +1985,10 @@
       "code": "920445",
       "market": "bj",
       "type": "京",
-      "name": "XD龙竹科",
+      "name": "龙竹科技",
       "name_en": "",
-      "py": "xdlongzhuke",
-      "abbr": "xdlzk"
+      "py": "longzhukeji",
+      "abbr": "lzkj"
     },
     "bj920454": {
       "code": "920454",

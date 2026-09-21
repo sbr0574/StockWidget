@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-18",
+  "last_update": "2026-09-21",
   "codes": {
     "sh000001": {
       "code": "000001",
@@ -8681,10 +8681,10 @@
       "code": "980027",
       "market": "sz",
       "type": "指",
-      "name": "新能源电池",
+      "name": "国证储能电池",
       "name_en": "",
-      "py": "xinnengyuandianchi",
-      "abbr": "xnydc"
+      "py": "guozhengchunengdianchi",
+      "abbr": "gzcndc"
     },
     "sz980028": {
       "code": "980028",
@@ -9005,10 +9005,10 @@
       "code": "980086",
       "market": "sz",
       "type": "指",
-      "name": "创新药",
+      "name": "创新药精选",
       "name_en": "",
-      "py": "chuangxinyao",
-      "abbr": "cxy"
+      "py": "chuangxinyaojingxuan",
+      "abbr": "cxyjx"
     },
     "sz98008601": {
       "code": "98008601",

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-18",
+  "last_update": "2026-09-21",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -10094,10 +10094,10 @@
       "code": "158008",
       "market": "sz",
       "type": "基",
-      "name": "新能源电池ETF华夏",
+      "name": "储能电池ETF华夏",
       "name_en": "",
-      "py": "xinnengyuandianchietfhuaxia",
-      "abbr": "xnydcetfhx"
+      "py": "chunengdianchietfhuaxia",
+      "abbr": "cndcetfhx"
     },
     "sz158009": {
       "code": "158009",
@@ -10634,10 +10634,10 @@
       "code": "159052",
       "market": "sz",
       "type": "基",
-      "name": "新能源电池ETF嘉实",
+      "name": "储能电池ETF嘉实",
       "name_en": "",
-      "py": "xinnengyuandianchietfjiashi",
-      "abbr": "xnydcetfjs"
+      "py": "chunengdianchietfjiashi",
+      "abbr": "cndcetfjs"
     },
     "sz159053": {
       "code": "159053",
@@ -10787,10 +10787,10 @@
       "code": "159071",
       "market": "sz",
       "type": "基",
-      "name": "新能源电池ETF华宝",
+      "name": "储能电池ETF华宝",
       "name_en": "",
-      "py": "xinnengyuandianchietfhuabao",
-      "abbr": "xnydcetfhb"
+      "py": "chunengdianchietfhuabao",
+      "abbr": "cndcetfhb"
     },
     "sz159072": {
       "code": "159072",
@@ -11714,10 +11714,10 @@
       "code": "159193",
       "market": "sz",
       "type": "基",
-      "name": "新能源电池ETF银华",
+      "name": "储能电池ETF银华",
       "name_en": "",
-      "py": "xinnengyuandianchietfyinhua",
-      "abbr": "xnydcetfyh"
+      "py": "chunengdianchietfyinhua",
+      "abbr": "cndcetfyh"
     },
     "sz159195": {
       "code": "159195",

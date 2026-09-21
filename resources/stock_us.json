@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-18",
+  "last_update": "2026-09-21",
   "codes": {
     "usa": {
       "code": "a",
@@ -7570,6 +7570,15 @@
       "py": "",
       "abbr": ""
     },
+    "usasgirw": {
+      "code": "asgirw",
+      "market": "us",
+      "type": "美",
+      "name": "abrdn Global Infrastructure Income Fund Rights (expiring October 15, 2026) Rights when issued",
+      "name_en": "abrdn Global Infrastructure Income Fund Rights (expiring October 15, 2026) Rights when issued",
+      "py": "",
+      "abbr": ""
+    },
     "usasgm": {
       "code": "asgm",
       "market": "us",
@@ -7837,6 +7846,15 @@
       "type": "美",
       "name": "Strive, Inc. - Class A Common Stock",
       "name_en": "Strive, Inc. - Class A Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usassx": {
+      "code": "assx",
+      "market": "us",
+      "type": "美",
+      "name": "T-REX 2X Long ASST Daily Target ETF",
+      "name_en": "T-REX 2X Long ASST Daily Target ETF",
       "py": "",
       "abbr": ""
     },
@@ -34768,6 +34786,15 @@
       "py": "anteji",
       "abbr": "atj"
     },
+    "usetra": {
+      "code": "etra",
+      "market": "us",
+      "type": "美",
+      "name": "Electra Therapeutics, Inc. - Common stock",
+      "name_en": "Electra Therapeutics, Inc. - Common stock",
+      "py": "",
+      "abbr": ""
+    },
     "usets": {
       "code": "ets",
       "market": "us",
@@ -42026,8 +42053,8 @@
       "code": "fwona",
       "market": "us",
       "type": "美",
-      "name": "Liberty Media Corporation - Series A Liberty Formula One Common Stock",
-      "name_en": "Liberty Media Corporation - Series A Liberty Formula One Common Stock",
+      "name": "Liberty Media Corporation - Series A Common Stock",
+      "name_en": "Liberty Media Corporation - Series A Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -42035,8 +42062,8 @@
       "code": "fwonk",
       "market": "us",
       "type": "美",
-      "name": "Liberty Media Corporation - Series C Liberty Formula One Common Stock",
-      "name_en": "Liberty Media Corporation - Series C Liberty Formula One Common Stock",
+      "name": "Liberty Media Corporation - Series C Common Stock",
+      "name_en": "Liberty Media Corporation - Series C Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -48088,15 +48115,6 @@
       "py": "",
       "abbr": ""
     },
-    "ushcwc": {
-      "code": "hcwc",
-      "market": "us",
-      "type": "美",
-      "name": "Healthy Choice Wellness Corp. Class A Common Stock",
-      "name_en": "Healthy Choice Wellness Corp. Class A Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "ushcxy": {
       "code": "hcxy",
       "market": "us",
@@ -49471,6 +49489,15 @@
       "type": "美",
       "name": "Hornbeck Offshore Services, Inc. Common Stock",
       "name_en": "Hornbeck Offshore Services, Inc. Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "ushost": {
+      "code": "host",
+      "market": "us",
+      "type": "美",
+      "name": "Host Digital Inc. Class A Common Stock",
+      "name_en": "Host Digital Inc. Class A Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -61974,6 +62001,15 @@
       "name_en": "Lincoln Electric Holdings, Inc. - Common Shares",
       "py": "linkendianqi",
       "abbr": "lkdq"
+    },
+    "usledru": {
+      "code": "ledru",
+      "market": "us",
+      "type": "美",
+      "name": "Leader's Advantage Acquisition Corp. - Units",
+      "name_en": "Leader's Advantage Acquisition Corp. - Units",
+      "py": "",
+      "abbr": ""
     },
     "usleds": {
       "code": "leds",
@@ -76786,6 +76822,15 @@
       "type": "美",
       "name": "Invesco Municipal Income Opportunities Trust Common Stock",
       "name_en": "Invesco Municipal Income Opportunities Trust Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usoig": {
+      "code": "oig",
+      "market": "us",
+      "type": "美",
+      "name": "Orion180 Insurance Group Inc. - Class A Common Stock",
+      "name_en": "Orion180 Insurance Group Inc. - Class A Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -92161,15 +92206,6 @@
       "py": "",
       "abbr": ""
     },
-    "ussat": {
-      "code": "sat",
-      "market": "us",
-      "type": "美",
-      "name": "Saratoga Investment Corp 6.00% Notes due 2027",
-      "name_en": "Saratoga Investment Corp 6.00% Notes due 2027",
-      "py": "",
-      "abbr": ""
-    },
     "ussata": {
       "code": "sata",
       "market": "us",
@@ -97200,15 +97236,6 @@
       "name_en": "Sanofi - American Depositary Shares",
       "py": "sainuofei",
       "abbr": "snf"
-    },
-    "ussnyr": {
-      "code": "snyr",
-      "market": "us",
-      "type": "美",
-      "name": "Synergy CHC Corp. - Common Stock",
-      "name_en": "Synergy CHC Corp. - Common Stock",
-      "py": "",
-      "abbr": ""
     },
     "usso": {
       "code": "so",
@@ -115777,12 +115804,30 @@
       "py": "",
       "abbr": ""
     },
+    "usxiii": {
+      "code": "xiii",
+      "market": "us",
+      "type": "美",
+      "name": "Churchill Capital Corp XIII - Class A Ordinary Shares",
+      "name_en": "Churchill Capital Corp XIII - Class A Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
     "usxiiiu": {
       "code": "xiiiu",
       "market": "us",
       "type": "美",
       "name": "Churchill Capital Corp XIII - Units",
       "name_en": "Churchill Capital Corp XIII - Units",
+      "py": "",
+      "abbr": ""
+    },
+    "usxiiiw": {
+      "code": "xiiiw",
+      "market": "us",
+      "type": "美",
+      "name": "Churchill Capital Corp XIII - Warrants",
+      "name_en": "Churchill Capital Corp XIII - Warrants",
       "py": "",
       "abbr": ""
     },

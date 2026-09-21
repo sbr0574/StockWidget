@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-18",
+  "last_update": "2026-09-21",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -17547,7 +17547,7 @@
       "market": "hk",
       "type": "港",
       "name": "卓越睿新",
-      "name_en": "ABLE DIGITAL",
+      "name_en": "ABLE DIGI-50",
       "py": "zhuoyueruixin",
       "abbr": "zyrx"
     },
@@ -18415,6 +18415,15 @@
       "py": "aerfaqiye-erwan",
       "abbr": "aefqy-ew"
     },
+    "hk02917": {
+      "code": "02917",
+      "market": "hk",
+      "type": "港",
+      "name": "智算能建股權",
+      "name_en": "AI ENERGY E RTS",
+      "py": "zhisuannengjianguquan",
+      "abbr": "zsnjgq"
+    },
     "hk02918": {
       "code": "02918",
       "market": "hk",
@@ -18504,6 +18513,15 @@
       "name_en": "TSINGTAO BR-2K",
       "py": "qingdaopijiu(erqian)",
       "abbr": "qdpj(eq)"
+    },
+    "hk02930": {
+      "code": "02930",
+      "market": "hk",
+      "type": "港",
+      "name": "卓越睿新(一百)",
+      "name_en": "ABLE DIGI-100",
+      "py": "zhuoyueruixin(yibai)",
+      "abbr": "zyrx(yb)"
     },
     "hk03001": {
       "code": "03001",
@@ -20507,10 +20525,10 @@
       "code": "03473",
       "market": "hk",
       "type": "基",
-      "name": "南方亞洲科技",
-      "name_en": "CSOP ASIA TECH",
-      "py": "nanfangyazhoukeji",
-      "abbr": "nfyzkj"
+      "name": "南方亞洲科技股息",
+      "name_en": "CSOP A TEC&DIV",
+      "py": "nanfangyazhoukejiguxi",
+      "abbr": "nfyzkjgx"
     },
     "hk03476": {
       "code": "03476",
@@ -22689,6 +22707,15 @@
       "name_en": "XUNLONG SCITECH",
       "py": "xunlongkeji",
       "abbr": "xlkj"
+    },
+    "hk06727": {
+      "code": "06727",
+      "market": "hk",
+      "type": "港",
+      "name": "星環科技",
+      "name_en": "TRANSWARP",
+      "py": "xinghuankeji",
+      "abbr": "xhkj"
     },
     "hk06745": {
       "code": "06745",
@@ -28881,15 +28908,6 @@
       "name_en": "ICBCCSOPCHINA-R",
       "py": "gongyinnanfangzhongguo-r",
       "abbr": "gynfzg-r"
-    },
-    "hk83168": {
-      "code": "83168",
-      "market": "hk",
-      "type": "基",
-      "name": "恒生人幣金ETF",
-      "name_en": "HS RMB GOLD ETF",
-      "py": "hengshengrenbijinetf",
-      "abbr": "hsrbjetf"
     },
     "hk83188": {
       "code": "83188",
