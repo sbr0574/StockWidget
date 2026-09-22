@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-21",
+  "last_update": "2026-09-22",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -18523,6 +18523,15 @@
       "py": "zhuoyueruixin(yibai)",
       "abbr": "zyrx(yb)"
     },
+    "hk02932": {
+      "code": "02932",
+      "market": "hk",
+      "type": "港",
+      "name": "正味集團股權",
+      "name_en": "ZHENGWEI GP RTS",
+      "py": "zhengweijituanguquan",
+      "abbr": "zwjtgq"
+    },
     "hk03001": {
       "code": "03001",
       "market": "hk",
@@ -26326,6 +26335,15 @@
       "py": "jinyeguojijituan",
       "abbr": "jygjjt"
     },
+    "hk08567": {
+      "code": "08567",
+      "market": "hk",
+      "type": "港",
+      "name": "金威醫療",
+      "name_en": "GF HEALTHCARE",
+      "py": "jinweiyiliao",
+      "abbr": "jwyl"
+    },
     "hk08581": {
       "code": "08581",
       "market": "hk",
@@ -27648,6 +27666,15 @@
       "name_en": "ISHARESCSI300-U",
       "py": "anshuohushensanbai-u",
       "abbr": "ashssb-u"
+    },
+    "hk09856": {
+      "code": "09856",
+      "market": "hk",
+      "type": "港",
+      "name": "納真科技",
+      "name_en": "LIGENT",
+      "py": "nazhenkeji",
+      "abbr": "nzkj"
     },
     "hk09857": {
       "code": "09857",

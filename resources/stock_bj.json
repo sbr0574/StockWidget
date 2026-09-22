@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-21",
+  "last_update": "2026-09-22",
   "codes": {
     "bj810011": {
       "code": "810011",
@@ -1009,6 +1009,15 @@
       "py": "longchenkeji",
       "abbr": "lckj"
     },
+    "bj920162": {
+      "code": "920162",
+      "market": "bj",
+      "type": "京",
+      "name": "莫森泰克",
+      "name_en": "",
+      "py": "mosentaike",
+      "abbr": "mstk"
+    },
     "bj920163": {
       "code": "920163",
       "market": "bj",
@@ -1112,10 +1121,10 @@
       "code": "920178",
       "market": "bj",
       "type": "京",
-      "name": "锐翔智能",
+      "name": "XD锐翔智",
       "name_en": "",
-      "py": "ruixiangzhineng",
-      "abbr": "rxzn"
+      "py": "xdruixiangzhi",
+      "abbr": "xdrxz"
     },
     "bj920179": {
       "code": "920179",
@@ -1328,10 +1337,10 @@
       "code": "920211",
       "market": "bj",
       "type": "京",
-      "name": "XD新睿电",
+      "name": "新睿电子",
       "name_en": "",
-      "py": "xdxinruidian",
-      "abbr": "xdxrd"
+      "py": "xinruidianzi",
+      "abbr": "xrdz"
     },
     "bj920212": {
       "code": "920212",
@@ -1409,10 +1418,10 @@
       "code": "920229",
       "market": "bj",
       "type": "京",
-      "name": "世纪数码",
+      "name": "N世纪",
       "name_en": "",
-      "py": "shijishuma",
-      "abbr": "sjsm"
+      "py": "nshiji",
+      "abbr": "nsj"
     },
     "bj920230": {
       "code": "920230",

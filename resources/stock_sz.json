@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-17",
+  "last_update": "2026-09-22",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -26370,6 +26370,15 @@
       "name_en": "",
       "py": "huiguxincai",
       "abbr": "hgxc"
+    },
+    "sz301686": {
+      "code": "301686",
+      "market": "sz",
+      "type": "创",
+      "name": "N中塑股份",
+      "name_en": "",
+      "py": "nzhongsugufen",
+      "abbr": "nzsgf"
     },
     "sz301687": {
       "code": "301687",
