@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-22",
+  "last_update": "2026-09-23",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -10180,6 +10180,15 @@
       "py": "honglidiboetfwanjia",
       "abbr": "hldbetfwj"
     },
+    "sz158026": {
+      "code": "158026",
+      "market": "sz",
+      "type": "基",
+      "name": "大盘成长ETF华夏",
+      "name_en": "",
+      "py": "dapanchengzhangetfhuaxia",
+      "abbr": "dpczetfhx"
+    },
     "sz158027": {
       "code": "158027",
       "market": "sz",
@@ -10251,6 +10260,24 @@
       "name_en": "",
       "py": "chuangyebansuanlietfyifangda",
       "abbr": "cybsletfyfd"
+    },
+    "sz158053": {
+      "code": "158053",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板算力ETF大成",
+      "name_en": "",
+      "py": "chuangyebansuanlietfdacheng",
+      "abbr": "cybsletfdc"
+    },
+    "sz158057": {
+      "code": "158057",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板算力ETF鹏华",
+      "name_en": "",
+      "py": "chuangyebansuanlietfpenghua",
+      "abbr": "cybsletfph"
     },
     "sz158061": {
       "code": "158061",

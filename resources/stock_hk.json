@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-22",
+  "last_update": "2026-09-23",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -6576,7 +6576,7 @@
       "market": "hk",
       "type": "港",
       "name": "阿爾法企業",
-      "name_en": "ALPHA PRO H-10K",
+      "name_en": "ALPHA PRO HLDGS",
       "py": "aerfaqiye",
       "abbr": "aefqy"
     },
@@ -18406,14 +18406,14 @@
       "py": "tianchengkonggu",
       "abbr": "tckg"
     },
-    "hk02914": {
-      "code": "02914",
+    "hk02915": {
+      "code": "02915",
       "market": "hk",
       "type": "港",
-      "name": "阿爾法企業-二萬",
-      "name_en": "ALPHA PRO H-20K",
-      "py": "aerfaqiye-erwan",
-      "abbr": "aefqy-ew"
+      "name": "雲迹",
+      "name_en": "YUNJI",
+      "py": "yunji",
+      "abbr": "yj"
     },
     "hk02917": {
       "code": "02917",

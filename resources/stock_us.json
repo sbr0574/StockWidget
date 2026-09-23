@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-22",
+  "last_update": "2026-09-23",
   "codes": {
     "usa": {
       "code": "a",
@@ -15490,30 +15490,12 @@
       "py": "",
       "abbr": ""
     },
-    "usbrr": {
-      "code": "brr",
-      "market": "us",
-      "type": "美",
-      "name": "ProCap Financial, Inc. - Common Stock",
-      "name_en": "ProCap Financial, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "usbrrr": {
       "code": "brrr",
       "market": "us",
       "type": "美",
       "name": "Coinshares Bitcoin ETF",
       "name_en": "Coinshares Bitcoin ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usbrrww": {
-      "code": "brrww",
-      "market": "us",
-      "type": "美",
-      "name": "ProCap Financial, Inc. - Warrant.",
-      "name_en": "ProCap Financial, Inc. - Warrant.",
       "py": "",
       "abbr": ""
     },
@@ -33445,6 +33427,15 @@
       "py": "",
       "abbr": ""
     },
+    "usenrg": {
+      "code": "enrg",
+      "market": "us",
+      "type": "美",
+      "name": "Ninepoint North American Energy Independence ETF",
+      "name_en": "Ninepoint North American Energy Independence ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usens": {
       "code": "ens",
       "market": "us",
@@ -34558,6 +34549,15 @@
       "type": "美",
       "name": "Eventide US Market ETF",
       "name_en": "Eventide US Market ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usesyn": {
+      "code": "esyn",
+      "market": "us",
+      "type": "美",
+      "name": "EnerSyn Global Inc. - Common Stock",
+      "name_en": "EnerSyn Global Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -42922,6 +42922,15 @@
       "py": "",
       "abbr": ""
     },
+    "usgcpu": {
+      "code": "gcpu",
+      "market": "us",
+      "type": "美",
+      "name": "Grayscale AI Compute ETF",
+      "name_en": "Grayscale AI Compute ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usgcsh": {
       "code": "gcsh",
       "market": "us",
@@ -50497,15 +50506,6 @@
       "type": "美",
       "name": "Hotchkis & Wiley Global Value Fund",
       "name_en": "Hotchkis & Wiley Global Value Fund",
-      "py": "",
-      "abbr": ""
-    },
-    "ushwh": {
-      "code": "hwh",
-      "market": "us",
-      "type": "美",
-      "name": "HWH International Inc. - Common Stock",
-      "name_en": "HWH International Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -62407,15 +62407,6 @@
       "py": "",
       "abbr": ""
     },
-    "uslgcf": {
-      "code": "lgcf",
-      "market": "us",
-      "type": "美",
-      "name": "Themes US Cash Flow Champions ETF",
-      "name_en": "Themes US Cash Flow Champions ETF",
-      "py": "",
-      "abbr": ""
-    },
     "uslgcl": {
       "code": "lgcl",
       "market": "us",
@@ -62755,15 +62746,6 @@
       "type": "美",
       "name": "Neutron Holdings, Inc. - Common Stock",
       "name_en": "Neutron Holdings, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "uslimi": {
-      "code": "limi",
-      "market": "us",
-      "type": "美",
-      "name": "Themes Lithium & Battery Metal Miners ETF",
-      "name_en": "Themes Lithium & Battery Metal Miners ETF",
       "py": "",
       "abbr": ""
     },
@@ -68293,6 +68275,15 @@
       "py": "",
       "abbr": ""
     },
+    "usmngb": {
+      "code": "mngb",
+      "market": "us",
+      "type": "美",
+      "name": "Yorkville America 2X Inverse MANGOS Plus Daily Target ETF",
+      "name_en": "Yorkville America 2X Inverse MANGOS Plus Daily Target ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usmngu": {
       "code": "mngu",
       "market": "us",
@@ -68353,15 +68344,6 @@
       "type": "美",
       "name": "Monro, Inc.  - Common Stock",
       "name_en": "Monro, Inc.  - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usmnrs": {
-      "code": "mnrs",
-      "market": "us",
-      "type": "美",
-      "name": "Grayscale Bitcoin Miners ETF",
-      "name_en": "Grayscale Bitcoin Miners ETF",
       "py": "",
       "abbr": ""
     },
@@ -72775,33 +72757,6 @@
       "py": "",
       "abbr": ""
     },
-    "usnhic": {
-      "code": "nhic",
-      "market": "us",
-      "type": "美",
-      "name": "NewHold Investment Corp III - Class A Ordinary shares",
-      "name_en": "NewHold Investment Corp III - Class A Ordinary shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usnhicu": {
-      "code": "nhicu",
-      "market": "us",
-      "type": "美",
-      "name": "NewHold Investment Corp III - Units",
-      "name_en": "NewHold Investment Corp III - Units",
-      "py": "",
-      "abbr": ""
-    },
-    "usnhicw": {
-      "code": "nhicw",
-      "market": "us",
-      "type": "美",
-      "name": "NewHold Investment Corp III - Warrants",
-      "name_en": "NewHold Investment Corp III - Warrants",
-      "py": "",
-      "abbr": ""
-    },
     "usnhiv": {
       "code": "nhiv",
       "market": "us",
@@ -75445,6 +75400,24 @@
       "type": "美",
       "name": "Northwest Bancshares, Inc. - Common Stock",
       "name_en": "Northwest Bancshares, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usnwcl": {
+      "code": "nwcl",
+      "market": "us",
+      "type": "美",
+      "name": "newcleo plc - Ordinary Shares",
+      "name_en": "newcleo plc - Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "usnwclw": {
+      "code": "nwclw",
+      "market": "us",
+      "type": "美",
+      "name": "newcleo plc - Warrants",
+      "name_en": "newcleo plc - Warrants",
       "py": "",
       "abbr": ""
     },
@@ -86590,6 +86563,15 @@
       "py": "",
       "abbr": ""
     },
+    "usqqqb": {
+      "code": "qqqb",
+      "market": "us",
+      "type": "美",
+      "name": "VistaShares Shield Nasdaq 100 Enhanced Protection ETF",
+      "name_en": "VistaShares Shield Nasdaq 100 Enhanced Protection ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usqqqd": {
       "code": "qqqd",
       "market": "us",
@@ -96328,15 +96310,6 @@
       "py": "erbeizuoduochaoweidiannaoetf-corgi",
       "abbr": "ebzdcwdnetf-corgi"
     },
-    "ussmcf": {
-      "code": "smcf",
-      "market": "us",
-      "type": "美",
-      "name": "Themes US Small Cap Cash Flow Champions ETF",
-      "name_en": "Themes US Small Cap Cash Flow Champions ETF",
-      "py": "",
-      "abbr": ""
-    },
     "ussmci": {
       "code": "smci",
       "market": "us",
@@ -100582,6 +100555,24 @@
       "type": "美",
       "name": "Silvaco Group, Inc. - Common Stock",
       "name_en": "Silvaco Group, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "ussvia": {
+      "code": "svia",
+      "market": "us",
+      "type": "美",
+      "name": "Silvia, Inc. - Common Stock",
+      "name_en": "Silvia, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "ussviaw": {
+      "code": "sviaw",
+      "market": "us",
+      "type": "美",
+      "name": "Silvia, Inc. - Warrant.",
+      "name_en": "Silvia, Inc. - Warrant.",
       "py": "",
       "abbr": ""
     },
@@ -111663,6 +111654,15 @@
       "name_en": "Vanguard S&P 500 ETF",
       "py": "biaopu500etf-vanguard",
       "abbr": "bp500etf-vanguard"
+    },
+    "usvoob": {
+      "code": "voob",
+      "market": "us",
+      "type": "美",
+      "name": "VistaShares Shield S&P 500 Enhanced Protection ETF",
+      "name_en": "VistaShares Shield S&P 500 Enhanced Protection ETF",
+      "py": "",
+      "abbr": ""
     },
     "usvoog": {
       "code": "voog",

@@ -1,47 +1,47 @@
 {
-  "run_date": "2026-09-22",
-  "started_at": "2026-09-22T08:55:07+08:00",
-  "completed_at": "2026-09-22T08:55:37+08:00",
+  "run_date": "2026-09-23",
+  "started_at": "2026-09-23T08:55:34+08:00",
+  "completed_at": "2026-09-23T08:55:57+08:00",
   "files": {
     "stock_us.json": {
-      "last_checked": "2026-09-22",
-      "last_update": "2026-09-22",
+      "last_checked": "2026-09-23",
+      "last_update": "2026-09-23",
       "updated": true,
       "error": false
     },
     "stock_hk.json": {
-      "last_checked": "2026-09-22",
-      "last_update": "2026-09-22",
+      "last_checked": "2026-09-23",
+      "last_update": "2026-09-23",
       "updated": true,
       "error": false
     },
     "futures_sh.json": {
-      "last_checked": "2026-09-22",
-      "last_update": "2026-09-22",
+      "last_checked": "2026-09-23",
+      "last_update": "2026-09-23",
       "updated": true,
       "error": false
     },
     "stock_sh.json": {
-      "last_checked": "2026-09-22",
-      "last_update": "2026-09-22",
+      "last_checked": "2026-09-23",
+      "last_update": "2026-09-23",
       "updated": true,
       "error": false
     },
     "stock_sz.json": {
-      "last_checked": "2026-09-22",
-      "last_update": "2026-09-22",
+      "last_checked": "2026-09-23",
+      "last_update": "2026-09-23",
       "updated": true,
       "error": false
     },
     "fund_cn.json": {
-      "last_checked": "2026-09-22",
-      "last_update": "2026-09-22",
+      "last_checked": "2026-09-23",
+      "last_update": "2026-09-23",
       "updated": true,
       "error": false
     },
     "stock_bj.json": {
-      "last_checked": "2026-09-22",
-      "last_update": "2026-09-22",
+      "last_checked": "2026-09-23",
+      "last_update": "2026-09-23",
       "updated": true,
       "error": false
     },
@@ -52,7 +52,7 @@
       "error": true
     },
     "index_global.json": {
-      "last_checked": "2026-09-22",
+      "last_checked": "2026-09-23",
       "last_update": "2026-08-27",
       "updated": false,
       "error": false
