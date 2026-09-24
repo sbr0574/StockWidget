@@ -1,49 +1,49 @@
 {
-  "run_date": "2026-09-23",
-  "started_at": "2026-09-23T08:55:34+08:00",
-  "completed_at": "2026-09-23T08:55:57+08:00",
+  "run_date": "2026-09-24",
+  "started_at": "2026-09-24T08:55:34+08:00",
+  "completed_at": "2026-09-24T08:55:53+08:00",
   "files": {
     "stock_us.json": {
-      "last_checked": "2026-09-23",
-      "last_update": "2026-09-23",
+      "last_checked": "2026-09-24",
+      "last_update": "2026-09-24",
       "updated": true,
       "error": false
     },
     "stock_hk.json": {
-      "last_checked": "2026-09-23",
-      "last_update": "2026-09-23",
+      "last_checked": "2026-09-24",
+      "last_update": "2026-09-24",
       "updated": true,
       "error": false
     },
     "futures_sh.json": {
-      "last_checked": "2026-09-23",
-      "last_update": "2026-09-23",
+      "last_checked": "2026-09-24",
+      "last_update": "2026-09-24",
       "updated": true,
       "error": false
     },
     "stock_sh.json": {
-      "last_checked": "2026-09-23",
-      "last_update": "2026-09-23",
+      "last_checked": "2026-09-24",
+      "last_update": "2026-09-24",
       "updated": true,
       "error": false
     },
     "stock_sz.json": {
-      "last_checked": "2026-09-23",
+      "last_checked": "2026-09-24",
       "last_update": "2026-09-23",
-      "updated": true,
+      "updated": false,
       "error": false
     },
     "fund_cn.json": {
-      "last_checked": "2026-09-23",
-      "last_update": "2026-09-23",
+      "last_checked": "2026-09-24",
+      "last_update": "2026-09-24",
       "updated": true,
       "error": false
     },
     "stock_bj.json": {
       "last_checked": "2026-09-23",
       "last_update": "2026-09-23",
-      "updated": true,
-      "error": false
+      "updated": false,
+      "error": true
     },
     "index_cn.json": {
       "last_checked": "2026-09-21",
@@ -52,7 +52,7 @@
       "error": true
     },
     "index_global.json": {
-      "last_checked": "2026-09-23",
+      "last_checked": "2026-09-24",
       "last_update": "2026-08-27",
       "updated": false,
       "error": false

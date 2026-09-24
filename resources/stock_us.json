@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-23",
+  "last_update": "2026-09-24",
   "codes": {
     "usa": {
       "code": "a",
@@ -3312,6 +3312,15 @@
       "name_en": "Direxion Daily AI and Big Data Bear 2X ETF",
       "py": "erbeizuokongaiyudashujuetf-direxion",
       "abbr": "ebzkaiydsjetf-direxion"
+    },
+    "usaibf": {
+      "code": "aibf",
+      "market": "us",
+      "type": "美",
+      "name": "iShares Future AI Beneficiaries ETF",
+      "name_en": "iShares Future AI Beneficiaries ETF",
+      "py": "",
+      "abbr": ""
     },
     "usaibu": {
       "code": "aibu",
@@ -20482,6 +20491,15 @@
       "type": "美",
       "name": "Calamos Convertible Opportunities and Income Fund - Closed End Fund",
       "name_en": "Calamos Convertible Opportunities and Income Fund - Closed End Fund",
+      "py": "",
+      "abbr": ""
+    },
+    "uschip": {
+      "code": "chip",
+      "market": "us",
+      "type": "美",
+      "name": "REX AI Chipmaking ETF",
+      "name_en": "REX AI Chipmaking ETF",
       "py": "",
       "abbr": ""
     },
@@ -54537,7 +54555,7 @@
       "market": "us",
       "type": "美",
       "name": "单片机微系统",
-      "name_en": "Identiv, Inc. - Common Stock",
+      "name_en": "INVE Technologies, Inc. - Common Stock",
       "py": "danpianjiweixitong",
       "abbr": "dpjwxt"
     },
@@ -63532,6 +63550,15 @@
       "py": "",
       "abbr": ""
     },
+    "usloviu": {
+      "code": "loviu",
+      "market": "us",
+      "type": "美",
+      "name": "Live Oak Acquisition Corp. VI - Units",
+      "name_en": "Live Oak Acquisition Corp. VI - Units",
+      "py": "",
+      "abbr": ""
+    },
     "uslow": {
       "code": "low",
       "market": "us",
@@ -70813,6 +70840,15 @@
       "py": "",
       "abbr": ""
     },
+    "usmycp": {
+      "code": "mycp",
+      "market": "us",
+      "type": "美",
+      "name": "State Street My2036 Corporate Bond ETF",
+      "name_en": "State Street My2036 Corporate Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usmye": {
       "code": "mye",
       "market": "us",
@@ -70885,6 +70921,15 @@
       "py": "",
       "abbr": ""
     },
+    "usmyhf": {
+      "code": "myhf",
+      "market": "us",
+      "type": "美",
+      "name": "State Street My2032 High Yield Corporate Bond ETF",
+      "name_en": "State Street My2032 High Yield Corporate Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usmyi": {
       "code": "myi",
       "market": "us",
@@ -70954,6 +70999,15 @@
       "type": "美",
       "name": "State Street My2031 Municipal Bond ETF",
       "name_en": "State Street My2031 Municipal Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usmyml": {
+      "code": "myml",
+      "market": "us",
+      "type": "美",
+      "name": "State Street My2032 Municipal Bond ETF",
+      "name_en": "State Street My2032 Municipal Bond ETF",
       "py": "",
       "abbr": ""
     },
@@ -72090,6 +72144,15 @@
       "name_en": "NorthEast Community Bancorp, Inc. - Common Stock",
       "py": "dongbeishequyinhang",
       "abbr": "dbsqyh"
+    },
+    "usneck": {
+      "code": "neck",
+      "market": "us",
+      "type": "美",
+      "name": "xETFs AI Bottlenecks ETF",
+      "name_en": "xETFs AI Bottlenecks ETF",
+      "py": "",
+      "abbr": ""
     },
     "usnee": {
       "code": "nee",
@@ -82189,15 +82252,6 @@
       "py": "",
       "abbr": ""
     },
-    "usplts": {
-      "code": "plts",
-      "market": "us",
-      "type": "美",
-      "name": "Platinum Analytics Cayman Limited - Class A Ordinary Shares",
-      "name_en": "Platinum Analytics Cayman Limited - Class A Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
     "uspltu": {
       "code": "pltu",
       "market": "us",
@@ -86500,6 +86554,15 @@
       "py": "",
       "abbr": ""
     },
+    "usqqi": {
+      "code": "qqi",
+      "market": "us",
+      "type": "美",
+      "name": "Invesco Nasdaq International Innovators 100 ETF",
+      "name_en": "Invesco Nasdaq International Innovators 100 ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usqqjl": {
       "code": "qqjl",
       "market": "us",
@@ -89521,15 +89584,6 @@
       "type": "美",
       "name": "Rivian Automotive, Inc. - Class A Common Stock",
       "name_en": "Rivian Automotive, Inc. - Class A Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usrivr": {
-      "code": "rivr",
-      "market": "us",
-      "type": "美",
-      "name": "RiverNorth Opportunities Fund, Inc. Rights (expiring September 23, 2026) Rights",
-      "name_en": "RiverNorth Opportunities Fund, Inc. Rights (expiring September 23, 2026) Rights",
       "py": "",
       "abbr": ""
     },
@@ -106894,6 +106948,15 @@
       "py": "",
       "abbr": ""
     },
+    "ustxca": {
+      "code": "txca",
+      "market": "us",
+      "type": "美",
+      "name": "Northern Trust California Intermediate Tax-Exempt Bond ETF",
+      "name_en": "Northern Trust California Intermediate Tax-Exempt Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
     "ustxg": {
       "code": "txg",
       "market": "us",
@@ -106938,6 +107001,15 @@
       "name_en": "Direxion Daily TXN Bull 2X ETF",
       "py": "erbeizuoduotxnetf-direxion",
       "abbr": "ebzdtxnetf-direxion"
+    },
+    "ustxny": {
+      "code": "txny",
+      "market": "us",
+      "type": "美",
+      "name": "Northern Trust New York Intermediate Tax-Exempt Bond ETF",
+      "name_en": "Northern Trust New York Intermediate Tax-Exempt Bond ETF",
+      "py": "",
+      "abbr": ""
     },
     "ustxo": {
       "code": "txo",
@@ -111331,6 +111403,15 @@
       "py": "",
       "abbr": ""
     },
+    "usvmhy": {
+      "code": "vmhy",
+      "market": "us",
+      "type": "美",
+      "name": "VictoryShares Municipal High Yield ETF",
+      "name_en": "VictoryShares Municipal High Yield ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usvmi": {
       "code": "vmi",
       "market": "us",
@@ -111364,6 +111445,15 @@
       "type": "美",
       "name": "Voya Multi-Sector Income ETF",
       "name_en": "Voya Multi-Sector Income ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usvmsd": {
+      "code": "vmsd",
+      "market": "us",
+      "type": "美",
+      "name": "VictoryShares Short-Duration Municipal ETF",
+      "name_en": "VictoryShares Short-Duration Municipal ETF",
       "py": "",
       "abbr": ""
     },
@@ -117289,6 +117379,15 @@
       "py": "",
       "abbr": ""
     },
+    "usxvad": {
+      "code": "xvad",
+      "market": "us",
+      "type": "美",
+      "name": "FT Vest AMD & Target Income ETF",
+      "name_en": "FT Vest AMD & Target Income ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usxvap": {
       "code": "xvap",
       "market": "us",
@@ -117298,12 +117397,57 @@
       "py": "",
       "abbr": ""
     },
+    "usxvaz": {
+      "code": "xvaz",
+      "market": "us",
+      "type": "美",
+      "name": "FT Vest AMZN & Target Income ETF",
+      "name_en": "FT Vest AMZN & Target Income ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usxvgl": {
+      "code": "xvgl",
+      "market": "us",
+      "type": "美",
+      "name": "FT Vest GOOG & Target Income ETF",
+      "name_en": "FT Vest GOOG & Target Income ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usxvms": {
+      "code": "xvms",
+      "market": "us",
+      "type": "美",
+      "name": "FT Vest MSFT & Target Income ETF",
+      "name_en": "FT Vest MSFT & Target Income ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usxvmt": {
+      "code": "xvmt",
+      "market": "us",
+      "type": "美",
+      "name": "FT Vest META & Target Income ETF",
+      "name_en": "FT Vest META & Target Income ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usxvnv": {
       "code": "xvnv",
       "market": "us",
       "type": "美",
       "name": "FT Vest NVDA & Target Income ETF",
       "name_en": "FT Vest NVDA & Target Income ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usxvpt": {
+      "code": "xvpt",
+      "market": "us",
+      "type": "美",
+      "name": "FT Vest PLTR & Target Income ETF",
+      "name_en": "FT Vest PLTR & Target Income ETF",
       "py": "",
       "abbr": ""
     },

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-23",
+  "last_update": "2026-09-24",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -2872,6 +2872,15 @@
       "py": "dianchietfhuaxia",
       "abbr": "dcetfhx"
     },
+    "sh512470": {
+      "code": "512470",
+      "market": "sh",
+      "type": "基",
+      "name": "工业有色ETF广发",
+      "name_en": "",
+      "py": "gongyeyouseetfguangfa",
+      "abbr": "gyysetfgf"
+    },
     "sh512480": {
       "code": "512480",
       "market": "sh",
@@ -4248,6 +4257,15 @@
       "name_en": "",
       "py": "honglizhiliangetfnanfang",
       "abbr": "hlzletfnf"
+    },
+    "sh515470": {
+      "code": "515470",
+      "market": "sh",
+      "type": "基",
+      "name": "人工智能ETF南方",
+      "name_en": "",
+      "py": "rengongzhinengetfnanfang",
+      "abbr": "rgznetfnf"
     },
     "sh515480": {
       "code": "515480",
@@ -9820,6 +9838,15 @@
       "py": "kechuang200etfhuabao",
       "abbr": "kc200etfhb"
     },
+    "sh589480": {
+      "code": "589480",
+      "market": "sh",
+      "type": "基",
+      "name": "科创芯片设计ETF嘉实",
+      "name_en": "",
+      "py": "kechuangxinpianshejietfjiashi",
+      "abbr": "kcxpsjetfjs"
+    },
     "sh589500": {
       "code": "589500",
       "market": "sh",
@@ -10243,6 +10270,15 @@
       "py": "chuangyebansuanlietfhuaxia",
       "abbr": "cybsletfhx"
     },
+    "sz158042": {
+      "code": "158042",
+      "market": "sz",
+      "type": "基",
+      "name": "恒生科技ETF富国",
+      "name_en": "",
+      "py": "hengshengkejietffuguo",
+      "abbr": "hskjetffg"
+    },
     "sz158049": {
       "code": "158049",
       "market": "sz",
@@ -10270,6 +10306,15 @@
       "py": "chuangyebansuanlietfdacheng",
       "abbr": "cybsletfdc"
     },
+    "sz158056": {
+      "code": "158056",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板算力ETF嘉实",
+      "name_en": "",
+      "py": "chuangyebansuanlietfjiashi",
+      "abbr": "cybsletfjs"
+    },
     "sz158057": {
       "code": "158057",
       "market": "sz",
@@ -10287,6 +10332,15 @@
       "name_en": "",
       "py": "chuangyebansuanlietftianhong",
       "abbr": "cybsletfth"
+    },
+    "sz158063": {
+      "code": "158063",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板算力ETF南方",
+      "name_en": "",
+      "py": "chuangyebansuanlietfnanfang",
+      "abbr": "cybsletfnf"
     },
     "sz159001": {
       "code": "159001",
