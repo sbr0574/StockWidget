@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-24",
+  "last_update": "2026-09-25",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -1508,10 +1508,10 @@
       "code": "00199",
       "market": "hk",
       "type": "港",
-      "name": "德祥地產",
-      "name_en": "ITC PROPERTIES",
-      "py": "dexiangdichan",
-      "abbr": "dxdc"
+      "name": "德祥新雲算力",
+      "name_en": "ITC NEOCLOUD",
+      "py": "dexiangxinyunsuanli",
+      "abbr": "dxxysl"
     },
     "hk00200": {
       "code": "00200",
@@ -17947,6 +17947,15 @@
       "py": "ppxinxingdongmeng",
       "abbr": "ppxxdm"
     },
+    "hk02811": {
+      "code": "02811",
+      "market": "hk",
+      "type": "基",
+      "name": "A惠理光通訊",
+      "name_en": "A VP OPTICAL",
+      "py": "ahuiliguangtongxun",
+      "abbr": "ahlgtx"
+    },
     "hk02812": {
       "code": "02812",
       "market": "hk",
@@ -18495,15 +18504,6 @@
       "name_en": "HARBOUR D RTS",
       "py": "gangwanshuziguquan",
       "abbr": "gwszgq"
-    },
-    "hk02928": {
-      "code": "02928",
-      "market": "hk",
-      "type": "港",
-      "name": "港仔機器人股權",
-      "name_en": "HK ROBOTICS RTS",
-      "py": "gangzaijiqirenguquan",
-      "abbr": "gzjqrgq"
     },
     "hk02929": {
       "code": "02929",
@@ -19269,6 +19269,15 @@
       "name_en": "X CSOPCHINEXT",
       "py": "xnanfangzhongchuangye",
       "abbr": "xnfzcy"
+    },
+    "hk03149": {
+      "code": "03149",
+      "market": "hk",
+      "type": "基",
+      "name": "南方先鋒科技",
+      "name_en": "CSOP PIONR TECH",
+      "py": "nanfangxianfengkeji",
+      "abbr": "nfxfkj"
     },
     "hk03150": {
       "code": "03150",
@@ -26352,15 +26361,6 @@
       "name_en": "GF HEALTHCARE",
       "py": "jinweiyiliao",
       "abbr": "jwyl"
-    },
-    "hk08581": {
-      "code": "08581",
-      "market": "hk",
-      "type": "港",
-      "name": "港娛國際股權",
-      "name_en": "HK ENT INTL RTS",
-      "py": "gangyuguojiguquan",
-      "abbr": "gygjgq"
     },
     "hk08601": {
       "code": "08601",

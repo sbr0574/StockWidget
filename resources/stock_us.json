@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-24",
+  "last_update": "2026-09-25",
   "codes": {
     "usa": {
       "code": "a",
@@ -7579,12 +7579,12 @@
       "py": "",
       "abbr": ""
     },
-    "usasgirw": {
-      "code": "asgirw",
+    "usasgir": {
+      "code": "asgir",
       "market": "us",
       "type": "美",
-      "name": "abrdn Global Infrastructure Income Fund Rights (expiring October 15, 2026) Rights when issued",
-      "name_en": "abrdn Global Infrastructure Income Fund Rights (expiring October 15, 2026) Rights when issued",
+      "name": "abrdn Global Infrastructure Income Fund Rights (expiring October 15, 2026) Rights",
+      "name_en": "abrdn Global Infrastructure Income Fund Rights (expiring October 15, 2026) Rights",
       "py": "",
       "abbr": ""
     },
@@ -10888,6 +10888,15 @@
       "type": "美",
       "name": "BlackRock Capital Allocation Term Trust Common Shares of Beneficial Interest",
       "name_en": "BlackRock Capital Allocation Term Trust Common Shares of Beneficial Interest",
+      "py": "",
+      "abbr": ""
+    },
+    "usbcatrw": {
+      "code": "bcatrw",
+      "market": "us",
+      "type": "美",
+      "name": "BlackRock Capital Allocation Term Trust Rights (expiring October 21, 2026) Rights when issued",
+      "name_en": "BlackRock Capital Allocation Term Trust Rights (expiring October 21, 2026) Rights when issued",
       "py": "",
       "abbr": ""
     },
@@ -16495,15 +16504,6 @@
       "type": "美",
       "name": "BTQ Technologies Corp. - Common Stock",
       "name_en": "BTQ Technologies Corp. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usbtr": {
-      "code": "btr",
-      "market": "us",
-      "type": "美",
-      "name": "Beacon Tactical Risk ETF",
-      "name_en": "Beacon Tactical Risk ETF",
       "py": "",
       "abbr": ""
     },
@@ -26668,6 +26668,15 @@
       "py": "",
       "abbr": ""
     },
+    "usdcap": {
+      "code": "dcap",
+      "market": "us",
+      "type": "美",
+      "name": "T-Strive Digital Credit Preferred Income ETF",
+      "name_en": "T-Strive Digital Credit Preferred Income ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usdcbg": {
       "code": "dcbg",
       "market": "us",
@@ -29347,15 +29356,6 @@
       "type": "美",
       "name": "Dominari Holdings Inc. - Common Stock",
       "name_en": "Dominari Holdings Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usdomo": {
-      "code": "domo",
-      "market": "us",
-      "type": "美",
-      "name": "Domo, Inc. - Class B Common Stock",
-      "name_en": "Domo, Inc. - Class B Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -38755,12 +38755,39 @@
       "py": "",
       "abbr": ""
     },
+    "usfjdi": {
+      "code": "fjdi",
+      "market": "us",
+      "type": "美",
+      "name": "ARC Group Securities Acquisition I - Class A Ordinary Shares",
+      "name_en": "ARC Group Securities Acquisition I - Class A Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "usfjdir": {
+      "code": "fjdir",
+      "market": "us",
+      "type": "美",
+      "name": "ARC Group Securities Acquisition I - Rights",
+      "name_en": "ARC Group Securities Acquisition I - Rights",
+      "py": "",
+      "abbr": ""
+    },
     "usfjdiu": {
       "code": "fjdiu",
       "market": "us",
       "type": "美",
       "name": "ARC Group Securities Acquisition I - Units",
       "name_en": "ARC Group Securities Acquisition I - Units",
+      "py": "",
+      "abbr": ""
+    },
+    "usfjdiw": {
+      "code": "fjdiw",
+      "market": "us",
+      "type": "美",
+      "name": "ARC Group Securities Acquisition I - Warrants",
+      "name_en": "ARC Group Securities Acquisition I - Warrants",
       "py": "",
       "abbr": ""
     },
@@ -50266,6 +50293,15 @@
       "py": "",
       "abbr": ""
     },
+    "ushuck": {
+      "code": "huck",
+      "market": "us",
+      "type": "美",
+      "name": "Huckleberry.ai, Inc. - Class B Common Stock",
+      "name_en": "Huckleberry.ai, Inc. - Class B Common Stock",
+      "py": "",
+      "abbr": ""
+    },
     "ushudi": {
       "code": "hudi",
       "market": "us",
@@ -50419,33 +50455,6 @@
       "py": "",
       "abbr": ""
     },
-    "ushvii": {
-      "code": "hvii",
-      "market": "us",
-      "type": "美",
-      "name": "Hennessy Capital Investment Corp. VII - Ordinary Shares",
-      "name_en": "Hennessy Capital Investment Corp. VII - Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "ushviir": {
-      "code": "hviir",
-      "market": "us",
-      "type": "美",
-      "name": "Hennessy Capital Investment Corp. VII - Rights",
-      "name_en": "Hennessy Capital Investment Corp. VII - Rights",
-      "py": "",
-      "abbr": ""
-    },
-    "ushviiu": {
-      "code": "hviiu",
-      "market": "us",
-      "type": "美",
-      "name": "Hennessy Capital Investment Corp. VII - Unit",
-      "name_en": "Hennessy Capital Investment Corp. VII - Unit",
-      "py": "",
-      "abbr": ""
-    },
     "ushvmc": {
       "code": "hvmc",
       "market": "us",
@@ -50551,6 +50560,15 @@
       "type": "美",
       "name": "Howmet Aerospace Inc. Common Stock",
       "name_en": "Howmet Aerospace Inc. Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "ushwmv": {
+      "code": "hwmv",
+      "market": "us",
+      "type": "美",
+      "name": "Hotchkis & Wiley Mid-Cap Value Fund",
+      "name_en": "Hotchkis & Wiley Mid-Cap Value Fund",
       "py": "",
       "abbr": ""
     },
@@ -66952,6 +66970,15 @@
       "py": "xitujituan",
       "abbr": "xtjt"
     },
+    "usmgin": {
+      "code": "mgin",
+      "market": "us",
+      "type": "美",
+      "name": "Man Active Global Infrastructure ETF",
+      "name_en": "Man Active Global Infrastructure ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usmgk": {
       "code": "mgk",
       "market": "us",
@@ -77398,6 +77425,15 @@
       "type": "美",
       "name": "TrueShares Equity Hedge ETF",
       "name_en": "TrueShares Equity Hedge ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usonen": {
+      "code": "onen",
+      "market": "us",
+      "type": "美",
+      "name": "ONE Nuclear Energy Inc. - Common Stock",
+      "name_en": "ONE Nuclear Energy Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -101746,15 +101782,6 @@
       "py": "",
       "abbr": ""
     },
-    "ustbph": {
-      "code": "tbph",
-      "market": "us",
-      "type": "美",
-      "name": "Theravance Biopharma, Inc. - Ordinary Shares",
-      "name_en": "Theravance Biopharma, Inc. - Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
     "ustbt": {
       "code": "tbt",
       "market": "us",
@@ -103843,6 +103870,15 @@
       "py": "10-20nianguozhaietf-ishares",
       "abbr": "10-20ngzetf-ishares"
     },
+    "ustlie": {
+      "code": "tlie",
+      "market": "us",
+      "type": "美",
+      "name": "American Beacon The London Company Income Equity ETF",
+      "name_en": "American Beacon The London Company Income Equity ETF",
+      "py": "",
+      "abbr": ""
+    },
     "ustlih": {
       "code": "tlih",
       "market": "us",
@@ -104722,6 +104758,15 @@
       "type": "美",
       "name": "Roundhill Top WeeklyPay ETF",
       "name_en": "Roundhill Top WeeklyPay ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "ustork": {
+      "code": "tork",
+      "market": "us",
+      "type": "美",
+      "name": "KraneShares Actuator ETF",
+      "name_en": "KraneShares Actuator ETF",
       "py": "",
       "abbr": ""
     },
@@ -109780,6 +109825,15 @@
       "type": "美",
       "name": "Valor Energy Incorporated - Common Stock",
       "name_en": "Valor Energy Incorporated - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usvaic": {
+      "code": "vaic",
+      "market": "us",
+      "type": "美",
+      "name": "VegaShares US Equity Autocallable Conservative Income ETF",
+      "name_en": "VegaShares US Equity Autocallable Conservative Income ETF",
       "py": "",
       "abbr": ""
     },
