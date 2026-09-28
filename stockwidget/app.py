@@ -22,6 +22,7 @@ from stockwidget.platform.autostart import set_start_on_boot
 from stockwidget.ui.settings_dialog import SettingsDialog
 from stockwidget.ui.tray import TrayIcon
 from stockwidget.ui.widget import FloatLabel
+from stockwidget.ui.taskbar import TaskbarController
 
 
 def _load_custom_icon(path) -> tuple[str, QIcon]:
@@ -113,15 +114,20 @@ class App(QApplication):
             on_quit=self.quit_app,
             on_click_through=self.win.set_click_through,
             click_through_getter=lambda: self.win.click_through,
+            on_display_mode=self.win.set_display_mode,
+            display_mode_getter=lambda: self.win.display_mode,
         )
         self.tray.show()
 
         # 启动浮窗
         self.settings_dlg = None
-        self.win.show()
-        self.win.raise_()
-        self.win.activateWindow()
-        self.win.setFocus(Qt.ActiveWindowFocusReason)
+        self.taskbar = TaskbarController(self.win, self.open_settings, self)
+        self.aboutToQuit.connect(self.taskbar.close)
+        self.taskbar.apply_mode()
+        if self.win.isVisible():
+            self.win.raise_()
+            self.win.activateWindow()
+            self.win.setFocus(Qt.ActiveWindowFocusReason)
 
         # 应用更新检查和市场代码刷新分别在后台执行，避免网络请求阻塞界面。
         self._has_update = False

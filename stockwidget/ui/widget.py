@@ -51,6 +51,9 @@ def _config_color(value, default: QColor) -> QColor:
 
 
 class FloatLabel(DragBehaviorMixin, QWidget):
+    taskbar_options_changed = Signal()
+    taskbar_status_changed = Signal(str)
+    presentation_changed = Signal()
     hotkey_triggered = Signal()
     click_through_hotkey_triggered = Signal()
     click_through_changed = Signal(bool)
@@ -61,6 +64,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         super().__init__()
         self._on_change = (lambda: None)
         self._open_settings_cb = None
+        self.taskbar_status = "任务栏显示已关闭"
 
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
@@ -220,6 +224,12 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.hotkey_click_through_enabled = bool(cfg.get("hotkey_click_through_enabled", False))
         self.hotkey_click_through = cfg.get("hotkey_click_through", "Ctrl+Alt+C")
         self.start_on_boot = bool(cfg.get("start_on_boot", False))
+        mode = cfg.get("display_mode", "float")
+        self.display_mode = mode if sys.platform == "win32" and mode in ("float", "taskbar", "both") else "float"
+        try:
+            self.taskbar_offset = max(0, min(2000, int(cfg.get("taskbar_offset", 0))))
+        except (TypeError, ValueError):
+            self.taskbar_offset = 0
 
     def reset_appearance(self):
         self._load_appearance_config({})
@@ -232,6 +242,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     def reset_settings(self):
         self._load_settings_config({})
+        self.taskbar_options_changed.emit()
         self.clear_sort()
         self._register_current()
         self._keep_top_timer.stop()
@@ -256,6 +267,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._on_change = fn or (lambda: None)
 
     def _notify_change(self):
+        self.presentation_changed.emit()
         self._on_change()
 
     def current_config(self):
@@ -291,6 +303,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             "hotkey_click_through_enabled": self.hotkey_click_through_enabled,
             "hotkey_click_through": self.hotkey_click_through,
             "start_on_boot": self.start_on_boot,
+            "display_mode": self.display_mode,
+            "taskbar_offset": self.taskbar_offset,
             "pos": {"x": self.x(), "y": self.y()},
         }
 
@@ -407,12 +421,14 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.message_label.setVisible(True)
         self._message_kind = kind
         self._defer_fit()
+        self.presentation_changed.emit()
 
     def _clear_message(self):
         """清除顶部提示"""
         self.message_label.setVisible(False)
         self.message_label.setText("")
         self._message_kind = None
+        self.presentation_changed.emit()
 
     def _effective_visible_metrics(self):
         """排序期间强制显示名称，但不改写用户保存的指标显示配置。"""
@@ -450,6 +466,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         right_cols = [i for i, h in enumerate(headers) if h not in ("名称", "K线", "卖一")]
         self.model.set_align_right_cols(right_cols)
         self.model.set_rows_headers(proj_rows, headers, projected_roles)
+        self.presentation_changed.emit()
         self.table.setVisible(bool(headers))
         self._sync_colors_to_views()
 
@@ -779,6 +796,31 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.display_flags_changed.emit()
 
     # ----- 鼠标穿透 / 强制置顶 / 快捷键开关 -----
+    def set_display_mode(self, mode):
+        if mode not in ("float", "taskbar", "both"):
+            return
+        if sys.platform != "win32":
+            mode = "float"
+        if mode == self.display_mode:
+            return
+        self.display_mode = mode
+        self.sync_refresh_timer()
+        self.taskbar_options_changed.emit()
+        self._notify_change()
+
+    def set_taskbar_offset(self, value):
+        self.taskbar_offset = max(0, min(2000, int(value)))
+        self.taskbar_options_changed.emit()
+        self._notify_change()
+
+    def sync_refresh_timer(self):
+        if self.isVisible() or self.display_mode != "float":
+            if not self.timer.isActive():
+                self.timer.start()
+                self._refresh_from_function()
+        else:
+            self.timer.stop()
+
     def set_click_through(self, enable: bool):
         enable = bool(enable)
         if self.click_through == enable:
@@ -924,8 +966,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     def hideEvent(self, event):
         super().hideEvent(event)
-        if self.timer and self.timer.isActive():
-            self.timer.stop()
+        self.sync_refresh_timer()
         if self._keep_top_timer and self._keep_top_timer.isActive():
             self._keep_top_timer.stop()
 

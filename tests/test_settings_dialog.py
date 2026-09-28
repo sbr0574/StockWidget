@@ -519,7 +519,7 @@ class SettingsDialogTests(unittest.TestCase):
         self.assertEqual(
             [dialog.ui.tab_widget.tabText(i)
              for i in range(dialog.ui.tab_widget.count())],
-            ["数据", "通用", "关于"],
+            ["数据", "通用", "任务栏", "关于"],
         )
         self.assertIs(dialog.ui.gb_about.parentWidget(), dialog.ui.about)
 

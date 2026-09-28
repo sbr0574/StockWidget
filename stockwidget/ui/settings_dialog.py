@@ -13,12 +13,13 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import (
     QApplication, QWidget, QDialog, QColorDialog, QButtonGroup, QFileDialog, QMessageBox,
-    QScrollBar, QVBoxLayout,
+    QScrollBar, QVBoxLayout, QFormLayout, QComboBox, QSpinBox, QLabel,
 )
 from stockwidget.ui.generated.ui_settings import Ui_SettingDialog
 from stockwidget.constants import APP_VERSION
 from stockwidget.core.config_store import config_paths
 from stockwidget.ui.widget import FloatLabel
+from stockwidget.ui.taskbar import DISPLAY_MODES
 from stockwidget.ui.metric_pool import MetricPoolWidget
 from stockwidget.ui.metric_settings_panel import NameSettingsPanel, UnitSettingsPanel
 from stockwidget.ui.watchlist_editor import WatchlistEditor
@@ -72,6 +73,7 @@ class SettingsDialog(QDialog):
         self._use_gitee_links = False
         self.ui = Ui_SettingDialog()
         self.ui.setupUi(self)
+        self._init_taskbar_settings()
         # Linux 下用 Tool 窗口避开任务栏/程序坞条目；
         # macOS 的 Dock 图标由应用级 Accessory 激活策略隐藏
         # （见 app._hide_macos_dock_icon），窗口保持普通标题栏，
@@ -249,6 +251,52 @@ class SettingsDialog(QDialog):
         self.ui.cb_head.toggled.connect(self.win.set_header_visible)
         self.ui.cb_grid.toggled.connect(self.win.set_grid_visible)
 
+    def _init_taskbar_settings(self):
+        page = QWidget()
+        page.setObjectName("taskbar_settings")
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(18, 18, 18, 18)
+        form = QFormLayout()
+        self.taskbar_mode = QComboBox(page)
+        for mode, label in DISPLAY_MODES:
+            self.taskbar_mode.addItem(label, mode)
+        self.taskbar_offset = QSpinBox(page)
+        self.taskbar_offset.setRange(0, 2000)
+        self.taskbar_offset.setSuffix(" px")
+        self.taskbar_offset.setToolTip("从系统托盘左侧向左偏移；数值越大，行情越靠左。")
+        form.addRow("显示方式", self.taskbar_mode)
+        form.addRow("任务栏向左偏移", self.taskbar_offset)
+        layout.addLayout(form)
+        description = QLabel(
+            "在主屏任务栏内显示当前排序后的前两行，沿用浮窗的指标、字体和颜色。\n\n"
+            "点击行情可显示/隐藏浮窗，右键可切换显示方式或打开设置。\n\n"
+            "任务栏背景透明，字号自动适应任务栏高度。若与其他图标重叠，可调整向左偏移。",
+            page,
+        )
+        description.setWordWrap(True)
+        layout.addWidget(description)
+        self.taskbar_status = QLabel(page)
+        self.taskbar_status.setWordWrap(True)
+        layout.addWidget(self.taskbar_status)
+        layout.addStretch()
+        self.ui.tab_widget.insertTab(2, page, "任务栏")
+        self.taskbar_mode.currentIndexChanged.connect(
+            lambda _: self.win.set_display_mode(self.taskbar_mode.currentData())
+        )
+        self.taskbar_offset.valueChanged.connect(self.win.set_taskbar_offset)
+        self.win.taskbar_options_changed.connect(self._sync_taskbar_settings)
+        self.win.taskbar_status_changed.connect(self.taskbar_status.setText)
+        self._sync_taskbar_settings()
+
+    def _sync_taskbar_settings(self):
+        with QSignalBlocker(self.taskbar_mode), QSignalBlocker(self.taskbar_offset):
+            self.taskbar_mode.setCurrentIndex(self.taskbar_mode.findData(self.win.display_mode))
+            self.taskbar_offset.setValue(self.win.taskbar_offset)
+        supported = sys.platform == "win32"
+        self.taskbar_mode.setEnabled(supported)
+        self.taskbar_offset.setEnabled(supported and self.win.display_mode != "float")
+        self.taskbar_status.setText(self.win.taskbar_status if supported else "任务栏嵌入仅支持 Windows。")
+
     def _load_settings(self):
         with ExitStack() as stack:
             for widget in self.findChildren(QWidget):
@@ -285,6 +333,7 @@ class SettingsDialog(QDialog):
             self.ui.cb_grid.setChecked(self.win.grid_visible)
 
             self._apply_platform_limits()
+            self._sync_taskbar_settings()
             self._refresh_hotkey_status()
             self._setup_source_buttons()
             self._setup_about()
