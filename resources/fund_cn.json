@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-24",
+  "last_update": "2026-09-28",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -7957,6 +7957,15 @@
       "py": "zhongyaoetfyinhua",
       "abbr": "zyetfyh"
     },
+    "sh562450": {
+      "code": "562450",
+      "market": "sh",
+      "type": "基",
+      "name": "有色矿业ETF博时",
+      "name_en": "",
+      "py": "yousekuangyeetfboshi",
+      "abbr": "yskyetfbs"
+    },
     "sh562500": {
       "code": "562500",
       "market": "sh",
@@ -10206,6 +10215,15 @@
       "name_en": "",
       "py": "honglidiboetfwanjia",
       "abbr": "hldbetfwj"
+    },
+    "sz158025": {
+      "code": "158025",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板成长ETF鹏华",
+      "name_en": "",
+      "py": "chuangyebanchengzhangetfpenghua",
+      "abbr": "cybczetfph"
     },
     "sz158026": {
       "code": "158026",

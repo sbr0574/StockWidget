@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-25",
+  "last_update": "2026-09-28",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -6107,10 +6107,10 @@
       "code": "00876",
       "market": "hk",
       "type": "港",
-      "name": "佳兆業健康",
-      "name_en": "KAISA HEALTH",
-      "py": "jiazhaoyejiankang",
-      "abbr": "jzyjk"
+      "name": "青海生物製藥",
+      "name_en": "QH BIO PHARMA",
+      "py": "qinghaishengwuzhiyao",
+      "abbr": "qhswzy"
     },
     "hk00878": {
       "code": "00878",
@@ -8196,7 +8196,7 @@
       "market": "hk",
       "type": "港",
       "name": "偉祿科技股份",
-      "name_en": "REALORD TECH",
+      "name_en": "REALORD TEC-NEW",
       "py": "weilukejigufen",
       "abbr": "wlkjgf"
     },
@@ -11742,7 +11742,7 @@
       "market": "hk",
       "type": "港",
       "name": "智算能建",
-      "name_en": "AI ENERGY E-2K",
+      "name_en": "AI ENERGY ENG",
       "py": "zhisuannengjian",
       "abbr": "zsnj"
     },
@@ -12138,7 +12138,7 @@
       "market": "hk",
       "type": "港",
       "name": "北京體育文化",
-      "name_en": "BJ SPORTS&E-NEW",
+      "name_en": "BJ SPORTS & ENT",
       "py": "beijingtiyuwenhua",
       "abbr": "bjtywh"
     },
@@ -13983,7 +13983,7 @@
       "market": "hk",
       "type": "港",
       "name": "世紀集團國際",
-      "name_en": "CENTURY GP INTL",
+      "name_en": "CENTURY GP-NEW",
       "py": "shijijituanguoji",
       "abbr": "sjjtgj"
     },
@@ -18388,15 +18388,6 @@
       "py": "zijinkuangye",
       "abbr": "zjky"
     },
-    "hk02908": {
-      "code": "02908",
-      "market": "hk",
-      "type": "港",
-      "name": "北京體育文化",
-      "name_en": "BJ SPORTS&E-OLD",
-      "py": "beijingtiyuwenhua",
-      "abbr": "bjtywh"
-    },
     "hk02912": {
       "code": "02912",
       "market": "hk",
@@ -18433,15 +18424,6 @@
       "py": "zhisuannengjianguquan",
       "abbr": "zsnjgq"
     },
-    "hk02918": {
-      "code": "02918",
-      "market": "hk",
-      "type": "港",
-      "name": "智算能建(一萬)",
-      "name_en": "AI ENERGY E-10K",
-      "py": "zhisuannengjian(yiwan)",
-      "abbr": "zsnj(yw)"
-    },
     "hk02919": {
       "code": "02919",
       "market": "hk",
@@ -18474,7 +18456,7 @@
       "market": "hk",
       "type": "港",
       "name": "偉祿科技股份",
-      "name_en": "REALORD TECH",
+      "name_en": "REALORD TEC-OLD",
       "py": "weilukejigufen",
       "abbr": "wlkjgf"
     },
@@ -18483,7 +18465,7 @@
       "market": "hk",
       "type": "港",
       "name": "世紀集團國際",
-      "name_en": "CENTURY GP INTL",
+      "name_en": "CENTURY GP-OLD",
       "py": "shijijituanguoji",
       "abbr": "sjjtgj"
     },
@@ -18495,15 +18477,6 @@
       "name_en": "JINTAI ENERGY H",
       "py": "jintainengyuankonggu",
       "abbr": "jtnykg"
-    },
-    "hk02927": {
-      "code": "02927",
-      "market": "hk",
-      "type": "港",
-      "name": "港灣數字股權",
-      "name_en": "HARBOUR D RTS",
-      "py": "gangwanshuziguquan",
-      "abbr": "gwszgq"
     },
     "hk02929": {
       "code": "02929",
@@ -19000,6 +18973,15 @@
       "py": "huaxiahengshengkeji",
       "abbr": "hxhskj"
     },
+    "hk03093": {
+      "code": "03093",
+      "market": "hk",
+      "type": "基",
+      "name": "FG機器人",
+      "name_en": "FG ROBOTICS",
+      "py": "fgjiqiren",
+      "abbr": "fgjqr"
+    },
     "hk03096": {
       "code": "03096",
       "market": "hk",
@@ -19242,6 +19224,15 @@
       "name_en": "CAM ASIA IGB",
       "py": "huaxiayatouzhai",
       "abbr": "hxytz"
+    },
+    "hk03143": {
+      "code": "03143",
+      "market": "hk",
+      "type": "基",
+      "name": "大成銀河港馬大型",
+      "name_en": "DC CG HKEXBURSA",
+      "py": "dachengyinhegangmadaxing",
+      "abbr": "dcyhgmdx"
     },
     "hk03145": {
       "code": "03145",
@@ -19566,6 +19557,15 @@
       "name_en": "A BOS USD MM",
       "py": "aboshimeiyuan",
       "abbr": "absmy"
+    },
+    "hk03197": {
+      "code": "03197",
+      "market": "hk",
+      "type": "基",
+      "name": "國泰海通資源",
+      "name_en": "GTHT GLSR ETF",
+      "py": "guotaihaitongziyuan",
+      "abbr": "gthtzy"
     },
     "hk03199": {
       "code": "03199",
@@ -20341,6 +20341,15 @@
       "py": "boshiyangqihongli",
       "abbr": "bsyqhl"
     },
+    "hk03438": {
+      "code": "03438",
+      "market": "hk",
+      "type": "基",
+      "name": "恒生AI ETF",
+      "name_en": "HSAI ETF",
+      "py": "hengshengaietf",
+      "abbr": "hsaietf"
+    },
     "hk03439": {
       "code": "03439",
       "market": "hk",
@@ -20692,6 +20701,24 @@
       "py": "agxhengxizeng",
       "abbr": "agxhxz"
     },
+    "hk03566": {
+      "code": "03566",
+      "market": "hk",
+      "type": "基",
+      "name": "廣發全球金屬",
+      "name_en": "GF GL METAL",
+      "py": "guangfaquanqiujinshu",
+      "abbr": "gfqqjs"
+    },
+    "hk03569": {
+      "code": "03569",
+      "market": "hk",
+      "type": "基",
+      "name": "華泰盈科港韓半導",
+      "name_en": "HTPCG HKKRSEMI",
+      "py": "huataiyingkeganghanbandao",
+      "abbr": "htykghbd"
+    },
     "hk03579": {
       "code": "03579",
       "market": "hk",
@@ -20701,6 +20728,15 @@
       "py": "yifangdampfganggu",
       "abbr": "yfdmpfgg"
     },
+    "hk03585": {
+      "code": "03585",
+      "market": "hk",
+      "type": "基",
+      "name": "國泰海通科技",
+      "name_en": "GTHT FTEC ETF",
+      "py": "guotaihaitongkeji",
+      "abbr": "gthtkj"
+    },
     "hk03589": {
       "code": "03589",
       "market": "hk",
@@ -20709,6 +20745,15 @@
       "name_en": "A HSTECHCC",
       "py": "ahengshengkejibeidui",
       "abbr": "ahskjbd"
+    },
+    "hk03599": {
+      "code": "03599",
+      "market": "hk",
+      "type": "基",
+      "name": "廣發港美科技",
+      "name_en": "GF HKUS TECH",
+      "py": "guangfagangmeikeji",
+      "abbr": "gfgmkj"
     },
     "hk03600": {
       "code": "03600",
@@ -26362,6 +26407,15 @@
       "py": "jinweiyiliao",
       "abbr": "jwyl"
     },
+    "hk08573": {
+      "code": "08573",
+      "market": "hk",
+      "type": "港",
+      "name": "中華節能",
+      "name_en": "SINO ENGY CONS",
+      "py": "zhonghuajieneng",
+      "abbr": "zhjn"
+    },
     "hk08601": {
       "code": "08601",
       "market": "hk",
@@ -26973,6 +27027,15 @@
       "name_en": "A BOS USD MM-U",
       "py": "aboshimeiyuan-u",
       "abbr": "absmy-u"
+    },
+    "hk09197": {
+      "code": "09197",
+      "market": "hk",
+      "type": "基",
+      "name": "國泰海通資源-U",
+      "name_en": "GTHT GLSR ETF-U",
+      "py": "guotaihaitongziyuan-u",
+      "abbr": "gthtzy-u"
     },
     "hk09403": {
       "code": "09403",
@@ -28396,6 +28459,33 @@
       "py": "agxhengxizeng-u",
       "abbr": "agxhxz-u"
     },
+    "hk41566": {
+      "code": "41566",
+      "market": "hk",
+      "type": "基",
+      "name": "廣發全球金屬—U",
+      "name_en": "GF GL METAL-U",
+      "py": "guangfaquanqiujinshu—u",
+      "abbr": "gfqqjs—u"
+    },
+    "hk41585": {
+      "code": "41585",
+      "market": "hk",
+      "type": "基",
+      "name": "國泰海通科技-U",
+      "name_en": "GTHT FTEC ETF-U",
+      "py": "guotaihaitongkeji-u",
+      "abbr": "gthtkj-u"
+    },
+    "hk41599": {
+      "code": "41599",
+      "market": "hk",
+      "type": "基",
+      "name": "廣發港美科技—U",
+      "name_en": "GF HKUS TECH-U",
+      "py": "guangfagangmeikeji—u",
+      "abbr": "gfgmkj—u"
+    },
     "hk80016": {
       "code": "80016",
       "market": "hk",
@@ -28981,6 +29071,15 @@
       "py": "aboshimeiyuan-r",
       "abbr": "absmy-r"
     },
+    "hk83197": {
+      "code": "83197",
+      "market": "hk",
+      "type": "基",
+      "name": "國泰海通資源-R",
+      "name_en": "GTHT GLSR ETF-R",
+      "py": "guotaihaitongziyuan-r",
+      "abbr": "gthtzy-r"
+    },
     "hk83199": {
       "code": "83199",
       "market": "hk",
@@ -29115,6 +29214,33 @@
       "name_en": "AGX HSDIV ENH-R",
       "py": "agxhengxizeng-r",
       "abbr": "agxhxz-r"
+    },
+    "hk83566": {
+      "code": "83566",
+      "market": "hk",
+      "type": "基",
+      "name": "廣發全球金屬—R",
+      "name_en": "GF GL METAL-R",
+      "py": "guangfaquanqiujinshu—r",
+      "abbr": "gfqqjs—r"
+    },
+    "hk83585": {
+      "code": "83585",
+      "market": "hk",
+      "type": "基",
+      "name": "國泰海通科技-R",
+      "name_en": "GTHT FTEC ETF-R",
+      "py": "guotaihaitongkeji-r",
+      "abbr": "gthtkj-r"
+    },
+    "hk83599": {
+      "code": "83599",
+      "market": "hk",
+      "type": "基",
+      "name": "廣發港美科技—R",
+      "name_en": "GF HKUS TECH-R",
+      "py": "guangfagangmeikeji—r",
+      "abbr": "gfgmkj—r"
     },
     "hk83690": {
       "code": "83690",

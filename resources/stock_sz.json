@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-23",
+  "last_update": "2026-09-28",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -14576,10 +14576,10 @@
       "code": "300096",
       "market": "sz",
       "type": "创",
-      "name": "ST易联众",
+      "name": "易联众",
       "name_en": "",
-      "py": "styilianzhong",
-      "abbr": "stylz"
+      "py": "yilianzhong",
+      "abbr": "ylz"
     },
     "sz300097": {
       "code": "300097",
