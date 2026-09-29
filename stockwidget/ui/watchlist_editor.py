@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 from shiboken6 import isValid
 
 from stockwidget.core.code_search import build_search_index, search_suggestions
-from stockwidget.core.watchlist import parse_positive_cost
+from stockwidget.core.watchlist import parse_positive_cost, parse_quantity
 from stockwidget.ui.add_code_panel import (
     ADDED_ROLE, ENTRY_ROLE, AddCodePanel, entry_display_text,
 )
@@ -191,10 +191,11 @@ class WatchlistEditor(QObject):
         return super().eventFilter(obj, ev)
 
     def _init_code_table(self, watchlist):
-        self.list_codes.setHorizontalHeaderLabels(["显示", "代码", "成本"])
+        self.list_codes.setHorizontalHeaderLabels(["显示", "代码", "成本", "数量"])
         self.list_codes.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.list_codes.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.list_codes.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        self.list_codes.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
         # 单击不进入编辑，便于整行拖动排序
         self.list_codes.setEditTriggers(
             QAbstractItemView.EditTrigger.DoubleClicked
@@ -221,7 +222,8 @@ class WatchlistEditor(QObject):
         for code, entry in watchlist.items():
             checked = bool(entry.get("checked", True))
             cost = entry.get("cost")
-            self._append_code_row(code, entry.get("name", ""), checked, cost)
+            quantity = entry.get("quantity")
+            self._append_code_row(code, entry.get("name", ""), checked, cost, quantity)
         self._refresh_empty_watchlist_hint()
         # 打开面板时不预选任何条目
         self.list_codes.setCurrentCell(-1, -1)
@@ -268,17 +270,18 @@ class WatchlistEditor(QObject):
         ev.accept()
         self._on_codes_changed(None)
 
-    def _append_code_row(self, code: str = "", name: str = "", checked: bool = False, cost=None):
+    def _append_code_row(self, code: str = "", name: str = "", checked: bool = False,
+                         cost=None, quantity=None):
         self._insert_code_row(
-            self.list_codes.rowCount(), code, name, checked, cost
+            self.list_codes.rowCount(), code, name, checked, cost, quantity
         )
 
     def _insert_code_row(self, row: int, code: str = "", name: str = "",
-                         checked: bool = False, cost=None):
+                         checked: bool = False, cost=None, quantity=None):
         with QSignalBlocker(self.list_codes):
             row = max(0, min(int(row), self.list_codes.rowCount()))
             self.list_codes.insertRow(row)
-            self._set_code_row(row, code, code, name, checked, cost)
+            self._set_code_row(row, code, code, name, checked, cost, quantity)
 
     def _ensure_search_index(self):
         """代码表对象变化时重建索引；普通查询复用已规范化记录。"""
@@ -305,7 +308,7 @@ class WatchlistEditor(QObject):
         return suggestions[0] if suggestions else None
 
     def _set_code_row(self, row: int, value_key: str, display_code: str = "", name: str = "",
-                      checked: bool = False, cost=None):
+                      checked: bool = False, cost=None, quantity=None):
         with QSignalBlocker(self.list_codes):
             value_key = str(value_key or "").strip().lower()
             display_code = str(display_code or "").strip()
@@ -343,6 +346,21 @@ class WatchlistEditor(QObject):
                 cost_item.setText("" if cost is None else f"{cost:g}")
                 cost_item.setData(Qt.UserRole, cost)
 
+            quantity = parse_quantity(quantity)
+            quantity_item = self.list_codes.item(row, 3)
+            if quantity_item is None:
+                quantity_item = QTableWidgetItem("")
+                self.list_codes.setItem(row, 3, quantity_item)
+            if entry.get("type") == "指":
+                # 指数不允许设置持仓数量
+                quantity_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled)
+                quantity_item.setText("")
+                quantity_item.setData(Qt.UserRole, None)
+            else:
+                quantity_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled)
+                quantity_item.setText("" if quantity is None else f"{quantity:g}")
+                quantity_item.setData(Qt.UserRole, quantity)
+
     def _cleanup_code_rows(self):
         with QSignalBlocker(self.list_codes):
             seen = set()
@@ -373,6 +391,7 @@ class WatchlistEditor(QObject):
             check_item = self.list_codes.item(row, 0)
             code_item = self.list_codes.item(row, 1)
             cost_item = self.list_codes.item(row, 2)
+            quantity_item = self.list_codes.item(row, 3)
             if code_item is None:
                 continue
 
@@ -387,6 +406,7 @@ class WatchlistEditor(QObject):
             entry = {
                 "checked": False,
                 "cost": None,
+                "quantity": None,
                 "name": "",
                 "type": type_,
                 "code": str(resolved.get("code", "") or "") if resolved else "",
@@ -394,9 +414,11 @@ class WatchlistEditor(QObject):
             }
             if check_item is not None and check_item.checkState() == Qt.Checked:
                 entry["checked"] = True
-            # 指数不允许设置成本
+            # 指数不允许设置成本和持仓数量
             if type_ != "指" and cost_item is not None:
                 entry["cost"] = parse_positive_cost(cost_item.text())
+            if type_ != "指" and quantity_item is not None:
+                entry["quantity"] = parse_quantity(quantity_item.text())
             if resolved:
                 entry["name"] = str(resolved.get("name", "") or "")
             watchlist[value] = entry
@@ -615,6 +637,8 @@ class WatchlistEditor(QObject):
             return
         cost_item = self.list_codes.item(row, 2)
         cost = parse_positive_cost(cost_item.text()) if cost_item is not None else None
+        quantity_item = self.list_codes.item(row, 3)
+        quantity = parse_quantity(quantity_item.text()) if quantity_item is not None else None
         entry = editor.property("_selected_entry")
         text = str(editor.text() or "").strip()
         if not isinstance(entry, dict):
@@ -624,7 +648,7 @@ class WatchlistEditor(QObject):
         entry_key = str(entry.get("key", "") or "").casefold() if entry else ""
         if entry and entry_key and entry_key not in existing_keys:
             self._set_code_row(
-                row, entry["key"], entry["code"], entry["name"], True, cost
+                row, entry["key"], entry["code"], entry["name"], True, cost, quantity
             )
         else:
             # 无效或重复输入均恢复旧行；新增空行则直接移除。
@@ -635,11 +659,13 @@ class WatchlistEditor(QObject):
         row = index.row()
         code_item = self.list_codes.item(row, 1)
         cost_item = self.list_codes.item(row, 2)
+        quantity_item = self.list_codes.item(row, 3)
         check_item = self.list_codes.item(row, 0)
         previous = {
             "key": str(code_item.data(Qt.UserRole) or "") if code_item else "",
             "code": str(code_item.text() or "") if code_item else "",
             "cost": parse_positive_cost(cost_item.text()) if cost_item else None,
+            "quantity": parse_quantity(quantity_item.text()) if quantity_item else None,
             "checked": check_item.checkState() == Qt.Checked if check_item else True,
         }
         editor.setProperty("_previous_editor_value", previous)
@@ -654,6 +680,9 @@ class WatchlistEditor(QObject):
 
     def _restore_or_remove_row(self, row: int, previous):
         if isinstance(previous, dict) and (previous["key"] or previous["code"]):
-            self._set_code_row(row, previous["key"], previous["code"], "", previous["checked"], previous.get("cost"))
+            self._set_code_row(
+                row, previous["key"], previous["code"], "",
+                previous["checked"], previous.get("cost"), previous.get("quantity"),
+            )
         elif 0 <= row < self.list_codes.rowCount():
             self.list_codes.removeRow(row)

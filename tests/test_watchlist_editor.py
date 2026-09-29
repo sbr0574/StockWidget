@@ -26,7 +26,7 @@ class WatchlistEditorTests(unittest.TestCase):
 
     def setUp(self):
         self.parent = QWidget()
-        self.table = WatchlistTable(0, 3, self.parent)
+        self.table = WatchlistTable(0, 4, self.parent)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setDragDropMode(QAbstractItemView.InternalMove)
@@ -107,6 +107,25 @@ class WatchlistEditorTests(unittest.TestCase):
         codes = {"new": {"code": "new", "market": "us", "name": "新标的", "type": "美"}}
         self.editor.refresh_code_search(codes)
         self.assertEqual(self.editor._entry_for_text("新标的")["key"], "new")
+
+    def test_quantity_is_collected_and_invalid_text_cleared(self):
+        received = []
+        self.editor.watchlist_changed.connect(received.append)
+        self.editor._append_code_row("sz000001", checked=True, cost=10, quantity=100)
+        self.editor._append_code_row("sh600519", checked=True, cost=20, quantity="abc")
+        self.editor._on_codes_changed(None)
+
+        watchlist = received[-1]
+        self.assertEqual(watchlist["sz000001"]["quantity"], 100)
+        self.assertIsNone(watchlist["sh600519"]["quantity"])
+
+        # 数量列可编辑，成本/数量均为空时按无持仓处理
+        self.table.item(0, 3).setText("200.5")
+        self.assertEqual(received[-1]["sz000001"]["quantity"], 200.5)
+        self.table.item(0, 2).setText("")
+        self.table.item(0, 3).setText("")
+        self.assertEqual(received[-1]["sz000001"]["cost"], None)
+        self.assertEqual(received[-1]["sz000001"]["quantity"], None)
 
     def test_move_return_after_nested_events_preserves_rows_and_later_edits(self):
         self.editor._append_code_row("sz000001", checked=True, cost=10)

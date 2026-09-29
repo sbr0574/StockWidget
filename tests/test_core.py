@@ -79,6 +79,25 @@ class WatchlistTests(unittest.TestCase):
         watchlist = normalize_watchlist({"sh600519": {"cost": "abc"}})
         self.assertIsNone(watchlist["sh600519"]["cost"])
 
+    def test_invalid_quantities_are_rejected_consistently(self):
+        for quantity in (None, "", "invalid", 0, -1, -100, "nan", "inf", float("-inf")):
+            with self.subTest(quantity=quantity):
+                entry = normalize_watchlist({"sh600519": {"quantity": quantity}})["sh600519"]
+                self.assertIsNone(entry["quantity"])
+
+    def test_normalize_quantity(self):
+        watchlist = normalize_watchlist(
+            {
+                "sh600519": {"quantity": "1500"},
+                "sz000001": {"quantity": "100.5"},
+                "sh501001": {"quantity": None},
+            }
+        )
+        self.assertEqual(watchlist["sh600519"]["quantity"], 1500)
+        self.assertIsInstance(watchlist["sh600519"]["quantity"], int)
+        self.assertEqual(watchlist["sz000001"]["quantity"], 100.5)
+        self.assertIsNone(watchlist["sh501001"]["quantity"])
+
     def test_none_watchlist(self):
         self.assertEqual(normalize_watchlist(None), {})
 

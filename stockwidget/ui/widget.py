@@ -40,7 +40,7 @@ from stockwidget.platform.click_through import apply_click_through
 
 
 SORTABLE_HEADERS = (
-    "现价", "涨跌", "涨幅", "浮盈", "委比", "成交量", "成交额", "均价",
+    "现价", "涨跌", "涨幅", "成本", "持仓数量", "持仓盈亏", "浮盈", "委比", "成交量", "成交额", "均价",
 )
 
 
@@ -68,7 +68,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self.setAttribute(Qt.WA_MacAlwaysShowToolWindow, True)
 
         self.codes_list: dict = codes_list
-        # 加载自选标的配置（代码 -> {checked, cost, name, type}）
+        # 加载自选标的配置（代码 -> {checked, cost, quantity, name, type}）
         watchlist_cfg = cfg.get("watchlist", {})
         self.watchlist: dict = normalize_watchlist(watchlist_cfg, self.codes_list)
         self._load_appearance_config(cfg)
@@ -547,7 +547,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             display_code = entry.get("code") or code_info.get("code") or c
             row, color_roles, row_sort_values = format_quote(
                 d, type_, display_code, market=market,
-                cost=entry.get("cost"), options=options,
+                cost=entry.get("cost"), quantity=entry.get("quantity"),
+                options=options,
                 include_sort=True,
             )
             full_rows.append(row)
@@ -600,7 +601,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     # ----- 应用设置 -----
     def set_watchlist(self, watchlist: dict):
-        """整体替换自选列表（key -> {code, market, checked, cost, name, type}）。"""
+        """整体替换自选列表（key -> {code, market, checked, cost, quantity, name, type}）。"""
         self.watchlist = normalize_watchlist(watchlist, self.codes_list)
         self._notify_change()
         self._refresh_from_function()
