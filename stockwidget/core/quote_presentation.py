@@ -33,6 +33,7 @@ def format_quote(
     *,
     market: str = "",
     cost: float | None = None,
+    quantity: float | None = None,
     options: QuoteDisplayOptions = QuoteDisplayOptions(),
     include_sort: bool = False,
 ):
@@ -107,6 +108,20 @@ def format_quote(
         profit_label = "-"
         profit_sign = 0
 
+    # 成本与持仓数量直接展示配置值，未配置时显示 "-"
+    cost_label = f"{cost:.{precision}f}" if cost is not None and cost > 0 else "-"
+    quantity_label = str(quantity) if quantity is not None and quantity > 0 else "-"
+
+    # 持仓盈亏 =（现价 − 成本）× 持仓数量，成本与数量齐全才计算
+    position_pl = None
+    if cost is not None and cost > 0 and quantity is not None and quantity > 0:
+        position_pl = (data["current_price"] - cost) * quantity
+        position_pl_label = f"{position_pl:+.2f}"
+        position_pl_sign = (position_pl > 0) - (position_pl < 0)
+    else:
+        position_pl_label = "-"
+        position_pl_sign = 0
+
     is_index = security_type == "指"
     english_units = should_use_english_units(options.unit_mode, market)
     format_data = {
@@ -114,6 +129,9 @@ def format_quote(
         "现价": f"{data['current_price']:.{precision}f}{arrow}",
         "涨跌": f"{change:+.{precision}f}",
         "涨幅": f"{change_pct:+.2f}%",
+        "成本": cost_label,
+        "持仓数量": quantity_label,
+        "持仓盈亏": position_pl_label,
         "浮盈": profit_label,
         "买一": b1_label,
         "卖一": s1_label,
@@ -142,6 +160,9 @@ def format_quote(
         "现价": direction_color_role(change),
         "涨跌": direction_color_role(change),
         "涨幅": direction_color_role(change),
+        "成本": COLOR_ROLE_TEXT,
+        "持仓数量": COLOR_ROLE_TEXT,
+        "持仓盈亏": direction_color_role(position_pl_sign),
         "浮盈": direction_color_role(profit_sign),
         "买一": direction_color_role(b1_color_sign),
         "卖一": direction_color_role(s1_color_sign),
@@ -155,6 +176,9 @@ def format_quote(
         "现价": data["current_price"],
         "涨跌": change,
         "涨幅": change_pct,
+        "成本": cost if cost is not None and cost > 0 else None,
+        "持仓数量": quantity if quantity is not None and quantity > 0 else None,
+        "持仓盈亏": position_pl,
         "浮盈": profit_pct,
         "委比": committee if (p_sum + s_sum) > 0 else None,
         "成交量": data["deals_vol"],
@@ -162,11 +186,14 @@ def format_quote(
         "均价": avg,
     }
 
-    # 指数不显示浮盈/买一卖一/委比/均价（均置为"-"）
+    # 指数不显示成本/持仓数量/持仓盈亏/浮盈/买一卖一/委比/均价（均置为"-"）
     if is_index:
-        for key in ("浮盈", "买一", "卖一", "委比", "均价"):
+        for key in ("成本", "持仓数量", "持仓盈亏", "浮盈", "买一", "卖一", "委比", "均价"):
             format_data[key] = "-"
             color_roles[key] = direction_color_role(0)
+        sort_values["成本"] = None
+        sort_values["持仓数量"] = None
+        sort_values["持仓盈亏"] = None
         sort_values["浮盈"] = None
         sort_values["委比"] = None
         sort_values["均价"] = None

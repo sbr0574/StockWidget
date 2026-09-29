@@ -8,6 +8,7 @@ from stockwidget.core.quote_presentation import (
     QuoteDisplayOptions, format_quote,
     COLOR_ROLE_TEXT,
     COLOR_ROLE_UP,
+    COLOR_ROLE_DOWN,
     COLOR_ROLE_NEUTRAL,
 )
 
@@ -59,10 +60,84 @@ class WidgetFormattingTests(unittest.TestCase):
         self.assertEqual(roles["现价"], COLOR_ROLE_NEUTRAL)
 
     def test_index_hides_unavailable_metrics_even_with_cost(self):
-        row, roles = format_quote(_quote(0), "指", "000001", cost=10)
-        for header in ("浮盈", "买一", "卖一", "委比", "均价", "成交量", "成交额"):
+        row, roles, sort_values = format_quote(_quote(0), "指", "000001", cost=10, include_sort=True)
+        for header in ("成本", "持仓数量", "浮盈", "持仓盈亏", "买一", "卖一", "委比", "均价", "成交量", "成交额"):
             self.assertEqual(row[header], "-")
         self.assertEqual(roles["浮盈"], COLOR_ROLE_NEUTRAL)
+        self.assertIsNone(sort_values["成本"])
+        self.assertIsNone(sort_values["持仓数量"])
+
+    def test_cost_and_quantity_are_displayed_as_configured(self):
+        quote = _quote()
+        quote["current_price"] = 12.0
+
+        row, roles, sort_values = format_quote(
+            quote, "沪", "600000", market="sh", cost=10.0, quantity=1500, include_sort=True
+        )
+        self.assertEqual(row["成本"], "10.00")
+        self.assertEqual(row["持仓数量"], "1500")
+        self.assertEqual(roles["成本"], COLOR_ROLE_TEXT)
+        self.assertEqual(roles["持仓数量"], COLOR_ROLE_TEXT)
+        self.assertEqual(sort_values["成本"], 10.0)
+        self.assertEqual(sort_values["持仓数量"], 1500)
+
+        # 小数成本/数量按原值显示
+        row, _ = format_quote(
+            deepcopy(quote), "沪", "600000", market="sh", cost=10.5, quantity=100.5
+        )
+        self.assertEqual(row["成本"], "10.50")
+        self.assertEqual(row["持仓数量"], "100.5")
+
+    def test_cost_and_quantity_are_hidden_without_position(self):
+        for kwargs in (
+            {},
+            {"cost": None, "quantity": None},
+            {"cost": 0, "quantity": 0},
+        ):
+            with self.subTest(**kwargs):
+                row, roles, sort_values = format_quote(
+                    deepcopy(_quote()), "沪", "600000", market="sh",
+                    include_sort=True, **kwargs,
+                )
+                self.assertEqual(row["成本"], "-")
+                self.assertEqual(row["持仓数量"], "-")
+                self.assertEqual(roles["成本"], COLOR_ROLE_TEXT)
+                self.assertEqual(roles["持仓数量"], COLOR_ROLE_TEXT)
+                self.assertIsNone(sort_values["成本"])
+                self.assertIsNone(sort_values["持仓数量"])
+
+    def test_position_pl_is_cost_times_quantity(self):
+        quote = _quote()
+        quote["current_price"] = 12.0
+
+        row, roles = format_quote(quote, "沪", "600000", market="sh", cost=10.0, quantity=100)
+        self.assertEqual(row["持仓盈亏"], "+200.00")
+        self.assertEqual(roles["持仓盈亏"], COLOR_ROLE_UP)
+
+        row, roles = format_quote(quote, "沪", "600000", market="sh", cost=12.5, quantity=200)
+        self.assertEqual(row["持仓盈亏"], "-100.00")
+        self.assertEqual(roles["持仓盈亏"], COLOR_ROLE_DOWN)
+
+        row, roles = format_quote(quote, "沪", "600000", market="sh", cost=12.0, quantity=100)
+        self.assertEqual(row["持仓盈亏"], "+0.00")
+        self.assertEqual(roles["持仓盈亏"], COLOR_ROLE_NEUTRAL)
+
+    def test_position_pl_requires_cost_and_quantity(self):
+        quote = _quote()
+        quote["current_price"] = 12.0
+        for kwargs in (
+            {"cost": 10.0},
+            {"quantity": 100},
+            {"cost": None, "quantity": 100},
+            {"cost": 0, "quantity": 100},
+            {"cost": 10.0, "quantity": 0},
+        ):
+            with self.subTest(**kwargs):
+                row, roles = format_quote(
+                    deepcopy(quote), "沪", "600000", market="sh", **kwargs
+                )
+                self.assertEqual(row["持仓盈亏"], "-")
+                self.assertEqual(roles["持仓盈亏"], COLOR_ROLE_NEUTRAL)
 
     def test_name_options_and_fund_precision(self):
         row, _ = format_quote(

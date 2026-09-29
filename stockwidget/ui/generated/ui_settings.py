@@ -45,8 +45,8 @@ class Ui_SettingDialog(object):
         self.gb_list.setFlat(False)
         self.gb_list.setCheckable(False)
         self.list_codes = WatchlistTable(self.gb_list)
-        if (self.list_codes.columnCount() < 3):
-            self.list_codes.setColumnCount(3)
+        if (self.list_codes.columnCount() < 4):
+            self.list_codes.setColumnCount(4)
         self.list_codes.setObjectName(u"list_codes")
         self.list_codes.setGeometry(QRect(10, 55, 300, 256))
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
@@ -64,7 +64,7 @@ class Ui_SettingDialog(object):
         self.list_codes.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.list_codes.setShowGrid(True)
         self.list_codes.setRowCount(0)
-        self.list_codes.setColumnCount(3)
+        self.list_codes.setColumnCount(4)
         self.list_codes.horizontalHeader().setCascadingSectionResizes(True)
         self.list_codes.horizontalHeader().setHighlightSections(True)
         self.list_codes.verticalHeader().setVisible(False)
