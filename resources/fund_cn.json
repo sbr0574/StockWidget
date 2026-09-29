@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-28",
+  "last_update": "2026-09-29",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -10278,6 +10278,15 @@
       "name_en": "",
       "py": "liangshietffuguo",
       "abbr": "lsetffg"
+    },
+    "sz158039": {
+      "code": "158039",
+      "market": "sz",
+      "type": "基",
+      "name": "港股通红利低波ETF广发",
+      "name_en": "",
+      "py": "ganggutonghonglidiboetfguangfa",
+      "abbr": "ggthldbetfgf"
     },
     "sz158041": {
       "code": "158041",

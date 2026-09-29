@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-28",
+  "last_update": "2026-09-29",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -15521,10 +15521,10 @@
       "code": "300211",
       "market": "sz",
       "type": "创",
-      "name": "*ST亿通",
+      "name": "亿通科技",
       "name_en": "",
-      "py": "*styitong",
-      "abbr": "*styt"
+      "py": "yitongkeji",
+      "abbr": "ytkj"
     },
     "sz300212": {
       "code": "300212",
@@ -24854,10 +24854,10 @@
       "code": "301339",
       "market": "sz",
       "type": "创",
-      "name": "通行宝",
+      "name": "苏交数智",
       "name_en": "",
-      "py": "tongxingbao",
-      "abbr": "txb"
+      "py": "sujiaoshuzhi",
+      "abbr": "sjsz"
     },
     "sz301345": {
       "code": "301345",
@@ -26442,6 +26442,15 @@
       "name_en": "",
       "py": "zhanxingufen",
       "abbr": "zxgf"
+    },
+    "sz301716": {
+      "code": "301716",
+      "market": "sz",
+      "type": "创",
+      "name": "N鸿富诚",
+      "name_en": "",
+      "py": "nhongfucheng",
+      "abbr": "nhfc"
     },
     "sz301717": {
       "code": "301717",

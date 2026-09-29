@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-28",
+  "last_update": "2026-09-29",
   "codes": {
     "usa": {
       "code": "a",
@@ -26780,8 +26780,8 @@
       "code": "dcor",
       "market": "us",
       "type": "美",
-      "name": "Dimensional US Core Equity 1 ETF",
-      "name_en": "Dimensional US Core Equity 1 ETF",
+      "name": "US Core Equity 1 Portfolio ETF Class Shares",
+      "name_en": "US Core Equity 1 Portfolio ETF Class Shares",
       "py": "",
       "abbr": ""
     },
@@ -27518,8 +27518,8 @@
       "code": "dfar",
       "market": "us",
       "type": "美",
-      "name": "Dimensional US Real Estate ETF",
-      "name_en": "Dimensional US Real Estate ETF",
+      "name": "DFA Real Estate Securities Portfolio ETF Class Shares",
+      "name_en": "DFA Real Estate Securities Portfolio ETF Class Shares",
       "py": "",
       "abbr": ""
     },
@@ -27896,8 +27896,8 @@
       "code": "dfsv",
       "market": "us",
       "type": "美",
-      "name": "Dimensional US Small Cap Value ETF",
-      "name_en": "Dimensional US Small Cap Value ETF",
+      "name": "US Small Cap Value Portfolio ETF Class Shares",
+      "name_en": "US Small Cap Value Portfolio ETF Class Shares",
       "py": "",
       "abbr": ""
     },
@@ -30290,8 +30290,8 @@
       "code": "duhp",
       "market": "us",
       "type": "美",
-      "name": "Dimensional US High Profitability ETF",
-      "name_en": "Dimensional US High Profitability ETF",
+      "name": "US High Relative Profitability Portfolio ETF Class Shares",
+      "name_en": "US High Relative Profitability Portfolio ETF Class Shares",
       "py": "",
       "abbr": ""
     },
@@ -30857,8 +30857,8 @@
       "code": "dxuv",
       "market": "us",
       "type": "美",
-      "name": "Dimensional US Vector Equity ETF",
-      "name_en": "Dimensional US Vector Equity ETF",
+      "name": "US Vector Equity Portfolio ETF Class Shares",
+      "name_en": "US Vector Equity Portfolio ETF Class Shares",
       "py": "",
       "abbr": ""
     },
@@ -38035,6 +38035,24 @@
       "py": "",
       "abbr": ""
     },
+    "usfgc": {
+      "code": "fgc",
+      "market": "us",
+      "type": "美",
+      "name": "FG Communities Holdings Inc. - Common Stock",
+      "name_en": "FG Communities Holdings Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usfgcpp": {
+      "code": "fgcpp",
+      "market": "us",
+      "type": "美",
+      "name": "FG Communities Holdings Inc. - 8.00% Cumulative Series A Preferred Stock",
+      "name_en": "FG Communities Holdings Inc. - 8.00% Cumulative Series A Preferred Stock",
+      "py": "",
+      "abbr": ""
+    },
     "usfgd": {
       "code": "fgd",
       "market": "us",
@@ -38122,24 +38140,6 @@
       "type": "美",
       "name": "F&G Annuities & Life, Inc. 7.950% Senior Notes due 2053",
       "name_en": "F&G Annuities & Life, Inc. 7.950% Senior Notes due 2053",
-      "py": "",
-      "abbr": ""
-    },
-    "usfgnx": {
-      "code": "fgnx",
-      "market": "us",
-      "type": "美",
-      "name": "FG Nexus Inc. - Common Stock",
-      "name_en": "FG Nexus Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usfgnxp": {
-      "code": "fgnxp",
-      "market": "us",
-      "type": "美",
-      "name": "FG Nexus Inc. - 8.00% Cumulative Series A Preferred Stock",
-      "name_en": "FG Nexus Inc. - 8.00% Cumulative Series A Preferred Stock",
       "py": "",
       "abbr": ""
     },
@@ -45745,6 +45745,15 @@
       "type": "美",
       "name": "iShares 25  Year Treasury STRIPS Bond ETF",
       "name_en": "iShares 25  Year Treasury STRIPS Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usgow": {
+      "code": "gow",
+      "market": "us",
+      "type": "美",
+      "name": "GOWell Energy Technology - Ordinary shares",
+      "name_en": "GOWell Energy Technology - Ordinary shares",
       "py": "",
       "abbr": ""
     },
@@ -54892,33 +54901,6 @@
       "py": "",
       "abbr": ""
     },
-    "usipex": {
-      "code": "ipex",
-      "market": "us",
-      "type": "美",
-      "name": "Inflection Point Acquisition Corp. - Class A Ordinary Shares",
-      "name_en": "Inflection Point Acquisition Corp. - Class A Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usipexr": {
-      "code": "ipexr",
-      "market": "us",
-      "type": "美",
-      "name": "Inflection Point Acquisition Corp. - Right",
-      "name_en": "Inflection Point Acquisition Corp. - Right",
-      "py": "",
-      "abbr": ""
-    },
-    "usipexu": {
-      "code": "ipexu",
-      "market": "us",
-      "type": "美",
-      "name": "Inflection Point Acquisition Corp. - Unit",
-      "name_en": "Inflection Point Acquisition Corp. - Unit",
-      "py": "",
-      "abbr": ""
-    },
     "usipfx": {
       "code": "ipfx",
       "market": "us",
@@ -61810,6 +61792,15 @@
       "type": "美",
       "name": "LCI Industries",
       "name_en": "LCI Industries",
+      "py": "",
+      "abbr": ""
+    },
+    "uslciv": {
+      "code": "lciv",
+      "market": "us",
+      "type": "美",
+      "name": "Logan Capital International ETF",
+      "name_en": "Logan Capital International ETF",
       "py": "",
       "abbr": ""
     },
@@ -80605,15 +80596,6 @@
       "py": "",
       "abbr": ""
     },
-    "uspdynw": {
-      "code": "pdynw",
-      "market": "us",
-      "type": "美",
-      "name": "Palladyne AI Corp. - Warrant",
-      "name_en": "Palladyne AI Corp. - Warrant",
-      "py": "",
-      "abbr": ""
-    },
     "uspeb": {
       "code": "peb",
       "market": "us",
@@ -81196,6 +81178,15 @@
       "type": "美",
       "name": "PGIM Floating Rate Income ETF",
       "name_en": "PGIM Floating Rate Income ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "uspfrx": {
+      "code": "pfrx",
+      "market": "us",
+      "type": "美",
+      "name": "Putnam Focused U.S. Research ETF",
+      "name_en": "Putnam Focused U.S. Research ETF",
       "py": "",
       "abbr": ""
     },
@@ -92701,33 +92692,6 @@
       "py": "xingbake",
       "abbr": "xbk"
     },
-    "ussbxd": {
-      "code": "sbxd",
-      "market": "us",
-      "type": "美",
-      "name": "SilverBox Corp IV Class A Ordinary Shares",
-      "name_en": "SilverBox Corp IV Class A Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "ussbxd_u": {
-      "code": "sbxd_u",
-      "market": "us",
-      "type": "美",
-      "name": "SilverBox Corp IV Units, each consisting of one Class A ordinary share and one-third of one redeemable warrant",
-      "name_en": "SilverBox Corp IV Units, each consisting of one Class A ordinary share and one-third of one redeemable warrant",
-      "py": "",
-      "abbr": ""
-    },
-    "ussbxd_ws": {
-      "code": "sbxd_ws",
-      "market": "us",
-      "type": "美",
-      "name": "SilverBox Corp IV Redeemable warrants, each whole warrant exercisable for one Class A Ordinary Share at an exercise price of $11.50",
-      "name_en": "SilverBox Corp IV Redeemable warrants, each whole warrant exercisable for one Class A Ordinary Share at an exercise price of $11.50",
-      "py": "",
-      "abbr": ""
-    },
     "ussbxe": {
       "code": "sbxe",
       "market": "us",
@@ -103330,6 +103294,15 @@
       "py": "",
       "abbr": ""
     },
+    "usthrmv": {
+      "code": "thrmv",
+      "market": "us",
+      "type": "美",
+      "name": "Gentherm Inc - Gentherm Inc Common Stock When-Issued",
+      "name_en": "Gentherm Inc - Gentherm Inc Common Stock When-Issued",
+      "py": "",
+      "abbr": ""
+    },
     "usthro": {
       "code": "thro",
       "market": "us",
@@ -106954,33 +106927,6 @@
       "type": "美",
       "name": "Taiwan Fund, Inc. (The) Common Stock",
       "name_en": "Taiwan Fund, Inc. (The) Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "ustwo_a": {
-      "code": "two_a",
-      "market": "us",
-      "type": "美",
-      "name": "Two Harbors Investments Corp 8.125% Series A Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock ($25.00 liquidation preference per share)",
-      "name_en": "Two Harbors Investments Corp 8.125% Series A Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock ($25.00 liquidation preference per share)",
-      "py": "",
-      "abbr": ""
-    },
-    "ustwo_b": {
-      "code": "two_b",
-      "market": "us",
-      "type": "美",
-      "name": "Two Harbors Investments Corp 7.625% Series B Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock",
-      "name_en": "Two Harbors Investments Corp 7.625% Series B Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "ustwo_c": {
-      "code": "two_c",
-      "market": "us",
-      "type": "美",
-      "name": "Two Harbors Investments Corp 7.25% Series C Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock",
-      "name_en": "Two Harbors Investments Corp 7.25% Series C Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock",
       "py": "",
       "abbr": ""
     },

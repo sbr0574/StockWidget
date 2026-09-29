@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-28",
+  "last_update": "2026-09-29",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -17745,7 +17745,7 @@
       "market": "hk",
       "type": "港",
       "name": "金泰能源控股",
-      "name_en": "JINTAI ENERGY H",
+      "name_en": "JINTAI ENGY-NEW",
       "py": "jintainengyuankonggu",
       "abbr": "jtnykg"
     },
@@ -18415,15 +18415,6 @@
       "py": "yunji",
       "abbr": "yj"
     },
-    "hk02917": {
-      "code": "02917",
-      "market": "hk",
-      "type": "港",
-      "name": "智算能建股權",
-      "name_en": "AI ENERGY E RTS",
-      "py": "zhisuannengjianguquan",
-      "abbr": "zsnjgq"
-    },
     "hk02919": {
       "code": "02919",
       "market": "hk",
@@ -18474,7 +18465,7 @@
       "market": "hk",
       "type": "港",
       "name": "金泰能源控股",
-      "name_en": "JINTAI ENERGY H",
+      "name_en": "JINTAI ENGY-OLD",
       "py": "jintainengyuankonggu",
       "abbr": "jtnykg"
     },
@@ -18504,6 +18495,15 @@
       "name_en": "ZHENGWEI GP RTS",
       "py": "zhengweijituanguquan",
       "abbr": "zwjtgq"
+    },
+    "hk02933": {
+      "code": "02933",
+      "market": "hk",
+      "type": "港",
+      "name": "煜榮集團股權",
+      "name_en": "YUK WING GP RTS",
+      "py": "yurongjituanguquan",
+      "abbr": "yrjtgq"
     },
     "hk03001": {
       "code": "03001",
@@ -19364,10 +19364,10 @@
       "code": "03169",
       "market": "hk",
       "type": "基",
-      "name": "嘉實中美科技50",
-      "name_en": "HGI G2 TECH 50",
-      "py": "jiashizhongmeikeji50",
-      "abbr": "jszmkj50"
+      "name": "嘉實科技50",
+      "name_en": "HGI TECH 50",
+      "py": "jiashikeji50",
+      "abbr": "jskj50"
     },
     "hk03170": {
       "code": "03170",
@@ -19593,6 +19593,15 @@
       "name_en": "INGENIC",
       "py": "junzhenggufen",
       "abbr": "jzgf"
+    },
+    "hk03228": {
+      "code": "03228",
+      "market": "hk",
+      "type": "港",
+      "name": "景旺電子",
+      "name_en": "KINWONG",
+      "py": "jingwangdianzi",
+      "abbr": "jwdz"
     },
     "hk03231": {
       "code": "03231",
@@ -20665,6 +20674,24 @@
       "py": "ahengshengguozhibeidui",
       "abbr": "ahsgzbd"
     },
+    "hk03520": {
+      "code": "03520",
+      "market": "hk",
+      "type": "基",
+      "name": "華夏港美現金",
+      "name_en": "CAM HKUS CF",
+      "py": "huaxiagangmeixianjin",
+      "abbr": "hxgmxj"
+    },
+    "hk03525": {
+      "code": "03525",
+      "market": "hk",
+      "type": "基",
+      "name": "華夏創新藥",
+      "name_en": "CAM INNODRUGS",
+      "py": "huaxiachuangxinyao",
+      "abbr": "hxcxy"
+    },
     "hk03533": {
       "code": "03533",
       "market": "hk",
@@ -21159,6 +21186,15 @@
       "name_en": "ROKAE ROBOTICS",
       "py": "luoshijiqiren",
       "abbr": "lsjqr"
+    },
+    "hk03757": {
+      "code": "03757",
+      "market": "hk",
+      "type": "港",
+      "name": "羅博特科",
+      "name_en": "ROBOTECHNIK",
+      "py": "luoboteke",
+      "abbr": "lbtk"
     },
     "hk03759": {
       "code": "03759",
@@ -22788,6 +22824,15 @@
       "name_en": "TRANSWARP",
       "py": "xinghuankeji",
       "abbr": "xhkj"
+    },
+    "hk06731": {
+      "code": "06731",
+      "market": "hk",
+      "type": "港",
+      "name": "本末科技",
+      "name_en": "DIRECT DRIVE",
+      "py": "benmokeji",
+      "abbr": "bmkj"
     },
     "hk06745": {
       "code": "06745",
@@ -27289,6 +27334,15 @@
       "py": "yingenshengwu-b",
       "abbr": "yesw-b"
     },
+    "hk09607": {
+      "code": "09607",
+      "market": "hk",
+      "type": "港",
+      "name": "彤程新材",
+      "name_en": "RA MATERIALS",
+      "py": "tongchengxincai",
+      "abbr": "tcxc"
+    },
     "hk09608": {
       "code": "09608",
       "market": "hk",
@@ -28441,6 +28495,24 @@
       "py": "wangyi",
       "abbr": "wy"
     },
+    "hk41520": {
+      "code": "41520",
+      "market": "hk",
+      "type": "基",
+      "name": "華夏港美現金-U",
+      "name_en": "CAM HKUS CF-U",
+      "py": "huaxiagangmeixianjin-u",
+      "abbr": "hxgmxj-u"
+    },
+    "hk41525": {
+      "code": "41525",
+      "market": "hk",
+      "type": "基",
+      "name": "華夏創新藥-U",
+      "name_en": "CAM INNODRUGS-U",
+      "py": "huaxiachuangxinyao-u",
+      "abbr": "hxcxy-u"
+    },
     "hk41533": {
       "code": "41533",
       "market": "hk",
@@ -29205,6 +29277,24 @@
       "name_en": "EFUND AI-R",
       "py": "yifangdaai-r",
       "abbr": "yfdai-r"
+    },
+    "hk83520": {
+      "code": "83520",
+      "market": "hk",
+      "type": "基",
+      "name": "華夏港美現金-R",
+      "name_en": "CAM HKUS CF-R",
+      "py": "huaxiagangmeixianjin-r",
+      "abbr": "hxgmxj-r"
+    },
+    "hk83525": {
+      "code": "83525",
+      "market": "hk",
+      "type": "基",
+      "name": "華夏創新藥-R",
+      "name_en": "CAM INNODRUGS-R",
+      "py": "huaxiachuangxinyao-r",
+      "abbr": "hxcxy-r"
     },
     "hk83555": {
       "code": "83555",
