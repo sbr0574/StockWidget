@@ -10,6 +10,18 @@ COLOR_ROLE_DOWN = "down"
 COLOR_ROLE_NEUTRAL = "neutral"
 
 
+@dataclass(frozen=True)
+class BidAskCell:
+    """One level-one metric, with independently colored values around its center."""
+    buy: str
+    sell: str
+    buy_role: str = COLOR_ROLE_NEUTRAL
+    sell_role: str = COLOR_ROLE_NEUTRAL
+
+    def __str__(self):
+        return f"{self.buy} / {self.sell}"
+
+
 def direction_color_role(value) -> str:
     if value > 0:
         return COLOR_ROLE_UP
@@ -109,14 +121,15 @@ def format_quote(
 
     is_index = security_type == "指"
     english_units = should_use_english_units(options.unit_mode, market)
+    bid_ask = (BidAskCell("-", "-") if is_index else BidAskCell(
+        b1_label.strip(), s1_label.strip(), direction_color_role(b1_color_sign), direction_color_role(s1_color_sign)))
     format_data = {
         "名称": name,
         "现价": f"{data['current_price']:.{precision}f}{arrow}",
         "涨跌": f"{change:+.{precision}f}",
         "涨幅": f"{change_pct:+.2f}%",
         "浮盈": profit_label,
-        "买一": b1_label,
-        "卖一": s1_label,
+        "买一/卖一": bid_ask,
         "委比": f"{committee:+.2f}%" if (p_sum + s_sum) > 0 else "-",
         "成交量": (
             "-" if is_index and not data["deals_vol"]
@@ -143,8 +156,7 @@ def format_quote(
         "涨跌": direction_color_role(change),
         "涨幅": direction_color_role(change),
         "浮盈": direction_color_role(profit_sign),
-        "买一": direction_color_role(b1_color_sign),
-        "卖一": direction_color_role(s1_color_sign),
+        "买一/卖一": COLOR_ROLE_TEXT,
         "委比": direction_color_role(committee),
         "成交量": COLOR_ROLE_TEXT,
         "成交额": COLOR_ROLE_TEXT,
@@ -164,7 +176,7 @@ def format_quote(
 
     # 指数不显示浮盈/买一卖一/委比/均价（均置为"-"）
     if is_index:
-        for key in ("浮盈", "买一", "卖一", "委比", "均价"):
+        for key in ("浮盈", "委比", "均价"):
             format_data[key] = "-"
             color_roles[key] = direction_color_role(0)
         sort_values["浮盈"] = None

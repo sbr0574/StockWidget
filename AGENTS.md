@@ -52,6 +52,7 @@ StockWidget/
 │       ├── taskbar.py              # 行情绘制、刷新和任务栏显示模式协调
 │       ├── pager.py                # 分页控件及箭头 / 页码交互
 │       ├── table_model.py          # 行情模型、颜色角色及 K 线绘制
+│       ├── quote_table.py          # 整表网格与圆角外框统一绘制，绘制层不接收鼠标
 │       ├── table_header.py         # 表头文字与排序箭头
 │       ├── settings_dialog.py      # 五个设置页的信号连接与配置同步
 │       ├── view_settings.py        # 原生组框的参数绑定、同步和编辑状态
@@ -127,6 +128,8 @@ StockWidget/
 - 同步分栏：勾选同步分栏与分隔线，取消后可独立设置。所有独立参数在同步期间保留，不用浮窗值覆盖独立配置。
 - 同步组框的勾选语义与原生 `QGroupBox` 的启用语义相反：勾选时禁用独立编辑，取消时允许编辑。必须检查首次显示、主题变化、鼠标切换和总开关切换后的编辑状态。
 - 排序仅支持现价、涨跌、涨幅、浮盈、委比、成交量、成交额、均价；同一表头按降序 / 升序 / 不排序循环。排序不改写自选列表人工顺序，当前排序状态不写入配置。
+- 买一 / 卖一是一列指标，使用 `BidAskCell` 保存两侧文字与颜色角色，`QuoteItemDelegate` 围绕列中心绘制。浮窗与任务栏复用尺寸和绘制函数；保留 `b1s1` 指标标识和旧配置开关，不再展开为两列。
+- 表格网格、表头分隔与圆角外框由 `QuoteTableView` 的透明绘制层一次描边，包含 K 线。不要再叠加原生网格、单元格样式边框或表头可见边框；绘制层必须透传鼠标，复用原有拖动区域。
 
 ## 置顶、隐藏与边界规则
 
@@ -195,6 +198,7 @@ git diff --check
 ```
 
 - 浮窗交互、分栏与分页：`tests.test_pagination`、`tests.test_widget_header`、`tests.test_metric_pool`、`tests.test_designer_forms`。
+- 表格边框与买一 / 卖一：`tests.test_quote_table`、`tests.test_widget_formatting`、`tests.test_metric_layout`，核对边框交叉处不叠加、表头与 K 线边界、单列中轴、两侧配色及任务栏绘制。
 - 位置与隐藏：`tests.test_widget_position`、`tests.test_geometry`、`tests.test_hiding`。
 - 任务栏与置顶：`tests.test_taskbar`、`tests.test_widget_topmost`；相关原生行为还要在真实 Windows 桌面验证。
 - 网络：`tests.test_quotes`、`tests.test_widget_requests`、`tests.test_network_errors`、`tests.test_code_lists`、`tests.test_update_check`。

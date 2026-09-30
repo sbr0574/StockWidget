@@ -5,9 +5,10 @@ import unittest
 from copy import deepcopy
 
 from stockwidget.core.quote_presentation import (
-    QuoteDisplayOptions, format_quote,
+    BidAskCell, QuoteDisplayOptions, format_quote,
     COLOR_ROLE_TEXT,
     COLOR_ROLE_UP,
+    COLOR_ROLE_DOWN,
     COLOR_ROLE_NEUTRAL,
 )
 
@@ -30,6 +31,17 @@ def _quote(volume: int = 123456, amount: float = 0) -> dict:
 
 
 class WidgetFormattingTests(unittest.TestCase):
+    def test_single_bid_ask_cell_preserves_continuous_trade_markers_and_both_colors(self):
+        quote = _quote()
+        quote["purchaser_price"][0], quote["seller_price"][0] = 11, 13
+        quote["purchaser_vol"][0], quote["seller_vol"][0] = 1234, 8900
+        for price, buy, sell in ((11, "12<", "89"), (13, "12", ">89")):
+            quote["current_price"] = price
+            row, _ = format_quote(quote, "沪", "600000", market="sh")
+            self.assertEqual(row["买一/卖一"], BidAskCell(buy, sell, COLOR_ROLE_UP, COLOR_ROLE_DOWN))
+            self.assertNotIn("买一", row)
+            self.assertNotIn("卖一", row)
+
     def test_auction_formatting_preserves_source_and_uses_auction_price(self):
         quote = _quote()
         quote["purchaser_price"][0] = quote["seller_price"][0] = 12.0
@@ -41,10 +53,9 @@ class WidgetFormattingTests(unittest.TestCase):
 
         self.assertEqual(quote, original)
         self.assertEqual(row["现价"], "12.00 ")
-        self.assertEqual(row["买一"], "10")
-        self.assertEqual(row["卖一"], "+2")
+        self.assertEqual(row["买一/卖一"], BidAskCell("10", "+2", COLOR_ROLE_UP, COLOR_ROLE_UP))
         self.assertEqual(row["浮盈"], "+20.00%")
-        self.assertEqual(roles["买一"], COLOR_ROLE_UP)
+        self.assertEqual(roles["买一/卖一"], COLOR_ROLE_TEXT)
 
     def test_preopen_defaults_preserve_source_and_produce_flat_candle(self):
         quote = _quote()
@@ -60,9 +71,10 @@ class WidgetFormattingTests(unittest.TestCase):
 
     def test_index_hides_unavailable_metrics_even_with_cost(self):
         row, roles = format_quote(_quote(0), "指", "000001", cost=10)
-        for header in ("浮盈", "买一", "卖一", "委比", "均价", "成交量", "成交额"):
+        for header in ("浮盈", "委比", "均价", "成交量", "成交额"):
             self.assertEqual(row[header], "-")
         self.assertEqual(roles["浮盈"], COLOR_ROLE_NEUTRAL)
+        self.assertEqual(row["买一/卖一"], BidAskCell("-", "-"))
 
     def test_name_options_and_fund_precision(self):
         row, _ = format_quote(

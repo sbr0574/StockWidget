@@ -128,7 +128,7 @@ class FloatLabelMetricLayoutTests(unittest.TestCase):
 
         self.assertEqual(
             window.model._headers,
-            ["名称", "K线", "现价", "买一", "卖一"],
+            ["名称", "K线", "现价", "买一/卖一"],
         )
         self.assertEqual(
             window.visible_metrics,

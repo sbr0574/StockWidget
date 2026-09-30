@@ -285,6 +285,7 @@ class PagingInteractionTests(unittest.TestCase):
         self.populate(9)
         controller = self.make_controller()
         w.set_header_visible(True)
+        w.set_grid_visible(True)
         w.set_view_options(float_split_enabled=True, float_max_rows=2, taskbar_sync_split=True)
         for display in ("float", "both"):
             for mode in ("manual", "auto"):
@@ -341,6 +342,7 @@ class PagingInteractionTests(unittest.TestCase):
         self.populate(9)
         controller = self.make_controller()
         w.set_header_visible(True)
+        w.set_grid_visible(True)
         w.set_view_options(float_split_enabled=True, float_max_rows=2)
         w.move(80, 80)
         w.set_position_options(boundary_check_enabled=True, edge_hide_enabled=True)
@@ -508,7 +510,7 @@ class PagingInteractionTests(unittest.TestCase):
         all_metrics = [spec.metric_id for spec in METRIC_SPECS]
         self.win.set_view_options(taskbar_metrics=all_metrics)
         self.assertEqual(self.win.view_options.taskbar_metrics, all_metrics)
-        self.assertEqual(self.win.taskbar_model.columnCount(), 12)
+        self.assertEqual(self.win.taskbar_model.columnCount(), 11)
         self.assertFalse(render_taskbar(self.win, 44).isNull())
         independent = ["volume", "price", "name", "change"]
         self.win.set_view_options(taskbar_metrics=independent, taskbar_sync_metrics=True)
@@ -606,6 +608,7 @@ class PagingInteractionTests(unittest.TestCase):
 
     def test_message_regions_drag_and_cancel_without_a_taskbar_controller(self):
         self.win.set_view_options(float_split_enabled=True)
+        self.win.set_grid_visible(True)
         self.win.show()
         for text, kind in (("加载中…", "loading"), ("自选列表为空", "empty"), ("网络请求失败", "error")):
             with self.subTest(kind=kind):

@@ -5,13 +5,14 @@ import sys
 
 from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QFont, QAction, QColor
-from PySide6.QtWidgets import QApplication, QWidget, QMenu, QHeaderView, QStyledItemDelegate
+from PySide6.QtWidgets import QApplication, QWidget, QMenu, QHeaderView
 
 from stockwidget.ui.table_model import (
     DEFAULT_DOWN_COLOR,
     DEFAULT_NEUTRAL_COLOR,
     DEFAULT_UP_COLOR,
     KLineDelegate,
+    QuoteItemDelegate,
     SimpleTableModel,
 )
 from stockwidget.ui.drag_mixin import DragBehaviorMixin
@@ -173,8 +174,10 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.k_delegate = KLineDelegate(self.table, base_pt=12)
         self.right_k_delegate = KLineDelegate(self.right_table, base_pt=12)
         self.taskbar_k_delegate = KLineDelegate(self, base_pt=12)
-        self._default_item_delegate = QStyledItemDelegate(self.table)
-        self._right_default_delegate = QStyledItemDelegate(self.right_table)
+        self._default_item_delegate = QuoteItemDelegate(self.table)
+        self._right_default_delegate = QuoteItemDelegate(self.right_table)
+        self.table.setItemDelegate(self._default_item_delegate)
+        self.right_table.setItemDelegate(self._right_default_delegate)
         self._sync_colors_to_views()
         self.k_delegate.set_point_size(self.font.pointSize())
         self.k_column_visible_index = None
@@ -422,6 +425,10 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         r,g,b,a = self.bg.red(), self.bg.green(), self.bg.blue(), self.bg.alpha()
         fg_r, fg_g, fg_b = self.fg.red(), self.fg.green(), self.fg.blue()
         line_col = f"rgba({fg_r},{fg_g},{fg_b},80)"
+        grid_color = QColor(self.fg)
+        grid_color.setAlpha(80)
+        for table in self.float_tables:
+            table.set_grid_appearance(self.grid_visible, grid_color)
         self.panel.setStyleSheet(f"""
             QWidget#panel {{
                 background: rgba({r},{g},{b},{a});
@@ -429,14 +436,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             }}
             QTableView {{
                 background: transparent;
-                border: {f"1px solid {line_col}" if self.grid_visible else "none"};
-                border-radius: 3px;
+                border: none;
                 color: {self.fg.name()};
                 outline: none;
-            }}
-            QTableView::item {{
-                border-right: {f"1px solid {line_col}" if self.grid_visible else "none"};
-                border-bottom: {f"1px solid {line_col}" if self.grid_visible else "none"};
             }}
             QHeaderView {{
                 background-color: transparent;
@@ -444,7 +446,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             QHeaderView::section {{
                 background: transparent;
                 border: none;
-                border-bottom: 1px solid {line_col};
+                border-bottom: 1px solid {"transparent" if self.grid_visible else line_col};
                 font-weight: 600;
                 color: {self.fg.name()};
                 padding: 2px 4px;
@@ -600,8 +602,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             proj_rows.append([row.get(h, "-") for h in headers])
             projected_roles.append([color_roles[r].get(h, "text") for h in headers])
 
-        # 右对齐：名称、K线、卖一除外
-        right_cols = [i for i, h in enumerate(headers) if h not in ("名称", "K线", "卖一")]
+        right_cols = [i for i, h in enumerate(headers) if h not in ("名称", "K线", "买一/卖一")]
         split, separator = self.get_split_settings("float")
         ranges = column_ranges(len(proj_rows), split)
         for model, (start, stop) in zip((self.model, self.right_model), ranges):
@@ -649,7 +650,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         headers = expand_metric_headers(metrics)
         rows = [[row.get(h, "-") for h in headers] for row in self._ordered_rows[page.start:page.stop]]
         roles = [[row.get(h, "text") for h in headers] for row in self._ordered_color_roles[page.start:page.stop]]
-        self.taskbar_model.set_align_right_cols([i for i, h in enumerate(headers) if h not in ("名称", "K线", "卖一")])
+        self.taskbar_model.set_align_right_cols([i for i, h in enumerate(headers) if h not in ("名称", "K线", "买一/卖一")])
         self.taskbar_model.set_rows_headers(rows, headers, roles)
         self._sync_colors_to_views()
 

@@ -16,10 +16,11 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QHBoxLayout,
-    QHeaderView, QLabel, QSizePolicy, QTableView,
-    QVBoxLayout, QWidget)
+    QHeaderView, QLabel, QSizePolicy, QVBoxLayout,
+    QWidget)
 
 from stockwidget.ui.pager import PagerWidget
+from stockwidget.ui.quote_table import QuoteTableView
 
 class Ui_FloatingWidget(object):
     def setupUi(self, floating_widget):
@@ -54,7 +55,7 @@ class Ui_FloatingWidget(object):
 
         self.data_layout.addWidget(self.pager)
 
-        self.table = QTableView(self.panel)
+        self.table = QuoteTableView(self.panel)
         self.table.setObjectName(u"table")
         self.table.setShowGrid(False)
         self.table.setFrameShape(QFrame.Shape.NoFrame)
@@ -72,7 +73,7 @@ class Ui_FloatingWidget(object):
 
         self.data_layout.addWidget(self.split_separator)
 
-        self.right_table = QTableView(self.panel)
+        self.right_table = QuoteTableView(self.panel)
         self.right_table.setObjectName(u"right_table")
         self.right_table.setShowGrid(False)
         self.right_table.setFrameShape(QFrame.Shape.NoFrame)

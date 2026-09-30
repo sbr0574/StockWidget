@@ -1,9 +1,9 @@
-from PySide6.QtCore import Qt, QRect, QAbstractTableModel, QModelIndex
-from PySide6.QtGui import QColor, QPainter, QPen, QBrush
-from PySide6.QtWidgets import QStyledItemDelegate
+from PySide6.QtCore import Qt, QRect, QRectF, QSize, QAbstractTableModel, QModelIndex
+from PySide6.QtGui import QColor, QFontMetrics, QPainter, QPen, QBrush
+from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem
 
 from stockwidget.core.quote_presentation import (
-    COLOR_ROLE_TEXT, COLOR_ROLE_UP, COLOR_ROLE_DOWN, COLOR_ROLE_NEUTRAL,
+    BidAskCell, COLOR_ROLE_TEXT, COLOR_ROLE_UP, COLOR_ROLE_DOWN, COLOR_ROLE_NEUTRAL,
 )
 
 # ----- 颜色配置 -----
@@ -60,10 +60,14 @@ class SimpleTableModel(QAbstractTableModel):
         return len(self._headers)
 
     def data(self, index, role=Qt.DisplayRole):
+        if not index.isValid():
+            return None
         r, c = index.row(), index.column()
         cell = self._rows[r][c]
 
         if role == Qt.UserRole:
+            if isinstance(cell, BidAskCell):
+                return cell
             if isinstance(cell, dict) and "k" in cell:
                 return cell["k"]
             return None
@@ -72,22 +76,14 @@ class SimpleTableModel(QAbstractTableModel):
             return "" if isinstance(cell, dict) else str(cell)
 
         if role == Qt.TextAlignmentRole:
+            if isinstance(cell, BidAskCell):
+                return Qt.AlignCenter
             return (Qt.AlignRight | Qt.AlignVCenter) if c in self._align_right else (Qt.AlignLeft | Qt.AlignVCenter)
 
         if role == Qt.ForegroundRole:
-            if self.unicolor:
-                return self.text_color
-
             if r >= len(self._color_roles) or c >= len(self._color_roles[r]):
                 return self.text_color
-            color_role = self._color_roles[r][c]
-            if color_role == COLOR_ROLE_UP:
-                return self.up_color
-            if color_role == COLOR_ROLE_DOWN:
-                return self.down_color
-            if color_role == COLOR_ROLE_NEUTRAL:
-                return self.neutral_color
-            return self.text_color
+            return self.color_for_role(self._color_roles[r][c])
 
         return None
 
@@ -108,6 +104,60 @@ class SimpleTableModel(QAbstractTableModel):
 
     def set_align_right_cols(self, cols_idx):
         self._align_right = set(cols_idx or [])
+
+    def color_for_role(self, role):
+        if self.unicolor:
+            return self.text_color
+        return {COLOR_ROLE_UP: self.up_color, COLOR_ROLE_DOWN: self.down_color,
+                COLOR_ROLE_NEUTRAL: self.neutral_color}.get(role, self.text_color)
+
+
+def bid_ask_width(cell, font, padding=4):
+    """Symmetric halves keep the axis fixed even when the digit counts differ."""
+    fm = QFontMetrics(font)
+    half = max(fm.horizontalAdvance(cell.buy), fm.horizontalAdvance(cell.sell))
+    return half * 2 + fm.horizontalAdvance(" / ") + padding * 2 + 2
+
+
+def paint_bid_ask(painter, rect, font, cell, model, padding=4):
+    fm = QFontMetrics(font)
+    gap = min(fm.horizontalAdvance(" / "), max(0, rect.width() - padding * 2))
+    center = rect.x() + rect.width() / 2
+    left_edge, right_edge = center - gap / 2, center + gap / 2
+    left = QRectF(rect.x() + padding, rect.y(), max(0, left_edge - rect.x() - padding), rect.height())
+    right = QRectF(right_edge, rect.y(), max(0, rect.right() + 1 - padding - right_edge), rect.height())
+    middle = QRectF(left_edge, rect.y(), gap, rect.height())
+    painter.save()
+    painter.setClipRect(rect)
+    painter.setFont(font)
+    for area, text, role, alignment in (
+        (left, cell.buy, cell.buy_role, Qt.AlignRight),
+        (right, cell.sell, cell.sell_role, Qt.AlignLeft),
+        (middle, "/", COLOR_ROLE_TEXT, Qt.AlignHCenter),
+    ):
+        painter.setPen(model.color_for_role(role))
+        painter.drawText(area, int(alignment | Qt.AlignVCenter),
+                         fm.elidedText(text, Qt.ElideRight, max(0, int(area.width()))))
+    painter.restore()
+
+
+class QuoteItemDelegate(QStyledItemDelegate):
+    """Render the paired metric in one cell; ordinary metrics use Qt's delegate."""
+    def sizeHint(self, option, index):
+        cell = index.data(Qt.UserRole)
+        if not isinstance(cell, BidAskCell):
+            return super().sizeHint(option, index)
+        styled = QStyleOptionViewItem(option)
+        self.initStyleOption(styled, index)
+        return QSize(bid_ask_width(cell, styled.font), QFontMetrics(styled.font).height())
+
+    def paint(self, painter, option, index):
+        cell = index.data(Qt.UserRole)
+        if not isinstance(cell, BidAskCell):
+            return super().paint(painter, option, index)
+        styled = QStyleOptionViewItem(option)
+        self.initStyleOption(styled, index)
+        paint_bid_ask(painter, option.rect, styled.font, cell, index.model())
 
 
 class KLineDelegate(QStyledItemDelegate):

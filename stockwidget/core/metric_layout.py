@@ -22,7 +22,7 @@ METRIC_SPECS = (
     MetricSpec("change", "涨跌", ("涨跌",), "change_visible"),
     MetricSpec("change_pct", "涨幅", ("涨幅",), "change_pct_visible", True),
     MetricSpec("profit", "浮盈", ("浮盈",), "profit_visible"),
-    MetricSpec("b1s1", "买一/卖一", ("买一", "卖一"), "b1s1_visible"),
+    MetricSpec("b1s1", "买一/卖一", ("买一/卖一",), "b1s1_visible"),
     MetricSpec("commi", "委比", ("委比",), "commi_visible"),
     MetricSpec("volume", "成交量", ("成交量",), "vol_visible"),
     MetricSpec("amount", "成交额", ("成交额",), "amount_visible"),

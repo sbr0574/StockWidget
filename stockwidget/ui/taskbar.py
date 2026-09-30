@@ -8,6 +8,8 @@ from PySide6.QtWidgets import QApplication, QStyleOptionViewItem
 
 from stockwidget.platform.taskbar import NativeTaskbarWindow, cursor_over_taskbar, find_taskbar
 from stockwidget.core.view_options import column_ranges
+from stockwidget.core.quote_presentation import BidAskCell
+from stockwidget.ui.table_model import bid_ask_width, paint_bid_ask
 from stockwidget.ui.pager import paint_pager, pager_hit
 
 
@@ -64,10 +66,16 @@ def render_taskbar(source, height, dpi=96, max_width=480):
         if model.headerData(c, Qt.Horizontal) == "K线":
             widths.append(round(30 * scale))
         else:
-            texts = [str(model.data(model.index(r, c), Qt.DisplayRole)) for r in range(rows)]
             # Integer font metrics can round down; elidedText uses fractional
             # advances internally, so allow two pixels for the final glyph.
-            widths.append(min(round(180 * scale), max(fm.horizontalAdvance(t) for t in texts) + padding * 2 + 2))
+            sizes = []
+            for r in range(rows):
+                index = model.index(r, c)
+                cell = index.data(Qt.UserRole)
+                sizes.append(bid_ask_width(cell, font, padding) if isinstance(cell, BidAskCell)
+                             else fm.horizontalAdvance(str(index.data())) + padding * 2 + 2)
+            maximum = 360 if model.headerData(c, Qt.Horizontal) == "买一/卖一" else 180
+            widths.append(min(round(maximum * scale), max(sizes)))
     total = sum(widths) * len(ranges)
     if total > content_width:
         widths = [max(1, int(width * content_width / total)) for width in widths]
@@ -93,9 +101,12 @@ def render_taskbar(source, height, dpi=96, max_width=480):
                 for r in range(start, stop):
                     rect = QRect(x, 2 + (r - start) * row_height, width, row_height)
                     index = model.index(r, c)
+                    cell = model.data(index, Qt.UserRole)
                     painter.save()
                     painter.setClipRect(rect)
-                    if model.headerData(c, Qt.Horizontal) == "K线":
+                    if isinstance(cell, BidAskCell):
+                        paint_bid_ask(painter, rect, font, cell, model, padding)
+                    elif model.headerData(c, Qt.Horizontal) == "K线":
                         option = QStyleOptionViewItem()
                         option.rect, option.font = rect, font
                         source.taskbar_k_delegate.paint(painter, option, index)

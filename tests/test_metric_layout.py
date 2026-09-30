@@ -64,7 +64,7 @@ class MetricLayoutTests(unittest.TestCase):
         self.assertEqual(normalized, ["amount", "b1s1", "change_pct"])
         self.assertEqual(
             expand_metric_headers(normalized),
-            ["成交额", "买一", "卖一", "涨幅"],
+            ["成交额", "买一/卖一", "涨幅"],
         )
 
     def test_legacy_visibility_is_kept_in_sync(self):
