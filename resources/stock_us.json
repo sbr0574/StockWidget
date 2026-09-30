@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-29",
+  "last_update": "2026-09-30",
   "codes": {
     "usa": {
       "code": "a",
@@ -42814,15 +42814,6 @@
       "py": "bitebietf-grayscale",
       "abbr": "btbetf-grayscale"
     },
-    "usgbtg": {
-      "code": "gbtg",
-      "market": "us",
-      "type": "美",
-      "name": "Global Business Travel Group, Inc. Class A Common Stock",
-      "name_en": "Global Business Travel Group, Inc. Class A Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "usgbug": {
       "code": "gbug",
       "market": "us",
@@ -52165,6 +52156,15 @@
       "py": "",
       "abbr": ""
     },
+    "usicmo": {
+      "code": "icmo",
+      "market": "us",
+      "type": "美",
+      "name": "Symmetry Panoramic International Country Momentum ETF",
+      "name_en": "Symmetry Panoramic International Country Momentum ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usicon": {
       "code": "icon",
       "market": "us",
@@ -54709,15 +54709,6 @@
       "type": "美",
       "name": "IonQ, Inc. Common Stock",
       "name_en": "IonQ, Inc. Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usionq_ws": {
-      "code": "ionq_ws",
-      "market": "us",
-      "type": "美",
-      "name": "IonQ, Inc. Redeemable warrants, each whole warrant exercisable for one share of Common Stock, each at an exercise price of $11.50 per share",
-      "name_en": "IonQ, Inc. Redeemable warrants, each whole warrant exercisable for one share of Common Stock, each at an exercise price of $11.50 per share",
       "py": "",
       "abbr": ""
     },
@@ -61795,15 +61786,6 @@
       "py": "",
       "abbr": ""
     },
-    "uslciv": {
-      "code": "lciv",
-      "market": "us",
-      "type": "美",
-      "name": "Logan Capital International ETF",
-      "name_en": "Logan Capital International ETF",
-      "py": "",
-      "abbr": ""
-    },
     "uslclg": {
       "code": "lclg",
       "market": "us",
@@ -64375,6 +64357,15 @@
       "type": "美",
       "name": "Lumen Technologies, Inc. Common Stock",
       "name_en": "Lumen Technologies, Inc. Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "uslunc": {
+      "code": "lunc",
+      "market": "us",
+      "type": "美",
+      "name": "Longnook Uncommon Compounders ETF",
+      "name_en": "Longnook Uncommon Compounders ETF",
       "py": "",
       "abbr": ""
     },
@@ -70498,6 +70489,15 @@
       "py": "",
       "abbr": ""
     },
+    "usmuy": {
+      "code": "muy",
+      "market": "us",
+      "type": "美",
+      "name": "YieldMax MU Option Income Strategy ETF",
+      "name_en": "YieldMax MU Option Income Strategy ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usmuyy": {
       "code": "muyy",
       "market": "us",
@@ -74176,6 +74176,15 @@
       "type": "美",
       "name": "Natural Resource Partners LP Limited Partnership",
       "name_en": "Natural Resource Partners LP Limited Partnership",
+      "py": "",
+      "abbr": ""
+    },
+    "usnrr": {
+      "code": "nrr",
+      "market": "us",
+      "type": "美",
+      "name": "Common Shares of Beneficial Interest of Bitwise NEAR ETF",
+      "name_en": "Common Shares of Beneficial Interest of Bitwise NEAR ETF",
       "py": "",
       "abbr": ""
     },
@@ -89425,15 +89434,6 @@
       "py": "",
       "abbr": ""
     },
-    "usrilyn": {
-      "code": "rilyn",
-      "market": "us",
-      "type": "美",
-      "name": "BRC Group Holdings, Inc. - 6.50% Senior Notes Due 2026",
-      "name_en": "BRC Group Holdings, Inc. - 6.50% Senior Notes Due 2026",
-      "py": "",
-      "abbr": ""
-    },
     "usrilyp": {
       "code": "rilyp",
       "market": "us",
@@ -91834,6 +91834,15 @@
       "type": "美",
       "name": "Ryerson Holding Corporation Common Stock",
       "name_en": "Ryerson Holding Corporation Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usrzai": {
+      "code": "rzai",
+      "market": "us",
+      "type": "美",
+      "name": "Roze AI Inc. - Common Shares",
+      "name_en": "Roze AI Inc. - Common Shares",
       "py": "",
       "abbr": ""
     },
@@ -104792,8 +104801,8 @@
       "code": "toro",
       "market": "us",
       "type": "美",
-      "name": "Toro Corp. - Common stock",
-      "name_en": "Toro Corp. - Common stock",
+      "name": "Toro Corp. - Common Shares",
+      "name_en": "Toro Corp. - Common Shares",
       "py": "",
       "abbr": ""
     },

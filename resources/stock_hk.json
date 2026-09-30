@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-29",
+  "last_update": "2026-09-30",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -896,10 +896,10 @@
       "code": "00117",
       "market": "hk",
       "type": "港",
-      "name": "天利控股集團",
-      "name_en": "TIANLI HOLDINGS",
-      "py": "tianlikonggujituan",
-      "abbr": "tlkgjt"
+      "name": "宇陽控股",
+      "name_en": "EYANG HOLDINGS",
+      "py": "yuyangkonggu",
+      "abbr": "yykg"
     },
     "hk00118": {
       "code": "00118",
@@ -4578,7 +4578,7 @@
       "market": "hk",
       "type": "港",
       "name": "卓悅控股",
-      "name_en": "BONJOUR HOLD",
+      "name_en": "BONJOUR H-NEW",
       "py": "zhuoyuekonggu",
       "abbr": "zykg"
     },
@@ -9474,7 +9474,7 @@
       "market": "hk",
       "type": "港",
       "name": "粵港灣智算",
-      "name_en": "GBA AI COMP-500",
+      "name_en": "GBA AI COMP",
       "py": "yuegangwanzhisuan",
       "abbr": "ygwzs"
     },
@@ -18415,21 +18415,12 @@
       "py": "yunji",
       "abbr": "yj"
     },
-    "hk02919": {
-      "code": "02919",
-      "market": "hk",
-      "type": "港",
-      "name": "粵港灣智算-二千",
-      "name_en": "GBA AI COMP-2K",
-      "py": "yuegangwanzhisuan-erqian",
-      "abbr": "ygwzs-eq"
-    },
     "hk02920": {
       "code": "02920",
       "market": "hk",
       "type": "港",
       "name": "卓悅控股",
-      "name_en": "BONJOUR HOLD",
+      "name_en": "BONJOUR H-OLD",
       "py": "zhuoyuekonggu",
       "abbr": "zykg"
     },
@@ -18487,15 +18478,6 @@
       "py": "zhuoyueruixin(yibai)",
       "abbr": "zyrx(yb)"
     },
-    "hk02932": {
-      "code": "02932",
-      "market": "hk",
-      "type": "港",
-      "name": "正味集團股權",
-      "name_en": "ZHENGWEI GP RTS",
-      "py": "zhengweijituanguquan",
-      "abbr": "zwjtgq"
-    },
     "hk02933": {
       "code": "02933",
       "market": "hk",
@@ -18504,6 +18486,15 @@
       "name_en": "YUK WING GP RTS",
       "py": "yurongjituanguquan",
       "abbr": "yrjtgq"
+    },
+    "hk02938": {
+      "code": "02938",
+      "market": "hk",
+      "type": "港",
+      "name": "帝王國際投資",
+      "name_en": "KING INTL INV",
+      "py": "diwangguojitouzi",
+      "abbr": "dwgjtz"
     },
     "hk03001": {
       "code": "03001",
@@ -18594,15 +18585,6 @@
       "name_en": "ISHARES AXJ",
       "py": "anshuoyazhouchuri",
       "abbr": "asyzcr"
-    },
-    "hk03011": {
-      "code": "03011",
-      "market": "hk",
-      "type": "基",
-      "name": "A中金美元",
-      "name_en": "A CICC USD",
-      "py": "azhongjinmeiyuan",
-      "abbr": "azjmy"
     },
     "hk03012": {
       "code": "03012",
@@ -18720,15 +18702,6 @@
       "name_en": "CSOP HSI ETF",
       "py": "nanfanghengzhietf",
       "abbr": "nfhzetf"
-    },
-    "hk03038": {
-      "code": "03038",
-      "market": "hk",
-      "type": "基",
-      "name": "恒生A股低碳",
-      "name_en": "HS ALOWCARBON",
-      "py": "hengshengaguditan",
-      "abbr": "hsagdt"
     },
     "hk03039": {
       "code": "03039",
@@ -20494,6 +20467,15 @@
       "py": "ataikanggangyuan",
       "abbr": "atkgy"
     },
+    "hk03459": {
+      "code": "03459",
+      "market": "hk",
+      "type": "基",
+      "name": "華夏香港成長",
+      "name_en": "CAM HKGROWTH",
+      "py": "huaxiaxianggangchengzhang",
+      "abbr": "hxxgcz"
+    },
     "hk03460": {
       "code": "03460",
       "market": "hk",
@@ -20593,6 +20575,15 @@
       "py": "ppshateguozhai",
       "abbr": "ppstgz"
     },
+    "hk03479": {
+      "code": "03479",
+      "market": "hk",
+      "type": "基",
+      "name": "華夏HALO",
+      "name_en": "CAM HKUS HALO",
+      "py": "huaxiahalo",
+      "abbr": "hxhalo"
+    },
     "hk03480": {
       "code": "03480",
       "market": "hk",
@@ -20647,6 +20638,15 @@
       "py": "nanfangaipingjing",
       "abbr": "nfaipj"
     },
+    "hk03500": {
+      "code": "03500",
+      "market": "hk",
+      "type": "基",
+      "name": "平安醫療保健",
+      "name_en": "PA HEALTHCARE",
+      "py": "pinganyiliaobaojian",
+      "abbr": "paylbj"
+    },
     "hk03509": {
       "code": "03509",
       "market": "hk",
@@ -20655,6 +20655,15 @@
       "name_en": "EFUND MPF CN A",
       "py": "yifangdampfagu",
       "abbr": "yfdmpfag"
+    },
+    "hk03510": {
+      "code": "03510",
+      "market": "hk",
+      "type": "基",
+      "name": "平安人工智能",
+      "name_en": "PA AI SELECT",
+      "py": "pinganrengongzhineng",
+      "abbr": "pargzn"
     },
     "hk03516": {
       "code": "03516",
@@ -20764,6 +20773,15 @@
       "py": "guotaihaitongkeji",
       "abbr": "gthtkj"
     },
+    "hk03587": {
+      "code": "03587",
+      "market": "hk",
+      "type": "基",
+      "name": "工銀全球AI",
+      "name_en": "ICBC UBS AI",
+      "py": "gongyinquanqiuai",
+      "abbr": "gyqqai"
+    },
     "hk03589": {
       "code": "03589",
       "market": "hk",
@@ -20772,6 +20790,24 @@
       "name_en": "A HSTECHCC",
       "py": "ahengshengkejibeidui",
       "abbr": "ahskjbd"
+    },
+    "hk03590": {
+      "code": "03590",
+      "market": "hk",
+      "type": "基",
+      "name": "華夏港高息",
+      "name_en": "CAM HKHIDIV",
+      "py": "huaxiaganggaoxi",
+      "abbr": "hxggx"
+    },
+    "hk03592": {
+      "code": "03592",
+      "market": "hk",
+      "type": "基",
+      "name": "華夏港高息A",
+      "name_en": "CAM HKHIDIV A",
+      "py": "huaxiaganggaoxia",
+      "abbr": "hxggxa"
     },
     "hk03599": {
       "code": "03599",
@@ -22843,6 +22879,15 @@
       "py": "binhuagufen",
       "abbr": "bhgf"
     },
+    "hk06802": {
+      "code": "06802",
+      "market": "hk",
+      "type": "港",
+      "name": "歡創科技",
+      "name_en": "CAMSENSE",
+      "py": "huanchuangkeji",
+      "abbr": "hckj"
+    },
     "hk06805": {
       "code": "06805",
       "market": "hk",
@@ -24468,7 +24513,7 @@
       "market": "hk",
       "type": "港",
       "name": "清大東方",
-      "name_en": "QINGDA ORIENTAL",
+      "name_en": "QINGDA ORI-500",
       "py": "qingdadongfang",
       "abbr": "qddf"
     },
@@ -26461,6 +26506,15 @@
       "py": "zhonghuajieneng",
       "abbr": "zhjn"
     },
+    "hk08582": {
+      "code": "08582",
+      "market": "hk",
+      "type": "港",
+      "name": "清大東方(四千)",
+      "name_en": "QINGDA ORI-4000",
+      "py": "qingdadongfang(siqian)",
+      "abbr": "qddf(sq)"
+    },
     "hk08601": {
       "code": "08601",
       "market": "hk",
@@ -27253,6 +27307,15 @@
       "py": "jingshunqqq-u",
       "abbr": "jsqqq-u"
     },
+    "hk09459": {
+      "code": "09459",
+      "market": "hk",
+      "type": "基",
+      "name": "華夏香港成長-U",
+      "name_en": "CAM HKGROWTH-U",
+      "py": "huaxiaxianggangchengzhang-u",
+      "abbr": "hxxgcz-u"
+    },
     "hk09460": {
       "code": "09460",
       "market": "hk",
@@ -27288,6 +27351,15 @@
       "name_en": "PPKSA G SUKUK-U",
       "py": "ppshateguozhai-u",
       "abbr": "ppstgz-u"
+    },
+    "hk09479": {
+      "code": "09479",
+      "market": "hk",
+      "type": "基",
+      "name": "華夏HALO-U",
+      "name_en": "CAM HKUS HALO-U",
+      "py": "huaxiahalo-u",
+      "abbr": "hxhalo-u"
     },
     "hk09480": {
       "code": "09480",
@@ -28495,6 +28567,24 @@
       "py": "wangyi",
       "abbr": "wy"
     },
+    "hk41500": {
+      "code": "41500",
+      "market": "hk",
+      "type": "基",
+      "name": "平安醫療保健-U",
+      "name_en": "PA HEALTHCARE-U",
+      "py": "pinganyiliaobaojian-u",
+      "abbr": "paylbj-u"
+    },
+    "hk41510": {
+      "code": "41510",
+      "market": "hk",
+      "type": "基",
+      "name": "平安人工智能-U",
+      "name_en": "PA AI SELECT-U",
+      "py": "pinganrengongzhineng-u",
+      "abbr": "pargzn-u"
+    },
     "hk41520": {
       "code": "41520",
       "market": "hk",
@@ -28548,6 +28638,33 @@
       "name_en": "GTHT FTEC ETF-U",
       "py": "guotaihaitongkeji-u",
       "abbr": "gthtkj-u"
+    },
+    "hk41587": {
+      "code": "41587",
+      "market": "hk",
+      "type": "基",
+      "name": "工銀全球AI-U",
+      "name_en": "ICBC UBS AI-U",
+      "py": "gongyinquanqiuai-u",
+      "abbr": "gyqqai-u"
+    },
+    "hk41590": {
+      "code": "41590",
+      "market": "hk",
+      "type": "基",
+      "name": "華夏港高息-U",
+      "name_en": "CAM HKHIDIV-U",
+      "py": "huaxiaganggaoxi-u",
+      "abbr": "hxggx-u"
+    },
+    "hk41592": {
+      "code": "41592",
+      "market": "hk",
+      "type": "基",
+      "name": "華夏港高息A-U",
+      "name_en": "CAM HKHIDIV A-U",
+      "py": "huaxiaganggaoxia-u",
+      "abbr": "hxggxa-u"
     },
     "hk41599": {
       "code": "41599",
@@ -28900,15 +29017,6 @@
       "py": "fghengshenghongli-r",
       "abbr": "fghshl-r"
     },
-    "hk83038": {
-      "code": "83038",
-      "market": "hk",
-      "type": "基",
-      "name": "恒生A股低碳-R",
-      "name_en": "HS ALOWCARBON-R",
-      "py": "hengshengaguditan-r",
-      "abbr": "hsagdt-r"
-    },
     "hk83042": {
       "code": "83042",
       "market": "hk",
@@ -29242,6 +29350,15 @@
       "py": "jingshunqqq-r",
       "abbr": "jsqqq-r"
     },
+    "hk83459": {
+      "code": "83459",
+      "market": "hk",
+      "type": "基",
+      "name": "華夏香港成長-R",
+      "name_en": "CAM HKGROWTH-R",
+      "py": "huaxiaxianggangchengzhang-r",
+      "abbr": "hxxgcz-r"
+    },
     "hk83460": {
       "code": "83460",
       "market": "hk",
@@ -29259,6 +29376,15 @@
       "name_en": "A CAM RMBTMMF-R",
       "py": "ahuaxiarenbishu-r",
       "abbr": "ahxrbs-r"
+    },
+    "hk83479": {
+      "code": "83479",
+      "market": "hk",
+      "type": "基",
+      "name": "華夏HALO-R",
+      "name_en": "CAM HKUS HALO-R",
+      "py": "huaxiahalo-r",
+      "abbr": "hxhalo-r"
     },
     "hk83483": {
       "code": "83483",
@@ -29322,6 +29448,33 @@
       "name_en": "GTHT FTEC ETF-R",
       "py": "guotaihaitongkeji-r",
       "abbr": "gthtkj-r"
+    },
+    "hk83587": {
+      "code": "83587",
+      "market": "hk",
+      "type": "基",
+      "name": "工銀全球AI-R",
+      "name_en": "ICBC UBS AI-R",
+      "py": "gongyinquanqiuai-r",
+      "abbr": "gyqqai-r"
+    },
+    "hk83590": {
+      "code": "83590",
+      "market": "hk",
+      "type": "基",
+      "name": "華夏港高息-R",
+      "name_en": "CAM HKHIDIV-R",
+      "py": "huaxiaganggaoxi-r",
+      "abbr": "hxggx-r"
+    },
+    "hk83592": {
+      "code": "83592",
+      "market": "hk",
+      "type": "基",
+      "name": "華夏港高息A-R",
+      "name_en": "CAM HKHIDIV A-R",
+      "py": "huaxiaganggaoxia-r",
+      "abbr": "hxggxa-r"
     },
     "hk83599": {
       "code": "83599",

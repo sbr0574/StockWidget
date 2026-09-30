@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-23",
+  "last_update": "2026-09-30",
   "codes": {
     "bj810011": {
       "code": "810011",
@@ -59,10 +59,10 @@
       "code": "920000",
       "market": "bj",
       "type": "京",
-      "name": "安徽凤凰",
+      "name": "XD安徽凤",
       "name_en": "",
-      "py": "anhuifenghuang",
-      "abbr": "ahfh"
+      "py": "xdanhuifeng",
+      "abbr": "xdahf"
     },
     "bj920001": {
       "code": "920001",
@@ -131,10 +131,10 @@
       "code": "920009",
       "market": "bj",
       "type": "京",
-      "name": "XD丹娜生",
+      "name": "丹娜生物",
       "name_en": "",
-      "py": "xddannasheng",
-      "abbr": "xddns"
+      "py": "dannashengwu",
+      "abbr": "dnsw"
     },
     "bj920010": {
       "code": "920010",
@@ -257,10 +257,10 @@
       "code": "920025",
       "market": "bj",
       "type": "京",
-      "name": "N凯达",
+      "name": "凯达重工",
       "name_en": "",
-      "py": "nkaida",
-      "abbr": "nkd"
+      "py": "kaidazhonggong",
+      "abbr": "kdzg"
     },
     "bj920026": {
       "code": "920026",
@@ -311,10 +311,10 @@
       "code": "920033",
       "market": "bj",
       "type": "京",
-      "name": "XD康普化",
+      "name": "康普化学",
       "name_en": "",
-      "py": "xdkangpuhua",
-      "abbr": "xdkph"
+      "py": "kangpuhuaxue",
+      "abbr": "kphx"
     },
     "bj920035": {
       "code": "920035",
@@ -401,10 +401,10 @@
       "code": "920055",
       "market": "bj",
       "type": "京",
-      "name": "XD隆源股",
+      "name": "隆源股份",
       "name_en": "",
-      "py": "xdlongyuangu",
-      "abbr": "xdlyg"
+      "py": "longyuangufen",
+      "abbr": "lygf"
     },
     "bj920056": {
       "code": "920056",
@@ -518,10 +518,10 @@
       "code": "920072",
       "market": "bj",
       "type": "京",
-      "name": "科莱瑞迪",
+      "name": "XD科莱瑞",
       "name_en": "",
-      "py": "kelairuidi",
-      "abbr": "klrd"
+      "py": "xdkelairui",
+      "abbr": "xdklr"
     },
     "bj920075": {
       "code": "920075",
@@ -1184,10 +1184,10 @@
       "code": "920186",
       "market": "bj",
       "type": "京",
-      "name": "中科仪",
+      "name": "XD中科仪",
       "name_en": "",
-      "py": "zhongkeyi",
-      "abbr": "zky"
+      "py": "xdzhongkeyi",
+      "abbr": "xdzky"
     },
     "bj920187": {
       "code": "920187",
@@ -1251,6 +1251,15 @@
       "name_en": "",
       "py": "sanxiangkeji",
       "abbr": "sxkj"
+    },
+    "bj920196": {
+      "code": "920196",
+      "market": "bj",
+      "type": "京",
+      "name": "南方乳业",
+      "name_en": "",
+      "py": "nanfangruye",
+      "abbr": "nfry"
     },
     "bj920198": {
       "code": "920198",
@@ -1382,10 +1391,10 @@
       "code": "920222",
       "market": "bj",
       "type": "京",
-      "name": "益坤电气",
+      "name": "XD益坤电",
       "name_en": "",
-      "py": "yikundianqi",
-      "abbr": "ykdq"
+      "py": "xdyikundian",
+      "abbr": "xdykd"
     },
     "bj920223": {
       "code": "920223",

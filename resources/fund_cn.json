@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-29",
+  "last_update": "2026-09-30",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -4285,6 +4285,15 @@
       "py": "zhongzheng500etftaikang",
       "abbr": "zz500etftk"
     },
+    "sh515540": {
+      "code": "515540",
+      "market": "sh",
+      "type": "基",
+      "name": "工业有色ETF浦银",
+      "name_en": "",
+      "py": "gongyeyouseetfpuyin",
+      "abbr": "gyysetfpy"
+    },
     "sh515550": {
       "code": "515550",
       "market": "sh",
@@ -7561,6 +7570,15 @@
       "py": "honglizhiliangetfhuataibairui",
       "abbr": "hlzletfhtbr"
     },
+    "sh561650": {
+      "code": "561650",
+      "market": "sh",
+      "type": "基",
+      "name": "红利质量ETF汇添富",
+      "name_en": "",
+      "py": "honglizhiliangetfhuitianfu",
+      "abbr": "hlzletfhtf"
+    },
     "sh561660": {
       "code": "561660",
       "market": "sh",
@@ -7875,6 +7893,15 @@
       "name_en": "",
       "py": "a500honglidiboetfzhaoshang",
       "abbr": "a500hldbetfzs"
+    },
+    "sh562200": {
+      "code": "562200",
+      "market": "sh",
+      "type": "基",
+      "name": "红利质量ETF嘉实",
+      "name_en": "",
+      "py": "honglizhiliangetfjiashi",
+      "abbr": "hlzletfjs"
     },
     "sh562300": {
       "code": "562300",
@@ -9856,6 +9883,15 @@
       "py": "kechuangxinpianshejietfjiashi",
       "abbr": "kcxpsjetfjs"
     },
+    "sh589490": {
+      "code": "589490",
+      "market": "sh",
+      "type": "基",
+      "name": "科创成长ETF华夏",
+      "name_en": "",
+      "py": "kechuangchengzhangetfhuaxia",
+      "abbr": "kcczetfhx"
+    },
     "sh589500": {
       "code": "589500",
       "market": "sh",
@@ -10350,6 +10386,15 @@
       "name_en": "",
       "py": "chuangyebansuanlietfpenghua",
       "abbr": "cybsletfph"
+    },
+    "sz158059": {
+      "code": "158059",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板算力ETF富国",
+      "name_en": "",
+      "py": "chuangyebansuanlietffuguo",
+      "abbr": "cybsletffg"
     },
     "sz158061": {
       "code": "158061",
@@ -14081,10 +14126,10 @@
       "code": "159593",
       "market": "sz",
       "type": "基",
-      "name": "中证A50ETF平安",
+      "name": "A50ETF平安",
       "name_en": "",
-      "py": "zhongzhenga50etfpingan",
-      "abbr": "zza50etfpa"
+      "py": "a50etfpingan",
+      "abbr": "a50etfpa"
     },
     "sz159595": {
       "code": "159595",

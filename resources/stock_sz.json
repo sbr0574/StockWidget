@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-29",
+  "last_update": "2026-09-30",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -4023,6 +4023,15 @@
       "name_en": "",
       "py": "yongdagufen",
       "abbr": "ydgf"
+    },
+    "sz001246": {
+      "code": "001246",
+      "market": "sz",
+      "type": "深",
+      "name": "N力勤资源",
+      "name_en": "",
+      "py": "nliqinziyuan",
+      "abbr": "nlqzy"
     },
     "sz001248": {
       "code": "001248",
@@ -18149,10 +18158,10 @@
       "code": "300527",
       "market": "sz",
       "type": "创",
-      "name": "ST应急",
+      "name": "中船应急",
       "name_en": "",
-      "py": "styingji",
-      "abbr": "styj"
+      "py": "zhongchuanyingji",
+      "abbr": "zcyj"
     },
     "sz300528": {
       "code": "300528",
@@ -23360,10 +23369,10 @@
       "code": "301139",
       "market": "sz",
       "type": "创",
-      "name": "*ST元道",
+      "name": "元道退",
       "name_en": "",
-      "py": "*styuandao",
-      "abbr": "*styd"
+      "py": "yuandaotui",
+      "abbr": "ydt"
     },
     "sz301141": {
       "code": "301141",
@@ -26375,10 +26384,10 @@
       "code": "301686",
       "market": "sz",
       "type": "创",
-      "name": "C中塑股份",
+      "name": "中塑股份",
       "name_en": "",
-      "py": "czhongsugufen",
-      "abbr": "czsgf"
+      "py": "zhongsugufen",
+      "abbr": "zsgf"
     },
     "sz301687": {
       "code": "301687",
@@ -26447,10 +26456,10 @@
       "code": "301716",
       "market": "sz",
       "type": "创",
-      "name": "N鸿富诚",
+      "name": "C鸿富诚",
       "name_en": "",
-      "py": "nhongfucheng",
-      "abbr": "nhfc"
+      "py": "chongfucheng",
+      "abbr": "chfc"
     },
     "sz301717": {
       "code": "301717",
