@@ -12,17 +12,13 @@ from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
     QFrame,
-    QHBoxLayout,
-    QLabel,
     QLineEdit,
     QListView,
-    QPushButton,
     QSizePolicy,
     QStyle,
     QStyledItemDelegate,
     QStyleOptionButton,
     QStyleOptionViewItem,
-    QVBoxLayout,
     QWidget,
 )
 
@@ -71,6 +67,8 @@ class FilledCheckBox(QCheckBox):
     _HOVER_VERTICAL_PADDING = 3
 
     def __init__(self, text="", parent=None):
+        if isinstance(text, QWidget):
+            parent, text = text, ""
         super().__init__(text, parent)
         self.set_theme(False)
 
@@ -211,31 +209,12 @@ class SelectAllCheckBox(FilledCheckBox):
 class FilterCheckRow(QWidget):
     selection_changed = Signal()
 
-    def __init__(self, object_prefix: str, title: str, items, parent=None):
-        super().__init__(parent)
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        # 相邻筛选项的间距大于 indicator 与自身文字的间距，避免视觉串组。
-        layout.setSpacing(8)
-
-        title_label = QLabel(title, self)
-        title_label.setObjectName(f"{object_prefix}_filter_title")
-        layout.addWidget(title_label)
-
-        self.all_checkbox = SelectAllCheckBox("全选", self)
-        self.all_checkbox.setObjectName(f"{object_prefix}_filter_all")
-        self.all_checkbox.setTristate(True)
-        self.all_checkbox.setCheckState(Qt.CheckState.Checked)
-        layout.addWidget(self.all_checkbox)
-
-        self.option_checkboxes = {}
-        for label, value in items:
-            checkbox = FilledCheckBox(label, self)
-            checkbox.setObjectName(f"{object_prefix}_filter_{value}")
-            checkbox.setChecked(True)
-            self.option_checkboxes[value] = checkbox
-            layout.addWidget(checkbox)
-        layout.addStretch(1)
+    def bind(self, object_prefix, items):
+        self.all_checkbox = self.findChild(QCheckBox, f"{object_prefix}_filter_all")
+        self.option_checkboxes = {
+            value: self.findChild(QCheckBox, f"{object_prefix}_filter_{value}")
+            for _label, value in items
+        }
 
         self.all_checkbox.stateChanged.connect(self._set_all_options)
         for checkbox in self.option_checkboxes.values():
@@ -418,63 +397,30 @@ class AddCodePanel(QFrame):
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        self.setFixedWidth(430)
 
         self._search_index = ()
         self._existing_keys = set()
         self._page = 1
         self.current_result = None
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(7)
-
-        self.search_input = CodeSearchInput(self)
-        self.search_input.setObjectName("add_code_search_input")
+        from stockwidget.ui.generated.ui_add_code_panel import Ui_AddCodePanel
+        self.ui = Ui_AddCodePanel()
+        self.ui.setupUi(self)
+        self.search_input = self.ui.add_code_search_input
         self.search_input.setPlaceholderText(placeholder)
         self.search_input.setToolTip(placeholder)
-        layout.addWidget(self.search_input)
-
-        self.category_filters = FilterCheckRow(
-            "category", "类别", CATEGORY_FILTER_ITEMS, self
-        )
-        self.region_filters = FilterCheckRow(
-            "region", "地区", REGION_FILTER_ITEMS, self
-        )
-        layout.addWidget(self.category_filters)
-        layout.addWidget(self.region_filters)
-
+        self.category_filters = self.ui.category_filters
+        self.region_filters = self.ui.region_filters
+        self.category_filters.bind("category", CATEGORY_FILTER_ITEMS)
+        self.region_filters.bind("region", REGION_FILTER_ITEMS)
         self.result_model = QStandardItemModel(self)
-        self.result_list = SearchResultList(self)
-        self.result_list.setObjectName("add_code_results")
+        self.result_list = self.ui.add_code_results
         self.result_list.setModel(self.result_model)
-        self.result_list.setEditTriggers(QListView.EditTrigger.NoEditTriggers)
-        self.result_list.setSelectionMode(QListView.SelectionMode.SingleSelection)
-        self.result_list.setUniformItemSizes(True)
-        self.result_list.setSpacing(0)
-        self.result_list.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.result_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.result_delegate = SearchResultDelegate(self.result_list)
         self.result_list.setItemDelegate(self.result_delegate)
-        # 1px 上下边框 + 10 个固定高度条目，正好填满当前列表高度。
-        self.result_list.setFixedHeight(PAGE_SIZE * RESULT_ROW_HEIGHT + 2)
-        layout.addWidget(self.result_list)
-
-        page_layout = QHBoxLayout()
-        page_layout.setContentsMargins(0, 0, 0, 0)
-        self.previous_button = QPushButton("上一页", self)
-        self.previous_button.setObjectName("add_code_previous_page")
-        self.previous_button.setAutoDefault(False)
-        self.page_label = QLabel("0 / 0（共 0 条）", self)
-        self.page_label.setObjectName("add_code_page_label")
-        self.page_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.next_button = QPushButton("下一页", self)
-        self.next_button.setObjectName("add_code_next_page")
-        self.next_button.setAutoDefault(False)
-        page_layout.addWidget(self.previous_button)
-        page_layout.addWidget(self.page_label, 1)
-        page_layout.addWidget(self.next_button)
-        layout.addLayout(page_layout)
+        self.previous_button = self.ui.add_code_previous_page
+        self.page_label = self.ui.add_code_page_label
+        self.next_button = self.ui.add_code_next_page
 
         self.search_input.textChanged.connect(
             lambda _text: self.refresh_results(reset_page=True)

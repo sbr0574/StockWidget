@@ -116,6 +116,7 @@ class App(QApplication):
             click_through_getter=lambda: self.win.click_through,
             on_display_mode=self.win.set_display_mode,
             display_mode_getter=lambda: self.win.display_mode,
+            taskbar_enabled_getter=lambda: self.win.view_options.taskbar_enabled,
         )
         self.tray.show()
 

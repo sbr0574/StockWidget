@@ -5,7 +5,7 @@ import sys
 
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QFont, QAction, QColor
-from PySide6.QtWidgets import QApplication, QWidget, QMenu, QVBoxLayout, QLabel, QTableView, QHeaderView, QAbstractItemView, QFrame, QStyledItemDelegate
+from PySide6.QtWidgets import QApplication, QWidget, QMenu, QHeaderView, QStyledItemDelegate
 
 from stockwidget.ui.table_model import (
     DEFAULT_DOWN_COLOR,
@@ -15,6 +15,9 @@ from stockwidget.ui.table_model import (
     SimpleTableModel,
 )
 from stockwidget.ui.drag_mixin import DragBehaviorMixin
+from stockwidget.ui.hide_controller import HideController
+from stockwidget.core.hide_rules import normalize_hide_times
+from stockwidget.core.view_options import DISPLAY_MODES, TASKBAR_STYLE_KEYS, ViewOptions, column_ranges, page_slice
 from stockwidget.ui.table_header import SortIndicatorStyle
 from stockwidget.platform.hotkeys import GlobalHotkeyManager, HotkeyResult
 from stockwidget.data.quotes import request_quote
@@ -51,6 +54,11 @@ def _config_color(value, default: QColor) -> QColor:
 
 
 class FloatLabel(DragBehaviorMixin, QWidget):
+    widget_visibility_changed = Signal()
+    view_options_changed = Signal()
+    drag_started = Signal()
+    drag_moved = Signal()
+    drag_finished = Signal(bool)
     taskbar_options_changed = Signal()
     taskbar_status_changed = Signal(str)
     presentation_changed = Signal()
@@ -58,6 +66,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     click_through_hotkey_triggered = Signal()
     click_through_changed = Signal(bool)
     display_flags_changed = Signal()  # 显示指标/表头/网格/统一颜色等显示相关设置变化
+    hide_options_changed = Signal()
     data_ready = Signal(object)  # (ok, data, error)
 
     def __init__(self, cfg: dict, codes_list: dict):
@@ -65,6 +74,12 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._on_change = (lambda: None)
         self._open_settings_cb = None
         self.taskbar_status = "任务栏显示已关闭"
+        self.widget_visible = True
+        self.taskbar_preview_active = False
+        self.float_page = self.taskbar_page = 0
+        self._ordered_rows = []
+        self._ordered_color_roles = []
+        self._quote_generation = 0
 
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
@@ -109,65 +124,85 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._register_current()
 
         # UI
-        self.panel = QWidget(self)
-        self.panel.setObjectName("panel")
-        self.vbox = QVBoxLayout(self.panel)
-        self.vbox.setContentsMargins(10,6,10,6)
-        self.vbox.setSpacing(0)
+        from stockwidget.ui.generated.ui_floating_widget import Ui_FloatingWidget
+        self.ui = Ui_FloatingWidget()
+        self.ui.setupUi(self)
+        self.panel = self.ui.panel
+        self.vbox = self.ui.vbox
+        self.table = self.ui.table
+        self.right_table = self.ui.right_table
+        self.split_separator = self.ui.split_separator
+        self.float_tables = (self.table, self.right_table)
+        self.message_label = self.ui.message_label
+        self.hide_notice = self.ui.hide_notice
+        self.hide_notice.hide()
+        self.data_layout = self.ui.data_layout
+        self.pager = self.ui.pager
 
-        self.table = QTableView(self.panel)
-        self.table.setFrameShape(QFrame.NoFrame)
-        self.table.setShowGrid(False)
-        self.table.setSelectionMode(QAbstractItemView.NoSelection)
-        self.table.setFocusPolicy(Qt.NoFocus)
-        self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setMinimumSectionSize(1)
-        self.table.verticalHeader().setDefaultSectionSize(1)
-        header = self.table.horizontalHeader()
-        header.setVisible(self.header_visible)
-        header.setStretchLastSection(False)
-        header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        header.setStyle(SortIndicatorStyle(header))
-        header.setSectionsClickable(True)
-        header.setSortIndicatorShown(False)
-        header.sectionClicked.connect(self._on_header_clicked)
-        self.table.setFont(self.font)
-        header.setFont(self.font)
-        self.table.setTextElideMode(Qt.ElideNone)
-        self.message_label = QLabel("", self.panel)
-        self.message_label.setStyleSheet("padding: 2px 4px;")
+        for table in self.float_tables:
+            table.verticalHeader().setVisible(False)
+            table.verticalHeader().setMinimumSectionSize(1)
+            table.verticalHeader().setDefaultSectionSize(1)
+            header = table.horizontalHeader()
+            header.setVisible(self.header_visible)
+            header.setStretchLastSection(False)
+            header.setSectionResizeMode(QHeaderView.ResizeToContents)
+            header.setStyle(SortIndicatorStyle(header))
+            header.setSectionsClickable(True)
+            header.setSortIndicatorShown(False)
+            header.sectionClicked.connect(self._on_header_clicked)
+            table.setFont(self.font)
+            header.setFont(self.font)
         self.message_label.setVisible(False)
         self._message_kind = None
-        self.vbox.addWidget(self.message_label)
         self._refresh_thread = None  # 后台刷新线程（避免网络请求阻塞 UI）
 
         # 首次报价到达前只显示紧凑提示，避免所有列撑出临时长条。
         self.model = SimpleTableModel(headers=[], align_right_cols=[])
+        self.right_model = SimpleTableModel(parent=self)
+        self.taskbar_model = SimpleTableModel(parent=self)
         self.table.setModel(self.model)
+        self.right_table.setModel(self.right_model)
 
         self.k_delegate = KLineDelegate(self.table, base_pt=12)
+        self.right_k_delegate = KLineDelegate(self.right_table, base_pt=12)
+        self.taskbar_k_delegate = KLineDelegate(self, base_pt=12)
         self._default_item_delegate = QStyledItemDelegate(self.table)
+        self._right_default_delegate = QStyledItemDelegate(self.right_table)
         self._sync_colors_to_views()
         self.k_delegate.set_point_size(self.font.pointSize())
         self.k_column_visible_index = None
 
-        self.vbox.addWidget(self.table)
+        self.pager.page_requested.connect(lambda delta: self.change_page("float", delta))
+        self.page_timers = {}
+        for surface in ("float", "taskbar"):
+            timer = QTimer(self)
+            timer.timeout.connect(partial(self.change_page, surface, 1, automatic=True))
+            self.page_timers[surface] = timer
         self.table.hide()
+        self.right_table.hide()
+        self.split_separator.hide()
         self._show_message("加载中…", kind="loading")
 
         # 点击与拖动统一判定，表头只有在未发生拖动时才触发排序。
+        header = self.table.horizontalHeader()
         self._init_drag(header)
         for w in (
-            self.panel, self.table, self.table.viewport(),
-            header.viewport(),
+            self.panel, self.message_label, self.hide_notice, self.table, self.table.viewport(),
+            header.viewport(), self.right_table, self.right_table.viewport(), self.split_separator,
         ):
-            w.installEventFilter(self)
+            self.register_drag_region(w)
+        right_header = self.right_table.horizontalHeader()
+        self.register_drag_region(right_header.viewport(),
+                                  lambda pos: self._on_header_clicked(right_header.logicalIndexAt(pos)))
+        self.register_drag_region(self.pager, self.pager.activate_at)
 
         self.apply_style()
         self.set_window_opacity_percent(self.opacity_pct)
         self._fit_to_contents()
 
         self._restore_position(cfg.get("pos"))
+        self.hide_controller = HideController(self)
 
         # 定时刷新数据
         self.data_ready.connect(self._process_data)
@@ -217,6 +252,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.data_source = str(cfg.get("data_source", "sina"))
         if self.data_source not in ("sina", "eastmoney"):
             self.data_source = "sina"
+        self.scheduled_hide_enabled = bool(cfg.get("scheduled_hide_enabled", False))
+        self.scheduled_hide_times = normalize_hide_times(cfg.get("scheduled_hide_times", []))
+        self.auto_hide_enabled = bool(cfg.get("auto_hide_enabled", False))
         self.force_top = bool(cfg.get("force_top", False))
         self.click_through = bool(cfg.get("click_through", False))
         self.hotkey_enabled = bool(cfg.get("hotkey_enabled", False))
@@ -230,18 +268,35 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self.taskbar_offset = max(0, min(2000, int(cfg.get("taskbar_offset", 0))))
         except (TypeError, ValueError):
             self.taskbar_offset = 0
+        self.view_options = ViewOptions.from_config(cfg, self.font.family(), self.visible_metrics)
+        if not self.view_options.taskbar_enabled:
+            self.display_mode = "float"
+        elif self.display_mode != "float":
+            self.display_mode = "both" if self.view_options.taskbar_dual_open else "taskbar"
 
     def reset_appearance(self):
         self._load_appearance_config({})
+        defaults = ViewOptions.from_config({}, self.font.family())
+        for key in TASKBAR_STYLE_KEYS:
+            setattr(self.view_options, key, getattr(defaults, key))
+        self.view_options_changed.emit()
         self._sync_colors_to_views()
         self.k_delegate.set_point_size(self.font.pointSize())
-        self.table.horizontalHeader().setVisible(self.header_visible)
+        for table in self.float_tables:
+            table.horizontalHeader().setVisible(self.header_visible)
         self.apply_style()
         self.set_window_opacity_percent(self.opacity_pct)
         self.display_flags_changed.emit()
 
     def reset_settings(self):
-        self._load_settings_config({})
+        self._load_settings_config({key: getattr(self.view_options, key) for key in TASKBAR_STYLE_KEYS})
+        self._quote_generation += 1
+        self.hide_controller.cancel_countdown()
+        self.hide_controller.configure()
+        self.hide_options_changed.emit()
+        self.float_page = self.taskbar_page = 0
+        self._reproject_cached_data()
+        self.view_options_changed.emit()
         self.taskbar_options_changed.emit()
         self.clear_sort()
         self._register_current()
@@ -296,6 +351,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
             "refresh_seconds": self.refresh_seconds,
             "data_source": self.data_source,
+            "scheduled_hide_enabled": self.scheduled_hide_enabled,
+            "scheduled_hide_times": list(self.scheduled_hide_times),
+            "auto_hide_enabled": self.auto_hide_enabled,
             "force_top": self.force_top,
             "click_through": self.click_through,
             "hotkey_enabled": self.hotkey_enabled,
@@ -305,6 +363,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             "start_on_boot": self.start_on_boot,
             "display_mode": self.display_mode,
             "taskbar_offset": self.taskbar_offset,
+            **self.view_options.to_config(),
             "pos": {"x": self.x(), "y": self.y()},
         }
 
@@ -318,14 +377,30 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self.neutral_color,
         )
         self.model.set_colors(*colors)
+        self.right_model.set_colors(*colors)
         self.k_delegate.set_colors(*colors)
-        self.table.viewport().update()
-        self.table.horizontalHeader().viewport().update()
+        self.right_k_delegate.set_colors(*colors)
+        taskbar_colors = colors if self.view_options.taskbar_sync_appearance else (
+            self.view_options.taskbar_unicolor, _config_color(self.view_options.taskbar_color, self.fg),
+            self.up_color, self.down_color, self.neutral_color,
+        )
+        self.taskbar_model.set_colors(*taskbar_colors)
+        self.taskbar_k_delegate.set_colors(*taskbar_colors)
+        if hasattr(self, "pager"):
+            self.pager.set_page(self.get_page("float"), self.fg, self.font)
+        for table in self.float_tables:
+            table.viewport().update()
+            table.horizontalHeader().viewport().update()
 
     def apply_style(self):
         # 先更新字体，再让样式表解析表头字重，避免尺寸计算与绘制使用不同字号。
-        self.table.setFont(self.font)
-        self.table.horizontalHeader().setFont(self.font)
+        for table in self.float_tables:
+            table.setFont(self.font)
+            table.horizontalHeader().setFont(self.font)
+        for delegate in (self.k_delegate, self.right_k_delegate):
+            delegate.set_point_size(self.font.pointSize())
+        self.hide_notice.setFont(self.font)
+        self.hide_notice.setStyleSheet(f"color: {self.fg.name(QColor.HexRgb)}; padding: 2px 4px;")
         r,g,b,a = self.bg.red(), self.bg.green(), self.bg.blue(), self.bg.alpha()
         fg_r, fg_g, fg_b = self.fg.red(), self.fg.green(), self.fg.blue()
         line_col = f"rgba({fg_r},{fg_g},{fg_b},80)"
@@ -356,32 +431,37 @@ class FloatLabel(DragBehaviorMixin, QWidget):
                 color: {self.fg.name()};
                 padding: 2px 4px;
             }}
+            QFrame#split_separator {{
+                color: {line_col};
+            }}
         """)
         self._defer_fit()
 
     def _apply_row_heights(self):
         fm = self.table.fontMetrics()
         h = fm.height() + max(0, self.line_extra_px)
-        self.table.verticalHeader().setDefaultSectionSize(h)
-        for r in range(self.model.rowCount()):
-            self.table.setRowHeight(r, h)
+        for table in self.float_tables:
+            table.verticalHeader().setDefaultSectionSize(h)
+            for r in range(table.model().rowCount()):
+                table.setRowHeight(r, h)
 
     def _fit_to_contents(self):
-        self.table.horizontalHeader().setStretchLastSection(False)
-        self.table.resizeColumnsToContents()
+        split, _separator = self.get_split_settings("float")
+        for table in self.float_tables:
+            table.horizontalHeader().setStretchLastSection(False)
+            table.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed if split else QHeaderView.ResizeToContents)
+            table.resizeColumnsToContents()
         self._apply_row_heights()
-
-        cols = self.model.columnCount()
-        rows = self.model.rowCount()
-        self.table.verticalHeader().setFixedWidth(0)
-        total_w = 2*self.table.frameWidth()
-        for c in range(cols):
-            total_w += self.table.columnWidth(c)
-        hh = self.table.horizontalHeader().height() if self.table.horizontalHeader().isVisible() else 0
-        total_h = hh + 2*self.table.frameWidth()
-        for r in range(rows):
-            total_h += self.table.rowHeight(r)
-        self.table.setFixedSize(max(1,total_w), max(1,total_h))
+        widths = [max(table.columnWidth(c) for table in (self.float_tables if split else (self.table,)))
+                  for c in range(self.model.columnCount())]
+        for table in self.float_tables:
+            table.verticalHeader().setFixedWidth(0)
+            for c, width in enumerate(widths):
+                table.setColumnWidth(c, width)
+            hh = table.horizontalHeader().sizeHint().height() if self.header_visible else 0
+            total_h = hh + 2 * table.frameWidth() + sum(
+                self.table.rowHeight(r) for r in range(self.model.rowCount()))
+            table.setFixedSize(max(1, sum(widths) + 2 * table.frameWidth()), max(1, total_h))
         self.panel.adjustSize()
         self.resize(self.panel.size())
 
@@ -451,44 +531,87 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def _project_columns(self, full_rows: list[dict], color_roles: list[dict], sort_values=None):
         sort_values = sort_values or [{} for _ in full_rows]
         indices = self._sorted_row_indices(sort_values)
-        full_rows = [full_rows[i] for i in indices]
-        color_roles = [color_roles[i] for i in indices]
+        self._ordered_rows = [full_rows[i] for i in indices]
+        self._ordered_color_roles = [color_roles[i] for i in indices]
+        self._project_float_page()
+        self._project_taskbar_page()
+        self._sync_page_timers()
+        self.presentation_changed.emit()
+
+    def get_page(self, surface):
+        options = self.view_options
+        limit = options.float_max_rows if surface == "float" else options.taskbar_rows
+        if surface == "float" and not options.float_paging_enabled:
+            limit = 0
+        if self.get_split_settings(surface)[0]:
+            limit *= 2
+        mode, _interval = self.get_page_settings(surface)
+        return page_slice(len(self._ordered_rows), limit, mode,
+                          getattr(self, f"{surface}_page"))
+
+    def get_page_settings(self, surface):
+        options = self.view_options
+        if surface == "float" or options.taskbar_sync_paging:
+            return (options.float_page_mode if options.float_paging_enabled else "first",
+                    options.float_page_interval)
+        return options.taskbar_page_mode, options.taskbar_page_interval
+
+    def get_split_settings(self, surface):
+        options = self.view_options
+        prefix = "float" if surface == "float" or options.taskbar_sync_split else "taskbar"
+        return getattr(options, f"{prefix}_split_enabled"), getattr(options, f"{prefix}_split_separator")
+
+    def get_taskbar_appearance(self):
+        options = self.view_options
+        if options.taskbar_sync_appearance:
+            return self.font, self.fg, self.opacity_pct, self.unicolor
+        return (QFont(options.taskbar_font_family, options.taskbar_font_size),
+                _config_color(options.taskbar_color, self.fg), options.taskbar_opacity_pct, options.taskbar_unicolor)
+
+    def _project_float_page(self):
+        page = self.get_page("float")
+        self.float_page = page.index
+        full_rows = self._ordered_rows[page.start:page.stop]
+        color_roles = self._ordered_color_roles[page.start:page.stop]
 
         # 名称与其余指标统一按用户配置顺序展开；排序期间名称被临时补到首列。
         headers = expand_metric_headers(self._effective_visible_metrics())
 
         proj_rows, projected_roles = [], []
         for r, row in enumerate(full_rows):
-            proj_rows.append([row[h] for h in headers])
-            projected_roles.append([color_roles[r][h] for h in headers])
+            proj_rows.append([row.get(h, "-") for h in headers])
+            projected_roles.append([color_roles[r].get(h, "text") for h in headers])
 
         # 右对齐：名称、K线、卖一除外
         right_cols = [i for i, h in enumerate(headers) if h not in ("名称", "K线", "卖一")]
-        self.model.set_align_right_cols(right_cols)
-        self.model.set_rows_headers(proj_rows, headers, projected_roles)
-        self.presentation_changed.emit()
+        split, separator = self.get_split_settings("float")
+        ranges = column_ranges(len(proj_rows), split)
+        for model, (start, stop) in zip((self.model, self.right_model), ranges):
+            model.set_align_right_cols(right_cols)
+            model.set_rows_headers(proj_rows[start:stop], headers, projected_roles[start:stop])
+        if not split:
+            self.right_model.set_rows_headers([], headers, [])
         self.table.setVisible(bool(headers))
+        self.right_table.setVisible(bool(headers) and split)
+        self.split_separator.setVisible(bool(headers) and split and separator)
         self._sync_colors_to_views()
 
         old_kline_col = self.k_column_visible_index
         new_kline_col = headers.index("K线") if "K线" in headers else None
-        if old_kline_col is not None and old_kline_col != new_kline_col:
-            self.table.setItemDelegateForColumn(
-                old_kline_col, self._default_item_delegate
-            )
-        if new_kline_col is not None:
-            self.k_column_visible_index = new_kline_col
-            self.k_delegate.set_point_size(self.font.pointSize())
-            self.table.setItemDelegateForColumn(new_kline_col, self.k_delegate)
-        else:
-            self.k_column_visible_index = None
-
-        header = self.table.horizontalHeader()
-        if self.sort_header in headers:
-            header.setSortIndicator(headers.index(self.sort_header), self.sort_order)
-            header.setSortIndicatorShown(True)
-        else:
-            header.setSortIndicatorShown(False)
+        for table, delegate, default in ((self.table, self.k_delegate, self._default_item_delegate),
+                                         (self.right_table, self.right_k_delegate, self._right_default_delegate)):
+            if old_kline_col is not None and old_kline_col != new_kline_col:
+                table.setItemDelegateForColumn(old_kline_col, default)
+            if new_kline_col is not None:
+                delegate.set_point_size(self.font.pointSize())
+                table.setItemDelegateForColumn(new_kline_col, delegate)
+            header = table.horizontalHeader()
+            if self.sort_header in headers:
+                header.setSortIndicator(headers.index(self.sort_header), self.sort_order)
+                header.setSortIndicatorShown(True)
+            else:
+                header.setSortIndicatorShown(False)
+        self.k_column_visible_index = new_kline_col
 
         if not headers:
             self._show_message(
@@ -500,6 +623,77 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self._clear_message()
 
         self._fit_to_contents()
+
+    def _project_taskbar_page(self):
+        page = self.get_page("taskbar")
+        self.taskbar_page = page.index
+        metrics = self._effective_visible_metrics() if self.view_options.taskbar_sync_metrics else self.view_options.taskbar_metrics
+        headers = expand_metric_headers(metrics)
+        rows = [[row.get(h, "-") for h in headers] for row in self._ordered_rows[page.start:page.stop]]
+        roles = [[row.get(h, "text") for h in headers] for row in self._ordered_color_roles[page.start:page.stop]]
+        self.taskbar_model.set_align_right_cols([i for i, h in enumerate(headers) if h not in ("名称", "K线", "卖一")])
+        self.taskbar_model.set_rows_headers(rows, headers, roles)
+        self._sync_colors_to_views()
+
+    def change_page(self, surface, delta, *, automatic=False):
+        page = self.get_page(surface)
+        if not page.controls:
+            return
+        setattr(self, f"{surface}_page", (page.index + delta) % page.count)
+        if surface == "float":
+            self._project_float_page()
+        else:
+            self._project_taskbar_page()
+        self.presentation_changed.emit()
+        if not automatic and self.page_timers[surface].isActive():
+            self.page_timers[surface].start()
+
+    def _sync_page_timers(self):
+        if not hasattr(self, "page_timers"):
+            return
+        for surface, timer in self.page_timers.items():
+            active = self.isVisible() if surface == "float" else (
+                self.widget_visible and (self.display_mode != "float" or self.taskbar_preview_active))
+            mode, seconds = self.get_page_settings(surface)
+            interval = seconds * 1000
+            if timer.interval() != interval:
+                timer.setInterval(interval)
+            if active and self.get_page(surface).controls and mode == "auto":
+                if not timer.isActive():
+                    timer.start()
+            else:
+                timer.stop()
+
+    def set_view_options(self, **changes):
+        old = self.view_options.to_config()
+        old_taskbar_page_mode = self.get_page_settings("taskbar")[0]
+        old_split = {surface: self.get_split_settings(surface)[0] for surface in ("float", "taskbar")}
+        options = ViewOptions.from_config({**old, **changes}, self.font.family())
+        if options.to_config() == old:
+            return
+        if old["taskbar_enabled"] and not options.taskbar_enabled:
+            self.finish_drag(False)
+        self.view_options = options
+        if self.get_page_settings("taskbar")[0] != old_taskbar_page_mode:
+            self.taskbar_page = 0
+        for surface in ("float", "taskbar"):
+            limit = "float_max_rows" if surface == "float" else "taskbar_rows"
+            if (getattr(options, limit) != old[limit]
+                    or getattr(options, f"{surface}_page_mode") != old[f"{surface}_page_mode"]
+                    or self.get_split_settings(surface)[0] != old_split[surface]
+                    or (surface == "float" and options.float_paging_enabled != old["float_paging_enabled"])):
+                setattr(self, f"{surface}_page", 0)
+        if not options.taskbar_enabled:
+            self.display_mode = "float"
+            self.taskbar_preview_active = False
+        elif self.display_mode != "float":
+            self.display_mode = "both" if options.taskbar_dual_open else "taskbar"
+        self._project_float_page()
+        self._project_taskbar_page()
+        self._sync_page_timers()
+        self.view_options_changed.emit()
+        self.taskbar_options_changed.emit()
+        self._notify_change()
 
     def _reproject_cached_data(self):
         self._project_columns(
@@ -519,25 +713,27 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             return
         self._refresh_thread = threading.Thread(
             target=self._fetch_data_worker,
-            args=(checked_codes,),
+            args=(checked_codes, self.data_source, self._quote_generation),
             daemon=True,
         )
         self._refresh_thread.start()
 
-    def _fetch_data_worker(self, codes: dict):
+    def _fetch_data_worker(self, codes: dict, source: str, generation: int):
         """后台线程：执行网络请求，结果经 data_ready 信号回到主线程。"""
         try:
-            data = request_quote(codes, source=self.data_source)
+            data = request_quote(codes, source=source)
             payload = (True, data, None)
         except requests.exceptions.RequestException:
             payload = (False, None, "网络请求失败")
         except Exception as e:
             payload = (False, None, str(e))
-        self.data_ready.emit(payload)
+        self.data_ready.emit((*payload, generation))
 
     def _process_data(self, payload):
         """主线程：处理请求结果并更新表格。payload = (ok, data, error)"""
-        ok, data, error = payload
+        ok, data, error = payload[:3]
+        if len(payload) > 3 and payload[3] != self._quote_generation:
+            return
         checked_codes = self.checked_codes
         if not checked_codes:
             ok, data = True, {}
@@ -545,6 +741,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             # 请求期间可能删除、取消勾选或调整顺序，以当前自选列表为准。
             data = {code: data[code] for code in checked_codes if code in data}
         if not ok:
+            self.hide_controller.cancel_countdown()
             self._show_message(error or "请求失败", is_error=True)
             return
 
@@ -581,6 +778,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         else:
             self._show_message("请在设置面板中添加自选股", is_error=True)
         self._project_columns(full_rows, full_color_roles, sort_values)
+        self.hide_controller.quotes_refreshed(data)
 
     # ----- 排序 -----
     def set_sort(self, header: str, order):
@@ -594,12 +792,14 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             return
         self.sort_header = header
         self.sort_order = order
+        self.float_page = self.taskbar_page = 0
         self._reproject_cached_data()
 
     def clear_sort(self):
         if self.sort_header is None:
             return
         self.sort_header = None
+        self.float_page = self.taskbar_page = 0
         self.table.horizontalHeader().setSortIndicatorShown(False)
         self._reproject_cached_data()
 
@@ -620,6 +820,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def set_watchlist(self, watchlist: dict):
         """整体替换自选列表（key -> {code, market, checked, cost, name, type}）。"""
         self.watchlist = normalize_watchlist(watchlist, self.codes_list)
+        self._quote_generation += 1
+        self.hide_controller.cancel_countdown()
+        self.float_page = self.taskbar_page = 0
         self._notify_change()
         self._refresh_from_function()
 
@@ -627,6 +830,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         """替换代码表，并用新代码表补齐自选项元数据。"""
         self.codes_list = codes_list or {}
         self.watchlist = normalize_watchlist(self.watchlist, self.codes_list)
+        self._quote_generation += 1
+        self.hide_controller.cancel_countdown()
 
     def set_type_visible(self, visible: bool):
         self.type_visible = bool(visible)
@@ -649,6 +854,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if self.sort_header is not None and self.sort_header not in expand_metric_headers(normalized):
             self.sort_header = None
             self.table.horizontalHeader().setSortIndicatorShown(False)
+        self._reproject_cached_data()
         self._notify_change()
         self._refresh_from_function()
         self.display_flags_changed.emit()
@@ -687,7 +893,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     def set_header_visible(self, vis: bool):
         self.header_visible = bool(vis)
-        self.table.horizontalHeader().setVisible(self.header_visible)
+        for table in self.float_tables:
+            table.horizontalHeader().setVisible(self.header_visible)
         self._notify_change()
         self._defer_fit()
         self.display_flags_changed.emit()
@@ -714,8 +921,22 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if source not in ("sina", "eastmoney") or source == self.data_source:
             return
         self.data_source = source
+        self._quote_generation += 1
+        self.hide_controller.cancel_countdown()
         self._notify_change()
         self._refresh_from_function()
+
+    def set_hide_options(self, *, scheduled_hide_enabled=None, scheduled_hide_times=None,
+                         auto_hide_enabled=None):
+        if scheduled_hide_enabled is not None:
+            self.scheduled_hide_enabled = bool(scheduled_hide_enabled)
+        if scheduled_hide_times is not None:
+            self.scheduled_hide_times = normalize_hide_times(scheduled_hide_times)
+        if auto_hide_enabled is not None:
+            self.auto_hide_enabled = bool(auto_hide_enabled)
+        self.hide_controller.configure()
+        self.hide_options_changed.emit()
+        self._notify_change()
 
     def set_fg_color(self, c: QColor):
         if isinstance(c, QColor) and c.isValid():
@@ -799,11 +1020,18 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def set_display_mode(self, mode):
         if mode not in ("float", "taskbar", "both"):
             return
-        if sys.platform != "win32":
+        if sys.platform != "win32" or not self.view_options.taskbar_enabled:
             mode = "float"
         if mode == self.display_mode:
+            self.set_widget_visible(True)
             return
         self.display_mode = mode
+        if mode != "float":
+            self.view_options.taskbar_dual_open = mode == "both"
+        was_hidden = not self.widget_visible
+        self.widget_visible = True
+        if was_hidden:
+            self.widget_visibility_changed.emit()
         self.sync_refresh_timer()
         self.taskbar_options_changed.emit()
         self._notify_change()
@@ -814,12 +1042,13 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._notify_change()
 
     def sync_refresh_timer(self):
-        if self.isVisible() or self.display_mode != "float":
+        if self.isVisible() or (self.widget_visible and (self.display_mode != "float" or self.taskbar_preview_active)):
             if not self.timer.isActive():
                 self.timer.start()
                 self._refresh_from_function()
         else:
             self.timer.stop()
+        self._sync_page_timers()
 
     def set_click_through(self, enable: bool):
         enable = bool(enable)
@@ -883,17 +1112,21 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     # ----- 交互 -----
     def contextMenuEvent(self, event):
+        self.show_context_menu(event.globalPos())
+
+    def build_context_menu(self, surface="float"):
         menu = QMenu(self)
         sub_cols = QMenu("显示指标", menu)
+        metrics = self.get_surface_metrics(surface)
         for spec in METRIC_SPECS:
             action = QAction(spec.label, sub_cols, checkable=True)
-            action.setChecked(spec.metric_id in self.visible_metrics)
-            action.toggled.connect(partial(self.set_metric_visible, spec.metric_id))
+            action.setChecked(spec.metric_id in metrics)
+            action.toggled.connect(partial(self.set_surface_metric_visible, surface, spec.metric_id))
             sub_cols.addAction(action)
         menu.addMenu(sub_cols)
 
         sort_menu = QMenu("排序", menu)
-        visible_headers = set(expand_metric_headers(self.visible_metrics))
+        visible_headers = set(expand_metric_headers(metrics))
         for header_name in SORTABLE_HEADERS:
             metric_menu = QMenu(header_name, sort_menu)
             metric_menu.setEnabled(header_name in visible_headers)
@@ -938,6 +1171,18 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         act_color.toggled.connect(self.set_unicolor)
         menu.addAction(act_color)
 
+        if sys.platform == "win32":
+            modes = QMenu("显示位置", menu)
+            menu.addMenu(modes)
+            for mode, label in DISPLAY_MODES:
+                action = modes.addAction(label)
+                action.setCheckable(True)
+                action.setChecked(self.display_mode == mode)
+                action.setEnabled(mode == "float" or self.view_options.taskbar_enabled)
+                if mode != "float" and not self.view_options.taskbar_enabled:
+                    action.setToolTip("请先在设置的任务栏页启用任务栏模式")
+                action.triggered.connect(lambda checked=False, value=mode: self.set_display_mode(value))
+
         menu.addSeparator()
         act_open_settings = QAction("设置…", menu)
         if callable(self._open_settings_cb):
@@ -947,15 +1192,42 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         menu.addAction(act_open_settings)
 
         menu.addSeparator()
-        menu.addAction(QAction("隐藏浮窗", menu, triggered=self.hide))
-        menu.exec(event.globalPos())
+        menu.addAction(QAction("隐藏", menu, triggered=self.hide_widget))
+        return menu
+
+    def get_surface_metrics(self, surface):
+        if surface == "float" or self.view_options.taskbar_sync_metrics:
+            return list(self.visible_metrics)
+        return list(self.view_options.taskbar_metrics)
+
+    def set_surface_metric_visible(self, surface, metric_id, visible):
+        if surface == "float" or self.view_options.taskbar_sync_metrics:
+            self.set_metric_visible(metric_id, visible)
+        else:
+            metrics = list(self.view_options.taskbar_metrics)
+            if visible and metric_id not in metrics:
+                metrics.append(metric_id)
+            elif not visible and metric_id in metrics:
+                metrics.remove(metric_id)
+            self.set_view_options(taskbar_metrics=metrics)
+
+    def show_context_menu(self, global_pos, surface="float"):
+        menu = self.build_context_menu(surface)
+        try:
+            menu.exec(global_pos)
+        finally:
+            menu.deleteLater()
 
     def closeEvent(self, event):
         event.ignore()
-        self.hide()
+        self.hide_widget()
 
     def showEvent(self, event):
         super().showEvent(event)
+        if self.display_mode != "taskbar" and not self.widget_visible:
+            self.widget_visible = True
+            self.widget_visibility_changed.emit()
+        self._sync_page_timers()
         if self.timer and not self.timer.isActive():
             self.timer.start()
         if self.force_top and self._keep_top_timer and not self._keep_top_timer.isActive():
@@ -966,6 +1238,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     def hideEvent(self, event):
         super().hideEvent(event)
+        if self.display_mode != "taskbar" and self.widget_visible:
+            self.widget_visible = False
+            self.widget_visibility_changed.emit()
         self.sync_refresh_timer()
         if self._keep_top_timer and self._keep_top_timer.isActive():
             self._keep_top_timer.stop()
@@ -1000,12 +1275,26 @@ class FloatLabel(DragBehaviorMixin, QWidget):
                 return result
         return HotkeyResult(True)
 
-    def toggle_win(self):
-        if self.isVisible():
-            self.hide()
-        else:
+    def set_widget_visible(self, visible):
+        """Visibility belongs to the widget, independently of its display location."""
+        visible = bool(visible)
+        if visible == self.widget_visible:
+            return
+        self.widget_visible = visible
+        if visible and self.display_mode != "taskbar":
             self.show()
             self.raise_()
             self.activateWindow()
             self.setFocus(Qt.ActiveWindowFocusReason)
+        elif not visible:
+            self.hide()
+        self.widget_visibility_changed.emit()
+        self.sync_refresh_timer()
         self._notify_change()
+
+    def hide_widget(self):
+        self.finish_drag(False)
+        self.set_widget_visible(False)
+
+    def toggle_win(self):
+        self.set_widget_visible(not self.widget_visible)

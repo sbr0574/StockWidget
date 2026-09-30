@@ -13,7 +13,7 @@ from PySide6.QtGui import QAction, QActionGroup
 from PySide6.QtWidgets import QMenu, QSystemTrayIcon
 
 from stockwidget.platform.capabilities import click_through_supported, tray_click_toggles
-from stockwidget.ui.taskbar import DISPLAY_MODES
+from stockwidget.core.view_options import DISPLAY_MODES
 
 
 class TrayIcon(QSystemTrayIcon):
@@ -22,7 +22,7 @@ class TrayIcon(QSystemTrayIcon):
     def __init__(self, icon, app_name, *,
                  on_toggle, on_open_settings, on_quit,
                  on_click_through, click_through_getter,
-                 on_display_mode=None, display_mode_getter=None):
+                 on_display_mode=None, display_mode_getter=None, taskbar_enabled_getter=None):
         super().__init__(icon)
         self._on_toggle = on_toggle
         self._on_click_through = on_click_through
@@ -31,8 +31,9 @@ class TrayIcon(QSystemTrayIcon):
         self.setToolTip(app_name)
 
         menu = QMenu()
-        menu.addAction(QAction("显示/隐藏 浮窗", self, triggered=self._on_toggle))
+        menu.addAction(QAction("显示/隐藏", self, triggered=self._on_toggle))
         self._display_mode_getter = display_mode_getter
+        self._taskbar_enabled_getter = taskbar_enabled_getter
         self._mode_actions = {}
         if sys.platform == "win32" and on_display_mode and display_mode_getter:
             modes = menu.addMenu("显示方式")
@@ -46,10 +47,7 @@ class TrayIcon(QSystemTrayIcon):
 
         self.act_click_through = QAction("鼠标穿透", self, checkable=True)
         self.act_click_through.setChecked(bool(self._click_through_getter()))
-        if self._display_mode_getter:
-            for mode, action in self._mode_actions.items():
-                with QSignalBlocker(action):
-                    action.setChecked(self._display_mode_getter() == mode)
+        self._sync_display_modes()
         self.act_click_through.toggled.connect(self._on_click_through)
         if not click_through_supported():
             # 当前平台（如 Wayland）不支持鼠标穿透，置为不可点按
@@ -68,10 +66,16 @@ class TrayIcon(QSystemTrayIcon):
     def sync_click_through(self):
         """菜单显示前，用浮窗当前状态同步「鼠标穿透」勾选。"""
         self.act_click_through.setChecked(bool(self._click_through_getter()))
+        self._sync_display_modes()
+
+    def _sync_display_modes(self):
         if self._display_mode_getter:
             for mode, action in self._mode_actions.items():
                 with QSignalBlocker(action):
                     action.setChecked(self._display_mode_getter() == mode)
+                enabled = mode == "float" or not self._taskbar_enabled_getter or self._taskbar_enabled_getter()
+                action.setEnabled(enabled)
+                action.setToolTip("" if enabled else "请先在设置的任务栏页启用任务栏模式")
 
     def _on_activated(self, reason):
         # Windows 左键切换；macOS/Linux 单击即弹菜单，无切换逻辑

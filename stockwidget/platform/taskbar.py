@@ -37,6 +37,12 @@ def _api():
         "FindWindowW": ([w.LPCWSTR, w.LPCWSTR], w.HWND),
         "FindWindowExW": ([w.HWND, w.HWND, w.LPCWSTR, w.LPCWSTR], w.HWND),
         "GetWindowRect": ([w.HWND, ctypes.POINTER(w.RECT)], w.BOOL),
+        "GetCursorPos": ([ctypes.POINTER(w.POINT)], w.BOOL),
+        "ScreenToClient": ([w.HWND, ctypes.POINTER(w.POINT)], w.BOOL),
+        "SetCapture": ([w.HWND], w.HWND),
+        "GetCapture": ([], w.HWND),
+        "ReleaseCapture": ([], w.BOOL),
+        "GetAsyncKeyState": ([ctypes.c_int], ctypes.c_short),
         "GetClientRect": ([w.HWND, ctypes.POINTER(w.RECT)], w.BOOL),
         "MapWindowPoints": ([w.HWND, w.HWND, ctypes.POINTER(w.POINT), w.UINT], ctypes.c_int),
         "GetDpiForWindow": ([w.HWND], w.UINT),
@@ -100,15 +106,30 @@ def find_taskbar():
     return TaskbarArea(hwnd, width, height, max(0, point.x - 6 * dpi // 96), dpi)
 
 
+def cursor_over_taskbar():
+    """Compare native coordinates, avoiding Qt logical/physical DPI conversion."""
+    if sys.platform != "win32":
+        return False
+    user, _, _ = _api()
+    hwnd = user.FindWindowW("Shell_TrayWnd", None)
+    point, rect = w.POINT(), w.RECT()
+    return bool(hwnd and user.GetCursorPos(ctypes.byref(point))
+                and user.GetWindowRect(hwnd, ctypes.byref(rect))
+                and rect.left <= point.x < rect.right and rect.top <= point.y < rect.bottom)
+
+
 class NativeTaskbarWindow:
     """A per-pixel alpha native child, fed premultiplied BGRA frames by Qt."""
 
-    def __init__(self, on_click, on_context_menu):
+    def __init__(self, on_pointer, on_context_menu):
         self.user, self.gdi, kernel = _api()
         self.hwnd = None
         self.parent = None
         self._last_frame = None
-        self._on_click = on_click
+        self._on_pointer = on_pointer
+        self._pointer_down = False
+        self._last_pointer_position = None
+        self._ignore_release = False
         self._on_context_menu = on_context_menu
         self._instance = kernel.GetModuleHandleW(None)
         self._class_name = f"StockWidgetTaskbar_{id(self)}"
@@ -123,16 +144,46 @@ class NativeTaskbarWindow:
                         ("menu", w.LPCWSTR), ("name", w.LPCWSTR)]
 
         wc = WindowClass()
+        wc.style = 0x0008  # CS_DBLCLKS: receive WM_LBUTTONDBLCLK
         wc.proc, wc.instance, wc.name = self._callback, self._instance, self._class_name
         if not self.user.RegisterClassW(ctypes.byref(wc)):
             raise ctypes.WinError(ctypes.get_last_error())
 
     def _wndproc(self, hwnd, message, wp, lp):
         try:
+            x, y = ctypes.c_short(lp & 0xFFFF).value, ctypes.c_short((lp >> 16) & 0xFFFF).value
             if message == 0x21:  # WM_MOUSEACTIVATE
                 return 3  # MA_NOACTIVATE
+            if message == 0x201:  # WM_LBUTTONDOWN
+                self._pointer_down = True
+                self._last_pointer_position = (x, y)
+                self._ignore_release = False
+                self.user.SetCapture(hwnd)
+                self._on_pointer("press", x, y)
+                return 0
+            if message == 0x200 and self._pointer_down:  # WM_MOUSEMOVE
+                if wp & 1:  # MK_LBUTTON; capture continues outside the taskbar
+                    self._last_pointer_position = (x, y)
+                    self._on_pointer("move", x, y)
+                return 0
             if message == 0x202:  # WM_LBUTTONUP
-                self._on_click()
+                self.release_pointer()
+                if not self._ignore_release:
+                    self._on_pointer("release", x, y)
+                self._ignore_release = False
+                return 0
+            if message == 0x203:  # WM_LBUTTONDBLCLK
+                self.release_pointer()
+                self._ignore_release = True
+                self._on_pointer("double_click", x, y)
+                return 0
+            if message in (0x1F, 0x215) and self._pointer_down:  # CANCELMODE / CAPTURECHANGED
+                self.release_pointer()
+                self._on_pointer("cancel", x, y)
+                return 0
+            if message == 0x100 and wp == 0x1B and self._pointer_down:  # Escape
+                self.release_pointer()
+                self._on_pointer("cancel", x, y)
                 return 0
             if message == 0x7B:  # WM_CONTEXTMENU
                 self._on_context_menu()
@@ -220,10 +271,52 @@ class NativeTaskbarWindow:
                 self.gdi.DeleteDC(dc)
 
     def hide(self):
+        if self._pointer_down and self.hwnd and self.user.IsWindow(self.hwnd):
+            # Keep the input owner alive until release; destroying it would
+            # interrupt a drag precisely when the pointer leaves the bar.
+            # SW_HIDE also releases capture on Windows, so conceal the frame.
+            if self._last_frame:
+                width, height, _ = self._last_frame
+                self._upload(width, height, bytes(width * height * 4))
+                self._last_frame = None
+            return
         if self.hwnd and self.user.IsWindow(self.hwnd):
             self.user.DestroyWindow(self.hwnd)
         self.hwnd = self.parent = self._last_frame = None
+        self._ignore_release = False
+
+    def release_pointer(self):
+        self._pointer_down = False
+        if self.hwnd and self.user.GetCapture() == self.hwnd:
+            self.user.ReleaseCapture()
+
+    def poll_pointer(self):
+        """Continue an initiated drag even when Explorer owns the foreground.
+
+        SetCapture restricts background windows to their visible area:
+        https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-setcapture
+        Poll only while a press initiated in our own window is held.
+        """
+        if not self._pointer_down or not self.hwnd:
+            return None
+        point = w.POINT()
+        if not self.user.GetCursorPos(ctypes.byref(point)) or not self.user.ScreenToClient(self.hwnd, ctypes.byref(point)):
+            return None
+        position = (point.x, point.y)
+        if self.user.GetAsyncKeyState(0x1B) & 0x8000:
+            kind = "cancel"
+        elif not self.user.GetAsyncKeyState(1) & 0x8000:
+            kind = "release"
+        elif position != self._last_pointer_position:
+            self._last_pointer_position = position
+            return ("move", *position)
+        else:
+            return None
+        self.release_pointer()
+        self._ignore_release = True  # do not dispatch a subsequent native up twice
+        return (kind, *position)
 
     def close(self):
+        self.release_pointer()
         self.hide()
         self.user.UnregisterClassW(self._class_name, self._instance)

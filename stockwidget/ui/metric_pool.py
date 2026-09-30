@@ -7,7 +7,7 @@ from PySide6.QtGui import (
     QColor, QCursor, QDrag, QKeyEvent, QPainter, QPalette, QPixmap,
 )
 from PySide6.QtWidgets import (
-    QLabel, QListWidget, QListWidgetItem, QVBoxLayout, QWidget,
+    QListWidget, QListWidgetItem, QWidget,
 )
 
 from stockwidget.core.metric_layout import (
@@ -44,7 +44,9 @@ class MetricListWidget(QListWidget):
     # 点击“成交量/成交额”后的 ⓘ 请求打开面板；参数为池自身。
     unit_settings_requested = Signal(object)
 
-    def __init__(self, pool_name: str, empty_text: str, parent=None):
+    def __init__(self, pool_name="", empty_text="", parent=None):
+        if isinstance(pool_name, QWidget):
+            parent, pool_name = pool_name, ""
         super().__init__(parent)
         self.pool_name = pool_name
         self.empty_text = empty_text
@@ -424,28 +426,19 @@ class MetricPoolWidget(QWidget):
         super().__init__(parent)
         self._visible_metrics: list[str] = []
 
-        self.available_label = QLabel("可用指标", self)
-        self.displayed_label = QLabel("已显示指标", self)
-        for label in (self.available_label, self.displayed_label):
-            label.setFixedHeight(14)
-
-        self.available_pool = MetricListWidget(
-            _POOL_AVAILABLE, "已全部显示", self
-        )
-        self.displayed_pool = MetricListWidget(
-            _POOL_DISPLAYED, "拖入要显示的指标", self
-        )
-
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(2)
-        layout.addWidget(self.displayed_label)
-        layout.addWidget(self.displayed_pool)
-        layout.addWidget(self.available_label)
-        layout.addWidget(self.available_pool)
-        # 两池按内容固定高度后，余量统一留在底部，避免布局把空隙
-        # 分散到标题和池之间，造成增删指标时顶部位置上下跳动。
-        layout.addStretch(1)
+        # Import after MetricListWidget is defined: the generated form promotes
+        # that class while MetricPoolWidget itself is promoted in settings.ui.
+        from stockwidget.ui.generated.ui_metric_pool import Ui_MetricPool
+        self.ui = Ui_MetricPool()
+        self.ui.setupUi(self)
+        self.available_label = self.ui.available_label
+        self.displayed_label = self.ui.displayed_label
+        self.available_pool = self.ui.metric_available_pool
+        self.displayed_pool = self.ui.metric_displayed_pool
+        for pool, name in ((self.available_pool, _POOL_AVAILABLE),
+                           (self.displayed_pool, _POOL_DISPLAYED)):
+            pool.pool_name = name
+            pool.empty_text = pool.property("emptyText")
 
         for pool in (self.available_pool, self.displayed_pool):
             pool.drop_requested.connect(
@@ -485,7 +478,10 @@ class MetricPoolWidget(QWidget):
 
     def _apply_pool_heights(self):
         """两个池按内容行数自动分配高度：较空的池让出空间，最少保留两行。"""
-        total = max(0, self.height() - 2 * 14 - 3 * 2)  # 减去两个标题与间距
+        margins = self.layout().contentsMargins()
+        total = max(0, self.height() - margins.top() - margins.bottom()
+                    - self.available_label.height() - self.displayed_label.height()
+                    - 3 * self.layout().spacing())
         if total <= 0:
             return
         rows_available = self._estimated_rows(self.available_pool)

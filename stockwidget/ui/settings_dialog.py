@@ -13,18 +13,17 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import (
     QApplication, QWidget, QDialog, QColorDialog, QButtonGroup, QFileDialog, QMessageBox,
-    QScrollBar, QVBoxLayout, QFormLayout, QComboBox, QSpinBox, QLabel,
+    QScrollBar,
 )
 from stockwidget.ui.generated.ui_settings import Ui_SettingDialog
 from stockwidget.constants import APP_VERSION
 from stockwidget.core.config_store import config_paths
+from stockwidget.core.hide_rules import MAX_HIDE_TIMES
 from stockwidget.ui.widget import FloatLabel
-from stockwidget.ui.taskbar import DISPLAY_MODES
-from stockwidget.ui.metric_pool import MetricPoolWidget
 from stockwidget.ui.metric_settings_panel import NameSettingsPanel, UnitSettingsPanel
 from stockwidget.ui.watchlist_editor import WatchlistEditor
 from stockwidget.ui.settings_style import LINUX_FONT_RULES, build_settings_stylesheet, color_swatch_icon
-from stockwidget.ui.hotkey_status import HotkeyStatus
+from stockwidget.ui.view_settings import FloatRowSettings, FloatSplitSettings, PagingSettings, TaskbarSettings
 from stockwidget.platform.hotkeys import HotkeyResult
 from stockwidget.platform.capabilities import (
     hotkeys_supported,
@@ -73,7 +72,8 @@ class SettingsDialog(QDialog):
         self._use_gitee_links = False
         self.ui = Ui_SettingDialog()
         self.ui.setupUi(self)
-        self._init_taskbar_settings()
+        self._designer_stylesheet = self.styleSheet()
+        self._init_view_settings()
         # Linux 下用 Tool 窗口避开任务栏/程序坞条目；
         # macOS 的 Dock 图标由应用级 Accessory 激活策略隐藏
         # （见 app._hide_macos_dock_icon），窗口保持普通标题栏，
@@ -111,9 +111,7 @@ class SettingsDialog(QDialog):
         self._hotkey_status = {}
         for key, _checkbox, editor in self._hotkey_rows:
             editor.setMaximumSequenceLength(1)
-            status = HotkeyStatus(editor.parentWidget())
-            status.setObjectName(key + "_status")
-            status.move(editor.geometry().right() + 9, editor.y() + 2)
+            status = getattr(self.ui, key + "_status")
             self._hotkey_status[key] = status
 
     def _refresh_hotkey_status(self):
@@ -125,12 +123,7 @@ class SettingsDialog(QDialog):
             status.set_result(result, message)
 
     def _init_metric_pool(self):
-        """用动态双池替换固定指标复选框区域。"""
-        layout = QVBoxLayout(self.ui.gb_data)
-        layout.setContentsMargins(5, 20, 5, 5)
-        layout.setSpacing(0)
-        self.metric_pool = MetricPoolWidget(self.ui.gb_data)
-        layout.addWidget(self.metric_pool)
+        self.metric_pool = self.ui.float_metric_pool
 
     def _start_github_check(self):
         """后台选择关于页链接平台，不阻塞设置窗口构造。"""
@@ -152,8 +145,9 @@ class SettingsDialog(QDialog):
 
     def _apply_theme_stylesheet(self, *_args):
         dark = QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
-        self.setStyleSheet(build_settings_stylesheet(dark, linux_fonts=sys.platform == "linux"))
-        for component in (self.metric_pool, self.watchlist_editor,
+        self.setStyleSheet(build_settings_stylesheet(dark, linux_fonts=sys.platform == "linux")
+                          + "\n" + self._designer_stylesheet)
+        for component in (self.metric_pool, self.taskbar_settings.metric_pool, self.watchlist_editor,
                           self.name_settings_panel, self.unit_settings_panel):
             component.set_theme(dark)
         self._refresh_color_buttons()
@@ -194,6 +188,8 @@ class SettingsDialog(QDialog):
         self.metric_pool.unit_settings_requested.connect(
             self._show_unit_settings_panel
         )
+        self.taskbar_settings.metric_pool.name_settings_requested.connect(self._show_name_settings_panel)
+        self.taskbar_settings.metric_pool.unit_settings_requested.connect(self._show_unit_settings_panel)
         self.name_settings_panel = NameSettingsPanel(self)
         self.name_settings_panel.name_length_changed.connect(
             self.win.set_name_length
@@ -212,9 +208,11 @@ class SettingsDialog(QDialog):
         self.name_settings_panel.panel_closed.connect(
             self.metric_pool.clear_selections
         )
+        self.name_settings_panel.panel_closed.connect(self.taskbar_settings.metric_pool.clear_selections)
         self.unit_settings_panel.panel_closed.connect(
             self.metric_pool.clear_selections
         )
+        self.unit_settings_panel.panel_closed.connect(self.taskbar_settings.metric_pool.clear_selections)
 
         self.ui.btn_check_update.clicked.connect(self._check_update_manually)
         self.ui.btn_open_cache_dir.clicked.connect(self._open_cache_dir)
@@ -250,52 +248,36 @@ class SettingsDialog(QDialog):
         self.ui.cb_hotkey_click_through.toggled.connect(self._on_click_through_hotkey_enabled_toggled)
         self.ui.cb_head.toggled.connect(self.win.set_header_visible)
         self.ui.cb_grid.toggled.connect(self.win.set_grid_visible)
+        self.ui.cb_auto_hide.toggled.connect(
+            lambda enabled: self.win.set_hide_options(auto_hide_enabled=enabled))
+        self.ui.gb_scheduled_hide.toggled.connect(
+            lambda enabled: self.win.set_hide_options(scheduled_hide_enabled=enabled))
+        self.ui.btn_add_hide_time.clicked.connect(self._add_hide_time)
+        self.ui.btn_del_hide_time.clicked.connect(self._delete_hide_time)
+        self.ui.hide_time_edit.timeChanged.connect(self._update_hide_time_buttons)
+        self.ui.list_hide_times.currentRowChanged.connect(self._update_hide_time_buttons)
+        self.win.hide_options_changed.connect(self._sync_hide_settings)
 
-    def _init_taskbar_settings(self):
-        page = QWidget()
-        page.setObjectName("taskbar_settings")
-        layout = QVBoxLayout(page)
-        layout.setContentsMargins(18, 18, 18, 18)
-        form = QFormLayout()
-        self.taskbar_mode = QComboBox(page)
-        for mode, label in DISPLAY_MODES:
-            self.taskbar_mode.addItem(label, mode)
-        self.taskbar_offset = QSpinBox(page)
-        self.taskbar_offset.setRange(0, 2000)
-        self.taskbar_offset.setSuffix(" px")
-        self.taskbar_offset.setToolTip("从系统托盘左侧向左偏移；数值越大，行情越靠左。")
-        form.addRow("显示方式", self.taskbar_mode)
-        form.addRow("任务栏向左偏移", self.taskbar_offset)
-        layout.addLayout(form)
-        description = QLabel(
-            "在主屏任务栏内显示当前排序后的前两行，沿用浮窗的指标、字体和颜色。\n\n"
-            "点击行情可显示/隐藏浮窗，右键可切换显示方式或打开设置。\n\n"
-            "任务栏背景透明，字号自动适应任务栏高度。若与其他图标重叠，可调整向左偏移。",
-            page,
-        )
-        description.setWordWrap(True)
-        layout.addWidget(description)
-        self.taskbar_status = QLabel(page)
-        self.taskbar_status.setWordWrap(True)
-        layout.addWidget(self.taskbar_status)
-        layout.addStretch()
-        self.ui.tab_widget.insertTab(2, page, "任务栏")
-        self.taskbar_mode.currentIndexChanged.connect(
-            lambda _: self.win.set_display_mode(self.taskbar_mode.currentData())
-        )
-        self.taskbar_offset.valueChanged.connect(self.win.set_taskbar_offset)
-        self.win.taskbar_options_changed.connect(self._sync_taskbar_settings)
-        self.win.taskbar_status_changed.connect(self.taskbar_status.setText)
-        self._sync_taskbar_settings()
+    def _init_view_settings(self):
+        self.float_row_settings = self.ui.float_row_settings
+        self.float_paging_settings = self.ui.float_paging_settings
+        self.float_split_settings = self.ui.float_split_settings
+        self.taskbar_settings = self.ui.taskbar_settings
+        self._view_bindings = []
+        for group, kind in ((self.float_row_settings, FloatRowSettings),
+                            (self.float_paging_settings, PagingSettings),
+                            (self.float_split_settings, FloatSplitSettings),
+                            (self.taskbar_settings, TaskbarSettings)):
+            binding = kind(group)
+            binding.bind(self.win)
+            self._view_bindings.append(binding)
+        self.taskbar_paging_settings = self.taskbar_settings.paging
+        self.taskbar_style_settings = self.taskbar_settings.style
+        self.taskbar_split_settings = self.taskbar_settings.split
 
-    def _sync_taskbar_settings(self):
-        with QSignalBlocker(self.taskbar_mode), QSignalBlocker(self.taskbar_offset):
-            self.taskbar_mode.setCurrentIndex(self.taskbar_mode.findData(self.win.display_mode))
-            self.taskbar_offset.setValue(self.win.taskbar_offset)
-        supported = sys.platform == "win32"
-        self.taskbar_mode.setEnabled(supported)
-        self.taskbar_offset.setEnabled(supported and self.win.display_mode != "float")
-        self.taskbar_status.setText(self.win.taskbar_status if supported else "任务栏嵌入仅支持 Windows。")
+    def _sync_view_settings(self):
+        for binding in self._view_bindings:
+            binding.sync()
 
     def _load_settings(self):
         with ExitStack() as stack:
@@ -331,13 +313,55 @@ class SettingsDialog(QDialog):
             self.ui.cb_click_through.setChecked(self.win.click_through)
             self.ui.cb_head.setChecked(self.win.header_visible)
             self.ui.cb_grid.setChecked(self.win.grid_visible)
+            self._sync_hide_settings()
 
             self._apply_platform_limits()
-            self._sync_taskbar_settings()
+            self._sync_view_settings()
             self._refresh_hotkey_status()
             self._setup_source_buttons()
             self._setup_about()
             self.refresh_data_state()
+
+    def _sync_hide_settings(self):
+        with QSignalBlocker(self.ui.cb_auto_hide), QSignalBlocker(self.ui.gb_scheduled_hide):
+            self.ui.cb_auto_hide.setChecked(self.win.auto_hide_enabled)
+            self.ui.gb_scheduled_hide.setChecked(self.win.scheduled_hide_enabled)
+        times = self.ui.list_hide_times
+        current = times.currentItem().text() if times.currentItem() else None
+        if [times.item(i).text() for i in range(times.count())] != self.win.scheduled_hide_times:
+            with QSignalBlocker(times):
+                times.clear()
+                times.addItems(self.win.scheduled_hide_times)
+                if current in self.win.scheduled_hide_times:
+                    times.setCurrentRow(self.win.scheduled_hide_times.index(current))
+                elif times.count():
+                    times.setCurrentRow(0)
+        self._update_hide_time_buttons()
+
+    def _update_hide_time_buttons(self, *_args):
+        value = self.ui.hide_time_edit.time().toString("HH:mm")
+        enabled = self.win.scheduled_hide_enabled
+        full = len(self.win.scheduled_hide_times) >= MAX_HIDE_TIMES
+        duplicate = value in self.win.scheduled_hide_times
+        self.ui.btn_add_hide_time.setEnabled(enabled
+            and not full and not duplicate)
+        self.ui.btn_add_hide_time.setToolTip("最多设置3个时间，请先删除一个" if full else
+                                           "该时间已添加" if duplicate else "添加每日隐藏时间")
+        self.ui.btn_del_hide_time.setEnabled(enabled and self.ui.list_hide_times.currentRow() >= 0)
+
+    def _add_hide_time(self):
+        value = self.ui.hide_time_edit.time().toString("HH:mm")
+        if (not self.win.scheduled_hide_enabled or value in self.win.scheduled_hide_times
+                or len(self.win.scheduled_hide_times) >= MAX_HIDE_TIMES):
+            return
+        self.win.set_hide_options(scheduled_hide_times=[*self.win.scheduled_hide_times, value])
+        self.ui.list_hide_times.setCurrentRow(self.win.scheduled_hide_times.index(value))
+
+    def _delete_hide_time(self):
+        selected = self.ui.list_hide_times.currentItem()
+        if selected is not None and self.win.scheduled_hide_enabled:
+            self.win.set_hide_options(scheduled_hide_times=[value for value in self.win.scheduled_hide_times
+                                                          if value != selected.text()])
 
     def _reset_appearance(self):
         self.win.reset_appearance()
@@ -512,11 +536,22 @@ class SettingsDialog(QDialog):
     def _pool_for_widget(self, widget):
         w = widget
         while w is not None and w is not self:
-            for pool in (self.metric_pool.available_pool, self.metric_pool.displayed_pool):
+            for pool in self._metric_lists():
                 if w is pool:
                     return pool
             w = w.parentWidget()
         return None
+
+    def _metric_lists(self):
+        return (self.metric_pool.available_pool, self.metric_pool.displayed_pool,
+                self.taskbar_settings.metric_pool.available_pool, self.taskbar_settings.metric_pool.displayed_pool)
+
+    def _clear_metric_selections(self, keep=None):
+        for pool in self._metric_lists():
+            if pool is not keep:
+                pool.clearSelection()
+                pool.setCurrentItem(None)
+                pool.clearFocus()
 
     def _clear_watchlist_selection(self):
         if self.ui.list_codes.currentRow() >= 0 or self.ui.list_codes.selectedItems():
@@ -539,16 +574,12 @@ class SettingsDialog(QDialog):
         pool = self._pool_for_widget(obj)
         if pool is not None:
             self._clear_watchlist_selection()
-            for other in (self.metric_pool.available_pool, self.metric_pool.displayed_pool):
-                if other is not pool:
-                    other.clearSelection()
-                    other.setCurrentItem(None)
-                    other.clearFocus()
+            self._clear_metric_selections(keep=pool)
         elif self._inside_watchlist(obj):
-            self.metric_pool.clear_selections()
+            self._clear_metric_selections()
         else:
             self._clear_watchlist_selection()
-            self.metric_pool.clear_selections()
+            self._clear_metric_selections()
             if obj is self:
                 self.setFocus()
 

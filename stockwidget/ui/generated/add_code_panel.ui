@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>AddCodePanel</class>
+ <widget class="QFrame" name="add_code_panel">
+  <property name="minimumSize">
+   <size>
+    <width>430</width>
+    <height>0</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>430</width>
+    <height>16777215</height>
+   </size>
+  </property>
+  <layout class="QVBoxLayout" name="addCodeLayout">
+   <property name="leftMargin">
+    <number>10</number>
+   </property>
+   <property name="topMargin">
+    <number>10</number>
+   </property>
+   <property name="rightMargin">
+    <number>10</number>
+   </property>
+   <property name="bottomMargin">
+    <number>10</number>
+   </property>
+   <property name="spacing">
+    <number>7</number>
+   </property>
+   <item>
+    <widget class="CodeSearchInput" name="add_code_search_input">
+     <property name="placeholderText">
+      <string>搜索代码、名称、拼音或缩写，空格区分关键词</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="FilterCheckRow" name="category_filters">
+     <layout class="QHBoxLayout" name="categoryFilterLayout">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <property name="spacing">
+       <number>8</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="category_filter_title">
+        <property name="text">
+         <string>类别</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="SelectAllCheckBox" name="category_filter_all">
+        <property name="text">
+         <string>全选</string>
+        </property>
+        <property name="tristate">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="FilledCheckBox" name="category_filter_stock">
+        <property name="text">
+         <string>股票</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="FilledCheckBox" name="category_filter_fund">
+        <property name="text">
+         <string>基金</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="FilledCheckBox" name="category_filter_index">
+        <property name="text">
+         <string>指数</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="FilledCheckBox" name="category_filter_futures">
+        <property name="text">
+         <string>期货</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="categoryFilterSpacer">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="FilterCheckRow" name="region_filters">
+     <layout class="QHBoxLayout" name="regionFilterLayout">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <property name="spacing">
+       <number>8</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="region_filter_title">
+        <property name="text">
+         <string>地区</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="SelectAllCheckBox" name="region_filter_all">
+        <property name="text">
+         <string>全选</string>
+        </property>
+        <property name="tristate">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="FilledCheckBox" name="region_filter_sh">
+        <property name="text">
+         <string>沪</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="FilledCheckBox" name="region_filter_sz">
+        <property name="text">
+         <string>深</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="FilledCheckBox" name="region_filter_bj">
+        <property name="text">
+         <string>京</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="FilledCheckBox" name="region_filter_hk">
+        <property name="text">
+         <string>港</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="FilledCheckBox" name="region_filter_us">
+        <property name="text">
+         <string>美</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="FilledCheckBox" name="region_filter_other">
+        <property name="text">
+         <string>其他</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="regionFilterSpacer">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="SearchResultList" name="add_code_results">
+     <property name="uniformItemSizes">
+      <bool>true</bool>
+     </property>
+     <property name="spacing">
+      <number>0</number>
+     </property>
+     <property name="editTriggers">
+      <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+     </property>
+     <property name="verticalScrollBarPolicy">
+      <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+     </property>
+     <property name="horizontalScrollBarPolicy">
+      <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>242</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>242</height>
+      </size>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="addCodePagesLayout" stretch="0,1,0">
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QPushButton" name="add_code_previous_page">
+       <property name="text">
+        <string>上一页</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="add_code_page_label">
+       <property name="text">
+        <string>0 / 0（共 0 条）</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="add_code_next_page">
+       <property name="text">
+        <string>下一页</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>430</width>
+    <height>380</height>
+   </rect>
+  </property>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CodeSearchInput</class>
+   <extends>QLineEdit</extends>
+   <header>stockwidget.ui.add_code_panel</header>
+  </customwidget>
+  <customwidget>
+   <class>SearchResultList</class>
+   <extends>QListView</extends>
+   <header>stockwidget.ui.add_code_panel</header>
+  </customwidget>
+  <customwidget>
+   <class>FilterCheckRow</class>
+   <extends>QWidget</extends>
+   <header>stockwidget.ui.add_code_panel</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>FilledCheckBox</class>
+   <extends>QCheckBox</extends>
+   <header>stockwidget.ui.add_code_panel</header>
+  </customwidget>
+  <customwidget>
+   <class>SelectAllCheckBox</class>
+   <extends>QCheckBox</extends>
+   <header>stockwidget.ui.add_code_panel</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

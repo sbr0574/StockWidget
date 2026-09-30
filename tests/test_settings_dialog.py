@@ -11,7 +11,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtCore import QPoint, QSize, Qt
 from PySide6.QtGui import QColor, QIcon, QPalette, QPixmap, QTextDocument, QKeySequence
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QAbstractItemDelegate, QScrollArea
+from PySide6.QtWidgets import QApplication, QAbstractItemDelegate, QScrollArea, QStyle, QStyleOptionGroupBox, QGroupBox, QSlider
 
 from stockwidget.ui.add_code_panel import (
     ADDED_ROLE,
@@ -27,6 +27,7 @@ from stockwidget.ui.settings_style import (
     COLOR_SWATCH_SIZE, build_settings_stylesheet, color_swatch_icon,
 )
 from stockwidget.ui.widget import FloatLabel
+from stockwidget.core.view_options import TASKBAR_STYLE_KEYS
 from stockwidget.platform.hotkeys import HotkeyResult
 
 
@@ -293,13 +294,15 @@ class SettingsDialogTests(unittest.TestCase):
             unicolor=False, header_visible=True, grid_visible=True,
             refresh_seconds=10, data_source="eastmoney", visible_metrics=["price"],
             hotkey="Ctrl+Alt+G",
+            taskbar_sync_appearance=False, taskbar_font_family="Arial", taskbar_font_size=17,
+            taskbar_color="#aabbcc",
         )
         _, defaults = self._make_dialog()
         before = window.current_config()
         appearance_keys = (
             "fg", "bg", "up_color", "down_color", "neutral_color", "opacity_pct",
             "font_family", "font_size", "line_extra_px", "unicolor", "header_visible", "grid_visible",
-        )
+        ) + TASKBAR_STYLE_KEYS
         dialog.ui.btn_reset_appearance.click()
         expected = {**before, **{key: defaults.current_config()[key] for key in appearance_keys}}
         self.assertEqual(window.current_config(), expected)
@@ -319,6 +322,8 @@ class SettingsDialogTests(unittest.TestCase):
             refresh_seconds=10, data_source="eastmoney", visible_metrics=["volume", "price"],
             code_visible=True, type_visible=True, name_length=3, unit_mode="en",
             start_on_boot=True, hotkey="Ctrl+Alt+G", hotkey_click_through="Ctrl+Alt+D",
+            taskbar_rows=3, taskbar_page_mode="auto", taskbar_metrics=["price"],
+            taskbar_color="#aabbcc", float_max_rows=4,
         )
         _, defaults = self._make_dialog()
         before = window.current_config()
@@ -337,6 +342,8 @@ class SettingsDialogTests(unittest.TestCase):
             "hotkey", "hotkey_click_through", "hotkey_enabled", "hotkey_click_through_enabled",
         )
         expected = {**before, **{key: defaults.current_config()[key] for key in settings_keys}}
+        expected.update({key: defaults.current_config()[key] for key in defaults.view_options.to_config()
+                         if key not in TASKBAR_STYLE_KEYS})
         from stockwidget.core.metric_layout import legacy_visibility
         expected.update(legacy_visibility(defaults.visible_metrics))
         self.assertEqual(window.current_config(), expected)
@@ -403,7 +410,7 @@ class SettingsDialogTests(unittest.TestCase):
         dark = build_settings_stylesheet(dark=True)
 
         for stylesheet in (regular, dark):
-            for selector in ("btn_add", "btn_del", "btn_top"):
+            for selector in ("btn_add", "btn_del", "btn_top", "btn_taskbar_color"):
                 self.assertIn(f"QPushButton#{selector}", stylesheet)
                 self.assertIn(f"QPushButton#{selector}:hover", stylesheet)
                 self.assertIn(f"QPushButton#{selector}:pressed", stylesheet)
@@ -419,6 +426,8 @@ class SettingsDialogTests(unittest.TestCase):
             self.assertIn("QPushButton#btn_fg_color:pressed", stylesheet)
             self.assertIn("QPushButton#btn_fg_color:disabled", stylesheet)
             self.assertNotIn("QPushButton#btn_fg_color:checked", stylesheet)
+            self.assertIn('QGroupBox[flat="true"] {', stylesheet)
+            self.assertIn('QGroupBox[flat="true"]::title {', stylesheet)
             self.assertIn(self.qt_app.palette().color(QPalette.Accent).name(), stylesheet)
 
             color_rules = []
@@ -510,7 +519,49 @@ class SettingsDialogTests(unittest.TestCase):
                 self.assertTrue(dialog.watchlist_editor.btn_del.isEnabled())
                 self.assertEqual(dialog.watchlist_editor.btn_top.isEnabled(), target > 0)
 
-    def test_general_layout_and_about_tab(self):
+    def test_shared_paging_and_taskbar_style_groups_preserve_control_behavior(self):
+        dialog, window = self._make_dialog()
+        floating, taskbar, style = (dialog.float_paging_settings,
+                                   dialog.taskbar_paging_settings, dialog.taskbar_style_settings)
+        row_limit = dialog.float_row_settings
+        self.assertFalse(floating.mode.isEnabled())
+        row_limit.setChecked(True)
+        dialog.taskbar_settings.setChecked(True)
+        dialog.taskbar_settings.metrics.setChecked(False)
+        row_limit.rows.setValue(3)
+        floating.mode.setCurrentIndex(floating.mode.findData("auto"))
+        floating.interval.setValue(12)
+        taskbar.setChecked(False)
+        dialog.taskbar_settings.rows.setValue(1)
+        taskbar.mode.setCurrentIndex(taskbar.mode.findData("manual"))
+        self.assertEqual(window.view_options.float_max_rows, 3)
+        self.assertEqual(window.view_options.float_page_mode, "auto")
+        self.assertEqual(window.view_options.float_page_interval, 12)
+        self.assertEqual(window.view_options.taskbar_rows, 1)
+        self.assertTrue(floating.interval.isEnabled())
+        self.assertFalse(taskbar.interval.isEnabled())
+        self.assertEqual(dialog.taskbar_settings.rows.maximum(), 4)
+        self.assertEqual(dialog.taskbar_settings.rows.minimum(), 1)
+        self.assertFalse(style.font_size.isEnabled())
+        style.setChecked(False)
+        style.font_size.setValue(14)
+        self.assertEqual(window.view_options.taskbar_font_size, 14)
+        self.assertEqual(window.font.pointSize(), 10)
+        style.setChecked(False)
+        self.assertTrue(style.color.isEnabled())
+        window.set_view_options(taskbar_color="#aabbcc", taskbar_metrics=["price", "volume"])
+        self.assertEqual(style.color.text(), "文字")
+        self.assertIn("#aabbcc", style.color.toolTip())
+        self.assertIsInstance(style.font_size, QSlider)
+        self.assertEqual(style.font_size_label.text(), "14 pt")
+        self.assertEqual(dialog.taskbar_settings.metric_pool.visible_metrics, ["price", "volume"])
+        row_limit.setChecked(False)
+        self.assertFalse(row_limit.rows.isEnabled())
+        row_limit = dialog.float_row_settings
+        self.assertFalse(floating.mode.isEnabled())
+        self.assertFalse(floating.interval.isEnabled())
+
+    def test_appearance_functions_layout_and_about_tab(self):
         dialog, _window = self._make_dialog()
 
         self.assertEqual(dialog.minimumSize(), dialog.maximumSize())
@@ -519,19 +570,190 @@ class SettingsDialogTests(unittest.TestCase):
         self.assertEqual(
             [dialog.ui.tab_widget.tabText(i)
              for i in range(dialog.ui.tab_widget.count())],
-            ["数据", "通用", "任务栏", "关于"],
+            ["数据", "外观", "功能", "任务栏", "关于"],
         )
         self.assertIs(dialog.ui.gb_about.parentWidget(), dialog.ui.about)
 
-        self.assertLess(dialog.ui.gb_icon.geometry().bottom(), dialog.ui.gb_fcn.y())
-        self.assertLess(dialog.ui.gb_fcn.geometry().bottom(), dialog.ui.gb_hotkeys.y())
+        self.assertTrue(dialog.ui.appearance.isAncestorOf(dialog.ui.gb_icon))
+        self.assertTrue(dialog.ui.appearance.isAncestorOf(dialog.ui.gb_color))
+        self.assertTrue(dialog.ui.appearance.isAncestorOf(dialog.ui.gb_opacity))
+        self.assertTrue(dialog.ui.appearance.isAncestorOf(dialog.ui.gb_text))
+        self.assertTrue(dialog.ui.functions.isAncestorOf(dialog.float_row_settings))
+        self.assertTrue(dialog.ui.functions.isAncestorOf(dialog.float_paging_settings))
+        self.assertTrue(dialog.float_row_settings.isCheckable())
+        self.assertFalse(dialog.float_paging_settings.isCheckable())
+        self.assertTrue(dialog.ui.taskbar.isAncestorOf(dialog.taskbar_paging_settings))
+        self.assertTrue(dialog.ui.taskbar.isAncestorOf(dialog.taskbar_style_settings))
+        self.assertTrue(dialog.taskbar_settings.isAncestorOf(dialog.taskbar_settings.metrics))
+        self.assertFalse(dialog.taskbar_settings.isFlat())
+        self.assertNotIsInstance(dialog.taskbar_settings.rows.parentWidget(), QGroupBox)
+        self.assertTrue(dialog.taskbar_settings.isCheckable())
+        self.assertTrue(dialog.ui.functions.isAncestorOf(dialog.ui.gb_fcn))
+        self.assertTrue(dialog.ui.functions.isAncestorOf(dialog.ui.gb_hotkeys))
+        self.assertFalse(dialog.ui.functions.isAncestorOf(dialog.taskbar_settings))
+        dialog.show()
+        dialog.ui.tab_widget.setCurrentWidget(dialog.ui.functions)
+        self.qt_app.processEvents()
+        self.assertLess(dialog.ui.gb_fcn.geometry().right(), dialog.ui.gb_hotkeys.x())
+        dialog.ui.tab_widget.setCurrentWidget(dialog.ui.appearance)
+        self.qt_app.processEvents()
+        for i in range(dialog.ui.tab_widget.count()):
+            page = dialog.ui.tab_widget.widget(i)
+            self.assertFalse(page.findChildren(QScrollArea))
+        for page, groups in (
+            (dialog.ui.appearance, (dialog.ui.gb_color, dialog.ui.gb_opacity, dialog.ui.gb_text,
+                                   dialog.ui.gb_icon)),
+            (dialog.ui.functions, (dialog.float_row_settings, dialog.float_paging_settings)),
+            (dialog.ui.taskbar, (dialog.taskbar_settings, dialog.taskbar_settings.metrics,
+                                dialog.taskbar_style_settings,
+                                dialog.taskbar_paging_settings)),
+        ):
+            dialog.ui.tab_widget.setCurrentWidget(page)
+            self.qt_app.processEvents()
+            for group in groups:
+                bounds = group.rect().translated(group.mapTo(page, QPoint()))
+                self.assertTrue(page.rect().contains(bounds), (group.title(), bounds, page.rect()))
+        taskbar = dialog.taskbar_settings
+        left_controls = (taskbar.dual, taskbar.rows, taskbar.offset, taskbar.style, taskbar.paging)
+        for upper, lower in zip(left_controls, left_controls[1:]):
+            top = upper.mapTo(taskbar, QPoint())
+            bottom = lower.mapTo(taskbar, QPoint())
+            self.assertLess(top.y() + upper.height(), bottom.y())
+        self.assertLess(taskbar.left.mapTo(taskbar, QPoint()).x() + taskbar.left.width(),
+                        taskbar.metrics.mapTo(taskbar, QPoint()).x())
+        for group in (dialog.float_row_settings, dialog.float_paging_settings,
+                      taskbar.metrics, taskbar.style, taskbar.paging):
+            self.assertTrue(group.isFlat())
+            self.assertEqual(group.styleSheet(), "")
+        self.assertTrue(taskbar.style.color.isFlat())
+        self.assertEqual(taskbar.style.color.size(), dialog.ui.btn_fg_color.size())
+        self.assertEqual(taskbar.style.color.styleSheet(), "")
         self.assertLess(dialog.ui.gb_color.geometry().bottom(), dialog.ui.gb_text.y())
-        self.assertEqual(dialog.ui.gb_fcn.x(), dialog.ui.gb_hotkeys.x())
         for button in dialog.icon_buttons.values():
             self.assertTrue(button.isFlat())
             self.assertEqual(button.styleSheet(), "")
         self.assertEqual(dialog.ui.btn_icon_custom.text(), "+")
         self.assertFalse(dialog.ui.btn_icon_custom.has_custom_icon())
+
+    def test_taskbar_metric_pool_reuses_selection_order_and_preserves_independent_metrics(self):
+        from stockwidget.core.metric_layout import METRIC_SPECS
+        from stockwidget.ui.metric_pool import MetricPoolWidget
+        dialog, window = self._make_dialog()
+        taskbar = dialog.taskbar_settings
+        self.assertFalse(taskbar.isChecked())
+        self.assertFalse(taskbar.body.isEnabled())
+        self.assertFalse(taskbar.metrics.isEnabled())
+        taskbar.setChecked(True)
+        self.assertTrue(window.view_options.taskbar_enabled)
+        self.assertTrue(taskbar.metrics.isChecked())
+        self.assertFalse(taskbar.metric_pool.isEnabled())
+        self.assertIsInstance(taskbar.metric_pool, MetricPoolWidget)
+        window.set_visible_metrics(["volume", "name", "price"])
+        self.assertEqual(taskbar.metric_pool.visible_metrics, ["volume", "name", "price"])
+        taskbar.metrics.setChecked(False)
+        self.assertTrue(taskbar.metric_pool.isEnabled())
+        pool = taskbar.metric_pool
+        for spec in METRIC_SPECS:
+            if spec.metric_id not in pool.visible_metrics:
+                pool.move_metric("available", "displayed", spec.metric_id, len(pool.visible_metrics))
+        self.assertEqual(len(window.view_options.taskbar_metrics), len(METRIC_SPECS))
+        pool.move_metric("displayed", "displayed", "kline", 0)
+        independent = pool.visible_metrics
+        self.assertEqual(independent[0], "kline")
+        self.assertEqual(window.view_options.taskbar_metrics, independent)
+        self.assertEqual(window.visible_metrics, ["volume", "name", "price"])
+        taskbar.metrics.setChecked(True)
+        self.assertEqual(pool.visible_metrics, window.visible_metrics)
+        window.set_visible_metrics(["price", "change"])
+        self.assertEqual(pool.visible_metrics, ["price", "change"])
+        taskbar.metrics.setChecked(False)
+        self.assertEqual(pool.visible_metrics, independent)
+        taskbar.setChecked(False)
+        self.assertFalse(taskbar.body.isEnabled())
+        self.assertFalse(pool.isEnabled())
+        self.assertEqual(window.display_mode, "float")
+
+    def test_native_sync_groups_enable_independent_editing_after_show_and_mouse_click(self):
+        dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_metrics=False,
+                                           taskbar_sync_appearance=False, taskbar_sync_paging=False,
+                                           taskbar_sync_split=False)
+        dialog.ui.tab_widget.setCurrentWidget(dialog.ui.taskbar)
+        dialog.show()
+        self.qt_app.processEvents()
+        groups = (dialog.taskbar_settings.metrics, dialog.taskbar_style_settings,
+                  dialog.taskbar_paging_settings, dialog.taskbar_split_settings)
+        for group in groups:
+            with self.subTest(group=group.title()):
+                self.assertTrue(group.isFlat())
+                self.assertFalse(group.isChecked())
+                self.assertTrue(group.body.isEnabled())
+                option = QStyleOptionGroupBox()
+                group.initStyleOption(option)
+                point = group.style().subControlRect(QStyle.CC_GroupBox, option,
+                                                     QStyle.SC_GroupBoxCheckBox, group).center()
+                QTest.mouseClick(group, Qt.LeftButton, pos=point)
+                self.assertTrue(group.isChecked())
+                self.assertFalse(group.body.isEnabled())
+                QTest.mouseClick(group, Qt.LeftButton, pos=point)
+                self.assertFalse(group.isChecked())
+                self.assertTrue(group.body.isEnabled())
+        style = dialog.taskbar_style_settings
+        style.opacity.setValue(43)
+        self.assertIsInstance(style.opacity, QSlider)
+        self.assertEqual(style.opacity_label.text(), "43%")
+        style.unicolor.setChecked(False)
+        dialog.taskbar_settings.rows.setValue(4)
+        self.assertEqual(window.view_options.taskbar_opacity_pct, 43)
+        self.assertFalse(window.view_options.taskbar_unicolor)
+        self.assertEqual(window.view_options.taskbar_rows, 4)
+        dialog.taskbar_settings.setChecked(False)
+        self.assertTrue(all(not group.body.isEnabled() for group in groups))
+        dialog.taskbar_settings.setChecked(True)
+        self.assertTrue(all(group.body.isEnabled() for group in groups))
+
+    def test_split_controls_use_native_groups_and_preserve_independent_taskbar_settings(self):
+        dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_split=False,
+                                           taskbar_split_enabled=True, taskbar_split_separator=False)
+        floating = dialog.float_split_settings
+        taskbar = dialog.taskbar_split_settings
+        for group in (dialog.float_row_settings, dialog.float_paging_settings, floating,
+                      dialog.taskbar_settings, dialog.taskbar_settings.metrics,
+                      dialog.taskbar_style_settings, dialog.taskbar_paging_settings, taskbar):
+            self.assertIs(type(group), QGroupBox)
+        self.assertFalse(floating.isChecked())
+        self.assertFalse(floating.separator.isEnabled())
+        floating.setChecked(True)
+        self.assertTrue(window.view_options.float_split_enabled)
+        floating.separator.setChecked(True)
+        self.assertTrue(taskbar.enabled.isEnabled())
+        self.assertTrue(taskbar.enabled.isChecked())
+        self.assertFalse(taskbar.separator.isChecked())
+        taskbar.setChecked(True)
+        self.assertFalse(taskbar.enabled.isEnabled())
+        self.assertTrue(taskbar.separator.isChecked())
+        floating.setChecked(False)
+        self.assertFalse(taskbar.enabled.isChecked())
+        for _ in range(2):
+            dialog._apply_theme_stylesheet()
+            self.qt_app.processEvents()
+            self.assertFalse(taskbar.body.isEnabled())
+        dialog.taskbar_settings.setChecked(False)
+        dialog.taskbar_settings.setChecked(True)
+        self.assertFalse(taskbar.body.isEnabled())
+        taskbar.setChecked(False)
+        self.assertTrue(taskbar.enabled.isEnabled())
+        self.assertTrue(taskbar.enabled.isChecked())
+        self.assertFalse(taskbar.separator.isChecked())
+        taskbar.enabled.setChecked(False)
+        self.assertFalse(taskbar.separator.isEnabled())
+        taskbar.enabled.setChecked(True)
+        self.assertTrue(taskbar.separator.isEnabled())
+        dialog.show()
+        for page, group in ((dialog.ui.functions, floating), (dialog.ui.taskbar, taskbar)):
+            dialog.ui.tab_widget.setCurrentWidget(page)
+            self.qt_app.processEvents()
+            bounds = group.rect().translated(group.mapTo(page, QPoint()))
+            self.assertTrue(page.rect().contains(bounds))
 
     def test_custom_icon_can_be_selected_and_deleted_from_hover_action(self):
         app = self._make_icon_app()
@@ -557,11 +779,14 @@ class SettingsDialogTests(unittest.TestCase):
             app.set_custom_icon.assert_called_once_with(icon_path)
             app.save_now.assert_called_once_with()
 
-            dialog.ui.tab_widget.setCurrentWidget(dialog.ui.general)
+            dialog.ui.tab_widget.setCurrentWidget(dialog.ui.appearance)
             dialog.show()
             self.qt_app.processEvents()
             QTest.mouseMove(dialog.ui.btn_icon_custom, QPoint(35, 5))
-            self.qt_app.processEvents()
+            # Windows delivers the native hover event asynchronously.
+            deadline = time.monotonic() + 1
+            while not dialog.ui.btn_icon_custom.underMouse() and time.monotonic() < deadline:
+                QTest.qWait(10)
             self.assertTrue(dialog.ui.btn_icon_custom.underMouse())
 
             QTest.mouseClick(

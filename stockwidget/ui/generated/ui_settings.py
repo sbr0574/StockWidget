@@ -15,14 +15,18 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QDialog,
-    QFontComboBox, QGridLayout, QGroupBox, QHBoxLayout,
-    QHeaderView, QLabel, QPushButton, QRadioButton,
-    QSizePolicy, QSlider, QSpinBox, QTabWidget,
-    QTableWidgetItem, QWidget)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComboBox,
+    QDialog, QFontComboBox, QFormLayout, QGridLayout,
+    QGroupBox, QHBoxLayout, QHeaderView, QLabel,
+    QListView, QListWidget, QListWidgetItem, QPushButton,
+    QRadioButton, QSizePolicy, QSlider, QSpacerItem,
+    QSpinBox, QTabWidget, QTableWidgetItem, QTimeEdit,
+    QVBoxLayout, QWidget)
 
 from stockwidget.ui.hotkey_sequence_edit import HotkeySequenceEdit
+from stockwidget.ui.hotkey_status import HotkeyStatus
 from stockwidget.ui.icon_button import CustomIconButton
+from stockwidget.ui.metric_pool import MetricPoolWidget
 from stockwidget.ui.watchlist_table import WatchlistTable
 
 class Ui_SettingDialog(object):
@@ -98,6 +102,15 @@ class Ui_SettingDialog(object):
         self.gb_data.setGeometry(QRect(350, 100, 201, 231))
         self.gb_data.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_data.setFlat(True)
+        self.floatMetricsLayout = QVBoxLayout(self.gb_data)
+        self.floatMetricsLayout.setSpacing(0)
+        self.floatMetricsLayout.setObjectName(u"floatMetricsLayout")
+        self.floatMetricsLayout.setContentsMargins(5, 20, 5, 5)
+        self.float_metric_pool = MetricPoolWidget(self.gb_data)
+        self.float_metric_pool.setObjectName(u"float_metric_pool")
+
+        self.floatMetricsLayout.addWidget(self.float_metric_pool)
+
         self.gb_data_setting = QGroupBox(self.data)
         self.gb_data_setting.setObjectName(u"gb_data_setting")
         self.gb_data_setting.setGeometry(QRect(350, 10, 201, 85))
@@ -122,127 +135,26 @@ class Ui_SettingDialog(object):
         self.rb_em.setObjectName(u"rb_em")
         self.rb_em.setGeometry(QRect(120, 25, 81, 26))
         self.tab_widget.addTab(self.data, "")
-        self.general = QWidget()
-        self.general.setObjectName(u"general")
-        self.gb_icon = QGroupBox(self.general)
-        self.gb_icon.setObjectName(u"gb_icon")
-        self.gb_icon.setGeometry(QRect(330, 10, 221, 71))
-        self.gb_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.gb_icon.setFlat(True)
-        self.horizontalLayout = QHBoxLayout(self.gb_icon)
-        self.horizontalLayout.setSpacing(3)
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.horizontalLayout.setContentsMargins(4, -1, 4, -1)
-        self.btn_icon_default = QPushButton(self.gb_icon)
-        self.btn_icon_default.setObjectName(u"btn_icon_default")
-        self.btn_icon_default.setMinimumSize(QSize(40, 40))
-        self.btn_icon_default.setMaximumSize(QSize(40, 40))
-        icon3 = QIcon()
-        icon3.addFile(u":/StockWidget.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.btn_icon_default.setIcon(icon3)
-        self.btn_icon_default.setIconSize(QSize(32, 32))
-        self.btn_icon_default.setCheckable(True)
-        self.btn_icon_default.setAutoExclusive(True)
-        self.btn_icon_default.setAutoDefault(False)
-        self.btn_icon_default.setFlat(True)
-
-        self.horizontalLayout.addWidget(self.btn_icon_default)
-
-        self.btn_icon_dark = QPushButton(self.gb_icon)
-        self.btn_icon_dark.setObjectName(u"btn_icon_dark")
-        self.btn_icon_dark.setMinimumSize(QSize(40, 40))
-        self.btn_icon_dark.setMaximumSize(QSize(40, 40))
-        icon4 = QIcon()
-        icon4.addFile(u":/DarkSW.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.btn_icon_dark.setIcon(icon4)
-        self.btn_icon_dark.setIconSize(QSize(32, 32))
-        self.btn_icon_dark.setCheckable(True)
-        self.btn_icon_dark.setAutoExclusive(True)
-        self.btn_icon_dark.setAutoDefault(False)
-        self.btn_icon_dark.setFlat(True)
-
-        self.horizontalLayout.addWidget(self.btn_icon_dark)
-
-        self.btn_icon_lightG = QPushButton(self.gb_icon)
-        self.btn_icon_lightG.setObjectName(u"btn_icon_lightG")
-        self.btn_icon_lightG.setMinimumSize(QSize(40, 40))
-        self.btn_icon_lightG.setMaximumSize(QSize(40, 40))
-        icon5 = QIcon()
-        icon5.addFile(u":/LightGlass.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.btn_icon_lightG.setIcon(icon5)
-        self.btn_icon_lightG.setIconSize(QSize(32, 32))
-        self.btn_icon_lightG.setCheckable(True)
-        self.btn_icon_lightG.setAutoExclusive(True)
-        self.btn_icon_lightG.setAutoDefault(False)
-        self.btn_icon_lightG.setFlat(True)
-
-        self.horizontalLayout.addWidget(self.btn_icon_lightG)
-
-        self.btn_icon_darkG = QPushButton(self.gb_icon)
-        self.btn_icon_darkG.setObjectName(u"btn_icon_darkG")
-        self.btn_icon_darkG.setEnabled(True)
-        self.btn_icon_darkG.setMinimumSize(QSize(40, 40))
-        self.btn_icon_darkG.setMaximumSize(QSize(40, 40))
-        icon6 = QIcon()
-        icon6.addFile(u":/DarkGlass.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.btn_icon_darkG.setIcon(icon6)
-        self.btn_icon_darkG.setIconSize(QSize(32, 32))
-        self.btn_icon_darkG.setCheckable(True)
-        self.btn_icon_darkG.setAutoExclusive(True)
-        self.btn_icon_darkG.setAutoDefault(False)
-        self.btn_icon_darkG.setFlat(True)
-
-        self.horizontalLayout.addWidget(self.btn_icon_darkG)
-
-        self.btn_icon_custom = CustomIconButton(self.gb_icon)
-        self.btn_icon_custom.setObjectName(u"btn_icon_custom")
-        self.btn_icon_custom.setMinimumSize(QSize(40, 40))
-        self.btn_icon_custom.setMaximumSize(QSize(40, 40))
-        self.btn_icon_custom.setIconSize(QSize(32, 32))
-        self.btn_icon_custom.setCheckable(True)
-        self.btn_icon_custom.setAutoExclusive(True)
-        self.btn_icon_custom.setAutoDefault(False)
-        self.btn_icon_custom.setFlat(True)
-
-        self.horizontalLayout.addWidget(self.btn_icon_custom)
-
-        self.gb_fcn = QGroupBox(self.general)
-        self.gb_fcn.setObjectName(u"gb_fcn")
-        self.gb_fcn.setGeometry(QRect(330, 85, 221, 111))
-        self.gb_fcn.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.gb_fcn.setFlat(True)
-        self.gridLayout = QGridLayout(self.gb_fcn)
-        self.gridLayout.setObjectName(u"gridLayout")
-        self.cb_grid = QCheckBox(self.gb_fcn)
-        self.cb_grid.setObjectName(u"cb_grid")
-
-        self.gridLayout.addWidget(self.cb_grid, 2, 0, 1, 1)
-
-        self.cb_head = QCheckBox(self.gb_fcn)
-        self.cb_head.setObjectName(u"cb_head")
-
-        self.gridLayout.addWidget(self.cb_head, 0, 0, 1, 1)
-
-        self.cb_auto_start = QCheckBox(self.gb_fcn)
-        self.cb_auto_start.setObjectName(u"cb_auto_start")
-
-        self.gridLayout.addWidget(self.cb_auto_start, 0, 1, 1, 1)
-
-        self.cb_force_top = QCheckBox(self.gb_fcn)
-        self.cb_force_top.setObjectName(u"cb_force_top")
-
-        self.gridLayout.addWidget(self.cb_force_top, 3, 0, 1, 1)
-
-        self.cb_click_through = QCheckBox(self.gb_fcn)
-        self.cb_click_through.setObjectName(u"cb_click_through")
-
-        self.gridLayout.addWidget(self.cb_click_through, 2, 1, 1, 1)
-
-        self.gb_color = QGroupBox(self.general)
+        self.appearance = QWidget()
+        self.appearance.setObjectName(u"appearance")
+        self.appearanceLayout = QVBoxLayout(self.appearance)
+        self.appearanceLayout.setSpacing(8)
+        self.appearanceLayout.setObjectName(u"appearanceLayout")
+        self.appearanceLayout.setContentsMargins(0, 0, 0, 0)
+        self.appearance_content = QWidget(self.appearance)
+        self.appearance_content.setObjectName(u"appearance_content")
+        self.appearanceGrid = QGridLayout(self.appearance_content)
+        self.appearanceGrid.setSpacing(8)
+        self.appearanceGrid.setObjectName(u"appearanceGrid")
+        self.appearanceGrid.setContentsMargins(8, 8, 8, 8)
+        self.floatStyleLayout = QVBoxLayout()
+        self.floatStyleLayout.setSpacing(8)
+        self.floatStyleLayout.setObjectName(u"floatStyleLayout")
+        self.gb_color = QGroupBox(self.appearance_content)
         self.gb_color.setObjectName(u"gb_color")
-        self.gb_color.setGeometry(QRect(10, 10, 301, 101))
         self.gb_color.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_color.setFlat(True)
+        self.gb_color.setMinimumSize(QSize(301, 0))
         self.gridLayout_4 = QGridLayout(self.gb_color)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.btn_up_color = QPushButton(self.gb_color)
@@ -321,11 +233,64 @@ class Ui_SettingDialog(object):
 
         self.gridLayout_4.addWidget(self.btn_bg_color, 0, 2, 1, 1)
 
-        self.gb_text = QGroupBox(self.general)
+
+        self.floatStyleLayout.addWidget(self.gb_color)
+
+        self.gb_opacity = QGroupBox(self.appearance_content)
+        self.gb_opacity.setObjectName(u"gb_opacity")
+        self.gb_opacity.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.gb_opacity.setFlat(True)
+        self.gb_opacity.setMinimumSize(QSize(301, 0))
+        self.gridLayout_3 = QGridLayout(self.gb_opacity)
+        self.gridLayout_3.setObjectName(u"gridLayout_3")
+        self.label_bg = QLabel(self.gb_opacity)
+        self.label_bg.setObjectName(u"label_bg")
+
+        self.gridLayout_3.addWidget(self.label_bg, 0, 0, 1, 1)
+
+        self.slider_bg_alpha = QSlider(self.gb_opacity)
+        self.slider_bg_alpha.setObjectName(u"slider_bg_alpha")
+        self.slider_bg_alpha.setMinimum(1)
+        self.slider_bg_alpha.setMaximum(100)
+        self.slider_bg_alpha.setValue(60)
+        self.slider_bg_alpha.setOrientation(Qt.Orientation.Horizontal)
+
+        self.gridLayout_3.addWidget(self.slider_bg_alpha, 0, 1, 1, 1)
+
+        self.label_bg_alpha = QLabel(self.gb_opacity)
+        self.label_bg_alpha.setObjectName(u"label_bg_alpha")
+        self.label_bg_alpha.setMinimumSize(QSize(40, 0))
+
+        self.gridLayout_3.addWidget(self.label_bg_alpha, 0, 2, 1, 1)
+
+        self.label_all = QLabel(self.gb_opacity)
+        self.label_all.setObjectName(u"label_all")
+
+        self.gridLayout_3.addWidget(self.label_all, 1, 0, 1, 1)
+
+        self.slider_all_alpha = QSlider(self.gb_opacity)
+        self.slider_all_alpha.setObjectName(u"slider_all_alpha")
+        self.slider_all_alpha.setMinimum(10)
+        self.slider_all_alpha.setMaximum(100)
+        self.slider_all_alpha.setValue(80)
+        self.slider_all_alpha.setOrientation(Qt.Orientation.Horizontal)
+
+        self.gridLayout_3.addWidget(self.slider_all_alpha, 1, 1, 1, 1)
+
+        self.label_all_alpha = QLabel(self.gb_opacity)
+        self.label_all_alpha.setObjectName(u"label_all_alpha")
+        self.label_all_alpha.setMinimumSize(QSize(40, 0))
+
+        self.gridLayout_3.addWidget(self.label_all_alpha, 1, 2, 1, 1)
+
+
+        self.floatStyleLayout.addWidget(self.gb_opacity)
+
+        self.gb_text = QGroupBox(self.appearance_content)
         self.gb_text.setObjectName(u"gb_text")
-        self.gb_text.setGeometry(QRect(10, 209, 301, 131))
         self.gb_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_text.setFlat(True)
+        self.gb_text.setMinimumSize(QSize(301, 0))
         self.gridLayout_2 = QGridLayout(self.gb_text)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.label_font = QLabel(self.gb_text)
@@ -382,11 +347,244 @@ class Ui_SettingDialog(object):
 
         self.gridLayout_2.addWidget(self.label_current_line_interval, 2, 2, 1, 1)
 
-        self.gb_hotkeys = QGroupBox(self.general)
+
+        self.floatStyleLayout.addWidget(self.gb_text)
+
+        self.floatStyleSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.floatStyleLayout.addItem(self.floatStyleSpacer)
+
+
+        self.appearanceGrid.addLayout(self.floatStyleLayout, 0, 0, 1, 1)
+
+        self.iconPagingLayout = QVBoxLayout()
+        self.iconPagingLayout.setSpacing(8)
+        self.iconPagingLayout.setObjectName(u"iconPagingLayout")
+        self.gb_icon = QGroupBox(self.appearance_content)
+        self.gb_icon.setObjectName(u"gb_icon")
+        self.gb_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.gb_icon.setFlat(True)
+        self.gb_icon.setMinimumSize(QSize(221, 71))
+        self.horizontalLayout = QHBoxLayout(self.gb_icon)
+        self.horizontalLayout.setSpacing(3)
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.horizontalLayout.setContentsMargins(4, -1, 4, -1)
+        self.btn_icon_default = QPushButton(self.gb_icon)
+        self.btn_icon_default.setObjectName(u"btn_icon_default")
+        self.btn_icon_default.setMinimumSize(QSize(40, 40))
+        self.btn_icon_default.setMaximumSize(QSize(40, 40))
+        icon3 = QIcon()
+        icon3.addFile(u":/StockWidget.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btn_icon_default.setIcon(icon3)
+        self.btn_icon_default.setIconSize(QSize(32, 32))
+        self.btn_icon_default.setCheckable(True)
+        self.btn_icon_default.setAutoExclusive(True)
+        self.btn_icon_default.setAutoDefault(False)
+        self.btn_icon_default.setFlat(True)
+
+        self.horizontalLayout.addWidget(self.btn_icon_default)
+
+        self.btn_icon_dark = QPushButton(self.gb_icon)
+        self.btn_icon_dark.setObjectName(u"btn_icon_dark")
+        self.btn_icon_dark.setMinimumSize(QSize(40, 40))
+        self.btn_icon_dark.setMaximumSize(QSize(40, 40))
+        icon4 = QIcon()
+        icon4.addFile(u":/DarkSW.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btn_icon_dark.setIcon(icon4)
+        self.btn_icon_dark.setIconSize(QSize(32, 32))
+        self.btn_icon_dark.setCheckable(True)
+        self.btn_icon_dark.setAutoExclusive(True)
+        self.btn_icon_dark.setAutoDefault(False)
+        self.btn_icon_dark.setFlat(True)
+
+        self.horizontalLayout.addWidget(self.btn_icon_dark)
+
+        self.btn_icon_lightG = QPushButton(self.gb_icon)
+        self.btn_icon_lightG.setObjectName(u"btn_icon_lightG")
+        self.btn_icon_lightG.setMinimumSize(QSize(40, 40))
+        self.btn_icon_lightG.setMaximumSize(QSize(40, 40))
+        icon5 = QIcon()
+        icon5.addFile(u":/LightGlass.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btn_icon_lightG.setIcon(icon5)
+        self.btn_icon_lightG.setIconSize(QSize(32, 32))
+        self.btn_icon_lightG.setCheckable(True)
+        self.btn_icon_lightG.setAutoExclusive(True)
+        self.btn_icon_lightG.setAutoDefault(False)
+        self.btn_icon_lightG.setFlat(True)
+
+        self.horizontalLayout.addWidget(self.btn_icon_lightG)
+
+        self.btn_icon_darkG = QPushButton(self.gb_icon)
+        self.btn_icon_darkG.setObjectName(u"btn_icon_darkG")
+        self.btn_icon_darkG.setEnabled(True)
+        self.btn_icon_darkG.setMinimumSize(QSize(40, 40))
+        self.btn_icon_darkG.setMaximumSize(QSize(40, 40))
+        icon6 = QIcon()
+        icon6.addFile(u":/DarkGlass.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btn_icon_darkG.setIcon(icon6)
+        self.btn_icon_darkG.setIconSize(QSize(32, 32))
+        self.btn_icon_darkG.setCheckable(True)
+        self.btn_icon_darkG.setAutoExclusive(True)
+        self.btn_icon_darkG.setAutoDefault(False)
+        self.btn_icon_darkG.setFlat(True)
+
+        self.horizontalLayout.addWidget(self.btn_icon_darkG)
+
+        self.btn_icon_custom = CustomIconButton(self.gb_icon)
+        self.btn_icon_custom.setObjectName(u"btn_icon_custom")
+        self.btn_icon_custom.setMinimumSize(QSize(40, 40))
+        self.btn_icon_custom.setMaximumSize(QSize(40, 40))
+        self.btn_icon_custom.setIconSize(QSize(32, 32))
+        self.btn_icon_custom.setCheckable(True)
+        self.btn_icon_custom.setAutoExclusive(True)
+        self.btn_icon_custom.setAutoDefault(False)
+        self.btn_icon_custom.setFlat(True)
+
+        self.horizontalLayout.addWidget(self.btn_icon_custom)
+
+
+        self.iconPagingLayout.addWidget(self.gb_icon)
+
+        self.iconAppearanceSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.iconPagingLayout.addItem(self.iconAppearanceSpacer)
+
+
+        self.appearanceGrid.addLayout(self.iconPagingLayout, 0, 1, 1, 1, Qt.AlignmentFlag.AlignTop)
+
+
+        self.appearanceLayout.addWidget(self.appearance_content)
+
+        self.tab_widget.addTab(self.appearance, "")
+        self.functions = QWidget()
+        self.functions.setObjectName(u"functions")
+        self.functionsLayout = QHBoxLayout(self.functions)
+        self.functionsLayout.setSpacing(8)
+        self.functionsLayout.setObjectName(u"functionsLayout")
+        self.functionsLayout.setContentsMargins(8, 8, 8, 8)
+        self.generalFunctionsLayout = QVBoxLayout()
+        self.generalFunctionsLayout.setSpacing(8)
+        self.generalFunctionsLayout.setObjectName(u"generalFunctionsLayout")
+        self.gb_fcn = QGroupBox(self.functions)
+        self.gb_fcn.setObjectName(u"gb_fcn")
+        self.gb_fcn.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.gb_fcn.setFlat(True)
+        self.gb_fcn.setMinimumSize(QSize(221, 111))
+        self.gridLayout = QGridLayout(self.gb_fcn)
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.cb_grid = QCheckBox(self.gb_fcn)
+        self.cb_grid.setObjectName(u"cb_grid")
+
+        self.gridLayout.addWidget(self.cb_grid, 2, 0, 1, 1)
+
+        self.cb_head = QCheckBox(self.gb_fcn)
+        self.cb_head.setObjectName(u"cb_head")
+
+        self.gridLayout.addWidget(self.cb_head, 0, 0, 1, 1)
+
+        self.cb_auto_start = QCheckBox(self.gb_fcn)
+        self.cb_auto_start.setObjectName(u"cb_auto_start")
+
+        self.gridLayout.addWidget(self.cb_auto_start, 0, 1, 1, 1)
+
+        self.cb_force_top = QCheckBox(self.gb_fcn)
+        self.cb_force_top.setObjectName(u"cb_force_top")
+
+        self.gridLayout.addWidget(self.cb_force_top, 3, 0, 1, 1)
+
+        self.cb_auto_hide = QCheckBox(self.gb_fcn)
+        self.cb_auto_hide.setObjectName(u"cb_auto_hide")
+
+        self.gridLayout.addWidget(self.cb_auto_hide, 3, 1, 1, 1)
+
+        self.cb_click_through = QCheckBox(self.gb_fcn)
+        self.cb_click_through.setObjectName(u"cb_click_through")
+
+        self.gridLayout.addWidget(self.cb_click_through, 2, 1, 1, 1)
+
+
+        self.generalFunctionsLayout.addWidget(self.gb_fcn)
+
+        self.floatRowsLayout = QVBoxLayout()
+        self.floatRowsLayout.setObjectName(u"floatRowsLayout")
+        self.float_row_settings = QGroupBox(self.functions)
+        self.float_row_settings.setObjectName(u"float_row_settings")
+        self.float_row_settings.setFlat(True)
+        self.float_row_settings.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.float_row_settings.setCheckable(True)
+        self.float_row_settings_outer = QVBoxLayout(self.float_row_settings)
+        self.float_row_settings_outer.setSpacing(4)
+        self.float_row_settings_outer.setObjectName(u"float_row_settings_outer")
+        self.float_row_settings_outer.setContentsMargins(6, 12, 6, 4)
+        self.float_row_settings_body = QWidget(self.float_row_settings)
+        self.float_row_settings_body.setObjectName(u"float_row_settings_body")
+        self.float_row_settings_layout = QFormLayout(self.float_row_settings_body)
+        self.float_row_settings_layout.setSpacing(4)
+        self.float_row_settings_layout.setObjectName(u"float_row_settings_layout")
+        self.float_row_settings_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        self.float_row_settings_layout.setContentsMargins(0, 0, 0, 0)
+        self.float_row_settings_layout_label_0 = QLabel(self.float_row_settings_body)
+        self.float_row_settings_layout_label_0.setObjectName(u"float_row_settings_layout_label_0")
+
+        self.float_row_settings_layout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.float_row_settings_layout_label_0)
+
+        self.float_max_rows = QSpinBox(self.float_row_settings_body)
+        self.float_max_rows.setObjectName(u"float_max_rows")
+        self.float_max_rows.setMinimum(1)
+        self.float_max_rows.setMaximum(1000)
+        self.float_max_rows.setValue(3)
+
+        self.float_row_settings_layout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.float_max_rows)
+
+
+        self.float_row_settings_outer.addWidget(self.float_row_settings_body)
+
+
+        self.floatRowsLayout.addWidget(self.float_row_settings)
+
+
+        self.generalFunctionsLayout.addLayout(self.floatRowsLayout)
+
+        self.float_split_settings = QGroupBox(self.functions)
+        self.float_split_settings.setObjectName(u"float_split_settings")
+        self.float_split_settings.setFlat(True)
+        self.float_split_settings.setCheckable(True)
+        self.float_split_settings.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.float_split_settings_outer = QVBoxLayout(self.float_split_settings)
+        self.float_split_settings_outer.setSpacing(4)
+        self.float_split_settings_outer.setObjectName(u"float_split_settings_outer")
+        self.float_split_settings_outer.setContentsMargins(6, 12, 6, 4)
+        self.float_split_settings_body = QWidget(self.float_split_settings)
+        self.float_split_settings_body.setObjectName(u"float_split_settings_body")
+        self.float_split_settings_layout = QHBoxLayout(self.float_split_settings_body)
+        self.float_split_settings_layout.setSpacing(6)
+        self.float_split_settings_layout.setObjectName(u"float_split_settings_layout")
+        self.float_split_settings_layout.setContentsMargins(0, 0, 0, 0)
+        self.float_split_separator = QCheckBox(self.float_split_settings_body)
+        self.float_split_separator.setObjectName(u"float_split_separator")
+
+        self.float_split_settings_layout.addWidget(self.float_split_separator)
+
+
+        self.float_split_settings_outer.addWidget(self.float_split_settings_body)
+
+
+        self.generalFunctionsLayout.addWidget(self.float_split_settings)
+
+        self.generalFunctionsSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.generalFunctionsLayout.addItem(self.generalFunctionsSpacer)
+
+
+        self.functionsLayout.addLayout(self.generalFunctionsLayout)
+
+        self.hotkeyFunctionsLayout = QVBoxLayout()
+        self.hotkeyFunctionsLayout.setObjectName(u"hotkeyFunctionsLayout")
+        self.gb_hotkeys = QGroupBox(self.functions)
         self.gb_hotkeys.setObjectName(u"gb_hotkeys")
-        self.gb_hotkeys.setGeometry(QRect(330, 200, 221, 135))
         self.gb_hotkeys.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.gb_hotkeys.setFlat(True)
+        self.gb_hotkeys.setMinimumSize(QSize(221, 135))
         self.cb_hotkey_hide = QCheckBox(self.gb_hotkeys)
         self.cb_hotkey_hide.setObjectName(u"cb_hotkey_hide")
         self.cb_hotkey_hide.setGeometry(QRect(10, 25, 131, 24))
@@ -399,54 +597,454 @@ class Ui_SettingDialog(object):
         self.keyseq_click_through = HotkeySequenceEdit(self.gb_hotkeys)
         self.keyseq_click_through.setObjectName(u"keyseq_click_through")
         self.keyseq_click_through.setGeometry(QRect(30, 105, 141, 25))
-        self.gb_opacity = QGroupBox(self.general)
-        self.gb_opacity.setObjectName(u"gb_opacity")
-        self.gb_opacity.setGeometry(QRect(10, 115, 301, 91))
-        self.gb_opacity.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.gb_opacity.setFlat(True)
-        self.gridLayout_3 = QGridLayout(self.gb_opacity)
-        self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.label_bg = QLabel(self.gb_opacity)
-        self.label_bg.setObjectName(u"label_bg")
+        self.hotkey_status = HotkeyStatus(self.gb_hotkeys)
+        self.hotkey_status.setObjectName(u"hotkey_status")
+        self.hotkey_status.setGeometry(QRect(179, 52, 18, 20))
+        self.hotkey_click_through_status = HotkeyStatus(self.gb_hotkeys)
+        self.hotkey_click_through_status.setObjectName(u"hotkey_click_through_status")
+        self.hotkey_click_through_status.setGeometry(QRect(179, 107, 18, 20))
 
-        self.gridLayout_3.addWidget(self.label_bg, 0, 0, 1, 1)
+        self.hotkeyFunctionsLayout.addWidget(self.gb_hotkeys)
 
-        self.slider_bg_alpha = QSlider(self.gb_opacity)
-        self.slider_bg_alpha.setObjectName(u"slider_bg_alpha")
-        self.slider_bg_alpha.setMinimum(1)
-        self.slider_bg_alpha.setMaximum(100)
-        self.slider_bg_alpha.setValue(60)
-        self.slider_bg_alpha.setOrientation(Qt.Orientation.Horizontal)
+        self.floatPagingLayout = QVBoxLayout()
+        self.floatPagingLayout.setObjectName(u"floatPagingLayout")
+        self.float_paging_settings = QGroupBox(self.functions)
+        self.float_paging_settings.setObjectName(u"float_paging_settings")
+        self.float_paging_settings.setFlat(True)
+        self.float_paging_settings.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.float_paging_settings_outer = QVBoxLayout(self.float_paging_settings)
+        self.float_paging_settings_outer.setSpacing(4)
+        self.float_paging_settings_outer.setObjectName(u"float_paging_settings_outer")
+        self.float_paging_settings_outer.setContentsMargins(6, 12, 6, 4)
+        self.float_paging_settings_body = QWidget(self.float_paging_settings)
+        self.float_paging_settings_body.setObjectName(u"float_paging_settings_body")
+        self.float_paging_settings_layout = QFormLayout(self.float_paging_settings_body)
+        self.float_paging_settings_layout.setSpacing(4)
+        self.float_paging_settings_layout.setObjectName(u"float_paging_settings_layout")
+        self.float_paging_settings_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        self.float_paging_settings_layout.setContentsMargins(0, 0, 0, 0)
+        self.float_paging_settings_layout_label_0 = QLabel(self.float_paging_settings_body)
+        self.float_paging_settings_layout_label_0.setObjectName(u"float_paging_settings_layout_label_0")
 
-        self.gridLayout_3.addWidget(self.slider_bg_alpha, 0, 1, 1, 1)
+        self.float_paging_settings_layout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.float_paging_settings_layout_label_0)
 
-        self.label_bg_alpha = QLabel(self.gb_opacity)
-        self.label_bg_alpha.setObjectName(u"label_bg_alpha")
-        self.label_bg_alpha.setMinimumSize(QSize(40, 0))
+        self.float_page_mode = QComboBox(self.float_paging_settings_body)
+        self.float_page_mode.addItem("")
+        self.float_page_mode.addItem("")
+        self.float_page_mode.addItem("")
+        self.float_page_mode.setObjectName(u"float_page_mode")
 
-        self.gridLayout_3.addWidget(self.label_bg_alpha, 0, 2, 1, 1)
+        self.float_paging_settings_layout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.float_page_mode)
 
-        self.label_all = QLabel(self.gb_opacity)
-        self.label_all.setObjectName(u"label_all")
+        self.float_paging_settings_layout_label_1 = QLabel(self.float_paging_settings_body)
+        self.float_paging_settings_layout_label_1.setObjectName(u"float_paging_settings_layout_label_1")
 
-        self.gridLayout_3.addWidget(self.label_all, 1, 0, 1, 1)
+        self.float_paging_settings_layout.setWidget(1, QFormLayout.ItemRole.LabelRole, self.float_paging_settings_layout_label_1)
 
-        self.slider_all_alpha = QSlider(self.gb_opacity)
-        self.slider_all_alpha.setObjectName(u"slider_all_alpha")
-        self.slider_all_alpha.setMinimum(10)
-        self.slider_all_alpha.setMaximum(100)
-        self.slider_all_alpha.setValue(80)
-        self.slider_all_alpha.setOrientation(Qt.Orientation.Horizontal)
+        self.float_page_interval = QSpinBox(self.float_paging_settings_body)
+        self.float_page_interval.setObjectName(u"float_page_interval")
+        self.float_page_interval.setMinimum(1)
+        self.float_page_interval.setMaximum(3600)
+        self.float_page_interval.setValue(5)
 
-        self.gridLayout_3.addWidget(self.slider_all_alpha, 1, 1, 1, 1)
+        self.float_paging_settings_layout.setWidget(1, QFormLayout.ItemRole.FieldRole, self.float_page_interval)
 
-        self.label_all_alpha = QLabel(self.gb_opacity)
-        self.label_all_alpha.setObjectName(u"label_all_alpha")
-        self.label_all_alpha.setMinimumSize(QSize(40, 0))
 
-        self.gridLayout_3.addWidget(self.label_all_alpha, 1, 2, 1, 1)
+        self.float_paging_settings_outer.addWidget(self.float_paging_settings_body)
 
-        self.tab_widget.addTab(self.general, "")
+
+        self.floatPagingLayout.addWidget(self.float_paging_settings)
+
+
+        self.hotkeyFunctionsLayout.addLayout(self.floatPagingLayout)
+
+        self.gb_scheduled_hide = QGroupBox(self.functions)
+        self.gb_scheduled_hide.setObjectName(u"gb_scheduled_hide")
+        self.gb_scheduled_hide.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.gb_scheduled_hide.setFlat(True)
+        self.gb_scheduled_hide.setCheckable(True)
+        self.gb_scheduled_hide.setChecked(False)
+        self.scheduledHideLayout = QVBoxLayout(self.gb_scheduled_hide)
+        self.scheduledHideLayout.setSpacing(3)
+        self.scheduledHideLayout.setObjectName(u"scheduledHideLayout")
+        self.scheduledHideLayout.setContentsMargins(6, 12, 6, 4)
+        self.scheduledHideEditLayout = QHBoxLayout()
+        self.scheduledHideEditLayout.setSpacing(4)
+        self.scheduledHideEditLayout.setObjectName(u"scheduledHideEditLayout")
+        self.hide_time_edit = QTimeEdit(self.gb_scheduled_hide)
+        self.hide_time_edit.setObjectName(u"hide_time_edit")
+        self.hide_time_edit.setTime(QTime(15, 0, 0))
+
+        self.scheduledHideEditLayout.addWidget(self.hide_time_edit)
+
+        self.btn_add_hide_time = QPushButton(self.gb_scheduled_hide)
+        self.btn_add_hide_time.setObjectName(u"btn_add_hide_time")
+        self.btn_add_hide_time.setAutoDefault(False)
+
+        self.scheduledHideEditLayout.addWidget(self.btn_add_hide_time)
+
+        self.btn_del_hide_time = QPushButton(self.gb_scheduled_hide)
+        self.btn_del_hide_time.setObjectName(u"btn_del_hide_time")
+        self.btn_del_hide_time.setAutoDefault(False)
+
+        self.scheduledHideEditLayout.addWidget(self.btn_del_hide_time)
+
+
+        self.scheduledHideLayout.addLayout(self.scheduledHideEditLayout)
+
+        self.list_hide_times = QListWidget(self.gb_scheduled_hide)
+        self.list_hide_times.setObjectName(u"list_hide_times")
+        self.list_hide_times.setMinimumSize(QSize(0, 28))
+        self.list_hide_times.setMaximumSize(QSize(16777215, 28))
+        self.list_hide_times.setFlow(QListView.Flow.LeftToRight)
+        self.list_hide_times.setSpacing(3)
+        self.list_hide_times.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.list_hide_times.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+        self.scheduledHideLayout.addWidget(self.list_hide_times)
+
+
+        self.hotkeyFunctionsLayout.addWidget(self.gb_scheduled_hide)
+
+        self.taskbarModeSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.hotkeyFunctionsLayout.addItem(self.taskbarModeSpacer)
+
+
+        self.functionsLayout.addLayout(self.hotkeyFunctionsLayout)
+
+        self.tab_widget.addTab(self.functions, "")
+        self.taskbar = QWidget()
+        self.taskbar.setObjectName(u"taskbar")
+        self.taskbarPageLayout = QVBoxLayout(self.taskbar)
+        self.taskbarPageLayout.setObjectName(u"taskbarPageLayout")
+        self.taskbarPageLayout.setContentsMargins(0, 0, 0, 0)
+        self.taskbar_content = QWidget(self.taskbar)
+        self.taskbar_content.setObjectName(u"taskbar_content")
+        self.taskbarLayout = QVBoxLayout(self.taskbar_content)
+        self.taskbarLayout.setObjectName(u"taskbarLayout")
+        self.taskbarLayout.setContentsMargins(6, 6, 6, 6)
+        self.taskbar_settings = QGroupBox(self.taskbar_content)
+        self.taskbar_settings.setObjectName(u"taskbar_settings")
+        self.taskbar_settings.setFlat(False)
+        self.taskbar_settings.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.taskbar_settings.setCheckable(True)
+        self.taskbar_settings_outer = QVBoxLayout(self.taskbar_settings)
+        self.taskbar_settings_outer.setSpacing(4)
+        self.taskbar_settings_outer.setObjectName(u"taskbar_settings_outer")
+        self.taskbar_settings_outer.setContentsMargins(6, 4, 6, 4)
+        self.taskbar_settings_body = QWidget(self.taskbar_settings)
+        self.taskbar_settings_body.setObjectName(u"taskbar_settings_body")
+        self.taskbar_settings_layout = QVBoxLayout(self.taskbar_settings_body)
+        self.taskbar_settings_layout.setSpacing(4)
+        self.taskbar_settings_layout.setObjectName(u"taskbar_settings_layout")
+        self.taskbar_settings_layout.setContentsMargins(0, 0, 0, 0)
+        self.taskbarColumns = QHBoxLayout()
+        self.taskbarColumns.setSpacing(8)
+        self.taskbarColumns.setObjectName(u"taskbarColumns")
+        self.taskbarColumns.setContentsMargins(0, 0, 0, 0)
+        self.taskbar_controls = QWidget(self.taskbar_settings_body)
+        self.taskbar_controls.setObjectName(u"taskbar_controls")
+        self.taskbarControlsLayout = QVBoxLayout(self.taskbar_controls)
+        self.taskbarControlsLayout.setSpacing(6)
+        self.taskbarControlsLayout.setObjectName(u"taskbarControlsLayout")
+        self.taskbarControlsLayout.setContentsMargins(0, 0, 0, 0)
+        self.taskbar_dual_open = QCheckBox(self.taskbar_controls)
+        self.taskbar_dual_open.setObjectName(u"taskbar_dual_open")
+
+        self.taskbarControlsLayout.addWidget(self.taskbar_dual_open)
+
+        self.taskbarLimitsLayout = QFormLayout()
+        self.taskbarLimitsLayout.setSpacing(6)
+        self.taskbarLimitsLayout.setObjectName(u"taskbarLimitsLayout")
+        self.taskbarLimitsLayout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        self.taskbarLimitsLayout.setContentsMargins(0, 0, 0, 0)
+        self.taskbarLimitsLayout_label_0 = QLabel(self.taskbar_controls)
+        self.taskbarLimitsLayout_label_0.setObjectName(u"taskbarLimitsLayout_label_0")
+
+        self.taskbarLimitsLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.taskbarLimitsLayout_label_0)
+
+        self.taskbar_rows = QSpinBox(self.taskbar_controls)
+        self.taskbar_rows.setObjectName(u"taskbar_rows")
+        self.taskbar_rows.setMinimum(1)
+        self.taskbar_rows.setMaximum(4)
+        self.taskbar_rows.setValue(2)
+
+        self.taskbarLimitsLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.taskbar_rows)
+
+        self.taskbarLimitsLayout_label_1 = QLabel(self.taskbar_controls)
+        self.taskbarLimitsLayout_label_1.setObjectName(u"taskbarLimitsLayout_label_1")
+
+        self.taskbarLimitsLayout.setWidget(1, QFormLayout.ItemRole.LabelRole, self.taskbarLimitsLayout_label_1)
+
+        self.taskbar_offset = QSpinBox(self.taskbar_controls)
+        self.taskbar_offset.setObjectName(u"taskbar_offset")
+        self.taskbar_offset.setMinimum(0)
+        self.taskbar_offset.setMaximum(2000)
+        self.taskbar_offset.setValue(0)
+
+        self.taskbarLimitsLayout.setWidget(1, QFormLayout.ItemRole.FieldRole, self.taskbar_offset)
+
+
+        self.taskbarControlsLayout.addLayout(self.taskbarLimitsLayout)
+
+        self.taskbar_style_settings = QGroupBox(self.taskbar_controls)
+        self.taskbar_style_settings.setObjectName(u"taskbar_style_settings")
+        self.taskbar_style_settings.setFlat(True)
+        self.taskbar_style_settings.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.taskbar_style_settings.setCheckable(True)
+        self.taskbar_style_settings_outer = QVBoxLayout(self.taskbar_style_settings)
+        self.taskbar_style_settings_outer.setSpacing(4)
+        self.taskbar_style_settings_outer.setObjectName(u"taskbar_style_settings_outer")
+        self.taskbar_style_settings_outer.setContentsMargins(6, 12, 6, 4)
+        self.taskbar_style_settings_body = QWidget(self.taskbar_style_settings)
+        self.taskbar_style_settings_body.setObjectName(u"taskbar_style_settings_body")
+        self.taskbar_style_settings_layout = QFormLayout(self.taskbar_style_settings_body)
+        self.taskbar_style_settings_layout.setSpacing(6)
+        self.taskbar_style_settings_layout.setObjectName(u"taskbar_style_settings_layout")
+        self.taskbar_style_settings_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        self.taskbar_style_settings_layout.setContentsMargins(0, 0, 0, 0)
+        self.taskbar_style_settings_layout_label_0 = QLabel(self.taskbar_style_settings_body)
+        self.taskbar_style_settings_layout_label_0.setObjectName(u"taskbar_style_settings_layout_label_0")
+
+        self.taskbar_style_settings_layout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.taskbar_style_settings_layout_label_0)
+
+        self.taskbar_font_family = QFontComboBox(self.taskbar_style_settings_body)
+        self.taskbar_font_family.setObjectName(u"taskbar_font_family")
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.taskbar_font_family.sizePolicy().hasHeightForWidth())
+        self.taskbar_font_family.setSizePolicy(sizePolicy4)
+
+        self.taskbar_style_settings_layout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.taskbar_font_family)
+
+        self.taskbar_style_settings_layout_label_1 = QLabel(self.taskbar_style_settings_body)
+        self.taskbar_style_settings_layout_label_1.setObjectName(u"taskbar_style_settings_layout_label_1")
+
+        self.taskbar_style_settings_layout.setWidget(1, QFormLayout.ItemRole.LabelRole, self.taskbar_style_settings_layout_label_1)
+
+        self.taskbar_font_size_layout = QHBoxLayout()
+        self.taskbar_font_size_layout.setSpacing(6)
+        self.taskbar_font_size_layout.setObjectName(u"taskbar_font_size_layout")
+        self.taskbar_font_size = QSlider(self.taskbar_style_settings_body)
+        self.taskbar_font_size.setObjectName(u"taskbar_font_size")
+        self.taskbar_font_size.setMinimum(5)
+        self.taskbar_font_size.setMaximum(30)
+        self.taskbar_font_size.setOrientation(Qt.Orientation.Horizontal)
+        self.taskbar_font_size.setValue(10)
+
+        self.taskbar_font_size_layout.addWidget(self.taskbar_font_size)
+
+        self.taskbar_font_size_label = QLabel(self.taskbar_style_settings_body)
+        self.taskbar_font_size_label.setObjectName(u"taskbar_font_size_label")
+        self.taskbar_font_size_label.setMinimumSize(QSize(38, 0))
+
+        self.taskbar_font_size_layout.addWidget(self.taskbar_font_size_label)
+
+
+        self.taskbar_style_settings_layout.setLayout(1, QFormLayout.ItemRole.FieldRole, self.taskbar_font_size_layout)
+
+        self.taskbar_style_settings_layout_label_3 = QLabel(self.taskbar_style_settings_body)
+        self.taskbar_style_settings_layout_label_3.setObjectName(u"taskbar_style_settings_layout_label_3")
+
+        self.taskbar_style_settings_layout.setWidget(3, QFormLayout.ItemRole.LabelRole, self.taskbar_style_settings_layout_label_3)
+
+        self.taskbar_opacity_pct_layout = QHBoxLayout()
+        self.taskbar_opacity_pct_layout.setSpacing(6)
+        self.taskbar_opacity_pct_layout.setObjectName(u"taskbar_opacity_pct_layout")
+        self.taskbar_opacity_pct = QSlider(self.taskbar_style_settings_body)
+        self.taskbar_opacity_pct.setObjectName(u"taskbar_opacity_pct")
+        self.taskbar_opacity_pct.setMinimum(0)
+        self.taskbar_opacity_pct.setMaximum(100)
+        self.taskbar_opacity_pct.setOrientation(Qt.Orientation.Horizontal)
+        self.taskbar_opacity_pct.setValue(100)
+
+        self.taskbar_opacity_pct_layout.addWidget(self.taskbar_opacity_pct)
+
+        self.taskbar_opacity_pct_label = QLabel(self.taskbar_style_settings_body)
+        self.taskbar_opacity_pct_label.setObjectName(u"taskbar_opacity_pct_label")
+        self.taskbar_opacity_pct_label.setMinimumSize(QSize(38, 0))
+
+        self.taskbar_opacity_pct_layout.addWidget(self.taskbar_opacity_pct_label)
+
+
+        self.taskbar_style_settings_layout.setLayout(3, QFormLayout.ItemRole.FieldRole, self.taskbar_opacity_pct_layout)
+
+        self.taskbar_style_settings_layout_label_2 = QLabel(self.taskbar_style_settings_body)
+        self.taskbar_style_settings_layout_label_2.setObjectName(u"taskbar_style_settings_layout_label_2")
+
+        self.taskbar_style_settings_layout.setWidget(2, QFormLayout.ItemRole.LabelRole, self.taskbar_style_settings_layout_label_2)
+
+        self.taskbarColorsLayout = QHBoxLayout()
+        self.taskbarColorsLayout.setSpacing(6)
+        self.taskbarColorsLayout.setObjectName(u"taskbarColorsLayout")
+        self.btn_taskbar_color = QPushButton(self.taskbar_style_settings_body)
+        self.btn_taskbar_color.setObjectName(u"btn_taskbar_color")
+        self.btn_taskbar_color.setFlat(True)
+        self.btn_taskbar_color.setAutoDefault(False)
+        self.btn_taskbar_color.setMinimumSize(QSize(60, 25))
+        self.btn_taskbar_color.setMaximumSize(QSize(60, 25))
+
+        self.taskbarColorsLayout.addWidget(self.btn_taskbar_color)
+
+        self.taskbar_unicolor = QCheckBox(self.taskbar_style_settings_body)
+        self.taskbar_unicolor.setObjectName(u"taskbar_unicolor")
+
+        self.taskbarColorsLayout.addWidget(self.taskbar_unicolor)
+
+        self.taskbarColorsSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.taskbarColorsLayout.addItem(self.taskbarColorsSpacer)
+
+
+        self.taskbar_style_settings_layout.setLayout(2, QFormLayout.ItemRole.FieldRole, self.taskbarColorsLayout)
+
+
+        self.taskbar_style_settings_outer.addWidget(self.taskbar_style_settings_body)
+
+
+        self.taskbarControlsLayout.addWidget(self.taskbar_style_settings)
+
+        self.taskbar_paging_settings = QGroupBox(self.taskbar_controls)
+        self.taskbar_paging_settings.setObjectName(u"taskbar_paging_settings")
+        self.taskbar_paging_settings.setFlat(True)
+        self.taskbar_paging_settings.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.taskbar_paging_settings.setCheckable(True)
+        self.taskbar_paging_settings_outer = QVBoxLayout(self.taskbar_paging_settings)
+        self.taskbar_paging_settings_outer.setSpacing(4)
+        self.taskbar_paging_settings_outer.setObjectName(u"taskbar_paging_settings_outer")
+        self.taskbar_paging_settings_outer.setContentsMargins(6, 12, 6, 4)
+        self.taskbar_paging_settings_body = QWidget(self.taskbar_paging_settings)
+        self.taskbar_paging_settings_body.setObjectName(u"taskbar_paging_settings_body")
+        self.taskbar_paging_settings_layout = QFormLayout(self.taskbar_paging_settings_body)
+        self.taskbar_paging_settings_layout.setSpacing(6)
+        self.taskbar_paging_settings_layout.setObjectName(u"taskbar_paging_settings_layout")
+        self.taskbar_paging_settings_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        self.taskbar_paging_settings_layout.setContentsMargins(0, 0, 0, 0)
+        self.taskbar_paging_settings_layout_label_0 = QLabel(self.taskbar_paging_settings_body)
+        self.taskbar_paging_settings_layout_label_0.setObjectName(u"taskbar_paging_settings_layout_label_0")
+
+        self.taskbar_paging_settings_layout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.taskbar_paging_settings_layout_label_0)
+
+        self.taskbar_page_mode = QComboBox(self.taskbar_paging_settings_body)
+        self.taskbar_page_mode.addItem("")
+        self.taskbar_page_mode.addItem("")
+        self.taskbar_page_mode.addItem("")
+        self.taskbar_page_mode.setObjectName(u"taskbar_page_mode")
+
+        self.taskbar_paging_settings_layout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.taskbar_page_mode)
+
+        self.taskbar_paging_settings_layout_label_1 = QLabel(self.taskbar_paging_settings_body)
+        self.taskbar_paging_settings_layout_label_1.setObjectName(u"taskbar_paging_settings_layout_label_1")
+
+        self.taskbar_paging_settings_layout.setWidget(1, QFormLayout.ItemRole.LabelRole, self.taskbar_paging_settings_layout_label_1)
+
+        self.taskbar_page_interval = QSpinBox(self.taskbar_paging_settings_body)
+        self.taskbar_page_interval.setObjectName(u"taskbar_page_interval")
+        self.taskbar_page_interval.setMinimum(1)
+        self.taskbar_page_interval.setMaximum(3600)
+        self.taskbar_page_interval.setValue(5)
+
+        self.taskbar_paging_settings_layout.setWidget(1, QFormLayout.ItemRole.FieldRole, self.taskbar_page_interval)
+
+
+        self.taskbar_paging_settings_outer.addWidget(self.taskbar_paging_settings_body)
+
+
+        self.taskbarControlsLayout.addWidget(self.taskbar_paging_settings)
+
+        self.taskbarControlsSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.taskbarControlsLayout.addItem(self.taskbarControlsSpacer)
+
+
+        self.taskbarColumns.addWidget(self.taskbar_controls)
+
+        self.taskbarRightLayout = QVBoxLayout()
+        self.taskbarRightLayout.setSpacing(4)
+        self.taskbarRightLayout.setObjectName(u"taskbarRightLayout")
+        self.taskbar_metric_settings = QGroupBox(self.taskbar_settings_body)
+        self.taskbar_metric_settings.setObjectName(u"taskbar_metric_settings")
+        self.taskbar_metric_settings.setFlat(True)
+        self.taskbar_metric_settings.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.taskbar_metric_settings.setCheckable(True)
+        self.taskbar_metric_settings_outer = QVBoxLayout(self.taskbar_metric_settings)
+        self.taskbar_metric_settings_outer.setSpacing(4)
+        self.taskbar_metric_settings_outer.setObjectName(u"taskbar_metric_settings_outer")
+        self.taskbar_metric_settings_outer.setContentsMargins(6, 12, 6, 4)
+        self.taskbar_metric_settings_body = QWidget(self.taskbar_metric_settings)
+        self.taskbar_metric_settings_body.setObjectName(u"taskbar_metric_settings_body")
+        self.taskbar_metric_settings_layout = QVBoxLayout(self.taskbar_metric_settings_body)
+        self.taskbar_metric_settings_layout.setSpacing(4)
+        self.taskbar_metric_settings_layout.setObjectName(u"taskbar_metric_settings_layout")
+        self.taskbar_metric_settings_layout.setContentsMargins(0, 0, 0, 0)
+        self.taskbar_metric_pool = MetricPoolWidget(self.taskbar_metric_settings_body)
+        self.taskbar_metric_pool.setObjectName(u"taskbar_metric_pool")
+        self.taskbar_metric_pool.setMinimumSize(QSize(0, 146))
+        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+        sizePolicy5.setHorizontalStretch(0)
+        sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.taskbar_metric_pool.sizePolicy().hasHeightForWidth())
+        self.taskbar_metric_pool.setSizePolicy(sizePolicy5)
+
+        self.taskbar_metric_settings_layout.addWidget(self.taskbar_metric_pool)
+
+
+        self.taskbar_metric_settings_outer.addWidget(self.taskbar_metric_settings_body)
+
+
+        self.taskbarRightLayout.addWidget(self.taskbar_metric_settings)
+
+        self.taskbar_split_settings = QGroupBox(self.taskbar_settings_body)
+        self.taskbar_split_settings.setObjectName(u"taskbar_split_settings")
+        self.taskbar_split_settings.setFlat(True)
+        self.taskbar_split_settings.setCheckable(True)
+        self.taskbar_split_settings.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.taskbar_split_settings_outer = QVBoxLayout(self.taskbar_split_settings)
+        self.taskbar_split_settings_outer.setSpacing(4)
+        self.taskbar_split_settings_outer.setObjectName(u"taskbar_split_settings_outer")
+        self.taskbar_split_settings_outer.setContentsMargins(6, 12, 6, 4)
+        self.taskbar_split_settings_body = QWidget(self.taskbar_split_settings)
+        self.taskbar_split_settings_body.setObjectName(u"taskbar_split_settings_body")
+        self.taskbar_split_settings_layout = QHBoxLayout(self.taskbar_split_settings_body)
+        self.taskbar_split_settings_layout.setSpacing(6)
+        self.taskbar_split_settings_layout.setObjectName(u"taskbar_split_settings_layout")
+        self.taskbar_split_settings_layout.setContentsMargins(0, 0, 0, 0)
+        self.taskbar_split_enabled = QCheckBox(self.taskbar_split_settings_body)
+        self.taskbar_split_enabled.setObjectName(u"taskbar_split_enabled")
+
+        self.taskbar_split_settings_layout.addWidget(self.taskbar_split_enabled)
+
+        self.taskbar_split_separator = QCheckBox(self.taskbar_split_settings_body)
+        self.taskbar_split_separator.setObjectName(u"taskbar_split_separator")
+
+        self.taskbar_split_settings_layout.addWidget(self.taskbar_split_separator)
+
+
+        self.taskbar_split_settings_outer.addWidget(self.taskbar_split_settings_body)
+
+
+        self.taskbarRightLayout.addWidget(self.taskbar_split_settings)
+
+
+        self.taskbarColumns.addLayout(self.taskbarRightLayout)
+
+        self.taskbarColumns.setStretch(0, 1)
+        self.taskbarColumns.setStretch(1, 1)
+
+        self.taskbar_settings_layout.addLayout(self.taskbarColumns)
+
+
+        self.taskbar_settings_outer.addWidget(self.taskbar_settings_body)
+
+
+        self.taskbarLayout.addWidget(self.taskbar_settings)
+
+
+        self.taskbarPageLayout.addWidget(self.taskbar_content)
+
+        self.tab_widget.addTab(self.taskbar, "")
         self.about = QWidget()
         self.about.setObjectName(u"about")
         self.gb_about = QGroupBox(self.about)
@@ -517,6 +1115,25 @@ class Ui_SettingDialog(object):
         self.rb_sina.setText(QCoreApplication.translate("SettingDialog", u"\u65b0\u6d6a", None))
         self.rb_em.setText(QCoreApplication.translate("SettingDialog", u"\u4e1c\u65b9\u8d22\u5bcc", None))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.data), QCoreApplication.translate("SettingDialog", u"\u6570\u636e", None))
+        self.gb_color.setTitle(QCoreApplication.translate("SettingDialog", u"\u989c\u8272\u7ba1\u7406", None))
+        self.btn_up_color.setText(QCoreApplication.translate("SettingDialog", u"\u4e0a\u6da8", None))
+        self.btn_neutral_color.setText(QCoreApplication.translate("SettingDialog", u"\u4e2d\u6027", None))
+        self.btn_down_color.setText(QCoreApplication.translate("SettingDialog", u"\u4e0b\u8dcc", None))
+        self.btn_fg_color.setText(QCoreApplication.translate("SettingDialog", u"\u6587\u5b57", None))
+        self.cb_unicolor.setText(QCoreApplication.translate("SettingDialog", u"\u7edf\u4e00\u989c\u8272", None))
+        self.label.setText(QCoreApplication.translate("SettingDialog", u"\u4e3b\u989c\u8272\uff1a", None))
+        self.btn_bg_color.setText(QCoreApplication.translate("SettingDialog", u"\u80cc\u666f", None))
+        self.gb_opacity.setTitle(QCoreApplication.translate("SettingDialog", u"\u4e0d\u900f\u660e\u5ea6", None))
+        self.label_bg.setText(QCoreApplication.translate("SettingDialog", u"\u80cc\u666f\uff1a", None))
+        self.label_bg_alpha.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
+        self.label_all.setText(QCoreApplication.translate("SettingDialog", u"\u6574\u4f53\u7a97\u53e3\uff1a", None))
+        self.label_all_alpha.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
+        self.gb_text.setTitle(QCoreApplication.translate("SettingDialog", u"\u5b57\u4f53\u4e0e\u884c\u8ddd", None))
+        self.label_font.setText(QCoreApplication.translate("SettingDialog", u"\u5b57\u4f53\u6837\u5f0f\uff1a", None))
+        self.label_font_size.setText(QCoreApplication.translate("SettingDialog", u"\u5b57\u4f53\u5927\u5c0f\uff1a", None))
+        self.label_current_font_size.setText(QCoreApplication.translate("SettingDialog", u"00 pt", None))
+        self.label_line_interval.setText(QCoreApplication.translate("SettingDialog", u"\u884c\u95f4\u8ddd\uff1a", None))
+        self.label_current_line_interval.setText(QCoreApplication.translate("SettingDialog", u"+0 px", None))
         self.gb_icon.setTitle(QCoreApplication.translate("SettingDialog", u"\u56fe\u6807\u9009\u62e9", None))
 #if QT_CONFIG(tooltip)
         self.btn_icon_default.setToolTip(QCoreApplication.translate("SettingDialog", u"\u9ed8\u8ba4\u56fe\u6807", None))
@@ -538,35 +1155,90 @@ class Ui_SettingDialog(object):
         self.btn_icon_custom.setToolTip(QCoreApplication.translate("SettingDialog", u"\u9009\u62e9\u81ea\u5b9a\u4e49\u56fe\u6807", None))
 #endif // QT_CONFIG(tooltip)
         self.btn_icon_custom.setText(QCoreApplication.translate("SettingDialog", u"+", None))
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.appearance), QCoreApplication.translate("SettingDialog", u"\u5916\u89c2", None))
         self.gb_fcn.setTitle(QCoreApplication.translate("SettingDialog", u"\u529f\u80fd", None))
         self.cb_grid.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u7f51\u683c", None))
         self.cb_head.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u8868\u5934", None))
         self.cb_auto_start.setText(QCoreApplication.translate("SettingDialog", u"\u5f00\u673a\u542f\u52a8", None))
         self.cb_force_top.setText(QCoreApplication.translate("SettingDialog", u"\u5f3a\u5236\u7f6e\u9876", None))
+        self.cb_auto_hide.setText(QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8\u9690\u85cf", None))
+#if QT_CONFIG(tooltip)
+        self.cb_auto_hide.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5237\u65b0\u65f6\uff0c\u6240\u6709\u52fe\u9009\u6807\u7684\u7684\u884c\u60c5\u65f6\u95f4\u5747\u8d85\u8fc730\u79d2\u5219\u9690\u85cf\u6d6e\u7a97\u548c\u4efb\u52a1\u680f\u3002\u65b0\u6d6a\u4e0e\u4e1c\u8d22\u5747\u652f\u6301\uff1b\u7f3a\u5931\u65f6\u95f4\u6216\u8bf7\u6c42\u5931\u8d25\u4e0d\u89e6\u53d1\u3002\u624b\u52a8\u547c\u51fa\u540e\u4f1a\u63d0\u793a\u5e76\u5012\u8ba1\u65f65\u79d2\uff1b\u65b0\u884c\u60c5\u5230\u8fbe\u4f1a\u53d6\u6d88\u5012\u8ba1\u65f6\u3002\u5b9a\u65f6\u9690\u85cf\u4ecd\u540c\u65f6\u751f\u6548\u3002", None))
+#endif // QT_CONFIG(tooltip)
         self.cb_click_through.setText(QCoreApplication.translate("SettingDialog", u"\u9f20\u6807\u7a7f\u900f", None))
-        self.gb_color.setTitle(QCoreApplication.translate("SettingDialog", u"\u989c\u8272\u7ba1\u7406", None))
-        self.btn_up_color.setText(QCoreApplication.translate("SettingDialog", u"\u4e0a\u6da8", None))
-        self.btn_neutral_color.setText(QCoreApplication.translate("SettingDialog", u"\u4e2d\u6027", None))
-        self.btn_down_color.setText(QCoreApplication.translate("SettingDialog", u"\u4e0b\u8dcc", None))
-        self.btn_fg_color.setText(QCoreApplication.translate("SettingDialog", u"\u6587\u5b57", None))
-        self.cb_unicolor.setText(QCoreApplication.translate("SettingDialog", u"\u7edf\u4e00\u989c\u8272", None))
-        self.label.setText(QCoreApplication.translate("SettingDialog", u"\u4e3b\u989c\u8272\uff1a", None))
-        self.btn_bg_color.setText(QCoreApplication.translate("SettingDialog", u"\u80cc\u666f", None))
-        self.gb_text.setTitle(QCoreApplication.translate("SettingDialog", u"\u5b57\u4f53\u4e0e\u884c\u8ddd", None))
-        self.label_font.setText(QCoreApplication.translate("SettingDialog", u"\u5b57\u4f53\u6837\u5f0f\uff1a", None))
-        self.label_font_size.setText(QCoreApplication.translate("SettingDialog", u"\u5b57\u4f53\u5927\u5c0f\uff1a", None))
-        self.label_current_font_size.setText(QCoreApplication.translate("SettingDialog", u"00 pt", None))
-        self.label_line_interval.setText(QCoreApplication.translate("SettingDialog", u"\u884c\u95f4\u8ddd\uff1a", None))
-        self.label_current_line_interval.setText(QCoreApplication.translate("SettingDialog", u"+0 px", None))
+        self.float_row_settings.setTitle(QCoreApplication.translate("SettingDialog", u"\u9650\u5236\u884c\u6570", None))
+        self.float_row_settings_layout_label_0.setText(QCoreApplication.translate("SettingDialog", u"\u6700\u5927\u884c\u6570", None))
+        self.float_max_rows.setSuffix(QCoreApplication.translate("SettingDialog", u" \u884c", None))
+#if QT_CONFIG(tooltip)
+        self.float_max_rows.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6bcf\u680f\u6700\u591a\u663e\u793a\u7684\u884c\u6570\uff1b\u5206\u680f\u65f6\u6bcf\u9875\u6700\u591a\u663e\u793a\u4e24\u500d\u6570\u91cf\u7684\u6807\u7684\u3002", None))
+#endif // QT_CONFIG(tooltip)
+        self.float_split_settings.setTitle(QCoreApplication.translate("SettingDialog", u"\u5206\u680f", None))
+#if QT_CONFIG(tooltip)
+        self.float_split_settings.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6309\u5f53\u524d\u9875\u5747\u5206\u4e3a\u5de6\u53f3\u4e24\u680f\uff1b\u5947\u6570\u65f6\u5de6\u680f\u591a\u4e00\u6761\u3002\u884c\u6570\u9650\u5236\u6309\u6bcf\u680f\u8ba1\u7b97\u3002", None))
+#endif // QT_CONFIG(tooltip)
+        self.float_split_separator.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u5206\u9694\u7ebf", None))
         self.gb_hotkeys.setTitle(QCoreApplication.translate("SettingDialog", u"\u5feb\u6377\u952e", None))
-        self.cb_hotkey_hide.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a/\u9690\u85cf\u6d6e\u7a97", None))
+        self.cb_hotkey_hide.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a / \u9690\u85cf\u884c\u60c5", None))
         self.cb_hotkey_click_through.setText(QCoreApplication.translate("SettingDialog", u"\u9f20\u6807\u7a7f\u900f", None))
-        self.gb_opacity.setTitle(QCoreApplication.translate("SettingDialog", u"\u4e0d\u900f\u660e\u5ea6", None))
-        self.label_bg.setText(QCoreApplication.translate("SettingDialog", u"\u80cc\u666f\uff1a", None))
-        self.label_bg_alpha.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
-        self.label_all.setText(QCoreApplication.translate("SettingDialog", u"\u6574\u4f53\u7a97\u53e3\uff1a", None))
-        self.label_all_alpha.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
-        self.tab_widget.setTabText(self.tab_widget.indexOf(self.general), QCoreApplication.translate("SettingDialog", u"\u901a\u7528", None))
+        self.float_paging_settings.setTitle(QCoreApplication.translate("SettingDialog", u"\u7ffb\u9875", None))
+        self.float_paging_settings_layout_label_0.setText(QCoreApplication.translate("SettingDialog", u"\u7ffb\u9875\u65b9\u5f0f", None))
+        self.float_page_mode.setItemText(0, QCoreApplication.translate("SettingDialog", u"\u4e0d\u7ffb\u9875", None))
+        self.float_page_mode.setItemText(1, QCoreApplication.translate("SettingDialog", u"\u624b\u52a8\u7ffb\u9875", None))
+        self.float_page_mode.setItemText(2, QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8\u7ffb\u9875", None))
+
+        self.float_paging_settings_layout_label_1.setText(QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8\u95f4\u9694", None))
+        self.float_page_interval.setSuffix(QCoreApplication.translate("SettingDialog", u" \u79d2", None))
+        self.gb_scheduled_hide.setTitle(QCoreApplication.translate("SettingDialog", u"\u5b9a\u65f6\u9690\u85cf", None))
+#if QT_CONFIG(tooltip)
+        self.gb_scheduled_hide.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6700\u591a\u6dfb\u52a03\u4e2a\u6bcf\u65e5\u9690\u85cf\u65f6\u95f4\uff0c\u6309\u7535\u8111\u672c\u5730\u65f6\u95f4\u7cbe\u786e\u5230\u5206\u949f\u3002\u5230\u65f6\u9690\u85cf\u6d6e\u7a97\u4e0e\u4efb\u52a1\u680f\uff1b\u5f53\u5206\u949f\u624b\u52a8\u547c\u51fa\u4e0d\u4f1a\u518d\u6b21\u9690\u85cf\u3002\u5173\u95ed\u65f6\u4fdd\u7559\u5df2\u8bbe\u65f6\u95f4\u3002", None))
+#endif // QT_CONFIG(tooltip)
+        self.hide_time_edit.setDisplayFormat(QCoreApplication.translate("SettingDialog", u"HH:mm", None))
+#if QT_CONFIG(tooltip)
+        self.hide_time_edit.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6bcf\u65e5\u9690\u85cf\u65f6\u95f4\uff0824\u5c0f\u65f6\u5236\uff09", None))
+#endif // QT_CONFIG(tooltip)
+        self.btn_add_hide_time.setText(QCoreApplication.translate("SettingDialog", u"\u6dfb\u52a0", None))
+        self.btn_del_hide_time.setText(QCoreApplication.translate("SettingDialog", u"\u5220\u9664", None))
+#if QT_CONFIG(tooltip)
+        self.btn_del_hide_time.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5220\u9664\u9009\u4e2d\u7684\u5b9a\u65f6\u9690\u85cf\u65f6\u95f4", None))
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.list_hide_times.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5355\u51fb\u9009\u4e2d\u65f6\u95f4\u540e\u53ef\u5220\u9664\uff0c\u6700\u591a3\u4e2a\u65f6\u95f4\uff0c\u6bcf\u65e5\u91cd\u590d\u3002", None))
+#endif // QT_CONFIG(tooltip)
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.functions), QCoreApplication.translate("SettingDialog", u"\u529f\u80fd", None))
+        self.taskbar_settings.setTitle(QCoreApplication.translate("SettingDialog", u"\u542f\u7528\u4efb\u52a1\u680f\u6a21\u5f0f", None))
+        self.taskbar_dual_open.setText(QCoreApplication.translate("SettingDialog", u"\u6d6e\u7a97\u4e0e\u4efb\u52a1\u680f\u540c\u65f6\u663e\u793a", None))
+        self.taskbarLimitsLayout_label_0.setText(QCoreApplication.translate("SettingDialog", u"\u884c\u6570\u9650\u5236", None))
+        self.taskbar_rows.setSuffix(QCoreApplication.translate("SettingDialog", u" \u884c", None))
+#if QT_CONFIG(tooltip)
+        self.taskbar_rows.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6bcf\u680f\u6700\u591a\u663e\u793a\u7684\u884c\u6570\uff1b\u5206\u680f\u65f6\u6bcf\u9875\u6700\u591a\u663e\u793a\u4e24\u500d\u6570\u91cf\u7684\u6807\u7684\u3002", None))
+#endif // QT_CONFIG(tooltip)
+        self.taskbarLimitsLayout_label_1.setText(QCoreApplication.translate("SettingDialog", u"\u504f\u79fb\u91cf", None))
+        self.taskbar_offset.setSuffix(QCoreApplication.translate("SettingDialog", u" px", None))
+        self.taskbar_style_settings.setTitle(QCoreApplication.translate("SettingDialog", u"\u540c\u6b65\u6d6e\u7a97\u5916\u89c2", None))
+        self.taskbar_style_settings_layout_label_0.setText(QCoreApplication.translate("SettingDialog", u"\u5b57\u4f53", None))
+        self.taskbar_style_settings_layout_label_1.setText(QCoreApplication.translate("SettingDialog", u"\u5b57\u53f7", None))
+        self.taskbar_font_size_label.setText(QCoreApplication.translate("SettingDialog", u"10 pt", None))
+        self.taskbar_style_settings_layout_label_3.setText(QCoreApplication.translate("SettingDialog", u"\u4e0d\u900f\u660e\u5ea6", None))
+        self.taskbar_opacity_pct_label.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
+        self.taskbar_style_settings_layout_label_2.setText(QCoreApplication.translate("SettingDialog", u"\u989c\u8272", None))
+        self.btn_taskbar_color.setText(QCoreApplication.translate("SettingDialog", u"\u6587\u5b57", None))
+        self.taskbar_unicolor.setText(QCoreApplication.translate("SettingDialog", u"\u7edf\u4e00\u989c\u8272", None))
+        self.taskbar_paging_settings.setTitle(QCoreApplication.translate("SettingDialog", u"\u540c\u6b65\u6d6e\u7a97\u7ffb\u9875", None))
+        self.taskbar_paging_settings_layout_label_0.setText(QCoreApplication.translate("SettingDialog", u"\u7ffb\u9875\u65b9\u5f0f", None))
+        self.taskbar_page_mode.setItemText(0, QCoreApplication.translate("SettingDialog", u"\u4e0d\u7ffb\u9875", None))
+        self.taskbar_page_mode.setItemText(1, QCoreApplication.translate("SettingDialog", u"\u624b\u52a8\u7ffb\u9875", None))
+        self.taskbar_page_mode.setItemText(2, QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8\u7ffb\u9875", None))
+
+        self.taskbar_paging_settings_layout_label_1.setText(QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8\u95f4\u9694", None))
+        self.taskbar_page_interval.setSuffix(QCoreApplication.translate("SettingDialog", u" \u79d2", None))
+        self.taskbar_metric_settings.setTitle(QCoreApplication.translate("SettingDialog", u"\u540c\u6b65\u6d6e\u7a97\u6307\u6807", None))
+        self.taskbar_split_settings.setTitle(QCoreApplication.translate("SettingDialog", u"\u540c\u6b65\u6d6e\u7a97\u5206\u680f", None))
+#if QT_CONFIG(tooltip)
+        self.taskbar_split_settings.setToolTip(QCoreApplication.translate("SettingDialog", u"\u52fe\u9009\u65f6\u8ddf\u968f\u6d6e\u7a97\u7684\u5206\u680f\u4e0e\u5206\u9694\u7ebf\uff1b\u53d6\u6d88\u540e\u7f16\u8f91\u72ec\u7acb\u8bbe\u7f6e\uff0c\u72ec\u7acb\u53c2\u6570\u4f1a\u4fdd\u7559\u3002", None))
+#endif // QT_CONFIG(tooltip)
+        self.taskbar_split_enabled.setText(QCoreApplication.translate("SettingDialog", u"\u542f\u7528\u5206\u680f", None))
+        self.taskbar_split_separator.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u5206\u9694\u7ebf", None))
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.taskbar), QCoreApplication.translate("SettingDialog", u"\u4efb\u52a1\u680f", None))
         self.gb_about.setTitle(QCoreApplication.translate("SettingDialog", u"StockWidget - \u6781\u7b80\u684c\u9762\u76ef\u76d8", None))
         self.label_version_state.setText(QCoreApplication.translate("SettingDialog", u"\U0001f4e6 \U00005f53\U0000524d\U00007a0b\U00005e8f\U00007248\U0000672c", None))
         self.label_about_info.setText("")

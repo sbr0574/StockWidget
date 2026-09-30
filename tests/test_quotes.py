@@ -110,6 +110,34 @@ class EastmoneyQuoteTests(unittest.TestCase):
         response.json.return_value = payload
         return response
 
+    def test_quote_timestamp_is_requested_and_normalized_for_each_market(self):
+        instruments = {"sh600000": {"market": "sh", "code": "600000"},
+                       "hk00700": {"market": "hk", "code": "00700"},
+                       "usaapl": {"market": "us", "code": "aapl"},
+                       "au0": {"market": "sh", "code": "au0", "type": "期"}}
+        response = self._response({"data": {"diff": [
+            {"f12": code, "f13": market, "f124": 1790753121}
+            for code, market in (("600000", 1), ("00700", 116), ("AAPL", 105), ("aum", 113))
+        ]}})
+        with patch.object(quotes.requests, "get", return_value=response) as request:
+            _, data = quotes.request_eastmoney(instruments)
+        self.assertIn("f124", request.call_args.kwargs["params"]["fields"].split(","))
+        for key in instruments:
+            self.assertEqual(data[key]["timestamp"], 1790753121)
+            self.assertEqual(data[key]["date"], "2026-09-30")
+            self.assertEqual(data[key]["time"], "15:25:21")
+
+    def test_missing_or_invalid_quote_time_is_not_replaced_by_request_time(self):
+        for invalid in (None, "-", 0, "bad", 1e99):
+            with self.subTest(invalid=invalid):
+                response = self._response({"data": {"diff": [
+                    {"f12": "600000", "f13": 1, "f124": invalid}
+                ]}})
+                with patch.object(quotes.requests, "get", return_value=response):
+                    _, data = quotes.request_eastmoney({"sh600000": {"market": "sh", "code": "600000"}})
+                self.assertIsNone(data["sh600000"]["timestamp"])
+                self.assertEqual((data["sh600000"]["date"], data["sh600000"]["time"]), ("", ""))
+
     def test_stable_host_and_preopen_placeholders(self):
         response = self._response(
             {

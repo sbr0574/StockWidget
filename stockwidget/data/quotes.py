@@ -1,6 +1,9 @@
+from datetime import datetime
 from typing import Tuple
 
 import requests
+
+from stockwidget.core.hide_rules import QUOTE_TIMEZONE, quote_timestamp
 
 # =====================================================================
 # 统一行情字典 schema（新浪 / 东财 两套数据源返回格式一致）：
@@ -10,7 +13,7 @@ import requests
 #       "deals_vol": int, "deals_amt": float,
 #       "purchaser_vol": [买1~买5 量], "purchaser_price": [买1~买5 价],
 #       "seller_vol": [卖1~卖5 量], "seller_price": [卖1~卖5 价],
-#       "date": str, "time": str,
+#       "date": str, "time": str, "timestamp": float | None（东财 f124）,
 #   }
 #   注：换手率 / 量比 是东财独有字段（新浪没有），已在 _new_entry 中预留（注释），
 #       启用东财数据源后取消注释即可填充。
@@ -312,7 +315,7 @@ def request_eastmoney(instruments: dict[str, dict]) -> Tuple[list, dict]:
     secids = [item[2] for item in requests_meta]
     params = {
         "secids": ",".join(secids),
-        "fields": "f12,f13,f14,f2,f3,f4,f5,f6,f15,f16,f17,f18,f8,f10",
+        "fields": "f12,f13,f14,f2,f3,f4,f5,f6,f15,f16,f17,f18,f8,f10,f124",
         "fltt": 2,
         "invt": 2,
     }
@@ -351,6 +354,11 @@ def request_eastmoney(instruments: dict[str, dict]) -> Tuple[list, dict]:
             sell_vol=_Z5, sell_price=_Z5,
             date="", time="",
         )
+        entry["timestamp"] = quote_timestamp({"timestamp": d.get("f124")})
+        if entry["timestamp"] is not None:
+            updated = datetime.fromtimestamp(entry["timestamp"], QUOTE_TIMEZONE)
+            entry["date"] = updated.strftime("%Y-%m-%d")
+            entry["time"] = updated.strftime("%H:%M:%S")
         # 东财独有字段（新浪无），预留，取消注释即可填充：
         # entry["turnover_rate"] = d.get("f8")   # 换手率（%）
         # entry["volume_ratio"] = d.get("f10")   # 量比

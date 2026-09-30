@@ -9,8 +9,6 @@ COLOR_SWATCH_SIZE = 12
 LINUX_FONT_RULES = """
 QWidget { font-size: 12px; }
 """
-_FLAT_GROUPS = ("gb_data", "gb_data_setting", "gb_icon", "gb_fcn", "gb_opacity",
-                "gb_color", "gb_text", "gb_tabel", "gb_hotkeys")
 
 def color_swatch_icon(color: QColor, device_pixel_ratio: float = 1.0) -> QIcon:
     """按屏幕像素比绘制无描边圆形色标，避免高 DPI 缩放发糊。"""
@@ -70,9 +68,6 @@ def build_settings_stylesheet(dark: bool, *, linux_fonts: bool = False) -> str:
         color_disabled_bg = "rgba(0, 0, 0, 0.04)"
         color_disabled_text = "rgba(0, 0, 0, 0.35)"
 
-    flat_boxes = ",\n".join(f"QGroupBox#{n}" for n in _FLAT_GROUPS)
-    flat_titles = ",\n".join(f"QGroupBox#{n}::title" for n in _FLAT_GROUPS)
-
     icon_selectors = (
         "QPushButton#btn_icon_default",
         "QPushButton#btn_icon_lightG",
@@ -86,6 +81,7 @@ def build_settings_stylesheet(dark: bool, *, linux_fonts: bool = False) -> str:
         "QPushButton#btn_up_color",
         "QPushButton#btn_down_color",
         "QPushButton#btn_neutral_color",
+        "QPushButton#btn_taskbar_color",
         "QPushButton#btn_add",
         "QPushButton#btn_del",
         "QPushButton#btn_top",
@@ -94,6 +90,8 @@ def build_settings_stylesheet(dark: bool, *, linux_fonts: bool = False) -> str:
         "QPushButton#btn_reset_appearance",
         "QPushButton#btn_reset_settings",
         "QPushButton#btn_open_cache_dir",
+        "QPushButton#btn_add_hide_time",
+        "QPushButton#btn_del_hide_time",
     )
     icon_buttons = ",\n".join(icon_selectors)
     icon_hover = ",\n".join(f"{selector}:hover" for selector in icon_selectors)
@@ -157,13 +155,13 @@ QPushButton#btn_icon_custom {{
 
     return f"""
 {font_rules}
-{flat_boxes} {{
+QGroupBox[flat="true"] {{
     border: none;
     border-top: 1px solid {sep};
     margin-top: 9px;
     padding-top: 0px;
 }}
-{flat_titles} {{
+QGroupBox[flat="true"]::title {{
     subcontrol-origin: margin;
     subcontrol-position: top center;
     padding: 2 8px;

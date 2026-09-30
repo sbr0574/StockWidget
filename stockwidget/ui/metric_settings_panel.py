@@ -2,8 +2,7 @@
 
 from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtWidgets import (
-    QCheckBox, QComboBox, QFrame, QHBoxLayout, QLabel, QRadioButton,
-    QSizePolicy, QVBoxLayout, QWidget,
+    QFrame, QSizePolicy, QWidget,
 )
 
 
@@ -97,33 +96,15 @@ class NameSettingsPanel(MetricSettingsPanel):
         super().__init__(parent)
         self.setObjectName("name_settings_panel")
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(7)
-
-        length_row = QHBoxLayout()
-        length_row.setContentsMargins(0, 0, 0, 0)
-        length_row.setSpacing(6)
-        self.length_label = QLabel("显示字数：", self)
-        self.cmb_namelen = QComboBox(self)
-        self.cmb_namelen.setObjectName("name_settings_namelen")
-        for value, text in NAME_LENGTH_OPTIONS:
-            self.cmb_namelen.addItem(text, userData=value)
-        length_row.addWidget(self.length_label)
-        length_row.addWidget(self.cmb_namelen, 1)
-        layout.addLayout(length_row)
-
-        flag_row = QHBoxLayout()
-        flag_row.setContentsMargins(0, 0, 0, 0)
-        flag_row.setSpacing(10)
-        self.cb_code = QCheckBox("显示代码", self)
-        self.cb_type = QCheckBox("显示类型", self)
-        self.cb_code.setObjectName("name_settings_code")
-        self.cb_type.setObjectName("name_settings_type")
-        flag_row.addWidget(self.cb_code)
-        flag_row.addWidget(self.cb_type)
-        flag_row.addStretch(1)
-        layout.addLayout(flag_row)
+        from stockwidget.ui.generated.ui_name_settings import Ui_NameSettingsPanel
+        self.ui = Ui_NameSettingsPanel()
+        self.ui.setupUi(self)
+        self.length_label = self.ui.length_label
+        self.cmb_namelen = self.ui.name_settings_namelen
+        self.cb_code = self.ui.name_settings_code
+        self.cb_type = self.ui.name_settings_type
+        for index, (value, _text) in enumerate(NAME_LENGTH_OPTIONS):
+            self.cmb_namelen.setItemData(index, value)
 
         self.cmb_namelen.currentIndexChanged.connect(self._on_name_length_changed)
         self.cb_code.toggled.connect(self.code_visible_changed)
@@ -174,31 +155,13 @@ class UnitSettingsPanel(MetricSettingsPanel):
         super().__init__(parent)
         self.setObjectName("unit_settings_panel")
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(7)
-
-        self.title_label = QLabel("数值单位：", self)
-        layout.addWidget(self.title_label)
-
-        row = QHBoxLayout()
-        row.setContentsMargins(0, 0, 0, 0)
-        row.setSpacing(10)
-        self.radio_buttons = {}
-        for value, text in UNIT_OPTIONS:
-            radio = QRadioButton(text, self)
-            radio.setObjectName(f"unit_option_{value}")
-            radio.toggled.connect(
-                lambda checked, v=value: self._on_toggled(v, checked)
-            )
-            self.radio_buttons[value] = radio
-            row.addWidget(radio)
-        row.addStretch(1)
-        layout.addLayout(row)
-
-        self.radio_buttons["auto"].setToolTip(
-            "美股、国际指数使用英文单位，国内、港股等使用中文单位"
-        )
+        from stockwidget.ui.generated.ui_unit_settings import Ui_UnitSettingsPanel
+        self.ui = Ui_UnitSettingsPanel()
+        self.ui.setupUi(self)
+        self.title_label = self.ui.title_label
+        self.radio_buttons = {value: getattr(self.ui, "unit_option_" + value) for value, _text in UNIT_OPTIONS}
+        for value, radio in self.radio_buttons.items():
+            radio.toggled.connect(lambda checked, v=value: self._on_toggled(v, checked))
 
         self.set_theme(False)
         self.sync_from(None)
