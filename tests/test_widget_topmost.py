@@ -3,7 +3,7 @@
 import os
 import sys
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -41,6 +41,94 @@ class WidgetTopmostTests(unittest.TestCase):
 
     def tearDown(self):
         delete(self.window)
+
+    def test_default_and_saved_topmost_configuration(self):
+        self.assertTrue(self.window.float_on_top)
+        self.assertTrue(self.window.windowFlags() & Qt.WindowStaysOnTopHint)
+        for cfg in ({"force_top": True}, {"float_on_top": False, "force_top": True}):
+            with self.subTest(cfg=cfg), patch.object(FloatLabel, "_refresh_from_function"), patch(
+                "stockwidget.ui.widget.GlobalHotkeyManager"
+            ), patch("stockwidget.ui.widget.force_top_supported", return_value=True):
+                restored = FloatLabel(cfg, {})
+                try:
+                    expected = cfg.get("float_on_top", True)
+                    self.assertEqual(restored.float_on_top, expected)
+                    self.assertEqual(bool(restored.windowFlags() & Qt.WindowStaysOnTopHint), expected)
+                    self.assertEqual(restored.force_top, expected)
+                    self.assertEqual(restored._keep_top_timer.isActive(), expected)
+                finally:
+                    delete(restored)
+
+    def test_disabling_topmost_stops_force_top_and_preserves_visible_state(self):
+        window = self.window
+        self.app.processEvents()
+        window.move(120, 140)
+        geometry = window.geometry()
+        changed = Mock()
+        visibility = Mock()
+        window.set_on_change(changed)
+        window.widget_visibility_changed.connect(visibility)
+        window.hide_controller._deadline = 12345
+        window._keep_top_timer.start()
+        for enabled in (False, True, False):
+            with self.subTest(enabled=enabled):
+                window.set_float_on_top(enabled)
+                self.assertEqual(bool(window.windowFlags() & Qt.WindowStaysOnTopHint), enabled)
+                self.assertTrue(window.isVisible())
+                self.assertTrue(window.widget_visible)
+                self.assertEqual(window.geometry(), geometry)
+                self.assertEqual(window.hide_controller._deadline, 12345)
+                self.assertFalse(window.force_top)
+                self.assertFalse(window._keep_top_timer.isActive())
+                self.assertTrue(window.timer.isActive())
+                self.assertFalse(window.testAttribute(Qt.WA_ShowWithoutActivating))
+                window._keep_top_timer.timeout.emit()
+        visibility.assert_not_called()
+        self.native_top.assert_not_called()
+        self.assertEqual(changed.call_count, 3)
+        with patch("stockwidget.ui.widget.force_top_supported", return_value=True):
+            window.set_force_top(True)
+        self.assertFalse(window.force_top)
+
+    def test_hidden_topmost_toggle_and_restore_keep_mode_and_position(self):
+        window = self.window
+        for mode in ("float", "taskbar", "both"):
+            with self.subTest(mode=mode):
+                window.display_mode = mode
+                window.show()
+                window.hide_widget()
+                position = window.pos()
+                for enabled in (False, True, False):
+                    window.set_float_on_top(enabled)
+                    self.assertFalse(window.isVisible())
+                    self.assertFalse(window.widget_visible)
+                    self.assertEqual(window.pos(), position)
+                    self.assertEqual(window.display_mode, mode)
+                window.toggle_win()
+                self.assertTrue(window.widget_visible)
+                self.assertEqual(window.pos(), position)
+                self.assertEqual(window.display_mode, mode)
+                self.assertFalse(window.windowFlags() & Qt.WindowStaysOnTopHint)
+                self.assertEqual(window.isVisible(), mode != "taskbar")
+
+    def test_topmost_setting_roundtrips_and_resets_to_enabled(self):
+        self.window.set_float_on_top(False)
+        cfg = self.window.current_config()
+        self.assertFalse(cfg["float_on_top"])
+        self.assertFalse(cfg["force_top"])
+        with patch.object(FloatLabel, "_refresh_from_function"), patch(
+            "stockwidget.ui.widget.GlobalHotkeyManager"
+        ):
+            restored = FloatLabel(cfg, {})
+            try:
+                self.assertFalse(restored.float_on_top)
+                self.assertFalse(restored.windowFlags() & Qt.WindowStaysOnTopHint)
+                restored.reset_settings()
+                self.assertTrue(restored.float_on_top)
+                self.assertTrue(restored.windowFlags() & Qt.WindowStaysOnTopHint)
+                self.assertFalse(restored.force_top)
+            finally:
+                delete(restored)
 
     def test_timer_keeps_raising_with_click_through_enabled(self):
         self.window.click_through = True
@@ -93,6 +181,48 @@ class WindowsTopmostIntegrationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
+
+    def test_float_topmost_toggle_changes_native_style_without_hiding_settings(self):
+        from ctypes import wintypes
+
+        from stockwidget.ui.settings_dialog import SettingsDialog
+
+        self.assertEqual(self.app.platformName(), "windows")
+        api = get_user32()
+        api.GetForegroundWindow.argtypes = []
+        api.GetForegroundWindow.restype = wintypes.HWND
+        with patch.object(FloatLabel, "_refresh_from_function"), patch(
+            "stockwidget.ui.widget.GlobalHotkeyManager"
+        ):
+            window = FloatLabel({}, {})
+        with patch.object(SettingsDialog, "_start_github_check"):
+            dialog = SettingsDialog(window, window)
+        try:
+            window.show()
+            self.app.processEvents()
+            window.move(30, 30)
+            window.set_force_top(True)
+            window.set_click_through(True)
+            dialog.show()
+            dialog.activateWindow()
+            self.app.processEvents()
+            geometry = window.geometry()
+            foreground = api.GetForegroundWindow()
+            for enabled in (False, True, False):
+                with self.subTest(enabled=enabled):
+                    dialog.ui.cb_float_on_top.setChecked(enabled)
+                    self.app.processEvents()
+                    style = api.GetWindowLongW(int(window.winId()), -20)
+                    self.assertEqual(bool(style & 0x8), enabled)  # WS_EX_TOPMOST
+                    self.assertTrue(style & 0x20)  # WS_EX_TRANSPARENT
+                    self.assertTrue(style & 0x80000)  # WS_EX_LAYERED
+                    self.assertEqual(window.geometry(), geometry)
+                    self.assertTrue(window.isVisible())
+                    self.assertTrue(dialog.isVisible())
+                    self.assertEqual(api.GetForegroundWindow(), foreground)
+        finally:
+            delete(dialog)
+            delete(window)
 
     def test_native_topmost_preserves_click_through_geometry_and_foreground(self):
         import ctypes

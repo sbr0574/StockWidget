@@ -239,7 +239,9 @@ class SettingsDialog(QDialog):
         self.ui.keyseq_hide.editingFinished.connect(self._on_hotkey_changed)
         self.ui.keyseq_click_through.editingFinished.connect(self._on_click_through_hotkey_changed)
         self.ui.cb_auto_start.toggled.connect(self._on_start_on_boot_toggled)
+        self.ui.cb_float_on_top.toggled.connect(self.win.set_float_on_top)
         self.ui.cb_force_top.toggled.connect(self.win.set_force_top)
+        self.win.topmost_changed.connect(self._sync_topmost_from_win)
         self.ui.cb_click_through.toggled.connect(self.win.set_click_through)
         self.win.click_through_changed.connect(self._sync_click_through_from_win)
         # 浮窗右键菜单等外部途径修改显示指标时，同步设置窗口复选框
@@ -257,6 +259,11 @@ class SettingsDialog(QDialog):
         self.ui.hide_time_edit.timeChanged.connect(self._update_hide_time_buttons)
         self.ui.list_hide_times.currentRowChanged.connect(self._update_hide_time_buttons)
         self.win.hide_options_changed.connect(self._sync_hide_settings)
+        self.ui.cb_boundary_check.toggled.connect(
+            lambda enabled: self.win.set_position_options(boundary_check_enabled=enabled))
+        self.ui.cb_edge_hide.toggled.connect(
+            lambda enabled: self.win.set_position_options(edge_hide_enabled=enabled))
+        self.win.position_options_changed.connect(self._sync_position_settings)
 
     def _init_view_settings(self):
         self.float_row_settings = self.ui.float_row_settings
@@ -309,11 +316,12 @@ class SettingsDialog(QDialog):
             self.ui.cb_hotkey_hide.setChecked(self.win.hotkey_enabled)
             self.ui.cb_hotkey_click_through.setChecked(self.win.hotkey_click_through_enabled)
             self.ui.cb_auto_start.setChecked(bool(self.win.start_on_boot))
-            self.ui.cb_force_top.setChecked(self.win.force_top)
+            self._sync_topmost_from_win()
             self.ui.cb_click_through.setChecked(self.win.click_through)
             self.ui.cb_head.setChecked(self.win.header_visible)
             self.ui.cb_grid.setChecked(self.win.grid_visible)
             self._sync_hide_settings()
+            self._sync_position_settings()
 
             self._apply_platform_limits()
             self._sync_view_settings()
@@ -321,6 +329,11 @@ class SettingsDialog(QDialog):
             self._setup_source_buttons()
             self._setup_about()
             self.refresh_data_state()
+
+    def _sync_position_settings(self):
+        self._set_checked_blocked(self.ui.cb_boundary_check, self.win.boundary_check_enabled)
+        self._set_checked_blocked(self.ui.cb_edge_hide, self.win.edge_hide_enabled)
+        self.ui.cb_edge_hide.setEnabled(self.win.boundary_check_enabled)
 
     def _sync_hide_settings(self):
         with QSignalBlocker(self.ui.cb_auto_hide), QSignalBlocker(self.ui.gb_scheduled_hide):
@@ -395,13 +408,21 @@ class SettingsDialog(QDialog):
             for w in (self.ui.slider_all_alpha, self.ui.label_all, self.ui.label_all_alpha):
                 w.setEnabled(False)
             self.ui.slider_all_alpha.setToolTip(unsupported_tooltip("整体不透明度"))
-        if not force_top_supported():
-            # 强制置顶:仅 Windows 支持
-            self.ui.cb_force_top.setEnabled(False)
-            self.ui.cb_force_top.setToolTip(unsupported_tooltip("强制置顶", suggest_x11=False))
+        self._sync_topmost_from_win()
         if not start_on_boot_supported():
             self.ui.cb_auto_start.setEnabled(False)
             self.ui.cb_auto_start.setToolTip(unsupported_tooltip("开机自启"))
+
+    def _sync_topmost_from_win(self):
+        self._set_checked_blocked(self.ui.cb_float_on_top, self.win.float_on_top)
+        self._set_checked_blocked(self.ui.cb_force_top, self.win.force_top)
+        supported = force_top_supported()
+        self.ui.cb_force_top.setEnabled(self.win.float_on_top and supported)
+        self.ui.cb_force_top.setToolTip(
+            unsupported_tooltip("强制置顶", suggest_x11=False) if not supported else
+            "请先启用浮窗置顶" if not self.win.float_on_top else
+            "每秒恢复浮窗置顶，避免被其他置顶窗口遮盖"
+        )
 
     def _setup_icon_choices(self):
         self.icon_buttons = {
@@ -767,12 +788,16 @@ class SettingsDialog(QDialog):
         self.ui.btn_check_update.setText("检查中…")
 
         def _worker():
+            errors = []
             try:
-                result = get_update_info(
-                    self.app.app_version if self.app is not None else APP_VERSION
+                has_update, latest_version = get_update_info(
+                    self.app.app_version if self.app is not None else APP_VERSION,
+                    errors=errors,
                 )
             except Exception:
-                result = (False, None)
+                has_update, latest_version = False, None
+                errors.append("更新检查发生异常")
+            result = (has_update, latest_version, "\n".join(errors))
             try:
                 self.update_check_finished.emit(result)
             except RuntimeError:
@@ -783,7 +808,8 @@ class SettingsDialog(QDialog):
     def _on_update_check_finished(self, result):
         self.ui.btn_check_update.setEnabled(True)
         self.ui.btn_check_update.setText("检查程序更新")
-        has_update, latest_version = result
+        has_update, latest_version = result[:2]
+        error = result[2] if len(result) > 2 else ""
         if self.app is not None:
             self.app._has_update = bool(has_update)
             self.app._latest_version = latest_version if has_update else None
@@ -805,7 +831,7 @@ class SettingsDialog(QDialog):
             )
         else:
             QMessageBox.warning(
-                self, "检查更新", "检查更新失败，请检查网络连接后重试。"
+                self, "检查更新", "检查更新失败。\n" + (error or "未获取到版本信息，请稍后重试。")
             )
 
     def _open_cache_dir(self):

@@ -368,6 +368,56 @@ class SettingsDialogTests(unittest.TestCase):
         self.assertEqual(window.bg.alpha(), 127)
         changes.assert_not_called()
 
+    def test_float_topmost_checkbox_controls_force_top_and_stays_synced(self):
+        with patch("stockwidget.ui.settings_dialog.force_top_supported", return_value=True), patch(
+            "stockwidget.ui.widget.force_top_supported", return_value=True
+        ):
+            dialog, window = self._make_dialog(force_top=True)
+            self.assertTrue(dialog.ui.cb_float_on_top.isChecked())
+            self.assertTrue(dialog.ui.cb_force_top.isChecked())
+            self.assertTrue(dialog.ui.cb_force_top.isEnabled())
+            dialog.show()
+            dialog.ui.tab_widget.setCurrentWidget(dialog.ui.functions)
+            self.qt_app.processEvents()
+            QTest.mouseClick(dialog.ui.cb_float_on_top, Qt.LeftButton)
+            self.assertFalse(window.float_on_top)
+            self.assertFalse(window.force_top)
+            self.assertFalse(dialog.ui.cb_force_top.isChecked())
+            self.assertFalse(dialog.ui.cb_force_top.isEnabled())
+            QTest.mouseClick(dialog.ui.cb_force_top, Qt.LeftButton)
+            self.assertFalse(window.force_top)
+            dialog._load_settings()
+            dialog._apply_theme_stylesheet()
+            self.assertFalse(dialog.ui.cb_force_top.isEnabled())
+            QTest.mouseClick(dialog.ui.cb_float_on_top, Qt.LeftButton)
+            self.assertTrue(window.float_on_top)
+            self.assertTrue(dialog.ui.cb_force_top.isEnabled())
+            self.assertFalse(dialog.ui.cb_force_top.isChecked())
+            QTest.mouseClick(dialog.ui.cb_force_top, Qt.LeftButton)
+            self.assertTrue(window.force_top)
+            window.set_float_on_top(False)
+            self.assertFalse(dialog.ui.cb_float_on_top.isChecked())
+            self.assertFalse(dialog.ui.cb_force_top.isChecked())
+            self.assertFalse(dialog.ui.cb_force_top.isEnabled())
+            dialog.ui.btn_reset_settings.click()
+            self.assertTrue(dialog.ui.cb_float_on_top.isChecked())
+            self.assertTrue(dialog.ui.cb_force_top.isEnabled())
+            self.assertFalse(dialog.ui.cb_force_top.isChecked())
+
+    def test_disabled_float_topmost_loads_with_force_top_unchecked_and_disabled(self):
+        dialog, window = self._make_dialog(float_on_top=False, force_top=True)
+        self.assertFalse(window.force_top)
+        self.assertFalse(dialog.ui.cb_float_on_top.isChecked())
+        self.assertFalse(dialog.ui.cb_force_top.isChecked())
+        self.assertFalse(dialog.ui.cb_force_top.isEnabled())
+
+    def test_float_topmost_does_not_enable_unsupported_force_top(self):
+        with patch("stockwidget.ui.settings_dialog.force_top_supported", return_value=False):
+            dialog, window = self._make_dialog()
+            for enabled in (False, True):
+                window.set_float_on_top(enabled)
+                self.assertFalse(dialog.ui.cb_force_top.isEnabled())
+
     def _make_icon_app(self, choice="default", custom_path=""):
         app = Mock()
         app._icon_choice = choice

@@ -1141,7 +1141,7 @@
           <bool>true</bool>
          </property>
          <layout class="QGridLayout" name="gridLayout">
-          <item row="2" column="0">
+          <item row="1" column="0">
            <widget class="QCheckBox" name="cb_grid">
             <property name="text">
              <string>显示网格</string>
@@ -1162,14 +1162,27 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="cb_float_on_top">
+            <property name="text">
+             <string>浮窗置顶</string>
+            </property>
+            <property name="toolTip">
+             <string>让浮窗保持在普通窗口上方；关闭后可被其他窗口遮盖，并关闭强制置顶</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
            <widget class="QCheckBox" name="cb_force_top">
             <property name="text">
              <string>强制置顶</string>
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
+          <item row="3" column="0">
            <widget class="QCheckBox" name="cb_auto_hide">
             <property name="text"><string>自动隐藏</string></property>
             <property name="toolTip">
@@ -1177,7 +1190,22 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
+          <item row="3" column="1">
+           <widget class="QCheckBox" name="cb_boundary_check">
+            <property name="text"><string>边界检测</string></property>
+            <property name="toolTip"><string>在屏幕内保持浮窗完整显示。启用后，程序加载、拖动及内容尺寸变化时自动调整越界位置；关闭后允许浮窗部分位于屏幕外。</string></property>
+            <property name="checked"><bool>false</bool></property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QCheckBox" name="cb_edge_hide">
+            <property name="text"><string>贴边隐藏</string></property>
+            <property name="toolTip"><string>需要先启用边界检测（边界保护）。贴住屏幕左、上、右边时缩至5px，并暂停行情刷新；鼠标移入恢复完整浮窗及刷新，移出再次缩边。底边不隐藏，拖动时保持展开。</string></property>
+            <property name="checked"><bool>false</bool></property>
+            <property name="enabled"><bool>false</bool></property>
+           </widget>
+          </item>
+          <item row="1" column="1">
            <widget class="QCheckBox" name="cb_click_through">
             <property name="text">
              <string>鼠标穿透</string>

@@ -336,6 +336,84 @@ class PagingInteractionTests(unittest.TestCase):
                         self.assertEqual(w.display_mode, display)
                         self.assertEqual(controller._active, display == "both")
 
+    def test_boundary_and_edge_hide_preserve_all_region_interactions(self):
+        w = self.win
+        self.populate(9)
+        controller = self.make_controller()
+        w.set_header_visible(True)
+        w.set_view_options(float_split_enabled=True, float_max_rows=2)
+        w.move(80, 80)
+        w.set_position_options(boundary_check_enabled=True, edge_hide_enabled=True)
+        for display in ("float", "both"):
+            for mode in ("manual", "auto"):
+                w.set_display_mode(display)
+                w.set_view_options(float_page_mode=mode, float_page_interval=60)
+                self.app.processEvents()
+                regions = [(w, QPoint(1, 1)), (w.panel, QPoint(1, 1)),
+                           (w.split_separator, w.split_separator.rect().center())]
+                regions += [(table.viewport(), QPoint(5, 5)) for table in w.float_tables]
+                regions += [(table.horizontalHeader().viewport(), QPoint(5, 5)) for table in w.float_tables]
+                regions += [(w.pager, QPoint(15, y)) for y in (3, w.pager.height() // 2, w.pager.height() - 3)]
+                regions.append((w.hide_notice, QPoint(5, 5)))
+                regions = [(target, point, None) for target, point in regions]
+                regions += [(w.message_label, QPoint(5, 5), message)
+                            for message in ("加载中…", "未选择标的", "网络请求失败")]
+                for target, point, message in regions:
+                    with self.subTest(display=display, mode=mode, region=target.objectName()):
+                        if message:
+                            w._show_message(message, is_error="失败" in message)
+                        w.hide_notice.setText("隐藏倒计时")
+                        w.hide_notice.show()
+                        w.move(80, 80)
+                        w._fit_to_contents()
+                        origin = w.pos()
+                        start = target.mapToGlobal(point)
+                        self.mouse(target, QEvent.MouseButtonPress, start, Qt.LeftButton, Qt.LeftButton)
+                        self.mouse(target, QEvent.MouseMove, start + QPoint(1, 0), Qt.NoButton, Qt.LeftButton)
+                        self.mouse(target, QEvent.MouseButtonRelease, start + QPoint(1, 0), Qt.LeftButton, Qt.NoButton)
+                        self.assertEqual(w.pos(), origin)
+                        page, sort = w.float_page, w.sort_header
+                        self.mouse(target, QEvent.MouseButtonPress, start, Qt.LeftButton, Qt.LeftButton)
+                        self.mouse(target, QEvent.MouseMove, start + QPoint(40, 25), Qt.NoButton, Qt.LeftButton)
+                        QApplication.sendEvent(w, QKeyEvent(QEvent.KeyPress, Qt.Key_Escape, Qt.NoModifier))
+                        self.assertEqual(w.pos(), origin)
+                        self.mouse(target, QEvent.MouseButtonRelease, start, Qt.LeftButton, Qt.NoButton)
+                        self.mouse(target, QEvent.MouseButtonPress, start, Qt.LeftButton, Qt.LeftButton)
+                        self.mouse(target, QEvent.MouseMove, start + QPoint(40, 25), Qt.NoButton, Qt.LeftButton)
+                        self.mouse(target, QEvent.MouseButtonRelease, start + QPoint(40, 25), Qt.LeftButton, Qt.NoButton)
+                        self.assertEqual(w.pos(), origin + QPoint(40, 25))
+                        self.assertEqual((w.float_page, w.sort_header), (page, sort))
+                        QTest.mouseDClick(target, Qt.LeftButton, pos=point)
+                        self.assertFalse(w.widget_visible)
+                        w.toggle_win()
+                        self.assertEqual(w.pos(), origin + QPoint(40, 25))
+                        self.assertEqual(w.display_mode, display)
+                        self.assertEqual(controller._active, display == "both")
+
+    def test_native_taskbar_drag_uses_full_size_when_float_is_a_strip(self):
+        w = self.win
+        controller = self.make_controller()
+        w.move(80, 80)
+        w.set_position_options(boundary_check_enabled=True, edge_hide_enabled=True)
+        w.set_display_mode("both")
+        self.app.processEvents()
+        screen = self.app.primaryScreen().geometry()
+        with patch("stockwidget.ui.position_controller.QCursor.pos", return_value=QPoint(99999, 99999)):
+            w.move(screen.right() - w.width() + 1, 100)
+            self.assertEqual(w.width(), 5)
+            full = w.position_controller.full_geometry()
+            controller._dpi = 192
+            start = QPoint(400, screen.bottom())
+            controller._dispatch_pointer("press", 80, 10, start, True)
+            self.assertEqual(w._drag_pos.x(), 40)
+            self.assertEqual(w.geometry(), full)
+            controller._dispatch_pointer("move", 80, 10, start - QPoint(50, 50), False)
+            controller._dispatch_pointer("cancel", 80, 10, start, False)
+            self.assertEqual(w.position_controller.full_geometry(), full)
+            self.assertEqual(w.width(), 5)
+            self.assertEqual(w.display_mode, "both")
+            self.assertTrue(controller._active)
+
     def test_first_only_ignores_manual_navigation(self):
         self.win.set_view_options(float_max_rows=2, float_page_mode="first", taskbar_rows=1)
         for surface in ("float", "taskbar"):

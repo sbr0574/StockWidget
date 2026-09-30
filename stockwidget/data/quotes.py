@@ -261,6 +261,7 @@ def request_sina(instruments: dict[str, dict]) -> dict:
         return {}
     url = "https://hq.sinajs.cn/list=" + ",".join(labels)
     response = requests.get(url, headers=_SINA_HEADERS, timeout=3)
+    response.raise_for_status()
     response.encoding = "gbk"
     for line in response.text.split("\n"):
         if not line or '"' not in line:

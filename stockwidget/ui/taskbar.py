@@ -237,8 +237,9 @@ class TaskbarController(QObject):
             if kind == "press":
                 self.input_timer.start()
                 self._native_press = pager_hit(self._pager_rect, x, y)
-                offset = QPoint(max(0, min(round(x * 96 / self._dpi), self.source.width() - 1)),
-                                max(0, min(round(y * 96 / self._dpi), self.source.height() - 1)))
+                full = self.source.position_controller.full_geometry()
+                offset = QPoint(max(0, min(round(x * 96 / self._dpi), full.width() - 1)),
+                                max(0, min(round(y * 96 / self._dpi), full.height() - 1)))
                 self.source.begin_drag(position, surface="taskbar", offset=offset)
             elif kind == "move" and self._native_press is not None:
                 self.source.move_drag(position)

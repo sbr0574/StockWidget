@@ -336,6 +336,23 @@ class FetchJsonTests(unittest.TestCase):
             fetch_json_from_url("https://example.com/test.json")
 
     @patch("stockwidget.data.code_lists.requests.get")
+    def test_request_failures_preserve_specific_reasons(self, get):
+        response = requests.Response()
+        response.status_code = 429
+        for error, expected in ((requests.ConnectTimeout(), "连接超时"),
+                                (requests.ReadTimeout(), "读取超时"),
+                                (requests.exceptions.ProxyError(), "代理请求失败"),
+                                (requests.exceptions.SSLError(), "安全连接失败（SSL）"),
+                                (requests.HTTPError(response=response), "HTTP 429：请求过于频繁"),
+                                (requests.HTTPError(), "HTTP 请求失败")):
+            with self.subTest(error=type(error).__name__):
+                get.side_effect = error
+                with self.assertRaises(CodeDownloadError) as caught:
+                    fetch_json_from_url("https://example.com/test.json")
+                self.assertEqual(str(caught.exception), expected)
+                self.assertIs(caught.exception.__cause__, error)
+
+    @patch("stockwidget.data.code_lists.requests.get")
     def test_html_response_is_rejected_and_connection_closed(self, get):
         response = Mock()
         response.iter_content.return_value = [b"<html>Access denied</html>"]

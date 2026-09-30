@@ -22,6 +22,18 @@ def clamp_point(x, y, rect, widget_w=0, widget_h=0):
     return max(left, min(x, right)), max(top, min(y, bottom))
 
 
+def best_screen(x, y, width, height, rects):
+    """优先选择窗口重叠最多的屏幕，屏外位置选择调整距离最短的屏幕。"""
+    def score(rect):
+        left, top, w, h = rect
+        overlap = (max(0, min(x + width, left + w) - max(x, left))
+                   * max(0, min(y + height, top + h) - max(y, top)))
+        cx, cy = clamp_point(x, y, rect, width, height)
+        return overlap, -((cx - x) ** 2 + (cy - y) ** 2)
+
+    return max(rects, key=score) if rects else None
+
+
 def resolve_restore_position(saved, rects, primary, widget_w=0, widget_h=0,
                              margin_x=40, margin_y=80):
     """根据保存位置决定窗口恢复位置。

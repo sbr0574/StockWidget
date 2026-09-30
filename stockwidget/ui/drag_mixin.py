@@ -39,6 +39,7 @@ class DragBehaviorMixin:
     # ----- 拖拽实现 -----
     def begin_drag(self, global_pos, *, surface="float", offset=None):
         """Shared pointer entry point for Qt and native taskbar adapters."""
+        self.position_controller.prepare_drag()
         self._reset_drag()
         self._drag_surface = surface
         self._drag_start_pos = QPoint(global_pos)
@@ -83,6 +84,8 @@ class DragBehaviorMixin:
         self._ensure_on_top()
         if dragged:
             self.drag_finished.emit(accepted)
+        self.position_controller.finish_drag(accepted)
+        if dragged:
             self._notify_change()
 
     def _drag_press(self, e):

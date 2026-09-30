@@ -3,7 +3,7 @@
 
 import unittest
 
-from stockwidget.core.geometry import clamp_point, resolve_restore_position, screen_containing
+from stockwidget.core.geometry import best_screen, clamp_point, resolve_restore_position, screen_containing
 
 
 PRIMARY = (0, 0, 1920, 1080)
@@ -33,6 +33,21 @@ class ClampPointTests(unittest.TestCase):
 
     def test_outside_left_top(self):
         self.assertEqual(clamp_point(-5000, -5000, PRIMARY, WIDTH, HEIGHT), (0, 0))
+
+
+class BestScreenTests(unittest.TestCase):
+    def test_largest_overlap_allows_crossing_monitor_seams(self):
+        self.assertEqual(best_screen(-80, 200, 200, 100, RECTS), PRIMARY)
+        self.assertEqual(best_screen(-180, 200, 200, 100, RECTS), SECONDARY)
+
+    def test_outside_uses_nearest_monitor_including_negative_coordinates(self):
+        self.assertEqual(best_screen(-5000, 200, 200, 100, RECTS), SECONDARY)
+        self.assertEqual(best_screen(3000, 200, 200, 100, RECTS), PRIMARY)
+
+    def test_staggered_monitors_and_empty_screen_list(self):
+        upper = (0, -1080, 1920, 1080)
+        self.assertEqual(best_screen(200, -100, 200, 150, [PRIMARY, upper]), upper)
+        self.assertIsNone(best_screen(0, 0, 200, 100, []))
 
 
 class ResolveRestorePositionTests(unittest.TestCase):

@@ -4,6 +4,8 @@
 import unittest
 from unittest.mock import Mock, patch
 
+import requests
+
 from stockwidget.data import quotes
 from stockwidget.data.quotes import _em_secid, _sina_code
 
@@ -101,6 +103,18 @@ class SinaVolumeUnitTests(unittest.TestCase):
         parts[14] = "1234"
         entry = quotes._parse_sina_futures(parts)
         self.assertEqual(entry["deals_vol"], 1234)
+
+
+class SinaRequestFailureTests(unittest.TestCase):
+    def test_http_error_is_not_parsed_as_an_empty_watchlist(self):
+        response = requests.Response()
+        response.status_code = 403
+        response.url = "https://hq.sinajs.cn/list=sh600000"
+        response._content = b"Access denied"
+        with patch.object(quotes.requests, "get", return_value=response):
+            with self.assertRaises(requests.HTTPError) as caught:
+                quotes.request_sina({"sh600000": {"market": "sh", "code": "600000"}})
+        self.assertIs(caught.exception.response, response)
 
 
 class EastmoneyQuoteTests(unittest.TestCase):

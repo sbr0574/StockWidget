@@ -3,7 +3,7 @@ import requests
 import threading
 import sys
 
-from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QFont, QAction, QColor
 from PySide6.QtWidgets import QApplication, QWidget, QMenu, QHeaderView, QStyledItemDelegate
 
@@ -16,11 +16,13 @@ from stockwidget.ui.table_model import (
 )
 from stockwidget.ui.drag_mixin import DragBehaviorMixin
 from stockwidget.ui.hide_controller import HideController
+from stockwidget.ui.position_controller import PositionController
 from stockwidget.core.hide_rules import normalize_hide_times
 from stockwidget.core.view_options import DISPLAY_MODES, TASKBAR_STYLE_KEYS, ViewOptions, column_ranges, page_slice
 from stockwidget.ui.table_header import SortIndicatorStyle
 from stockwidget.platform.hotkeys import GlobalHotkeyManager, HotkeyResult
 from stockwidget.data.quotes import request_quote
+from stockwidget.data.network_errors import request_error_message
 from stockwidget.core.quote_presentation import QuoteDisplayOptions, format_quote
 from stockwidget.core.metric_layout import (
     METRIC_BY_ID,
@@ -65,8 +67,10 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     hotkey_triggered = Signal()
     click_through_hotkey_triggered = Signal()
     click_through_changed = Signal(bool)
+    topmost_changed = Signal()
     display_flags_changed = Signal()  # 显示指标/表头/网格/统一颜色等显示相关设置变化
     hide_options_changed = Signal()
+    position_options_changed = Signal()
     data_ready = Signal(object)  # (ok, data, error)
 
     def __init__(self, cfg: dict, codes_list: dict):
@@ -80,8 +84,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._ordered_rows = []
         self._ordered_color_roles = []
         self._quote_generation = 0
+        self._updating_topmost = False
 
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
         self.setFocusPolicy(Qt.StrongFocus)
         if sys.platform == "darwin":
@@ -93,6 +98,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.watchlist: dict = normalize_watchlist(watchlist_cfg, self.codes_list)
         self._load_appearance_config(cfg)
         self._load_settings_config(cfg)
+        self.setWindowFlag(Qt.WindowStaysOnTopHint, self.float_on_top)
 
         # 排序是浮窗运行时的视图状态，不改变或持久化自选列表顺序。
         self.sort_header = None
@@ -196,6 +202,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.register_drag_region(right_header.viewport(),
                                   lambda pos: self._on_header_clicked(right_header.logicalIndexAt(pos)))
         self.register_drag_region(self.pager, self.pager.activate_at)
+        self.position_controller = PositionController(self)
 
         self.apply_style()
         self.set_window_opacity_percent(self.opacity_pct)
@@ -255,7 +262,10 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.scheduled_hide_enabled = bool(cfg.get("scheduled_hide_enabled", False))
         self.scheduled_hide_times = normalize_hide_times(cfg.get("scheduled_hide_times", []))
         self.auto_hide_enabled = bool(cfg.get("auto_hide_enabled", False))
-        self.force_top = bool(cfg.get("force_top", False))
+        self.boundary_check_enabled = bool(cfg.get("boundary_check_enabled", False))
+        self.edge_hide_enabled = self.boundary_check_enabled and bool(cfg.get("edge_hide_enabled", False))
+        self.float_on_top = bool(cfg.get("float_on_top", True))
+        self.force_top = self.float_on_top and bool(cfg.get("force_top", False))
         self.click_through = bool(cfg.get("click_through", False))
         self.hotkey_enabled = bool(cfg.get("hotkey_enabled", False))
         self.hotkey = cfg.get("hotkey", "Ctrl+Alt+F")
@@ -290,6 +300,10 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     def reset_settings(self):
         self._load_settings_config({key: getattr(self.view_options, key) for key in TASKBAR_STYLE_KEYS})
+        self.position_controller.recheck()
+        self.position_options_changed.emit()
+        self._apply_float_on_top()
+        self.topmost_changed.emit()
         self._quote_generation += 1
         self.hide_controller.cancel_countdown()
         self.hide_controller.configure()
@@ -354,6 +368,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             "scheduled_hide_enabled": self.scheduled_hide_enabled,
             "scheduled_hide_times": list(self.scheduled_hide_times),
             "auto_hide_enabled": self.auto_hide_enabled,
+            "boundary_check_enabled": self.boundary_check_enabled,
+            "edge_hide_enabled": self.edge_hide_enabled,
+            "float_on_top": self.float_on_top,
             "force_top": self.force_top,
             "click_through": self.click_through,
             "hotkey_enabled": self.hotkey_enabled,
@@ -364,7 +381,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             "display_mode": self.display_mode,
             "taskbar_offset": self.taskbar_offset,
             **self.view_options.to_config(),
-            "pos": {"x": self.x(), "y": self.y()},
+            "pos": {"x": self.position_controller.full_geometry().x(),
+                    "y": self.position_controller.full_geometry().y()},
         }
 
     # ----- 外观/尺寸 -----
@@ -462,14 +480,19 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             total_h = hh + 2 * table.frameWidth() + sum(
                 self.table.rowHeight(r) for r in range(self.model.rowCount()))
             table.setFixedSize(max(1, sum(widths) + 2 * table.frameWidth()), max(1, total_h))
+        # 固定表格尺寸后，嵌套布局的 sizeHint 仍可能缓存上一轮数据。
+        # 同步重算布局再调整外框，避免浮窗大小慢一轮刷新。
+        self.data_layout.invalidate()
+        self.vbox.invalidate()
+        self.vbox.activate()
         self.panel.adjustSize()
-        self.resize(self.panel.size())
+        self.position_controller.fit(self.panel.size())
 
     def _defer_fit(self):
         QTimer.singleShot(0, self.table, self._fit_to_contents)
 
     def _restore_position(self, pos_cfg):
-        """多显示器恢复位置：保存位置落在任一屏幕内则原位恢复，否则回退到主屏默认位置。"""
+        """默认原样恢复保存位置；启用边界检测时按完整浮窗尺寸调整。"""
         screens = QApplication.screens()
         rects = []
         for s in screens:
@@ -482,14 +505,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if isinstance(pos_cfg, dict) and "x" in pos_cfg and "y" in pos_cfg:
             saved = (int(pos_cfg["x"]), int(pos_cfg["y"]))
 
-        # 已保存的屏内左上角不应被临时加载提示的尺寸推走。
-        restoring_on_screen = saved is not None and any(
-            left <= saved[0] < left + width and top <= saved[1] < top + height
-            for left, top, width, height in rects
-        )
-        width, height = (1, 1) if restoring_on_screen else (self.width(), self.height())
-        x, y = resolve_restore_position(saved, rects, primary, width, height)
-        self.move(x, y)
+        x, y = saved if saved is not None else resolve_restore_position(
+            None, rects, primary, self.width(), self.height())
+        self.position_controller.restore_position(QPoint(x, y))
 
     # ----- 数据 & 投影 -----
     def _show_message(self, msg: str, is_error: bool = False, *, kind=None):
@@ -652,7 +670,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if not hasattr(self, "page_timers"):
             return
         for surface, timer in self.page_timers.items():
-            active = self.isVisible() if surface == "float" else (
+            active = (self.isVisible() and not self.position_controller.collapsed) if surface == "float" else (
                 self.widget_visible and (self.display_mode != "float" or self.taskbar_preview_active))
             mode, seconds = self.get_page_settings(surface)
             interval = seconds * 1000
@@ -705,6 +723,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def _refresh_from_function(self):
         """定时入口：将网络请求丢到后台线程执行，避免阻塞 UI。
         若上一轮请求尚未完成则跳过本次刷新，防止请求重叠。"""
+        if self.position_controller.collapsed:
+            return
         checked_codes = self.checked_codes
         if not checked_codes:
             self._process_data((True, {}, None))
@@ -720,17 +740,20 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     def _fetch_data_worker(self, codes: dict, source: str, generation: int):
         """后台线程：执行网络请求，结果经 data_ready 信号回到主线程。"""
+        source_name = {"sina": "新浪", "eastmoney": "东财"}.get(source, "行情")
         try:
             data = request_quote(codes, source=source)
             payload = (True, data, None)
-        except requests.exceptions.RequestException:
-            payload = (False, None, "网络请求失败")
+        except requests.exceptions.RequestException as exc:
+            payload = (False, None, f"{source_name}：{request_error_message(exc)}")
         except Exception as e:
-            payload = (False, None, str(e))
+            payload = (False, None, f"{source_name}：行情处理失败（{type(e).__name__}）")
         self.data_ready.emit((*payload, generation))
 
     def _process_data(self, payload):
         """主线程：处理请求结果并更新表格。payload = (ok, data, error)"""
+        if self.position_controller.collapsed:
+            return
         ok, data, error = payload[:3]
         if len(payload) > 3 and payload[3] != self._quote_generation:
             return
@@ -743,6 +766,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if not ok:
             self.hide_controller.cancel_countdown()
             self._show_message(error or "请求失败", is_error=True)
+            self._fit_to_contents()
             return
 
         full_rows = []
@@ -1016,7 +1040,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._defer_fit()
         self.display_flags_changed.emit()
 
-    # ----- 鼠标穿透 / 强制置顶 / 快捷键开关 -----
+    # ----- 鼠标穿透 / 浮窗置顶 / 强制置顶 / 快捷键开关 -----
     def set_display_mode(self, mode):
         if mode not in ("float", "taskbar", "both"):
             return
@@ -1042,13 +1066,25 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._notify_change()
 
     def sync_refresh_timer(self):
-        if self.isVisible() or (self.widget_visible and (self.display_mode != "float" or self.taskbar_preview_active)):
+        if not self.position_controller.collapsed and (
+                self.isVisible() or (self.widget_visible and (self.display_mode != "float" or self.taskbar_preview_active))):
             if not self.timer.isActive():
                 self.timer.start()
                 self._refresh_from_function()
         else:
             self.timer.stop()
         self._sync_page_timers()
+
+    def set_position_options(self, *, boundary_check_enabled=None, edge_hide_enabled=None):
+        boundary = self.boundary_check_enabled if boundary_check_enabled is None else bool(boundary_check_enabled)
+        edge_hide = self.edge_hide_enabled if edge_hide_enabled is None else bool(edge_hide_enabled)
+        edge_hide = boundary and edge_hide
+        if (boundary, edge_hide) == (self.boundary_check_enabled, self.edge_hide_enabled):
+            return
+        self.boundary_check_enabled, self.edge_hide_enabled = boundary, edge_hide
+        self.position_controller.recheck()
+        self.position_options_changed.emit()
+        self._notify_change()
 
     def set_click_through(self, enable: bool):
         enable = bool(enable)
@@ -1063,9 +1099,39 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def toggle_click_through(self):
         self.set_click_through(not self.click_through)
 
+    def _apply_float_on_top(self):
+        if bool(self.windowFlags() & Qt.WindowStaysOnTopHint) == self.float_on_top:
+            return
+        visible = self.isVisible()
+        geometry = self.geometry()
+        show_without_activating = self.testAttribute(Qt.WA_ShowWithoutActivating)
+        # Qt 修改窗口标志会暂时隐藏窗口；这不是用户隐藏，不能联动任务栏或隐藏倒计时。
+        self._updating_topmost = True
+        try:
+            self.setWindowFlag(Qt.WindowStaysOnTopHint, self.float_on_top)
+            self.setGeometry(geometry)
+            if visible:
+                self.setAttribute(Qt.WA_ShowWithoutActivating, True)
+                self.show()
+        finally:
+            self.setAttribute(Qt.WA_ShowWithoutActivating, show_without_activating)
+            self._updating_topmost = False
+
+    def set_float_on_top(self, enabled: bool):
+        enabled = bool(enabled)
+        if self.float_on_top == enabled:
+            return
+        self.float_on_top = enabled
+        if not enabled:
+            self.force_top = False
+            self._keep_top_timer.stop()
+        self._apply_float_on_top()
+        self.topmost_changed.emit()
+        self._notify_change()
+
     def set_force_top(self, enabled: bool):
         enabled = bool(enabled)
-        if not force_top_supported():
+        if not self.float_on_top or not force_top_supported():
             # 仅 Windows 支持强制置顶,其余平台忽略该开关
             enabled = False
         if self.force_top == enabled:
@@ -1078,6 +1144,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         else:
             if self._keep_top_timer and self._keep_top_timer.isActive():
                 self._keep_top_timer.stop()
+        self.topmost_changed.emit()
         self._notify_change()
 
     def _set_hotkey_option(self, attr: str, value, *, register: bool = True) -> HotkeyResult:
@@ -1224,12 +1291,11 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     def showEvent(self, event):
         super().showEvent(event)
-        if self.display_mode != "taskbar" and not self.widget_visible:
+        if not self._updating_topmost and self.display_mode != "taskbar" and not self.widget_visible:
             self.widget_visible = True
             self.widget_visibility_changed.emit()
         self._sync_page_timers()
-        if self.timer and not self.timer.isActive():
-            self.timer.start()
+        self.sync_refresh_timer()
         if self.force_top and self._keep_top_timer and not self._keep_top_timer.isActive():
             self._keep_top_timer.start()
         apply_click_through(self, self.click_through)
@@ -1238,6 +1304,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     def hideEvent(self, event):
         super().hideEvent(event)
+        if self._updating_topmost:
+            return
         if self.display_mode != "taskbar" and self.widget_visible:
             self.widget_visible = False
             self.widget_visibility_changed.emit()
@@ -1246,7 +1314,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self._keep_top_timer.stop()
 
     def _ensure_on_top(self):
-        if not self.force_top or not self.isVisible():
+        if not self.float_on_top or not self.force_top or not self.isVisible():
             return
         try:
             aw = QApplication.activeWindow()

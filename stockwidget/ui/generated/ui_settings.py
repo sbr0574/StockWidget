@@ -475,7 +475,7 @@ class Ui_SettingDialog(object):
         self.cb_grid = QCheckBox(self.gb_fcn)
         self.cb_grid.setObjectName(u"cb_grid")
 
-        self.gridLayout.addWidget(self.cb_grid, 2, 0, 1, 1)
+        self.gridLayout.addWidget(self.cb_grid, 1, 0, 1, 1)
 
         self.cb_head = QCheckBox(self.gb_fcn)
         self.cb_head.setObjectName(u"cb_head")
@@ -487,20 +487,39 @@ class Ui_SettingDialog(object):
 
         self.gridLayout.addWidget(self.cb_auto_start, 0, 1, 1, 1)
 
+        self.cb_float_on_top = QCheckBox(self.gb_fcn)
+        self.cb_float_on_top.setObjectName(u"cb_float_on_top")
+        self.cb_float_on_top.setChecked(True)
+
+        self.gridLayout.addWidget(self.cb_float_on_top, 2, 0, 1, 1)
+
         self.cb_force_top = QCheckBox(self.gb_fcn)
         self.cb_force_top.setObjectName(u"cb_force_top")
 
-        self.gridLayout.addWidget(self.cb_force_top, 3, 0, 1, 1)
+        self.gridLayout.addWidget(self.cb_force_top, 2, 1, 1, 1)
 
         self.cb_auto_hide = QCheckBox(self.gb_fcn)
         self.cb_auto_hide.setObjectName(u"cb_auto_hide")
 
-        self.gridLayout.addWidget(self.cb_auto_hide, 3, 1, 1, 1)
+        self.gridLayout.addWidget(self.cb_auto_hide, 3, 0, 1, 1)
+
+        self.cb_boundary_check = QCheckBox(self.gb_fcn)
+        self.cb_boundary_check.setObjectName(u"cb_boundary_check")
+        self.cb_boundary_check.setChecked(False)
+
+        self.gridLayout.addWidget(self.cb_boundary_check, 3, 1, 1, 1)
+
+        self.cb_edge_hide = QCheckBox(self.gb_fcn)
+        self.cb_edge_hide.setObjectName(u"cb_edge_hide")
+        self.cb_edge_hide.setChecked(False)
+        self.cb_edge_hide.setEnabled(False)
+
+        self.gridLayout.addWidget(self.cb_edge_hide, 4, 0, 1, 1)
 
         self.cb_click_through = QCheckBox(self.gb_fcn)
         self.cb_click_through.setObjectName(u"cb_click_through")
 
-        self.gridLayout.addWidget(self.cb_click_through, 2, 1, 1, 1)
+        self.gridLayout.addWidget(self.cb_click_through, 1, 1, 1, 1)
 
 
         self.generalFunctionsLayout.addWidget(self.gb_fcn)
@@ -1160,10 +1179,22 @@ class Ui_SettingDialog(object):
         self.cb_grid.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u7f51\u683c", None))
         self.cb_head.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u8868\u5934", None))
         self.cb_auto_start.setText(QCoreApplication.translate("SettingDialog", u"\u5f00\u673a\u542f\u52a8", None))
+        self.cb_float_on_top.setText(QCoreApplication.translate("SettingDialog", u"\u6d6e\u7a97\u7f6e\u9876", None))
+#if QT_CONFIG(tooltip)
+        self.cb_float_on_top.setToolTip(QCoreApplication.translate("SettingDialog", u"\u8ba9\u6d6e\u7a97\u4fdd\u6301\u5728\u666e\u901a\u7a97\u53e3\u4e0a\u65b9\uff1b\u5173\u95ed\u540e\u53ef\u88ab\u5176\u4ed6\u7a97\u53e3\u906e\u76d6\uff0c\u5e76\u5173\u95ed\u5f3a\u5236\u7f6e\u9876", None))
+#endif // QT_CONFIG(tooltip)
         self.cb_force_top.setText(QCoreApplication.translate("SettingDialog", u"\u5f3a\u5236\u7f6e\u9876", None))
         self.cb_auto_hide.setText(QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8\u9690\u85cf", None))
 #if QT_CONFIG(tooltip)
         self.cb_auto_hide.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5237\u65b0\u65f6\uff0c\u6240\u6709\u52fe\u9009\u6807\u7684\u7684\u884c\u60c5\u65f6\u95f4\u5747\u8d85\u8fc730\u79d2\u5219\u9690\u85cf\u6d6e\u7a97\u548c\u4efb\u52a1\u680f\u3002\u65b0\u6d6a\u4e0e\u4e1c\u8d22\u5747\u652f\u6301\uff1b\u7f3a\u5931\u65f6\u95f4\u6216\u8bf7\u6c42\u5931\u8d25\u4e0d\u89e6\u53d1\u3002\u624b\u52a8\u547c\u51fa\u540e\u4f1a\u63d0\u793a\u5e76\u5012\u8ba1\u65f65\u79d2\uff1b\u65b0\u884c\u60c5\u5230\u8fbe\u4f1a\u53d6\u6d88\u5012\u8ba1\u65f6\u3002\u5b9a\u65f6\u9690\u85cf\u4ecd\u540c\u65f6\u751f\u6548\u3002", None))
+#endif // QT_CONFIG(tooltip)
+        self.cb_boundary_check.setText(QCoreApplication.translate("SettingDialog", u"\u8fb9\u754c\u68c0\u6d4b", None))
+#if QT_CONFIG(tooltip)
+        self.cb_boundary_check.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5728\u5c4f\u5e55\u5185\u4fdd\u6301\u6d6e\u7a97\u5b8c\u6574\u663e\u793a\u3002\u542f\u7528\u540e\uff0c\u7a0b\u5e8f\u52a0\u8f7d\u3001\u62d6\u52a8\u53ca\u5185\u5bb9\u5c3a\u5bf8\u53d8\u5316\u65f6\u81ea\u52a8\u8c03\u6574\u8d8a\u754c\u4f4d\u7f6e\uff1b\u5173\u95ed\u540e\u5141\u8bb8\u6d6e\u7a97\u90e8\u5206\u4f4d\u4e8e\u5c4f\u5e55\u5916\u3002", None))
+#endif // QT_CONFIG(tooltip)
+        self.cb_edge_hide.setText(QCoreApplication.translate("SettingDialog", u"\u8d34\u8fb9\u9690\u85cf", None))
+#if QT_CONFIG(tooltip)
+        self.cb_edge_hide.setToolTip(QCoreApplication.translate("SettingDialog", u"\u9700\u8981\u5148\u542f\u7528\u8fb9\u754c\u68c0\u6d4b\uff08\u8fb9\u754c\u4fdd\u62a4\uff09\u3002\u8d34\u4f4f\u5c4f\u5e55\u5de6\u3001\u4e0a\u3001\u53f3\u8fb9\u65f6\u7f29\u81f35px\uff0c\u5e76\u6682\u505c\u884c\u60c5\u5237\u65b0\uff1b\u9f20\u6807\u79fb\u5165\u6062\u590d\u5b8c\u6574\u6d6e\u7a97\u53ca\u5237\u65b0\uff0c\u79fb\u51fa\u518d\u6b21\u7f29\u8fb9\u3002\u5e95\u8fb9\u4e0d\u9690\u85cf\uff0c\u62d6\u52a8\u65f6\u4fdd\u6301\u5c55\u5f00\u3002", None))
 #endif // QT_CONFIG(tooltip)
         self.cb_click_through.setText(QCoreApplication.translate("SettingDialog", u"\u9f20\u6807\u7a7f\u900f", None))
         self.float_row_settings.setTitle(QCoreApplication.translate("SettingDialog", u"\u9650\u5236\u884c\u6570", None))

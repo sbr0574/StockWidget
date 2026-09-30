@@ -21,14 +21,15 @@ class WidgetHeaderTests(unittest.TestCase):
         cls.app = QApplication.instance() or QApplication([])
 
     def setUp(self):
-        with patch.object(FloatLabel, "_refresh_from_function"):
-            self.window = FloatLabel({
-                "header_visible": True,
-                "name_visible": False,
-                "visible_metrics": ["price", "change_pct"],
-                "fg": "#ed952a",
-                "bg": {"r": 0, "g": 0, "b": 0, "a": 255},
-            }, {})
+        # 这些测试使用手动填充的行情，显示窗口时也不能刷新并覆盖样本。
+        self.enterContext(patch.object(FloatLabel, "_refresh_from_function"))
+        self.window = FloatLabel({
+            "header_visible": True,
+            "name_visible": False,
+            "visible_metrics": ["price", "change_pct"],
+            "fg": "#ed952a",
+            "bg": {"r": 0, "g": 0, "b": 0, "a": 255},
+        }, {})
         self.window.timer.stop()
         self.window._wayland_drag = False
         self.window._last_full_rows = [

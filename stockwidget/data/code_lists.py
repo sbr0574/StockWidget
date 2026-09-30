@@ -17,6 +17,7 @@ from stockwidget.constants import (
     CODE_LIST_FILES,
 )
 from stockwidget.core.config_store import config_paths, data_cache_dir, load_file, save_file
+from stockwidget.data.network_errors import request_error_message
 
 
 CODES_CHECK_HOUR = 9
@@ -101,12 +102,8 @@ def fetch_json_from_url(url: str, timeout=CODES_HTTP_TIMEOUT):
             if not isinstance(data, dict):
                 raise CodeDownloadError("返回内容不是代码数据")
             return data
-    except requests.Timeout as exc:
-        raise CodeDownloadError("连接或读取超时") from exc
-    except requests.HTTPError as exc:
-        raise CodeDownloadError(f"HTTP {exc.response.status_code}") from exc
     except requests.RequestException as exc:
-        raise CodeDownloadError("网络连接失败或传输中断") from exc
+        raise CodeDownloadError(request_error_message(exc)) from exc
     except ValueError as exc:
         raise CodeDownloadError("返回内容不是有效 JSON") from exc
 
@@ -294,7 +291,9 @@ class CodeListManager:
             try:
                 data = self._fetcher(url)
                 error = "内容缺失或格式不正确"
-            except (CodeDownloadError, requests.RequestException, ValueError) as exc:
+            except requests.RequestException as exc:
+                data, error = None, request_error_message(exc)
+            except (CodeDownloadError, ValueError) as exc:
                 data, error = None, str(exc)
             if isinstance(data, dict) and (validator is None or validator(data)):
                 self._preferred_source = template
