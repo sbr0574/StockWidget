@@ -23,11 +23,9 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComb
     QSpinBox, QTabWidget, QTableWidgetItem, QTimeEdit,
     QVBoxLayout, QWidget)
 
-from stockwidget.ui.hotkey_sequence_edit import HotkeySequenceEdit
-from stockwidget.ui.hotkey_status import HotkeyStatus
-from stockwidget.ui.icon_button import CustomIconButton
-from stockwidget.ui.metric_pool import MetricPoolWidget
-from stockwidget.ui.watchlist_table import WatchlistTable
+from stockwidget.ui.controls.metrics import MetricPoolWidget
+from stockwidget.ui.controls.settings_widgets import (CustomIconButton, HotkeySequenceEdit, HotkeyStatus)
+from stockwidget.ui.watchlist.editor import WatchlistTable
 
 class Ui_SettingDialog(object):
     def setupUi(self, SettingDialog):

@@ -19,10 +19,10 @@ from stockwidget.core.config_store import load_file, save_file
 from stockwidget.data.code_lists import CODES_RETRY_SECONDS, CodeListManager
 from stockwidget.data.update_check import get_update_info
 from stockwidget.platform.autostart import set_start_on_boot
-from stockwidget.ui.settings_dialog import SettingsDialog
-from stockwidget.ui.tray import TrayIcon
-from stockwidget.ui.widget import FloatLabel
-from stockwidget.ui.taskbar import TaskbarController
+from stockwidget.ui.settings.dialog import SettingsDialog
+from stockwidget.ui.menus import TrayIcon
+from stockwidget.ui.floating.widget import FloatLabel
+from stockwidget.ui.floating.taskbar import TaskbarController
 
 
 def _load_custom_icon(path) -> tuple[str, QIcon]:

@@ -115,7 +115,7 @@
   <customwidget>
    <class>MetricListWidget</class>
    <extends>QListWidget</extends>
-   <header>stockwidget.ui.metric_pool</header>
+   <header>stockwidget.ui.controls.metrics</header>
   </customwidget>
  </customwidgets>
  <resources/>

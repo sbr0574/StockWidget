@@ -24,49 +24,39 @@ StockWidget/
 │   ├── constants.py                # 应用名称、版本、配置名和代码下载位置
 │   ├── core/                       # 与 Qt 无关的业务规则
 │   │   ├── config_store.py         # 配置 / 缓存路径、JSON 读取与原子保存
-│   │   ├── watchlist.py            # 自选数据规范化与校验
-│   │   ├── code_search.py          # 代码、名称、拼音及缩写搜索
-│   │   ├── metric_layout.py        # 指标标识、顺序、物理列展开和旧配置兼容
-│   │   ├── quote_presentation.py   # 行情显示值、颜色角色和原始排序值
-│   │   ├── formatters.py           # 数字、单位等格式化
-│   │   ├── view_options.py         # 显示参数、分页和分栏计算
-│   │   ├── geometry.py             # 屏幕选择和窗口边界计算
-│   │   └── hide_rules.py           # 隐藏时间、行情时间与过期判断
+│   │   ├── watchlist.py            # 证券元数据、自选校验、代码 / 名称 / 拼音搜索
+│   │   ├── quote_presentation.py   # 指标定义、格式化、颜色角色、排序和共用列投影
+│   │   ├── view_options.py         # 显示参数、同步偏好、分页和分栏计算
+│   │   └── window_rules.py         # 屏幕边界、恢复位置、隐藏时间与行情过期判断
 │   ├── data/                       # 网络访问与数据同步
-│   │   ├── quotes.py               # 新浪 / 东财请求、解析与统一行情结构
+│   │   ├── quotes.py               # 新浪 / 东财请求、解析、统一行情结构与安全请求结果
 │   │   ├── code_lists.py           # 内置列表、缓存、状态清单与远端同步
 │   │   ├── network_errors.py       # 请求异常分类与安全的显示文本
 │   │   └── update_check.py         # GitHub / Gitee 应用版本检查
 │   ├── platform/                   # 系统能力探测与原生实现
 │   │   ├── capabilities.py         # Windows / macOS / X11 / Wayland 能力判断
-│   │   ├── windows.py              # Windows 原生窗口操作和无激活置顶
+│   │   ├── window.py               # Windows 无激活置顶、Windows / X11 鼠标穿透
 │   │   ├── taskbar.py              # 任务栏嵌入、原生窗口与鼠标输入
-│   │   ├── click_through.py        # Windows / X11 鼠标穿透
 │   │   ├── hotkeys.py              # 全局快捷键注册、注销与冲突结果
 │   │   └── autostart.py            # 各平台开机自启
 │   └── ui/                         # Qt 界面、绑定与显示状态协调
-│       ├── widget.py               # FloatLabel，行情投影与共用操作入口
-│       ├── drag_mixin.py           # 全区域手势、拖动阈值与取消
-│       ├── position_controller.py  # 边界检测、贴边收起 / 展开与完整位置恢复
-│       ├── hide_controller.py      # 定时隐藏、旧行情隐藏与倒计时
-│       ├── taskbar.py              # 行情绘制、刷新和任务栏显示模式协调
-│       ├── pager.py                # 分页控件及箭头 / 页码交互
-│       ├── table_model.py          # 行情模型、颜色角色及 K 线绘制
-│       ├── quote_table.py          # 整表网格与圆角外框统一绘制，绘制层不接收鼠标
-│       ├── table_header.py         # 表头文字与排序箭头
-│       ├── settings_dialog.py      # 五个设置页的信号连接与配置同步
-│       ├── view_settings.py        # 原生组框的参数绑定、同步和编辑状态
-│       ├── settings_style.py       # 通用样式、flat 组框与颜色按钮
-│       ├── theme.py                # 系统主题探测与颜色常量
-│       ├── metric_pool.py          # 共用指标双池、拖拽排序与双击移动
-│       ├── metric_settings_panel.py # 名称 / 单位设置弹窗绑定
-│       ├── watchlist_editor.py     # 自选编辑、增删与配置应用
-│       ├── watchlist_table.py      # 自选表格编辑和拖放交互
-│       ├── add_code_panel.py       # 添加标的、搜索、筛选与结果分页
-│       ├── hotkey_sequence_edit.py # 快捷键输入与保留组合校验
-│       ├── hotkey_status.py        # 快捷键注册状态提示
-│       ├── icon_button.py          # 图标按钮
-│       ├── tray.py                 # 托盘菜单与平台点击行为
+│       ├── floating/              # 行情窗口和显示状态协调
+│       │   ├── widget.py          # FloatLabel：装配、配置、外观和共用窗口操作
+│       │   ├── presenter.py       # QuotePresenter：请求生命周期、缓存、排序及两处页码
+│       │   ├── interaction.py     # 拖动手势、位置与贴边状态、定时及旧行情隐藏
+│       │   └── taskbar.py         # 任务栏绘制、原生输入适配和显示模式协调
+│       ├── controls/              # Designer 可提升的共用控件和绘制
+│       │   ├── quote_view.py      # 行情模型、代理、表头、统一网格和分页控件
+│       │   ├── metrics.py         # 指标双池及名称 / 单位弹窗
+│       │   ├── settings_widgets.py # 快捷键输入 / 状态与自定义图标按钮
+│       │   └── style.py           # 系统强调色、主题样式、flat 组框和颜色图标
+│       ├── settings/              # 设置界面装配和绑定
+│       │   ├── dialog.py          # 五个设置页的信号连接、配置同步和面板交互
+│       │   └── groups.py          # 原生组框的参数绑定、同步和编辑状态
+│       ├── watchlist/             # 自选编辑界面
+│       │   ├── editor.py          # 表格、编辑代理、拖放、增删与配置提交
+│       │   └── add_panel.py       # 搜索、筛选、结果绘制和分页
+│       ├── menus.py               # 托盘与行情右键菜单，共用显示位置选项
 │       └── generated/             # Designer 源文件与自动生成的 Python 适配层
 │           ├── settings.ui
 │           ├── floating_widget.ui
@@ -83,7 +73,9 @@ StockWidget/
 ├── scripts/
 │   ├── generate_ui.py             # 生成全部 / 指定界面，或检查是否同步
 │   └── update_codes.py            # 更新全市场代码列表及状态清单
-├── tests/                         # 业务、网络、界面与平台集成测试
+├── tests/                         # 按 core / data / ui / native 分组的行为回归
+│   ├── support.py                 # 共用 Qt 场景夹具、请求隔离和窗口清理
+│   └── test_app.py                # 应用装配、图标、更新与资源完整性
 ├── .github/
 │   ├── workflows/                 # 测试、三平台构建、代码列表更新
 │   └── scripts/                   # Linux deb / rpm 打包
@@ -98,7 +90,12 @@ StockWidget/
 
 各包的 `__init__.py` 负责包初始化。新增文件按职责放入现有层：纯规则进 `core`，网络进 `data`，原生系统调用进 `platform`，界面与绑定进 `ui`。`app.py` 负责装配；不要在设置绑定中重复实现业务规则或在各平台另建一套行情逻辑。
 
-行情从 `data/quotes.py` 解析为统一结构，经 `core/quote_presentation.py` 生成显示内容与原始排序值，再由 `FloatLabel` 统一排序、分别投影到浮窗与任务栏。两处共用数据和操作入口，分别保存自己的运行时页码。
+行情从 `data/quotes.py` 解析为统一结构；`fetch_quote_result()` 负责安全的请求错误结果，不依赖 Qt。`core/quote_presentation.py` 定义指标，统一生成显示值、颜色角色和原始排序值，提供排序及列投影纯函数。`QuotePresenter` 组合在 `FloatLabel.quotes` 上，独占请求代数、行情缓存、排序和两处运行时页码；`FloatLabel` 持有配置和 Qt 视图，提供共用窗口操作入口。任务栏读取同一展示控制器，不再维护另一套行情状态。
+
+- 同类职责优先归入现有模块；不要为几十行紧密相关的控件、样式或纯函数新建碎片文件。手写源码和测试尽量保持每文件不超过 1000 行，生成的 `ui_*.py` 除外；较大的类优先按状态所有权和职责组合拆分。
+- 内部模块迁移要更新所有调用方、测试补丁目标和 Designer 提升路径，不保留无人使用的旧模块转发。旧用户配置的读取和保存兼容不能作为废弃代码删除。
+- `format_quote()` 固定返回显示值、颜色角色、原始排序值三项；每个指标只对应一个 `MetricSpec.header`，买一 / 卖一也不展开为多列。
+- 测试优先验证用户行为、配置兼容、错误路径和平台边界；共用场景初始化与清理。同一规则用参数化场景覆盖，避免重复断言样式表文本、控件别名或 Qt 自身属性。
 
 配置路径由 `core/config_store.py` 管理：Windows 使用 `%APPDATA%/StockWidget`，其他平台使用 `~/StockWidget`，下载的代码缓存放在其中的 `data/`。兼容旧字段，不擅自变更缓存目录或覆盖用户配置。服务器生成的代码列表发布到 `codes-data` 分支，业务代码在 `main`；更新脚本支持 `CODES_OUTPUT_DIR` 指定输出目录。
 
@@ -134,7 +131,7 @@ StockWidget/
 ## 置顶、隐藏与边界规则
 
 - “浮窗置顶”默认开启；关闭后浮窗可被普通窗口遮盖，“强制置顶”同步取消并禁用，重新开启普通置顶不自动恢复强制置顶。
-- Windows 强制置顶使用 `platform/windows.py` 的原生操作，鼠标穿透期间仍生效，不抢前台输入焦点，避让设置窗口和弹出菜单。
+- Windows 强制置顶使用 `platform/window.py` 的原生操作，鼠标穿透期间仍生效，不抢前台输入焦点，避让设置窗口和弹出菜单。
 - “边界检测”与“贴边隐藏”默认关闭。边界检测开启时，在启动恢复、移动及内容尺寸变化后将浮窗限制在完整屏幕范围；关闭时允许浮窗部分位于屏幕外。双开时允许经过任务栏区域。
 - 贴边隐藏依赖边界检测，只处理左 / 上 / 右边，收起为 5px 窄条；移入展开，移出收起。左边露出面板右边缘、上边露出下边缘；鼠标在展开浮窗内或屏幕最外侧时保持展开。
 - 贴边收起时保存完整窗口位置与尺寸，持久化和呼出不能把窄条当作完整窗口。拖动、菜单和任务栏预览期间避免自动收起；Esc 恢复拖动前状态。
@@ -164,12 +161,12 @@ StockWidget/
 
 修改 `.ui` 后运行 `python scripts/generate_ui.py` 统一生成，也可加界面名称仅生成一个文件；`--check` 检查生成文件是否最新。不要手改 `ui_*.py`。修改控件位置、尺寸、间距时保留 `objectName` 和提升类；绑定代码不能覆盖 Designer 的静态布局属性。
 
-- 已保存的勾选状态、数值、字体与颜色来自用户配置，Designer 初始值不覆盖配置；默认业务参数在 `core/view_options.py` 和 `ui/widget.py`。
+- 已保存的勾选状态、数值、字体与颜色来自用户配置，Designer 初始值不覆盖配置；默认业务参数在 `core/view_options.py` 和 `ui/floating/widget.py`。
 - 下拉框顺序对应业务枚举，增删或重排选项时同步调整绑定。
 - `MetricPoolWidget` 等提升控件在 Designer 中是占位；内部布局修改对应源文件，外部位置在 `settings.ui` 中调整，保留提升关系。
-- 主题由 `ui/settings_style.py` 管理；`settings.ui` 根窗口的自定义样式追加在主题之后，保留系统主题切换。
+- 主题由 `ui/controls/style.py` 管理；`settings.ui` 根窗口的自定义样式追加在主题之后，保留系统主题切换。
 - 指标池高度和浮窗整体尺寸按内容动态适配，Designer 边距与间距生效，预览窗口尺寸不锁定浮窗大小。
-- 添加标的面板每页默认 10 条、条目高度 24；调整结果列表高度时同时核对 `add_code_panel.py` 的 `PAGE_SIZE` 与 `RESULT_ROW_HEIGHT`。
+- 添加标的面板每页默认 10 条、条目高度 24；调整结果列表高度时同时核对 `ui/watchlist/add_panel.py` 的 `PAGE_SIZE` 与 `RESULT_ROW_HEIGHT`。
 - 原生任务栏、行情 / K 线与箭头绘制、鼠标捕获、动态右键菜单由代码实现；Designer 提供相关容器和分页占位区域。
 
 ## 网络与平台约定
@@ -193,16 +190,16 @@ python main.py
 
 ```powershell
 python scripts/generate_ui.py --check
-python -m unittest discover -s tests -v
+python -m unittest discover -s tests -t . -v
 git diff --check
 ```
 
-- 浮窗交互、分栏与分页：`tests.test_pagination`、`tests.test_widget_header`、`tests.test_metric_pool`、`tests.test_designer_forms`。
-- 表格边框与买一 / 卖一：`tests.test_quote_table`、`tests.test_widget_formatting`、`tests.test_metric_layout`，核对边框交叉处不叠加、表头与 K 线边界、单列中轴、两侧配色及任务栏绘制。
-- 位置与隐藏：`tests.test_widget_position`、`tests.test_geometry`、`tests.test_hiding`。
-- 任务栏与置顶：`tests.test_taskbar`、`tests.test_widget_topmost`；相关原生行为还要在真实 Windows 桌面验证。
-- 网络：`tests.test_quotes`、`tests.test_widget_requests`、`tests.test_network_errors`、`tests.test_code_lists`、`tests.test_update_check`。
-- 设置与同步：`tests.test_settings_dialog`，覆盖主题、首次加载、同步开关和总开关联动。
+- 浮窗交互、分栏与分页：`tests.ui.test_pagination`、`tests.ui.test_quote_view`、`tests.ui.test_metrics`、`tests.ui.test_controls`。
+- 表格边框与买一 / 卖一：`tests.ui.test_quote_view`、`tests.core.test_quote_presentation`，核对边框交叉处不叠加、表头与 K 线边界、单列中轴、两侧配色及任务栏绘制。
+- 位置与隐藏：`tests.ui.test_position`、`tests.ui.test_visibility`、`tests.core.test_window_rules`。
+- 任务栏与置顶：`tests.ui.test_taskbar`、`tests.ui.test_visibility`；相关原生行为还要在真实 Windows 桌面设置 `STOCKWIDGET_TEST_WINDOWS=1`、`QT_QPA_PLATFORM=windows` 验证。
+- 网络与数据维护：`tests.data.test_quotes`、`tests.ui.test_requests`、`tests.data.test_code_lists`、`tests.test_app`。
+- 设置与同步：`tests.ui.test_settings`，覆盖主题、首次加载、同步开关和总开关联动；自选编辑使用 `tests.ui.test_watchlist`。
 - 无头 Qt 测试使用 `QT_QPA_PLATFORM=offscreen`；高 DPI 验证可使用 `QT_SCALE_FACTOR=1.5` / `2`。字体像素比较需确认中文字体可用；Qt 主题测试同进程卡住时可隔离运行并如实说明。
 - Linux X11 集成验证按 `.github/workflows/test.yml` 使用 `xvfb-run` 和 `STOCKWIDGET_TEST_X11=1`；维护代码列表脚本另需 `pandas`、`openpyxl` 和 `pypinyin`。
 

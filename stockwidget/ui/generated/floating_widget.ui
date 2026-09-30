@@ -144,12 +144,12 @@
   <customwidget>
    <class>QuoteTableView</class>
    <extends>QTableView</extends>
-   <header>stockwidget.ui.quote_table</header>
+   <header>stockwidget.ui.controls.quote_view</header>
   </customwidget>
   <customwidget>
    <class>PagerWidget</class>
    <extends>QWidget</extends>
-   <header>stockwidget.ui.pager</header>
+   <header>stockwidget.ui.controls.quote_view</header>
   </customwidget>
  </customwidgets>
  <resources/>

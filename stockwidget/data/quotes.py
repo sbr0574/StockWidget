@@ -3,7 +3,9 @@ from typing import Tuple
 
 import requests
 
-from stockwidget.core.hide_rules import QUOTE_TIMEZONE, quote_timestamp
+from stockwidget.core.window_rules import QUOTE_TIMEZONE, quote_timestamp
+from stockwidget.data.network_errors import request_error_message
+
 
 # =====================================================================
 # 统一行情字典 schema（新浪 / 东财 两套数据源返回格式一致）：
@@ -373,3 +375,14 @@ def request_quote(instruments: dict[str, dict], source: str = DATA_SOURCE) -> di
         _, data = request_eastmoney(instruments)
         return data
     return request_sina(instruments)
+
+
+def fetch_quote_result(codes: dict, source: str):
+    """Return (ok, quotes, safe_error) for consumers without Qt dependencies."""
+    source_name = {"sina": "新浪", "eastmoney": "东财"}.get(source, "行情")
+    try:
+        return True, request_quote(codes, source=source), None
+    except requests.exceptions.RequestException as exc:
+        return False, None, f"{source_name}：{request_error_message(exc)}"
+    except Exception as exc:
+        return False, None, f"{source_name}：行情处理失败（{type(exc).__name__}）"

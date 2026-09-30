@@ -1,1 +1,1 @@
-"""StockWidget tests."""
+"""StockWidget regression tests."""

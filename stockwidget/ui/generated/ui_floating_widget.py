@@ -19,8 +19,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QHBoxLay
     QHeaderView, QLabel, QSizePolicy, QVBoxLayout,
     QWidget)
 
-from stockwidget.ui.pager import PagerWidget
-from stockwidget.ui.quote_table import QuoteTableView
+from stockwidget.ui.controls.quote_view import (PagerWidget, QuoteTableView)
 
 class Ui_FloatingWidget(object):
     def setupUi(self, floating_widget):

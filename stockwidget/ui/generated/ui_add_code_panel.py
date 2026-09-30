@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QHBoxLay
     QLabel, QPushButton, QSizePolicy, QSpacerItem,
     QVBoxLayout, QWidget)
 
-from stockwidget.ui.add_code_panel import (CodeSearchInput, FilledCheckBox, FilterCheckRow, SearchResultList,
+from stockwidget.ui.watchlist.add_panel import (CodeSearchInput, FilledCheckBox, FilterCheckRow, SearchResultList,
     SelectAllCheckBox)
 
 class Ui_AddCodePanel(object):

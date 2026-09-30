@@ -339,28 +339,28 @@
   <customwidget>
    <class>CodeSearchInput</class>
    <extends>QLineEdit</extends>
-   <header>stockwidget.ui.add_code_panel</header>
+   <header>stockwidget.ui.watchlist.add_panel</header>
   </customwidget>
   <customwidget>
    <class>SearchResultList</class>
    <extends>QListView</extends>
-   <header>stockwidget.ui.add_code_panel</header>
+   <header>stockwidget.ui.watchlist.add_panel</header>
   </customwidget>
   <customwidget>
    <class>FilterCheckRow</class>
    <extends>QWidget</extends>
-   <header>stockwidget.ui.add_code_panel</header>
+   <header>stockwidget.ui.watchlist.add_panel</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>FilledCheckBox</class>
    <extends>QCheckBox</extends>
-   <header>stockwidget.ui.add_code_panel</header>
+   <header>stockwidget.ui.watchlist.add_panel</header>
   </customwidget>
   <customwidget>
    <class>SelectAllCheckBox</class>
    <extends>QCheckBox</extends>
-   <header>stockwidget.ui.add_code_panel</header>
+   <header>stockwidget.ui.watchlist.add_panel</header>
   </customwidget>
  </customwidgets>
  <resources/>

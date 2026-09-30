@@ -1,8 +1,133 @@
-"""行情指标计算和展示投影，不依赖 Qt，也不修改原始行情。"""
+"""指标定义、旧配置迁移、数值格式化及行情展示投影；不依赖 Qt。"""
 
 from dataclasses import dataclass
+from typing import Mapping, Sequence
 
-from stockwidget.core.formatters import format_value, should_use_english_units
+
+@dataclass(frozen=True)
+class MetricSpec:
+    metric_id: str
+    label: str
+    header: str
+    legacy_attr: str
+    default_visible: bool = False
+
+
+# 名称作为可排序、可显示/隐藏的普通指标参与布局。
+NAME_METRIC_ID = "name"
+
+METRIC_SPECS = (
+    MetricSpec(NAME_METRIC_ID, "名称", "名称", "name_visible", True),
+    MetricSpec("price", "现价", "现价", "price_visible", True),
+    MetricSpec("change", "涨跌", "涨跌", "change_visible"),
+    MetricSpec("change_pct", "涨幅", "涨幅", "change_pct_visible", True),
+    MetricSpec("profit", "浮盈", "浮盈", "profit_visible"),
+    MetricSpec("b1s1", "买一/卖一", "买一/卖一", "b1s1_visible"),
+    MetricSpec("commi", "委比", "委比", "commi_visible"),
+    MetricSpec("volume", "成交量", "成交量", "vol_visible"),
+    MetricSpec("amount", "成交额", "成交额", "amount_visible"),
+    MetricSpec("average", "均价", "均价", "avg_visible"),
+    MetricSpec("kline", "日K线", "K线", "kline_visible"),
+)
+
+METRIC_BY_ID = {spec.metric_id: spec for spec in METRIC_SPECS}
+METRIC_IDS = tuple(METRIC_BY_ID)
+DEFAULT_VISIBLE_METRICS = tuple(
+    spec.metric_id for spec in METRIC_SPECS if spec.default_visible
+)
+
+
+def normalize_visible_metrics(value: Sequence[str] | None) -> list[str]:
+    """过滤未知项和重复项，同时保留合法指标的输入顺序。"""
+    if not isinstance(value, (list, tuple)):
+        return []
+
+    normalized = []
+    seen = set()
+    for raw_metric_id in value:
+        metric_id = str(raw_metric_id or "").strip()
+        if metric_id in METRIC_BY_ID and metric_id not in seen:
+            normalized.append(metric_id)
+            seen.add(metric_id)
+    return normalized
+
+
+def visible_metrics_from_config(cfg: Mapping | None) -> list[str]:
+    """读取新有序列表；字段缺失或类型错误时从旧可见布尔值迁移。"""
+    cfg = cfg if isinstance(cfg, Mapping) else {}
+    raw_metrics = cfg.get("visible_metrics")
+    if isinstance(raw_metrics, (list, tuple)):
+        normalized = normalize_visible_metrics(raw_metrics)
+        # 旧版本配置的 visible_metrics 不含名称指标：名称仍受独立的
+        # name_visible 开关控制，未关闭时补在首位，保持原有显示效果。
+        if NAME_METRIC_ID not in normalized and bool(cfg.get("name_visible", True)):
+            normalized.insert(0, NAME_METRIC_ID)
+        return normalized
+
+    return [
+        spec.metric_id
+        for spec in METRIC_SPECS
+        if bool(cfg.get(spec.legacy_attr, spec.default_visible))
+    ]
+
+
+def metric_headers(metric_ids: Sequence[str] | None) -> list[str]:
+    """每个指标对应一列，按有效指标的配置顺序取得表头。"""
+    return [METRIC_BY_ID[metric_id].header for metric_id in normalize_visible_metrics(metric_ids)]
+
+
+def legacy_visibility(metric_ids: Sequence[str] | None) -> dict[str, bool]:
+    """仅在保存配置时生成旧布尔字段；运行时以有序指标列表为准。"""
+    visible = set(normalize_visible_metrics(metric_ids))
+    return {
+        spec.legacy_attr: spec.metric_id in visible
+        for spec in METRIC_SPECS
+    }
+
+
+# 自动单位模式下使用英文单位（k/M/B/T）的市场：美股与国际指数。
+ENGLISH_UNIT_MARKETS = frozenset({"us", "gb"})
+
+
+def format_value(value: float, lot_size: int = 1, unit_cn: bool = True) -> str:
+    """统一格式化成交量/成交额等数值。
+
+    unit_cn=True 时按 万/亿/万亿 缩写，否则按 k/M/B/T 缩写；
+    lot_size 用于把成交量按每手股数换算后再缩写。
+    """
+    value = int(value / lot_size)
+    if unit_cn:
+        if value < 1e4:
+            return f"{value}"
+        if value < 1e8:
+            return f"{value / 1e4:.2f}万"
+        if value < 1e12:
+            return f"{value / 1e8:.2f}亿"
+        return f"{value / 1e12:.2f}万亿"
+    if value < 1e3:
+        return f"{value}"
+    if value < 1e6:
+        return f"{value / 1e3:.2f}k"
+    if value < 1e9:
+        return f"{value / 1e6:.2f}M"
+    if value < 1e12:
+        return f"{value / 1e9:.2f}B"
+    return f"{value / 1e12:.2f}T"
+
+
+def should_use_english_units(unit_mode: str, market: str = "") -> bool:
+    """按单位模式决定是否使用英文单位。
+
+    模式为 中文/英文 时按模式返回；“自动”时美股与国际指数
+    （market 为 us/gb）使用英文单位，国内、港股等使用中文单位。
+    """
+    mode = str(unit_mode or "").strip().lower()
+    if mode in ("en", "english", "英文"):
+        return True
+    if mode in ("cn", "zh", "chinese", "中文"):
+        return False
+    return str(market or "").strip().lower() in ENGLISH_UNIT_MARKETS
+
 
 COLOR_ROLE_TEXT = "text"
 COLOR_ROLE_UP = "up"
@@ -46,7 +171,6 @@ def format_quote(
     market: str = "",
     cost: float | None = None,
     options: QuoteDisplayOptions = QuoteDisplayOptions(),
-    include_sort: bool = False,
 ):
     data = dict(data)
     lot_size = 100 if market in {"sh", "sz", "bj"} and security_type != "期" else 1
@@ -187,6 +311,26 @@ def format_quote(
         if not data["deals_amt"]:
             sort_values["成交额"] = None
 
-    if include_sort:
-        return format_data, color_roles, sort_values
-    return format_data, color_roles
+    return format_data, color_roles, sort_values
+
+
+SORTABLE_HEADERS = ("现价", "涨跌", "涨幅", "浮盈", "委比", "成交量", "成交额", "均价")
+
+
+def sorted_quote_indices(sort_values, header, *, descending=True):
+    """按原始数值稳定排序，缺失值始终放最后；不修改自选顺序。"""
+    indices = list(range(len(sort_values)))
+    if header not in SORTABLE_HEADERS:
+        return indices
+    valid = [i for i in indices if sort_values[i].get(header) is not None]
+    missing = [i for i in indices if sort_values[i].get(header) is None]
+    valid.sort(key=lambda i: sort_values[i][header], reverse=descending)
+    return valid + missing
+
+
+def project_quote_columns(rows, color_roles, headers):
+    """浮窗和任务栏共用相同的缺省文字、颜色及对齐规则。"""
+    values = [[row.get(h, "-") for h in headers] for row in rows]
+    roles = [[row.get(h, COLOR_ROLE_TEXT) for h in headers] for row in color_roles]
+    right_columns = [i for i, h in enumerate(headers) if h not in ("名称", "K线", "买一/卖一")]
+    return values, roles, right_columns

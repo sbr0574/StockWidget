@@ -2,7 +2,7 @@
 
 from dataclasses import asdict, dataclass, field
 
-from stockwidget.core.metric_layout import DEFAULT_VISIBLE_METRICS, normalize_visible_metrics
+from stockwidget.core.quote_presentation import DEFAULT_VISIBLE_METRICS, normalize_visible_metrics
 
 
 PAGE_MODES = (("first", "只显示前 N 行"), ("manual", "手动翻页"), ("auto", "自动翻页"))
@@ -87,6 +87,17 @@ class ViewOptions:
 
     def to_config(self):
         return asdict(self)
+
+    def page_settings(self, surface):
+        """读取指定显示面的有效翻页配置，保留未启用的独立偏好。"""
+        if surface == "float" or self.taskbar_sync_paging:
+            return (self.float_page_mode if self.float_paging_enabled else "first",
+                    self.float_page_interval)
+        return self.taskbar_page_mode, self.taskbar_page_interval
+
+    def split_settings(self, surface):
+        prefix = "float" if surface == "float" or self.taskbar_sync_split else "taskbar"
+        return getattr(self, f"{prefix}_split_enabled"), getattr(self, f"{prefix}_split_separator")
 
 
 @dataclass(frozen=True)

@@ -18,7 +18,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QApplication, QLabel, QListView, QListWidgetItem,
     QSizePolicy, QSpacerItem, QVBoxLayout, QWidget)
 
-from stockwidget.ui.metric_pool import MetricListWidget
+from stockwidget.ui.controls.metrics import MetricListWidget
 
 class Ui_MetricPool(object):
     def setupUi(self, metric_pool):

@@ -2533,28 +2533,28 @@
   <customwidget>
    <class>HotkeySequenceEdit</class>
    <extends>QKeySequenceEdit</extends>
-   <header>stockwidget.ui.hotkey_sequence_edit</header>
+   <header>stockwidget.ui.controls.settings_widgets</header>
   </customwidget>
   <customwidget>
    <class>WatchlistTable</class>
    <extends>QTableWidget</extends>
-   <header>stockwidget.ui.watchlist_table</header>
+   <header>stockwidget.ui.watchlist.editor</header>
   </customwidget>
   <customwidget>
    <class>CustomIconButton</class>
    <extends>QPushButton</extends>
-   <header>stockwidget.ui.icon_button</header>
+   <header>stockwidget.ui.controls.settings_widgets</header>
   </customwidget>
   <customwidget>
    <class>MetricPoolWidget</class>
    <extends>QWidget</extends>
-   <header>stockwidget.ui.metric_pool</header>
+   <header>stockwidget.ui.controls.metrics</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>HotkeyStatus</class>
    <extends>QWidget</extends>
-   <header>stockwidget.ui.hotkey_status</header>
+   <header>stockwidget.ui.controls.settings_widgets</header>
   </customwidget>
  </customwidgets>
  <resources/>
