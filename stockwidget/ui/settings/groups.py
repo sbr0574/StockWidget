@@ -99,26 +99,37 @@ class FloatRowSettings(_SettingsGroup):
         super().bind(source)
         self.group.toggled.connect(lambda value: source.set_view_options(float_paging_enabled=value))
         self._publish(rows=self._value_control("float_max_rows"))
+        self._publish(paging=self._control(QGroupBox, "float_paging_settings"),
+                      paging_body=self._control(QWidget, "float_paging_settings_body"),
+                      auto=self._control(QCheckBox, "float_page_mode"),
+                      interval=self._control(QComboBox, "float_page_interval"))
+        for index in range(self.interval.count()):
+            self.interval.setItemData(index, int(self.interval.itemText(index).removesuffix("秒")))
+        self.paging.toggled.connect(self._set_page_mode)
+        self.auto.toggled.connect(self._set_page_mode)
+        self.interval.currentIndexChanged.connect(
+            lambda _: source.set_view_options(float_page_interval=self.interval.currentData()))
         self._connect_sync()
+
+    def _set_page_mode(self, _checked):
+        mode = "auto" if self.auto.isChecked() else "manual"
+        self.source.set_view_options(float_page_mode=mode if self.paging.isChecked() else "first")
 
     def _sync(self):
         options = self.source.view_options
         self.group.setChecked(options.float_paging_enabled)
         self.body.setEnabled(options.float_paging_enabled)
         self.rows.setValue(options.float_max_rows)
-
-
-class PagingSettings(_SettingsGroup):
-    def bind(self, source):
-        super().bind(source)
-        self._page_controls("float")
-        self._connect_sync()
-
-    def _sync(self):
-        options = self.source.view_options
-        self.body.setEnabled(options.float_paging_enabled)
-        self.mode.setCurrentIndex(self.mode.findData(options.float_page_mode))
-        self.interval.setValue(options.float_page_interval)
+        paging = options.float_page_mode != "first"
+        self.paging.setChecked(paging)
+        self.paging_body.setEnabled(paging)
+        self.auto.setChecked(options.float_page_mode == "auto")
+        index = self.interval.findData(options.float_page_interval)
+        if index < 0:
+            # Saved intervals need not be one of the Designer's preset choices.
+            self.interval.addItem(f"{options.float_page_interval}秒", options.float_page_interval)
+            index = self.interval.count() - 1
+        self.interval.setCurrentIndex(index)
         self.interval.setEnabled(options.float_page_mode == "auto")
 
 

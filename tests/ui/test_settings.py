@@ -349,22 +349,22 @@ class SettingsDialogTests(SettingsTestCase):
 
     def test_shared_paging_and_taskbar_style_groups_preserve_control_behavior(self):
         dialog, window = self._make_dialog()
-        floating, taskbar, style = (dialog.float_paging_settings,
+        floating, taskbar, style = (dialog.float_row_settings,
                                    dialog.taskbar_paging_settings, dialog.taskbar_style_settings)
         row_limit = dialog.float_row_settings
-        self.assertFalse(floating.mode.isEnabled())
+        self.assertFalse(floating.auto.isEnabled())
         row_limit.setChecked(True)
         dialog.taskbar_settings.setChecked(True)
         dialog.taskbar_settings.metrics.setChecked(False)
         row_limit.rows.setValue(3)
-        floating.mode.setCurrentIndex(floating.mode.findData("auto"))
-        floating.interval.setValue(12)
+        floating.auto.setChecked(True)
+        floating.interval.setCurrentIndex(floating.interval.findData(10))
         taskbar.setChecked(False)
         dialog.taskbar_settings.rows.setValue(1)
         taskbar.mode.setCurrentIndex(taskbar.mode.findData("manual"))
         self.assertEqual(window.view_options.float_max_rows, 3)
         self.assertEqual(window.view_options.float_page_mode, "auto")
-        self.assertEqual(window.view_options.float_page_interval, 12)
+        self.assertEqual(window.view_options.float_page_interval, 10)
         self.assertEqual(window.view_options.taskbar_rows, 1)
         self.assertTrue(floating.interval.isEnabled())
         self.assertFalse(taskbar.interval.isEnabled())
@@ -385,9 +385,72 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertEqual(dialog.taskbar_settings.metric_pool.visible_metrics, ["price", "volume"])
         row_limit.setChecked(False)
         self.assertFalse(row_limit.rows.isEnabled())
-        row_limit = dialog.float_row_settings
-        self.assertFalse(floating.mode.isEnabled())
+        self.assertFalse(floating.auto.isEnabled())
         self.assertFalse(floating.interval.isEnabled())
+
+    def test_row_limit_preserves_saved_paging_mode_and_interval_until_auto_is_changed(self):
+        for mode in ("first", "manual", "auto"):
+            with self.subTest(mode=mode):
+                dialog, window = self._make_dialog(float_paging_enabled=True,
+                                                   float_page_mode=mode, float_page_interval=17)
+                rows = dialog.float_row_settings
+                self.assertEqual(rows.paging.isChecked(), mode != "first")
+                self.assertEqual(rows.auto.isChecked(), mode == "auto")
+                self.assertEqual(rows.interval.isEnabled(), mode == "auto")
+                self.assertEqual(rows.interval.currentData(), 17)
+                rows.setChecked(False)
+                dialog._load_settings()
+                self.assertFalse(rows.auto.isEnabled())
+                self.assertEqual(window.view_options.float_page_mode, mode)
+                self.assertEqual(window.view_options.float_page_interval, 17)
+                rows.setChecked(True)
+                rows.paging.setChecked(True)
+                rows.auto.setChecked(True)
+                self.assertEqual(window.view_options.float_page_mode, "auto")
+                self.assertTrue(rows.interval.isEnabled())
+                rows.auto.setChecked(False)
+                self.assertEqual(window.view_options.float_page_mode, "manual")
+                self.assertFalse(rows.interval.isEnabled())
+                self.assertEqual(window.view_options.float_page_interval, 17)
+
+    def test_nested_paging_switch_controls_first_manual_auto_and_synced_taskbar(self):
+        dialog, window = self._make_dialog(float_paging_enabled=True, float_page_mode="first")
+        dialog.ui.tab_widget.setCurrentWidget(dialog.ui.appearance)
+        dialog.show()
+        self.qt_app.processEvents()
+        rows = dialog.float_row_settings
+        paging = rows.paging
+        self.assertTrue(rows.rows.isEnabled())
+        self.assertFalse(rows.auto.isEnabled())
+
+        def click_paging():
+            option = QStyleOptionGroupBox()
+            paging.initStyleOption(option)
+            point = paging.style().subControlRect(QStyle.CC_GroupBox, option,
+                                                 QStyle.SC_GroupBoxCheckBox, paging).center()
+            QTest.mouseClick(paging, Qt.LeftButton, pos=point)
+            self.qt_app.processEvents()
+
+        click_paging()
+        self.assertTrue(rows.auto.isEnabled())
+        self.assertFalse(rows.interval.isEnabled())
+        self.assertEqual(window.view_options.page_settings("float")[0], "manual")
+        rows.auto.click()
+        rows.interval.setCurrentIndex(rows.interval.findData(3600))
+        self.assertEqual(window.view_options.page_settings("float"), ("auto", 3600))
+        self.assertEqual(window.view_options.page_settings("taskbar"), ("auto", 3600))
+        click_paging()
+        self.assertTrue(rows.rows.isEnabled())
+        self.assertFalse(rows.auto.isEnabled())
+        self.assertFalse(rows.interval.isEnabled())
+        self.assertEqual(window.view_options.page_settings("float"), ("first", 3600))
+        self.assertEqual(window.view_options.page_settings("taskbar"), ("first", 3600))
+        dialog._apply_theme_stylesheet()
+        self.qt_app.processEvents()
+        self.assertFalse(rows.auto.isEnabled())
+        click_paging()
+        self.assertTrue(rows.auto.isEnabled())
+        self.assertEqual(window.view_options.page_settings("float"), ("manual", 3600))
 
     def test_native_sync_groups_enable_independent_editing_after_show_and_mouse_click(self):
         dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_metrics=False,
@@ -432,7 +495,7 @@ class SettingsDialogTests(SettingsTestCase):
                                            taskbar_split_enabled=True, taskbar_split_separator=False)
         floating = dialog.float_split_settings
         taskbar = dialog.taskbar_split_settings
-        for group in (dialog.float_row_settings, dialog.float_paging_settings, floating,
+        for group in (dialog.float_row_settings, dialog.float_row_settings.paging, floating,
                       dialog.taskbar_settings, dialog.taskbar_settings.metrics,
                       dialog.taskbar_style_settings, dialog.taskbar_paging_settings, taskbar):
             self.assertIs(type(group), QGroupBox)
@@ -465,7 +528,7 @@ class SettingsDialogTests(SettingsTestCase):
         taskbar.enabled.setChecked(True)
         self.assertTrue(taskbar.separator.isEnabled())
         dialog.show()
-        for page, group in ((dialog.ui.functions, floating), (dialog.ui.taskbar, taskbar)):
+        for page, group in ((dialog.ui.appearance, floating), (dialog.ui.taskbar, taskbar)):
             dialog.ui.tab_widget.setCurrentWidget(page)
             self.qt_app.processEvents()
             bounds = group.rect().translated(group.mapTo(page, QPoint()))

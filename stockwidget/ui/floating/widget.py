@@ -240,6 +240,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.scheduled_hide_enabled = bool(cfg.get("scheduled_hide_enabled", False))
         self.scheduled_hide_times = normalize_hide_times(cfg.get("scheduled_hide_times", []))
         self.auto_hide_enabled = bool(cfg.get("auto_hide_enabled", False))
+        self.hide_enabled = bool(cfg.get("hide_enabled", self.scheduled_hide_enabled or self.auto_hide_enabled))
         self.boundary_check_enabled = bool(cfg.get("boundary_check_enabled", False))
         self.edge_hide_enabled = self.boundary_check_enabled and bool(cfg.get("edge_hide_enabled", False))
         self.float_on_top = bool(cfg.get("float_on_top", True))
@@ -341,6 +342,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
             "refresh_seconds": self.refresh_seconds,
             "data_source": self.data_source,
+            "hide_enabled": self.hide_enabled,
             "scheduled_hide_enabled": self.scheduled_hide_enabled,
             "scheduled_hide_times": list(self.scheduled_hide_times),
             "auto_hide_enabled": self.auto_hide_enabled,
@@ -632,8 +634,13 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._notify_change()
         self.quotes.refresh()
 
-    def set_hide_options(self, *, scheduled_hide_enabled=None, scheduled_hide_times=None,
+    def set_hide_options(self, *, hide_enabled=None, scheduled_hide_enabled=None, scheduled_hide_times=None,
                          auto_hide_enabled=None):
+        if hide_enabled is not None:
+            self.hide_enabled = bool(hide_enabled)
+        elif scheduled_hide_enabled or auto_hide_enabled:
+            # 保持旧调用方启用单项隐藏时即可生效的行为。
+            self.hide_enabled = True
         if scheduled_hide_enabled is not None:
             self.scheduled_hide_enabled = bool(scheduled_hide_enabled)
         if scheduled_hide_times is not None:

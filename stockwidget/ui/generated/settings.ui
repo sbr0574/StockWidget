@@ -69,9 +69,9 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>55</y>
+        <y>56</y>
         <width>300</width>
-        <height>256</height>
+        <height>255</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -125,9 +125,9 @@
       <attribute name="verticalHeaderCascadingSectionResizes">
        <bool>false</bool>
       </attribute>
-      <column/>
-      <column/>
-      <column/>
+      <column />
+      <column />
+      <column />
      </widget>
      <widget class="QPushButton" name="btn_del">
       <property name="geometry">
@@ -142,7 +142,7 @@
        <string>删除</string>
       </property>
       <property name="icon">
-       <iconset theme="QIcon::ThemeIcon::ListRemove"/>
+       <iconset theme="QIcon::ThemeIcon::ListRemove" />
       </property>
       <property name="iconSize">
        <size>
@@ -170,7 +170,7 @@
        <string>添加</string>
       </property>
       <property name="icon">
-       <iconset theme="QIcon::ThemeIcon::ListAdd"/>
+       <iconset theme="QIcon::ThemeIcon::ListAdd" />
       </property>
       <property name="iconSize">
        <size>
@@ -198,7 +198,7 @@
        <string>置顶</string>
       </property>
       <property name="icon">
-       <iconset theme="QIcon::ThemeIcon::GoUp"/>
+       <iconset theme="QIcon::ThemeIcon::GoUp" />
       </property>
       <property name="iconSize">
        <size>
@@ -217,9 +217,9 @@
     <widget class="QGroupBox" name="gb_data">
      <property name="geometry">
       <rect>
-       <x>350</x>
+       <x>340</x>
        <y>100</y>
-       <width>201</width>
+       <width>211</width>
        <height>231</height>
       </rect>
      </property>
@@ -234,36 +234,36 @@
      </property>
      <layout class="QVBoxLayout" name="floatMetricsLayout">
       <property name="leftMargin">
-       <number>5</number>
+       <number>10</number>
       </property>
       <property name="topMargin">
-       <number>20</number>
+       <number>15</number>
       </property>
       <property name="rightMargin">
-       <number>5</number>
+       <number>10</number>
       </property>
       <property name="bottomMargin">
        <number>5</number>
       </property>
       <property name="spacing">
-       <number>0</number>
+       <number>5</number>
       </property>
       <item>
-       <widget class="MetricPoolWidget" name="float_metric_pool"/>
+       <widget class="MetricPoolWidget" name="float_metric_pool" />
       </item>
      </layout>
     </widget>
     <widget class="QGroupBox" name="gb_data_setting">
      <property name="geometry">
       <rect>
-       <x>350</x>
+       <x>340</x>
        <y>10</y>
-       <width>201</width>
+       <width>211</width>
        <height>85</height>
       </rect>
      </property>
      <property name="styleSheet">
-      <string notr="true"/>
+      <string notr="true" />
      </property>
      <property name="title">
       <string>数据设置</string>
@@ -279,7 +279,7 @@
        <rect>
         <x>10</x>
         <y>25</y>
-        <width>81</width>
+        <width>49</width>
         <height>26</height>
        </rect>
       </property>
@@ -291,7 +291,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>55</y>
+        <y>56</y>
         <width>81</width>
         <height>26</height>
        </rect>
@@ -304,7 +304,7 @@
       <property name="geometry">
        <rect>
         <x>100</x>
-        <y>55</y>
+        <y>56</y>
         <width>95</width>
         <height>26</height>
        </rect>
@@ -319,9 +319,9 @@
      <widget class="QRadioButton" name="rb_sina">
       <property name="geometry">
        <rect>
-        <x>65</x>
+        <x>64</x>
         <y>25</y>
-        <width>51</width>
+        <width>66</width>
         <height>26</height>
        </rect>
       </property>
@@ -332,9 +332,9 @@
      <widget class="QRadioButton" name="rb_em">
       <property name="geometry">
        <rect>
-        <x>120</x>
+        <x>135</x>
         <y>25</y>
-        <width>81</width>
+        <width>66</width>
         <height>26</height>
        </rect>
       </property>
@@ -380,12 +380,12 @@
          <number>8</number>
         </property>
         <property name="spacing">
-         <number>8</number>
+         <number>10</number>
         </property>
         <item row="0" column="0">
          <layout class="QVBoxLayout" name="floatStyleLayout">
           <property name="spacing">
-           <number>8</number>
+           <number>10</number>
           </property>
           <item>
            <widget class="QGroupBox" name="gb_color">
@@ -399,18 +399,33 @@
              <bool>true</bool>
             </property>
             <layout class="QGridLayout" name="gridLayout_4">
+             <property name="leftMargin">
+              <number>10</number>
+             </property>
+             <property name="topMargin">
+              <number>15</number>
+             </property>
+             <property name="rightMargin">
+              <number>10</number>
+             </property>
+             <property name="bottomMargin">
+              <number>5</number>
+             </property>
+             <property name="spacing">
+              <number>5</number>
+             </property>
              <item row="1" column="1">
               <widget class="QPushButton" name="btn_up_color">
                <property name="minimumSize">
                 <size>
-                 <width>60</width>
-                 <height>25</height>
+                 <width>55</width>
+                 <height>26</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>60</width>
-                 <height>25</height>
+                 <width>55</width>
+                 <height>26</height>
                 </size>
                </property>
                <property name="text">
@@ -434,14 +449,14 @@
               <widget class="QPushButton" name="btn_neutral_color">
                <property name="minimumSize">
                 <size>
-                 <width>60</width>
-                 <height>25</height>
+                 <width>55</width>
+                 <height>26</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>60</width>
-                 <height>25</height>
+                 <width>55</width>
+                 <height>26</height>
                 </size>
                </property>
                <property name="text">
@@ -465,14 +480,14 @@
               <widget class="QPushButton" name="btn_down_color">
                <property name="minimumSize">
                 <size>
-                 <width>60</width>
-                 <height>25</height>
+                 <width>55</width>
+                 <height>26</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>60</width>
-                 <height>25</height>
+                 <width>55</width>
+                 <height>26</height>
                 </size>
                </property>
                <property name="text">
@@ -496,14 +511,14 @@
               <widget class="QPushButton" name="btn_fg_color">
                <property name="minimumSize">
                 <size>
-                 <width>60</width>
-                 <height>25</height>
+                 <width>55</width>
+                 <height>26</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>60</width>
-                 <height>25</height>
+                 <width>55</width>
+                 <height>26</height>
                 </size>
                </property>
                <property name="text">
@@ -534,13 +549,13 @@
                <property name="minimumSize">
                 <size>
                  <width>90</width>
-                 <height>25</height>
+                 <height>26</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>90</width>
-                 <height>25</height>
+                 <height>26</height>
                 </size>
                </property>
                <property name="baseSize">
@@ -565,13 +580,13 @@
                <property name="minimumSize">
                 <size>
                  <width>90</width>
-                 <height>25</height>
+                 <height>26</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>90</width>
-                 <height>25</height>
+                 <height>26</height>
                 </size>
                </property>
                <property name="text">
@@ -586,14 +601,14 @@
               <widget class="QPushButton" name="btn_bg_color">
                <property name="minimumSize">
                 <size>
-                 <width>60</width>
-                 <height>25</height>
+                 <width>55</width>
+                 <height>26</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>60</width>
-                 <height>25</height>
+                 <width>55</width>
+                 <height>26</height>
                 </size>
                </property>
                <property name="text">
@@ -634,10 +649,37 @@
              <bool>true</bool>
             </property>
             <layout class="QGridLayout" name="gridLayout_3">
+             <property name="leftMargin">
+              <number>10</number>
+             </property>
+             <property name="topMargin">
+              <number>15</number>
+             </property>
+             <property name="rightMargin">
+              <number>10</number>
+             </property>
+             <property name="bottomMargin">
+              <number>5</number>
+             </property>
+             <property name="spacing">
+              <number>5</number>
+             </property>
              <item row="0" column="0">
               <widget class="QLabel" name="label_bg">
                <property name="text">
                 <string>背景：</string>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>90</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>90</width>
+                 <height>26</height>
+                </size>
                </property>
               </widget>
              </item>
@@ -655,6 +697,18 @@
                <property name="orientation">
                 <enum>Qt::Orientation::Horizontal</enum>
                </property>
+               <property name="minimumSize">
+                <size>
+                 <width>135</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>135</width>
+                 <height>26</height>
+                </size>
+               </property>
               </widget>
              </item>
              <item row="0" column="2">
@@ -662,11 +716,17 @@
                <property name="minimumSize">
                 <size>
                  <width>40</width>
-                 <height>0</height>
+                 <height>26</height>
                 </size>
                </property>
                <property name="text">
                 <string>100%</string>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>40</width>
+                 <height>26</height>
+                </size>
                </property>
               </widget>
              </item>
@@ -674,6 +734,18 @@
               <widget class="QLabel" name="label_all">
                <property name="text">
                 <string>整体窗口：</string>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>90</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>90</width>
+                 <height>26</height>
+                </size>
                </property>
               </widget>
              </item>
@@ -691,6 +763,18 @@
                <property name="orientation">
                 <enum>Qt::Orientation::Horizontal</enum>
                </property>
+               <property name="minimumSize">
+                <size>
+                 <width>135</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>135</width>
+                 <height>26</height>
+                </size>
+               </property>
               </widget>
              </item>
              <item row="1" column="2">
@@ -698,11 +782,17 @@
                <property name="minimumSize">
                 <size>
                  <width>40</width>
-                 <height>0</height>
+                 <height>26</height>
                 </size>
                </property>
                <property name="text">
                 <string>100%</string>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>40</width>
+                 <height>26</height>
+                </size>
                </property>
               </widget>
              </item>
@@ -727,20 +817,72 @@
              <bool>true</bool>
             </property>
             <layout class="QGridLayout" name="gridLayout_2">
+             <property name="leftMargin">
+              <number>10</number>
+             </property>
+             <property name="topMargin">
+              <number>15</number>
+             </property>
+             <property name="rightMargin">
+              <number>10</number>
+             </property>
+             <property name="bottomMargin">
+              <number>5</number>
+             </property>
+             <property name="spacing">
+              <number>5</number>
+             </property>
              <item row="0" column="0">
               <widget class="QLabel" name="label_font">
                <property name="text">
                 <string>字体样式：</string>
                </property>
+               <property name="minimumSize">
+                <size>
+                 <width>90</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>90</width>
+                 <height>26</height>
+                </size>
+               </property>
               </widget>
              </item>
              <item row="0" column="1" colspan="2">
-              <widget class="QFontComboBox" name="cmb_font"/>
+              <widget class="QFontComboBox" name="cmb_font">
+               <property name="minimumSize">
+                <size>
+                 <width>180</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>180</width>
+                 <height>26</height>
+                </size>
+               </property>
+              </widget>
              </item>
              <item row="1" column="0">
               <widget class="QLabel" name="label_font_size">
                <property name="text">
                 <string>字体大小：</string>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>90</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>90</width>
+                 <height>26</height>
+                </size>
                </property>
               </widget>
              </item>
@@ -764,6 +906,18 @@
                <property name="orientation">
                 <enum>Qt::Orientation::Horizontal</enum>
                </property>
+               <property name="minimumSize">
+                <size>
+                 <width>135</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>135</width>
+                 <height>26</height>
+                </size>
+               </property>
               </widget>
              </item>
              <item row="1" column="2">
@@ -771,11 +925,17 @@
                <property name="minimumSize">
                 <size>
                  <width>40</width>
-                 <height>0</height>
+                 <height>26</height>
                 </size>
                </property>
                <property name="text">
                 <string>00 pt</string>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>40</width>
+                 <height>26</height>
+                </size>
                </property>
               </widget>
              </item>
@@ -783,6 +943,18 @@
               <widget class="QLabel" name="label_line_interval">
                <property name="text">
                 <string>行间距：</string>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>90</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>90</width>
+                 <height>26</height>
+                </size>
                </property>
               </widget>
              </item>
@@ -797,6 +969,18 @@
                <property name="orientation">
                 <enum>Qt::Orientation::Horizontal</enum>
                </property>
+               <property name="minimumSize">
+                <size>
+                 <width>135</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>135</width>
+                 <height>26</height>
+                </size>
+               </property>
               </widget>
              </item>
              <item row="2" column="2">
@@ -804,11 +988,17 @@
                <property name="minimumSize">
                 <size>
                  <width>40</width>
-                 <height>0</height>
+                 <height>26</height>
                 </size>
                </property>
                <property name="text">
                 <string>+0 px</string>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>40</width>
+                 <height>26</height>
+                </size>
                </property>
               </widget>
              </item>
@@ -839,7 +1029,7 @@
         <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignTop">
          <layout class="QVBoxLayout" name="iconPagingLayout">
           <property name="spacing">
-           <number>8</number>
+           <number>10</number>
           </property>
           <item>
            <widget class="QGroupBox" name="gb_icon">
@@ -854,13 +1044,19 @@
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout">
              <property name="spacing">
-              <number>3</number>
+              <number>5</number>
              </property>
              <property name="leftMargin">
-              <number>4</number>
+              <number>10</number>
              </property>
              <property name="rightMargin">
-              <number>4</number>
+              <number>10</number>
+             </property>
+             <property name="topMargin">
+              <number>15</number>
+             </property>
+             <property name="bottomMargin">
+              <number>5</number>
              </property>
              <item>
               <widget class="QPushButton" name="btn_icon_default">
@@ -880,7 +1076,7 @@
                 <string>默认图标</string>
                </property>
                <property name="text">
-                <string/>
+                <string />
                </property>
                <property name="icon">
                 <iconset>
@@ -924,7 +1120,7 @@
                 <string>深色图标</string>
                </property>
                <property name="text">
-                <string/>
+                <string />
                </property>
                <property name="icon">
                 <iconset>
@@ -968,7 +1164,7 @@
                 <string>浅色玻璃</string>
                </property>
                <property name="text">
-                <string/>
+                <string />
                </property>
                <property name="icon">
                 <iconset>
@@ -1015,7 +1211,7 @@
                 <string>深色玻璃</string>
                </property>
                <property name="text">
-                <string/>
+                <string />
                </property>
                <property name="icon">
                 <iconset>
@@ -1084,16 +1280,395 @@
             </layout>
             <property name="minimumSize">
              <size>
-              <width>221</width>
-              <height>71</height>
+              <width>240</width>
+              <height>70</height>
              </size>
             </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="float_row_settings">
+            <property name="title">
+             <string>限制行数</string>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <layout class="QVBoxLayout" name="float_row_settings_outer">
+             <property name="leftMargin">
+              <number>10</number>
+             </property>
+             <property name="topMargin">
+              <number>15</number>
+             </property>
+             <property name="rightMargin">
+              <number>10</number>
+             </property>
+             <property name="bottomMargin">
+              <number>5</number>
+             </property>
+             <property name="spacing">
+              <number>5</number>
+             </property>
+             <item>
+              <widget class="QWidget" name="float_row_settings_body">
+               <layout class="QGridLayout" name="float_row_settings_layout">
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <property name="spacing">
+                 <number>5</number>
+                </property>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="float_row_settings_layout_label_0">
+                  <property name="text">
+                   <string>最大行数</string>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>26</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>26</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QSpinBox" name="float_max_rows">
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>1000</number>
+                  </property>
+                  <property name="suffix">
+                   <string> 行</string>
+                  </property>
+                  <property name="value">
+                   <number>3</number>
+                  </property>
+                  <property name="toolTip">
+                   <string>每栏最多显示的行数；分栏时每页最多显示两倍数量的标的。</string>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>90</width>
+                    <height>26</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>90</width>
+                    <height>26</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0" colspan="2">
+                 <widget class="QGroupBox" name="float_paging_settings">
+                  <property name="title">
+                   <string>翻页</string>
+                  </property>
+                  <property name="flat">
+                   <bool>true</bool>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
+                  </property>
+                  <property name="checkable">
+                   <bool>true</bool>
+                  </property>
+                  <property name="toolTip">
+                   <string>开启后可手动或自动翻页；关闭时只显示前 N 行。</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="float_paging_settings_outer">
+                   <property name="leftMargin">
+                    <number>10</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>15</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>10</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>5</number>
+                   </property>
+                   <property name="spacing">
+                    <number>5</number>
+                   </property>
+                   <item>
+                    <widget class="QWidget" name="float_paging_settings_body">
+                     <layout class="QHBoxLayout" name="float_paging_settings_layout">
+                      <property name="leftMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="topMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="rightMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="bottomMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="spacing">
+                       <number>5</number>
+                      </property>
+                      <item>
+                       <widget class="QCheckBox" name="float_page_mode">
+                        <property name="text">
+                         <string>自动翻页</string>
+                        </property>
+                        <property name="toolTip">
+                         <string>按设定间隔自动翻页；取消勾选后可使用浮窗箭头手动翻页。</string>
+                        </property>
+                        <property name="minimumSize">
+                         <size>
+                          <width>90</width>
+                          <height>26</height>
+                         </size>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>90</width>
+                          <height>26</height>
+                         </size>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLabel" name="float_paging_settings_layout_label_1">
+                        <property name="text">
+                         <string>间隔：</string>
+                        </property>
+                        <property name="minimumSize">
+                         <size>
+                          <width>36</width>
+                          <height>26</height>
+                         </size>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>36</width>
+                          <height>26</height>
+                         </size>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QComboBox" name="float_page_interval">
+                        <property name="minimumSize">
+                         <size>
+                          <width>64</width>
+                          <height>26</height>
+                         </size>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>64</width>
+                          <height>26</height>
+                         </size>
+                        </property>
+                        <property name="toolTip">
+                         <string>自动翻页的间隔，单位为秒；开启自动翻页后可调整。</string>
+                        </property>
+                        <property name="maxVisibleItems">
+                         <number>15</number>
+                        </property>
+                        <item>
+                         <property name="text">
+                          <string>1秒</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>2秒</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>3秒</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>5秒</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>10秒</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>15秒</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>20秒</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>30秒</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>60秒</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>120秒</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>300秒</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>600秒</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>1800秒</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>3600秒</string>
+                         </property>
+                        </item>
+                        <property name="currentIndex">
+                         <number>3</number>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="float_split_settings">
+            <property name="title">
+             <string>分栏</string>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
+            </property>
+            <property name="toolTip">
+             <string>按当前页均分为左右两栏；奇数时左栏多一条。行数限制按每栏计算。</string>
+            </property>
+            <layout class="QVBoxLayout" name="float_split_settings_outer">
+             <property name="leftMargin">
+              <number>10</number>
+             </property>
+             <property name="topMargin">
+              <number>15</number>
+             </property>
+             <property name="rightMargin">
+              <number>10</number>
+             </property>
+             <property name="bottomMargin">
+              <number>5</number>
+             </property>
+             <property name="spacing">
+              <number>5</number>
+             </property>
+             <item>
+              <widget class="QWidget" name="float_split_settings_body">
+               <layout class="QHBoxLayout" name="float_split_settings_layout">
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <property name="spacing">
+                 <number>5</number>
+                </property>
+                <item alignment="Qt::AlignmentFlag::AlignLeft">
+                 <widget class="QCheckBox" name="float_split_separator">
+                  <property name="text">
+                   <string>显示分隔线</string>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>90</width>
+                    <height>26</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>90</width>
+                    <height>26</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
           <item>
            <spacer name="iconAppearanceSpacer">
             <property name="orientation">
              <enum>Qt::Orientation::Vertical</enum>
+            </property>
+            <property name="sizeHint">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
             </property>
            </spacer>
           </item>
@@ -1122,12 +1697,12 @@
       <number>8</number>
      </property>
      <property name="spacing">
-      <number>8</number>
+      <number>10</number>
      </property>
      <item>
       <layout class="QVBoxLayout" name="generalFunctionsLayout">
        <property name="spacing">
-        <number>8</number>
+        <number>10</number>
        </property>
        <item>
         <widget class="QGroupBox" name="gb_fcn">
@@ -1141,17 +1716,37 @@
           <bool>true</bool>
          </property>
          <layout class="QGridLayout" name="gridLayout">
-          <item row="1" column="0">
-           <widget class="QCheckBox" name="cb_grid">
-            <property name="text">
-             <string>显示网格</string>
-            </property>
-           </widget>
-          </item>
+          <property name="leftMargin">
+           <number>10</number>
+          </property>
+          <property name="topMargin">
+           <number>15</number>
+          </property>
+          <property name="rightMargin">
+           <number>10</number>
+          </property>
+          <property name="bottomMargin">
+           <number>5</number>
+          </property>
+          <property name="spacing">
+           <number>5</number>
+          </property>
           <item row="0" column="0">
            <widget class="QCheckBox" name="cb_head">
             <property name="text">
              <string>显示表头</string>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>124</width>
+              <height>24</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>124</width>
+              <height>24</height>
+             </size>
             </property>
            </widget>
           </item>
@@ -1159,6 +1754,56 @@
            <widget class="QCheckBox" name="cb_auto_start">
             <property name="text">
              <string>开机启动</string>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>124</width>
+              <height>24</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>124</width>
+              <height>24</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="cb_grid">
+            <property name="text">
+             <string>显示网格</string>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>124</width>
+              <height>24</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>124</width>
+              <height>24</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QCheckBox" name="cb_click_through">
+            <property name="text">
+             <string>鼠标穿透</string>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>124</width>
+              <height>24</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>124</width>
+              <height>24</height>
+             </size>
             </property>
            </widget>
           </item>
@@ -1173,6 +1818,18 @@
             <property name="checked">
              <bool>true</bool>
             </property>
+            <property name="minimumSize">
+             <size>
+              <width>124</width>
+              <height>24</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>124</width>
+              <height>24</height>
+             </size>
+            </property>
            </widget>
           </item>
           <item row="2" column="1">
@@ -1180,138 +1837,89 @@
             <property name="text">
              <string>强制置顶</string>
             </property>
+            <property name="minimumSize">
+             <size>
+              <width>124</width>
+              <height>24</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>124</width>
+              <height>24</height>
+             </size>
+            </property>
            </widget>
           </item>
           <item row="3" column="0">
-           <widget class="QCheckBox" name="cb_auto_hide">
-            <property name="text"><string>自动隐藏</string></property>
+           <widget class="QCheckBox" name="cb_boundary_check">
+            <property name="text">
+             <string>边界检测</string>
+            </property>
             <property name="toolTip">
-             <string>刷新时，所有勾选标的的行情时间均超过30秒则隐藏浮窗和任务栏。新浪与东财均支持；缺失时间或请求失败不触发。手动呼出后会提示并倒计时5秒；新行情到达会取消倒计时。定时隐藏仍同时生效。</string>
+             <string>在屏幕内保持浮窗完整显示。启用后，程序加载、拖动及内容尺寸变化时自动调整越界位置；关闭后允许浮窗部分位于屏幕外。</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>124</width>
+              <height>24</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>124</width>
+              <height>24</height>
+             </size>
             </property>
            </widget>
           </item>
           <item row="3" column="1">
-           <widget class="QCheckBox" name="cb_boundary_check">
-            <property name="text"><string>边界检测</string></property>
-            <property name="toolTip"><string>在屏幕内保持浮窗完整显示。启用后，程序加载、拖动及内容尺寸变化时自动调整越界位置；关闭后允许浮窗部分位于屏幕外。</string></property>
-            <property name="checked"><bool>false</bool></property>
-           </widget>
-          </item>
-          <item row="4" column="0">
            <widget class="QCheckBox" name="cb_edge_hide">
-            <property name="text"><string>贴边隐藏</string></property>
-            <property name="toolTip"><string>需要先启用边界检测（边界保护）。贴住屏幕左、上、右边时缩至5px，并暂停行情刷新；鼠标移入恢复完整浮窗及刷新，移出再次缩边。底边不隐藏，拖动时保持展开。</string></property>
-            <property name="checked"><bool>false</bool></property>
-            <property name="enabled"><bool>false</bool></property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QCheckBox" name="cb_click_through">
             <property name="text">
-             <string>鼠标穿透</string>
+             <string>贴边收起</string>
+            </property>
+            <property name="toolTip">
+             <string>需先开启边界检测。贴住屏幕左、上、右边时收起为5px窄条，鼠标移入展开、移出收起；收起时暂停浮窗自动翻页，底边不收起。</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>124</width>
+              <height>24</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>124</width>
+              <height>24</height>
+             </size>
             </property>
            </widget>
           </item>
          </layout>
          <property name="minimumSize">
           <size>
-           <width>221</width>
-           <height>111</height>
+           <width>301</width>
+           <height>141</height>
           </size>
          </property>
         </widget>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="floatRowsLayout">
-         <item>
-          <widget class="QGroupBox" name="float_row_settings">
-           <property name="title">
-            <string>限制行数</string>
-           </property>
-           <property name="flat">
-            <bool>true</bool>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignmentFlag::AlignCenter</set>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-           <layout class="QVBoxLayout" name="float_row_settings_outer">
-            <property name="leftMargin">
-             <number>6</number>
-            </property>
-            <property name="topMargin">
-             <number>12</number>
-            </property>
-            <property name="rightMargin">
-             <number>6</number>
-            </property>
-            <property name="bottomMargin">
-             <number>4</number>
-            </property>
-            <property name="spacing">
-             <number>4</number>
-            </property>
-            <item>
-             <widget class="QWidget" name="float_row_settings_body">
-              <layout class="QFormLayout" name="float_row_settings_layout">
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>0</number>
-               </property>
-               <property name="spacing">
-                <number>4</number>
-               </property>
-               <property name="fieldGrowthPolicy">
-                <enum>QFormLayout::FieldGrowthPolicy::AllNonFixedFieldsGrow</enum>
-               </property>
-               <item row="0" column="0">
-                <widget class="QLabel" name="float_row_settings_layout_label_0">
-                 <property name="text">
-                  <string>最大行数</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <widget class="QSpinBox" name="float_max_rows">
-                 <property name="minimum">
-                  <number>1</number>
-                 </property>
-                 <property name="maximum">
-                  <number>1000</number>
-                 </property>
-                 <property name="suffix">
-                  <string> 行</string>
-                 </property>
-                 <property name="value">
-                  <number>3</number>
-                 </property>
-                 <property name="toolTip">
-                  <string>每栏最多显示的行数；分栏时每页最多显示两倍数量的标的。</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="float_split_settings">
+        <widget class="QGroupBox" name="gb_scheduled_hide">
          <property name="title">
-          <string>分栏</string>
+          <string>自动隐藏</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignCenter</set>
          </property>
          <property name="flat">
           <bool>true</bool>
@@ -1319,54 +1927,184 @@
          <property name="checkable">
           <bool>true</bool>
          </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignCenter</set>
+         <property name="checked">
+          <bool>false</bool>
          </property>
          <property name="toolTip">
-          <string>按当前页均分为左右两栏；奇数时左栏多一条。行数限制按每栏计算。</string>
+          <string>总开关控制定时隐藏与自动识别。最多设置3个每日隐藏时间，按电脑本地时间执行；关闭时保留时间与自动识别选项。</string>
          </property>
-         <layout class="QVBoxLayout" name="float_split_settings_outer">
+         <layout class="QVBoxLayout" name="scheduledHideLayout">
           <property name="leftMargin">
-           <number>6</number>
+           <number>10</number>
           </property>
           <property name="topMargin">
-           <number>12</number>
+           <number>15</number>
           </property>
           <property name="rightMargin">
-           <number>6</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
-           <number>4</number>
+           <number>5</number>
           </property>
           <property name="spacing">
-           <number>4</number>
+           <number>5</number>
           </property>
           <item>
-           <widget class="QWidget" name="float_split_settings_body">
-            <layout class="QHBoxLayout" name="float_split_settings_layout">
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <property name="spacing">
-              <number>6</number>
-             </property>
-             <item>
-              <widget class="QCheckBox" name="float_split_separator">
-               <property name="text">
-                <string>显示分隔线</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
+           <widget class="QLabel" name="label_hide_status">
+            <property name="text">
+             <string>未启用：定时与自动识别均已关闭</string>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>18</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>18</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="cb_auto_hide">
+            <property name="text">
+             <string>自动识别</string>
+            </property>
+            <property name="toolTip">
+             <string>刷新时，所有勾选标的的行情时间均超过30秒则隐藏浮窗和任务栏。新浪与东财均支持；缺失时间或请求失败不触发。手动呼出后会提示并倒计时5秒；新行情到达会取消倒计时。定时隐藏仍同时生效。</string>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>124</width>
+              <height>24</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>124</width>
+              <height>24</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="scheduledHideEditLayout">
+            <property name="spacing">
+             <number>8</number>
+            </property>
+            <item>
+             <widget class="QTimeEdit" name="hide_time_edit">
+              <property name="displayFormat">
+               <string>HH:mm</string>
+              </property>
+              <property name="time">
+               <time>
+                <hour>15</hour>
+                <minute>0</minute>
+                <second>0</second>
+               </time>
+              </property>
+              <property name="toolTip">
+               <string>每日隐藏时间（24小时制）</string>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>105</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>105</width>
+                <height>24</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_add_hide_time">
+              <property name="text">
+               <string>添加</string>
+              </property>
+              <property name="autoDefault">
+               <bool>false</bool>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>80</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>80</width>
+                <height>24</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_del_hide_time">
+              <property name="text">
+               <string>删除</string>
+              </property>
+              <property name="toolTip">
+               <string>删除选中的定时隐藏时间</string>
+              </property>
+              <property name="autoDefault">
+               <bool>false</bool>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>80</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>80</width>
+                <height>24</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QListWidget" name="list_hide_times">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>60</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>60</height>
+             </size>
+            </property>
+            <property name="flow">
+             <enum>QListView::Flow::TopToBottom</enum>
+            </property>
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="horizontalScrollBarPolicy">
+             <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+            </property>
+            <property name="verticalScrollBarPolicy">
+             <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
+            </property>
+            <property name="toolTip">
+             <string>单击选中时间后可删除，最多3个时间，每日重复。</string>
+            </property>
+            <property name="wrapping">
+             <bool>false</bool>
+            </property>
            </widget>
           </item>
          </layout>
@@ -1377,7 +2115,7 @@
          <property name="orientation">
           <enum>Qt::Orientation::Vertical</enum>
          </property>
-         <property name="sizeHint" stdset="0">
+         <property name="sizeHint">
           <size>
            <width>0</width>
            <height>0</height>
@@ -1389,6 +2127,9 @@
      </item>
      <item>
       <layout class="QVBoxLayout" name="hotkeyFunctionsLayout">
+       <property name="spacing">
+        <number>10</number>
+       </property>
        <item>
         <widget class="QGroupBox" name="gb_hotkeys">
          <property name="title">
@@ -1400,26 +2141,44 @@
          <property name="flat">
           <bool>true</bool>
          </property>
+         <property name="maximumSize">
+          <size>
+           <width>240</width>
+           <height>141</height>
+          </size>
+         </property>
          <widget class="QCheckBox" name="cb_hotkey_hide">
           <property name="geometry">
            <rect>
             <x>10</x>
             <y>25</y>
-            <width>131</width>
+            <width>124</width>
             <height>24</height>
            </rect>
           </property>
           <property name="text">
            <string>显示 / 隐藏行情</string>
           </property>
+          <property name="minimumSize">
+           <size>
+            <width>124</width>
+            <height>24</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>124</width>
+            <height>24</height>
+           </size>
+          </property>
          </widget>
          <widget class="HotkeySequenceEdit" name="keyseq_hide">
           <property name="geometry">
            <rect>
             <x>30</x>
-            <y>50</y>
-            <width>141</width>
-            <height>25</height>
+            <y>54</y>
+            <width>180</width>
+            <height>24</height>
            </rect>
           </property>
          </widget>
@@ -1427,207 +2186,63 @@
           <property name="geometry">
            <rect>
             <x>10</x>
-            <y>80</y>
-            <width>131</width>
+            <y>83</y>
+            <width>124</width>
             <height>24</height>
            </rect>
           </property>
           <property name="text">
            <string>鼠标穿透</string>
           </property>
+          <property name="minimumSize">
+           <size>
+            <width>124</width>
+            <height>24</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>124</width>
+            <height>24</height>
+           </size>
+          </property>
          </widget>
          <widget class="HotkeySequenceEdit" name="keyseq_click_through">
           <property name="geometry">
            <rect>
             <x>30</x>
-            <y>105</y>
-            <width>141</width>
-            <height>25</height>
+            <y>112</y>
+            <width>180</width>
+            <height>24</height>
            </rect>
           </property>
          </widget>
          <property name="minimumSize">
           <size>
-           <width>221</width>
-           <height>135</height>
+           <width>240</width>
+           <height>141</height>
           </size>
          </property>
          <widget class="HotkeyStatus" name="hotkey_status">
           <property name="geometry">
            <rect>
-            <x>179</x>
-            <y>52</y>
+            <x>218</x>
+            <y>54</y>
             <width>18</width>
-            <height>20</height>
+            <height>24</height>
            </rect>
           </property>
          </widget>
          <widget class="HotkeyStatus" name="hotkey_click_through_status">
           <property name="geometry">
            <rect>
-            <x>179</x>
-            <y>107</y>
+            <x>218</x>
+            <y>112</y>
             <width>18</width>
-            <height>20</height>
+            <height>24</height>
            </rect>
           </property>
          </widget>
-        </widget>
-       </item>
-       <item>
-        <layout class="QVBoxLayout" name="floatPagingLayout">
-         <item>
-          <widget class="QGroupBox" name="float_paging_settings">
-           <property name="title">
-            <string>翻页</string>
-           </property>
-           <property name="flat">
-            <bool>true</bool>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignmentFlag::AlignCenter</set>
-           </property>
-           <layout class="QVBoxLayout" name="float_paging_settings_outer">
-            <property name="leftMargin">
-             <number>6</number>
-            </property>
-            <property name="topMargin">
-             <number>12</number>
-            </property>
-            <property name="rightMargin">
-             <number>6</number>
-            </property>
-            <property name="bottomMargin">
-             <number>4</number>
-            </property>
-            <property name="spacing">
-             <number>4</number>
-            </property>
-            <item>
-             <widget class="QWidget" name="float_paging_settings_body">
-              <layout class="QFormLayout" name="float_paging_settings_layout">
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>0</number>
-               </property>
-               <property name="spacing">
-                <number>4</number>
-               </property>
-               <property name="fieldGrowthPolicy">
-                <enum>QFormLayout::FieldGrowthPolicy::AllNonFixedFieldsGrow</enum>
-               </property>
-               <item row="0" column="0">
-                <widget class="QLabel" name="float_paging_settings_layout_label_0">
-                 <property name="text">
-                  <string>翻页方式</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <widget class="QComboBox" name="float_page_mode">
-                 <item>
-                  <property name="text">
-                   <string>不翻页</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>手动翻页</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>自动翻页</string>
-                  </property>
-                 </item>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QLabel" name="float_paging_settings_layout_label_1">
-                 <property name="text">
-                  <string>自动间隔</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QSpinBox" name="float_page_interval">
-                 <property name="minimum">
-                  <number>1</number>
-                 </property>
-                 <property name="maximum">
-                  <number>3600</number>
-                 </property>
-                 <property name="suffix">
-                  <string> 秒</string>
-                 </property>
-                 <property name="value">
-                  <number>5</number>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="gb_scheduled_hide">
-         <property name="title"><string>定时隐藏</string></property>
-         <property name="alignment"><set>Qt::AlignmentFlag::AlignCenter</set></property>
-         <property name="flat"><bool>true</bool></property>
-         <property name="checkable"><bool>true</bool></property>
-         <property name="checked"><bool>false</bool></property>
-         <property name="toolTip"><string>最多添加3个每日隐藏时间，按电脑本地时间精确到分钟。到时隐藏浮窗与任务栏；当分钟手动呼出不会再次隐藏。关闭时保留已设时间。</string></property>
-         <layout class="QVBoxLayout" name="scheduledHideLayout">
-          <property name="leftMargin"><number>6</number></property>
-          <property name="topMargin"><number>12</number></property>
-          <property name="rightMargin"><number>6</number></property>
-          <property name="bottomMargin"><number>4</number></property>
-          <property name="spacing"><number>3</number></property>
-          <item>
-           <layout class="QHBoxLayout" name="scheduledHideEditLayout">
-            <property name="spacing"><number>4</number></property>
-            <item>
-             <widget class="QTimeEdit" name="hide_time_edit">
-              <property name="displayFormat"><string>HH:mm</string></property>
-              <property name="time"><time><hour>15</hour><minute>0</minute><second>0</second></time></property>
-              <property name="toolTip"><string>每日隐藏时间（24小时制）</string></property>
-             </widget>
-            </item>
-            <item><widget class="QPushButton" name="btn_add_hide_time">
-             <property name="text"><string>添加</string></property>
-             <property name="autoDefault"><bool>false</bool></property>
-            </widget></item>
-            <item><widget class="QPushButton" name="btn_del_hide_time">
-             <property name="text"><string>删除</string></property>
-             <property name="toolTip"><string>删除选中的定时隐藏时间</string></property>
-             <property name="autoDefault"><bool>false</bool></property>
-            </widget></item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QListWidget" name="list_hide_times">
-            <property name="minimumSize"><size><width>0</width><height>28</height></size></property>
-            <property name="maximumSize"><size><width>16777215</width><height>28</height></size></property>
-            <property name="flow"><enum>QListView::Flow::LeftToRight</enum></property>
-            <property name="spacing"><number>3</number></property>
-            <property name="horizontalScrollBarPolicy"><enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum></property>
-            <property name="verticalScrollBarPolicy"><enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum></property>
-            <property name="toolTip"><string>单击选中时间后可删除，最多3个时间，每日重复。</string></property>
-           </widget>
-          </item>
-         </layout>
         </widget>
        </item>
        <item>
@@ -1635,7 +2250,7 @@
          <property name="orientation">
           <enum>Qt::Orientation::Vertical</enum>
          </property>
-         <property name="sizeHint" stdset="0">
+         <property name="sizeHint">
           <size>
            <width>0</width>
            <height>0</height>
@@ -1668,16 +2283,19 @@
       <widget class="QWidget" name="taskbar_content">
        <layout class="QVBoxLayout" name="taskbarLayout">
         <property name="leftMargin">
-         <number>6</number>
+         <number>4</number>
         </property>
         <property name="topMargin">
-         <number>6</number>
+         <number>4</number>
         </property>
         <property name="rightMargin">
-         <number>6</number>
+         <number>4</number>
         </property>
         <property name="bottomMargin">
-         <number>6</number>
+         <number>4</number>
+        </property>
+        <property name="spacing">
+         <number>5</number>
         </property>
         <item>
          <widget class="QGroupBox" name="taskbar_settings">
@@ -1695,19 +2313,19 @@
           </property>
           <layout class="QVBoxLayout" name="taskbar_settings_outer">
            <property name="leftMargin">
-            <number>6</number>
+            <number>10</number>
            </property>
            <property name="topMargin">
-            <number>4</number>
+            <number>5</number>
            </property>
            <property name="rightMargin">
-            <number>6</number>
+            <number>10</number>
            </property>
            <property name="bottomMargin">
-            <number>4</number>
+            <number>0</number>
            </property>
            <property name="spacing">
-            <number>4</number>
+            <number>5</number>
            </property>
            <item>
             <widget class="QWidget" name="taskbar_settings_body">
@@ -1725,10 +2343,10 @@
                <number>0</number>
               </property>
               <property name="spacing">
-               <number>4</number>
+               <number>5</number>
               </property>
               <item>
-               <layout class="QHBoxLayout" name="taskbarColumns" stretch="1,1">
+               <layout class="QHBoxLayout" name="taskbarColumns" stretch="0,1">
                 <property name="leftMargin">
                  <number>0</number>
                 </property>
@@ -1742,10 +2360,22 @@
                  <number>0</number>
                 </property>
                 <property name="spacing">
-                 <number>8</number>
+                 <number>10</number>
                 </property>
                 <item>
                  <widget class="QWidget" name="taskbar_controls">
+                  <property name="minimumSize">
+                   <size>
+                    <width>190</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>190</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
                   <layout class="QVBoxLayout" name="taskbarControlsLayout">
                    <property name="leftMargin">
                     <number>0</number>
@@ -1760,12 +2390,24 @@
                     <number>0</number>
                    </property>
                    <property name="spacing">
-                    <number>6</number>
+                    <number>8</number>
                    </property>
                    <item>
                     <widget class="QCheckBox" name="taskbar_dual_open">
                      <property name="text">
                       <string>浮窗与任务栏同时显示</string>
+                     </property>
+                     <property name="minimumSize">
+                      <size>
+                       <width>170</width>
+                       <height>26</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>170</width>
+                       <height>26</height>
+                      </size>
                      </property>
                     </widget>
                    </item>
@@ -1784,7 +2426,7 @@
                       <number>0</number>
                      </property>
                      <property name="spacing">
-                      <number>6</number>
+                      <number>5</number>
                      </property>
                      <property name="fieldGrowthPolicy">
                       <enum>QFormLayout::FieldGrowthPolicy::AllNonFixedFieldsGrow</enum>
@@ -1793,6 +2435,18 @@
                       <widget class="QLabel" name="taskbarLimitsLayout_label_0">
                        <property name="text">
                         <string>行数限制</string>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>0</width>
+                         <height>26</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>16777215</width>
+                         <height>26</height>
+                        </size>
                        </property>
                       </widget>
                      </item>
@@ -1813,12 +2467,36 @@
                        <property name="toolTip">
                         <string>每栏最多显示的行数；分栏时每页最多显示两倍数量的标的。</string>
                        </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>80</width>
+                         <height>26</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>80</width>
+                         <height>26</height>
+                        </size>
+                       </property>
                       </widget>
                      </item>
                      <item row="1" column="0">
                       <widget class="QLabel" name="taskbarLimitsLayout_label_1">
                        <property name="text">
                         <string>偏移量</string>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>0</width>
+                         <height>26</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>16777215</width>
+                         <height>26</height>
+                        </size>
                        </property>
                       </widget>
                      </item>
@@ -1836,228 +2514,21 @@
                        <property name="value">
                         <number>0</number>
                        </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>80</width>
+                         <height>26</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>80</width>
+                         <height>26</height>
+                        </size>
+                       </property>
                       </widget>
                      </item>
                     </layout>
-                   </item>
-                   <item>
-                    <widget class="QGroupBox" name="taskbar_style_settings">
-                     <property name="title">
-                      <string>同步浮窗外观</string>
-                     </property>
-                     <property name="flat">
-                      <bool>true</bool>
-                     </property>
-                     <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignCenter</set>
-                     </property>
-                     <property name="checkable">
-                      <bool>true</bool>
-                     </property>
-                     <layout class="QVBoxLayout" name="taskbar_style_settings_outer">
-                      <property name="leftMargin">
-                       <number>6</number>
-                      </property>
-                      <property name="topMargin">
-                       <number>12</number>
-                      </property>
-                      <property name="rightMargin">
-                       <number>6</number>
-                      </property>
-                      <property name="bottomMargin">
-                       <number>4</number>
-                      </property>
-                      <property name="spacing">
-                       <number>4</number>
-                      </property>
-                      <item>
-                       <widget class="QWidget" name="taskbar_style_settings_body">
-                        <layout class="QFormLayout" name="taskbar_style_settings_layout">
-                         <property name="leftMargin">
-                          <number>0</number>
-                         </property>
-                         <property name="topMargin">
-                          <number>0</number>
-                         </property>
-                         <property name="rightMargin">
-                          <number>0</number>
-                         </property>
-                         <property name="bottomMargin">
-                          <number>0</number>
-                         </property>
-                         <property name="spacing">
-                          <number>6</number>
-                         </property>
-                         <property name="fieldGrowthPolicy">
-                          <enum>QFormLayout::FieldGrowthPolicy::AllNonFixedFieldsGrow</enum>
-                         </property>
-                         <item row="0" column="0">
-                          <widget class="QLabel" name="taskbar_style_settings_layout_label_0">
-                           <property name="text">
-                            <string>字体</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="0" column="1">
-                          <widget class="QFontComboBox" name="taskbar_font_family">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="1" column="0">
-                          <widget class="QLabel" name="taskbar_style_settings_layout_label_1">
-                           <property name="text">
-                            <string>字号</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="1" column="1">
-                          <layout class="QHBoxLayout" name="taskbar_font_size_layout">
-                           <property name="spacing">
-                            <number>6</number>
-                           </property>
-                           <item>
-                            <widget class="QSlider" name="taskbar_font_size">
-                             <property name="minimum">
-                              <number>5</number>
-                             </property>
-                             <property name="maximum">
-                              <number>30</number>
-                             </property>
-                             <property name="orientation">
-                              <enum>Qt::Orientation::Horizontal</enum>
-                             </property>
-                             <property name="value">
-                              <number>10</number>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <widget class="QLabel" name="taskbar_font_size_label">
-                             <property name="text">
-                              <string>10 pt</string>
-                             </property>
-                             <property name="minimumSize">
-                              <size>
-                               <width>38</width>
-                               <height>0</height>
-                              </size>
-                             </property>
-                            </widget>
-                           </item>
-                          </layout>
-                         </item>
-                         <item row="3" column="0">
-                          <widget class="QLabel" name="taskbar_style_settings_layout_label_3">
-                           <property name="text">
-                            <string>不透明度</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="3" column="1">
-                          <layout class="QHBoxLayout" name="taskbar_opacity_pct_layout">
-                           <property name="spacing">
-                            <number>6</number>
-                           </property>
-                           <item>
-                            <widget class="QSlider" name="taskbar_opacity_pct">
-                             <property name="minimum">
-                              <number>0</number>
-                             </property>
-                             <property name="maximum">
-                              <number>100</number>
-                             </property>
-                             <property name="orientation">
-                              <enum>Qt::Orientation::Horizontal</enum>
-                             </property>
-                             <property name="value">
-                              <number>100</number>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <widget class="QLabel" name="taskbar_opacity_pct_label">
-                             <property name="text">
-                              <string>100%</string>
-                             </property>
-                             <property name="minimumSize">
-                              <size>
-                               <width>38</width>
-                               <height>0</height>
-                              </size>
-                             </property>
-                            </widget>
-                           </item>
-                          </layout>
-                         </item>
-                         <item row="2" column="0">
-                          <widget class="QLabel" name="taskbar_style_settings_layout_label_2">
-                           <property name="text">
-                            <string>颜色</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="2" column="1">
-                          <layout class="QHBoxLayout" name="taskbarColorsLayout">
-                           <property name="spacing">
-                            <number>6</number>
-                           </property>
-                           <item>
-                            <widget class="QPushButton" name="btn_taskbar_color">
-                             <property name="text">
-                              <string>文字</string>
-                             </property>
-                             <property name="flat">
-                              <bool>true</bool>
-                             </property>
-                             <property name="autoDefault">
-                              <bool>false</bool>
-                             </property>
-                             <property name="minimumSize">
-                              <size>
-                               <width>60</width>
-                               <height>25</height>
-                              </size>
-                             </property>
-                             <property name="maximumSize">
-                              <size>
-                               <width>60</width>
-                               <height>25</height>
-                              </size>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <widget class="QCheckBox" name="taskbar_unicolor">
-                             <property name="text">
-                              <string>统一颜色</string>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <spacer name="taskbarColorsSpacer">
-                             <property name="orientation">
-                              <enum>Qt::Orientation::Horizontal</enum>
-                             </property>
-                             <property name="sizeHint">
-                              <size>
-                               <width>0</width>
-                               <height>0</height>
-                              </size>
-                             </property>
-                            </spacer>
-                           </item>
-                          </layout>
-                         </item>
-                        </layout>
-                       </widget>
-                      </item>
-                     </layout>
-                    </widget>
                    </item>
                    <item>
                     <widget class="QGroupBox" name="taskbar_paging_settings">
@@ -2075,19 +2546,19 @@
                      </property>
                      <layout class="QVBoxLayout" name="taskbar_paging_settings_outer">
                       <property name="leftMargin">
-                       <number>6</number>
+                       <number>10</number>
                       </property>
                       <property name="topMargin">
-                       <number>12</number>
+                       <number>15</number>
                       </property>
                       <property name="rightMargin">
-                       <number>6</number>
+                       <number>10</number>
                       </property>
                       <property name="bottomMargin">
-                       <number>4</number>
+                       <number>5</number>
                       </property>
                       <property name="spacing">
-                       <number>4</number>
+                       <number>5</number>
                       </property>
                       <item>
                        <widget class="QWidget" name="taskbar_paging_settings_body">
@@ -2105,7 +2576,7 @@
                           <number>0</number>
                          </property>
                          <property name="spacing">
-                          <number>6</number>
+                          <number>5</number>
                          </property>
                          <property name="fieldGrowthPolicy">
                           <enum>QFormLayout::FieldGrowthPolicy::AllNonFixedFieldsGrow</enum>
@@ -2115,10 +2586,34 @@
                            <property name="text">
                             <string>翻页方式</string>
                            </property>
+                           <property name="minimumSize">
+                            <size>
+                             <width>0</width>
+                             <height>26</height>
+                            </size>
+                           </property>
+                           <property name="maximumSize">
+                            <size>
+                             <width>16777215</width>
+                             <height>26</height>
+                            </size>
+                           </property>
                           </widget>
                          </item>
                          <item row="0" column="1">
                           <widget class="QComboBox" name="taskbar_page_mode">
+                           <property name="minimumSize">
+                            <size>
+                             <width>80</width>
+                             <height>26</height>
+                            </size>
+                           </property>
+                           <property name="maximumSize">
+                            <size>
+                             <width>80</width>
+                             <height>26</height>
+                            </size>
+                           </property>
                            <item>
                             <property name="text">
                              <string>不翻页</string>
@@ -2141,6 +2636,18 @@
                            <property name="text">
                             <string>自动间隔</string>
                            </property>
+                           <property name="minimumSize">
+                            <size>
+                             <width>0</width>
+                             <height>26</height>
+                            </size>
+                           </property>
+                           <property name="maximumSize">
+                            <size>
+                             <width>16777215</width>
+                             <height>26</height>
+                            </size>
+                           </property>
                           </widget>
                          </item>
                          <item row="1" column="1">
@@ -2156,6 +2663,18 @@
                            </property>
                            <property name="value">
                             <number>5</number>
+                           </property>
+                           <property name="minimumSize">
+                            <size>
+                             <width>80</width>
+                             <height>26</height>
+                            </size>
+                           </property>
+                           <property name="maximumSize">
+                            <size>
+                             <width>80</width>
+                             <height>26</height>
+                            </size>
                            </property>
                           </widget>
                          </item>
@@ -2178,14 +2697,387 @@
                      </property>
                     </spacer>
                    </item>
+                   <item>
+                    <widget class="QGroupBox" name="taskbar_split_settings">
+                     <property name="title">
+                      <string>同步浮窗分栏</string>
+                     </property>
+                     <property name="flat">
+                      <bool>true</bool>
+                     </property>
+                     <property name="checkable">
+                      <bool>true</bool>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignmentFlag::AlignCenter</set>
+                     </property>
+                     <property name="toolTip">
+                      <string>勾选时跟随浮窗的分栏与分隔线；取消后编辑独立设置，独立参数会保留。</string>
+                     </property>
+                     <layout class="QVBoxLayout" name="taskbar_split_settings_outer">
+                      <property name="leftMargin">
+                       <number>10</number>
+                      </property>
+                      <property name="topMargin">
+                       <number>15</number>
+                      </property>
+                      <property name="rightMargin">
+                       <number>10</number>
+                      </property>
+                      <property name="bottomMargin">
+                       <number>5</number>
+                      </property>
+                      <property name="spacing">
+                       <number>5</number>
+                      </property>
+                      <item>
+                       <widget class="QWidget" name="taskbar_split_settings_body">
+                        <layout class="QVBoxLayout" name="taskbar_split_settings_layout">
+                         <property name="leftMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="topMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="rightMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="bottomMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="spacing">
+                          <number>5</number>
+                         </property>
+                         <item>
+                          <widget class="QCheckBox" name="taskbar_split_enabled">
+                           <property name="text">
+                            <string>启用分栏</string>
+                           </property>
+                           <property name="minimumSize">
+                            <size>
+                             <width>170</width>
+                             <height>26</height>
+                            </size>
+                           </property>
+                           <property name="maximumSize">
+                            <size>
+                             <width>170</width>
+                             <height>26</height>
+                            </size>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QCheckBox" name="taskbar_split_separator">
+                           <property name="text">
+                            <string>显示分隔线</string>
+                           </property>
+                           <property name="minimumSize">
+                            <size>
+                             <width>170</width>
+                             <height>26</height>
+                            </size>
+                           </property>
+                           <property name="maximumSize">
+                            <size>
+                             <width>170</width>
+                             <height>26</height>
+                            </size>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
+                       </widget>
+                      </item>
+                     </layout>
+                    </widget>
+                   </item>
                   </layout>
                  </widget>
                 </item>
                 <item>
                  <layout class="QVBoxLayout" name="taskbarRightLayout">
                   <property name="spacing">
-                   <number>4</number>
+                   <number>5</number>
                   </property>
+                  <item>
+                   <widget class="QGroupBox" name="taskbar_style_settings">
+                    <property name="title">
+                     <string>同步浮窗外观</string>
+                    </property>
+                    <property name="flat">
+                     <bool>true</bool>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignmentFlag::AlignCenter</set>
+                    </property>
+                    <property name="checkable">
+                     <bool>true</bool>
+                    </property>
+                    <layout class="QVBoxLayout" name="taskbar_style_settings_outer">
+                     <property name="leftMargin">
+                      <number>10</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>15</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>10</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>5</number>
+                     </property>
+                     <property name="spacing">
+                      <number>5</number>
+                     </property>
+                     <item>
+                      <widget class="QWidget" name="taskbar_style_settings_body">
+                       <layout class="QGridLayout" name="taskbar_style_settings_layout">
+                        <property name="leftMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="topMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="rightMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="bottomMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="spacing">
+                         <number>5</number>
+                        </property>
+                        <item row="0" column="0">
+                         <widget class="QLabel" name="taskbar_style_settings_layout_label_0">
+                          <property name="text">
+                           <string>字体</string>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>32</width>
+                            <height>26</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>32</width>
+                            <height>26</height>
+                           </size>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="0" column="1">
+                         <widget class="QFontComboBox" name="taskbar_font_family">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>120</width>
+                            <height>26</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>120</width>
+                            <height>26</height>
+                           </size>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="0" column="2">
+                         <widget class="QSlider" name="taskbar_font_size">
+                          <property name="minimum">
+                           <number>5</number>
+                          </property>
+                          <property name="maximum">
+                           <number>30</number>
+                          </property>
+                          <property name="orientation">
+                           <enum>Qt::Orientation::Horizontal</enum>
+                          </property>
+                          <property name="value">
+                           <number>10</number>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>100</width>
+                            <height>26</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>100</width>
+                            <height>26</height>
+                           </size>
+                          </property>
+                          <property name="toolTip">
+                           <string>任务栏字号</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="0" column="3">
+                         <widget class="QLabel" name="taskbar_font_size_label">
+                          <property name="text">
+                           <string>10 pt</string>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>40</width>
+                            <height>26</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>40</width>
+                            <height>26</height>
+                           </size>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="1" column="0" colspan="4">
+                         <layout class="QHBoxLayout" name="taskbarColorsLayout">
+                          <property name="spacing">
+                           <number>5</number>
+                          </property>
+                          <item>
+                           <widget class="QPushButton" name="btn_taskbar_color">
+                            <property name="text">
+                             <string>文字</string>
+                            </property>
+                            <property name="flat">
+                             <bool>true</bool>
+                            </property>
+                            <property name="autoDefault">
+                             <bool>false</bool>
+                            </property>
+                            <property name="minimumSize">
+                             <size>
+                              <width>55</width>
+                              <height>26</height>
+                             </size>
+                            </property>
+                            <property name="maximumSize">
+                             <size>
+                              <width>55</width>
+                              <height>26</height>
+                             </size>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QCheckBox" name="taskbar_unicolor">
+                            <property name="text">
+                             <string>统一颜色</string>
+                            </property>
+                            <property name="minimumSize">
+                             <size>
+                              <width>170</width>
+                              <height>26</height>
+                             </size>
+                            </property>
+                            <property name="maximumSize">
+                             <size>
+                              <width>170</width>
+                              <height>26</height>
+                             </size>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <spacer name="taskbarColorsSpacer">
+                            <property name="orientation">
+                             <enum>Qt::Orientation::Horizontal</enum>
+                            </property>
+                            <property name="sizeHint">
+                             <size>
+                              <width>0</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                           </spacer>
+                          </item>
+                         </layout>
+                        </item>
+                        <item row="2" column="0" colspan="2">
+                         <widget class="QLabel" name="taskbar_style_settings_layout_label_3">
+                          <property name="text">
+                           <string>不透明度</string>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>26</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>16777215</width>
+                            <height>26</height>
+                           </size>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="2" column="2">
+                         <widget class="QSlider" name="taskbar_opacity_pct">
+                          <property name="minimum">
+                           <number>0</number>
+                          </property>
+                          <property name="maximum">
+                           <number>100</number>
+                          </property>
+                          <property name="orientation">
+                           <enum>Qt::Orientation::Horizontal</enum>
+                          </property>
+                          <property name="value">
+                           <number>100</number>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>100</width>
+                            <height>26</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>100</width>
+                            <height>26</height>
+                           </size>
+                          </property>
+                          <property name="toolTip">
+                           <string>任务栏文字不透明度</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="2" column="3">
+                         <widget class="QLabel" name="taskbar_opacity_pct_label">
+                          <property name="text">
+                           <string>100%</string>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>40</width>
+                            <height>26</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>40</width>
+                            <height>26</height>
+                           </size>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
                   <item>
                    <widget class="QGroupBox" name="taskbar_metric_settings">
                     <property name="title">
@@ -2202,19 +3094,19 @@
                     </property>
                     <layout class="QVBoxLayout" name="taskbar_metric_settings_outer">
                      <property name="leftMargin">
-                      <number>6</number>
+                      <number>10</number>
                      </property>
                      <property name="topMargin">
-                      <number>12</number>
+                      <number>15</number>
                      </property>
                      <property name="rightMargin">
-                      <number>6</number>
+                      <number>10</number>
                      </property>
                      <property name="bottomMargin">
-                      <number>4</number>
+                      <number>5</number>
                      </property>
                      <property name="spacing">
-                      <number>4</number>
+                      <number>5</number>
                      </property>
                      <item>
                       <widget class="QWidget" name="taskbar_metric_settings_body">
@@ -2232,14 +3124,14 @@
                          <number>0</number>
                         </property>
                         <property name="spacing">
-                         <number>4</number>
+                         <number>5</number>
                         </property>
                         <item>
                          <widget class="MetricPoolWidget" name="taskbar_metric_pool">
                           <property name="minimumSize">
                            <size>
                             <width>0</width>
-                            <height>146</height>
+                            <height>155</height>
                            </size>
                           </property>
                           <property name="sizePolicy">
@@ -2247,77 +3139,6 @@
                             <horstretch>0</horstretch>
                             <verstretch>0</verstretch>
                            </sizepolicy>
-                          </property>
-                         </widget>
-                        </item>
-                       </layout>
-                      </widget>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QGroupBox" name="taskbar_split_settings">
-                    <property name="title">
-                     <string>同步浮窗分栏</string>
-                    </property>
-                    <property name="flat">
-                     <bool>true</bool>
-                    </property>
-                    <property name="checkable">
-                     <bool>true</bool>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignmentFlag::AlignCenter</set>
-                    </property>
-                    <property name="toolTip">
-                     <string>勾选时跟随浮窗的分栏与分隔线；取消后编辑独立设置，独立参数会保留。</string>
-                    </property>
-                    <layout class="QVBoxLayout" name="taskbar_split_settings_outer">
-                     <property name="leftMargin">
-                      <number>6</number>
-                     </property>
-                     <property name="topMargin">
-                      <number>12</number>
-                     </property>
-                     <property name="rightMargin">
-                      <number>6</number>
-                     </property>
-                     <property name="bottomMargin">
-                      <number>4</number>
-                     </property>
-                     <property name="spacing">
-                      <number>4</number>
-                     </property>
-                     <item>
-                      <widget class="QWidget" name="taskbar_split_settings_body">
-                       <layout class="QHBoxLayout" name="taskbar_split_settings_layout">
-                        <property name="leftMargin">
-                         <number>0</number>
-                        </property>
-                        <property name="topMargin">
-                         <number>0</number>
-                        </property>
-                        <property name="rightMargin">
-                         <number>0</number>
-                        </property>
-                        <property name="bottomMargin">
-                         <number>0</number>
-                        </property>
-                        <property name="spacing">
-                         <number>6</number>
-                        </property>
-                        <item>
-                         <widget class="QCheckBox" name="taskbar_split_enabled">
-                          <property name="text">
-                           <string>启用分栏</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QCheckBox" name="taskbar_split_separator">
-                          <property name="text">
-                           <string>显示分隔线</string>
                           </property>
                          </widget>
                         </item>
@@ -2368,7 +3189,7 @@
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>22</y>
+        <y>25</y>
         <width>501</width>
         <height>22</height>
        </rect>
@@ -2393,7 +3214,7 @@
        </rect>
       </property>
       <property name="text">
-       <string/>
+       <string />
       </property>
       <property name="textFormat">
        <enum>Qt::TextFormat::RichText</enum>
@@ -2412,8 +3233,8 @@
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>74</y>
-        <width>130</width>
+        <y>79</y>
+        <width>117</width>
         <height>26</height>
        </rect>
       </property>
@@ -2450,7 +3271,7 @@
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>46</y>
+        <y>52</y>
         <width>501</width>
         <height>22</height>
        </rect>

@@ -52,11 +52,9 @@ def build_settings_stylesheet(dark: bool, *, linux_fonts: bool = False) -> str:
         sep = "rgba(255, 255, 255, 0.35)"
         header_bg, header_line = "rgba(255, 255, 255, 0.10)", "rgba(255, 255, 255, 0.30)"
         empty_hint = "rgba(255, 255, 255, 0.28)"
-        icon_hover_bg = accent_rgba(0.12)
-        icon_pressed_bg = accent_rgba(0.22)
-        icon_selected = accent_rgba(0.20)
-        icon_selected_hover = accent_rgba(0.26)
-        icon_selected_pressed = accent_rgba(0.34)
+        selected_bg = accent_rgba(0.20)
+        selected_hover_bg = accent_rgba(0.26)
+        selected_pressed_bg = accent_rgba(0.34)
         color_bg = "rgba(255, 255, 255, 0.10)"
         color_hover_bg = accent_rgba(0.12)
         color_pressed_bg = accent_rgba(0.22)
@@ -66,58 +64,59 @@ def build_settings_stylesheet(dark: bool, *, linux_fonts: bool = False) -> str:
         sep = "rgba(0, 0, 0, 0.25)"
         header_bg, header_line = "rgba(0, 0, 0, 0.06)", "rgba(0, 0, 0, 0.20)"
         empty_hint = "rgba(0, 0, 0, 0.28)"
-        icon_hover_bg = accent_rgba(0.08)
-        icon_pressed_bg = accent_rgba(0.16)
-        icon_selected = accent_rgba(0.12)
-        icon_selected_hover = accent_rgba(0.18)
-        icon_selected_pressed = accent_rgba(0.24)
+        selected_bg = accent_rgba(0.12)
+        selected_hover_bg = accent_rgba(0.18)
+        selected_pressed_bg = accent_rgba(0.24)
         color_bg = "rgba(0, 0, 0, 0.07)"
         color_hover_bg = accent_rgba(0.08)
         color_pressed_bg = accent_rgba(0.16)
         color_disabled_bg = "rgba(0, 0, 0, 0.04)"
         color_disabled_text = "rgba(0, 0, 0, 0.35)"
 
-    icon_selectors = (
-        "QPushButton#btn_icon_default",
-        "QPushButton#btn_icon_lightG",
-        "QPushButton#btn_icon_dark",
-        "QPushButton#btn_icon_darkG",
-        "QPushButton#btn_icon_custom",
-    )
-    color_selectors = (
-        "QPushButton#btn_fg_color",
-        "QPushButton#btn_bg_color",
-        "QPushButton#btn_up_color",
-        "QPushButton#btn_down_color",
-        "QPushButton#btn_neutral_color",
-        "QPushButton#btn_taskbar_color",
-        "QPushButton#btn_add",
-        "QPushButton#btn_del",
-        "QPushButton#btn_top",
-        "QPushButton#btn_check_update",
-        "QPushButton#btn_clear_watchlist",
-        "QPushButton#btn_reset_appearance",
-        "QPushButton#btn_reset_settings",
-        "QPushButton#btn_open_cache_dir",
-        "QPushButton#btn_add_hide_time",
-        "QPushButton#btn_del_hide_time",
-    )
-    icon_buttons = ",\n".join(icon_selectors)
-    icon_hover = ",\n".join(f"{selector}:hover" for selector in icon_selectors)
-    icon_pressed = ",\n".join(f"{selector}:pressed" for selector in icon_selectors)
-    icon_checked = ",\n".join(f"{selector}:checked" for selector in icon_selectors)
-    icon_checked_hover = ",\n".join(
-        f"{selector}:checked:hover" for selector in icon_selectors
-    )
-    icon_checked_pressed = ",\n".join(
-        f"{selector}:checked:pressed" for selector in icon_selectors
-    )
-    color_buttons = ",\n".join(color_selectors)
-    color_hover = ",\n".join(f"{selector}:hover" for selector in color_selectors)
-    color_pressed = ",\n".join(f"{selector}:pressed" for selector in color_selectors)
-    color_disabled = ",\n".join(f"{selector}:disabled" for selector in color_selectors)
+    buttons = f"""
+QPushButton {{
+    background-color: {color_bg};
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 3px;
+}}
+QPushButton:hover {{
+    background-color: {color_hover_bg};
+}}
+QPushButton:pressed {{
+    background-color: {color_pressed_bg};
+}}
+QPushButton:checked {{
+    background-color: {selected_bg};
+    border: 2px solid {accent_color().name()};
+}}
+QPushButton:checked:hover {{
+    background-color: {selected_hover_bg};
+}}
+QPushButton:checked:pressed {{
+    background-color: {selected_pressed_bg};
+}}
+QPushButton:disabled {{
+    background-color: {color_disabled_bg};
+    color: {color_disabled_text};
+}}
+"""
 
-    choice_buttons = f"""
+    # Icon choices keep their original transparent tiles and selection outline.
+    icon_selectors = tuple(f"QPushButton#{name}" for name in (
+        "btn_icon_default", "btn_icon_lightG", "btn_icon_dark", "btn_icon_darkG", "btn_icon_custom"))
+    icon_buttons = ",\n".join(icon_selectors)
+    icon_states = "\n".join(
+        f"{', '.join(selector + state for selector in icon_selectors)} {{ {rules} }}"
+        for state, rules in (
+            (":hover", f"background-color: {color_hover_bg};"),
+            (":pressed", f"background-color: {color_pressed_bg};"),
+            (":checked", f"background-color: {selected_bg}; border: 2px solid {accent_color().name()};"),
+            (":checked:hover", f"background-color: {selected_hover_bg};"),
+            (":checked:pressed", f"background-color: {selected_pressed_bg};"),
+        )
+    )
+    icon_buttons = f"""
 {icon_buttons} {{
     background-color: transparent;
     border: 1px solid transparent;
@@ -128,38 +127,7 @@ QPushButton#btn_icon_custom {{
     font-size: 22px;
     font-weight: 300;
 }}
-{icon_hover} {{
-    background-color: {icon_hover_bg};
-}}
-{icon_pressed} {{
-    background-color: {icon_pressed_bg};
-}}
-{icon_checked} {{
-    background-color: {icon_selected};
-    border: 2px solid {accent_color().name()};
-}}
-{icon_checked_hover} {{
-    background-color: {icon_selected_hover};
-}}
-{icon_checked_pressed} {{
-    background-color: {icon_selected_pressed};
-}}
-{color_buttons} {{
-    background-color: {color_bg};
-    border: none;
-    border-radius: 6px;
-    padding: 3px;
-}}
-{color_hover} {{
-    background-color: {color_hover_bg};
-}}
-{color_pressed} {{
-    background-color: {color_pressed_bg};
-}}
-{color_disabled} {{
-    background-color: {color_disabled_bg};
-    color: {color_disabled_text};
-}}
+{icon_states}
 """
 
     return f"""
@@ -188,5 +156,6 @@ QLabel#empty_watchlist_hint {{
     font-size: 18px;
     font-weight: 500;
 }}
-{choice_buttons}
+{buttons}
+{icon_buttons}
 """

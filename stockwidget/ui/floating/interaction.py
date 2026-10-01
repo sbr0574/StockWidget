@@ -372,13 +372,14 @@ class HideController(QObject):
         self.configure()
 
     def configure(self):
-        if self.source.scheduled_hide_enabled and self.source.scheduled_hide_times:
+        if (self.source.hide_enabled and self.source.scheduled_hide_enabled
+                and self.source.scheduled_hide_times):
             if not self.schedule_timer.isActive():
                 self._last_check = datetime.now().astimezone()
                 self.schedule_timer.start()
         else:
             self.schedule_timer.stop()
-        if not self.source.auto_hide_enabled:
+        if not self.source.hide_enabled or not self.source.auto_hide_enabled:
             self.cancel_countdown()
 
     def check_schedule(self, now=None):
@@ -386,7 +387,7 @@ class HideController(QObject):
         due = due_hide_times(self.source.scheduled_hide_times, self._last_check, now)
         self._last_check = now
         self._fired = {event for event in self._fired if event[0] == now.date()}
-        if not self.source.scheduled_hide_enabled:
+        if not self.source.hide_enabled or not self.source.scheduled_hide_enabled:
             return
         pending = {(now.date(), value) for value in due} - self._fired
         self._fired.update(pending)  # 隐藏时也消耗当天事件，呼出后不会重复隐藏。
@@ -399,7 +400,7 @@ class HideController(QObject):
 
     def quotes_refreshed(self, data):
         source = self.source
-        if (not source.auto_hide_enabled or not source.widget_visible
+        if (not source.hide_enabled or not source.auto_hide_enabled or not source.widget_visible
                 or not all_quotes_stale(data, source.checked_codes, time.time())):
             self.cancel_countdown()
             return
@@ -415,7 +416,8 @@ class HideController(QObject):
     def check_countdown(self):
         if self._deadline is None:
             return
-        if not self.source.auto_hide_enabled or not self.source.widget_visible:
+        if (not self.source.hide_enabled or not self.source.auto_hide_enabled
+                or not self.source.widget_visible):
             self.cancel_countdown()
             return
         remaining = self._deadline - time.monotonic()

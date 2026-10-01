@@ -44,7 +44,6 @@ from stockwidget.ui.generated.ui_settings import Ui_SettingDialog
 from stockwidget.ui.settings.groups import (
     FloatRowSettings,
     FloatSplitSettings,
-    PagingSettings,
     TaskbarSettings,
 )
 from stockwidget.ui.watchlist.editor import WatchlistEditor
@@ -263,7 +262,8 @@ class SettingsDialog(QDialog):
         self.ui.cb_auto_hide.toggled.connect(
             lambda enabled: self.win.set_hide_options(auto_hide_enabled=enabled))
         self.ui.gb_scheduled_hide.toggled.connect(
-            lambda enabled: self.win.set_hide_options(scheduled_hide_enabled=enabled))
+            lambda enabled: self.win.set_hide_options(hide_enabled=enabled,
+                                                      scheduled_hide_enabled=enabled))
         self.ui.btn_add_hide_time.clicked.connect(self._add_hide_time)
         self.ui.btn_del_hide_time.clicked.connect(self._delete_hide_time)
         self.ui.hide_time_edit.timeChanged.connect(self._update_hide_time_buttons)
@@ -277,12 +277,10 @@ class SettingsDialog(QDialog):
 
     def _init_view_settings(self):
         self.float_row_settings = self.ui.float_row_settings
-        self.float_paging_settings = self.ui.float_paging_settings
         self.float_split_settings = self.ui.float_split_settings
         self.taskbar_settings = self.ui.taskbar_settings
         self._view_bindings = []
         for group, kind in ((self.float_row_settings, FloatRowSettings),
-                            (self.float_paging_settings, PagingSettings),
                             (self.float_split_settings, FloatSplitSettings),
                             (self.taskbar_settings, TaskbarSettings)):
             binding = kind(group)
@@ -348,7 +346,14 @@ class SettingsDialog(QDialog):
     def _sync_hide_settings(self):
         with QSignalBlocker(self.ui.cb_auto_hide), QSignalBlocker(self.ui.gb_scheduled_hide):
             self.ui.cb_auto_hide.setChecked(self.win.auto_hide_enabled)
-            self.ui.gb_scheduled_hide.setChecked(self.win.scheduled_hide_enabled)
+            self.ui.gb_scheduled_hide.setChecked(self.win.hide_enabled)
+        conditions = []
+        if self.win.scheduled_hide_enabled and self.win.scheduled_hide_times:
+            conditions.append("定时隐藏")
+        if self.win.auto_hide_enabled:
+            conditions.append("自动识别")
+        status = ("已启用：" + " + ".join(conditions) if conditions else "已启用：尚未设置隐藏条件")
+        self.ui.label_hide_status.setText(status if self.win.hide_enabled else "未启用：定时与自动识别均已关闭")
         times = self.ui.list_hide_times
         current = times.currentItem().text() if times.currentItem() else None
         if [times.item(i).text() for i in range(times.count())] != self.win.scheduled_hide_times:
@@ -363,7 +368,7 @@ class SettingsDialog(QDialog):
 
     def _update_hide_time_buttons(self, *_args):
         value = self.ui.hide_time_edit.time().toString("HH:mm")
-        enabled = self.win.scheduled_hide_enabled
+        enabled = self.win.hide_enabled
         full = len(self.win.scheduled_hide_times) >= MAX_HIDE_TIMES
         duplicate = value in self.win.scheduled_hide_times
         self.ui.btn_add_hide_time.setEnabled(enabled
@@ -374,15 +379,16 @@ class SettingsDialog(QDialog):
 
     def _add_hide_time(self):
         value = self.ui.hide_time_edit.time().toString("HH:mm")
-        if (not self.win.scheduled_hide_enabled or value in self.win.scheduled_hide_times
+        if (not self.win.hide_enabled or value in self.win.scheduled_hide_times
                 or len(self.win.scheduled_hide_times) >= MAX_HIDE_TIMES):
             return
-        self.win.set_hide_options(scheduled_hide_times=[*self.win.scheduled_hide_times, value])
+        self.win.set_hide_options(scheduled_hide_enabled=True,
+                                 scheduled_hide_times=[*self.win.scheduled_hide_times, value])
         self.ui.list_hide_times.setCurrentRow(self.win.scheduled_hide_times.index(value))
 
     def _delete_hide_time(self):
         selected = self.ui.list_hide_times.currentItem()
-        if selected is not None and self.win.scheduled_hide_enabled:
+        if selected is not None and self.win.hide_enabled:
             self.win.set_hide_options(scheduled_hide_times=[value for value in self.win.scheduled_hide_times
                                                           if value != selected.text()])
 

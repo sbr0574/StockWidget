@@ -192,6 +192,43 @@ class HidingTests(unittest.TestCase):
         self.assertTrue(self.win.auto_hide_enabled)
         self.assertEqual(self.win.scheduled_hide_times, ["15:00", "16:00"])
 
+    def test_master_hide_switch_cancels_both_rules_and_preserves_options_on_reload(self):
+        self.win.set_hide_options(scheduled_hide_enabled=True, auto_hide_enabled=True)
+        self.restore_and_countdown()
+        self.assertIsNotNone(self.win.hide_controller._deadline)
+        self.win.set_hide_options(hide_enabled=False)
+        self.assertEqual(self.win.hide_notice.text(), "")
+        self.assertFalse(self.win.hide_controller.schedule_timer.isActive())
+        self.assertFalse(self.win.hide_controller.countdown_timer.isActive())
+        self.refresh()
+        self.win.hide_controller._last_check = NOW - timedelta(seconds=1)
+        self.win.hide_controller.check_schedule(NOW)
+        self.assertTrue(self.win.widget_visible)
+        saved = self.win.current_config()
+        other = FloatLabel(saved, CODES)
+        try:
+            self.assertFalse(other.hide_enabled)
+            self.assertTrue(other.auto_hide_enabled)
+            self.assertTrue(other.scheduled_hide_enabled)
+            self.assertEqual(other.scheduled_hide_times, ["15:00", "16:00"])
+            self.assertFalse(other.hide_controller.schedule_timer.isActive())
+            other.set_hide_options(hide_enabled=True)
+            self.assertTrue(other.hide_controller.schedule_timer.isActive())
+        finally:
+            delete(other)
+
+    def test_old_hide_switches_enable_the_new_master_when_loading_legacy_config(self):
+        for scheduled, automatic in ((False, False), (True, False), (False, True), (True, True)):
+            with self.subTest(scheduled=scheduled, automatic=automatic):
+                other = FloatLabel({"scheduled_hide_enabled": scheduled,
+                                    "auto_hide_enabled": automatic}, CODES)
+                try:
+                    self.assertEqual(other.hide_enabled, scheduled or automatic)
+                    self.assertEqual(other.scheduled_hide_enabled, scheduled)
+                    self.assertEqual(other.auto_hide_enabled, automatic)
+                finally:
+                    delete(other)
+
     def test_display_mode_menu_restore_also_gets_countdown(self):
         self.win.set_hide_options(auto_hide_enabled=True)
         self.win.hide_widget()
@@ -261,6 +298,10 @@ class HidingTests(unittest.TestCase):
                 dialog.ui.btn_add_hide_time.click()
             self.assertEqual(self.win.scheduled_hide_times, ["15:00", "16:00", "17:00"])
             self.assertFalse(dialog.ui.btn_add_hide_time.isEnabled())
+            self.app.processEvents()
+            times = dialog.ui.list_hide_times
+            self.assertTrue(all(times.viewport().rect().contains(times.visualItemRect(times.item(i)))
+                                for i in range(3)))
             dialog.ui.list_hide_times.setCurrentRow(1)
             dialog.ui.btn_del_hide_time.click()
             self.assertEqual(self.win.scheduled_hide_times, ["15:00", "17:00"])
@@ -281,16 +322,18 @@ class HidingTests(unittest.TestCase):
                     self.app.processEvents()
                     self.assertEqual(dialog.ui.hide_time_edit.isEnabled(), enabled)
                     self.assertEqual(dialog.ui.list_hide_times.isEnabled(), enabled)
+                    self.assertEqual(dialog.ui.cb_auto_hide.isEnabled(), enabled)
+                    self.assertEqual(self.win.hide_enabled, enabled)
+                    self.assertTrue(self.win.auto_hide_enabled)
+                    self.assertIn("已启用" if enabled else "未启用", dialog.ui.label_hide_status.text())
             page = dialog.ui.functions
             self.assertFalse(page.findChildren(QScrollArea))
-            for control in (dialog.ui.gb_hotkeys, dialog.float_paging_settings,
+            for control in (dialog.ui.gb_hotkeys, dialog.ui.gb_fcn, dialog.ui.label_hide_status,
                             dialog.ui.gb_scheduled_hide, dialog.ui.list_hide_times,
                             dialog.ui.btn_add_hide_time, dialog.ui.btn_del_hide_time):
                 bounds = control.rect().translated(control.mapTo(page, QPoint()))
                 self.assertTrue(page.rect().contains(bounds), (control.objectName(), bounds, page.rect()))
-            groups = (dialog.ui.gb_hotkeys, dialog.float_paging_settings, dialog.ui.gb_scheduled_hide)
-            for upper, lower in zip(groups, groups[1:]):
-                self.assertLess(upper.geometry().bottom(), lower.geometry().top())
+            self.assertLess(dialog.ui.gb_fcn.geometry().bottom(), dialog.ui.gb_scheduled_hide.geometry().top())
         finally:
             self.app.setPalette(original)
             delete(dialog)

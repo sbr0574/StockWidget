@@ -26,7 +26,7 @@ class Ui_MetricPool(object):
             metric_pool.setObjectName(u"metric_pool")
         metric_pool.resize(240, 220)
         self.metricPoolLayout = QVBoxLayout(metric_pool)
-        self.metricPoolLayout.setSpacing(2)
+        self.metricPoolLayout.setSpacing(5)
         self.metricPoolLayout.setObjectName(u"metricPoolLayout")
         self.metricPoolLayout.setContentsMargins(0, 0, 0, 0)
         self.displayed_label = QLabel(metric_pool)
