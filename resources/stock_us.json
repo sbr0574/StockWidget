@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-30",
+  "last_update": "2026-10-01",
   "codes": {
     "usa": {
       "code": "a",
@@ -919,6 +919,15 @@
       "py": "",
       "abbr": ""
     },
+    "usaccv": {
+      "code": "accv",
+      "market": "us",
+      "type": "美",
+      "name": "Accelevation Holdings Corp. - Class A ordinary shares",
+      "name_en": "Accelevation Holdings Corp. - Class A ordinary shares",
+      "py": "",
+      "abbr": ""
+    },
     "usacdc": {
       "code": "acdc",
       "market": "us",
@@ -1114,6 +1123,15 @@
       "type": "美",
       "name": "American Coastal Insurance Corporation - Common Stock",
       "name_en": "American Coastal Insurance Corporation - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usacig": {
+      "code": "acig",
+      "market": "us",
+      "type": "美",
+      "name": "Hartford Alpha Capture International Growth ETF",
+      "name_en": "Hartford Alpha Capture International Growth ETF",
       "py": "",
       "abbr": ""
     },
@@ -1393,6 +1411,15 @@
       "type": "美",
       "name": "American Customer Satisfaction ETF",
       "name_en": "American Customer Satisfaction ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usacsm": {
+      "code": "acsm",
+      "market": "us",
+      "type": "美",
+      "name": "Hartford Alpha Capture SMID Cap ETF",
+      "name_en": "Hartford Alpha Capture SMID Cap ETF",
       "py": "",
       "abbr": ""
     },
@@ -3871,15 +3898,6 @@
       "py": "",
       "abbr": ""
     },
-    "usaixc": {
-      "code": "aixc",
-      "market": "us",
-      "type": "美",
-      "name": "AIxCrypto Holdings, Inc. - Common Stock",
-      "name_en": "AIxCrypto Holdings, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "usaixi": {
       "code": "aixi",
       "market": "us",
@@ -5508,15 +5526,6 @@
       "name_en": "Direxion Daily AMZN Bear 1X ETF",
       "py": "zuokongyamaxunetf-direxion",
       "abbr": "zkymxetf-direxion"
-    },
-    "usamze": {
-      "code": "amze",
-      "market": "us",
-      "type": "美",
-      "name": "Amaze Holdings, Inc. Common Stock",
-      "name_en": "Amaze Holdings, Inc. Common Stock",
-      "py": "",
-      "abbr": ""
     },
     "usamzg": {
       "code": "amzg",
@@ -9115,6 +9124,15 @@
       "type": "美",
       "name": "Avantis U.S. Mid Cap Value ETF",
       "name_en": "Avantis U.S. Mid Cap Value ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usavnc": {
+      "code": "avnc",
+      "market": "us",
+      "type": "美",
+      "name": "Avantis All International Core Equity ETF",
+      "name_en": "Avantis All International Core Equity ETF",
       "py": "",
       "abbr": ""
     },
@@ -14378,8 +14396,8 @@
       "code": "bnc",
       "market": "us",
       "type": "美",
-      "name": "CEA Industries Inc. - Common Stock",
-      "name_en": "CEA Industries Inc. - Common Stock",
+      "name": "BNB Standard Corporation - Common Stock",
+      "name_en": "BNB Standard Corporation - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -14387,8 +14405,8 @@
       "code": "bncww",
       "market": "us",
       "type": "美",
-      "name": "CEA Industries Inc. - Warrant",
-      "name_en": "CEA Industries Inc. - Warrant",
+      "name": "BNB Standard Corporation - Warrant",
+      "name_en": "BNB Standard Corporation - Warrant",
       "py": "",
       "abbr": ""
     },
@@ -14396,8 +14414,8 @@
       "code": "bncwz",
       "market": "us",
       "type": "美",
-      "name": "CEA Industries Inc. - Warrants",
-      "name_en": "CEA Industries Inc. - Warrants",
+      "name": "BNB Standard Corporation - Warrants",
+      "name_en": "BNB Standard Corporation - Warrants",
       "py": "",
       "abbr": ""
     },
@@ -26443,6 +26461,15 @@
       "py": "nongchanpinetf-powershares",
       "abbr": "ncpetf-powershares"
     },
+    "usdbar": {
+      "code": "dbar",
+      "market": "us",
+      "type": "美",
+      "name": "IMGP DBI Absolute Return ETF",
+      "name_en": "IMGP DBI Absolute Return ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usdbaw": {
       "code": "dbaw",
       "market": "us",
@@ -26620,15 +26647,6 @@
       "type": "美",
       "name": "Invesco DB Precious Metals Fund",
       "name_en": "Invesco DB Precious Metals Fund",
-      "py": "",
-      "abbr": ""
-    },
-    "usdbrg": {
-      "code": "dbrg",
-      "market": "us",
-      "type": "美",
-      "name": "DigitalBridge Group, Inc.",
-      "name_en": "DigitalBridge Group, Inc.",
       "py": "",
       "abbr": ""
     },
@@ -33346,6 +33364,15 @@
       "py": "",
       "abbr": ""
     },
+    "usenhe": {
+      "code": "enhe",
+      "market": "us",
+      "type": "美",
+      "name": "iShares Enhanced Emerging Markets Active ETF",
+      "name_en": "iShares Enhanced Emerging Markets Active ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usenhi": {
       "code": "enhi",
       "market": "us",
@@ -37978,6 +38005,15 @@
       "type": "美",
       "name": "FundX Future Fund Opportunities ETF",
       "name_en": "FundX Future Fund Opportunities ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usffr": {
+      "code": "ffr",
+      "market": "us",
+      "type": "美",
+      "name": "FF EAI Robotics Ecosystem Inc. - Common Stock",
+      "name_en": "FF EAI Robotics Ecosystem Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -43614,15 +43650,6 @@
       "name_en": "Geron Corporation - Common Stock",
       "py": "jielong",
       "abbr": "jl"
-    },
-    "usgety": {
-      "code": "gety",
-      "market": "us",
-      "type": "美",
-      "name": "Getty Images Holdings, Inc. Class A Common Stock",
-      "name_en": "Getty Images Holdings, Inc. Class A Common Stock",
-      "py": "",
-      "abbr": ""
     },
     "usgev": {
       "code": "gev",
@@ -56089,6 +56116,15 @@
       "py": "",
       "abbr": ""
     },
+    "usivai": {
+      "code": "ivai",
+      "market": "us",
+      "type": "美",
+      "name": "Ives Ultra AI Opportunities Inc. Common Stock",
+      "name_en": "Ives Ultra AI Opportunities Inc. Common Stock",
+      "py": "",
+      "abbr": ""
+    },
     "usival": {
       "code": "ival",
       "market": "us",
@@ -58417,6 +58453,15 @@
       "type": "美",
       "name": "Nuveen Credit Strategies Income Fund Shares of Beneficial Interest",
       "name_en": "Nuveen Credit Strategies Income Fund Shares of Beneficial Interest",
+      "py": "",
+      "abbr": ""
+    },
+    "usjqty": {
+      "code": "jqty",
+      "market": "us",
+      "type": "美",
+      "name": "Jensen U.S. Quality Index ETF",
+      "name_en": "Jensen U.S. Quality Index ETF",
       "py": "",
       "abbr": ""
     },
@@ -61783,6 +61828,15 @@
       "type": "美",
       "name": "LCI Industries",
       "name_en": "LCI Industries",
+      "py": "",
+      "abbr": ""
+    },
+    "uslciv": {
+      "code": "lciv",
+      "market": "us",
+      "type": "美",
+      "name": "Logan Capital International ETF",
+      "name_en": "Logan Capital International ETF",
       "py": "",
       "abbr": ""
     },
@@ -102029,8 +102083,8 @@
       "code": "tcv",
       "market": "us",
       "type": "美",
-      "name": "Towle Value ETF",
-      "name_en": "Towle Value ETF",
+      "name": "Towle Small-Cap Value ETF",
+      "name_en": "Towle Small-Cap Value ETF",
       "py": "",
       "abbr": ""
     },
