@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-01",
+  "last_update": "2026-10-02",
   "codes": {
     "usa": {
       "code": "a",
@@ -20836,6 +20836,15 @@
       "py": "",
       "abbr": ""
     },
+    "uschwm": {
+      "code": "chwm",
+      "market": "us",
+      "type": "美",
+      "name": "Chilwa Minerals Limited - American Depository Shares",
+      "name_en": "Chilwa Minerals Limited - American Depository Shares",
+      "py": "",
+      "abbr": ""
+    },
     "uschwy": {
       "code": "chwy",
       "market": "us",
@@ -31066,6 +31075,15 @@
       "type": "美",
       "name": "Pacer Developed Markets Cash Cows Growth Leaders ETF",
       "name_en": "Pacer Developed Markets Cash Cows Growth Leaders ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "useafh": {
+      "code": "eafh",
+      "market": "us",
+      "type": "美",
+      "name": "Xtrackers MSCI EAFE 50% Hedged Equity ETF",
+      "name_en": "Xtrackers MSCI EAFE 50% Hedged Equity ETF",
       "py": "",
       "abbr": ""
     },
@@ -48479,8 +48497,8 @@
       "code": "help",
       "market": "us",
       "type": "美",
-      "name": "Cybin Inc. - Common Stock",
-      "name_en": "Cybin Inc. - Common Stock",
+      "name": "Helus Pharma Inc.  - Common Stock",
+      "name_en": "Helus Pharma Inc.  - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -63109,6 +63127,15 @@
       "py": "",
       "abbr": ""
     },
+    "usllma": {
+      "code": "llma",
+      "market": "us",
+      "type": "美",
+      "name": "Global X LLM ETF",
+      "name_en": "Global X LLM ETF",
+      "py": "",
+      "abbr": ""
+    },
     "uslly": {
       "code": "lly",
       "market": "us",
@@ -64845,15 +64872,6 @@
       "name_en": "Mid-America Apartment Communities, Inc. Common Stock",
       "py": "maafangchanxintuo",
       "abbr": "maafcxt"
-    },
-    "usmaa_i": {
-      "code": "maa_i",
-      "market": "us",
-      "type": "美",
-      "name": "MAA房产信托(优先股)",
-      "name_en": "Mid-America Apartment Communities, Inc. 8.50% Series I Cumulative Redeemable Preferred Stock",
-      "py": "maafangchanxintuo(youxiangu)",
-      "abbr": "maafcxt(yxg)"
     },
     "usmaas": {
       "code": "maas",
@@ -66623,8 +66641,8 @@
       "code": "metv",
       "market": "us",
       "type": "美",
-      "name": "Roundhill Ball Metaverse ETF",
-      "name_en": "Roundhill Ball Metaverse ETF",
+      "name": "Roundhill Metaverse ETF",
+      "name_en": "Roundhill Metaverse ETF",
       "py": "",
       "abbr": ""
     },
@@ -68137,6 +68155,24 @@
       "type": "美",
       "name": "MiniMed Group, Inc. - Common Stock",
       "name_en": "MiniMed Group, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usmmedv": {
+      "code": "mmedv",
+      "market": "us",
+      "type": "美",
+      "name": "MiniMed Group, Inc. - Common Stock When Issued",
+      "name_en": "MiniMed Group, Inc. - Common Stock When Issued",
+      "py": "",
+      "abbr": ""
+    },
+    "usmmhi": {
+      "code": "mmhi",
+      "market": "us",
+      "type": "美",
+      "name": "NYLIM MacKay Muni High Income ETF",
+      "name_en": "NYLIM MacKay Muni High Income ETF",
       "py": "",
       "abbr": ""
     },
@@ -73342,15 +73378,6 @@
       "py": "",
       "abbr": ""
     },
-    "usnly_i": {
-      "code": "nly_i",
-      "market": "us",
-      "type": "美",
-      "name": "Annaly Capital Management Inc 6.750% Series I Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock",
-      "name_en": "Annaly Capital Management Inc 6.750% Series I Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock",
-      "py": "",
-      "abbr": ""
-    },
     "usnly_j": {
       "code": "nly_j",
       "market": "us",
@@ -74608,15 +74635,6 @@
       "type": "美",
       "name": "Nutriband Inc. - Common Stock",
       "name_en": "Nutriband Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usntrbw": {
-      "code": "ntrbw",
-      "market": "us",
-      "type": "美",
-      "name": "Nutriband Inc. - Warrant",
-      "name_en": "Nutriband Inc. - Warrant",
       "py": "",
       "abbr": ""
     },
@@ -76501,6 +76519,15 @@
       "py": "",
       "abbr": ""
     },
+    "usoct": {
+      "code": "oct",
+      "market": "us",
+      "type": "美",
+      "name": "VanEck U.S. Equity Buffer ETF - October",
+      "name_en": "VanEck U.S. Equity Buffer ETF - October",
+      "py": "",
+      "abbr": ""
+    },
     "usoctb": {
       "code": "octb",
       "market": "us",
@@ -76516,6 +76543,15 @@
       "type": "美",
       "name": "Innovator Premium Income 20 Barrier ETF - October",
       "name_en": "Innovator Premium Income 20 Barrier ETF - October",
+      "py": "",
+      "abbr": ""
+    },
+    "usocti": {
+      "code": "octi",
+      "market": "us",
+      "type": "美",
+      "name": "AllianzIM International Equity Buffer15 Uncapped Oct ETF",
+      "name_en": "AllianzIM International Equity Buffer15 Uncapped Oct ETF",
       "py": "",
       "abbr": ""
     },
@@ -77830,6 +77866,15 @@
       "type": "美",
       "name": "OPENLANE, Inc. Common Stock",
       "name_en": "OPENLANE, Inc. Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usopnw": {
+      "code": "opnw",
+      "market": "us",
+      "type": "美",
+      "name": "OpenWorld, Inc. - Common Stock",
+      "name_en": "OpenWorld, Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -83214,6 +83259,15 @@
       "name_en": "Portland General Electric Co Common Stock",
       "py": "botelantongyongdianqi",
       "abbr": "btltydq"
+    },
+    "usport_u": {
+      "code": "port_u",
+      "market": "us",
+      "type": "美",
+      "name": "Southport Acquisition Corp. II Units, each consisting of one Class A ordinary share and one-third of one redeemable warrant",
+      "name_en": "Southport Acquisition Corp. II Units, each consisting of one Class A ordinary share and one-third of one redeemable warrant",
+      "py": "",
+      "abbr": ""
     },
     "uspost": {
       "code": "post",
@@ -89357,8 +89411,8 @@
       "code": "rhrx",
       "market": "us",
       "type": "美",
-      "name": "RH Tactical Rotation ETF",
-      "name_en": "RH Tactical Rotation ETF",
+      "name": "Adaptive Tactical Rotation ETF",
+      "name_en": "Adaptive Tactical Rotation ETF",
       "py": "",
       "abbr": ""
     },
@@ -102187,6 +102241,15 @@
       "py": "",
       "abbr": ""
     },
+    "ustdem": {
+      "code": "tdem",
+      "market": "us",
+      "type": "美",
+      "name": "T. Rowe Price Dynamic Emerging Markets Bond ETF",
+      "name_en": "T. Rowe Price Dynamic Emerging Markets Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
     "ustdf": {
       "code": "tdf",
       "market": "us",
@@ -105433,6 +105496,15 @@
       "type": "美",
       "name": "Trinity Biotech plc - American Depositary Shares",
       "name_en": "Trinity Biotech plc - American Depositary Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "ustril": {
+      "code": "tril",
+      "market": "us",
+      "type": "美",
+      "name": "VegaShares Trillions ETF",
+      "name_en": "VegaShares Trillions ETF",
       "py": "",
       "abbr": ""
     },
@@ -109648,6 +109720,15 @@
       "py": "",
       "abbr": ""
     },
+    "usuwmcrw": {
+      "code": "uwmcrw",
+      "market": "us",
+      "type": "美",
+      "name": "UWM Holdings Corporation Rights (November 12, 2026) Rights when issued",
+      "name_en": "UWM Holdings Corporation Rights (November 12, 2026) Rights when issued",
+      "py": "",
+      "abbr": ""
+    },
     "usux": {
       "code": "ux",
       "market": "us",
@@ -112123,15 +112204,6 @@
       "py": "",
       "abbr": ""
     },
-    "usvrme": {
-      "code": "vrme",
-      "market": "us",
-      "type": "美",
-      "name": "VerifyMe, Inc. - Common Stock",
-      "name_en": "VerifyMe, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "usvrns": {
       "code": "vrns",
       "market": "us",
@@ -112885,6 +112957,15 @@
       "type": "美",
       "name": "Inverse VIX Short-Term Futures ETNs due March 22, 2045",
       "name_en": "Inverse VIX Short-Term Futures ETNs due March 22, 2045",
+      "py": "",
+      "abbr": ""
+    },
+    "usvylr": {
+      "code": "vylr",
+      "market": "us",
+      "type": "美",
+      "name": "Vylor Inc. Common Stock",
+      "name_en": "Vylor Inc. Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -117230,8 +117311,8 @@
       "code": "xspc",
       "market": "us",
       "type": "美",
-      "name": "VegaShares SpaceX & Beyond Earth ETF",
-      "name_en": "VegaShares SpaceX & Beyond Earth ETF",
+      "name": "VegaShares Space & AI ETF",
+      "name_en": "VegaShares Space & AI ETF",
       "py": "",
       "abbr": ""
     },
@@ -117610,6 +117691,15 @@
       "type": "美",
       "name": "Amplify Top 10 Space ETF",
       "name_en": "Amplify Top 10 Space ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usxx": {
+      "code": "xx",
+      "market": "us",
+      "type": "美",
+      "name": "Roundhill S&P 500 Target 10,000 2030 ETF",
+      "name_en": "Roundhill S&P 500 Target 10,000 2030 ETF",
       "py": "",
       "abbr": ""
     },
