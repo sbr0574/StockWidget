@@ -8,6 +8,7 @@ import unittest
 
 from PySide6.QtCore import QPoint, QTime, Qt
 from PySide6.QtGui import QColor, QPalette
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QScrollArea, QWidget, QPushButton
 from shiboken6 import delete
 
@@ -291,7 +292,7 @@ class HidingTests(unittest.TestCase):
         original = self.app.palette()
         try:
             dialog.show()
-            dialog.ui.tab_widget.setCurrentWidget(dialog.ui.functions)
+            dialog.ui.settings_pages.setCurrentWidget(dialog.ui.general)
             dialog.ui.gb_scheduled_hide.setChecked(True)
             for hour in (17, 18):
                 dialog.ui.hide_time_edit.setTime(QTime(hour, 0))
@@ -303,7 +304,10 @@ class HidingTests(unittest.TestCase):
             self.assertTrue(all(times.viewport().rect().contains(times.visualItemRect(times.item(i)))
                                 for i in range(3)))
             dialog.ui.list_hide_times.setCurrentRow(1)
-            dialog.ui.btn_del_hide_time.click()
+            item = dialog.ui.list_hide_times.currentItem()
+            rect = dialog.ui.list_hide_times.visualItemRect(item)
+            point = dialog.ui.list_hide_times.itemDelegate().delete_rect(rect).center()
+            QTest.mouseClick(dialog.ui.list_hide_times.viewport(), Qt.LeftButton, pos=point)
             self.assertEqual(self.win.scheduled_hide_times, ["15:00", "17:00"])
             self.assertTrue(dialog.ui.btn_add_hide_time.isEnabled())
             dialog.ui.hide_time_edit.setTime(QTime(15, 0))
@@ -325,15 +329,16 @@ class HidingTests(unittest.TestCase):
                     self.assertEqual(dialog.ui.cb_auto_hide.isEnabled(), enabled)
                     self.assertEqual(self.win.hide_enabled, enabled)
                     self.assertTrue(self.win.auto_hide_enabled)
-                    self.assertIn("已启用" if enabled else "未启用", dialog.ui.label_hide_status.text())
-            page = dialog.ui.functions
-            self.assertFalse(page.findChildren(QScrollArea))
-            for control in (dialog.ui.gb_hotkeys, dialog.ui.gb_fcn, dialog.ui.label_hide_status,
+                    self.assertIn("程序将在" if enabled else "程序未启用自动隐藏", dialog.ui.label_hide_status.text())
+            page = dialog.ui.general
+            self.assertTrue(page.findChildren(QScrollArea))
+            content = dialog.ui.general_content
+            for control in (dialog.ui.gb_icon, dialog.ui.cb_auto_start_row, dialog.ui.label_hide_status,
                             dialog.ui.gb_scheduled_hide, dialog.ui.list_hide_times,
-                            dialog.ui.btn_add_hide_time, dialog.ui.btn_del_hide_time):
-                bounds = control.rect().translated(control.mapTo(page, QPoint()))
-                self.assertTrue(page.rect().contains(bounds), (control.objectName(), bounds, page.rect()))
-            self.assertLess(dialog.ui.gb_fcn.geometry().bottom(), dialog.ui.gb_scheduled_hide.geometry().top())
+                            dialog.ui.btn_add_hide_time, dialog.ui.hide_time_edit):
+                bounds = control.rect().translated(control.mapTo(content, QPoint()))
+                self.assertTrue(content.rect().contains(bounds), (control.objectName(), bounds, content.rect()))
+            self.assertLess(dialog.ui.cb_auto_start_row.geometry().bottom(), dialog.ui.cmb_color_mode_row.geometry().top())
         finally:
             self.app.setPalette(original)
             delete(dialog)

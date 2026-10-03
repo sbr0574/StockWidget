@@ -49,8 +49,11 @@ class Ui_FloatingWidget(object):
         self.data_layout.setContentsMargins(0, 0, 0, 0)
         self.pager = PagerWidget(self.panel)
         self.pager.setObjectName(u"pager")
-        self.pager.setMinimumSize(QSize(38, 42))
-        self.pager.setMaximumSize(QSize(38, 16777215))
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.pager.sizePolicy().hasHeightForWidth())
+        self.pager.setSizePolicy(sizePolicy)
 
         self.data_layout.addWidget(self.pager)
 

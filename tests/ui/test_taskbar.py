@@ -6,14 +6,15 @@ import sys
 import unittest
 
 from PySide6.QtCore import Qt, QEvent, QPoint, QPointF
-from PySide6.QtGui import QColor, QKeyEvent, QMouseEvent
+from PySide6.QtGui import QColor, QKeyEvent, QMouseEvent, QPalette
 from PySide6.QtWidgets import QApplication
 from shiboken6 import delete
 
 from stockwidget.platform.taskbar import TaskbarArea, NativeTaskbarWindow, find_taskbar
 from stockwidget.ui.floating.presenter import QuotePresenter
-from stockwidget.ui.floating.taskbar import TaskbarController, render_taskbar
+from stockwidget.ui.floating.taskbar import TaskbarController, render_taskbar, taskbar_message
 from stockwidget.ui.floating.widget import FloatLabel
+from stockwidget.ui.menus import build_quote_menu
 
 from tests.support import QtTestCase, PagingTestCase
 
@@ -40,6 +41,64 @@ class TaskbarTests(QtTestCase):
     def set_rows(self, rows):
         self.window.quotes.project_rows([dict(zip(("名称", "现价"), row)) for row in rows],
                                      [{"名称": "text", "现价": "up"} for _ in rows])
+
+    def test_startup_shows_loading_for_configured_taskbar_metrics(self):
+        for synced, floating, independent, expected in (
+            (True, ["price"], [], "加载中…"),
+            (False, [], ["price"], "加载中…"),
+            (True, [], ["price"], "请选择任务栏显示指标"),
+            (False, ["price"], [], "请选择任务栏显示指标"),
+        ):
+            with self.subTest(synced=synced, metrics=(floating, independent)):
+                window = FloatLabel({"taskbar_enabled": True, "display_mode": "taskbar",
+                                     "visible_metrics": floating, "name_visible": False,
+                                     "taskbar_metrics": independent,
+                                     "taskbar_sync_metrics": synced}, {})
+                try:
+                    self.assertEqual(taskbar_message(window), expected)
+                    self.assertFalse(render_taskbar(window, 44).isNull())
+                finally:
+                    delete(window)
+
+    def test_quote_menu_exit_uses_the_application_quit_callback(self):
+        quit_app = Mock()
+        self.window.set_quit_callback(lambda: quit_app())
+        menu = build_quote_menu(self.window)
+        try:
+            next(action for action in menu.actions() if action.text() == "退出").trigger()
+            quit_app.assert_called_once_with()
+        finally:
+            delete(menu)
+
+    def test_automatic_taskbar_color_tracks_theme_without_overwriting_manual_color(self):
+        original = self.app.palette()
+        self.window.set_view_options(taskbar_sync_appearance=False, taskbar_auto_color=True,
+                                     taskbar_color="#123456", taskbar_unicolor=False)
+        self.set_rows([["黄金", "123.45"]])
+        with patch("stockwidget.ui.controls.style.QGuiApplication.styleHints") as hints:
+            hints.return_value.colorScheme.return_value = Qt.ColorScheme.Unknown
+            try:
+                images = []
+                for background, expected in (("#202020", "#ffffff"), ("#eeeeee", "#000000")):
+                    palette = QPalette(original)
+                    palette.setColor(QPalette.Window, QColor(background))
+                    self.app.setPalette(palette)
+                    self.app.processEvents()
+                    self.assertEqual(self.window.get_taskbar_appearance()[1].name(), expected)
+                    for column in range(self.window.taskbar_model.columnCount()):
+                        color = self.window.taskbar_model.index(0, column).data(Qt.ForegroundRole)
+                        self.assertEqual(color.name(), expected)
+                    images.append(render_taskbar(self.window, 44))
+                self.assertNotEqual(*images)
+                self.assertEqual(self.window.current_config()["taskbar_color"], "#123456")
+                self.assertFalse(self.window.current_config()["taskbar_unicolor"])
+                self.window.set_view_options(taskbar_sync_appearance=True)
+                self.assertEqual(self.window.get_taskbar_appearance()[1], self.window.fg)
+                self.window.set_view_options(taskbar_sync_appearance=False, taskbar_auto_color=False)
+                self.assertEqual(self.window.get_taskbar_appearance()[1].name(), "#123456")
+                self.assertFalse(self.window.get_taskbar_appearance()[3])
+            finally:
+                self.app.setPalette(original)
 
     def test_render_uses_only_first_two_rows(self):
         self.set_rows([["黄金", "123.45"], ["白银", "67.89"], ["不会出现", "100"]])
@@ -88,8 +147,18 @@ class TaskbarTests(QtTestCase):
         self.assertFalse(self.window.timer.isActive())
 
     def test_invalid_and_non_windows_modes_fall_back_to_float(self):
-        with patch("stockwidget.ui.floating.widget.sys.platform", "linux"):
-            self.window.set_display_mode("taskbar")
+        for platform in ("linux", "darwin"):
+            with self.subTest(platform=platform), patch("sys.platform", platform):
+                self.window.set_display_mode("taskbar")
+                menu = build_quote_menu(self.window)
+                try:
+                    labels = [action.text() for action in menu.actions()]
+                    self.assertNotIn("任务栏行情", labels)
+                    self.assertNotIn("显示位置", labels)
+                    self.assertIn("分栏", labels)
+                    self.assertEqual(self.window.display_mode, "float")
+                finally:
+                    delete(menu)
         self.assertEqual(self.window.display_mode, "float")
         self.window.set_display_mode("invalid")
         self.assertEqual(self.window.display_mode, "float")
@@ -125,23 +194,52 @@ class TaskbarTests(QtTestCase):
         with patch.object(SettingsDialog, "_start_github_check"), patch("sys.platform", "win32"):
             dialog = SettingsDialog(self.window, self.window)
             tray = TrayIcon(QIcon(), "Test", on_toggle=Mock(), on_open_settings=Mock(),
-                            on_quit=Mock(), on_click_through=Mock(), click_through_getter=lambda: False,
-                            on_display_mode=self.window.set_display_mode,
-                            display_mode_getter=lambda: self.window.display_mode,
-                            taskbar_enabled_getter=lambda: self.window.view_options.taskbar_enabled)
+                            on_quit=Mock(), source=self.window)
             try:
-                self.assertFalse(tray._mode_actions["taskbar"].isEnabled())
-                dialog.taskbar_settings.setChecked(True)
+                actions = {action.text(): action for action in tray.contextMenu().actions()}
+                mode = actions["任务栏行情"]
+                self.assertFalse(mode.isChecked())
+                dialog.taskbar_settings.enabled.setChecked(True)
                 self.assertEqual(self.window.display_mode, "taskbar")
-                tray.sync_click_through()
-                self.assertTrue(tray._mode_actions["taskbar"].isChecked())
-                tray._mode_actions["both"].trigger()
+                tray.sync_settings()
+                self.assertTrue(mode.isChecked())
+                mode.trigger()
+                self.assertFalse(dialog.taskbar_settings.enabled.isChecked())
+                mode.trigger()
+                dialog.taskbar_settings.dual.setChecked(True)
+                self.window.set_display_mode("both")
                 self.assertTrue(dialog.taskbar_settings.dual.isChecked())
-                self.assertTrue(dialog.taskbar_settings.isChecked())
+                self.assertTrue(dialog.taskbar_settings.enabled.isChecked())
+                actions["分栏"].trigger()
+                self.assertTrue(dialog.float_split_settings.isChecked())
                 self.window.set_display_mode("float")
-                self.assertTrue(dialog.taskbar_settings.isChecked())
+                self.assertTrue(dialog.taskbar_settings.enabled.isChecked())
+                self.window.set_view_options(taskbar_dual_open=False, taskbar_sync_split=False,
+                                             float_split_enabled=False, taskbar_split_enabled=False)
+                self.window.set_display_mode("taskbar")
+                tray.sync_settings()
+                self.assertFalse(actions["分栏"].isChecked())
+                actions["分栏"].trigger()
+                self.assertTrue(self.window.view_options.taskbar_split_enabled)
+                self.assertFalse(self.window.view_options.float_split_enabled)
+                menu = build_quote_menu(self.window, "taskbar")
+                try:
+                    split = next(action for action in menu.actions() if action.text() == "分栏")
+                    self.assertTrue(split.isChecked())
+                    split.trigger()
+                    self.assertFalse(self.window.view_options.taskbar_split_enabled)
+                    self.assertFalse(self.window.view_options.float_split_enabled)
+                finally:
+                    delete(menu)
                 self.window.reset_settings()
-                self.assertFalse(dialog.taskbar_settings.isChecked())
+                self.assertFalse(dialog.taskbar_settings.enabled.isChecked())
+                tray.sync_settings()
+                self.assertFalse(mode.isChecked())
+                with patch("stockwidget.ui.menus.QDesktopServices.openUrl") as open_url:
+                    actions["使用帮助"].trigger()
+                    actions["问题反馈"].trigger()
+                self.assertEqual([call.args[0].toString() for call in open_url.call_args_list],
+                                 ["https://github.com/sbr0574/StockWidget#readme", "https://github.com/sbr0574/StockWidget/issues"])
             finally:
                 delete(tray)
                 delete(dialog)
@@ -174,6 +272,62 @@ class TaskbarTests(QtTestCase):
 @unittest.skipUnless(sys.platform == "win32" and os.environ.get("STOCKWIDGET_TEST_WINDOWS") == "1",
                      "Requires opt-in Windows desktop session")
 class NativeTaskbarTests(QtTestCase):
+    def test_float_preview_keeps_native_capture_and_restores_on_leave_and_escape(self):
+        import ctypes
+        from ctypes import wintypes as w
+
+        with patch.object(QuotePresenter, "refresh"), patch("stockwidget.ui.floating.widget.GlobalHotkeyManager"):
+            source = FloatLabel({"pos": {"x": 100, "y": 100}, "taskbar_enabled": True}, {})
+        controller = TaskbarController(source, Mock())
+        try:
+            source.show()
+            self.app.processEvents()
+            self.enterContext(patch.object(NativeTaskbarWindow, "poll_pointer", return_value=None))
+            start = source.pos() + QPoint(5, 5)
+            source.begin_drag(start)
+            with patch("stockwidget.ui.floating.taskbar.cursor_over_taskbar", return_value=True):
+                source.move_drag(start + QPoint(80, 80))
+                self.app.processEvents()
+            self.assertTrue(controller._active, source.taskbar_status)
+            self.assertFalse(source.isVisible())
+            self.assertTrue(source.widget_visible)
+            user, hwnd = controller.native.user, controller.native.hwnd
+            self.assertEqual(user.GetCapture(), hwnd)
+            user.SendMessageW.argtypes = [w.HWND, w.UINT, w.WPARAM, w.LPARAM]
+            user.SendMessageW.restype = ctypes.c_ssize_t
+            xy = ((-250 & 0xffff) << 16) | 110
+            with patch("stockwidget.ui.floating.taskbar.QCursor.pos", return_value=QPoint(300, 300)), \
+                 patch("stockwidget.ui.floating.taskbar.cursor_over_taskbar", return_value=False):
+                user.SendMessageW(hwnd, 0x200, 1, xy)
+                self.app.processEvents()
+                self.assertTrue(source.isVisible())
+                self.assertTrue(source.widget_visible)
+                self.assertFalse(controller._active)
+                self.assertEqual(user.GetCapture(), hwnd)
+                user.SendMessageW(hwnd, 0x202, 0, xy)
+                self.app.processEvents()
+            self.assertEqual(source.display_mode, "float")
+            self.assertIsNone(user.GetCapture())
+            self.assertIsNone(controller.native.hwnd)
+            origin = source.pos()
+            source.begin_drag(origin + QPoint(5, 5))
+            with patch("stockwidget.ui.floating.taskbar.cursor_over_taskbar", return_value=True):
+                source.move_drag(origin + QPoint(90, 90))
+                self.app.processEvents()
+                self.assertFalse(source.isVisible())
+                user.SendMessageW(controller.native.hwnd, 0x100, 0x1B, 0)
+                self.app.processEvents()
+            self.assertEqual(source.pos(), origin)
+            self.assertTrue(source.isVisible())
+            self.assertFalse(source.taskbar_preview_active)
+            self.assertIsNone(user.GetCapture())
+            self.assertIsNone(controller.native.hwnd)
+        finally:
+            controller.close()
+            delete(controller)
+            delete(source)
+            self.app.processEvents()
+
 
     def test_native_drag_keeps_capture_while_hidden_then_releases_into_float(self):
         import ctypes
@@ -403,7 +557,7 @@ class DockingInteractionTests(PagingTestCase):
         self.assertTrue(controller._active)
         self.assertFalse(self.win.isVisible())
 
-    def test_disabled_taskbar_cannot_be_started_by_drag_or_display_position_menu(self):
+    def test_taskbar_menu_switch_enables_docking_and_can_restore_the_float(self):
         controller = self.make_controller()
         self.win.set_view_options(taskbar_enabled=False)
         self.win.move(100, 100)
@@ -424,8 +578,18 @@ class DockingInteractionTests(PagingTestCase):
         menu = self.win.build_context_menu()
         try:
             actions = {action.text(): action for action in menu.actions()}
-            modes = actions["显示位置"].menu()
-            self.assertEqual([action.isEnabled() for action in modes.actions()], [True, False, False])
+            self.assertNotIn("显示位置", actions)
+            self.assertFalse(actions["任务栏行情"].isChecked())
+            actions["任务栏行情"].trigger()
+            self.assertTrue(self.win.view_options.taskbar_enabled)
+            self.assertEqual(self.win.display_mode, "taskbar")
+            self.assertFalse(self.win.isVisible())
+            self.assertTrue(controller._active)
+            actions["分栏"].trigger()
+            self.assertTrue(self.win.view_options.float_split_enabled)
+            with patch("stockwidget.ui.floating.widget.apply_click_through"):
+                actions["鼠标穿透"].trigger()
+                self.assertTrue(self.win.click_through)
         finally:
             delete(menu)
         self.win.set_view_options(taskbar_enabled=True)
@@ -627,11 +791,17 @@ class DockingInteractionTests(PagingTestCase):
         self.over.return_value = True
         controller.drag_moved()
         self.assertTrue(controller._active)
-        self.assertTrue(self.win.isVisible())
+        self.assertFalse(self.win.isVisible())
+        self.assertTrue(self.win.widget_visible)
+        self.assertTrue(self.win.taskbar_preview_active)
+        self.assertTrue(self.win.timer.isActive())
+        self.native.capture_pointer.assert_called_once()
         self.assertEqual(self.win.display_mode, "float")
         self.over.return_value = False
         controller.drag_moved()
         self.assertFalse(controller._active)
+        self.assertTrue(self.win.isVisible())
+        self.assertTrue(self.win.widget_visible)
         self.over.return_value = True
         controller.drag_moved()
         self.win.move(40, 750)
@@ -674,9 +844,10 @@ class DockingInteractionTests(PagingTestCase):
         self.over.return_value = True
         mouse(QEvent.MouseMove, start + QPoint(0, 100), Qt.NoButton, Qt.LeftButton)
         self.assertTrue(controller._active)
-        self.assertTrue(self.win.isVisible())
+        self.assertFalse(self.win.isVisible())
         QApplication.sendEvent(self.win, QKeyEvent(QEvent.KeyPress, Qt.Key_Escape, Qt.NoModifier))
         self.assertEqual(self.win.pos(), origin)
+        self.assertTrue(self.win.isVisible())
         self.assertFalse(controller._active)
         mouse(QEvent.MouseButtonRelease, start, Qt.LeftButton, Qt.NoButton)
         self.assertEqual(self.win.display_mode, "float")

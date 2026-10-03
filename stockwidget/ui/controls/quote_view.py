@@ -20,7 +20,6 @@ from PySide6.QtGui import (
     QPalette,
     QPolygonF,
     QPainterPath,
-    QFont,
 )
 from PySide6.QtWidgets import (
     QStyledItemDelegate,
@@ -152,12 +151,14 @@ def bid_ask_width(cell, font, padding=4):
     """Symmetric halves keep the axis fixed even when the digit counts differ."""
     fm = QFontMetrics(font)
     half = max(fm.horizontalAdvance(cell.buy), fm.horizontalAdvance(cell.sell))
-    return half * 2 + fm.horizontalAdvance(" / ") + padding * 2 + 2
+    slot = max(fm.horizontalAdvance(symbol) for symbol in ("▶", "◀")) + 2
+    return half * 2 + slot + padding * 2 + 2
 
 
 def paint_bid_ask(painter, rect, font, cell, model, padding=4):
     fm = QFontMetrics(font)
-    gap = min(fm.horizontalAdvance(" / "), max(0, rect.width() - padding * 2))
+    gap = min(max(fm.horizontalAdvance(symbol) for symbol in ("▶", "◀")) + 2,
+              max(0, rect.width() - padding * 2))
     center = rect.x() + rect.width() / 2
     left_edge, right_edge = center - gap / 2, center + gap / 2
     left = QRectF(rect.x() + padding, rect.y(), max(0, left_edge - rect.x() - padding), rect.height())
@@ -169,7 +170,7 @@ def paint_bid_ask(painter, rect, font, cell, model, padding=4):
     for area, text, role, alignment in (
         (left, cell.buy, cell.buy_role, Qt.AlignRight),
         (right, cell.sell, cell.sell_role, Qt.AlignLeft),
-        (middle, "/", COLOR_ROLE_TEXT, Qt.AlignHCenter),
+        (middle, cell.marker, COLOR_ROLE_TEXT, Qt.AlignHCenter),
     ):
         painter.setPen(model.color_for_role(role))
         painter.drawText(area, int(alignment | Qt.AlignVCenter),
@@ -453,19 +454,32 @@ def pager_hit(rect, x, y):
     return 0
 
 
+def pager_size(page, font, minimum_width=38):
+    fm = QFontMetrics(font)
+    digits = len(str(page.count if page else 1))
+    # Reserve the widest digits for both numbers, independent of the current page.
+    digit_width = max(fm.horizontalAdvance(str(n)) for n in range(10))
+    width = max(minimum_width, 2 * digits * digit_width + fm.horizontalAdvance("/") + 8)
+    return QSize(width, max(14, fm.height() + 4) * 3)
+
+
 def paint_pager(painter, rect, page, color, font):
     painter.save()
     painter.setClipRect(rect)
-    f = QFont(font)
-    pixels = font.pixelSize() if font.pixelSize() > 0 else QFontMetrics(font).height()
-    f.setPixelSize(max(7, min(round(rect.height() / 4.2), pixels)))
     label = f"{page.index + 1}/{page.count}"
-    while f.pixelSize() > 7 and QFontMetrics(f).horizontalAdvance(label) > rect.width() - 2:
-        f.setPixelSize(f.pixelSize() - 1)
-    painter.setFont(f)
+    painter.setFont(font)
     painter.setPen(color)
-    for area, text in zip(pager_regions(rect), ("︿", label, "﹀")):
-        painter.drawText(area, Qt.AlignCenter, text)
+    previous, middle, following = pager_regions(rect)
+    painter.drawText(middle, Qt.AlignCenter, label)
+    painter.setRenderHint(QPainter.Antialiasing)
+    for area, direction in ((previous, -1), (following, 1)):
+        center = QRectF(area).center()
+        half_width = min(QFontMetrics(font).height() / 4, area.width() / 4, area.height() / 3)
+        path = QPainterPath()
+        path.moveTo(center.x() - half_width, center.y() - direction * half_width / 2)
+        path.lineTo(center.x(), center.y() + direction * half_width / 2)
+        path.lineTo(center.x() + half_width, center.y() - direction * half_width / 2)
+        painter.drawPath(path)
     painter.restore()
 
 
@@ -476,18 +490,17 @@ class PagerWidget(QWidget):
         super().__init__(parent)
         self.page = None
         self.color = QColor("white")
-        self.setFixedWidth(38)
-        self.setMinimumHeight(42)
         self.setCursor(Qt.PointingHandCursor)
         self.setToolTip("单击上方 / 下方翻页；按住任意位置拖动；双击隐藏")
         self.hide()
 
     def sizeHint(self):
-        return QSize(38, 42)
+        return pager_size(self.page, self.font())
 
     def set_page(self, page, color, font):
         self.page, self.color = page, QColor(color)
         self.setFont(font)
+        self.setFixedSize(self.sizeHint())
         self.setVisible(page.controls)
         self.update()
 

@@ -8,16 +8,19 @@ import sys
 import threading
 
 from PySide6.QtCore import Qt, QEvent, QUrl, QSignalBlocker, Signal
-from PySide6.QtGui import QColor, QDesktopServices, QGuiApplication, QIcon, QKeySequence
+from PySide6.QtGui import QColor, QDesktopServices, QGuiApplication, QIcon, QKeySequence, QWheelEvent
 from PySide6.QtWidgets import (
     QApplication,
     QWidget,
     QDialog,
+    QComboBox,
     QColorDialog,
     QButtonGroup,
     QFileDialog,
     QMessageBox,
     QScrollBar,
+    QScrollArea,
+    QSlider,
 )
 
 from stockwidget.constants import APP_VERSION
@@ -33,11 +36,13 @@ from stockwidget.platform.capabilities import (
     unsupported_tooltip,
 )
 from stockwidget.platform.hotkeys import HotkeyResult
-from stockwidget.ui.controls.metrics import NameSettingsPanel, UnitSettingsPanel
 from stockwidget.ui.controls.style import (
     LINUX_FONT_RULES,
     build_settings_stylesheet,
-    color_swatch_icon,
+    is_dark_theme,
+    set_color_button,
+    settings_navigation_icon,
+    theme_palette,
 )
 from stockwidget.ui.floating.widget import FloatLabel
 from stockwidget.ui.generated.ui_settings import Ui_SettingDialog
@@ -102,6 +107,8 @@ class SettingsDialog(QDialog):
         self._connect_controls()
         self._setup_icon_choices()
         self._load_settings()
+        self.ui.settings_navigation.currentRowChanged.connect(self._on_settings_page_changed)
+        self.ui.settings_navigation.setCurrentRow(0)
         self._apply_theme_stylesheet()
         QGuiApplication.styleHints().colorSchemeChanged.connect(self._apply_theme_stylesheet)
         QApplication.instance().paletteChanged.connect(self._apply_theme_stylesheet)
@@ -153,21 +160,29 @@ class SettingsDialog(QDialog):
         self._setup_about()
 
     def _apply_theme_stylesheet(self, *_args):
-        dark = QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
+        mode = self.win.view_options.color_mode
+        self._applied_color_mode = mode
+        dark = mode == "dark" or (mode == "system" and is_dark_theme())
         self.setStyleSheet(build_settings_stylesheet(dark, linux_fonts=sys.platform == "linux")
                           + "\n" + self._designer_stylesheet)
-        for component in (self.metric_pool, self.taskbar_settings.metric_pool, self.watchlist_editor,
-                          self.name_settings_panel, self.unit_settings_panel):
+        self.setPalette(QApplication.palette() if mode == "system" else theme_palette(dark, QApplication.palette()))
+        for component in (self.metric_pool, self.taskbar_settings.metric_pool, self.watchlist_editor):
             component.set_theme(dark)
         self._refresh_color_buttons()
+        navigation = self.ui.settings_navigation
+        for index in range(navigation.count()):
+            navigation.item(index).setIcon(settings_navigation_icon(index, self.devicePixelRatioF(), self.palette()))
+
+    def _on_settings_page_changed(self, _index):
+        self.watchlist_editor.add_code_panel.hide()
+        self._clear_watchlist_selection()
+        self._clear_metric_selections()
 
     def _refresh_color_buttons(self):
         """用无描边圆形图标展示五个颜色按钮的当前色值。"""
         for button, attr, title in self._color_buttons:
             color = QColor(getattr(self.win, attr))
-            color_name = color.name(QColor.NameFormat.HexRgb)
-            button.setToolTip(f"{title}: {color_name}")
-            button.setIcon(color_swatch_icon(color, button.devicePixelRatioF()))
+            set_color_button(button, color, title)
 
     def _connect_controls(self):
         """连接设置控件与浮窗状态，静态控件统一从 self.ui 访问。"""
@@ -191,37 +206,24 @@ class SettingsDialog(QDialog):
         self.metric_pool.visible_metrics_changed.connect(
             self.win.set_visible_metrics
         )
-        self.metric_pool.name_settings_requested.connect(
-            self._show_name_settings_panel
-        )
-        self.metric_pool.unit_settings_requested.connect(
-            self._show_unit_settings_panel
-        )
-        self.taskbar_settings.metric_pool.name_settings_requested.connect(self._show_name_settings_panel)
-        self.taskbar_settings.metric_pool.unit_settings_requested.connect(self._show_unit_settings_panel)
-        self.name_settings_panel = NameSettingsPanel(self)
-        self.name_settings_panel.name_length_changed.connect(
-            self.win.set_name_length
-        )
-        self.name_settings_panel.code_visible_changed.connect(
-            self.win.set_code_visible
-        )
-        self.name_settings_panel.type_visible_changed.connect(
-            self.win.set_type_visible
-        )
-        self.unit_settings_panel = UnitSettingsPanel(self)
-        self.unit_settings_panel.unit_mode_changed.connect(
-            self.win.set_unit_mode
-        )
-        # 面板关闭（含点击外部空白关闭）后清除指标块的选中状态
-        self.name_settings_panel.panel_closed.connect(
-            self.metric_pool.clear_selections
-        )
-        self.name_settings_panel.panel_closed.connect(self.taskbar_settings.metric_pool.clear_selections)
-        self.unit_settings_panel.panel_closed.connect(
-            self.metric_pool.clear_selections
-        )
-        self.unit_settings_panel.panel_closed.connect(self.taskbar_settings.metric_pool.clear_selections)
+        self.ui.cb_name_visible.toggled.connect(self._set_name_visible)
+        self.ui.cmb_name_length.currentIndexChanged.connect(
+            lambda _: self.win.set_name_length(self.ui.cmb_name_length.currentData()))
+        self.ui.cb_code_visible.toggled.connect(self.win.set_code_visible)
+        self.ui.cb_type_visible.toggled.connect(self.win.set_type_visible)
+        self.ui.cmb_unit_mode.currentIndexChanged.connect(
+            lambda _: self.win.set_unit_mode(self.ui.cmb_unit_mode.currentData()))
+        for index, value in enumerate((-1, 1, 2, 3, 4)):
+            self.ui.cmb_name_length.setItemData(index, value)
+        for index, value in enumerate(("auto", "cn", "en")):
+            self.ui.cmb_unit_mode.setItemData(index, value)
+        for index, value in enumerate(("system", "light", "dark")):
+            self.ui.cmb_color_mode.setItemData(index, value)
+        self.ui.cmb_color_mode.currentIndexChanged.connect(
+            lambda _: self.win.set_view_options(color_mode=self.ui.cmb_color_mode.currentData()))
+        self.ui.cb_hide_tray_icon.toggled.connect(
+            lambda hidden: self.win.set_view_options(hide_tray_icon=hidden))
+        self.win.view_options_changed.connect(self._sync_common_options)
 
         self.ui.btn_check_update.clicked.connect(self._check_update_manually)
         self.ui.btn_open_cache_dir.clicked.connect(self._open_cache_dir)
@@ -255,6 +257,7 @@ class SettingsDialog(QDialog):
         self.win.click_through_changed.connect(self._sync_click_through_from_win)
         # 浮窗右键菜单等外部途径修改显示指标时，同步设置窗口复选框
         self.win.display_flags_changed.connect(self._sync_display_flags_from_win)
+        self.win.presentation_changed.connect(self._sync_metric_options)
         self.ui.cb_hotkey_hide.toggled.connect(self._on_hotkey_hide_enabled_toggled)
         self.ui.cb_hotkey_click_through.toggled.connect(self._on_click_through_hotkey_enabled_toggled)
         self.ui.cb_head.toggled.connect(self.win.set_header_visible)
@@ -265,7 +268,7 @@ class SettingsDialog(QDialog):
             lambda enabled: self.win.set_hide_options(hide_enabled=enabled,
                                                       scheduled_hide_enabled=enabled))
         self.ui.btn_add_hide_time.clicked.connect(self._add_hide_time)
-        self.ui.btn_del_hide_time.clicked.connect(self._delete_hide_time)
+        self.ui.list_hide_times.remove_requested.connect(self._delete_hide_time)
         self.ui.hide_time_edit.timeChanged.connect(self._update_hide_time_buttons)
         self.ui.list_hide_times.currentRowChanged.connect(self._update_hide_time_buttons)
         self.win.hide_options_changed.connect(self._sync_hide_settings)
@@ -300,8 +303,8 @@ class SettingsDialog(QDialog):
                 stack.enter_context(QSignalBlocker(widget))
             self.ui.sb_interval.setValue(self.win.refresh_seconds)
             self.metric_pool.set_visible_metrics(self.win.visible_metrics)
-            self.name_settings_panel.sync_from(self.win)
-            self.unit_settings_panel.sync_from(self.win)
+            self._sync_metric_options()
+            self._sync_common_options()
 
             self._set_checked_blocked(self.ui.cb_unicolor, self.win.unicolor)
             self._update_direction_color_controls()
@@ -347,13 +350,18 @@ class SettingsDialog(QDialog):
         with QSignalBlocker(self.ui.cb_auto_hide), QSignalBlocker(self.ui.gb_scheduled_hide):
             self.ui.cb_auto_hide.setChecked(self.win.auto_hide_enabled)
             self.ui.gb_scheduled_hide.setChecked(self.win.hide_enabled)
-        conditions = []
-        if self.win.scheduled_hide_enabled and self.win.scheduled_hide_times:
-            conditions.append("定时隐藏")
-        if self.win.auto_hide_enabled:
-            conditions.append("自动识别")
-        status = ("已启用：" + " + ".join(conditions) if conditions else "已启用：尚未设置隐藏条件")
-        self.ui.label_hide_status.setText(status if self.win.hide_enabled else "未启用：定时与自动识别均已关闭")
+        times_text = "，".join(self.win.scheduled_hide_times) if self.win.scheduled_hide_enabled else ""
+        if not self.win.hide_enabled:
+            status = "程序未启用自动隐藏"
+        elif times_text and self.win.auto_hide_enabled:
+            status = f"程序将在{times_text}及无数据更新时自动隐藏"
+        elif times_text:
+            status = f"程序将在{times_text}自动隐藏"
+        elif self.win.auto_hide_enabled:
+            status = "程序将在无数据更新时自动隐藏"
+        else:
+            status = "程序未启用自动隐藏"
+        self.ui.label_hide_status.setText(status)
         times = self.ui.list_hide_times
         current = times.currentItem().text() if times.currentItem() else None
         if [times.item(i).text() for i in range(times.count())] != self.win.scheduled_hide_times:
@@ -375,7 +383,6 @@ class SettingsDialog(QDialog):
             and not full and not duplicate)
         self.ui.btn_add_hide_time.setToolTip("最多设置3个时间，请先删除一个" if full else
                                            "该时间已添加" if duplicate else "添加每日隐藏时间")
-        self.ui.btn_del_hide_time.setEnabled(enabled and self.ui.list_hide_times.currentRow() >= 0)
 
     def _add_hide_time(self):
         value = self.ui.hide_time_edit.time().toString("HH:mm")
@@ -386,11 +393,10 @@ class SettingsDialog(QDialog):
                                  scheduled_hide_times=[*self.win.scheduled_hide_times, value])
         self.ui.list_hide_times.setCurrentRow(self.win.scheduled_hide_times.index(value))
 
-    def _delete_hide_time(self):
-        selected = self.ui.list_hide_times.currentItem()
-        if selected is not None and self.win.hide_enabled:
+    def _delete_hide_time(self, time):
+        if self.win.hide_enabled:
             self.win.set_hide_options(scheduled_hide_times=[value for value in self.win.scheduled_hide_times
-                                                          if value != selected.text()])
+                                                          if value != time])
 
     def _reset_appearance(self):
         self.win.reset_appearance()
@@ -407,6 +413,7 @@ class SettingsDialog(QDialog):
         - Wayland 下:全局快捷键、鼠标穿透、窗口整体透明度不可用。
         - Linux 下:强制置顶不可用(raise_ 受窗口管理器/合成器限制)。
         """
+        self.ui.settings_navigation.item(5).setHidden(sys.platform != "win32")
         if not hotkeys_supported():
             for w in (self.ui.cb_hotkey_hide, self.ui.cb_hotkey_click_through,
                       self.ui.keyseq_hide, self.ui.keyseq_click_through):
@@ -547,6 +554,17 @@ class SettingsDialog(QDialog):
         self.watchlist_editor.refresh_code_search(self.win.codes_list)
 
     def eventFilter(self, obj, ev):
+        if ev.type() == QEvent.Wheel and isinstance(obj, (QSlider, QComboBox)) and self._widget_in_dialog(obj):
+            parent = obj.parentWidget()
+            while parent and not isinstance(parent, QScrollArea):
+                parent = parent.parentWidget()
+            if parent:
+                viewport = parent.viewport()
+                forwarded = QWheelEvent(viewport.mapFromGlobal(ev.globalPosition()), ev.globalPosition(),
+                                        ev.pixelDelta(), ev.angleDelta(), ev.buttons(), ev.modifiers(),
+                                        ev.phase(), ev.inverted(), ev.source())
+                QApplication.sendEvent(viewport, forwarded)
+            return True
         if ev.type() == QEvent.MouseButtonPress:
             self._handle_outside_press(obj)
         return super().eventFilter(obj, ev)
@@ -638,33 +656,29 @@ class SettingsDialog(QDialog):
         self._update_direction_color_controls()
         self._refresh_color_buttons()
 
-    def _show_name_settings_panel(self, anchor=None):
-        """点击“名称”后的 ⓘ 切换名称显示设置面板。"""
-        self._show_metric_settings_panel(
-            self.name_settings_panel, self.unit_settings_panel, anchor
-        )
+    def _set_name_visible(self, checked):
+        self.win.set_name_length(self.ui.cmb_name_length.currentData() if checked else 0)
 
-    def _show_unit_settings_panel(self, anchor=None):
-        """点击“成交量/成交额”后的 ⓘ 切换单位设置面板。"""
-        self._show_metric_settings_panel(
-            self.unit_settings_panel, self.name_settings_panel, anchor
-        )
+    def _sync_metric_options(self):
+        controls = (self.ui.cb_name_visible, self.ui.cmb_name_length, self.ui.cb_code_visible,
+                    self.ui.cb_type_visible, self.ui.cmb_unit_mode)
+        with ExitStack() as stack:
+            for control in controls:
+                stack.enter_context(QSignalBlocker(control))
+            self.ui.cb_name_visible.setChecked(self.win.name_length != 0)
+            if self.win.name_length != 0:
+                self.ui.cmb_name_length.setCurrentIndex(max(0, self.ui.cmb_name_length.findData(self.win.name_length)))
+            self.ui.cmb_name_length.setEnabled(self.win.name_length != 0)
+            self.ui.cb_code_visible.setChecked(self.win.code_visible)
+            self.ui.cb_type_visible.setChecked(self.win.type_visible)
+            self.ui.cmb_unit_mode.setCurrentIndex(self.ui.cmb_unit_mode.findData(self.win.unit_mode))
 
-    def _show_metric_settings_panel(self, panel, other_panel, anchor):
-        if not isinstance(anchor, QWidget):
-            anchor = self.metric_pool
-        item = anchor.currentItem() if hasattr(anchor, "currentItem") else None
-        other_panel.hide()
-        # 关闭旧面板会清除两池选中，切换入口时恢复新入口的高亮。
-        if item is not None:
-            anchor.setCurrentItem(item)
-        panel.sync_from(self.win)
-        panel.show_for(anchor)
-
-    def _on_hotkey_changed(self):
-        new_hotkey = self.ui.keyseq_hide.keySequence().toString()
-        self.win.update_hotkey(new_hotkey)
-        self._refresh_hotkey_status()
+    def _sync_common_options(self):
+        with QSignalBlocker(self.ui.cmb_color_mode), QSignalBlocker(self.ui.cb_hide_tray_icon):
+            self.ui.cmb_color_mode.setCurrentIndex(self.ui.cmb_color_mode.findData(self.win.view_options.color_mode))
+            self.ui.cb_hide_tray_icon.setChecked(self.win.view_options.hide_tray_icon)
+        if self.win.view_options.color_mode != getattr(self, "_applied_color_mode", None):
+            self._apply_theme_stylesheet()
 
     def _on_icon_button_toggled(self, key: str, checked: bool):
         if not checked:
@@ -681,11 +695,18 @@ class SettingsDialog(QDialog):
                 self.app.save_now()
             self._active_icon_choice = "custom"
             return
-
         self._active_icon_choice = key
         if self.app is not None:
             self.app.set_app_icon(key)
             self.app.save_now()
+
+    def _on_hotkey_changed(self):
+        self.win.update_hotkey(self.ui.keyseq_hide.keySequence().toString())
+        self._refresh_hotkey_status()
+
+    def _on_click_through_hotkey_changed(self):
+        self.win.update_click_through_hotkey(self.ui.keyseq_click_through.keySequence().toString())
+        self._refresh_hotkey_status()
 
     def _on_start_on_boot_toggled(self, checked: bool):
         self.win.start_on_boot = bool(checked)
@@ -730,8 +751,7 @@ class SettingsDialog(QDialog):
     def _sync_display_flags_from_win(self):
         """浮窗右键菜单等外部途径修改显示状态时，同步指标池。"""
         self.metric_pool.set_visible_metrics(self.win.visible_metrics)
-        self.name_settings_panel.sync_from(self.win)
-        self.unit_settings_panel.sync_from(self.win)
+        self._sync_metric_options()
         self._set_checked_blocked(self.ui.cb_head, self.win.header_visible)
         self._set_checked_blocked(self.ui.cb_grid, self.win.grid_visible)
         self._set_checked_blocked(self.ui.cb_unicolor, self.win.unicolor)
@@ -858,6 +878,4 @@ class SettingsDialog(QDialog):
 
     def closeEvent(self, event):
         self.watchlist_editor.close()
-        self.name_settings_panel.hide()
-        self.unit_settings_panel.hide()
         super().closeEvent(event)

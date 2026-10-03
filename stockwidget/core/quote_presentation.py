@@ -142,9 +142,18 @@ class BidAskCell:
     sell: str
     buy_role: str = COLOR_ROLE_NEUTRAL
     sell_role: str = COLOR_ROLE_NEUTRAL
+    marker: str = ""
 
     def __str__(self):
-        return f"{self.buy} / {self.sell}"
+        return f"{self.buy} {self.marker or ' '} {self.sell}"
+
+
+def _format_book_volume(value, lot_size, *, signed=False):
+    """盘口数量按市场换算，超过一万时固定使用两位小数的万单位。"""
+    volume = int(value / lot_size)
+    if abs(volume) > 10000:
+        return f"{volume / 10000:+.2f}万" if signed else f"{volume / 10000:.2f}万"
+    return f"{volume:+d}" if signed else str(volume)
 
 
 def direction_color_role(value) -> str:
@@ -186,6 +195,7 @@ def format_quote(
     # 一档盘口数据
     pur_1 = data["purchaser_price"][0]
     sell_1 = data["seller_price"][0]
+    marker = ""
     if pur_1 == sell_1 > 0:
         # 集合竞价阶段
         data["current_price"] = sell_1
@@ -194,18 +204,20 @@ def format_quote(
             (data["purchaser_vol"][1] or (-data["seller_vol"][1]))
             / lot_size
         )
-        b1_label = f"{paired:d}"
-        s1_label = f"{unpaired:+d}"
+        b1_label = _format_book_volume(paired, 1)
+        s1_label = _format_book_volume(unpaired, 1, signed=True)
         b1_color_sign = (unpaired > 0) - (unpaired < 0)
         s1_color_sign = b1_color_sign
     else:
         # 连续交易阶段（有买/卖盘口量时才显示，否则"-"）
         pur_v1 = data["purchaser_vol"][0]
         sell_v1 = data["seller_vol"][0]
-        buy_marker = "<" if pur_1 and pur_v1 and data["current_price"] == pur_1 else " "
-        sell_marker = ">" if sell_1 and sell_v1 and data["current_price"] == sell_1 else " "
-        b1_label = f"{int(pur_v1 / lot_size)}{buy_marker}" if (pur_1 and pur_v1) else "-"
-        s1_label = f"{sell_marker}{int(sell_v1 / lot_size)}" if (sell_1 and sell_v1) else "-"
+        if pur_1 and pur_v1 and data["current_price"] == pur_1:
+            marker = "◀"
+        elif sell_1 and sell_v1 and data["current_price"] == sell_1:
+            marker = "▶"
+        b1_label = _format_book_volume(pur_v1, lot_size) if (pur_1 and pur_v1) else "-"
+        s1_label = _format_book_volume(sell_v1, lot_size) if (sell_1 and sell_v1) else "-"
         b1_color_sign = 1 if (pur_1 and pur_v1) else 0
         s1_color_sign = -1 if (sell_1 and sell_v1) else 0
 
@@ -246,7 +258,7 @@ def format_quote(
     is_index = security_type == "指"
     english_units = should_use_english_units(options.unit_mode, market)
     bid_ask = (BidAskCell("-", "-") if is_index else BidAskCell(
-        b1_label.strip(), s1_label.strip(), direction_color_role(b1_color_sign), direction_color_role(s1_color_sign)))
+        b1_label, s1_label, direction_color_role(b1_color_sign), direction_color_role(s1_color_sign), marker))
     format_data = {
         "名称": name,
         "现价": f"{data['current_price']:.{precision}f}{arrow}",

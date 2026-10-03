@@ -77,12 +77,37 @@ class WidgetFormattingTests(unittest.TestCase):
         quote = _quote()
         quote["purchaser_price"][0], quote["seller_price"][0] = 11, 13
         quote["purchaser_vol"][0], quote["seller_vol"][0] = 1234, 8900
-        for price, buy, sell in ((11, "12<", "89"), (13, "12", ">89")):
+        for price, marker in ((11, "◀"), (13, "▶"), (12, ""), (0, "")):
             quote["current_price"] = price
             row, _, _sort_values = format_quote(quote, "沪", "600000", market="sh")
-            self.assertEqual(row["买一/卖一"], BidAskCell(buy, sell, COLOR_ROLE_UP, COLOR_ROLE_DOWN))
+            self.assertEqual(row["买一/卖一"], BidAskCell("12", "89", COLOR_ROLE_UP, COLOR_ROLE_DOWN, marker))
             self.assertNotIn("买一", row)
             self.assertNotIn("卖一", row)
+
+    def test_book_volume_uses_lots_then_wan_with_two_decimals_in_all_markets(self):
+        for market, security_type, lot_size in (("sh", "沪", 100), ("sz", "深", 100),
+                                                ("bj", "北", 100), ("hk", "港", 1),
+                                                ("us", "美", 1), ("sh", "期", 1)):
+            for volume, label in ((9999, "9999"), (10000, "10000"),
+                                  (10001, "1.00万"), (123456, "12.35万")):
+                with self.subTest(market=market, security_type=security_type, volume=volume):
+                    quote = _quote()
+                    quote["purchaser_price"][0], quote["seller_price"][0] = 11, 13
+                    quote["purchaser_vol"][0] = quote["seller_vol"][0] = volume * lot_size
+                    row, _, _ = format_quote(quote, security_type, "test", market=market)
+                    self.assertEqual(row["买一/卖一"], BidAskCell(label, label, "up", "down"))
+
+    def test_auction_keeps_direction_slot_empty_and_shortens_signed_unpaired_volume(self):
+        for unpaired, label, role in ((123456, "+12.35万", "up"),
+                                      (-123456, "-12.35万", "down"), (0, "+0", "neutral")):
+            with self.subTest(unpaired=unpaired):
+                quote = _quote()
+                quote["purchaser_price"][0] = quote["seller_price"][0] = 12
+                quote["seller_vol"][0] = 1000100
+                quote["purchaser_vol"][1] = max(0, unpaired) * 100
+                quote["seller_vol"][1] = max(0, -unpaired) * 100
+                row, _, _ = format_quote(quote, "沪", "600000", market="sh")
+                self.assertEqual(row["买一/卖一"], BidAskCell("1.00万", label, role, role))
 
     def test_auction_formatting_preserves_source_and_uses_auction_price(self):
         quote = _quote()

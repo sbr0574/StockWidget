@@ -1,8 +1,101 @@
-"""Designer 设置控件：快捷键输入与状态、自定义图标选择。"""
+"""Designer 设置控件：开关、快捷键输入与状态、自定义图标选择。"""
 
-from PySide6.QtCore import Qt, QRectF, QPointF, Signal
-from PySide6.QtGui import QColor, QPainter, QPen, QIcon
-from PySide6.QtWidgets import QKeySequenceEdit, QWidget, QPushButton
+from PySide6.QtCore import QEvent, Qt, QRect, QRectF, QPointF, QSize, Signal
+from PySide6.QtGui import QColor, QPainter, QPalette, QPen, QIcon
+from PySide6.QtWidgets import (QCheckBox, QKeySequenceEdit, QListWidget, QStyle,
+                              QStyledItemDelegate, QStyleOptionViewItem, QWidget, QPushButton)
+
+
+class _HideTimeDelegate(QStyledItemDelegate):
+    def sizeHint(self, option, index):
+        return QSize(160, 26)
+
+    @staticmethod
+    def delete_rect(rect):
+        return QRect(rect.right() + 1 - 24, rect.top() + (rect.height() - 20) // 2, 20, 20)
+
+    def paint(self, painter, option, index):
+        item = QStyleOptionViewItem(option)
+        self.initStyleOption(item, index)
+        button = self.delete_rect(item.rect)
+        item.rect.setRight(button.left() - 5)
+        option.widget.style().drawControl(QStyle.CE_ItemViewItem, item, painter, option.widget)
+        painter.save()
+        painter.setRenderHint(QPainter.Antialiasing)
+        color = option.palette.color(QPalette.Text)
+        if not option.state & QStyle.State_Enabled:
+            painter.setOpacity(0.4)
+        background = QColor(220, 60, 60, 41)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(background)
+        painter.drawRoundedRect(button, 4, 4)
+        cross = QColor("#ffaaaa" if color.lightness() > 128 else "#b73333")
+        painter.setPen(QPen(cross, 1.4, Qt.SolidLine, Qt.RoundCap))
+        center = QRectF(button).center()
+        painter.drawLine(center + QPointF(-3, -3), center + QPointF(3, 3))
+        painter.drawLine(center + QPointF(-3, 3), center + QPointF(3, -3))
+        painter.restore()
+
+    def editorEvent(self, event, model, option, index):
+        if (event.type() == QEvent.MouseButtonRelease and event.button() == Qt.LeftButton
+                and option.state & QStyle.State_Enabled
+                and self.delete_rect(option.rect).contains(event.position().toPoint())):
+            self.parent().remove_requested.emit(index.data())
+            return True
+        return super().editorEvent(event, model, option, index)
+
+
+class HideTimeList(QListWidget):
+    """Native three-row time list with a delete action on each row."""
+
+    remove_requested = Signal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setItemDelegate(_HideTimeDelegate(self))
+
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key_Delete, Qt.Key_Backspace) and self.currentItem():
+            self.remove_requested.emit(self.currentItem().text())
+            event.accept()
+            return
+        super().keyPressEvent(event)
+
+
+class ToggleSwitch(QCheckBox):
+    """保留原生勾选、键盘与无障碍语义，仅将指示器绘制为开关。"""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def sizeHint(self):
+        return QSize(44, 26)
+
+    def hitButton(self, position):
+        return self.rect().contains(position)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        if not self.isEnabled():
+            painter.setOpacity(0.45)
+        track = QRectF(2, (self.height() - 22) / 2, self.width() - 4, 22)
+        color = self.palette().color(QPalette.ColorRole.Accent)
+        if not self.isChecked():
+            color = self.palette().color(QPalette.ColorRole.WindowText)
+            color.setAlpha(75)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(color)
+        painter.drawRoundedRect(track, 11, 11)
+        knob_x = track.right() - 20 if self.isChecked() else track.left() + 2
+        painter.setBrush(Qt.GlobalColor.white)
+        painter.drawEllipse(QRectF(knob_x, track.top() + 2, 18, 18))
+        if self.hasFocus():
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.setPen(QPen(self.palette().color(QPalette.ColorRole.Accent), 1,
+                                Qt.PenStyle.DotLine))
+            painter.drawRoundedRect(track.adjusted(-1, -1, 1, 1), 12, 12)
 
 
 class HotkeySequenceEdit(QKeySequenceEdit):
@@ -26,7 +119,7 @@ class HotkeySequenceEdit(QKeySequenceEdit):
 class HotkeyStatus(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedSize(20, 20)
+        self.setFixedSize(28, 28)
         self.active = False
 
     def set_result(self, result, message):
@@ -37,6 +130,7 @@ class HotkeyStatus(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
+        painter.translate(4, 4)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(Qt.NoPen)
         painter.setBrush(QColor("#28a745" if self.active else "#dc3545"))

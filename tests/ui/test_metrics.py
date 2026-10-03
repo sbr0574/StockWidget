@@ -1,4 +1,4 @@
-"""共用指标池、顺序投影和名称 / 单位面板交互。"""
+"""固定指标目录、可排序显示池及共用行情列投影。"""
 
 from unittest.mock import Mock, patch
 
@@ -44,10 +44,64 @@ class MetricPoolWidgetTests(QtTestCase):
             ["amount", "b1s1", "kline"],
         )
         self.assertEqual(changes[-1], ["amount", "b1s1", "kline"])
-        self.assertEqual(
-            self.pool.displayed_pool.count() + self.pool.available_pool.count(),
-            len(METRIC_IDS),
-        )
+        self.assertEqual(self.pool.available_pool.count(), len(METRIC_IDS))
+        for row in range(self.pool.available_pool.count()):
+            item = self.pool.available_pool.item(row)
+            self.assertEqual(bool(item.flags() & Qt.ItemIsDragEnabled),
+                             item.data(Qt.UserRole) not in self.pool.visible_metrics)
+
+    def test_catalog_keeps_all_entries_in_place_and_disables_already_displayed_entries(self):
+        self.pool.resize(480, 300)
+        self.pool.set_visible_metrics(["price"])
+        self.pool.show()
+        self.qt_app.processEvents()
+        catalog = self.pool.available_pool
+        identifiers = [catalog.item(i).data(Qt.UserRole) for i in range(catalog.count())]
+        price = next(catalog.item(i) for i in range(catalog.count()) if catalog.item(i).data(Qt.UserRole) == "price")
+        name = next(catalog.item(i) for i in range(catalog.count()) if catalog.item(i).data(Qt.UserRole) == "name")
+        position, height = catalog.visualItemRect(name), catalog.height()
+        QTest.mouseClick(catalog.viewport(), Qt.LeftButton, pos=position.center())
+        QTest.mouseDClick(catalog.viewport(), Qt.LeftButton, pos=position.center())
+        self.assertEqual(self.pool.visible_metrics, ["price", "name"])
+        self.assertFalse(name.flags() & Qt.ItemIsEnabled)
+        self.assertFalse(price.flags() & Qt.ItemIsDragEnabled)
+        catalog.setCurrentItem(price)
+        with patch("stockwidget.ui.controls.metrics.QDrag") as drag:
+            catalog.startDrag(Qt.MoveAction)
+        drag.assert_not_called()
+        self.pool.move_metric("available", "displayed", "price", 0)
+        self.assertEqual(self.pool.visible_metrics, ["price", "name"])
+        self.pool.move_metric("displayed", "available", "name", 0)
+        self.assertTrue(name.flags() & Qt.ItemIsEnabled)
+        self.assertEqual([catalog.item(i).data(Qt.UserRole) for i in range(catalog.count())], identifiers)
+        self.assertEqual(catalog.visualItemRect(name), position)
+        self.assertEqual(catalog.height(), height)
+        displayed_height = self.pool.displayed_pool.height()
+        self.pool.set_visible_metrics(list(METRIC_IDS))
+        self.qt_app.processEvents()
+        self.assertEqual((catalog.height(), self.pool.displayed_pool.height()), (56, displayed_height))
+        self.assertTrue(all(self.pool.displayed_pool.viewport().rect().contains(
+            self.pool.displayed_pool.visualItemRect(self.pool.displayed_pool.item(i)))
+            for i in range(self.pool.displayed_pool.count())))
+
+    def test_disabled_catalog_text_remains_readable_on_a_dark_palette(self):
+        palette = QPalette(self.pool.palette())
+        palette.setColor(QPalette.Window, QColor("#222222"))
+        palette.setColor(QPalette.Base, QColor("#222222"))
+        palette.setColor(QPalette.Text, QColor("#eeeeee"))
+        palette.setColor(QPalette.Mid, QColor("#222222"))
+        self.pool.setPalette(palette)
+        self.pool.resize(480, 260)
+        self.pool.set_visible_metrics(["kline"])
+        self.pool.set_theme(True)
+        self.pool.show()
+        self.qt_app.processEvents()
+        catalog = self.pool.available_pool
+        item = next(catalog.item(i) for i in range(catalog.count())
+                    if catalog.item(i).data(Qt.UserRole) == "kline")
+        image = catalog.viewport().grab(catalog.visualItemRect(item)).toImage()
+        self.assertGreater(max(image.pixelColor(x, y).lightness()
+                               for x in range(image.width()) for y in range(image.height())), 120)
 
     def test_available_pool_does_not_have_its_own_persisted_order(self):
         self.pool.set_visible_metrics(["price"])
@@ -310,7 +364,7 @@ class FloatLabelMetricLayoutTests(QtTestCase):
         self.assertEqual(window.quotes.sort_order, Qt.SortOrder.AscendingOrder)
 
 
-class MetricPanelTests(SettingsTestCase):
+class MetricSettingsTests(SettingsTestCase):
     def test_buttons_and_metric_pools_follow_palette_changes(self):
         dialog, _window = self._make_dialog()
         original = self.qt_app.palette()
@@ -332,17 +386,17 @@ class MetricPanelTests(SettingsTestCase):
         from stockwidget.ui.controls.metrics import MetricPoolWidget
         dialog, window = self._make_dialog()
         taskbar = dialog.taskbar_settings
-        self.assertFalse(taskbar.isChecked())
+        self.assertFalse(taskbar.enabled.isChecked())
         self.assertFalse(taskbar.body.isEnabled())
         self.assertFalse(taskbar.metrics.isEnabled())
-        taskbar.setChecked(True)
+        taskbar.enabled.setChecked(True)
         self.assertTrue(window.view_options.taskbar_enabled)
-        self.assertTrue(taskbar.metrics.isChecked())
+        self.assertTrue(taskbar.metrics.sync_toggle.isChecked())
         self.assertFalse(taskbar.metric_pool.isEnabled())
         self.assertIsInstance(taskbar.metric_pool, MetricPoolWidget)
         window.set_visible_metrics(["volume", "name", "price"])
         self.assertEqual(taskbar.metric_pool.visible_metrics, ["volume", "name", "price"])
-        taskbar.metrics.setChecked(False)
+        taskbar.metrics.sync_toggle.setChecked(False)
         self.assertTrue(taskbar.metric_pool.isEnabled())
         pool = taskbar.metric_pool
         for spec in METRIC_SPECS:
@@ -354,13 +408,13 @@ class MetricPanelTests(SettingsTestCase):
         self.assertEqual(independent[0], "kline")
         self.assertEqual(window.view_options.taskbar_metrics, independent)
         self.assertEqual(window.visible_metrics, ["volume", "name", "price"])
-        taskbar.metrics.setChecked(True)
+        taskbar.metrics.sync_toggle.setChecked(True)
         self.assertEqual(pool.visible_metrics, window.visible_metrics)
         window.set_visible_metrics(["price", "change"])
         self.assertEqual(pool.visible_metrics, ["price", "change"])
-        taskbar.metrics.setChecked(False)
+        taskbar.metrics.sync_toggle.setChecked(False)
         self.assertEqual(pool.visible_metrics, independent)
-        taskbar.setChecked(False)
+        taskbar.enabled.setChecked(False)
         self.assertFalse(taskbar.body.isEnabled())
         self.assertFalse(pool.isEnabled())
         self.assertEqual(window.display_mode, "float")
@@ -410,66 +464,7 @@ class MetricPanelTests(SettingsTestCase):
             ["kline", "price", "change_pct"],
         )
 
-    def test_name_metric_click_opens_settings_panel(self):
-        dialog, window = self._make_dialog()
-        pool = dialog.metric_pool.displayed_pool
-        name_item = next(
-            pool.item(row)
-            for row in range(pool.count())
-            if pool.item(row).data(Qt.ItemDataRole.UserRole) == "name"
-        )
 
-        with patch.object(window.quotes, "refresh"):
-            self._click_info(dialog, pool, name_item)
-        self.qt_app.processEvents()
-
-        panel = dialog.name_settings_panel
-        self.assertTrue(panel.isVisible())
-        self.assertEqual(panel.cmb_namelen.currentData(), window.name_length)
-        self.assertFalse(panel.cb_code.isChecked())
-        self.assertFalse(panel.cb_type.isChecked())
-
-        with patch.object(window.quotes, "refresh"):
-            panel.cb_code.setChecked(True)
-            panel.cb_type.setChecked(True)
-            panel.cmb_namelen.setCurrentIndex(
-                panel.cmb_namelen.findData(2)
-            )
-        self.assertTrue(window.code_visible)
-        self.assertTrue(window.type_visible)
-        self.assertEqual(window.name_length, 2)
-
-        panel.hide()
-
-    def test_volume_metric_click_opens_shared_unit_settings_panel(self):
-        dialog, window = self._make_dialog()
-        pool = dialog.metric_pool.available_pool
-        volume_item = next(
-            pool.item(row)
-            for row in range(pool.count())
-            if pool.item(row).data(Qt.ItemDataRole.UserRole) == "volume"
-        )
-
-        with patch.object(window.quotes, "refresh"):
-            self._click_info(dialog, pool, volume_item)
-        self.qt_app.processEvents()
-
-        panel = dialog.unit_settings_panel
-        self.assertTrue(panel.isVisible())
-        self.assertTrue(panel.radio_buttons["auto"].isChecked())
-        self.assertEqual(window.unit_mode, "auto")
-
-        # 成交量/成交额共享同一面板与同一设置
-        with patch.object(window.quotes, "refresh"):
-            panel.radio_buttons["en"].setChecked(True)
-        self.assertEqual(window.unit_mode, "en")
-        self.assertEqual(
-            window.current_config()["unit_mode"], "en"
-        )
-        panel.sync_from(window)
-        self.assertTrue(panel.radio_buttons["en"].isChecked())
-
-        panel.hide()
 
     def test_outside_press_clears_watchlist_and_metric_selections(self):
         watchlist = {
@@ -576,7 +571,7 @@ class MetricPanelTests(SettingsTestCase):
         self.assertIsNone(displayed.currentItem())
         self.assertIsNone(available.currentItem())
 
-    def test_double_click_moves_clickable_metric_without_opening_panel(self):
+    def test_double_click_moves_name_metric_to_the_other_pool(self):
         dialog, window = self._make_dialog()
         displayed = dialog.metric_pool.displayed_pool
         name_item = next(
@@ -585,84 +580,18 @@ class MetricPanelTests(SettingsTestCase):
             if displayed.item(row).data(Qt.ItemDataRole.UserRole) == "name"
         )
 
-        # 点击文字立即结束，不会打开面板，也没有待执行的延迟。
+        # 单击结束后清除选中；所有指标均采用相同的双击交互。
+        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.data)
         dialog.show()
         self.qt_app.processEvents()
         pos = displayed.visualItemRect(name_item).center() - QPoint(8, 0)
         QTest.mouseClick(displayed.viewport(), Qt.LeftButton, pos=pos)
         self.assertIsNone(displayed.currentItem())
-        self.assertFalse(dialog.name_settings_panel.isVisible())
 
         # 双击文字快速移动到另一池。
         with patch.object(window.quotes, "refresh"):
             QTest.mouseDClick(displayed.viewport(), Qt.LeftButton, pos=pos)
         self.qt_app.processEvents()
 
-        self.assertFalse(dialog.name_settings_panel.isVisible())
         self.assertNotIn("name", window.visible_metrics)
         self.assertEqual(displayed.currentItem(), None)
-
-    def test_clickable_chip_loses_selection_when_panel_closes(self):
-        dialog, _window = self._make_dialog()
-        displayed = dialog.metric_pool.displayed_pool
-        name_item = next(
-            displayed.item(row)
-            for row in range(displayed.count())
-            if displayed.item(row).data(Qt.ItemDataRole.UserRole) == "name"
-        )
-
-        self._click_info(dialog, displayed, name_item)
-        self.qt_app.processEvents()
-        panel = dialog.name_settings_panel
-        self.assertTrue(panel.isVisible())
-
-        displayed.setCurrentItem(name_item)
-        self.assertIsNotNone(displayed.currentItem())
-
-        # 面板关闭（含点击外部空白关闭）后指标块失焦
-        panel.hide()
-        self.qt_app.processEvents()
-        self.assertIsNone(displayed.currentItem())
-
-    def test_info_click_toggles_immediately_and_outside_click_closes(self):
-        dialog, _window = self._make_dialog()
-        pool = dialog.metric_pool.displayed_pool
-        item = pool.item(0)
-        self._click_info(dialog, pool, item)
-        panel = dialog.name_settings_panel
-        self.assertTrue(panel.isVisible())
-        self.assertIs(pool.currentItem(), item)
-        # QTest 直接投递到指标池时，也应切换关闭。
-        QTest.mouseClick(pool.viewport(), Qt.LeftButton, pos=pool.info_rect(item).center())
-        self.assertFalse(panel.isVisible())
-        self.assertIsNone(pool.currentItem())
-
-        self._click_info(dialog, pool, item)
-        # 原生 Popup 把外部点击交给弹窗：同一个 ⓘ 禁止重放，避免重开。
-        global_pos = pool.viewport().mapToGlobal(pool.info_rect(item).center())
-        with patch.object(panel, "setAttribute", wraps=panel.setAttribute) as set_attribute:
-            QTest.mouseClick(panel, Qt.LeftButton, pos=panel.mapFromGlobal(global_pos))
-            set_attribute.assert_any_call(Qt.WA_NoMouseReplay, True)
-        self.assertFalse(panel.isVisible())
-        self.assertIsNone(pool.currentItem())
-
-        self._click_info(dialog, pool, item)
-        global_pos = dialog.ui.gb_color.mapToGlobal(QPoint(4, 4))
-        QTest.mouseClick(panel, Qt.LeftButton, pos=panel.mapFromGlobal(global_pos))
-        self.assertFalse(panel.isVisible())
-        self.assertFalse(panel.testAttribute(Qt.WA_NoMouseReplay))
-        self.assertIsNone(pool.currentItem())
-
-    def test_switching_info_entry_preserves_new_highlight(self):
-        dialog, _window = self._make_dialog()
-        name_pool = dialog.metric_pool.displayed_pool
-        self._click_info(dialog, name_pool, name_pool.item(0))
-        pool = dialog.metric_pool.available_pool
-        item = next(pool.item(r) for r in range(pool.count())
-                    if pool.item(r).data(Qt.UserRole) == "volume")
-        QTest.mouseClick(pool.viewport(), Qt.LeftButton, pos=pool.info_rect(item).center())
-        self.assertFalse(dialog.name_settings_panel.isVisible())
-        self.assertTrue(dialog.unit_settings_panel.isVisible())
-        self.assertIs(pool.currentItem(), item)
-        self.assertIsNone(name_pool.currentItem())
-        self.assertEqual(dialog.unit_settings_panel._metric_id, "volume")

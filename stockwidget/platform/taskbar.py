@@ -290,12 +290,19 @@ class NativeTaskbarWindow:
         if self.hwnd and self.user.GetCapture() == self.hwnd:
             self.user.ReleaseCapture()
 
+    def capture_pointer(self):
+        """Continue a float-initiated drag while only the taskbar preview is visible."""
+        self._pointer_down = True
+        self._last_pointer_position = None
+        self._ignore_release = False
+        self.user.SetCapture(self.hwnd)
+
     def poll_pointer(self):
         """Continue an initiated drag even when Explorer owns the foreground.
 
         SetCapture restricts background windows to their visible area:
         https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-setcapture
-        Poll only while a press initiated in our own window is held.
+        Poll only while a press initiated in our float or taskbar window is held.
         """
         if not self._pointer_down or not self.hwnd:
             return None

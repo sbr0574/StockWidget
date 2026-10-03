@@ -7,15 +7,15 @@ from PySide6.QtGui import QColor, QCursor, QFont, QFontMetrics, QImage, QPainter
 from PySide6.QtWidgets import QApplication, QStyleOptionViewItem
 
 from stockwidget.core.quote_presentation import BidAskCell
-from stockwidget.core.view_options import column_ranges
+from stockwidget.core.view_options import column_ranges, taskbar_content_height, taskbar_font_pixels
 from stockwidget.platform.taskbar import NativeTaskbarWindow, cursor_over_taskbar, find_taskbar
-from stockwidget.ui.controls.quote_view import bid_ask_width, paint_bid_ask, paint_pager, pager_hit
+from stockwidget.ui.controls.quote_view import bid_ask_width, paint_bid_ask, paint_pager, pager_hit, pager_size
 
 
 def taskbar_message(source):
     if source.hide_notice.text():
         return source.hide_notice.text()
-    if not source.taskbar_model.columnCount():
+    if not source.get_surface_metrics("taskbar"):
         return "请选择任务栏显示指标"
     message = source.message_label.text()
     if source._message_kind != "metrics" and message:
@@ -24,8 +24,13 @@ def taskbar_message(source):
 
 
 def taskbar_pager_rect(source, height, dpi):
-    if source.quotes.get_page("taskbar").controls and not taskbar_message(source):
-        return QRect(0, 0, round(38 * dpi / 96), height)
+    page = source.quotes.get_page("taskbar")
+    if page.controls and not taskbar_message(source):
+        appearance_font, *_ = source.get_taskbar_appearance()
+        font = QFont(appearance_font)
+        font.setPixelSize(taskbar_font_pixels(height, dpi, source.view_options.taskbar_rows, font.pointSizeF()))
+        width = pager_size(page, font, round(38 * dpi / 96)).width()
+        return QRect(0, 0, width, height)
     return QRect()
 
 
@@ -37,7 +42,7 @@ def render_taskbar(source, height, dpi=96, max_width=480):
     row_height = max(1, (height - 4) // options.taskbar_rows)
     appearance_font, color, opacity, _unicolor = source.get_taskbar_appearance()
     font = QFont(appearance_font)
-    font.setPixelSize(max(7, min(round(font.pointSizeF() * dpi / 72), row_height - 2)))
+    font.setPixelSize(taskbar_font_pixels(height, dpi, options.taskbar_rows, font.pointSizeF()))
     fm = QFontMetrics(font)
     model = source.taskbar_model
     rows, cols = model.rowCount(), model.columnCount()
@@ -197,7 +202,7 @@ class TaskbarController(QObject):
             area = find_taskbar()
             if area is None:
                 raise OSError("等待 Windows 任务栏恢复")
-            height = min(area.height, round(44 * area.dpi / 96))
+            height = taskbar_content_height(area.height, area.dpi)
             max_width = min(round(480 * area.dpi / 96), area.right)
             if max_width < 80 or height < 24:
                 raise OSError("任务栏空间不足，请使用标准高度的横向任务栏")
@@ -221,7 +226,7 @@ class TaskbarController(QObject):
             if self.source.taskbar_status != status:
                 logging.getLogger(__name__).warning("%s", status)
             self._status(status)
-            if self.source.display_mode == "taskbar":
+            if self.source.display_mode == "taskbar" or self._dragging:
                 self.source.show()
 
     def _click(self, x, y):
@@ -296,7 +301,16 @@ class TaskbarController(QObject):
             return
         self._drag_over = over
         self.source.taskbar_preview_active = over
-        if not over and self.source._drag_surface == "taskbar":
+        self.apply_mode()
+        if over and self._active:
+            self.source.hide()
+            if self.source._drag_surface == "float" and self.native:
+                # Hiding Qt releases its implicit mouse grab. The native input
+                # adapter continues the same gesture until release or Escape.
+                self._native_press = 0
+                self.native.capture_pointer()
+                self.input_timer.start()
+        elif self.source.widget_visible:
             # Showing a preview must not steal the native pointer capture.
             previous = self.source.testAttribute(Qt.WA_ShowWithoutActivating)
             self.source.setAttribute(Qt.WA_ShowWithoutActivating, True)
@@ -305,7 +319,6 @@ class TaskbarController(QObject):
                 self.source.raise_()
             finally:
                 self.source.setAttribute(Qt.WA_ShowWithoutActivating, previous)
-        self.apply_mode()
         self.source.sync_refresh_timer()
 
     def drag_finished(self, accepted):

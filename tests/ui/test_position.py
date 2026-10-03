@@ -360,8 +360,9 @@ class WidgetPositionTests(unittest.TestCase):
             dialog = SettingsDialog(window, window)
         self.windows.append(dialog)
         dialog.show()
-        dialog.ui.tab_widget.setCurrentWidget(dialog.ui.functions)
+        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.floating)
         self.app.processEvents()
+        dialog.ui.floating_scroll.ensureWidgetVisible(dialog.ui.gb_fcn)
         self.assertFalse(dialog.ui.cb_boundary_check.isChecked())
         self.assertFalse(dialog.ui.cb_edge_hide.isEnabled())
         QTest.mouseClick(dialog.ui.cb_boundary_check, Qt.LeftButton)
@@ -381,7 +382,7 @@ class WidgetPositionTests(unittest.TestCase):
         self.assertFalse(dialog.ui.cb_edge_hide.isChecked())
         self.assertFalse(dialog.ui.cb_edge_hide.isEnabled())
         for control in (dialog.ui.cb_boundary_check, dialog.ui.cb_edge_hide):
-            self.assertTrue(dialog.ui.functions.isAncestorOf(control))
+            self.assertTrue(dialog.ui.floating.isAncestorOf(control))
             self.assertTrue(dialog.ui.gb_fcn.rect().contains(control.geometry()))
 
 

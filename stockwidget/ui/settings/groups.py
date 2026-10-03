@@ -3,7 +3,7 @@
 from contextlib import ExitStack
 import sys
 
-from PySide6.QtCore import QEvent, QObject, QSignalBlocker, QTimer
+from PySide6.QtCore import QObject, QSignalBlocker, QTimer
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -18,13 +18,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from stockwidget.core.view_options import PAGE_MODES
+from stockwidget.core.view_options import PAGE_MODES, taskbar_content_height, taskbar_font_size_limit
+from stockwidget.platform.taskbar import find_taskbar
 from stockwidget.ui.controls.metrics import MetricPoolWidget
-from stockwidget.ui.controls.style import color_swatch_icon
+from stockwidget.ui.controls.style import set_color_button
 
 
 class _SettingsGroup(QObject):
-    """Bind a native Designer QGroupBox without replacing its Qt behavior."""
+    """Bind Designer controls without creating or replacing their layouts."""
 
     def __init__(self, group):
         super().__init__(group)
@@ -77,21 +78,14 @@ class _SyncedGroup(_SettingsGroup):
     def bind(self, source, key):
         super().bind(source)
         self.sync_key = key
-        self.group.toggled.connect(lambda checked: source.set_view_options(**{key: checked}))
-        # Native unchecked groups disable their body after toggled; sync means
-        # the opposite, so restore editing after the native click/polish ends.
-        self.group.clicked.connect(self.sync)
-        self.group.installEventFilter(self)
-
-    def eventFilter(self, watched, event):
-        if event.type() in (QEvent.Polish, QEvent.StyleChange, QEvent.Show, QEvent.EnabledChange):
-            # Apply after Qt has finished its native group enable/polish pass.
-            QTimer.singleShot(0, self, self.sync)
-        return False
+        self._publish(sync_toggle=self._control(QCheckBox, key))
+        self.sync_toggle.toggled.connect(lambda checked: source.set_view_options(**{key: checked}))
 
     def _sync_switch(self):
-        self.group.setChecked(getattr(self.source.view_options, self.sync_key))
-        self.body.setEnabled(not self.group.isChecked())
+        checked = getattr(self.source.view_options, self.sync_key)
+        self.sync_toggle.setChecked(checked)
+        self.body.setVisible(not checked)
+        self.body.setEnabled(not checked)
 
 
 class FloatRowSettings(_SettingsGroup):
@@ -99,16 +93,12 @@ class FloatRowSettings(_SettingsGroup):
         super().bind(source)
         self.group.toggled.connect(lambda value: source.set_view_options(float_paging_enabled=value))
         self._publish(rows=self._value_control("float_max_rows"))
-        self._publish(paging=self._control(QGroupBox, "float_paging_settings"),
+        self._publish(paging=self._control(QCheckBox, "float_paging_enabled"),
                       paging_body=self._control(QWidget, "float_paging_settings_body"),
                       auto=self._control(QCheckBox, "float_page_mode"),
-                      interval=self._control(QComboBox, "float_page_interval"))
-        for index in range(self.interval.count()):
-            self.interval.setItemData(index, int(self.interval.itemText(index).removesuffix("秒")))
+                      interval=self._value_control("float_page_interval"))
         self.paging.toggled.connect(self._set_page_mode)
         self.auto.toggled.connect(self._set_page_mode)
-        self.interval.currentIndexChanged.connect(
-            lambda _: source.set_view_options(float_page_interval=self.interval.currentData()))
         self._connect_sync()
 
     def _set_page_mode(self, _checked):
@@ -122,14 +112,10 @@ class FloatRowSettings(_SettingsGroup):
         self.rows.setValue(options.float_max_rows)
         paging = options.float_page_mode != "first"
         self.paging.setChecked(paging)
+        self.paging_body.setVisible(paging)
         self.paging_body.setEnabled(paging)
         self.auto.setChecked(options.float_page_mode == "auto")
-        index = self.interval.findData(options.float_page_interval)
-        if index < 0:
-            # Saved intervals need not be one of the Designer's preset choices.
-            self.interval.addItem(f"{options.float_page_interval}秒", options.float_page_interval)
-            index = self.interval.count() - 1
-        self.interval.setCurrentIndex(index)
+        self.interval.setValue(options.float_page_interval)
         self.interval.setEnabled(options.float_page_mode == "auto")
 
 
@@ -159,11 +145,31 @@ class TaskbarStyleSettings(_SyncedGroup):
                       font_size_label=self._control(QLabel, "taskbar_font_size_label"),
                       color=self._control(QPushButton, "btn_taskbar_color"))
         self.color.clicked.connect(self._pick_color)
-        self._publish(unicolor=self._control(QCheckBox, "taskbar_unicolor"))
+        self._publish(unicolor=self._control(QCheckBox, "taskbar_unicolor"),
+                      auto_color=self._control(QCheckBox, "taskbar_auto_color"))
         self.unicolor.toggled.connect(lambda value: source.set_view_options(taskbar_unicolor=value))
+        self.auto_color.toggled.connect(lambda value: source.set_view_options(taskbar_auto_color=value))
         self._publish(opacity=self._value_control("taskbar_opacity_pct", QSlider),
                       opacity_label=self._control(QLabel, "taskbar_opacity_pct_label"))
+        self._taskbar_geometry = None
+        self._geometry_timer = QTimer(self)
+        self._geometry_timer.setInterval(1000)
+        self._geometry_timer.timeout.connect(lambda: self.sync() if self.group.isVisible() else None)
+        self._geometry_timer.start()
         self._connect_sync()
+
+    def _font_size_limit(self):
+        try:
+            area = find_taskbar() if sys.platform == "win32" else None
+        except OSError:
+            area = None
+        if area:
+            self._taskbar_geometry = (taskbar_content_height(area.height, area.dpi), area.dpi)
+        if self._taskbar_geometry is None:
+            dpi = max(96, round(96 * self.group.devicePixelRatioF()))
+            self._taskbar_geometry = (round(44 * dpi / 96), dpi)
+        height, dpi = self._taskbar_geometry
+        return taskbar_font_size_limit(height, dpi, self.source.view_options.taskbar_rows)
 
     def _pick_color(self):
         color = QColorDialog.getColor(QColor(self.source.view_options.taskbar_color), self.group, "任务栏文字颜色")
@@ -174,13 +180,19 @@ class TaskbarStyleSettings(_SyncedGroup):
         self._sync_switch()
         font, color, opacity, unicolor = self.source.get_taskbar_appearance()
         self.font_family.setCurrentFont(font)
-        self.font_size.setValue(font.pointSize())
-        self.font_size_label.setText(f"{font.pointSize()} pt")
-        self.color.setToolTip(f"文字颜色: {color.name()}")
-        self.color.setIcon(color_swatch_icon(color, self.group.devicePixelRatioF()))
+        limit = self._font_size_limit()
+        self.font_size.setMaximum(limit)
+        self.font_size.setValue(min(font.pointSize(), limit))
+        self.font_size_label.setText(f"{self.font_size.value()} pt")
+        self.font_size.setToolTip(f"当前行数与任务栏高度下，最大字号为 {limit} pt；缩放变化后自动更新。")
+        set_color_button(self.color, color, "任务栏文字颜色")
         self.opacity.setValue(opacity)
         self.opacity_label.setText(f"{opacity}%")
         self.unicolor.setChecked(unicolor)
+        automatic = self.source.view_options.taskbar_auto_color
+        self.auto_color.setChecked(automatic)
+        self.color.setEnabled(not automatic)
+        self.unicolor.setEnabled(not automatic)
 
 
 class TaskbarPagingSettings(_SyncedGroup):
@@ -232,7 +244,7 @@ class TaskbarSplitSettings(_SyncedGroup):
 class TaskbarSettings(_SettingsGroup):
     def bind(self, source):
         super().bind(source)
-        self._publish(left=self._control(QWidget, "taskbar_controls"),
+        self._publish(enabled=self._control(QCheckBox, "taskbar_enabled"),
                       dual=self._control(QCheckBox, "taskbar_dual_open"))
         self.dual.toggled.connect(lambda value: source.set_view_options(taskbar_dual_open=value))
         self._publish(rows=self._value_control("taskbar_rows"),
@@ -248,22 +260,19 @@ class TaskbarSettings(_SettingsGroup):
             binding.bind(source)
             self.bindings.append(binding)
         self._publish(metric_pool=self.metrics.metric_pool)
-        self.group.toggled.connect(self._enable_taskbar)
-        source.taskbar_status_changed.connect(self.group.setToolTip)
+        self.enabled.toggled.connect(lambda value: source.set_view_options(taskbar_enabled=value))
+        source.taskbar_status_changed.connect(self.enabled.setToolTip)
         self._connect_sync()
-
-    def _enable_taskbar(self, enabled):
-        self.source.set_view_options(taskbar_enabled=enabled)
-        self.source.set_display_mode(("both" if self.source.view_options.taskbar_dual_open else "taskbar") if enabled else "float")
 
     def _sync(self):
         source = self.source
-        self.group.setChecked(source.view_options.taskbar_enabled)
+        self.enabled.setChecked(source.view_options.taskbar_enabled)
+        self.body.setVisible(source.view_options.taskbar_enabled)
         self.body.setEnabled(source.view_options.taskbar_enabled)
         self.dual.setChecked(source.view_options.taskbar_dual_open)
         self.rows.setValue(source.view_options.taskbar_rows)
         self.offset.setValue(source.taskbar_offset)
         self.group.setEnabled(sys.platform == "win32")
-        self.group.setToolTip(source.taskbar_status)
+        self.enabled.setToolTip(source.taskbar_status)
         for binding in self.bindings:
             binding.sync()

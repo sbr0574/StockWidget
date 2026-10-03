@@ -1,15 +1,15 @@
 """两处独立分页、分栏、自动翻页和全区域拖动。"""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 import os
 
-from PySide6.QtCore import QEvent, QPoint, Qt
-from PySide6.QtGui import QColor, QKeyEvent, QPainter
+from PySide6.QtCore import QEvent, QPoint, QRect, Qt
+from PySide6.QtGui import QColor, QFont, QKeyEvent, QPainter
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
 from stockwidget.core.view_options import ViewOptions
-from stockwidget.ui.floating.taskbar import render_taskbar
+from stockwidget.ui.floating.taskbar import render_taskbar, taskbar_pager_rect
 
 from tests.support import PagingTestCase
 
@@ -18,6 +18,79 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 
 class PagingInteractionTests(PagingTestCase):
+    def test_last_page_reserves_the_configured_height_in_each_column(self):
+        w = self.win
+        w.show()
+        for split in (False, True):
+            for header in (False, True):
+                for font_size in (5, 10, 15):
+                    with self.subTest(split=split, header=header, font_size=font_size):
+                        self.populate(13 if split else 7)
+                        w.set_header_visible(header)
+                        w.set_font_size(font_size)
+                        w.set_view_options(float_split_enabled=split, float_max_rows=3,
+                                           float_page_mode="manual")
+                        w.quotes.float_page = 0
+                        w.quotes.reproject()
+                        self.app.processEvents()
+                        height, table_size, pager_size = w.height(), w.table.size(), w.pager.size()
+                        w.quotes.change_page("float", 2)
+                        self.app.processEvents()
+                        self.assertEqual(w.model.rowCount(), 1)
+                        self.assertEqual(w.right_model.rowCount(), 0)
+                        self.assertEqual(w.height(), height)
+                        self.assertEqual(w.table.height(), table_size.height())
+                        self.assertEqual(w.pager.size(), pager_size)
+                        if split:
+                            self.assertEqual(w.right_table.height(), table_size.height())
+                        # The empty part of the last page is still a drag region.
+                        target = w.table.viewport()
+                        start = target.mapToGlobal(QPoint(3, target.height() - 3))
+                        origin = w.pos()
+                        self.mouse(target, QEvent.MouseButtonPress, start, Qt.LeftButton, Qt.LeftButton)
+                        self.mouse(target, QEvent.MouseMove, start + QPoint(40, 25), Qt.NoButton, Qt.LeftButton)
+                        self.mouse(target, QEvent.MouseButtonRelease, start + QPoint(40, 25), Qt.LeftButton, Qt.NoButton)
+                        self.assertEqual(w.pos(), origin + QPoint(40, 25))
+                        w.set_view_options(float_paging_enabled=False)
+                        self.assertTrue(w.pager.isHidden())
+                        self.assertGreater(w.table.height(), table_size.height())
+                        w.set_view_options(float_paging_enabled=True)
+
+    def test_pager_keeps_size_and_quote_font_when_page_number_gains_a_digit(self):
+        w = self.win
+        self.populate(34)
+        w.set_view_options(float_max_rows=3, taskbar_rows=3, taskbar_page_mode="manual")
+        w.set_font_size(15)
+        w.show()
+        self.app.processEvents()
+        size = w.pager.size()
+        calls = []
+
+        class Recorder(QPainter):
+            def drawText(self, *args):
+                calls.append((args[-1], QFont(self.font())))
+                return super().drawText(*args)
+
+        native_size = None
+        for index in (0, 8, 9, 11):
+            w.quotes.change_page("float", index - w.quotes.float_page)
+            w.quotes.change_page("taskbar", index - w.quotes.taskbar_page)
+            self.app.processEvents()
+            with self.subTest(page=index + 1):
+                self.assertEqual(w.pager.size(), size)
+                with patch("stockwidget.ui.controls.quote_view.QPainter", Recorder):
+                    w.pager.grab()
+                self.assertEqual(calls[-1], (f"{index + 1}/12", w.font))
+                calls.clear()
+                with patch("stockwidget.ui.floating.taskbar.QPainter", Recorder):
+                    render_taskbar(w, 90, max_width=1000)
+                self.assertEqual(calls[0][0], f"{index + 1}/12")
+                self.assertEqual(calls[0][1], calls[1][1])
+                controller_rect = taskbar_pager_rect(w, 90, 96)
+                if native_size is None:
+                    native_size = controller_rect.size()
+                self.assertEqual(controller_rect.size(), native_size)
+
     def test_independent_pages_and_incomplete_last_page(self):
         self.win.set_view_options(float_max_rows=2, float_page_mode="manual",
                                   taskbar_rows=3, taskbar_page_mode="manual")
@@ -241,6 +314,11 @@ class PagingInteractionTests(PagingTestCase):
 
     def test_boundary_and_edge_hide_preserve_all_region_interactions(self):
         w = self.win
+        # This scenario expects free movement inside a screen. Offscreen's
+        # default screen shrinks to 400 logical pixels at 200% DPI.
+        screen = Mock(wraps=QApplication.primaryScreen())
+        screen.geometry.return_value = QRect(0, 0, 1920, 1080)
+        self.enterContext(patch("stockwidget.ui.floating.interaction.QApplication.screens", return_value=[screen]))
         self.populate(9)
         controller = self.make_controller()
         w.set_header_visible(True)

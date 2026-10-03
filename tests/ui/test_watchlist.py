@@ -30,7 +30,7 @@ from stockwidget.ui.watchlist.editor import (
     SEARCH_PLACEHOLDER,
 )
 
-from tests.support import QtTestCase, SettingsTestCase
+from tests.support import CODES, QtTestCase, SettingsTestCase
 
 
 class WatchlistEditorTests(QtTestCase):
@@ -684,7 +684,10 @@ class WatchlistDialogTests(SettingsTestCase):
         self.assertEqual(dialog.watchlist_editor.list_codes.item(0, 2).text(), "123")
 
     def test_popup_uses_table_width_and_expands_for_long_result(self):
-        dialog, _window = self._make_dialog()
+        codes = {**CODES, "longname": {**CODES["longname"], "name": "特别长证券名称" * 12}}
+        dialog, _window = self._make_dialog(codes=codes)
+        dialog.show()
+        self.qt_app.processEvents()
         editor = self._start_code_editor(dialog)
         base_width = (
             dialog.watchlist_editor.list_codes.columnWidth(1)

@@ -101,8 +101,8 @@ class QuoteTableTests(QtTestCase):
 
     def test_one_bid_ask_column_keeps_colors_markers_and_a_fixed_axis_in_both_surfaces(self):
         w = self.window
-        cells = [BidAskCell("1<", "234567", "up", "down"),
-                 BidAskCell("123456", ">2", "up", "down"), BidAskCell("-", "-")]
+        cells = [BidAskCell("1", "23.46万", "up", "down", "◀"),
+                 BidAskCell("12.35万", "2", "up", "down", "▶"), BidAskCell("-", "-")]
         w.quotes._last_full_rows = [{"买一/卖一": cell} for cell in cells]
         w.quotes._last_color_roles = [{"买一/卖一": "text"} for _ in cells]
         w.set_unicolor(False)
@@ -113,7 +113,7 @@ class QuoteTableTests(QtTestCase):
         self.assertEqual(w.current_config()["visible_metrics"], ["b1s1"])
         self.assertTrue(w.current_config()["b1s1_visible"])
         self.assertEqual(w.model.index(0, 0).data(Qt.UserRole), cells[0])
-        self.assertEqual(w.model.index(0, 0).data(), "1< / 234567")
+        self.assertEqual(w.model.index(0, 0).data(), "1 ◀ 23.46万")
         calls = []
 
         class Recorder(QPainter):
@@ -130,11 +130,12 @@ class QuoteTableTests(QtTestCase):
             option.font, option.rect = w.font, QRect(0, row * 30, width, 30)
             w._default_item_delegate.paint(painter, option, w.model.index(row, 0))
             buy, sell, separator = calls[-3:]
-            self.assertEqual((buy[1], sell[1], separator[1]), (cell.buy, cell.sell, "/"))
+            self.assertEqual((buy[1], sell[1], separator[1]), (cell.buy, cell.sell, cell.marker))
             self.assertAlmostEqual((buy[0].right() + sell[0].left()) / 2, width / 2)
             self.assertAlmostEqual(separator[0].center().x(), width / 2)
             self.assertEqual(buy[2], w.model.color_for_role(cell.buy_role))
             self.assertEqual(sell[2], w.model.color_for_role(cell.sell_role))
+        self.assertEqual(len({rect.width() for rect, _, _ in calls[2::3]}), 1)
         painter.end()
         for dpi in (96, 192):
             calls.clear()
@@ -144,6 +145,8 @@ class QuoteTableTests(QtTestCase):
             separators = calls[2::3]
             self.assertEqual(len(separators), 3)
             self.assertEqual(len({rect.center().x() for rect, _, _ in separators}), 1)
+            self.assertEqual(len({rect.width() for rect, _, _ in separators}), 1)
+            self.assertEqual([text for _, text, _ in separators], ["◀", "▶", ""])
         w.set_unicolor(True)
         self.assertEqual(w.model.color_for_role("up"), w.fg)
         self.assertEqual(w.taskbar_model.color_for_role("down"), w.fg)
@@ -155,7 +158,7 @@ class QuoteTableTests(QtTestCase):
 
     def test_taskbar_keeps_its_independent_colors_for_both_sides(self):
         w = self.window
-        w.quotes._last_full_rows = [{"买一/卖一": BidAskCell("23<", ">45", "up", "down")}]
+        w.quotes._last_full_rows = [{"买一/卖一": BidAskCell("23", "45", "up", "down", "▶")}]
         w.quotes._last_color_roles = [{"买一/卖一": "text"}]
         w.set_visible_metrics(["b1s1"])
         w.set_unicolor(True)
@@ -169,7 +172,7 @@ class QuoteTableTests(QtTestCase):
 
         with patch("stockwidget.ui.floating.taskbar.QPainter", Recorder):
             render_taskbar(w, 60)
-        self.assertEqual(calls, [("23<", w.up_color), (">45", w.down_color), ("/", QColor("#112233"))])
+        self.assertEqual(calls, [("23", w.up_color), ("45", w.down_color), ("▶", QColor("#112233"))])
         self.assertEqual(w.model.color_for_role("down"), w.fg)
 
 

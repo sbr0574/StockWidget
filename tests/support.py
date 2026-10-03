@@ -8,7 +8,7 @@ import unittest
 from PySide6.QtCore import Qt, QPointF
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QAbstractItemDelegate
+from PySide6.QtWidgets import QApplication, QAbstractItemDelegate, QScrollArea
 from shiboken6 import delete
 
 from stockwidget.platform.taskbar import TaskbarArea
@@ -115,11 +115,6 @@ class SettingsTestCase(QtTestCase):
         self._windows.append((dialog, window))
         return dialog, window
 
-    def _click_info(self, dialog, pool, item):
-        dialog.show()
-        self.qt_app.processEvents()
-        pool.scrollToItem(item)
-        QTest.mouseClick(pool.viewport(), Qt.LeftButton, pos=pool.info_rect(item).center())
 
     def _start_code_editor(self, dialog):
         dialog.watchlist_editor._start_quick_add()

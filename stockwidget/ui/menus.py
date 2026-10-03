@@ -9,35 +9,48 @@
 from functools import partial
 import sys
 
-from PySide6.QtCore import Qt, QSignalBlocker
-from PySide6.QtGui import QAction, QActionGroup
-from PySide6.QtWidgets import QMenu, QSystemTrayIcon
+from PySide6.QtCore import Qt, QSignalBlocker, QUrl
+from PySide6.QtGui import QAction, QDesktopServices
+from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from stockwidget.core.quote_presentation import METRIC_SPECS, SORTABLE_HEADERS, metric_headers
-from stockwidget.core.view_options import DISPLAY_MODES
+from stockwidget.data.update_check import project_links
 from stockwidget.platform.capabilities import click_through_supported, tray_click_toggles
 
 
-def display_mode_actions(menu, on_change):
-    """托盘和行情菜单使用同一组显示位置选项。"""
-    actions = {}
-    group = QActionGroup(menu)
-    for mode, label in DISPLAY_MODES:
-        action = menu.addAction(label)
-        action.setCheckable(True)
-        group.addAction(action)
-        action.triggered.connect(lambda checked=False, value=mode: on_change(value))
-        actions[mode] = action
-    return actions
-
-
-def sync_display_modes(actions, current, taskbar_enabled):
-    for mode, action in actions.items():
+def _sync_toggles(toggles):
+    for action, getter in toggles:
         with QSignalBlocker(action):
-            action.setChecked(current == mode)
-        enabled = mode == "float" or taskbar_enabled
-        action.setEnabled(enabled)
-        action.setToolTip("" if enabled else "请先在设置的任务栏页启用任务栏模式")
+            action.setChecked(bool(getter()))
+
+
+def _view_toggles(menu, source, surface="float"):
+    """Bind both menus to the same saved options as the settings page."""
+    toggles = []
+
+    def add(text, getter, setter):
+        action = menu.addAction(text)
+        action.setCheckable(True)
+        action.toggled.connect(setter)
+        toggles.append((action, getter))
+        return action
+
+    if sys.platform == "win32":
+        add("任务栏行情", lambda: source.view_options.taskbar_enabled,
+            lambda enabled: source.set_view_options(taskbar_enabled=enabled))
+
+    def split_key():
+        current = surface() if callable(surface) else surface
+        return "float_split_enabled" if current == "float" or source.view_options.taskbar_sync_split else "taskbar_split_enabled"
+
+    add("分栏", lambda: getattr(source.view_options, split_key()),
+        lambda enabled: source.set_view_options(**{split_key(): enabled}))
+    through = add("鼠标穿透", lambda: source.click_through, source.set_click_through)
+    if not click_through_supported():
+        through.setEnabled(False)
+        through.setToolTip("当前会话不支持鼠标穿透")
+    _sync_toggles(toggles)
+    return toggles
 
 
 class TrayIcon(QSystemTrayIcon):
@@ -45,50 +58,30 @@ class TrayIcon(QSystemTrayIcon):
 
     def __init__(self, icon, app_name, *,
                  on_toggle, on_open_settings, on_quit,
-                 on_click_through, click_through_getter,
-                 on_display_mode=None, display_mode_getter=None, taskbar_enabled_getter=None):
+                 source):
         super().__init__(icon)
         self._on_toggle = on_toggle
-        self._on_click_through = on_click_through
-        self._click_through_getter = click_through_getter
 
         self.setToolTip(app_name)
 
         menu = QMenu()
         menu.addAction(QAction("显示/隐藏", self, triggered=self._on_toggle))
-        self._display_mode_getter = display_mode_getter
-        self._taskbar_enabled_getter = taskbar_enabled_getter
-        self._mode_actions = {}
-        if sys.platform == "win32" and on_display_mode and display_mode_getter:
-            self._mode_actions = display_mode_actions(menu.addMenu("显示方式"), on_display_mode)
-
-        self.act_click_through = QAction("鼠标穿透", self, checkable=True)
-        self.act_click_through.setChecked(bool(self._click_through_getter()))
-        self._sync_display_modes()
-        self.act_click_through.toggled.connect(self._on_click_through)
-        if not click_through_supported():
-            # 当前平台（如 Wayland）不支持鼠标穿透，置为不可点按
-            self.act_click_through.setEnabled(False)
-            self.act_click_through.setToolTip("当前会话不支持鼠标穿透")
-        menu.addAction(self.act_click_through)
+        self._toggles = _view_toggles(menu, source, lambda: "taskbar" if source.display_mode == "taskbar" else "float")
 
         menu.addAction(QAction("设置…", self, triggered=on_open_settings))
         menu.addSeparator()
+        for title, key in (("使用帮助", "readme"), ("问题反馈", "issues")):
+            menu.addAction(QAction(title, self, triggered=lambda _checked=False, link=key:
+                                  QDesktopServices.openUrl(QUrl(project_links()[link]))))
+        menu.addSeparator()
         menu.addAction(QAction("退出", self, triggered=on_quit))
-        menu.aboutToShow.connect(self.sync_click_through)
+        menu.aboutToShow.connect(self.sync_settings)
         self.setContextMenu(menu)
 
         self.activated.connect(self._on_activated)
 
-    def sync_click_through(self):
-        """菜单显示前，用浮窗当前状态同步「鼠标穿透」勾选。"""
-        self.act_click_through.setChecked(bool(self._click_through_getter()))
-        self._sync_display_modes()
-
-    def _sync_display_modes(self):
-        if self._display_mode_getter:
-            sync_display_modes(self._mode_actions, self._display_mode_getter(),
-                               not self._taskbar_enabled_getter or self._taskbar_enabled_getter())
+    def sync_settings(self):
+        _sync_toggles(self._toggles)
 
     def _on_activated(self, reason):
         # Windows 左键切换；macOS/Linux 单击即弹菜单，无切换逻辑
@@ -153,9 +146,7 @@ def build_quote_menu(source, surface="float"):
     act_color.toggled.connect(source.set_unicolor)
     menu.addAction(act_color)
 
-    if sys.platform == "win32":
-        actions = display_mode_actions(menu.addMenu("显示位置"), source.set_display_mode)
-        sync_display_modes(actions, source.display_mode, source.view_options.taskbar_enabled)
+    _view_toggles(menu, source, surface)
 
     menu.addSeparator()
     act_open_settings = QAction("设置…", menu)
@@ -167,4 +158,5 @@ def build_quote_menu(source, surface="float"):
 
     menu.addSeparator()
     menu.addAction(QAction("隐藏", menu, triggered=source.hide_widget))
+    menu.addAction(QAction("退出", menu, triggered=source._quit_cb or QApplication.instance().quit))
     return menu

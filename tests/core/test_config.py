@@ -6,7 +6,7 @@ import unittest
 
 from stockwidget.constants import APP_NAME
 from stockwidget.core.config_store import config_paths, load_file, save_file
-from stockwidget.core.view_options import ViewOptions, column_ranges, page_slice
+from stockwidget.core.view_options import ViewOptions, column_ranges, page_slice, taskbar_font_size_limit, taskbar_font_pixels
 
 
 class ConfigStoreTests(unittest.TestCase):
@@ -59,6 +59,40 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 
 class PageMathTests(unittest.TestCase):
+    def test_taskbar_font_limit_matches_rows_and_physical_scale(self):
+        for height, dpi, rows, expected in ((88, 192, 4, 7), (88, 192, 3, 10),
+                                            (44, 96, 4, 6), (44, 96, 3, 8), (88, 192, 1, 30)):
+            with self.subTest(height=height, dpi=dpi, rows=rows):
+                self.assertEqual(taskbar_font_size_limit(height, dpi, rows), expected)
+                self.assertEqual(taskbar_font_pixels(height, dpi, rows, 100), (height - 4) // rows - 2)
+
+    def test_color_mode_and_tray_preference_defaults_validation_and_roundtrip(self):
+        defaults = ViewOptions.from_config({})
+        self.assertEqual(defaults.color_mode, "system")
+        self.assertFalse(defaults.hide_tray_icon)
+        for mode in ("system", "light", "dark", None, "invalid"):
+            with self.subTest(mode=mode):
+                options = ViewOptions.from_config({"color_mode": mode, "hide_tray_icon": True})
+                self.assertEqual(options.color_mode, mode if mode in ("system", "light", "dark") else "system")
+                self.assertTrue(options.hide_tray_icon)
+                self.assertEqual(ViewOptions.from_config(options.to_config()), options)
+
+    def test_taskbar_automatic_color_defaults_preserve_legacy_manual_color_and_roundtrip(self):
+        legacy = ViewOptions.from_config({"taskbar_color": "#123456", "taskbar_unicolor": False})
+        self.assertFalse(legacy.taskbar_auto_color)
+        configured = ViewOptions.from_config({**legacy.to_config(), "taskbar_auto_color": True})
+        self.assertEqual(ViewOptions.from_config(configured.to_config()), configured)
+        self.assertEqual(configured.taskbar_color, "#123456")
+        self.assertFalse(configured.taskbar_unicolor)
+
+    def test_float_row_and_interval_ranges_normalize_saved_configuration(self):
+        for rows, seconds, expected in ((0, 0, (1, 1)), (1000, 3600, (20, 60)),
+                                        (20, 60, (20, 60)), ("invalid", None, (3, 5))):
+            with self.subTest(rows=rows, seconds=seconds):
+                options = ViewOptions.from_config({"float_max_rows": rows, "float_page_interval": seconds})
+                self.assertEqual((options.float_max_rows, options.float_page_interval), expected)
+                self.assertEqual(ViewOptions.from_config(options.to_config()), options)
+
     def test_split_defaults_roundtrip_and_odd_item_distribution(self):
         defaults = ViewOptions.from_config({})
         self.assertFalse(defaults.float_split_enabled)

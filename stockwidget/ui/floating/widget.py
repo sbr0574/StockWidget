@@ -3,7 +3,7 @@
 import sys
 
 from PySide6.QtCore import QPoint, Qt, QTimer, Signal
-from PySide6.QtGui import QFont, QColor
+from PySide6.QtGui import QFont, QColor, QGuiApplication
 from PySide6.QtWidgets import QApplication, QWidget, QHeaderView
 
 from stockwidget.core.quote_presentation import (
@@ -12,7 +12,7 @@ from stockwidget.core.quote_presentation import (
     normalize_visible_metrics,
     visible_metrics_from_config,
 )
-from stockwidget.core.view_options import TASKBAR_STYLE_KEYS, ViewOptions
+from stockwidget.core.view_options import APPEARANCE_OPTION_KEYS, ViewOptions
 from stockwidget.core.watchlist import normalize_watchlist
 from stockwidget.core.window_rules import normalize_hide_times, resolve_restore_position
 from stockwidget.platform.capabilities import (
@@ -34,6 +34,7 @@ from stockwidget.ui.controls.quote_view import (
     SimpleTableModel,
     SortIndicatorStyle,
 )
+from stockwidget.ui.controls.style import is_dark_theme
 from stockwidget.ui.floating.interaction import (
     DragBehaviorMixin,
     HideController,
@@ -69,6 +70,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         super().__init__()
         self._on_change = (lambda: None)
         self._open_settings_cb = None
+        self._quit_cb = None
         self.taskbar_status = "任务栏显示已关闭"
         self.widget_visible = True
         self.taskbar_preview_active = False
@@ -160,6 +162,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.table.setItemDelegate(self._default_item_delegate)
         self.right_table.setItemDelegate(self._right_default_delegate)
         self._sync_colors_to_views()
+        QGuiApplication.styleHints().colorSchemeChanged.connect(self._sync_taskbar_theme)
+        QApplication.instance().paletteChanged.connect(self._sync_taskbar_theme)
         self.k_delegate.set_point_size(self.font.pointSize())
         self.k_column_visible_index = None
 
@@ -266,7 +270,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def reset_appearance(self):
         self._load_appearance_config({})
         defaults = ViewOptions.from_config({}, self.font.family())
-        for key in TASKBAR_STYLE_KEYS:
+        for key in APPEARANCE_OPTION_KEYS:
             setattr(self.view_options, key, getattr(defaults, key))
         self.view_options_changed.emit()
         self._sync_colors_to_views()
@@ -278,7 +282,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.display_flags_changed.emit()
 
     def reset_settings(self):
-        self._load_settings_config({key: getattr(self.view_options, key) for key in TASKBAR_STYLE_KEYS})
+        self._load_settings_config({key: getattr(self.view_options, key) for key in APPEARANCE_OPTION_KEYS})
         self.position_controller.recheck()
         self.position_options_changed.emit()
         self._apply_float_on_top()
@@ -308,6 +312,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     # 与 App 连接
     def set_open_settings_callback(self, fn):
         self._open_settings_cb = fn
+
+    def set_quit_callback(self, fn):
+        self._quit_cb = fn
 
     def set_on_change(self, fn):
         self._on_change = fn or (lambda: None)
@@ -376,10 +383,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.right_model.set_colors(*colors)
         self.k_delegate.set_colors(*colors)
         self.right_k_delegate.set_colors(*colors)
-        taskbar_colors = colors if self.view_options.taskbar_sync_appearance else (
-            self.view_options.taskbar_unicolor, _config_color(self.view_options.taskbar_color, self.fg),
-            self.up_color, self.down_color, self.neutral_color,
-        )
+        _font, color, _opacity, unicolor = self.get_taskbar_appearance()
+        taskbar_colors = (unicolor, color, self.up_color, self.down_color, self.neutral_color)
         self.taskbar_model.set_colors(*taskbar_colors)
         self.taskbar_k_delegate.set_colors(*taskbar_colors)
         if hasattr(self, "pager"):
@@ -441,6 +446,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
                 table.setRowHeight(r, h)
 
     def _fit_to_contents(self):
+        self.pager.set_page(self.quotes.get_page("float"), self.fg, self.font)
         split, _separator = self.view_options.split_settings("float")
         for table in self.float_tables:
             table.horizontalHeader().setStretchLastSection(False)
@@ -454,8 +460,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             for c, width in enumerate(widths):
                 table.setColumnWidth(c, width)
             hh = table.horizontalHeader().sizeHint().height() if self.header_visible else 0
-            total_h = hh + 2 * table.frameWidth() + sum(
-                self.table.rowHeight(r) for r in range(self.model.rowCount()))
+            rows = (self.view_options.float_max_rows if self.view_options.float_paging_enabled
+                    else self.model.rowCount())
+            total_h = hh + 2 * table.frameWidth() + rows * table.verticalHeader().defaultSectionSize()
             table.setFixedSize(max(1, sum(widths) + 2 * table.frameWidth()), max(1, total_h))
         # 固定表格尺寸后，嵌套布局的 sizeHint 仍可能缓存上一轮数据。
         # 同步重算布局再调整外框，避免浮窗大小慢一轮刷新。
@@ -509,8 +516,16 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         options = self.view_options
         if options.taskbar_sync_appearance:
             return self.font, self.fg, self.opacity_pct, self.unicolor
+        color = (QColor("#FFFFFF" if is_dark_theme() else "#000000")
+                 if options.taskbar_auto_color else _config_color(options.taskbar_color, self.fg))
         return (QFont(options.taskbar_font_family, options.taskbar_font_size),
-                _config_color(options.taskbar_color, self.fg), options.taskbar_opacity_pct, options.taskbar_unicolor)
+                color, options.taskbar_opacity_pct, options.taskbar_unicolor or options.taskbar_auto_color)
+
+    def _sync_taskbar_theme(self, *_args):
+        if self.view_options.taskbar_auto_color and not self.view_options.taskbar_sync_appearance:
+            self._sync_colors_to_views()
+            self.taskbar_options_changed.emit()
+            self.presentation_changed.emit()
 
     def set_view_options(self, **changes):
         previous = self.view_options
@@ -524,8 +539,11 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if not options.taskbar_enabled:
             self.display_mode = "float"
             self.taskbar_preview_active = False
-        elif self.display_mode != "float":
+        elif self.display_mode != "float" or (not old["taskbar_enabled"] and sys.platform == "win32"):
             self.display_mode = "both" if options.taskbar_dual_open else "taskbar"
+            if not old["taskbar_enabled"] and not self.widget_visible:
+                self.widget_visible = True
+                self.widget_visibility_changed.emit()
         self.quotes.view_options_changed(previous)
         self.view_options_changed.emit()
         self.taskbar_options_changed.emit()
@@ -917,7 +935,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         super().hideEvent(event)
         if self._updating_topmost:
             return
-        if self.display_mode != "taskbar" and self.widget_visible:
+        if self.display_mode != "taskbar" and self.widget_visible and not self.taskbar_preview_active:
             self.widget_visible = False
             self.widget_visibility_changed.emit()
         self.sync_refresh_timer()

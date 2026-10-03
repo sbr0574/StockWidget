@@ -6,11 +6,11 @@ from stockwidget.core.quote_presentation import DEFAULT_VISIBLE_METRICS, normali
 
 
 PAGE_MODES = (("first", "只显示前 N 行"), ("manual", "手动翻页"), ("auto", "自动翻页"))
-DISPLAY_MODES = (("float", "仅浮窗"), ("taskbar", "仅任务栏"), ("both", "浮窗和任务栏"))
 TASKBAR_STYLE_KEYS = (
     "taskbar_sync_appearance", "taskbar_font_family", "taskbar_font_size",
-    "taskbar_color", "taskbar_opacity_pct", "taskbar_unicolor",
+    "taskbar_color", "taskbar_auto_color", "taskbar_opacity_pct", "taskbar_unicolor",
 )
+APPEARANCE_OPTION_KEYS = ("color_mode", *TASKBAR_STYLE_KEYS)
 
 
 def bounded_int(value, default, low, high):
@@ -20,8 +20,25 @@ def bounded_int(value, default, low, high):
         return default
 
 
+def taskbar_content_height(height, dpi):
+    return min(height, round(44 * dpi / 96))
+
+
+def taskbar_font_pixels(height, dpi, rows, point_size):
+    row_height = max(1, (height - 4) // rows)
+    return max(7, min(round(point_size * dpi / 72), row_height - 2))
+
+
+def taskbar_font_size_limit(height, dpi, rows):
+    """Expose the renderer's row/DPI limit in whole point sizes."""
+    pixels = max(7, (height - 4) // rows - 2)
+    return max(5, min(30, round(pixels * 72 / dpi)))
+
+
 @dataclass
 class ViewOptions:
+    color_mode: str = "system"
+    hide_tray_icon: bool = False
     float_split_enabled: bool = False
     float_split_separator: bool = True
     float_paging_enabled: bool = False
@@ -42,6 +59,7 @@ class ViewOptions:
     taskbar_font_family: str = "Microsoft YaHei"
     taskbar_font_size: int = 10
     taskbar_color: str = "#FFFFFF"
+    taskbar_auto_color: bool = False
     taskbar_opacity_pct: int = 100
     taskbar_unicolor: bool = True
     taskbar_dual_open: bool = False
@@ -51,7 +69,7 @@ class ViewOptions:
         defaults = cls(taskbar_font_family=font_family)
         result = cls(**{key: cfg.get(key, value) for key, value in asdict(defaults).items()})
         for key, low, high in (
-            ("float_max_rows", 1, 1000), ("float_page_interval", 1, 3600),
+            ("float_max_rows", 1, 20), ("float_page_interval", 1, 60),
             ("taskbar_rows", 1, 4), ("taskbar_page_interval", 1, 3600),
             ("taskbar_font_size", 5, 30), ("taskbar_opacity_pct", 0, 100),
         ):
@@ -59,11 +77,13 @@ class ViewOptions:
         for key in ("float_page_mode", "taskbar_page_mode"):
             if getattr(result, key) not in ("first", "manual", "auto"):
                 setattr(result, key, getattr(defaults, key))
+        if result.color_mode not in ("system", "light", "dark"):
+            result.color_mode = "system"
         if "taskbar_metrics" not in cfg and metrics is not None:
             result.taskbar_metrics = metrics
         result.taskbar_metrics = normalize_visible_metrics(result.taskbar_metrics)
         if "float_paging_enabled" not in cfg:
-            result.float_paging_enabled = bounded_int(cfg.get("float_max_rows", 0), 0, 0, 1000) > 0
+            result.float_paging_enabled = bounded_int(cfg.get("float_max_rows", 0), 0, 0, 20) > 0
         if "taskbar_enabled" not in cfg:
             result.taskbar_enabled = cfg.get("display_mode", "float") in ("taskbar", "both")
         if "taskbar_sync_metrics" not in cfg:
@@ -76,8 +96,8 @@ class ViewOptions:
             result.taskbar_font_family = font_family
         if not isinstance(result.taskbar_color, str):
             result.taskbar_color = defaults.taskbar_color
-        for key in ("float_paging_enabled", "taskbar_enabled", "taskbar_sync_metrics",
-                    "taskbar_sync_appearance", "taskbar_sync_paging", "taskbar_unicolor", "taskbar_dual_open",
+        for key in ("hide_tray_icon", "float_paging_enabled", "taskbar_enabled", "taskbar_sync_metrics",
+                    "taskbar_sync_appearance", "taskbar_sync_paging", "taskbar_unicolor", "taskbar_auto_color", "taskbar_dual_open",
                     "float_split_enabled", "float_split_separator", "taskbar_sync_split",
                     "taskbar_split_enabled", "taskbar_split_separator"):
             setattr(result, key, bool(getattr(result, key)))

@@ -8,14 +8,49 @@ import os
 import tempfile
 import unittest
 
-from PySide6.QtGui import QColor, QIcon, QPixmap
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QIcon, QPalette, QPixmap
+from shiboken6 import delete
 import requests
 
 from stockwidget.app import App, _load_custom_icon
 from stockwidget.constants import CONFIG_FILE, CODE_LIST_FILES
 from stockwidget.data import update_check
+from stockwidget.ui.controls.style import ApplicationTheme, is_dark_theme, theme_palette
 
 from tests.support import QtTestCase
+
+
+class ApplicationThemeTests(QtTestCase):
+    def test_forced_theme_keeps_system_palette_current_and_taskbar_color_independent(self):
+        app = self.qt_app
+        original = app.palette()
+        previous_theme = getattr(app, "theme", None)
+        theme = ApplicationTheme(app)
+        app.theme = theme
+        try:
+            light = theme_palette(False, original)
+            app.setPalette(light)
+            theme.set_mode("dark")
+            self.assertLess(app.palette().color(QPalette.Window).lightness(), 128)
+            with patch("stockwidget.ui.controls.style.QGuiApplication.styleHints") as hints:
+                hints.return_value.colorScheme.return_value = Qt.ColorScheme.Unknown
+                self.assertFalse(is_dark_theme())
+                dark = theme_palette(True, original)
+                dark.setColor(QPalette.Window, QColor("#18191a"))
+                app.setPalette(dark)
+                theme.set_mode("light")
+                self.assertGreater(app.palette().color(QPalette.Window).lightness(), 128)
+                self.assertTrue(is_dark_theme())
+                theme.set_mode("system")
+                self.assertEqual(app.palette(), dark)
+        finally:
+            delete(theme)
+            if previous_theme is None:
+                del app.theme
+            else:
+                app.theme = previous_theme
+            app.setPalette(original)
 
 
 class AppIconTests(QtTestCase):
@@ -91,6 +126,18 @@ class AppIconTests(QtTestCase):
 
 
 class AppCodeRefreshTests(unittest.TestCase):
+    def test_tray_hide_preference_is_windows_only_and_keeps_the_saved_preference(self):
+        from stockwidget.core.view_options import ViewOptions
+        options = ViewOptions()
+        app = SimpleNamespace(win=SimpleNamespace(view_options=options), tray=Mock(), theme=Mock())
+        for platform, hidden, visible in (("win32", False, True), ("win32", True, False),
+                                          ("darwin", True, True), ("linux", True, True)):
+            options.hide_tray_icon = hidden
+            with patch("stockwidget.app.sys.platform", platform):
+                App._sync_application_options(app)
+            app.tray.setVisible.assert_called_with(visible)
+            self.assertEqual(options.hide_tray_icon, hidden)
+
     def test_quit_uses_qt_event_loop_shutdown(self):
         app = SimpleNamespace(tray=Mock(), save_now=Mock(), quit=Mock())
         App.quit_app(app)

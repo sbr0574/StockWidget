@@ -97,17 +97,17 @@ class DesignerFormTests(QtTestCase):
 
     def test_designer_spacing_and_label_width_survive_binding_and_sync(self):
         tree = ET.parse(DIRECTORY / "settings.ui")
-        tree.find(".//layout[@name='taskbarControlsLayout']/property[@name='spacing']/number").text = "9"
+        tree.find(".//layout[@name='taskbar_settings_layout']/property[@name='spacing']/number").text = "9"
         tree.find(".//widget[@name='taskbar_font_size_label']/property[@name='minimumSize']/size/width").text = "47"
         root = load_form(ET.tostring(tree.getroot()))
         with patch.object(QuotePresenter, "refresh"), patch("stockwidget.ui.floating.widget.GlobalHotkeyManager"):
             source = FloatLabel({}, {})
         try:
-            taskbar = root.findChild(QGroupBox, "taskbar_settings")
+            taskbar = root.findChild(QWidget, "taskbar_settings")
             binding = TaskbarSettings(taskbar)
             binding.bind(source)
             source.set_view_options(taskbar_enabled=True, taskbar_sync_appearance=False, taskbar_font_size=14)
-            self.assertEqual(taskbar.left.layout().spacing(), 9)
+            self.assertEqual(taskbar.body.layout().spacing(), 9)
             self.assertEqual(taskbar.style.font_size_label.minimumWidth(), 47)
             self.assertEqual(taskbar.style.font_size_label.text(), "14 pt")
             self.assertIs(taskbar.style.font_size, root.findChild(QWidget, "taskbar_font_size"))
