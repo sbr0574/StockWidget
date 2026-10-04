@@ -41,10 +41,10 @@ jobs:
       - name: Run unit tests
         env:
           QT_QPA_PLATFORM: offscreen
-        run: python -m unittest discover -s tests -v
+        run: python -m unittest discover -s tests -t . -v
 
       - name: Run X11 integration tests
         env:
           QT_QPA_PLATFORM: xcb
           STOCKWIDGET_TEST_X11: "1"
-        run: xvfb-run -a python -m unittest tests.test_x11_integration -v
+        run: xvfb-run -a python -m unittest tests.native.test_x11_integration -v

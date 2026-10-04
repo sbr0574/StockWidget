@@ -12,7 +12,7 @@ Linux 的关键差异在于 X11 与 Wayland：
 - 窗口整体透明度：仅 X11 可用；Wayland 平台插件不支持设置窗口透明度。
 - 开机自启：两者皆可用（XDG autostart .desktop，桌面环境层面实现）。
 - 窗口拖动：Wayland 需用 QWindow.startSystemMove() 由合成器接管；X11 可直接 move()。
-- 强制置顶：仅 Windows 支持（轮询 raise_）；Linux 上 raise_() 受窗口管理器限制不可靠，
+- 强制置顶：仅 Windows 支持（轮询 SetWindowPos，不激活窗口）；Linux 上 raise_() 受窗口管理器限制不可靠，
   macOS 上轮询 raise_() 会不断抢焦点，故这两个平台禁用该选项。
   （macOS 浮窗置顶由 WidgetPanel 的 Qt.WA_MacAlwaysShowToolWindow 属性保证。）
 

@@ -19,9 +19,11 @@ from stockwidget.core.config_store import load_file, save_file
 from stockwidget.data.code_lists import CODES_RETRY_SECONDS, CodeListManager
 from stockwidget.data.update_check import get_update_info
 from stockwidget.platform.autostart import set_start_on_boot
-from stockwidget.ui.settings_dialog import SettingsDialog
-from stockwidget.ui.tray import TrayIcon
-from stockwidget.ui.widget import FloatLabel
+from stockwidget.ui.settings.dialog import SettingsDialog
+from stockwidget.ui.controls.style import ApplicationTheme
+from stockwidget.ui.menus import TrayIcon
+from stockwidget.ui.floating.widget import FloatLabel
+from stockwidget.ui.floating.taskbar import TaskbarController
 
 
 def _load_custom_icon(path) -> tuple[str, QIcon]:
@@ -86,6 +88,7 @@ class App(QApplication):
 
         self.setQuitOnLastWindowClosed(False)
         cfg = load_file(CONFIG_FILE)
+        self.theme = ApplicationTheme(self)
 
         # 加载图标
         self._icon_choice = cfg.get('app_icon')
@@ -103,25 +106,29 @@ class App(QApplication):
         self.set_start_on_boot(self._start_on_boot)  # 应用配置中的开机自启
         self.win.set_on_change(self.save_now)
         self.win.set_open_settings_callback(self.open_settings)
+        self.win.set_quit_callback(self.quit_app)
 
-        # 初始化托盘（菜单与点击行为封装在 ui/tray.py，按平台区分）
+        # 初始化托盘（菜单与点击行为封装在 ui/menus.py，按平台区分）
         self.tray = TrayIcon(
             app_icon,
             APP_NAME,
             on_toggle=self.toggle_win,
             on_open_settings=self.open_settings,
             on_quit=self.quit_app,
-            on_click_through=self.win.set_click_through,
-            click_through_getter=lambda: self.win.click_through,
+            source=self.win,
         )
-        self.tray.show()
+        self.win.view_options_changed.connect(self._sync_application_options)
+        self._sync_application_options()
 
         # 启动浮窗
         self.settings_dlg = None
-        self.win.show()
-        self.win.raise_()
-        self.win.activateWindow()
-        self.win.setFocus(Qt.ActiveWindowFocusReason)
+        self.taskbar = TaskbarController(self.win, self.open_settings, self)
+        self.aboutToQuit.connect(self.taskbar.close)
+        self.taskbar.apply_mode()
+        if self.win.isVisible():
+            self.win.raise_()
+            self.win.activateWindow()
+            self.win.setFocus(Qt.ActiveWindowFocusReason)
 
         # 应用更新检查和市场代码刷新分别在后台执行，避免网络请求阻塞界面。
         self._has_update = False
@@ -153,6 +160,11 @@ class App(QApplication):
 
     def toggle_win(self):
         self.win.toggle_win()
+
+    def _sync_application_options(self):
+        options = self.win.view_options
+        self.theme.set_mode(options.color_mode)
+        self.tray.setVisible(not (sys.platform == "win32" and options.hide_tray_icon))
 
     def open_settings(self):
         if self.settings_dlg and self.settings_dlg.isVisible():
