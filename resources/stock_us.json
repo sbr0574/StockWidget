@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-02",
+  "last_update": "2026-10-05",
   "codes": {
     "usa": {
       "code": "a",
@@ -11169,6 +11169,15 @@
       "name_en": "Brinks Company (The) Common Stock",
       "py": "bulinke",
       "abbr": "blk"
+    },
+    "usbcom": {
+      "code": "bcom",
+      "market": "us",
+      "type": "美",
+      "name": "Rareview Bloomberg Commodity Index ETF",
+      "name_en": "Rareview Bloomberg Commodity Index ETF",
+      "py": "",
+      "abbr": ""
     },
     "usbcor": {
       "code": "bcor",
@@ -22861,33 +22870,6 @@
       "py": "kekoukelezhuangping",
       "abbr": "kkklzp"
     },
-    "uscola": {
-      "code": "cola",
-      "market": "us",
-      "type": "美",
-      "name": "Columbus Acquisition Corp - Ordinary Shares",
-      "name_en": "Columbus Acquisition Corp - Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "uscolar": {
-      "code": "colar",
-      "market": "us",
-      "type": "美",
-      "name": "Columbus Acquisition Corp - Rights",
-      "name_en": "Columbus Acquisition Corp - Rights",
-      "py": "",
-      "abbr": ""
-    },
-    "uscolau": {
-      "code": "colau",
-      "market": "us",
-      "type": "美",
-      "name": "Columbus Acquisition Corp - Unit",
-      "name_en": "Columbus Acquisition Corp - Unit",
-      "py": "",
-      "abbr": ""
-    },
     "uscolb": {
       "code": "colb",
       "market": "us",
@@ -30787,6 +30769,15 @@
       "type": "美",
       "name": "Dynex Capital, Inc. 6.900% Series C Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock",
       "name_en": "Dynex Capital, Inc. 6.900% Series C Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usdx_d": {
+      "code": "dx_d",
+      "market": "us",
+      "type": "美",
+      "name": "Dynex Capital, Inc. 9.375% Series D Fixed-Rate Cumulative Redeemable Preferred Stock",
+      "name_en": "Dynex Capital, Inc. 9.375% Series D Fixed-Rate Cumulative Redeemable Preferred Stock",
       "py": "",
       "abbr": ""
     },
@@ -40960,15 +40951,6 @@
       "py": "",
       "abbr": ""
     },
-    "usfsea": {
-      "code": "fsea",
-      "market": "us",
-      "type": "美",
-      "name": "First Seacoast Bancorp, Inc. - Common Stock",
-      "name_en": "First Seacoast Bancorp, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "usfsec": {
       "code": "fsec",
       "market": "us",
@@ -43740,15 +43722,6 @@
       "name_en": "Guardforce AI Co., Limited - Ordinary Shares",
       "py": "weianzhineng",
       "abbr": "wazn"
-    },
-    "usgfaiw": {
-      "code": "gfaiw",
-      "market": "us",
-      "type": "美",
-      "name": "卫安智能(权证)",
-      "name_en": "Guardforce AI Co., Limited - Warrant",
-      "py": "weianzhineng(quanzheng)",
-      "abbr": "wazn(qz)"
     },
     "usgfeb": {
       "code": "gfeb",
@@ -68356,6 +68329,15 @@
       "py": "",
       "abbr": ""
     },
+    "usmn": {
+      "code": "mn",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi MANGOS ETF",
+      "name_en": "Corgi MANGOS ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usmna": {
       "code": "mna",
       "market": "us",
@@ -74485,12 +74467,21 @@
       "py": "napukeanquanjishu",
       "abbr": "npkaqjs"
     },
-    "usnsts": {
-      "code": "nsts",
+    "usnstr": {
+      "code": "nstr",
       "market": "us",
       "type": "美",
-      "name": "NSTS Bancorp, Inc. - Common Stock",
-      "name_en": "NSTS Bancorp, Inc. - Common Stock",
+      "name": "NorthStar Earth & Space Enterprises, Inc. Common Shares",
+      "name_en": "NorthStar Earth & Space Enterprises, Inc. Common Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "usnstr_ws": {
+      "code": "nstr_ws",
+      "market": "us",
+      "type": "美",
+      "name": "NorthStar Earth & Space Enterprises, Inc. Warrants",
+      "name_en": "NorthStar Earth & Space Enterprises, Inc. Warrants",
       "py": "",
       "abbr": ""
     },
@@ -85271,8 +85262,8 @@
       "code": "pusa",
       "market": "us",
       "type": "美",
-      "name": "Aureus Greenway Holdings Inc. - Common Stock",
-      "name_en": "Aureus Greenway Holdings Inc. - Common Stock",
+      "name": "Powerus Corporation - Common Stock",
+      "name_en": "Powerus Corporation - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -92275,6 +92266,15 @@
       "type": "美",
       "name": "SailPoint, Inc. - Common Stock",
       "name_en": "SailPoint, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "ussaiq": {
+      "code": "saiq",
+      "market": "us",
+      "type": "美",
+      "name": "WISeSat.Space Holdings Corp. - Ordinary Shares",
+      "name_en": "WISeSat.Space Holdings Corp. - Ordinary Shares",
       "py": "",
       "abbr": ""
     },
@@ -103420,15 +103420,6 @@
       "py": "",
       "abbr": ""
     },
-    "usthrmv": {
-      "code": "thrmv",
-      "market": "us",
-      "type": "美",
-      "name": "Gentherm Inc - Gentherm Inc Common Stock When-Issued",
-      "name_en": "Gentherm Inc - Gentherm Inc Common Stock When-Issued",
-      "py": "",
-      "abbr": ""
-    },
     "usthro": {
       "code": "thro",
       "market": "us",
@@ -109926,33 +109917,6 @@
       "name_en": "Marriott Vacations Worldwide Corporation Common Stock",
       "py": "wanhaodujiahuanqiu",
       "abbr": "whdjhq"
-    },
-    "usvaci": {
-      "code": "vaci",
-      "market": "us",
-      "type": "美",
-      "name": "Viking Acquisition Corp. I Class A Ordinary Shares",
-      "name_en": "Viking Acquisition Corp. I Class A Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usvaci_u": {
-      "code": "vaci_u",
-      "market": "us",
-      "type": "美",
-      "name": "Viking Acquisition Corp. I Units, each consisting of one Class A ordinary share and one-third of one Warrant",
-      "name_en": "Viking Acquisition Corp. I Units, each consisting of one Class A ordinary share and one-third of one Warrant",
-      "py": "",
-      "abbr": ""
-    },
-    "usvaci_ws": {
-      "code": "vaci_ws",
-      "market": "us",
-      "type": "美",
-      "name": "Viking Acquisition Corp. I Warrants to purchase one Class A Ordinary Share",
-      "name_en": "Viking Acquisition Corp. I Warrants to purchase one Class A Ordinary Share",
-      "py": "",
-      "abbr": ""
     },
     "usvai": {
       "code": "vai",
