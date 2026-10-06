@@ -178,10 +178,12 @@ def merge_quote(bars, instrument, view, quote, previous=None, *, gaps=False):
                 amount = max(old_amount, total_amount - sum(bar.amount for bar in prefix))
             elif same_minute:
                 amount = old_amount + max(0, total_amount - _number(previous.get("deals_amt"), 0))
-        average = total_amount / total_volume if total_volume and total_amount and instrument.get("type") != "期" else None
+        # Index turnover/volume is the components' price, not index points.
+        index = instrument.get("type") == "指"
+        average = total_amount / total_volume if total_volume and total_amount and instrument.get("type") not in {"期", "指"} else None
         bar = Bar(key, old.open if old else price, max(old.high, price) if old else price,
                   min(old.low, price) if old else price, price, volume, amount,
-                  average or (old.average if old else None))
+                  None if index else average or (old.average if old else None))
     merged = (*bars[:-1], bar) if old else (*bars, bar)
     return select_bars(merged, "daily" if daily else "five_day", instrument)
 
@@ -196,6 +198,30 @@ class HistorySeries:
         self.repair_needed = False
         self.retry_after = 0
         self._quote = None
+
+    @property
+    def reference_price(self):
+        """Latest plotted session's previous close, never a guessed opening."""
+        if not self.result.bars:
+            return None
+        day = trading_date(self.result.bars[-1], self.instrument)
+        clock = quote_clock(self._quote, self.instrument) if self._quote else None
+        if clock and trading_date(Bar(clock.isoformat(), 0, 0, 0, 0), self.instrument) == day:
+            previous = _number(self._quote.get("prev_close"), 0)
+            if previous > 0:
+                return previous
+        previous = next((bar for bar in reversed(self.result.bars)
+                         if trading_date(bar, self.instrument) < day), None)
+        if previous and previous.close > 0:
+            if len(previous.time) == 10:
+                return previous.close
+            market = self.instrument.get("market")
+            closing = 960 if market in {"us", "hk"} else 900 if market in {"sh", "sz", "bj"} else None
+            stamp = datetime.fromisoformat(previous.time)
+            if (self.instrument.get("type") != "期" and closing
+                    and stamp.hour * 60 + stamp.minute in {closing - 1, closing}):
+                return previous.close
+        return None
 
     def needs_download(self, now):
         if self.loaded_day is not None and self.loaded_day != history_day(self.instrument, now):
@@ -294,7 +320,7 @@ def parse_eastmoney(payload, *, daily=False, instrument=None):
             if (instrument or {}).get("market") in {"sh", "sz", "bj"} and (instrument or {}).get("type") != "期":
                 volume *= 100  # Eastmoney history uses lots; quotes use shares.
             bars.append(make_bar(stamp, parts[1], parts[3], parts[4], parts[2],
-                                 volume, parts[6], None if daily else parts[7]))
+                                 volume, parts[6], None if daily or (instrument or {}).get("type") == "指" else parts[7]))
         except (ValueError, TypeError, IndexError, AttributeError):
             continue
     return _ordered(bars)

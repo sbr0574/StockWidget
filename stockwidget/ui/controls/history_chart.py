@@ -1,10 +1,12 @@
 """History plotting with QtGui only; no extra charting/runtime dependency."""
 
+import math
+
 from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QWidget, QToolTip
 
-from stockwidget.core.quote_presentation import price_precision
+from stockwidget.core.quote_presentation import format_value, price_precision, should_use_english_units, volume_lot_size
 from stockwidget.data.bars import MA_PERIODS, moving_average, trading_date
 
 
@@ -22,14 +24,19 @@ class HistoryChart(QWidget):
         self.show_average = self.show_volume = True
         self.view = "intraday"
         self.instrument = {}
+        self.unit_mode = "auto"
+        self.reference_price = None
         self.up_color, self.down_color = QColor("#ff4444"), QColor("#00b060")
         self._hover = None
         self._plot = QRectF()
+        self._volume_plot = QRectF()
+        self._reference_y = None
 
-    def set_data(self, bars, view, instrument):
+    def set_data(self, bars, view, instrument, *, reference_price=None):
         self.view, self.instrument = view, instrument
         self.bars = tuple(bars[-30:] if view == "daily" else bars)
         self.averages = {period: moving_average(bars, period)[-30:] for period in MA_PERIODS} if view == "daily" else {}
+        self.reference_price = reference_price if reference_price and math.isfinite(reference_price) and reference_price > 0 else None
         self._hover = None
         self.update()
 
@@ -37,57 +44,105 @@ class HistoryChart(QWidget):
         self.periods = set(periods)
         self.update()
 
-    def set_options(self, periods, average, volume):
+    def set_options(self, periods, average, volume, unit_mode="auto"):
         self.show_average, self.show_volume = average, volume
+        self.unit_mode = unit_mode
         self.set_periods(periods)
 
     def _price(self, value):
         precision = price_precision(self.instrument.get("type"), self.instrument.get("market", ""))
         return f"{value:.{precision}f}"
 
+    def _average(self, bar):
+        # Also ignore index averages stored by older versions of the cache.
+        return bar.average if self.instrument.get("type") != "指" and bar.average and bar.average > 0 else None
+
+    def _volume(self, value):
+        market, security_type = self.instrument.get("market", ""), self.instrument.get("type")
+        lot = volume_lot_size(security_type, market)
+        unit = "手" if lot == 100 else "合约" if security_type == "期" else "股"
+        return format_value(value, lot, not should_use_english_units(self.unit_mode, market)) + unit
+
+    def _percent(self, price):
+        change = (price / self.reference_price - 1) * 100
+        return "0%" if abs(change) < .005 else f"{change:+.2f}%"
+
+    def price_range(self):
+        values = [price for bar in self.bars for price in ((bar.low, bar.high) if self.view == "daily" else (bar.close,))]
+        if self.view == "daily":
+            values += [value for period in self.periods for value in self.averages[period] if value is not None]
+        else:
+            if self.show_average:
+                values += [value for bar in self.bars if (value := self._average(bar)) is not None]
+            if self.reference_price:
+                values.append(self.reference_price)
+        low, high = min(values), max(values)
+        padding = max((high - low) * .08, abs(high) * .002, .001)
+        return (max(0, low - padding) if low > 0 else low - padding), high + padding
+
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         palette = self.palette()
         painter.fillRect(self.rect(), palette.base())
+        self._reference_y = None
         if not self.bars:
             painter.setPen(palette.text().color())
             painter.drawText(self.rect(), Qt.AlignCenter, "暂无可用历史数据")
             return
-        values = [price for bar in self.bars for price in ((bar.low, bar.high) if self.view == "daily" else (bar.close,))]
-        if self.view == "daily":
-            values += [value for period in self.periods for value in self.averages[period] if value is not None]
-        elif self.show_average:
-            values += [bar.average for bar in self.bars if bar.average is not None and bar.average > 0]
-        low, high = min(values), max(values)
-        padding = max((high - low) * .08, abs(high) * .002, .001)
-        low, high = low - padding, high + padding
-        left = max(48, max(self.fontMetrics().horizontalAdvance(self._price(price)) for price in (low, high)) + 8)
+        low, high = self.price_range()
+        reference = self.reference_price if self.view != "daily" else None
+        max_volume = max(bar.volume for bar in self.bars)
+        labels = [self._price(price) for price in (low, high)]
+        if self.show_volume:
+            labels.append(self._volume(max_volume))
+        left = max(48, max(self.fontMetrics().horizontalAdvance(label) for label in labels) + 8)
+        right = (max(self.fontMetrics().horizontalAdvance(self._percent(price))
+                     for price in (low, high, reference)) + 8 if reference else 12)
+        label_height = self.fontMetrics().height() + 4
+        volume_gap = label_height + 4
         height = max(1, self.height() - 44)
-        plot = self._plot = QRectF(left, 12, max(1, self.width() - left - 12),
-                                  height * .68 if self.show_volume else height)
-        volume_rect = QRectF(plot.left(), plot.bottom() + 16, plot.width(),
-                             max(1, self.height() - plot.bottom() - 48))
+        volume_height = min(height / 2, max(28, height * .25)) if self.show_volume else 0
+        plot = self._plot = QRectF(left, 12, max(1, self.width() - left - right),
+                                  max(1, height - volume_height - volume_gap) if self.show_volume else height)
+        volume_rect = self._volume_plot = QRectF(plot.left(), plot.bottom() + volume_gap, plot.width(), volume_height)
         step = plot.width() / len(self.bars)
         x_at = lambda i: plot.left() + step * (i + .5)
         y_at = lambda price: plot.bottom() - (price - low) / (high - low) * plot.height()
         text_color = palette.text().color()
         grid_color = palette.mid().color()
         grid_color.setAlpha(80)
-        painter.setPen(QPen(grid_color, 1))
-        ticks = 3 if plot.height() < 100 else 5
-        for i in range(ticks):
-            y = plot.top() + plot.height() * i / (ticks - 1)
-            painter.drawLine(QPointF(plot.left(), y), QPointF(plot.right(), y))
+        reference_y = self._reference_y = y_at(reference) if reference else None
+
+        def axis_label(price, y):
             painter.setPen(text_color)
-            painter.drawText(QRectF(0, y - 10, left - 8, 20), Qt.AlignRight | Qt.AlignVCenter,
-                             self._price(high - (high - low) * i / (ticks - 1)))
+            painter.drawText(QRectF(0, y - label_height / 2, left - 8, label_height),
+                             Qt.AlignRight | Qt.AlignVCenter, self._price(price))
+            if reference:
+                painter.drawText(QRectF(plot.right() + 4, y - label_height / 2, right - 4, label_height),
+                                 Qt.AlignLeft | Qt.AlignVCenter, self._percent(price))
+
+        painter.setPen(QPen(grid_color, 1))
+        ticks = min(5, int(plot.height() / (label_height + 4)) + 1)
+        for i in range(ticks):
+            fraction = i / (ticks - 1) if ticks > 1 else .5
+            y = plot.top() + plot.height() * fraction
+            if reference_y is not None and abs(y - reference_y) < label_height:
+                continue
+            painter.drawLine(QPointF(plot.left(), y), QPointF(plot.right(), y))
+            axis_label(high - (high - low) * fraction, y)
             painter.setPen(QPen(grid_color, 1))
         dates = [trading_date(bar, self.instrument) for bar in self.bars]
         for i in range(1, len(dates)):
             if dates[i] != dates[i - 1] and self.view != "daily":
                 painter.drawLine(QPointF(x_at(i) - step / 2, plot.top()),
                                  QPointF(x_at(i) - step / 2, volume_rect.bottom() if self.show_volume else plot.bottom()))
+        if reference_y is not None:
+            zero_color = QColor(text_color)
+            zero_color.setAlpha(150)
+            painter.setPen(QPen(zero_color, 1, Qt.DashLine))
+            painter.drawLine(QPointF(plot.left(), reference_y), QPointF(plot.right(), reference_y))
+            axis_label(reference, reference_y)
         if self.view == "daily":
             for i, bar in enumerate(self.bars):
                 color = self.up_color if bar.close >= bar.open else self.down_color
@@ -102,16 +157,27 @@ class HistoryChart(QWidget):
         else:
             self._line(painter, [bar.close for bar in self.bars], x_at, y_at, palette.highlight().color(), dates)
             if self.show_average:
-                self._line(painter, [bar.average if bar.average and bar.average > 0 else None for bar in self.bars],
+                self._line(painter, [self._average(bar) for bar in self.bars],
                            x_at, y_at, QColor(MA_COLORS[0]), dates)
         painter.setPen(text_color)
         if self.show_volume:
-            max_volume = max(1, max(bar.volume for bar in self.bars))
+            separator = QColor(text_color)
+            separator.setAlpha(110)
+            painter.setPen(QPen(separator, 1))
+            separator_y = (plot.bottom() + volume_rect.top()) / 2
+            painter.drawLine(QPointF(0, separator_y), QPointF(self.width(), separator_y))
+            painter.drawLine(volume_rect.bottomLeft(), volume_rect.bottomRight())
+            scale_volume = max(1, max_volume)
             for i, bar in enumerate(self.bars):
                 color = self.up_color if bar.close >= bar.open else self.down_color
-                painter.fillRect(QRectF(x_at(i) - step * .3, volume_rect.bottom() - bar.volume / max_volume * volume_rect.height(),
-                                       max(1, step * .6), bar.volume / max_volume * volume_rect.height()), color)
-            painter.drawText(QRectF(0, volume_rect.top(), left - 8, 20), Qt.AlignRight, "成交量")
+                painter.fillRect(QRectF(x_at(i) - step * .3, volume_rect.bottom() - bar.volume / scale_volume * volume_rect.height(),
+                                       max(1, step * .6), bar.volume / scale_volume * volume_rect.height()), color)
+            painter.setPen(text_color)
+            painter.drawText(QRectF(0, volume_rect.top(), left - 8, label_height), Qt.AlignRight, self._volume(max_volume))
+            if volume_rect.height() >= label_height * 2 + 4:
+                painter.drawText(QRectF(0, volume_rect.bottom() - label_height, left - 8, label_height),
+                                 Qt.AlignRight | Qt.AlignBottom, "0")
+        painter.setPen(text_color)
         for rect, label in self._time_labels():
             painter.drawText(rect, Qt.AlignCenter, label)
         if self._hover is not None:
@@ -174,9 +240,9 @@ class HistoryChart(QWidget):
         text = (f"{bar.time}\n开 {self._price(bar.open)}  高 {self._price(bar.high)}  "
                 f"低 {self._price(bar.low)}  收 {self._price(bar.close)}")
         if self.show_volume:
-            text += f"\n成交量 {bar.volume:g}"
-        if self.view != "daily" and self.show_average and bar.average is not None:
-            text += f"\n均价 {self._price(bar.average)}"
+            text += f"\n成交量 {self._volume(bar.volume)}"
+        if self.view != "daily" and self.show_average and (average := self._average(bar)) is not None:
+            text += f"\n均价 {self._price(average)}"
         for period in sorted(self.periods):
             value = self.averages.get(period, [])[i] if self.view == "daily" else None
             if value is not None:

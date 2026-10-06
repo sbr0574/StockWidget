@@ -1,5 +1,6 @@
 """History parsing, source preference, full-window MAs and cache boundaries."""
 
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
@@ -262,6 +263,46 @@ class LiveHistoryTests(unittest.TestCase):
                       "opening_price": 10, "high_price": 12, "low_price": 9,
                       "deals_vol": 120, "deals_amt": 1320}
         self.minute = Bar("2026-09-30 09:31:00", 10, 11, 9, 10, 100, 1000, 10)
+
+    def test_index_turnover_is_not_an_average_in_index_points(self):
+        for market, code, price in (("sh", "000001", 3842), ("sz", "399001", 12887), ("sz", "399006", 3135)):
+            with self.subTest(code=code):
+                instrument = {"market": market, "code": code, "type": "指"}
+                # Old caches can contain a component-price average near 15.
+                minute = replace(self.minute, open=price, high=price, low=price, close=price, average=15)
+                quote = {**self.quote, "opening_price": price, "current_price": price,
+                         "deals_vol": 100, "deals_amt": 1500}
+                self.assertIsNone(merge_quote((minute,), instrument, "intraday", quote)[-1].average)
+                payload = {"data": {"trends": [f"2026-09-30 09:31,{price},{price},{price},{price},1,1500,15"]}}
+                self.assertIsNone(parse_eastmoney(payload, instrument=instrument)[0].average)
+
+    def test_zero_change_uses_latest_session_previous_close_without_guessing(self):
+        cases = ((A_SHARE, "2026-09-29 15:00:00"),
+                 ({"market": "hk", "code": "00700", "type": "港"}, "2026-09-29 16:00:00"),
+                 ({"market": "us", "code": "aapl", "type": "美"}, "2026-09-29 15:59:00"))
+        for instrument, previous_time in cases:
+            with self.subTest(market=instrument["market"]):
+                previous = replace(self.minute, time=previous_time, close=9)
+                # Five-day reference belongs to its newest day, not the first day's open.
+                first = replace(self.minute, time="2026-09-28 09:31:00", open=7, close=7)
+                series = HistorySeries(instrument, "five_day")
+                series.set_history(BarResult((first, previous, self.minute), "sina"), "2026-09-30", self.now)
+                self.assertEqual(series.reference_price, 9)
+        series = HistorySeries(A_SHARE, "intraday")
+        previous = replace(self.minute, time="2026-09-29 15:00:00", close=9)
+        series.set_history(BarResult((previous, self.minute), "sina"), "2026-09-30", self.now)
+        series.update_quote({**self.quote, "prev_close": 8.5})
+        self.assertEqual(series.reference_price, 8.5)
+        series.update_quote({**self.quote, "time": "09:30:00", "prev_close": 5})
+        self.assertEqual(series.reference_price, 8.5)  # Rejected old quote cannot change zero.
+        for previous_close in (0, float("nan"), float("inf")):
+            series.update_quote({**self.quote, "prev_close": previous_close})
+            self.assertEqual(series.reference_price, 9)
+        for bars in ((self.minute,), (replace(previous, time="2026-09-29 09:31:00"), self.minute), ()):
+            with self.subTest(bars=bars):
+                series = HistorySeries(A_SHARE, "five_day")
+                series.set_history(BarResult(bars, "sina"), "2026-09-30", self.now)
+                self.assertIsNone(series.reference_price)
 
     def test_current_minute_updates_then_appends_without_downloading(self):
         series = HistorySeries(A_SHARE, "intraday")

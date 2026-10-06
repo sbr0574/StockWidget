@@ -102,7 +102,7 @@ class HistoryUITests(HistoryTestCase):
         for mode in ("large", "medium", "small"):
             combo = dialog.ui.cmb_chart_display_mode
             combo.setCurrentIndex(combo.findData(mode))
-            self.app.processEvents()
+            self.wait_until(lambda: popup.rect().contains(popup.chart.geometry()))
             sizes.append(popup.size())
             self.assertEqual(popup.view, "daily")
             self.assertFalse(popup.chart.show_average)
@@ -215,18 +215,86 @@ class HistoryUITests(HistoryTestCase):
         from shiboken6 import delete
         chart = HistoryChart()
         try:
-            bars = tuple(replace(bar, open=10.1, high=12.1234, low=9.1, close=11.1234) for bar in sample_bars())
-            for market, type_, expected in (("sh", "沪", "11.12"), ("sz", "基", "11.123"), ("us", "美", "11.123")):
+            bars = tuple(replace(bar, open=10.1, high=12.1234, low=9.1, close=11.1234, volume=2_000_000)
+                         for bar in sample_bars())
+            for market, type_, expected, unit_mode, volume in (
+                    ("sh", "沪", "11.12", "cn", "2.00万手"),
+                    ("sz", "基", "11.123", "en", "20.00k手"),
+                    ("us", "美", "11.123", "auto", "2.00M股"),
+                    ("hk", "港", "11.12", "cn", "200.00万股"),
+                    ("", "期", "11.12", "en", "2.00M合约")):
+                chart.set_options([5, 10, 20, 30, 60], True, True, unit_mode)
                 chart.set_data(bars, "daily", {"market": market, "type": type_})
                 text = chart.tooltip_text(29)
                 self.assertIn(f"收 {expected}", text)
                 self.assertIn(f"MA60: {expected}", text)
+                self.assertIn(f"成交量 {volume}", text)
                 chart.set_options([], False, False)
                 self.assertNotIn("MA60", chart.tooltip_text(29))
                 self.assertNotIn("成交量", chart.tooltip_text(29))
                 chart.set_options([5, 10, 20, 30, 60], True, True)
         finally:
             delete(chart)
+
+    def test_index_zero_axis_and_volume_separator_in_compact_charts(self):
+        from shiboken6 import delete
+
+        chart = HistoryChart()
+        try:
+            chart.setMinimumSize(220, 110)
+            for market, code, price in (("sh", "000001", 3842), ("sz", "399001", 12887), ("sz", "399006", 3135)):
+                instrument = {"market": market, "code": code, "type": "指"}
+                bars = (Bar("2026-09-29 15:00:00", price, price, price, price, 100, 1500, 15),
+                        Bar("2026-09-30 09:31:00", price, price + 2, price, price + 2, 150, 2250, 15))
+                for view in ("intraday", "five_day"):
+                    for width, height in ((220, 110), (308, 154), (408, 224), (548, 324)):
+                        with self.subTest(code=code, view=view, size=(width, height)):
+                            chart.resize(width, height)
+                            chart.set_data(bars[-1:] if view == "intraday" else bars, view, instrument,
+                                           reference_price=price)
+                            image = chart.grab().toImage()
+                            low, high = chart.price_range()
+                            self.assertGreater(low, price * .98)
+                            self.assertLess(high, price * 1.02)
+                            self.assertTrue(chart._plot.top() < chart._reference_y < chart._plot.bottom())
+                            self.assertNotIn("均价", chart.tooltip_text(0))
+                            # The separator extends into the otherwise empty axis margin.
+                            scale = image.devicePixelRatio()
+                            y = round((chart._plot.bottom() + chart._volume_plot.top()) / 2 * scale)
+                            background = chart.palette().color(QPalette.Base)
+                            self.assertTrue(any(image.pixelColor(round(2 * scale), row) != background
+                                                for row in range(y - 1, y + 2)))
+            chart.set_options([], True, False)
+            chart.grab()
+            self.assertTrue(chart._volume_plot.isEmpty())
+            self.assertIsNotNone(chart._reference_y)
+            chart.set_data(sample_bars(), "daily", instrument, reference_price=price)
+            chart.grab()
+            self.assertIsNone(chart._reference_y)
+        finally:
+            delete(chart)
+
+    def test_volume_units_update_from_settings_without_fetch_and_normal_footer_is_hidden(self):
+        dialog, window = self.make_window(chart_enabled=True, unit_mode="cn")
+        history = window.history
+        minutes = history.cache.get.side_effect({}, "five_day", "sina").bars
+        history.cache.get.side_effect = None
+        history.cache.get.return_value = BarResult((replace(minutes[0], volume=2_000_000), *minutes[1:]), "sina")
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = history.dialog
+        self.assertTrue(popup.status.isHidden())
+        self.assertEqual(popup.chart.reference_price, 9)
+        for mode, volume in (("cn", "2.00万手"), ("en", "20.00k手"), ("auto", "2.00万手")):
+            with self.subTest(mode=mode):
+                dialog.ui.cmb_unit_mode.setCurrentIndex(dialog.ui.cmb_unit_mode.findData(mode))
+                self.assertIn(f"成交量 {volume}", popup.chart.tooltip_text(0))
+                self.assertEqual(history.cache.get.call_count, 1)
+        series = next(iter(history._series.values()))
+        series.result = replace(series.result, stale=True, message="历史数据更新失败")
+        history.reload()
+        self.assertFalse(popup.status.isHidden())
+        self.assertIn("更新失败", popup.status.toolTip())
 
     def test_compact_chart_time_labels_keep_endpoints_without_overlap(self):
         from shiboken6 import delete
@@ -276,7 +344,7 @@ class HistoryUITests(HistoryTestCase):
         self.assertEqual(len(popup.chart.bars), 30)
         combo.setCurrentIndex(combo.findData("large"))
         self.wait_ready(window)
-        self.assertIs(QApplication.activePopupWidget(), popup)
+        self.wait_until(lambda: QApplication.activePopupWidget() is popup)
         dialog.ui.cb_chart_enabled.setChecked(False)
         self.assertFalse(popup.isVisible())
         self.assertFalse(combo.isEnabled())

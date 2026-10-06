@@ -62,6 +62,7 @@ class HistoryDialog(QDialog):
         self.status.setProperty("settingDescription", True)
         self.status.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
         self.status.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.status.hide()
         layout.addWidget(self.status)
         self.display_mode = None
         self.set_display_mode(display_mode)
@@ -112,6 +113,7 @@ class HistoryDialog(QDialog):
 
     def set_status(self, text):
         self._status_text = text
+        self.status.setVisible(bool(text))
         self.status.setToolTip(text)
         self._elide_labels()
 
@@ -144,6 +146,7 @@ class HistoryController(QObject):
         self._series = {}
         self.result_ready.connect(self._accept)
         self.window.view_options_changed.connect(self._options_changed)
+        self.window.display_flags_changed.connect(self._apply_chart_options)
         self.window.quotes.quotes_updated.connect(self._quotes_updated)
         self.click_timer = QTimer(self)
         self.click_timer.setSingleShot(True)
@@ -249,7 +252,7 @@ class HistoryController(QObject):
         if self.dialog:
             options = self.window.view_options
             self.dialog.chart.set_options(options.chart_ma_periods, options.chart_average_enabled,
-                                          options.chart_volume_enabled)
+                                          options.chart_volume_enabled, self.window.unit_mode)
 
     def _closed(self, *_args):
         self._generation += 1
@@ -340,20 +343,12 @@ class HistoryController(QObject):
         result = series.result
         instrument = series.instrument
         bars = select_bars(result.bars, view, instrument)
-        self.dialog.chart.set_data(bars, view, instrument)
+        self.dialog.chart.set_data(bars, view, instrument, reference_price=series.reference_price)
         self._displayed_key = (self._key(instrument, view, preferred), view)
-        provider = {"sina": "新浪", "eastmoney": "东方财富"}.get(result.source, "")
-        pieces = [result.message, provider, "未复权", "跟随行情更新"]
-        if result.source and result.source != preferred:
-            pieces.append("已使用备用数据源")
+        pieces = [result.message]
         if result.stale:
             pieces.append("缓存（更新失败）")
-        elif result.cached:
-            pieces.append("本地缓存")
-        if bars:
-            visible = self.dialog.chart.bars
-            pieces.append(f"{visible[0].time} — {visible[-1].time}")
-            if view == "daily" and len(bars) < 89:
-                pieces.append("历史不足时，部分均线从满足周期处开始显示")
+        if bars and view == "daily" and len(bars) < 89:
+            pieces.append("历史不足时，部分均线从满足周期处开始显示")
         self.dialog.set_status(" · ".join(piece for piece in pieces if piece))
         self._place_floating()
