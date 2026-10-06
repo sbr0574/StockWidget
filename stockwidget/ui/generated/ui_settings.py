@@ -290,6 +290,33 @@ class Ui_SettingDialog(object):
 
         self.dataContentLayout.addWidget(self.gb_data_setting)
 
+        self.chart_enabled_row = QWidget(self.data_content)
+        self.chart_enabled_row.setObjectName(u"chart_enabled_row")
+        self.chart_enabled_layout = QGridLayout(self.chart_enabled_row)
+        self.chart_enabled_layout.setObjectName(u"chart_enabled_layout")
+        self.chart_enabled_layout.setHorizontalSpacing(10)
+        self.chart_enabled_layout.setVerticalSpacing(5)
+        self.chart_enabled_layout.setContentsMargins(0, 0, 0, 0)
+        self.chart_enabled_title = QLabel(self.chart_enabled_row)
+        self.chart_enabled_title.setObjectName(u"chart_enabled_title")
+
+        self.chart_enabled_layout.addWidget(self.chart_enabled_title, 0, 0, 1, 1)
+
+        self.chart_enabled_description = QLabel(self.chart_enabled_row)
+        self.chart_enabled_description.setObjectName(u"chart_enabled_description")
+        self.chart_enabled_description.setMaximumSize(QSize(310, 16777215))
+        self.chart_enabled_description.setWordWrap(True)
+
+        self.chart_enabled_layout.addWidget(self.chart_enabled_description, 1, 0, 1, 1)
+
+        self.cb_chart_enabled = ToggleSwitch(self.chart_enabled_row)
+        self.cb_chart_enabled.setObjectName(u"cb_chart_enabled")
+
+        self.chart_enabled_layout.addWidget(self.cb_chart_enabled, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+
+        self.dataContentLayout.addWidget(self.chart_enabled_row)
+
         self.gb_data = QGroupBox(self.data_content)
         self.gb_data.setObjectName(u"gb_data")
         self.gb_data.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -2776,6 +2803,13 @@ class Ui_SettingDialog(object):
         self.rb_em.setText(QCoreApplication.translate("SettingDialog", u"\u4e1c\u65b9\u8d22\u5bcc", None))
         self.label_interval.setText(QCoreApplication.translate("SettingDialog", u"\u5237\u65b0\u95f4\u9694\uff1a", None))
         self.sb_interval.setSuffix(QCoreApplication.translate("SettingDialog", u" \u79d2", None))
+        self.chart_enabled_title.setText(QCoreApplication.translate("SettingDialog", u"\u70b9\u51fb\u884c\u60c5\u884c\u663e\u793a\u56fe\u8868", None))
+        self.chart_enabled_description.setStyleSheet(QCoreApplication.translate("SettingDialog", u"color: palette(mid);", None))
+        self.chart_enabled_description.setText(QCoreApplication.translate("SettingDialog", u"\u67e5\u770b\u5f53\u65e5 / 5\u65e5\u5206\u65f6\u548c30\u65e5K\u7ebf\uff0c\u6570\u636e\u6e90\u8ddf\u968f\u5f53\u524d\u884c\u60c5\u8bbe\u7f6e\u3002", None))
+#if QT_CONFIG(tooltip)
+        self.cb_chart_enabled.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5f00\u542f\u540e\uff0c\u6d6e\u7a97\u548c\u4efb\u52a1\u680f\u7684\u884c\u60c5\u884c\u5747\u53ef\u5355\u51fb\u6253\u5f00\u56fe\u8868\u3002\u62d6\u52a8\u53ca\u53cc\u51fb\u9690\u85cf\u4fdd\u6301\u539f\u6709\u64cd\u4f5c\uff1b\u5173\u95ed\u540e\u4e0d\u8bf7\u6c42\u6216\u663e\u793a\u56fe\u8868\u3002", None))
+#endif // QT_CONFIG(tooltip)
+        self.cb_chart_enabled.setText(QCoreApplication.translate("SettingDialog", u"\u70b9\u51fb\u884c\u60c5\u884c\u663e\u793a\u56fe\u8868", None))
         self.gb_data.setTitle(QCoreApplication.translate("SettingDialog", u"\u6307\u6807\u663e\u793a", None))
         self.cb_head_title.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u8868\u5934", None))
         self.cb_head_description.setText(QCoreApplication.translate("SettingDialog", u"\u5728\u884c\u60c5\u9876\u90e8\u663e\u793a\u6307\u6807\u540d\u79f0\uff0c\u652f\u6301\u7684\u8868\u5934\u53ef\u5355\u51fb\u6392\u5e8f\u3002", None))

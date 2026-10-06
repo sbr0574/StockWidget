@@ -37,6 +37,7 @@ def taskbar_font_size_limit(height, dpi, rows):
 
 @dataclass
 class ViewOptions:
+    chart_enabled: bool = False
     color_mode: str = "system"
     hide_tray_icon: bool = False
     float_split_enabled: bool = False
@@ -96,7 +97,7 @@ class ViewOptions:
             result.taskbar_font_family = font_family
         if not isinstance(result.taskbar_color, str):
             result.taskbar_color = defaults.taskbar_color
-        for key in ("hide_tray_icon", "float_paging_enabled", "taskbar_enabled", "taskbar_sync_metrics",
+        for key in ("chart_enabled", "hide_tray_icon", "float_paging_enabled", "taskbar_enabled", "taskbar_sync_metrics",
                     "taskbar_sync_appearance", "taskbar_sync_paging", "taskbar_unicolor", "taskbar_auto_color", "taskbar_dual_open",
                     "float_split_enabled", "float_split_separator", "taskbar_sync_split",
                     "taskbar_split_enabled", "taskbar_split_separator"):

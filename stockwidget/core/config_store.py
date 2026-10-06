@@ -17,6 +17,11 @@ def data_cache_dir() -> str:
     return os.path.join(config_paths(), "data")
 
 
+def history_cache_dir() -> str:
+    """History downloads are separate from market-code metadata in data/."""
+    return os.path.join(config_paths(), "cache")
+
+
 def load_file(file_name: str, fallback: dict | None = None, *, directory: str | None = None) -> dict:
     """读取配置文件为 dict；文件不存在或解析失败时返回 fallback（默认 {}）。"""
     fallback = {} if fallback is None else fallback

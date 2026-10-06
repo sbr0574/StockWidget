@@ -36,6 +36,8 @@ class QuotePresenter(QObject):
         self._last_full_rows = []
         self._last_color_roles = []
         self._last_sort_values = []
+        self._last_keys = []
+        self._ordered_keys = []
         self._quote_generation = 0
         self._refresh_thread = None
         self.data_ready.connect(self.accept_result)
@@ -85,6 +87,7 @@ class QuotePresenter(QObject):
                                        descending=self.sort_order == Qt.DescendingOrder)
         self._ordered_rows = [full_rows[i] for i in indices]
         self._ordered_color_roles = [color_roles[i] for i in indices]
+        self._ordered_keys = [self._last_keys[i] if i < len(self._last_keys) else None for i in indices]
         self._project_float_page()
         self._project_taskbar_page()
         self.sync_page_timers()
@@ -100,6 +103,19 @@ class QuotePresenter(QObject):
         mode, _interval = options.page_settings(surface)
         return page_slice(len(self._ordered_rows), limit, mode,
                           getattr(self, f"{surface}_page"))
+
+    def instrument_at(self, surface, row, block=0):
+        """Resolve identity through sorting, independent pages and split columns."""
+        page = self.get_page(surface)
+        ranges = column_ranges(page.stop - page.start, self.window.view_options.split_settings(surface)[0])
+        if not 0 <= block < len(ranges):
+            return None
+        start, stop = ranges[block]
+        if not 0 <= row < stop - start:
+            return None
+        offset = page.start + start + row
+        key = self._ordered_keys[offset] if offset < len(self._ordered_keys) else None
+        return self.window.checked_codes.get(key)
 
     def _project_float_page(self):
         page = self.get_page("float")
@@ -268,6 +284,7 @@ class QuotePresenter(QObject):
         self._last_full_rows = full_rows
         self._last_color_roles = full_color_roles
         self._last_sort_values = sort_values
+        self._last_keys = list(data)
 
         if data:
             self.window._clear_message()

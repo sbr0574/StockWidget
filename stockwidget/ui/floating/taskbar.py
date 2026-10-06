@@ -34,9 +34,11 @@ def taskbar_pager_rect(source, height, dpi):
     return QRect()
 
 
-def render_taskbar(source, height, dpi=96, max_width=480):
+def render_taskbar(source, height, dpi=96, max_width=480, hit_regions=None):
     """Render independent metrics/style at physical taskbar DPI."""
     scale = dpi / 96
+    if hit_regions is not None:
+        hit_regions.clear()
     padding = max(2, round(5 * scale))
     options = source.view_options
     row_height = max(1, (height - 4) // options.taskbar_rows)
@@ -104,6 +106,8 @@ def render_taskbar(source, height, dpi=96, max_width=480):
             for c, width in enumerate(widths):
                 for r in range(start, stop):
                     rect = QRect(x, 2 + (r - start) * row_height, width, row_height)
+                    if hit_regions is not None:
+                        hit_regions.append((rect, r - start, block))
                     index = model.index(r, c)
                     cell = model.data(index, Qt.UserRole)
                     painter.save()
@@ -141,6 +145,7 @@ class TaskbarController(QObject):
         self._native_press = None
         self._dpi = 96
         self._pager_rect = QRect()
+        self._hit_regions = []
         self.timer = QTimer(self)
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.refresh)
@@ -206,7 +211,7 @@ class TaskbarController(QObject):
             max_width = min(round(480 * area.dpi / 96), area.right)
             if max_width < 80 or height < 24:
                 raise OSError("任务栏空间不足，请使用标准高度的横向任务栏")
-            image = render_taskbar(self.source, height, area.dpi, max_width)
+            image = render_taskbar(self.source, height, area.dpi, max_width, self._hit_regions)
             self._pager_rect = taskbar_pager_rect(self.source, height, area.dpi)
             self._dpi = area.dpi
             if self.native is None:
@@ -230,10 +235,14 @@ class TaskbarController(QObject):
                 self.source.show()
 
     def _click(self, x, y):
-        # A single click only operates the arrow controls, never the data.
         delta = pager_hit(self._pager_rect, x, y)
         if delta:
             self.source.quotes.change_page("taskbar", delta)
+            return
+        for rect, row, block in self._hit_regions:
+            if rect.contains(x, y):
+                self.source.history.request_row("taskbar", row, block)
+                break
 
     def _double_click(self, x, y):
         self.source.hide_widget()

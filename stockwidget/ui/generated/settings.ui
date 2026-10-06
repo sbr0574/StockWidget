@@ -748,6 +748,37 @@
             </widget>
            </item>
            <item>
+            <widget class="QWidget" name="chart_enabled_row">
+             <layout class="QGridLayout" name="chart_enabled_layout">
+              <property name="leftMargin"><number>0</number></property>
+              <property name="topMargin"><number>0</number></property>
+              <property name="rightMargin"><number>0</number></property>
+              <property name="bottomMargin"><number>0</number></property>
+              <property name="horizontalSpacing"><number>10</number></property>
+              <property name="verticalSpacing"><number>5</number></property>
+              <item row="0" column="0">
+               <widget class="QLabel" name="chart_enabled_title">
+                <property name="text"><string>点击行情行显示图表</string></property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="chart_enabled_description">
+                <property name="maximumSize"><size><width>310</width><height>16777215</height></size></property>
+                <property name="styleSheet"><string>color: palette(mid);</string></property>
+                <property name="text"><string>查看当日 / 5日分时和30日K线，数据源跟随当前行情设置。</string></property>
+                <property name="wordWrap"><bool>true</bool></property>
+               </widget>
+              </item>
+              <item row="0" column="1" rowspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
+               <widget class="ToggleSwitch" name="cb_chart_enabled">
+                <property name="toolTip"><string>开启后，浮窗和任务栏的行情行均可单击打开图表。拖动及双击隐藏保持原有操作；关闭后不请求或显示图表。</string></property>
+                <property name="text"><string>点击行情行显示图表</string></property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
             <widget class="QGroupBox" name="gb_data">
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignLeft</set>
