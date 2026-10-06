@@ -5,6 +5,8 @@ import os
 import unittest
 
 from stockwidget.core.window_rules import (
+    adjacent_popup_position,
+    adjacent_popup_size,
     best_screen,
     clamp_point,
     resolve_restore_position,
@@ -67,6 +69,39 @@ class BestScreenTests(unittest.TestCase):
         upper = (0, -1080, 1920, 1080)
         self.assertEqual(best_screen(200, -100, 200, 150, [PRIMARY, upper]), upper)
         self.assertIsNone(best_screen(0, 0, 200, 100, []))
+
+
+class AdjacentPopupTests(unittest.TestCase):
+    def test_small_screen_shrinks_popup_to_fit_beside_quotes(self):
+        self.assertEqual(adjacent_popup_size((30, 30, 167, 138), (0, 0, 640, 376),
+                                             (560, 400), (400, 300)), (435, 376))
+        self.assertEqual(adjacent_popup_size((100, 100, 200, 100), PRIMARY,
+                                             (560, 400), (400, 300)), (560, 400))
+        self.assertEqual(adjacent_popup_size((0, 0, 640, 360), (0, 0, 640, 360),
+                                             (560, 400), (400, 300)), (560, 360))
+
+    def test_changes_sides_and_clamps_without_covering_anchor(self):
+        cases = (
+            ((100, 100, 200, 100), PRIMARY, (308, 100)),
+            ((1700, 900, 200, 100), PRIMARY, (1132, 680)),
+            ((300, 100, 200, 100), (0, 0, 800, 800), (240, 208)),
+            ((300, 600, 200, 100), (0, 0, 800, 800), (240, 192)),
+            ((-1700, 100, 200, 100), SECONDARY, (-1492, 100)),
+        )
+        for anchor, bounds, expected in cases:
+            with self.subTest(anchor=anchor, bounds=bounds):
+                self.assertEqual(adjacent_popup_position(anchor, bounds, 560, 400), expected)
+
+    def test_taskbar_prefers_above_and_stays_on_screen_near_right_edge(self):
+        self.assertEqual(adjacent_popup_position((1890, 1060, 1, 1), (0, 0, 1920, 1040),
+                                                 560, 400, prefer_above=True), (1360, 640))
+        self.assertEqual(adjacent_popup_position((100, 0, 1, 1), PRIMARY,
+                                                 560, 400, prefer_above=True), (100, 9))
+
+    def test_no_space_and_offscreen_anchor_keep_popup_accessible(self):
+        self.assertEqual(adjacent_popup_position((0, 0, 800, 800), (0, 0, 800, 800), 560, 400), (240, 0))
+        x, y = adjacent_popup_position((5000, 5000, 200, 100), PRIMARY, 560, 400)
+        self.assertTrue(0 <= x <= 1360 and 0 <= y <= 680)
 
 
 class ResolveRestorePositionTests(unittest.TestCase):

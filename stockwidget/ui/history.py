@@ -1,10 +1,14 @@
-"""Nonmodal history dialog and bounded asynchronous request lifecycle."""
+"""Shared history window/popup and bounded asynchronous request lifecycle."""
 
 import threading
 
-from PySide6.QtCore import QObject, Qt, QTimer, Signal
-from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox, QDialog, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
+from PySide6.QtCore import QObject, QPoint, QRect, QSize, Qt, QTimer, Signal
+from PySide6.QtGui import QCursor
+from PySide6.QtWidgets import (
+    QApplication, QCheckBox, QComboBox, QDialog, QHBoxLayout, QLabel, QPushButton, QToolTip, QVBoxLayout, QWidget,
+)
 
+from stockwidget.core.window_rules import adjacent_popup_position, adjacent_popup_size, best_screen
 from stockwidget.data.bar_cache import BarCache
 from stockwidget.data.bars import BarResult, MA_PERIODS
 from stockwidget.ui.controls.history_chart import HistoryChart, MA_COLORS
@@ -14,13 +18,25 @@ from stockwidget.ui.controls.style import build_settings_stylesheet, is_dark_the
 class HistoryDialog(QDialog):
     view_changed = Signal()
     refresh_requested = Signal()
+    dismissed = Signal()
 
-    def __init__(self, parent):
+    def __init__(self, parent, display_mode="window"):
         super().__init__(parent, Qt.Dialog)
-        self.resize(760, 490)
-        self.setMinimumSize(530, 390)
         self.setModal(False)
         layout = QVBoxLayout(self)
+        self.title_row = QWidget()
+        title_layout = QHBoxLayout(self.title_row)
+        title_layout.setContentsMargins(0, 0, 0, 0)
+        self.title = QLabel()
+        self.title.setWordWrap(True)
+        title_layout.addWidget(self.title, 1)
+        self.close_button = QPushButton("×")
+        self.close_button.setFixedSize(26, 26)
+        self.close_button.setToolTip("关闭图表（Esc）")
+        self.close_button.setAccessibleName("关闭图表")
+        self.close_button.clicked.connect(self.close)
+        title_layout.addWidget(self.close_button)
+        layout.addWidget(self.title_row)
         controls = QHBoxLayout()
         self.view_combo = QComboBox()
         for label, value in (("当日分时", "intraday"), ("5日分时", "five_day"), ("日K线 · 最近30个交易日", "daily")):
@@ -51,6 +67,29 @@ class HistoryDialog(QDialog):
         self.view_combo.currentIndexChanged.connect(self._view_changed)
         self.refresh_button.clicked.connect(self.refresh_requested)
         self._view_changed()
+        self.display_mode = None
+        self.set_display_mode(display_mode)
+
+    def set_display_mode(self, mode):
+        if mode == self.display_mode:
+            return
+        self.display_mode = mode
+        floating = mode == "floating"
+        # Qt's popup mouse capture dismisses on desktop/other-app clicks too,
+        # while its popup stack keeps the view selector's dropdown usable.
+        self.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint if floating else Qt.Dialog)
+        # A dismissal click on a quote row must not replay and reopen the chart.
+        self.setAttribute(Qt.WA_NoMouseReplay, floating)
+        self.title_row.setVisible(floating)
+        self.chart.setMinimumSize(QSize(360, 160) if floating else QSize(400, 280))
+        self.setMinimumSize(QSize(400, 300) if floating else QSize(530, 390))
+        self.resize(QSize(560, 400) if floating else QSize(760, 490))
+        self.setWindowOpacity(.92 if floating else 1.)
+
+    def hideEvent(self, event):
+        super().hideEvent(event)
+        QToolTip.hideText()
+        self.dismissed.emit()
 
     @property
     def view(self):
@@ -92,13 +131,16 @@ class HistoryController(QObject):
         self.click_timer.setTimerType(Qt.PreciseTimer)
         self.click_timer.timeout.connect(self._open_pending)
         self._clicked_instrument = None
+        self._surface = "float"
+        self._taskbar_position = QPoint()
         self.window.widget_visibility_changed.connect(self._visibility_changed)
 
-    def request_row(self, surface, row, block=0):
+    def request_row(self, surface, row, block=0, *, global_pos=None):
         if not self.window.view_options.chart_enabled:
             return
         self._clicked_instrument = self.window.quotes.instrument_at(surface, row, block)
         if self._clicked_instrument:
+            self._set_anchor(surface, global_pos)
             # Preserve the existing double-click-to-hide gesture without a popup.
             self.click_timer.start(QApplication.doubleClickInterval())
 
@@ -112,28 +154,54 @@ class HistoryController(QObject):
             if self.dialog:
                 self.dialog.close()
 
-    def open_row(self, surface, row, block=0):
+    def open_row(self, surface, row, block=0, *, global_pos=None):
         if not self.window.view_options.chart_enabled:
             return
         instrument = self.window.quotes.instrument_at(surface, row, block)
         if instrument is None:
             return
+        self._set_anchor(surface, global_pos)
         self._open(instrument)
+
+    def _set_anchor(self, surface, global_pos):
+        self._surface = surface
+        if surface == "taskbar":
+            self._taskbar_position = QPoint(global_pos if global_pos is not None else QCursor.pos())
 
     def _open(self, instrument):
         if self.dialog is None:
-            self.dialog = HistoryDialog(self.window)
+            self.dialog = HistoryDialog(self.window, self.window.view_options.chart_display_mode)
             self.dialog.view_changed.connect(self.reload)
             self.dialog.refresh_requested.connect(self.reload)
-            self.dialog.finished.connect(self._closed)
+            self.dialog.dismissed.connect(self._closed)
         self.instrument = dict(instrument)
         self.dialog.setWindowTitle(f"{instrument.get('name') or instrument.get('code')} · 行情图表")
+        self.dialog.title.setText(self.dialog.windowTitle())
         self._apply_theme()
+        self._show()
+        self.reload()
+
+    def _show(self):
+        self._place_floating()
         self.dialog.show()
         self.dialog.raise_()
         self.dialog.activateWindow()
         self.timer.start()
-        self.reload()
+
+    def _place_floating(self):
+        self.dialog.layout().activate()
+        if self.dialog.display_mode == "floating":
+            anchor = (self.window.position_controller.full_geometry() if self._surface == "float"
+                      else QRect(self._taskbar_position, QSize(1, 1)))
+            bounds = best_screen(*anchor.getRect(), [screen.availableGeometry().getRect()
+                                                    for screen in QApplication.screens()])
+            if bounds:
+                minimum = self.dialog.minimumSize().expandedTo(self.dialog.minimumSizeHint())
+                self.dialog.resize(*adjacent_popup_size(anchor.getRect(), bounds, (560, 400),
+                                                       (minimum.width(), minimum.height())))
+                self.dialog.move(*adjacent_popup_position(anchor.getRect(), bounds,
+                                                         self.dialog.width(), self.dialog.height(),
+                                                         prefer_above=self._surface == "taskbar"))
 
     def _apply_theme(self):
         if self.dialog is None:
@@ -151,6 +219,12 @@ class HistoryController(QObject):
             if self.dialog:
                 self.dialog.close()
         else:
+            if self.dialog and self.dialog.display_mode != self.window.view_options.chart_display_mode:
+                visible = self.dialog.isVisible()
+                self.dialog.set_display_mode(self.window.view_options.chart_display_mode)
+                if visible:
+                    self._show()
+                    self.reload()
             self._apply_theme()
 
     def _closed(self, *_args):
@@ -207,5 +281,6 @@ class HistoryController(QObject):
                     pieces.append("历史不足时，部分均线从满足周期处开始显示")
             pieces.append(result.message)
             self.dialog.status.setText(" · ".join(piece for piece in pieces if piece))
+            self._place_floating()
         if self._pending is not None:
             self._start(self._pending)

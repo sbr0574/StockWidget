@@ -234,14 +234,14 @@ class TaskbarController(QObject):
             if self.source.display_mode == "taskbar" or self._dragging:
                 self.source.show()
 
-    def _click(self, x, y):
+    def _click(self, x, y, global_pos=None):
         delta = pager_hit(self._pager_rect, x, y)
         if delta:
             self.source.quotes.change_page("taskbar", delta)
             return
         for rect, row, block in self._hit_regions:
             if rect.contains(x, y):
-                self.source.history.request_row("taskbar", row, block)
+                self.source.history.request_row("taskbar", row, block, global_pos=global_pos)
                 break
 
     def _double_click(self, x, y):
@@ -269,12 +269,12 @@ class TaskbarController(QObject):
                 self.source.move_drag(position)
             elif kind in ("release", "cancel"):
                 self.input_timer.stop()
-                clicked = (kind == "release" and self._native_press
+                clicked = (kind == "release" and self._native_press is not None
                            and self.source._drag_pos is not None and not self.source._is_drag_position(position)
                            and self._native_press == pager_hit(self._pager_rect, x, y))
                 self.source.finish_drag(kind == "release")
                 if clicked:
-                    self._click(x, y)
+                    self._click(x, y, position)
                 self._native_press = None
                 if not self._dragging:
                     self.apply_mode()

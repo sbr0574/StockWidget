@@ -59,6 +59,16 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 
 class PageMathTests(unittest.TestCase):
+    def test_chart_display_mode_legacy_default_validation_and_roundtrip(self):
+        legacy = ViewOptions.from_config({"chart_enabled": True})
+        self.assertTrue(legacy.chart_enabled)
+        self.assertEqual(legacy.chart_display_mode, "window")
+        for mode in ("window", "floating", None, "invalid", True):
+            with self.subTest(mode=mode):
+                options = ViewOptions.from_config({"chart_display_mode": mode})
+                self.assertEqual(options.chart_display_mode, mode if mode in ("window", "floating") else "window")
+                self.assertEqual(ViewOptions.from_config(options.to_config()), options)
+
     def test_taskbar_font_limit_matches_rows_and_physical_scale(self):
         for height, dpi, rows, expected in ((88, 192, 4, 7), (88, 192, 3, 10),
                                             (44, 96, 4, 6), (44, 96, 3, 8), (88, 192, 1, 30)):

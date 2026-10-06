@@ -80,9 +80,10 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertEqual(window.current_config()["unit_mode"], "en")
 
     def test_wheel_scrolls_page_without_changing_slider_or_combo_values(self):
-        dialog, _ = self._make_dialog()
+        dialog, _ = self._make_dialog(chart_enabled=True)
         dialog.show()
-        for page, controls in ((dialog.ui.data, (dialog.ui.cmb_name_length, dialog.ui.cmb_unit_mode)),
+        for page, controls in ((dialog.ui.data, (dialog.ui.cmb_chart_display_mode,
+                                               dialog.ui.cmb_name_length, dialog.ui.cmb_unit_mode)),
                                (dialog.ui.floating, (dialog.ui.cmb_font, dialog.ui.slider_font_size))):
             dialog.ui.settings_pages.setCurrentWidget(page)
             scroll = page.findChild(QScrollArea)

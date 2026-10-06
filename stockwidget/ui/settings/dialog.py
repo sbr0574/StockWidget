@@ -225,6 +225,10 @@ class SettingsDialog(QDialog):
             lambda hidden: self.win.set_view_options(hide_tray_icon=hidden))
         self.ui.cb_chart_enabled.toggled.connect(
             lambda enabled: self.win.set_view_options(chart_enabled=enabled))
+        for index, value in enumerate(("window", "floating")):
+            self.ui.cmb_chart_display_mode.setItemData(index, value)
+        self.ui.cmb_chart_display_mode.currentIndexChanged.connect(
+            lambda _: self.win.set_view_options(chart_display_mode=self.ui.cmb_chart_display_mode.currentData()))
         self.win.view_options_changed.connect(self._sync_common_options)
 
         self.ui.btn_check_update.clicked.connect(self._check_update_manually)
@@ -678,6 +682,10 @@ class SettingsDialog(QDialog):
     def _sync_common_options(self):
         with QSignalBlocker(self.ui.cb_chart_enabled):
             self.ui.cb_chart_enabled.setChecked(self.win.view_options.chart_enabled)
+        with QSignalBlocker(self.ui.cmb_chart_display_mode):
+            self.ui.cmb_chart_display_mode.setCurrentIndex(
+                self.ui.cmb_chart_display_mode.findData(self.win.view_options.chart_display_mode))
+        self.ui.chart_display_mode_row.setEnabled(self.win.view_options.chart_enabled)
         with QSignalBlocker(self.ui.cmb_color_mode), QSignalBlocker(self.ui.cb_hide_tray_icon):
             self.ui.cmb_color_mode.setCurrentIndex(self.ui.cmb_color_mode.findData(self.win.view_options.color_mode))
             self.ui.cb_hide_tray_icon.setChecked(self.win.view_options.hide_tray_icon)

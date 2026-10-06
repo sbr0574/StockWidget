@@ -38,6 +38,7 @@ def taskbar_font_size_limit(height, dpi, rows):
 @dataclass
 class ViewOptions:
     chart_enabled: bool = False
+    chart_display_mode: str = "window"
     color_mode: str = "system"
     hide_tray_icon: bool = False
     float_split_enabled: bool = False
@@ -80,6 +81,8 @@ class ViewOptions:
                 setattr(result, key, getattr(defaults, key))
         if result.color_mode not in ("system", "light", "dark"):
             result.color_mode = "system"
+        if result.chart_display_mode not in ("window", "floating"):
+            result.chart_display_mode = "window"
         if "taskbar_metrics" not in cfg and metrics is not None:
             result.taskbar_metrics = metrics
         result.taskbar_metrics = normalize_visible_metrics(result.taskbar_metrics)

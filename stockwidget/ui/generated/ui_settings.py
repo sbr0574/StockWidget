@@ -317,6 +317,37 @@ class Ui_SettingDialog(object):
 
         self.dataContentLayout.addWidget(self.chart_enabled_row)
 
+        self.chart_display_mode_row = QWidget(self.data_content)
+        self.chart_display_mode_row.setObjectName(u"chart_display_mode_row")
+        self.chart_display_mode_layout = QGridLayout(self.chart_display_mode_row)
+        self.chart_display_mode_layout.setObjectName(u"chart_display_mode_layout")
+        self.chart_display_mode_layout.setHorizontalSpacing(10)
+        self.chart_display_mode_layout.setVerticalSpacing(5)
+        self.chart_display_mode_layout.setContentsMargins(0, 0, 0, 0)
+        self.chart_display_mode_title = QLabel(self.chart_display_mode_row)
+        self.chart_display_mode_title.setObjectName(u"chart_display_mode_title")
+
+        self.chart_display_mode_layout.addWidget(self.chart_display_mode_title, 0, 0, 1, 1)
+
+        self.chart_display_mode_description = QLabel(self.chart_display_mode_row)
+        self.chart_display_mode_description.setObjectName(u"chart_display_mode_description")
+        self.chart_display_mode_description.setMaximumSize(QSize(310, 16777215))
+        self.chart_display_mode_description.setWordWrap(True)
+
+        self.chart_display_mode_layout.addWidget(self.chart_display_mode_description, 1, 0, 1, 1)
+
+        self.cmb_chart_display_mode = QComboBox(self.chart_display_mode_row)
+        self.cmb_chart_display_mode.addItem("")
+        self.cmb_chart_display_mode.addItem("")
+        self.cmb_chart_display_mode.setObjectName(u"cmb_chart_display_mode")
+        self.cmb_chart_display_mode.setMinimumSize(QSize(110, 28))
+        self.cmb_chart_display_mode.setMaximumSize(QSize(110, 28))
+
+        self.chart_display_mode_layout.addWidget(self.cmb_chart_display_mode, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+
+        self.dataContentLayout.addWidget(self.chart_display_mode_row)
+
         self.gb_data = QGroupBox(self.data_content)
         self.gb_data.setObjectName(u"gb_data")
         self.gb_data.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -2746,6 +2777,9 @@ class Ui_SettingDialog(object):
 
         self.settingsShellLayout.addWidget(self.settings_pages)
 
+#if QT_CONFIG(shortcut)
+        self.chart_display_mode_title.setBuddy(self.cmb_chart_display_mode)
+#endif // QT_CONFIG(shortcut)
 
         self.retranslateUi(SettingDialog)
         self.settings_navigation.currentRowChanged.connect(self.settings_pages.setCurrentIndex)
@@ -2810,6 +2844,15 @@ class Ui_SettingDialog(object):
         self.cb_chart_enabled.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5f00\u542f\u540e\uff0c\u6d6e\u7a97\u548c\u4efb\u52a1\u680f\u7684\u884c\u60c5\u884c\u5747\u53ef\u5355\u51fb\u6253\u5f00\u56fe\u8868\u3002\u62d6\u52a8\u53ca\u53cc\u51fb\u9690\u85cf\u4fdd\u6301\u539f\u6709\u64cd\u4f5c\uff1b\u5173\u95ed\u540e\u4e0d\u8bf7\u6c42\u6216\u663e\u793a\u56fe\u8868\u3002", None))
 #endif // QT_CONFIG(tooltip)
         self.cb_chart_enabled.setText(QCoreApplication.translate("SettingDialog", u"\u70b9\u51fb\u884c\u60c5\u884c\u663e\u793a\u56fe\u8868", None))
+        self.chart_display_mode_title.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u663e\u793a\u65b9\u5f0f", None))
+        self.chart_display_mode_description.setStyleSheet(QCoreApplication.translate("SettingDialog", u"color: palette(mid);", None))
+        self.chart_display_mode_description.setText(QCoreApplication.translate("SettingDialog", u"\u534a\u900f\u660e\u6d6e\u7a97\u9760\u8fd1\u884c\u60c5\u663e\u793a\uff0c\u70b9\u51fb\u5916\u90e8\u6216\u6309 Esc \u5173\u95ed\u3002", None))
+        self.cmb_chart_display_mode.setItemText(0, QCoreApplication.translate("SettingDialog", u"\u72ec\u7acb\u7a97\u53e3", None))
+        self.cmb_chart_display_mode.setItemText(1, QCoreApplication.translate("SettingDialog", u"\u534a\u900f\u660e\u6d6e\u7a97", None))
+
+#if QT_CONFIG(tooltip)
+        self.cmb_chart_display_mode.setToolTip(QCoreApplication.translate("SettingDialog", u"\u72ec\u7acb\u7a97\u53e3\u4fdd\u6301\u539f\u6709\u56fe\u8868\u663e\u793a\u3002\u534a\u900f\u660e\u6d6e\u7a97\u663e\u793a\u5728\u884c\u60c5\u6d6e\u7a97\u65c1\uff1b\u4ece\u4efb\u52a1\u680f\u6253\u5f00\u65f6\u9760\u8fd1\u70b9\u51fb\u4f4d\u7f6e\uff0c\u5e76\u81ea\u52a8\u907f\u8ba9\u5c4f\u5e55\u8fb9\u7f18\u3002", None))
+#endif // QT_CONFIG(tooltip)
         self.gb_data.setTitle(QCoreApplication.translate("SettingDialog", u"\u6307\u6807\u663e\u793a", None))
         self.cb_head_title.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u8868\u5934", None))
         self.cb_head_description.setText(QCoreApplication.translate("SettingDialog", u"\u5728\u884c\u60c5\u9876\u90e8\u663e\u793a\u6307\u6807\u540d\u79f0\uff0c\u652f\u6301\u7684\u8868\u5934\u53ef\u5355\u51fb\u6392\u5e8f\u3002", None))

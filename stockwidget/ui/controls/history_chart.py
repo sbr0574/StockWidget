@@ -95,13 +95,29 @@ class HistoryChart(QWidget):
                                    max(1, step * .6), bar.volume / max_volume * volume_rect.height()), color)
         painter.setPen(text_color)
         painter.drawText(QRectF(0, volume_rect.top(), 60, 20), Qt.AlignRight, "成交量")
-        for i in sorted({0, len(self.bars) // 4, len(self.bars) // 2, 3 * len(self.bars) // 4, len(self.bars) - 1}):
-            label = self.bars[i].time[5:10] if self.view == "daily" else self.bars[i].time[5:16]
-            x = min(self.width() - 110, max(plot.left(), x_at(i) - 40))
-            painter.drawText(QRectF(x, self.height() - 28, 110, 22), Qt.AlignLeft | Qt.AlignVCenter, label)
+        for rect, label in self._time_labels():
+            painter.drawText(rect, Qt.AlignCenter, label)
         if self._hover is not None:
             painter.setPen(QPen(palette.highlight().color(), 1, Qt.DashLine))
             painter.drawLine(QPointF(x_at(self._hover), plot.top()), QPointF(x_at(self._hover), volume_rect.bottom()))
+
+    def _time_labels(self):
+        """Keep both endpoints and omit intermediate ticks that would overlap."""
+        if not self.bars:
+            return []
+        step = self._plot.width() / len(self.bars)
+        labels = []
+        for i in sorted({0, len(self.bars) // 4, len(self.bars) // 2, 3 * len(self.bars) // 4, len(self.bars) - 1}):
+            label = self.bars[i].time[5:10] if self.view == "daily" else self.bars[i].time[5:16]
+            width = self.fontMetrics().horizontalAdvance(label) + 4
+            x = min(self.width() - width - 8, max(self._plot.left(),
+                                                self._plot.left() + step * (i + .5) - width / 2))
+            labels.append((QRectF(x, self.height() - 28, width, 22), label))
+        visible = labels[:1]
+        for rect, label in labels[1:-1]:
+            if rect.left() >= visible[-1][0].right() + 8 and rect.right() + 8 <= labels[-1][0].left():
+                visible.append((rect, label))
+        return visible + labels[-1:] if len(labels) > 1 else visible
 
     @staticmethod
     def _line(painter, values, x_at, y_at, color, dates=None):
