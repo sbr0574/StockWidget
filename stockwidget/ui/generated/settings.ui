@@ -2460,13 +2460,13 @@
                   <property name="minimumSize">
                    <size>
                     <width>170</width>
-                    <height>80</height>
+                    <height>82</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
                     <width>170</width>
-                    <height>80</height>
+                    <height>82</height>
                    </size>
                   </property>
                   <property name="uniformItemSizes">

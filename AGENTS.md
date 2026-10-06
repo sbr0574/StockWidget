@@ -226,6 +226,7 @@ git diff --check
 - 任务栏与置顶：`tests.ui.test_taskbar`、`tests.ui.test_visibility`；相关原生行为还要在真实 Windows 桌面设置 `STOCKWIDGET_TEST_WINDOWS=1`、`QT_QPA_PLATFORM=windows` 验证。
 - 网络与数据维护：`tests.data.test_quotes`、`tests.ui.test_requests`、`tests.data.test_code_lists`、`tests.test_app`。
 - 设置与同步：`tests.ui.test_settings`，覆盖主题、首次加载、同步开关和总开关联动；自选编辑使用 `tests.ui.test_watchlist`。
+- 主题测试显式切换浅色 / 深色，修改应用调色板后恢复原值；验证控件实际颜色及可读性，透明控件按父容器背景判断，不依赖样式表文本或默认系统主题。排序箭头截图按设备像素比换算，验证文字、列宽、方向、颜色及加宽前后的间距，避免将字体字形留白误判为箭头间距。
 - 无头 Qt 测试使用 `QT_QPA_PLATFORM=offscreen`；高 DPI 验证可使用 `QT_SCALE_FACTOR=1.5` / `2`。字体像素比较需确认中文字体可用；Qt 主题测试同进程卡住时可隔离运行并如实说明。
 - Linux X11 集成验证按 `.github/workflows/test.yml` 使用 `xvfb-run` 和 `STOCKWIDGET_TEST_X11=1`；维护代码列表脚本另需 `pandas`、`openpyxl` 和 `pypinyin`。
 

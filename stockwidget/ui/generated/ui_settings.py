@@ -1012,8 +1012,8 @@ class Ui_SettingDialog(object):
         self.list_hide_times.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.list_hide_times.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.list_hide_times.setWrapping(False)
-        self.list_hide_times.setMinimumSize(QSize(170, 80))
-        self.list_hide_times.setMaximumSize(QSize(170, 80))
+        self.list_hide_times.setMinimumSize(QSize(170, 82))
+        self.list_hide_times.setMaximumSize(QSize(170, 82))
         self.list_hide_times.setUniformItemSizes(True)
 
         self.scheduledHideControls.addWidget(self.list_hide_times, 0, Qt.AlignmentFlag.AlignTop|Qt.AlignmentFlag.AlignLeft)
