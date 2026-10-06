@@ -12,7 +12,7 @@ import requests
 from stockwidget.core.config_store import history_cache_dir
 from stockwidget.data.bar_cache import BarCache, cache_state
 from stockwidget.data.bars import (
-    Bar, BarResult, DAILY_HISTORY, fetch_bars, market_now, moving_average,
+    Bar, BarResult, DAILY_HISTORY, HistorySeries, fetch_bars, history_day, market_now, merge_quote, minute_gaps, moving_average,
     parse_eastmoney, parse_sina, request_eastmoney_bars, request_sina_bars, select_bars,
 )
 
@@ -56,6 +56,17 @@ class HistoryTests(unittest.TestCase):
         self.assertEqual(parse_sina("null"), ())
         with self.assertRaises(ValueError):
             parse_sina('[__import__("os")]')
+
+    def test_sina_daily_time_labels_normalize_before_live_candle_update(self):
+        text = '=[{"day":"2026-09-30 15:00:00","open":10,"high":12,"low":9,"close":11,"volume":100}]'
+        bars = parse_sina(text, daily=True)
+        self.assertEqual(bars[0].time, "2026-09-30")
+        quote = {"date": "2026-09-30", "time": "10:00:00", "opening_price": 10,
+                 "current_price": 12, "high_price": 12, "low_price": 9, "deals_vol": 120}
+        live = merge_quote(bars, A_SHARE, "daily", quote)
+        self.assertEqual(len(live), 1)
+        self.assertEqual(live[0].close, 12)
+        self.assertEqual(parse_sina(text)[0].time, "2026-09-30 15:00:00")
 
     def test_us_clock_dst_and_beijing_minute_conversion(self):
         instrument = {"market": "us", "code": "aapl"}
@@ -121,11 +132,11 @@ class HistoryTests(unittest.TestCase):
 
     @patch("stockwidget.data.bars.requests.get")
     def test_request_parameters_and_asset_compatibility(self, get):
-        get.return_value.text = '=[{"day":"2026-09-30","open":10,"high":12,"low":9,"close":11}]'
+        get.return_value.text = '=[{"day":"2026-09-30 15:00:00","open":10,"high":12,"low":9,"close":11}]'
         get.return_value.json.return_value = {"data": {"klines": ["2026-09-30,10,11,12,9,100,1100,1"]}}
         for instrument in (A_SHARE, {"market": "sz", "code": "399001", "type": "指"},
                            {"market": "", "code": "au0", "type": "期"}):
-            self.assertTrue(request_sina_bars(instrument, "daily"))
+            self.assertEqual(request_sina_bars(instrument, "daily")[-1].time, "2026-09-30")
         self.assertEqual(get.call_args.kwargs["params"]["symbol"], "AU0")
         request_sina_bars(A_SHARE, "daily")
         self.assertEqual(get.call_args.kwargs["params"]["datalen"], DAILY_HISTORY)
@@ -173,23 +184,24 @@ class CacheTests(unittest.TestCase):
         self.cache.get(A_SHARE, "intraday", "sina")
         self.assertEqual(self.fetch.call_count, 2)
 
-    def test_daily_ttl_close_and_next_day_invalidate(self):
+    def test_daily_download_once_per_exchange_day_even_after_close(self):
         self.cache.get(A_SHARE, "daily", "sina")
         self.now += timedelta(seconds=61)
         self.assertTrue(self.cache.get(A_SHARE, "daily", "sina").cached)
         self.now += timedelta(seconds=240)
         self.cache.get(A_SHARE, "daily", "sina")
-        self.assertEqual(self.fetch.call_count, 2)
+        self.assertEqual(self.fetch.call_count, 1)
         self.now = datetime(2026, 9, 30, 8, tzinfo=timezone.utc)
-        self.cache.get(A_SHARE, "daily", "sina")
+        self.assertTrue(self.cache.get(A_SHARE, "daily", "sina").cached)
         self.now += timedelta(hours=2)
         self.assertTrue(self.cache.get(A_SHARE, "daily", "sina").cached)
         self.now += timedelta(days=1)
         self.assertFalse(self.cache.get(A_SHARE, "daily", "sina").cached)
+        self.assertEqual(self.fetch.call_count, 2)
 
     def test_failed_refresh_preserves_stale_data_and_corruption_recovers(self):
         self.cache.get(A_SHARE, "daily", "sina")
-        self.now += timedelta(minutes=6)
+        self.now += timedelta(days=1)
         self.fetch.return_value = BarResult(message="暂无可用历史数据")
         result = self.cache.get(A_SHARE, "daily", "sina")
         self.assertTrue(result.stale)
@@ -232,3 +244,136 @@ class CacheTests(unittest.TestCase):
         self.now += timedelta(minutes=2)
         self.fetch.return_value = BarResult(short(range(27, 30)), "eastmoney", "接口仅返回 3 个交易日")
         self.assertEqual(len(self.cache.get(A_SHARE, "five_day", "sina").bars), 3)
+
+    def test_missing_minutes_repair_bypasses_ttl_but_preserves_failure_backoff(self):
+        self.cache.get(A_SHARE, "five_day", "sina")
+        self.cache.get(A_SHARE, "five_day", "sina", repair=True)
+        self.assertEqual(self.fetch.call_count, 2)
+        self.fetch.return_value = BarResult(message="暂无可用历史数据")
+        self.assertTrue(self.cache.get(A_SHARE, "five_day", "sina", repair=True).stale)
+        self.cache.get(A_SHARE, "five_day", "sina", repair=True)
+        self.assertEqual(self.fetch.call_count, 3)
+
+
+class LiveHistoryTests(unittest.TestCase):
+    def setUp(self):
+        self.now = datetime(2026, 9, 30, 1, 31, tzinfo=timezone.utc)
+        self.quote = {"date": "2026-09-30", "time": "09:31:10", "current_price": 11,
+                      "opening_price": 10, "high_price": 12, "low_price": 9,
+                      "deals_vol": 120, "deals_amt": 1320}
+        self.minute = Bar("2026-09-30 09:31:00", 10, 11, 9, 10, 100, 1000, 10)
+
+    def test_current_minute_updates_then_appends_without_downloading(self):
+        series = HistorySeries(A_SHARE, "intraday")
+        series.update_quote(self.quote)
+        self.assertTrue(series.needs_download(self.now))
+        series.set_history(BarResult((self.minute,), "sina"), "2026-09-30", self.now)
+        self.assertEqual(series.result.bars[-1], Bar(self.minute.time, 10, 11, 9, 11, 120, 1320, 11))
+        for second, price, volume in ((20, 12, 130), (30, 10.5, 140)):
+            series.update_quote({**self.quote, "time": f"09:31:{second}", "current_price": price,
+                                 "deals_vol": volume, "deals_amt": volume * 11})
+        self.assertEqual(len(series.result.bars), 1)
+        self.assertEqual((series.result.bars[-1].close, series.result.bars[-1].high), (10.5, 12))
+        series.update_quote({**self.quote, "time": "09:32:01", "current_price": 12, "deals_vol": 150, "deals_amt": 1650})
+        self.assertEqual(len(series.result.bars), 2)
+        self.assertEqual(series.result.bars[-1].volume, 10)
+        self.assertEqual(series.result.bars[-1].average, 11)
+        self.assertFalse(series.needs_download(self.now + timedelta(minutes=10)))
+
+    def test_missing_minute_requests_repair_and_does_not_invent_its_volume(self):
+        series = HistorySeries(A_SHARE, "five_day")
+        series.set_history(BarResult((self.minute,), "sina"), "2026-09-30", self.now)
+        series.update_quote({**self.quote, "time": "09:33:01", "deals_vol": 180})
+        self.assertTrue(series.needs_download(self.now + timedelta(minutes=2)))
+        self.assertEqual(series.result.bars[-1].volume, 0)
+        series.update_quote({**self.quote, "time": "09:33:20", "deals_vol": 190})
+        self.assertEqual(series.result.bars[-1].volume, 10)
+        series.set_history(BarResult((self.minute,), "sina"), "2026-09-30", self.now + timedelta(minutes=2))
+        self.assertFalse(series.needs_download(self.now + timedelta(minutes=3)))
+        self.assertTrue(series.needs_download(self.now + timedelta(minutes=8)))
+        missing = Bar("2026-09-30 09:32:00", 11, 11, 11, 11, 60, 660, 11)
+        series.set_history(BarResult((self.minute, missing), "sina"), "2026-09-30", self.now + timedelta(minutes=8))
+        self.assertFalse(series.repair_needed)
+        self.assertEqual(series.result.bars[-1].volume, 30)
+
+    def test_lunch_break_is_not_missing_data_but_an_actual_hole_is(self):
+        start = datetime(2026, 9, 30, 9, 31)
+        bars = tuple(Bar((start + timedelta(minutes=i)).isoformat(" "), 10, 10, 10, 10) for i in range(120))
+        current = datetime(2026, 9, 30, 13)
+        self.assertFalse(minute_gaps(bars, A_SHARE, current))
+        self.assertTrue(minute_gaps(bars[:-2], A_SHARE, current))
+
+    def test_daily_candle_updates_cumulative_ohlc_and_refreshes_next_day(self):
+        series = HistorySeries(A_SHARE, "daily")
+        bars = (Bar("2026-09-29", 9, 10, 8, 9, 100), Bar("2026-09-30", 10, 11, 9, 10, 100))
+        series.set_history(BarResult(bars, "sina"), "2026-09-30", self.now)
+        series.update_quote(self.quote)
+        self.assertEqual(series.result.bars[-1], Bar("2026-09-30", 10, 12, 9, 11, 120, 1320))
+        self.assertFalse(series.needs_download(self.now + timedelta(hours=6)))
+        series.update_quote({**self.quote, "date": "2026-10-01", "current_price": 12, "opening_price": 11})
+        self.assertEqual(len(series.result.bars), 3)
+        self.assertEqual(series.result.bars[-1].time, "2026-10-01")
+        self.assertTrue(series.needs_download(self.now + timedelta(days=1)))
+
+    def test_unknown_invalid_and_out_of_order_quotes_preserve_data(self):
+        series = HistorySeries(A_SHARE, "intraday")
+        series.set_history(BarResult((self.minute,), "sina"), "2026-09-30", self.now)
+        series.update_quote(self.quote)
+        bars = series.result.bars
+        for change in ({"date": "", "time": ""}, {"current_price": 0}, {"opening_price": 0},
+                       {"current_price": float("nan")}, {"time": "09:30:59"}):
+            series.update_quote({**self.quote, **change})
+            self.assertEqual(series.result.bars, bars)
+
+    def test_us_clock_and_futures_night_use_the_exchange_trading_day(self):
+        us = {"market": "us", "code": "aapl", "type": "美"}
+        quote = {**self.quote, "date": "2026-07-02", "time": "03:59:30"}
+        self.assertEqual(merge_quote((), us, "daily", quote)[-1].time, "2026-07-01")
+        self.assertEqual(merge_quote((), us, "five_day", quote)[-1].time, "2026-07-01 15:59:00")
+        future = {"market": "", "code": "au0", "type": "期"}
+        quote = {**self.quote, "date": "2026-09-30", "time": "21:01:00"}
+        self.assertEqual(merge_quote((), future, "daily", quote)[-1].time, "2026-10-01")
+        self.assertFalse(minute_gaps((), future, datetime(2026, 9, 30, 21, 1)))
+        self.assertEqual(history_day(future, datetime(2026, 9, 30, 13, 1, tzinfo=timezone.utc)), "2026-10-01")
+        midnight = (Bar("2026-09-30 23:59:00", 10, 10, 10, 10),
+                    Bar("2026-10-01 00:00:00", 10, 10, 10, 10))
+        self.assertFalse(minute_gaps(midnight, future, datetime(2026, 10, 1, 0, 1)))
+        self.assertTrue(minute_gaps(midnight[:1], future, datetime(2026, 10, 1, 0, 1)))
+
+    def test_live_and_eastmoney_history_volumes_use_the_same_unit(self):
+        payload = {"data": {"trends": ["2026-09-30 09:31,10,10,11,9,1,1000,10"]}}
+        bars = parse_eastmoney(payload, instrument=A_SHARE)
+        self.assertEqual(bars[0].volume, 100)
+        self.assertEqual(merge_quote(bars, A_SHARE, "intraday", self.quote)[-1].volume, 120)
+
+    def test_failed_repairs_keep_minutes_already_observed_live(self):
+        series = HistorySeries(A_SHARE, "five_day")
+        series.set_history(BarResult((self.minute,), "sina"), "2026-09-30", self.now)
+        series.update_quote({**self.quote, "time": "09:32:10"})
+        series.update_quote({**self.quote, "time": "09:34:10", "current_price": 12})
+        series.set_history(BarResult((self.minute,), "sina", "更新失败", cached=True, stale=True),
+                           "2026-09-30", self.now)
+        self.assertEqual([bar.time[11:16] for bar in series.result.bars], ["09:31", "09:32", "09:34"])
+        self.assertEqual(series.result.bars[-1].close, 12)
+        series.set_history(BarResult(message="处理失败"), "2026-09-30", self.now)
+        self.assertEqual(len(series.result.bars), 3)
+        self.assertTrue(series.result.stale)
+        # A real provider change resets history rather than mixing sources.
+        series.set_history(BarResult((self.minute,), "eastmoney"), "2026-09-30", self.now)
+        self.assertNotIn("09:32", [bar.time[11:16] for bar in series.result.bars])
+
+    def test_repair_keeps_the_current_minute_extrema_observed_during_download(self):
+        series = HistorySeries(A_SHARE, "intraday")
+        series.set_history(BarResult((self.minute,), "sina"), "2026-09-30", self.now)
+        series.update_quote({**self.quote, "current_price": 12})
+        series.update_quote({**self.quote, "time": "09:31:20", "current_price": 10})
+        series.set_history(BarResult((self.minute,), "sina"), "2026-09-30", self.now)
+        self.assertEqual((series.result.bars[-1].high, series.result.bars[-1].close), (12, 10))
+
+    def test_empty_history_retries_after_backoff_even_if_a_live_candle_exists(self):
+        series = HistorySeries(A_SHARE, "daily")
+        series.update_quote(self.quote)
+        series.set_history(BarResult(message="暂无可用历史数据"), "2026-09-30", self.now)
+        self.assertTrue(series.result.bars)
+        self.assertFalse(series.needs_download(self.now + timedelta(minutes=4)))
+        self.assertTrue(series.needs_download(self.now + timedelta(minutes=6)))

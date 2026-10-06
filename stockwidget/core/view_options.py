@@ -39,6 +39,9 @@ def taskbar_font_size_limit(height, dpi, rows):
 class ViewOptions:
     chart_enabled: bool = False
     chart_display_mode: str = "window"
+    chart_ma_periods: list[int] = field(default_factory=lambda: [5, 10, 20, 30, 60])
+    chart_average_enabled: bool = True
+    chart_volume_enabled: bool = True
     color_mode: str = "system"
     hide_tray_icon: bool = False
     float_split_enabled: bool = False
@@ -81,8 +84,13 @@ class ViewOptions:
                 setattr(result, key, getattr(defaults, key))
         if result.color_mode not in ("system", "light", "dark"):
             result.color_mode = "system"
-        if result.chart_display_mode not in ("window", "floating"):
+        if result.chart_display_mode == "floating":
+            result.chart_display_mode = "large"
+        if result.chart_display_mode not in ("window", "large", "medium", "small"):
             result.chart_display_mode = "window"
+        if not isinstance(result.chart_ma_periods, (list, tuple)):
+            result.chart_ma_periods = defaults.chart_ma_periods
+        result.chart_ma_periods = [period for period in (5, 10, 20, 30, 60) if period in result.chart_ma_periods]
         if "taskbar_metrics" not in cfg and metrics is not None:
             result.taskbar_metrics = metrics
         result.taskbar_metrics = normalize_visible_metrics(result.taskbar_metrics)
@@ -100,7 +108,8 @@ class ViewOptions:
             result.taskbar_font_family = font_family
         if not isinstance(result.taskbar_color, str):
             result.taskbar_color = defaults.taskbar_color
-        for key in ("chart_enabled", "hide_tray_icon", "float_paging_enabled", "taskbar_enabled", "taskbar_sync_metrics",
+        for key in ("chart_enabled", "chart_average_enabled", "chart_volume_enabled", "hide_tray_icon",
+                    "float_paging_enabled", "taskbar_enabled", "taskbar_sync_metrics",
                     "taskbar_sync_appearance", "taskbar_sync_paging", "taskbar_unicolor", "taskbar_auto_color", "taskbar_dual_open",
                     "float_split_enabled", "float_split_separator", "taskbar_sync_split",
                     "taskbar_split_enabled", "taskbar_split_separator"):

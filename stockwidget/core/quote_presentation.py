@@ -172,6 +172,11 @@ class QuoteDisplayOptions:
     unit_mode: str = "auto"
 
 
+def price_precision(security_type, market=""):
+    """Shared price precision for quotes and historical charts."""
+    return 3 if security_type == "基" or market == "us" else 2
+
+
 def format_quote(
     data: dict,
     security_type: str | None,
@@ -243,7 +248,7 @@ def format_quote(
             arrow = "↓"
     k_payload = {"k": (data["opening_price"], data["current_price"], data["high_price"], data["low_price"], data["prev_close"])}
 
-    precision = 3 if security_type == "基" or market == "us" else 2
+    precision = price_precision(security_type, market)
 
     # 浮盈计算（与成本价比较），仅显示百分比
     profit_pct = None

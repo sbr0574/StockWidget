@@ -63,11 +63,22 @@ class PageMathTests(unittest.TestCase):
         legacy = ViewOptions.from_config({"chart_enabled": True})
         self.assertTrue(legacy.chart_enabled)
         self.assertEqual(legacy.chart_display_mode, "window")
-        for mode in ("window", "floating", None, "invalid", True):
+        for mode in ("window", "large", "medium", "small", "floating", None, "invalid", True):
             with self.subTest(mode=mode):
                 options = ViewOptions.from_config({"chart_display_mode": mode})
-                self.assertEqual(options.chart_display_mode, mode if mode in ("window", "floating") else "window")
+                expected = "large" if mode == "floating" else mode if mode in ("window", "large", "medium", "small") else "window"
+                self.assertEqual(options.chart_display_mode, expected)
                 self.assertEqual(ViewOptions.from_config(options.to_config()), options)
+
+    def test_chart_indicator_preferences_normalize_and_survive_disabled_chart(self):
+        options = ViewOptions.from_config({"chart_enabled": False, "chart_ma_periods": [60, 5, 5, "10", -1],
+                                           "chart_average_enabled": False, "chart_volume_enabled": False})
+        self.assertEqual(options.chart_ma_periods, [5, 60])
+        self.assertFalse(options.chart_average_enabled)
+        self.assertFalse(options.chart_volume_enabled)
+        self.assertEqual(ViewOptions.from_config(options.to_config()), options)
+        self.assertEqual(ViewOptions.from_config({"chart_ma_periods": []}).chart_ma_periods, [])
+        self.assertEqual(ViewOptions.from_config({"chart_ma_periods": None}).chart_ma_periods, [5, 10, 20, 30, 60])
 
     def test_taskbar_font_limit_matches_rows_and_physical_scale(self):
         for height, dpi, rows, expected in ((88, 192, 4, 7), (88, 192, 3, 10),

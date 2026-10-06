@@ -5,20 +5,20 @@ import threading
 from PySide6.QtCore import QObject, QPoint, QRect, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QComboBox, QDialog, QHBoxLayout, QLabel, QPushButton, QToolTip, QVBoxLayout, QWidget,
+    QApplication, QButtonGroup, QDialog, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QToolTip, QVBoxLayout, QWidget,
 )
 
 from stockwidget.core.window_rules import adjacent_popup_position, adjacent_popup_size, best_screen
 from stockwidget.data.bar_cache import BarCache
-from stockwidget.data.bars import BarResult, MA_PERIODS
-from stockwidget.ui.controls.history_chart import HistoryChart, MA_COLORS
+from stockwidget.data.bars import BarResult, HistorySeries, history_day, select_bars
+from stockwidget.ui.controls.history_chart import HistoryChart
 from stockwidget.ui.controls.style import build_settings_stylesheet, is_dark_theme, theme_palette
 
 
 class HistoryDialog(QDialog):
     view_changed = Signal()
-    refresh_requested = Signal()
     dismissed = Signal()
+    SIZES = {"window": (760, 490), "large": (560, 400), "medium": (420, 300), "small": (320, 230)}
 
     def __init__(self, parent, display_mode="window"):
         super().__init__(parent, Qt.Dialog)
@@ -28,45 +28,41 @@ class HistoryDialog(QDialog):
         title_layout = QHBoxLayout(self.title_row)
         title_layout.setContentsMargins(0, 0, 0, 0)
         self.title = QLabel()
-        self.title.setWordWrap(True)
+        self.title.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
+        self._title_text = self._status_text = ""
         title_layout.addWidget(self.title, 1)
         self.close_button = QPushButton("×")
         self.close_button.setFixedSize(26, 26)
+        self.close_button.setAutoDefault(False)
         self.close_button.setToolTip("关闭图表（Esc）")
         self.close_button.setAccessibleName("关闭图表")
         self.close_button.clicked.connect(self.close)
         title_layout.addWidget(self.close_button)
         layout.addWidget(self.title_row)
         controls = QHBoxLayout()
-        self.view_combo = QComboBox()
-        for label, value in (("当日分时", "intraday"), ("5日分时", "five_day"), ("日K线 · 最近30个交易日", "daily")):
-            self.view_combo.addItem(label, value)
-        controls.addWidget(self.view_combo)
-        controls.addStretch()
-        self.refresh_button = QPushButton("刷新")
-        self.refresh_button.setToolTip("按缓存更新周期检查历史数据")
-        controls.addWidget(self.refresh_button)
+        self.view_buttons = {}
+        self.view_group = QButtonGroup(self)
+        self._view = "intraday"
+        for label, value in (("分时", "intraday"), ("5日", "five_day"), ("K线", "daily")):
+            button = QPushButton(label)
+            button.setCheckable(True)
+            button.setAutoDefault(False)
+            button.setMinimumSize(60, 28)
+            button.setAccessibleName(label)
+            button.setToolTip("最近30个交易日的日K线" if value == "daily" else "当日分时" if value == "intraday" else "最近5个交易日分时")
+            self.view_buttons[value] = button
+            self.view_group.addButton(button)
+            controls.addWidget(button, 1)
+        self.view_buttons[self._view].setChecked(True)
+        self.view_group.buttonToggled.connect(self._view_changed)
         layout.addLayout(controls)
-        ma_layout = QHBoxLayout()
-        self.ma_boxes = []
-        for period, color in zip(MA_PERIODS, MA_COLORS):
-            box = QCheckBox(f"MA{period}")
-            box.setChecked(True)
-            box.setStyleSheet(f"QCheckBox {{ color: {color}; }} QCheckBox:disabled {{ color: palette(mid); }}")
-            box.toggled.connect(self._sync_periods)
-            self.ma_boxes.append(box)
-            ma_layout.addWidget(box)
-        ma_layout.addStretch()
-        layout.addLayout(ma_layout)
         self.chart = HistoryChart()
         layout.addWidget(self.chart, 1)
         self.status = QLabel()
-        self.status.setWordWrap(True)
+        self.status.setProperty("settingDescription", True)
+        self.status.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
         self.status.setTextInteractionFlags(Qt.TextSelectableByMouse)
         layout.addWidget(self.status)
-        self.view_combo.currentIndexChanged.connect(self._view_changed)
-        self.refresh_button.clicked.connect(self.refresh_requested)
-        self._view_changed()
         self.display_mode = None
         self.set_display_mode(display_mode)
 
@@ -74,16 +70,20 @@ class HistoryDialog(QDialog):
         if mode == self.display_mode:
             return
         self.display_mode = mode
-        floating = mode == "floating"
-        # Qt's popup mouse capture dismisses on desktop/other-app clicks too,
-        # while its popup stack keeps the view selector's dropdown usable.
+        floating = mode != "window"
+        # Popup capture also handles outside clicks in other applications.
         self.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint if floating else Qt.Dialog)
         # A dismissal click on a quote row must not replay and reopen the chart.
         self.setAttribute(Qt.WA_NoMouseReplay, floating)
         self.title_row.setVisible(floating)
-        self.chart.setMinimumSize(QSize(360, 160) if floating else QSize(400, 280))
-        self.setMinimumSize(QSize(400, 300) if floating else QSize(530, 390))
-        self.resize(QSize(560, 400) if floating else QSize(760, 490))
+        chart_minimum, minimum = {"window": ((400, 280), (530, 390)), "large": ((360, 160), (400, 300)),
+                                  "medium": ((280, 150), (330, 250)), "small": ((220, 110), (260, 210))}[mode]
+        self.chart.setMinimumSize(*chart_minimum)
+        self.setMinimumSize(*minimum)
+        margin = 6 if floating else 10
+        self.layout().setContentsMargins(margin, margin, margin, margin)
+        self.layout().setSpacing(4 if floating else 6)
+        self.resize(*self.SIZES[mode])
         self.setWindowOpacity(.92 if floating else 1.)
 
     def hideEvent(self, event):
@@ -93,15 +93,35 @@ class HistoryDialog(QDialog):
 
     @property
     def view(self):
-        return self.view_combo.currentData()
+        return self._view
 
-    def _view_changed(self):
-        for box in self.ma_boxes:
-            box.setEnabled(self.view == "daily")
+    def set_view(self, view):
+        self.view_buttons[view].setChecked(True)
+
+    def _view_changed(self, button, checked):
+        if not checked:
+            return
+        self._view = next(view for view, candidate in self.view_buttons.items() if candidate is button)
         self.view_changed.emit()
 
-    def _sync_periods(self):
-        self.chart.set_periods([period for period, box in zip(MA_PERIODS, self.ma_boxes) if box.isChecked()])
+    def set_title(self, text):
+        self._title_text = text
+        self.setWindowTitle(text)
+        self.title.setToolTip(text)
+        self._elide_labels()
+
+    def set_status(self, text):
+        self._status_text = text
+        self.status.setToolTip(text)
+        self._elide_labels()
+
+    def _elide_labels(self):
+        for label, text in ((self.title, self._title_text), (self.status, self._status_text)):
+            label.setText(label.fontMetrics().elidedText(text, Qt.ElideRight, max(1, label.width())))
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._elide_labels()
 
 
 class HistoryController(QObject):
@@ -121,11 +141,10 @@ class HistoryController(QObject):
         self._busy = False
         self._pending = None
         self._displayed_key = None
+        self._series = {}
         self.result_ready.connect(self._accept)
         self.window.view_options_changed.connect(self._options_changed)
-        self.timer = QTimer(self)
-        self.timer.setInterval(60000)
-        self.timer.timeout.connect(self.reload)
+        self.window.quotes.quotes_updated.connect(self._quotes_updated)
         self.click_timer = QTimer(self)
         self.click_timer.setSingleShot(True)
         self.click_timer.setTimerType(Qt.PreciseTimer)
@@ -172,11 +191,10 @@ class HistoryController(QObject):
         if self.dialog is None:
             self.dialog = HistoryDialog(self.window, self.window.view_options.chart_display_mode)
             self.dialog.view_changed.connect(self.reload)
-            self.dialog.refresh_requested.connect(self.reload)
             self.dialog.dismissed.connect(self._closed)
         self.instrument = dict(instrument)
-        self.dialog.setWindowTitle(f"{instrument.get('name') or instrument.get('code')} · 行情图表")
-        self.dialog.title.setText(self.dialog.windowTitle())
+        self.dialog.set_title(f"{instrument.get('name') or instrument.get('code')} · 行情图表")
+        self._apply_chart_options()
         self._apply_theme()
         self._show()
         self.reload()
@@ -186,18 +204,17 @@ class HistoryController(QObject):
         self.dialog.show()
         self.dialog.raise_()
         self.dialog.activateWindow()
-        self.timer.start()
 
     def _place_floating(self):
         self.dialog.layout().activate()
-        if self.dialog.display_mode == "floating":
+        if self.dialog.display_mode != "window":
             anchor = (self.window.position_controller.full_geometry() if self._surface == "float"
                       else QRect(self._taskbar_position, QSize(1, 1)))
             bounds = best_screen(*anchor.getRect(), [screen.availableGeometry().getRect()
                                                     for screen in QApplication.screens()])
             if bounds:
                 minimum = self.dialog.minimumSize().expandedTo(self.dialog.minimumSizeHint())
-                self.dialog.resize(*adjacent_popup_size(anchor.getRect(), bounds, (560, 400),
+                self.dialog.resize(*adjacent_popup_size(anchor.getRect(), bounds, self.dialog.SIZES[self.dialog.display_mode],
                                                        (minimum.width(), minimum.height())))
                 self.dialog.move(*adjacent_popup_position(anchor.getRect(), bounds,
                                                          self.dialog.width(), self.dialog.height(),
@@ -226,21 +243,64 @@ class HistoryController(QObject):
                     self._show()
                     self.reload()
             self._apply_theme()
+            self._apply_chart_options()
+
+    def _apply_chart_options(self):
+        if self.dialog:
+            options = self.window.view_options
+            self.dialog.chart.set_options(options.chart_ma_periods, options.chart_average_enabled,
+                                          options.chart_volume_enabled)
 
     def _closed(self, *_args):
         self._generation += 1
         self._pending = None
-        self.timer.stop()
+
+    @staticmethod
+    def _key(instrument, view, source):
+        return (*(instrument.get(field) for field in ("market", "code", "type")), source,
+                "daily" if view == "daily" else "five_day")
+
+    def _series_for(self, instrument, view, source):
+        key = self._key(instrument, view, source)
+        if key not in self._series:
+            self._series[key] = HistorySeries(instrument, view)
+        series = self._series[key]
+        quote = self.window.quotes.quote_for(instrument) if source == self.window.data_source else None
+        if quote:
+            series.update_quote(quote)
+        return series
+
+    def _quotes_updated(self):
+        for key, series in self._series.items():
+            if key[-2] == self.window.data_source:
+                quote = self.window.quotes.quote_for(series.instrument)
+                if quote:
+                    series.update_quote(quote)
+        if self.dialog and self.dialog.isVisible() and self.instrument:
+            series = self._series_for(self.instrument, self.dialog.view, self.window.data_source)
+            if series.loaded_day is not None:
+                self._render(series, self.dialog.view, self.window.data_source)
+            if not self._busy and series.needs_download(self.cache.clock()):
+                self.reload()
 
     def reload(self):
         if not self.dialog or not self.dialog.isVisible() or not self.instrument or not self.window.view_options.chart_enabled:
             return
         self._generation += 1
-        request = (self._generation, dict(self.instrument), self.dialog.view, self.window.data_source)
-        key = (self.instrument.get("market"), self.instrument.get("code"), self.dialog.view, self.window.data_source)
+        view, source = self.dialog.view, self.window.data_source
+        series = self._series_for(self.instrument, view, source)
+        now = self.cache.clock()
+        day = history_day(self.instrument, now)
+        request = (self._generation, dict(self.instrument), view, source, day,
+                   series.loaded_day == day and series.repair_needed)
+        key = (self._key(self.instrument, view, source), view)
         if key != self._displayed_key:
             self.dialog.chart.set_data((), self.dialog.view, self.instrument)
-        self.dialog.status.setText("更新中…" if self.dialog.chart.bars else "加载中…")
+        if not series.needs_download(now):
+            self._pending = None
+            self._render(series, view, source)
+            return
+        self.dialog.set_status("更新中…" if self.dialog.chart.bars else "加载中…")
         if self._busy:
             self._pending = request  # At most one worker; latest selection wins.
         else:
@@ -252,35 +312,48 @@ class HistoryController(QObject):
         threading.Thread(target=self._worker, args=(request,), daemon=True).start()
 
     def _worker(self, request):
-        generation, instrument, view, source = request
+        generation, instrument, view, source, day, repair = request
         try:
-            result = self.cache.get(instrument, view, source)
+            result = self.cache.get(instrument, "daily" if view == "daily" else "five_day", source, repair=repair)
         except Exception:
             result = BarResult(message="暂无可用历史数据 · 历史数据处理失败")
         try:
-            self.result_ready.emit((generation, instrument, view, source, result))
+            self.result_ready.emit((*request, result))
         except RuntimeError:
             pass  # Parent was destroyed while the network request was running.
 
     def _accept(self, payload):
         self._busy = False
-        generation, instrument, view, preferred, result = payload
+        generation, instrument, view, preferred, day, repair, result = payload
+        series = self._series_for(instrument, view, preferred)
+        series.set_history(result, day, self.cache.clock())
         if generation == self._generation and self.dialog and self.dialog.isVisible():
-            self.dialog.chart.set_data(result.bars, view, instrument)
-            self._displayed_key = (instrument.get("market"), instrument.get("code"), view, preferred)
-            provider = {"sina": "新浪", "eastmoney": "东方财富"}.get(result.source, "")
-            pieces = [f"数据来源：{provider}" if provider else "", "未复权"]
-            if result.source and result.source != preferred:
-                pieces.append("已使用备用数据源")
-            if result.cached:
-                pieces.append("缓存（更新失败）" if result.stale else "本地缓存")
-            if result.bars:
-                visible = self.dialog.chart.bars
-                pieces.append(f"{visible[0].time} — {visible[-1].time}")
-                if view == "daily" and len(result.bars) < 89:
-                    pieces.append("历史不足时，部分均线从满足周期处开始显示")
-            pieces.append(result.message)
-            self.dialog.status.setText(" · ".join(piece for piece in pieces if piece))
-            self._place_floating()
+            self._render(series, view, preferred)
         if self._pending is not None:
-            self._start(self._pending)
+            pending, self._pending = self._pending, None
+            if pending[0] == self._generation and self.dialog.isVisible():
+                # The completed worker may have loaded the same minute family
+                # while the user switched from intraday to five-day view.
+                self.reload()
+
+    def _render(self, series, view, preferred):
+        result = series.result
+        instrument = series.instrument
+        bars = select_bars(result.bars, view, instrument)
+        self.dialog.chart.set_data(bars, view, instrument)
+        self._displayed_key = (self._key(instrument, view, preferred), view)
+        provider = {"sina": "新浪", "eastmoney": "东方财富"}.get(result.source, "")
+        pieces = [result.message, provider, "未复权", "跟随行情更新"]
+        if result.source and result.source != preferred:
+            pieces.append("已使用备用数据源")
+        if result.stale:
+            pieces.append("缓存（更新失败）")
+        elif result.cached:
+            pieces.append("本地缓存")
+        if bars:
+            visible = self.dialog.chart.bars
+            pieces.append(f"{visible[0].time} — {visible[-1].time}")
+            if view == "daily" and len(bars) < 89:
+                pieces.append("历史不足时，部分均线从满足周期处开始显示")
+        self.dialog.set_status(" · ".join(piece for piece in pieces if piece))
+        self._place_floating()

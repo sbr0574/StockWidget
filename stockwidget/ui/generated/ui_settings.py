@@ -290,7 +290,14 @@ class Ui_SettingDialog(object):
 
         self.dataContentLayout.addWidget(self.gb_data_setting)
 
-        self.chart_enabled_row = QWidget(self.data_content)
+        self.gb_chart = QGroupBox(self.data_content)
+        self.gb_chart.setObjectName(u"gb_chart")
+        self.gb_chart.setFlat(False)
+        self.gb_chart_layout = QVBoxLayout(self.gb_chart)
+        self.gb_chart_layout.setSpacing(10)
+        self.gb_chart_layout.setObjectName(u"gb_chart_layout")
+        self.gb_chart_layout.setContentsMargins(10, 15, 10, 10)
+        self.chart_enabled_row = QWidget(self.gb_chart)
         self.chart_enabled_row.setObjectName(u"chart_enabled_row")
         self.chart_enabled_layout = QGridLayout(self.chart_enabled_row)
         self.chart_enabled_layout.setObjectName(u"chart_enabled_layout")
@@ -299,12 +306,14 @@ class Ui_SettingDialog(object):
         self.chart_enabled_layout.setContentsMargins(0, 0, 0, 0)
         self.chart_enabled_title = QLabel(self.chart_enabled_row)
         self.chart_enabled_title.setObjectName(u"chart_enabled_title")
+        self.chart_enabled_title.setProperty(u"settingTitle", True)
 
         self.chart_enabled_layout.addWidget(self.chart_enabled_title, 0, 0, 1, 1)
 
         self.chart_enabled_description = QLabel(self.chart_enabled_row)
         self.chart_enabled_description.setObjectName(u"chart_enabled_description")
         self.chart_enabled_description.setMaximumSize(QSize(310, 16777215))
+        self.chart_enabled_description.setProperty(u"settingDescription", True)
         self.chart_enabled_description.setWordWrap(True)
 
         self.chart_enabled_layout.addWidget(self.chart_enabled_description, 1, 0, 1, 1)
@@ -315,9 +324,9 @@ class Ui_SettingDialog(object):
         self.chart_enabled_layout.addWidget(self.cb_chart_enabled, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
-        self.dataContentLayout.addWidget(self.chart_enabled_row)
+        self.gb_chart_layout.addWidget(self.chart_enabled_row)
 
-        self.chart_display_mode_row = QWidget(self.data_content)
+        self.chart_display_mode_row = QWidget(self.gb_chart)
         self.chart_display_mode_row.setObjectName(u"chart_display_mode_row")
         self.chart_display_mode_layout = QGridLayout(self.chart_display_mode_row)
         self.chart_display_mode_layout.setObjectName(u"chart_display_mode_layout")
@@ -326,17 +335,21 @@ class Ui_SettingDialog(object):
         self.chart_display_mode_layout.setContentsMargins(0, 0, 0, 0)
         self.chart_display_mode_title = QLabel(self.chart_display_mode_row)
         self.chart_display_mode_title.setObjectName(u"chart_display_mode_title")
+        self.chart_display_mode_title.setProperty(u"settingTitle", True)
 
         self.chart_display_mode_layout.addWidget(self.chart_display_mode_title, 0, 0, 1, 1)
 
         self.chart_display_mode_description = QLabel(self.chart_display_mode_row)
         self.chart_display_mode_description.setObjectName(u"chart_display_mode_description")
         self.chart_display_mode_description.setMaximumSize(QSize(310, 16777215))
+        self.chart_display_mode_description.setProperty(u"settingDescription", True)
         self.chart_display_mode_description.setWordWrap(True)
 
         self.chart_display_mode_layout.addWidget(self.chart_display_mode_description, 1, 0, 1, 1)
 
         self.cmb_chart_display_mode = QComboBox(self.chart_display_mode_row)
+        self.cmb_chart_display_mode.addItem("")
+        self.cmb_chart_display_mode.addItem("")
         self.cmb_chart_display_mode.addItem("")
         self.cmb_chart_display_mode.addItem("")
         self.cmb_chart_display_mode.setObjectName(u"cmb_chart_display_mode")
@@ -346,7 +359,88 @@ class Ui_SettingDialog(object):
         self.chart_display_mode_layout.addWidget(self.cmb_chart_display_mode, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
-        self.dataContentLayout.addWidget(self.chart_display_mode_row)
+        self.gb_chart_layout.addWidget(self.chart_display_mode_row)
+
+        self.chart_indicators = QWidget(self.gb_chart)
+        self.chart_indicators.setObjectName(u"chart_indicators")
+        self.chart_indicators_layout = QVBoxLayout(self.chart_indicators)
+        self.chart_indicators_layout.setSpacing(5)
+        self.chart_indicators_layout.setObjectName(u"chart_indicators_layout")
+        self.chart_indicators_layout.setContentsMargins(0, 0, 0, 0)
+        self.chart_indicators_title = QLabel(self.chart_indicators)
+        self.chart_indicators_title.setObjectName(u"chart_indicators_title")
+        self.chart_indicators_title.setProperty(u"settingTitle", True)
+
+        self.chart_indicators_layout.addWidget(self.chart_indicators_title)
+
+        self.chart_indicators_description = QLabel(self.chart_indicators)
+        self.chart_indicators_description.setObjectName(u"chart_indicators_description")
+        self.chart_indicators_description.setMaximumSize(QSize(310, 16777215))
+        self.chart_indicators_description.setWordWrap(True)
+        self.chart_indicators_description.setProperty(u"settingDescription", True)
+
+        self.chart_indicators_layout.addWidget(self.chart_indicators_description)
+
+        self.chart_lines_layout = QHBoxLayout()
+        self.chart_lines_layout.setSpacing(10)
+        self.chart_lines_layout.setObjectName(u"chart_lines_layout")
+        self.cb_chart_average = QCheckBox(self.chart_indicators)
+        self.cb_chart_average.setObjectName(u"cb_chart_average")
+
+        self.chart_lines_layout.addWidget(self.cb_chart_average)
+
+        self.cb_chart_volume = QCheckBox(self.chart_indicators)
+        self.cb_chart_volume.setObjectName(u"cb_chart_volume")
+
+        self.chart_lines_layout.addWidget(self.cb_chart_volume)
+
+        self.chart_lines_spacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.chart_lines_layout.addItem(self.chart_lines_spacer)
+
+
+        self.chart_indicators_layout.addLayout(self.chart_lines_layout)
+
+        self.chart_ma_layout = QHBoxLayout()
+        self.chart_ma_layout.setSpacing(10)
+        self.chart_ma_layout.setObjectName(u"chart_ma_layout")
+        self.cb_chart_ma5 = QCheckBox(self.chart_indicators)
+        self.cb_chart_ma5.setObjectName(u"cb_chart_ma5")
+
+        self.chart_ma_layout.addWidget(self.cb_chart_ma5)
+
+        self.cb_chart_ma10 = QCheckBox(self.chart_indicators)
+        self.cb_chart_ma10.setObjectName(u"cb_chart_ma10")
+
+        self.chart_ma_layout.addWidget(self.cb_chart_ma10)
+
+        self.cb_chart_ma20 = QCheckBox(self.chart_indicators)
+        self.cb_chart_ma20.setObjectName(u"cb_chart_ma20")
+
+        self.chart_ma_layout.addWidget(self.cb_chart_ma20)
+
+        self.cb_chart_ma30 = QCheckBox(self.chart_indicators)
+        self.cb_chart_ma30.setObjectName(u"cb_chart_ma30")
+
+        self.chart_ma_layout.addWidget(self.cb_chart_ma30)
+
+        self.cb_chart_ma60 = QCheckBox(self.chart_indicators)
+        self.cb_chart_ma60.setObjectName(u"cb_chart_ma60")
+
+        self.chart_ma_layout.addWidget(self.cb_chart_ma60)
+
+        self.chart_ma_spacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.chart_ma_layout.addItem(self.chart_ma_spacer)
+
+
+        self.chart_indicators_layout.addLayout(self.chart_ma_layout)
+
+
+        self.gb_chart_layout.addWidget(self.chart_indicators)
+
+
+        self.dataContentLayout.addWidget(self.gb_chart)
 
         self.gb_data = QGroupBox(self.data_content)
         self.gb_data.setObjectName(u"gb_data")
@@ -2837,22 +2931,32 @@ class Ui_SettingDialog(object):
         self.rb_em.setText(QCoreApplication.translate("SettingDialog", u"\u4e1c\u65b9\u8d22\u5bcc", None))
         self.label_interval.setText(QCoreApplication.translate("SettingDialog", u"\u5237\u65b0\u95f4\u9694\uff1a", None))
         self.sb_interval.setSuffix(QCoreApplication.translate("SettingDialog", u" \u79d2", None))
+        self.gb_chart.setTitle(QCoreApplication.translate("SettingDialog", u"\u5206\u65f6 / K\u7ebf\u56fe", None))
         self.chart_enabled_title.setText(QCoreApplication.translate("SettingDialog", u"\u70b9\u51fb\u884c\u60c5\u884c\u663e\u793a\u56fe\u8868", None))
-        self.chart_enabled_description.setStyleSheet(QCoreApplication.translate("SettingDialog", u"color: palette(mid);", None))
-        self.chart_enabled_description.setText(QCoreApplication.translate("SettingDialog", u"\u67e5\u770b\u5f53\u65e5 / 5\u65e5\u5206\u65f6\u548c30\u65e5K\u7ebf\uff0c\u6570\u636e\u6e90\u8ddf\u968f\u5f53\u524d\u884c\u60c5\u8bbe\u7f6e\u3002", None))
+        self.chart_enabled_description.setText(QCoreApplication.translate("SettingDialog", u"\u67e5\u770b\u5206\u65f6\u30015\u65e5\u548c\u65e5K\u7ebf\uff0c\u8ddf\u968f\u884c\u60c5\u5237\u65b0\u95f4\u9694\u66f4\u65b0\u3002", None))
 #if QT_CONFIG(tooltip)
         self.cb_chart_enabled.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5f00\u542f\u540e\uff0c\u6d6e\u7a97\u548c\u4efb\u52a1\u680f\u7684\u884c\u60c5\u884c\u5747\u53ef\u5355\u51fb\u6253\u5f00\u56fe\u8868\u3002\u62d6\u52a8\u53ca\u53cc\u51fb\u9690\u85cf\u4fdd\u6301\u539f\u6709\u64cd\u4f5c\uff1b\u5173\u95ed\u540e\u4e0d\u8bf7\u6c42\u6216\u663e\u793a\u56fe\u8868\u3002", None))
 #endif // QT_CONFIG(tooltip)
         self.cb_chart_enabled.setText(QCoreApplication.translate("SettingDialog", u"\u70b9\u51fb\u884c\u60c5\u884c\u663e\u793a\u56fe\u8868", None))
-        self.chart_display_mode_title.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u663e\u793a\u65b9\u5f0f", None))
-        self.chart_display_mode_description.setStyleSheet(QCoreApplication.translate("SettingDialog", u"color: palette(mid);", None))
-        self.chart_display_mode_description.setText(QCoreApplication.translate("SettingDialog", u"\u534a\u900f\u660e\u6d6e\u7a97\u9760\u8fd1\u884c\u60c5\u663e\u793a\uff0c\u70b9\u51fb\u5916\u90e8\u6216\u6309 Esc \u5173\u95ed\u3002", None))
+        self.chart_display_mode_title.setText(QCoreApplication.translate("SettingDialog", u"\u7a97\u53e3\u5927\u5c0f", None))
+        self.chart_display_mode_description.setText(QCoreApplication.translate("SettingDialog", u"\u6d6e\u7a97\u9760\u8fd1\u884c\u60c5\u663e\u793a\uff0c\u70b9\u51fb\u5916\u90e8\u6216\u6309 Esc \u5173\u95ed\u3002", None))
         self.cmb_chart_display_mode.setItemText(0, QCoreApplication.translate("SettingDialog", u"\u72ec\u7acb\u7a97\u53e3", None))
-        self.cmb_chart_display_mode.setItemText(1, QCoreApplication.translate("SettingDialog", u"\u534a\u900f\u660e\u6d6e\u7a97", None))
+        self.cmb_chart_display_mode.setItemText(1, QCoreApplication.translate("SettingDialog", u"\u5927\u6d6e\u7a97", None))
+        self.cmb_chart_display_mode.setItemText(2, QCoreApplication.translate("SettingDialog", u"\u4e2d\u6d6e\u7a97", None))
+        self.cmb_chart_display_mode.setItemText(3, QCoreApplication.translate("SettingDialog", u"\u5c0f\u6d6e\u7a97", None))
 
 #if QT_CONFIG(tooltip)
-        self.cmb_chart_display_mode.setToolTip(QCoreApplication.translate("SettingDialog", u"\u72ec\u7acb\u7a97\u53e3\u4fdd\u6301\u539f\u6709\u56fe\u8868\u663e\u793a\u3002\u534a\u900f\u660e\u6d6e\u7a97\u663e\u793a\u5728\u884c\u60c5\u6d6e\u7a97\u65c1\uff1b\u4ece\u4efb\u52a1\u680f\u6253\u5f00\u65f6\u9760\u8fd1\u70b9\u51fb\u4f4d\u7f6e\uff0c\u5e76\u81ea\u52a8\u907f\u8ba9\u5c4f\u5e55\u8fb9\u7f18\u3002", None))
+        self.cmb_chart_display_mode.setToolTip(QCoreApplication.translate("SettingDialog", u"\u72ec\u7acb\u7a97\u53e3\u53ef\u8c03\u6574\u5927\u5c0f\u3002\u5927\u3001\u4e2d\u3001\u5c0f\u6d6e\u7a97\u5747\u4e3a\u534a\u900f\u660e\uff0c\u5206\u522b\u7ea6560\u00d7400\u3001420\u00d7300\u3001320\u00d7230\uff1b\u4ece\u4efb\u52a1\u680f\u6253\u5f00\u65f6\u9760\u8fd1\u70b9\u51fb\u4f4d\u7f6e\uff0c\u81ea\u52a8\u907f\u8ba9\u5c4f\u5e55\u8fb9\u7f18\u3002", None))
 #endif // QT_CONFIG(tooltip)
+        self.chart_indicators_title.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6307\u6807", None))
+        self.chart_indicators_description.setText(QCoreApplication.translate("SettingDialog", u"\u5747\u4ef7\u7ebf\u7528\u4e8e\u5206\u65f6\u56fe\uff0cMA\u5747\u7ebf\u7528\u4e8e\u65e5K\u7ebf\u3002", None))
+        self.cb_chart_average.setText(QCoreApplication.translate("SettingDialog", u"\u5206\u65f6\u5747\u4ef7\u7ebf", None))
+        self.cb_chart_volume.setText(QCoreApplication.translate("SettingDialog", u"\u6210\u4ea4\u91cf", None))
+        self.cb_chart_ma5.setText(QCoreApplication.translate("SettingDialog", u"MA5", None))
+        self.cb_chart_ma10.setText(QCoreApplication.translate("SettingDialog", u"MA10", None))
+        self.cb_chart_ma20.setText(QCoreApplication.translate("SettingDialog", u"MA20", None))
+        self.cb_chart_ma30.setText(QCoreApplication.translate("SettingDialog", u"MA30", None))
+        self.cb_chart_ma60.setText(QCoreApplication.translate("SettingDialog", u"MA60", None))
         self.gb_data.setTitle(QCoreApplication.translate("SettingDialog", u"\u6307\u6807\u663e\u793a", None))
         self.cb_head_title.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u8868\u5934", None))
         self.cb_head_description.setText(QCoreApplication.translate("SettingDialog", u"\u5728\u884c\u60c5\u9876\u90e8\u663e\u793a\u6307\u6807\u540d\u79f0\uff0c\u652f\u6301\u7684\u8868\u5934\u53ef\u5355\u51fb\u6392\u5e8f\u3002", None))
