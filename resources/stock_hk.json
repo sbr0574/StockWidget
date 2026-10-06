@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-05",
+  "last_update": "2026-10-06",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -16053,7 +16053,7 @@
       "market": "hk",
       "type": "港",
       "name": "怡俊集團控股",
-      "name_en": "EASY SMART GP",
+      "name_en": "EASY SMART-100",
       "py": "yijunjituankonggu",
       "abbr": "yjjtkg"
     },
@@ -18487,6 +18487,15 @@
       "py": "yurongjituanguquan",
       "abbr": "yrjtgq"
     },
+    "hk02934": {
+      "code": "02934",
+      "market": "hk",
+      "type": "港",
+      "name": "中國三迪",
+      "name_en": "CHINA SANDI",
+      "py": "zhongguosandi",
+      "abbr": "zgsd"
+    },
     "hk02935": {
       "code": "02935",
       "market": "hk",
@@ -18522,6 +18531,15 @@
       "name_en": "KING INTL INV",
       "py": "diwangguojitouzi",
       "abbr": "dwgjtz"
+    },
+    "hk02939": {
+      "code": "02939",
+      "market": "hk",
+      "type": "港",
+      "name": "怡俊集團(二千)",
+      "name_en": "EASY SMART-2K",
+      "py": "yijunjituan(erqian)",
+      "abbr": "yjjt(eq)"
     },
     "hk03001": {
       "code": "03001",
@@ -26523,6 +26541,15 @@
       "name_en": "GF HEALTHCARE",
       "py": "jinweiyiliao",
       "abbr": "jwyl"
+    },
+    "hk08572": {
+      "code": "08572",
+      "market": "hk",
+      "type": "港",
+      "name": "朝威控股",
+      "name_en": "GLORY FLAME",
+      "py": "chaoweikonggu",
+      "abbr": "cwkg"
     },
     "hk08573": {
       "code": "08573",

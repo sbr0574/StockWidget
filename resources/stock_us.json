@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-05",
+  "last_update": "2026-10-06",
   "codes": {
     "usa": {
       "code": "a",
@@ -2392,15 +2392,6 @@
       "type": "美",
       "name": "Anfield U.S. Equity Sector Rotation ETF",
       "name_en": "Anfield U.S. Equity Sector Rotation ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usaeth": {
-      "code": "aeth",
-      "market": "us",
-      "type": "美",
-      "name": "Bitwise Trendwise Ether and Treasuries Rotation Strategy ETF",
-      "name_en": "Bitwise Trendwise Ether and Treasuries Rotation Strategy ETF",
       "py": "",
       "abbr": ""
     },
@@ -10918,12 +10909,12 @@
       "py": "",
       "abbr": ""
     },
-    "usbcatrw": {
-      "code": "bcatrw",
+    "usbcatr": {
+      "code": "bcatr",
       "market": "us",
       "type": "美",
-      "name": "BlackRock Capital Allocation Term Trust Rights (expiring October 21, 2026) Rights when issued",
-      "name_en": "BlackRock Capital Allocation Term Trust Rights (expiring October 21, 2026) Rights when issued",
+      "name": "BlackRock Capital Allocation Term Trust Rights (expiring October 21, 2026) Rights",
+      "name_en": "BlackRock Capital Allocation Term Trust Rights (expiring October 21, 2026) Rights",
       "py": "",
       "abbr": ""
     },
@@ -26641,33 +26632,6 @@
       "py": "",
       "abbr": ""
     },
-    "usdbrg_h": {
-      "code": "dbrg_h",
-      "market": "us",
-      "type": "美",
-      "name": "DigitalBridge Group, Inc. 7.125% Series H",
-      "name_en": "DigitalBridge Group, Inc. 7.125% Series H",
-      "py": "",
-      "abbr": ""
-    },
-    "usdbrg_i": {
-      "code": "dbrg_i",
-      "market": "us",
-      "type": "美",
-      "name": "DigitalBridge Group, Inc. 7.15% Series I",
-      "name_en": "DigitalBridge Group, Inc. 7.15% Series I",
-      "py": "",
-      "abbr": ""
-    },
-    "usdbrg_j": {
-      "code": "dbrg_j",
-      "market": "us",
-      "type": "美",
-      "name": "DigitalBridge Group, Inc. 7.125% Series J",
-      "name_en": "DigitalBridge Group, Inc. 7.125% Series J",
-      "py": "",
-      "abbr": ""
-    },
     "usdbvt": {
       "code": "dbvt",
       "market": "us",
@@ -27491,8 +27455,8 @@
       "code": "dfac",
       "market": "us",
       "type": "美",
-      "name": "Dimensional U.S. Core Equity 2 ETF",
-      "name_en": "Dimensional U.S. Core Equity 2 ETF",
+      "name": "U.S. Core Equity 2 Portfolio ETF Class Shares",
+      "name_en": "U.S. Core Equity 2 Portfolio ETF Class Shares",
       "py": "",
       "abbr": ""
     },
@@ -27536,8 +27500,8 @@
       "code": "dfas",
       "market": "us",
       "type": "美",
-      "name": "Dimensional U.S. Small Cap ETF",
-      "name_en": "Dimensional U.S. Small Cap ETF",
+      "name": "U.S. Small Cap Portfolio: ETF Class Shares",
+      "name_en": "U.S. Small Cap Portfolio: ETF Class Shares",
       "py": "",
       "abbr": ""
     },
@@ -27545,8 +27509,8 @@
       "code": "dfat",
       "market": "us",
       "type": "美",
-      "name": "Dimensional U.S. Targeted Value ETF",
-      "name_en": "Dimensional U.S. Targeted Value ETF",
+      "name": "U.S. Targeted Value Portfolio ETF Class Shares",
+      "name_en": "U.S. Targeted Value Portfolio ETF Class Shares",
       "py": "",
       "abbr": ""
     },
@@ -29583,15 +29547,6 @@
       "name_en": "YieldMax DKNG Option Income Strategy ETF",
       "py": "dkngqiquanshouyicelveetf-yieldmax",
       "abbr": "dkngqqsycletf-yieldmax"
-    },
-    "usdrct": {
-      "code": "drct",
-      "market": "us",
-      "type": "美",
-      "name": "Direct Digital Holdings, Inc. - Class A Common Stock",
-      "name_en": "Direct Digital Holdings, Inc. - Class A Common Stock",
-      "py": "",
-      "abbr": ""
     },
     "usdrd": {
       "code": "drd",
@@ -47341,15 +47296,6 @@
       "py": "",
       "abbr": ""
     },
-    "usgwh": {
-      "code": "gwh",
-      "market": "us",
-      "type": "美",
-      "name": "ESS Tech, Inc. Common Stock",
-      "name_en": "ESS Tech, Inc. Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "usgwre": {
       "code": "gwre",
       "market": "us",
@@ -53398,15 +53344,6 @@
       "py": "",
       "abbr": ""
     },
-    "usilcb": {
-      "code": "ilcb",
-      "market": "us",
-      "type": "美",
-      "name": "iShares Morningstar Large-Cap ETF",
-      "name_en": "iShares Morningstar Large-Cap ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usilcg": {
       "code": "ilcg",
       "market": "us",
@@ -54955,12 +54892,30 @@
       "py": "",
       "abbr": ""
     },
+    "usiphx": {
+      "code": "iphx",
+      "market": "us",
+      "type": "美",
+      "name": "Inflection Point Acquisition Corp. VIII - Class A Ordinary Shares",
+      "name_en": "Inflection Point Acquisition Corp. VIII - Class A Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
     "usiphxu": {
       "code": "iphxu",
       "market": "us",
       "type": "美",
       "name": "Inflection Point Acquisition Corp. VIII - Unit",
       "name_en": "Inflection Point Acquisition Corp. VIII - Unit",
+      "py": "",
+      "abbr": ""
+    },
+    "usiphxw": {
+      "code": "iphxw",
+      "market": "us",
+      "type": "美",
+      "name": "Inflection Point Acquisition Corp. VIII - Warrant",
+      "name_en": "Inflection Point Acquisition Corp. VIII - Warrant",
       "py": "",
       "abbr": ""
     },
@@ -55537,15 +55492,6 @@
       "type": "美",
       "name": "IncomeSTKd 1x Bitcoin & 1x Gold Premium ETF",
       "name_en": "IncomeSTKd 1x Bitcoin & 1x Gold Premium ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usiscb": {
-      "code": "iscb",
-      "market": "us",
-      "type": "美",
-      "name": "iShares Morningstar Small-Cap ETF",
-      "name_en": "iShares Morningstar Small-Cap ETF",
       "py": "",
       "abbr": ""
     },
@@ -68041,6 +67987,15 @@
       "py": "",
       "abbr": ""
     },
+    "usmlrg": {
+      "code": "mlrg",
+      "market": "us",
+      "type": "美",
+      "name": "iShares MSCI USA ETF",
+      "name_en": "iShares MSCI USA ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usmlss": {
       "code": "mlss",
       "market": "us",
@@ -69685,6 +69640,15 @@
       "type": "美",
       "name": "MSC Industrial Direct Company, Inc. Common Stock",
       "name_en": "MSC Industrial Direct Company, Inc. Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usmsml": {
+      "code": "msml",
+      "market": "us",
+      "type": "美",
+      "name": "iShares MSCI USA Small-Cap ETF",
+      "name_en": "iShares MSCI USA Small-Cap ETF",
       "py": "",
       "abbr": ""
     },
@@ -91603,6 +91567,15 @@
       "py": "",
       "abbr": ""
     },
+    "usrwaym": {
+      "code": "rwaym",
+      "market": "us",
+      "type": "美",
+      "name": "Runway Growth Finance Corp. - 7.75% Notes Due 2031",
+      "name_en": "Runway Growth Finance Corp. - 7.75% Notes Due 2031",
+      "py": "",
+      "abbr": ""
+    },
     "usrwem": {
       "code": "rwem",
       "market": "us",
@@ -101791,12 +101764,30 @@
       "py": "wuguihaian",
       "abbr": "wgha"
     },
+    "ustbcv": {
+      "code": "tbcv",
+      "market": "us",
+      "type": "美",
+      "name": "Thunder Bridge Capital Partners V, Ltd. - Class A Ordinary Shares",
+      "name_en": "Thunder Bridge Capital Partners V, Ltd. - Class A Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
     "ustbcvu": {
       "code": "tbcvu",
       "market": "us",
       "type": "美",
       "name": "Thunder Bridge Capital Partners V, Ltd. - Units",
       "name_en": "Thunder Bridge Capital Partners V, Ltd. - Units",
+      "py": "",
+      "abbr": ""
+    },
+    "ustbcvw": {
+      "code": "tbcvw",
+      "market": "us",
+      "type": "美",
+      "name": "Thunder Bridge Capital Partners V, Ltd. - Warrants",
+      "name_en": "Thunder Bridge Capital Partners V, Ltd. - Warrants",
       "py": "",
       "abbr": ""
     },
@@ -107056,15 +107047,6 @@
       "py": "",
       "abbr": ""
     },
-    "ustwod": {
-      "code": "twod",
-      "market": "us",
-      "type": "美",
-      "name": "Two Harbors Investments Corp 9.375% Senior Notes due 2030",
-      "name_en": "Two Harbors Investments Corp 9.375% Senior Notes due 2030",
-      "py": "",
-      "abbr": ""
-    },
     "ustwox": {
       "code": "twox",
       "market": "us",
@@ -111340,6 +111322,15 @@
       "py": "konghuangzhishuqihuoduanqiheyueetf",
       "abbr": "khzsqhdqhyetf"
     },
+    "usvjet": {
+      "code": "vjet",
+      "market": "us",
+      "type": "美",
+      "name": "Flyte Aviation, Inc. Common Stock",
+      "name_en": "Flyte Aviation, Inc. Common Stock",
+      "py": "",
+      "abbr": ""
+    },
     "usvki": {
       "code": "vki",
       "market": "us",
@@ -112474,15 +112465,6 @@
       "py": "shijiequanshichangzhishuetf-vanguard",
       "abbr": "sjqsczsetf-vanguard"
     },
-    "usvtak": {
-      "code": "vtak",
-      "market": "us",
-      "type": "美",
-      "name": "Catheter Precision, Inc. Common Stock",
-      "name_en": "Catheter Precision, Inc. Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "usvtc": {
       "code": "vtc",
       "market": "us",
@@ -113065,24 +113047,6 @@
       "type": "美",
       "name": "Western Alliance Bancorporation Depositary Shares, Each Representing a 1/400th Interest in a Share of 4.250% Fixed-Rate Non-Cumulative Perpetual Preferred Stock, Series A",
       "name_en": "Western Alliance Bancorporation Depositary Shares, Each Representing a 1/400th Interest in a Share of 4.250% Fixed-Rate Non-Cumulative Perpetual Preferred Stock, Series A",
-      "py": "",
-      "abbr": ""
-    },
-    "uswald": {
-      "code": "wald",
-      "market": "us",
-      "type": "美",
-      "name": "Waldencast plc - Class A Ordinary Share",
-      "name_en": "Waldencast plc - Class A Ordinary Share",
-      "py": "",
-      "abbr": ""
-    },
-    "uswaldw": {
-      "code": "waldw",
-      "market": "us",
-      "type": "美",
-      "name": "Waldencast plc - Warrant",
-      "name_en": "Waldencast plc - Warrant",
       "py": "",
       "abbr": ""
     },
@@ -114175,15 +114139,6 @@
       "py": "",
       "abbr": ""
     },
-    "uswkey": {
-      "code": "wkey",
-      "market": "us",
-      "type": "美",
-      "name": "WISeKey International Holding Ltd - American Depositary Shares",
-      "name_en": "WISeKey International Holding Ltd - American Depositary Shares",
-      "py": "",
-      "abbr": ""
-    },
     "uswkhs": {
       "code": "wkhs",
       "market": "us",
@@ -114597,6 +114552,15 @@
       "name_en": "Westport Fuel Systems Inc - Common Shares",
       "py": "xigangranliao",
       "abbr": "xgrl"
+    },
+    "uswqey": {
+      "code": "wqey",
+      "market": "us",
+      "type": "美",
+      "name": "WISeQey Corp - Ordinary Shares",
+      "name_en": "WISeQey Corp - Ordinary Shares",
+      "py": "",
+      "abbr": ""
     },
     "uswqtm": {
       "code": "wqtm",
@@ -115540,15 +115504,6 @@
       "type": "美",
       "name": "Innovator U.S. Equity Accelerated 9 Buffer ETF - July",
       "name_en": "Innovator U.S. Equity Accelerated 9 Buffer ETF - July",
-      "py": "",
-      "abbr": ""
-    },
-    "usxbnb": {
-      "code": "xbnb",
-      "market": "us",
-      "type": "美",
-      "name": "Teucrium xETFs 2x Long Daily BNB ETF",
-      "name_en": "Teucrium xETFs 2x Long Daily BNB ETF",
       "py": "",
       "abbr": ""
     },
@@ -119122,15 +119077,6 @@
       "type": "美",
       "name": "USCF Sustainable Battery Metals Strategy Fund",
       "name_en": "USCF Sustainable Battery Metals Strategy Fund",
-      "py": "",
-      "abbr": ""
-    },
-    "uszsc": {
-      "code": "zsc",
-      "market": "us",
-      "type": "美",
-      "name": "USCF Sustainable Commodity Strategy Fund",
-      "name_en": "USCF Sustainable Commodity Strategy Fund",
       "py": "",
       "abbr": ""
     },
