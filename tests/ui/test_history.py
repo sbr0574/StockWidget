@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import time
 
 from PySide6.QtCore import QPoint, QRect, Qt
+from PySide6.QtGui import QCursor
 from PySide6.QtTest import QTest
 
 from stockwidget.data.bars import BarResult
@@ -15,6 +16,17 @@ from tests.support import SettingsTestCase
 
 
 class HistoryUITests(SettingsTestCase):
+    def setUp(self):
+        super().setUp()
+        self._cursor_position = QCursor.pos()
+
+    def tearDown(self):
+        super().tearDown()
+        # QTest mouse gestures can move the global cursor even offscreen.
+        # Restore it so later hover tests don't inherit a deleted window's hit.
+        QCursor.setPos(self._cursor_position)
+        self.app.processEvents()
+
     def wait_until(self, predicate):
         deadline = time.monotonic() + 2
         while not predicate() and time.monotonic() < deadline:
@@ -88,6 +100,7 @@ class HistoryUITests(SettingsTestCase):
             open_chart.assert_not_called()
             QTest.mouseClick(target, Qt.LeftButton, pos=pos)
             QTest.mouseDClick(target, Qt.LeftButton, pos=pos)
+            QTest.mouseRelease(target, Qt.LeftButton, pos=pos)
             QTest.qWait(self.app.doubleClickInterval() + 30)
             open_chart.assert_not_called()
             self.assertFalse(window.widget_visible)
