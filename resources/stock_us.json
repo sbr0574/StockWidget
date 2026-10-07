@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-06",
+  "last_update": "2026-10-07",
   "codes": {
     "usa": {
       "code": "a",
@@ -25088,8 +25088,8 @@
       "code": "ctgg",
       "market": "us",
       "type": "美",
-      "name": "Qwest Corporation 6.500% Senior Notes due 2051 (denominations of $25)",
-      "name_en": "Qwest Corporation 6.500% Senior Notes due 2051 (denominations of $25)",
+      "name": "Qwest Corporation - 6.500% Notes due 2051",
+      "name_en": "Qwest Corporation - 6.500% Notes due 2051",
       "py": "",
       "abbr": ""
     },
@@ -25106,8 +25106,8 @@
       "code": "cthh",
       "market": "us",
       "type": "美",
-      "name": "Qwest Corporation 6.750% Senior Notes due 2052 (denominations of $25)",
-      "name_en": "Qwest Corporation 6.750% Senior Notes due 2052 (denominations of $25)",
+      "name": "Qwest Corporation - 6.750% Notes due 2052",
+      "name_en": "Qwest Corporation - 6.750% Notes due 2052",
       "py": "",
       "abbr": ""
     },
@@ -44965,6 +44965,15 @@
       "py": "",
       "abbr": ""
     },
+    "usgmac": {
+      "code": "gmac",
+      "market": "us",
+      "type": "美",
+      "name": "Simplify Brookwood Global Macro ETF",
+      "name_en": "Simplify Brookwood Global Macro ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usgmar": {
       "code": "gmar",
       "market": "us",
@@ -48598,6 +48607,15 @@
       "type": "美",
       "name": "Hartford Large Cap Growth ETF",
       "name_en": "Hartford Large Cap Growth ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "ushfix": {
+      "code": "hfix",
+      "market": "us",
+      "type": "美",
+      "name": "Nomura High Yield Total Return ETF",
+      "name_en": "Nomura High Yield Total Return ETF",
       "py": "",
       "abbr": ""
     },
@@ -62155,15 +62173,6 @@
       "py": "",
       "abbr": ""
     },
-    "uslesl": {
-      "code": "lesl",
-      "market": "us",
-      "type": "美",
-      "name": "Leslie's, Inc. - Common Stock",
-      "name_en": "Leslie's, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "usleu": {
       "code": "leu",
       "market": "us",
@@ -64355,8 +64364,8 @@
       "code": "lumn",
       "market": "us",
       "type": "美",
-      "name": "Lumen Technologies, Inc. Common Stock",
-      "name_en": "Lumen Technologies, Inc. Common Stock",
+      "name": "Lumen Technologies, Inc.  - Common Stock",
+      "name_en": "Lumen Technologies, Inc.  - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -72910,15 +72919,6 @@
       "py": "",
       "abbr": ""
     },
-    "usnhpbp": {
-      "code": "nhpbp",
-      "market": "us",
-      "type": "美",
-      "name": "National Healthcare Properties, Inc. - 7.125% Series B Cumulative Redeemable Perpetual Preferred Stock",
-      "name_en": "National Healthcare Properties, Inc. - 7.125% Series B Cumulative Redeemable Perpetual Preferred Stock",
-      "py": "",
-      "abbr": ""
-    },
     "usnhs": {
       "code": "nhs",
       "market": "us",
@@ -79489,6 +79489,15 @@
       "py": "",
       "abbr": ""
     },
+    "uspaxgu": {
+      "code": "paxgu",
+      "market": "us",
+      "type": "美",
+      "name": "Pine Tree Acquisition Corp. - Units",
+      "name_en": "Pine Tree Acquisition Corp. - Units",
+      "py": "",
+      "abbr": ""
+    },
     "uspaxs": {
       "code": "paxs",
       "market": "us",
@@ -84601,15 +84610,6 @@
       "py": "",
       "abbr": ""
     },
-    "uspsky": {
-      "code": "psky",
-      "market": "us",
-      "type": "美",
-      "name": "Paramount Skydance Corporation - Class B Common Stock",
-      "name_en": "Paramount Skydance Corporation - Class B Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "uspsl": {
       "code": "psl",
       "market": "us",
@@ -86983,15 +86983,6 @@
       "type": "美",
       "name": "Global X NASDAQ 100 Risk Managed Income ETF",
       "name_en": "Global X NASDAQ 100 Risk Managed Income ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usqrvo": {
-      "code": "qrvo",
-      "market": "us",
-      "type": "美",
-      "name": "Qorvo, Inc. - Common Stock",
-      "name_en": "Qorvo, Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -95893,6 +95884,15 @@
       "type": "美",
       "name": "SkyAI, Inc. - Warrant",
       "name_en": "SkyAI, Inc. - Warrant",
+      "py": "",
+      "abbr": ""
+    },
+    "usskyd": {
+      "code": "skyd",
+      "market": "us",
+      "type": "美",
+      "name": "Skydance Corporation Class B Common Stock",
+      "name_en": "Skydance Corporation Class B Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -107515,6 +107515,15 @@
       "py": "youbuzhoushouyietf-roundhill",
       "abbr": "ybzsyetf-roundhill"
     },
+    "usubiq": {
+      "code": "ubiq",
+      "market": "us",
+      "type": "美",
+      "name": "AAM Ubiquitous ETF",
+      "name_en": "AAM Ubiquitous ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usubnd": {
       "code": "ubnd",
       "market": "us",
@@ -109690,15 +109699,6 @@
       "type": "美",
       "name": "UWM Holdings Corporation Class A Common Stock",
       "name_en": "UWM Holdings Corporation Class A Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usuwmcrw": {
-      "code": "uwmcrw",
-      "market": "us",
-      "type": "美",
-      "name": "UWM Holdings Corporation Rights (November 12, 2026) Rights when issued",
-      "name_en": "UWM Holdings Corporation Rights (November 12, 2026) Rights when issued",
       "py": "",
       "abbr": ""
     },

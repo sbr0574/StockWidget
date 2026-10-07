@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-06",
+  "last_update": "2026-10-07",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -18541,6 +18541,15 @@
       "py": "yijunjituan(erqian)",
       "abbr": "yjjt(eq)"
     },
+    "hk02944": {
+      "code": "02944",
+      "market": "hk",
+      "type": "港",
+      "name": "大健康國際股權",
+      "name_en": "UNI HEALTH RTS",
+      "py": "dajiankangguojiguquan",
+      "abbr": "djkgjgq"
+    },
     "hk03001": {
       "code": "03001",
       "market": "hk",
@@ -24702,7 +24711,7 @@
       "market": "hk",
       "type": "港",
       "name": "金威醫療",
-      "name_en": "GF HEALTHCARE",
+      "name_en": "GF HEALTH-NEW",
       "py": "jinweiyiliao",
       "abbr": "jwyl"
     },
@@ -26538,7 +26547,7 @@
       "market": "hk",
       "type": "港",
       "name": "金威醫療",
-      "name_en": "GF HEALTHCARE",
+      "name_en": "GF HEALTH-OLD",
       "py": "jinweiyiliao",
       "abbr": "jwyl"
     },
@@ -26577,6 +26586,15 @@
       "name_en": "CB GLOBAL",
       "py": "langhuaguojijituan",
       "abbr": "lhgjjt"
+    },
+    "hk08585": {
+      "code": "08585",
+      "market": "hk",
+      "type": "港",
+      "name": "首都金融控股",
+      "name_en": "CAPITAL FIN",
+      "py": "shoudujinrongkonggu",
+      "abbr": "sdjrkg"
     },
     "hk08601": {
       "code": "08601",
