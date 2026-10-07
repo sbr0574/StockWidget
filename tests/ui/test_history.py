@@ -258,6 +258,7 @@ class HistoryUITests(HistoryTestCase):
                             self.assertLess(high, price * 1.02)
                             self.assertTrue(chart._plot.top() < chart._reference_y < chart._plot.bottom())
                             self.assertNotIn("均价", chart.tooltip_text(0))
+                            self.assertIn("分时均线", chart.tooltip_text(0))
                             # The separator extends into the otherwise empty axis margin.
                             scale = image.devicePixelRatio()
                             y = round((chart._plot.bottom() + chart._volume_plot.top()) / 2 * scale)
@@ -295,6 +296,30 @@ class HistoryUITests(HistoryTestCase):
         history.reload()
         self.assertFalse(popup.status.isHidden())
         self.assertIn("更新失败", popup.status.toolTip())
+
+    def test_missing_historical_average_is_drawn_and_switching_it_off_does_not_refetch(self):
+        dialog, window = self.make_window(chart_enabled=True)
+        history = window.history
+        minutes = history.cache.get.side_effect({}, "five_day", "sina").bars
+        minutes = tuple(replace(bar, open=10 + i / 10, high=10 + i / 10, low=10 + i / 10,
+                                close=10 + i / 10, volume=100, amount=(10 + i / 10) * 100, average=None)
+                        for i, bar in enumerate(minutes))
+        history.cache.get.side_effect = None
+        history.cache.get.return_value = BarResult(minutes, "sina")
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        chart = history.dialog.chart
+        self.assertIn("均价 10.50", chart.tooltip_text(10))
+        with_average = chart.grab().toImage()
+        dialog.ui.cb_chart_average.setChecked(False)
+        self.assertNotIn("均价", chart.tooltip_text(10))
+        self.assertNotEqual(with_average, chart.grab().toImage())
+        dialog.ui.cb_chart_average.setChecked(True)
+        self.assertIn("均价 10.50", chart.tooltip_text(10))
+        history.dialog.set_view("five_day")
+        self.wait_ready(window)
+        self.assertIn("均价 10.50", chart.tooltip_text(10))
+        self.assertEqual(history.cache.get.call_count, 1)
 
     def test_compact_chart_time_labels_keep_endpoints_without_overlap(self):
         from shiboken6 import delete

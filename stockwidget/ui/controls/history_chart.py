@@ -7,7 +7,7 @@ from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QWidget, QToolTip
 
 from stockwidget.core.quote_presentation import format_value, price_precision, should_use_english_units, volume_lot_size
-from stockwidget.data.bars import MA_PERIODS, moving_average, trading_date
+from stockwidget.data.bars import MA_PERIODS, intraday_average, moving_average, trading_date
 
 
 MA_COLORS = ("#e3ac28", "#ba6ee0", "#2a9fd6", "#d97839", "#6fa84c")
@@ -20,6 +20,7 @@ class HistoryChart(QWidget):
         self.setMouseTracking(True)
         self.bars = ()
         self.averages = {}
+        self.minute_averages = []
         self.periods = set(MA_PERIODS)
         self.show_average = self.show_volume = True
         self.view = "intraday"
@@ -36,6 +37,7 @@ class HistoryChart(QWidget):
         self.view, self.instrument = view, instrument
         self.bars = tuple(bars[-30:] if view == "daily" else bars)
         self.averages = {period: moving_average(bars, period)[-30:] for period in MA_PERIODS} if view == "daily" else {}
+        self.minute_averages = intraday_average(self.bars, instrument) if view != "daily" else []
         self.reference_price = reference_price if reference_price and math.isfinite(reference_price) and reference_price > 0 else None
         self._hover = None
         self.update()
@@ -53,9 +55,8 @@ class HistoryChart(QWidget):
         precision = price_precision(self.instrument.get("type"), self.instrument.get("market", ""))
         return f"{value:.{precision}f}"
 
-    def _average(self, bar):
-        # Also ignore index averages stored by older versions of the cache.
-        return bar.average if self.instrument.get("type") != "指" and bar.average and bar.average > 0 else None
+    def _indicator_width(self):
+        return max(.65, min(1.5, 1.5 * min(self.width() / 740, self.height() / 420)))
 
     def _volume(self, value):
         market, security_type = self.instrument.get("market", ""), self.instrument.get("type")
@@ -73,7 +74,7 @@ class HistoryChart(QWidget):
             values += [value for period in self.periods for value in self.averages[period] if value is not None]
         else:
             if self.show_average:
-                values += [value for bar in self.bars if (value := self._average(bar)) is not None]
+                values += self.minute_averages
             if self.reference_price:
                 values.append(self.reference_price)
         low, high = min(values), max(values)
@@ -153,12 +154,13 @@ class HistoryChart(QWidget):
                 painter.fillRect(QRectF(x - step * .3, top, step * .6, max(1, bottom - top)), color)
             for period, color in zip(MA_PERIODS, MA_COLORS):
                 if period in self.periods:
-                    self._line(painter, self.averages[period], x_at, y_at, QColor(color))
+                    self._line(painter, self.averages[period], x_at, y_at, QColor(color),
+                               width=self._indicator_width())
         else:
             self._line(painter, [bar.close for bar in self.bars], x_at, y_at, palette.highlight().color(), dates)
             if self.show_average:
-                self._line(painter, [self._average(bar) for bar in self.bars],
-                           x_at, y_at, QColor(MA_COLORS[0]), dates)
+                self._line(painter, self.minute_averages, x_at, y_at, QColor(MA_COLORS[0]), dates,
+                           width=self._indicator_width())
         painter.setPen(text_color)
         if self.show_volume:
             separator = QColor(text_color)
@@ -208,7 +210,7 @@ class HistoryChart(QWidget):
         return visible + labels[-1:] if len(labels) > 1 else visible
 
     @staticmethod
-    def _line(painter, values, x_at, y_at, color, dates=None):
+    def _line(painter, values, x_at, y_at, color, dates=None, *, width=1.5):
         path, started = QPainterPath(), False
         for i, value in enumerate(values):
             if value is None:
@@ -222,7 +224,7 @@ class HistoryChart(QWidget):
             else:
                 path.moveTo(point)
                 started = True
-        painter.setPen(QPen(color, 1.5))
+        painter.setPen(QPen(color, width))
         painter.drawPath(path)
 
     def mouseMoveEvent(self, event):
@@ -241,8 +243,9 @@ class HistoryChart(QWidget):
                 f"低 {self._price(bar.low)}  收 {self._price(bar.close)}")
         if self.show_volume:
             text += f"\n成交量 {self._volume(bar.volume)}"
-        if self.view != "daily" and self.show_average and (average := self._average(bar)) is not None:
-            text += f"\n均价 {self._price(average)}"
+        if self.view != "daily" and self.show_average:
+            label = "分时均线" if self.instrument.get("type") == "指" else "均价"
+            text += f"\n{label} {self._price(self.minute_averages[i])}"
         for period in sorted(self.periods):
             value = self.averages.get(period, [])[i] if self.view == "daily" else None
             if value is not None:

@@ -13,7 +13,8 @@ import requests
 from stockwidget.core.config_store import history_cache_dir
 from stockwidget.data.bar_cache import BarCache, cache_state
 from stockwidget.data.bars import (
-    Bar, BarResult, DAILY_HISTORY, HistorySeries, fetch_bars, history_day, market_now, merge_quote, minute_gaps, moving_average,
+    Bar, BarResult, DAILY_HISTORY, HistorySeries, fetch_bars, history_day, intraday_average,
+    market_now, merge_quote, minute_gaps, moving_average,
     parse_eastmoney, parse_sina, request_eastmoney_bars, request_sina_bars, select_bars,
 )
 
@@ -99,6 +100,28 @@ class HistoryTests(unittest.TestCase):
         self.assertEqual(moving_average(bars[:4], 5), [None] * 4)
         with self.assertRaises(ValueError):
             moving_average(bars, 0)
+
+    def test_sina_intraday_average_uses_cumulative_turnover_and_resets_each_day(self):
+        bars = parse_sina('=[{"day":"2026-09-29 09:31:00","o":10,"h":11,"l":9,"c":10,"v":100,"a":1000},'
+                          '{"day":"2026-09-29 09:32:00","o":20,"h":21,"l":19,"c":20,"v":300,"a":6000},'
+                          '{"day":"2026-09-30 09:31:00","o":30,"h":31,"l":29,"c":30,"v":200,"a":6000}]')
+        self.assertEqual(intraday_average(bars, A_SHARE), [10, 17.5, 30])
+        self.assertTrue(all(bar.average is None for bar in bars))
+
+    def test_intraday_average_preserves_supplied_values_and_handles_missing_turnover(self):
+        bars = (Bar("2026-09-29 23:59:00", 10, 10, 10, 10, 100),
+                Bar("2026-09-30 00:00:00", 20, 20, 20, 20, 300),
+                Bar("2026-09-30 09:00:00", 30, 30, 30, 30, 0))
+        futures = {"market": "", "code": "au0", "type": "期"}
+        # Night and morning are one futures session; turnover includes a multiplier.
+        multiplied = tuple(replace(bar, amount=bar.volume * bar.close * 100) for bar in bars)
+        self.assertEqual(intraday_average(multiplied, futures), [10, 17.5, 17.5])
+        supplied = (replace(bars[0], time="2026-09-30 09:31:00", average=12),
+                    replace(bars[1], time="2026-09-30 09:32:00", average=18))
+        self.assertEqual(intraday_average(supplied, A_SHARE), [12, 18])
+        missing = tuple(replace(bar, average=None) for bar in supplied)
+        self.assertEqual(intraday_average(missing, A_SHARE), [10, 17.5])
+        self.assertEqual(intraday_average((replace(missing[0], volume=0),), A_SHARE), [10])
 
     def test_source_preference_fallback_and_safe_empty_state(self):
         bars = sample_bars()
@@ -275,6 +298,8 @@ class LiveHistoryTests(unittest.TestCase):
                 self.assertIsNone(merge_quote((minute,), instrument, "intraday", quote)[-1].average)
                 payload = {"data": {"trends": [f"2026-09-30 09:31,{price},{price},{price},{price},1,1500,15"]}}
                 self.assertIsNone(parse_eastmoney(payload, instrument=instrument)[0].average)
+                later = replace(minute, time="2026-09-30 09:32:00", close=price + 2, volume=300)
+                self.assertEqual(intraday_average((minute, later), instrument), [price, price + 1])
 
     def test_zero_change_uses_latest_session_previous_close_without_guessing(self):
         cases = ((A_SHARE, "2026-09-29 15:00:00"),

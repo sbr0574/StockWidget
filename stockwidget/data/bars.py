@@ -383,6 +383,40 @@ def moving_average(bars, period):
     return result
 
 
+def intraday_average(bars, instrument):
+    """Session VWAP, with minute-price estimates where turnover is unavailable.
+
+    Index turnover belongs to its components, so average index points instead.
+    Futures turnover can include a contract multiplier; never divide it by lots.
+    """
+    result = []
+    day = None
+    index = instrument.get("type") == "指"
+    futures = instrument.get("type") == "期" or not instrument.get("market")
+    volume = weighted = prices = count = 0
+    for bar in bars:
+        current_day = trading_date(bar, instrument)
+        if current_day != day:
+            day = current_day
+            volume = weighted = prices = count = 0
+        prices += bar.close
+        count += 1
+        quantity = max(0, bar.volume)
+        amount = _number(bar.amount)
+        volume += quantity
+        weighted += (amount if not futures and amount is not None and amount > 0 and quantity > 0
+                     else bar.close * quantity)
+        supplied = _number(bar.average)
+        if index:
+            value = prices / count
+        elif supplied is not None and supplied > 0:
+            value = supplied
+        else:
+            value = weighted / volume if volume else prices / count
+        result.append(value)
+    return result
+
+
 def _em_candidates(instrument):
     secid = _em_secid(instrument)
     if instrument.get("market") == "us" and secid:

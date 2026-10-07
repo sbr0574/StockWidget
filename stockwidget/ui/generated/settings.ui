@@ -841,13 +841,13 @@
                  </widget></item>
                  <item><widget class="QLabel" name="chart_indicators_description">
                   <property name="maximumSize"><size><width>310</width><height>16777215</height></size></property>
-                  <property name="text"><string>均价线用于分时图，MA均线用于日K线。</string></property>
+                  <property name="text"><string>分时均线用于分时 / 5日图，MA均线用于日K线。</string></property>
                   <property name="wordWrap"><bool>true</bool></property>
                   <property name="settingDescription" stdset="0"><bool>true</bool></property>
                  </widget></item>
                  <item><layout class="QHBoxLayout" name="chart_lines_layout">
                   <property name="spacing"><number>10</number></property>
-                  <item><widget class="QCheckBox" name="cb_chart_average"><property name="text"><string>分时均价线</string></property></widget></item>
+                  <item><widget class="QCheckBox" name="cb_chart_average"><property name="text"><string>分时均线</string></property><property name="toolTip"><string>优先使用行情均价，缺失时按当日分钟数据计算。股票使用累计成交均价，指数使用分钟点位平均；缺少成交额及期货按分钟价格和成交量估算。</string></property></widget></item>
                   <item><widget class="QCheckBox" name="cb_chart_volume"><property name="text"><string>成交量</string></property></widget></item>
                   <item><spacer name="chart_lines_spacer"><property name="orientation"><enum>Qt::Orientation::Horizontal</enum></property><property name="sizeHint" stdset="0"><size><width>0</width><height>0</height></size></property></spacer></item>
                  </layout></item>
