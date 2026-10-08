@@ -312,7 +312,9 @@ class Ui_SettingDialog(object):
 
         self.chart_enabled_description = QLabel(self.chart_enabled_row)
         self.chart_enabled_description.setObjectName(u"chart_enabled_description")
+        self.chart_enabled_description.setMinimumSize(QSize(310, 0))
         self.chart_enabled_description.setMaximumSize(QSize(310, 16777215))
+        self.chart_enabled_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
         self.chart_enabled_description.setProperty(u"settingDescription", True)
         self.chart_enabled_description.setWordWrap(True)
 
@@ -341,7 +343,9 @@ class Ui_SettingDialog(object):
 
         self.chart_display_mode_description = QLabel(self.chart_display_mode_row)
         self.chart_display_mode_description.setObjectName(u"chart_display_mode_description")
+        self.chart_display_mode_description.setMinimumSize(QSize(310, 0))
         self.chart_display_mode_description.setMaximumSize(QSize(310, 16777215))
+        self.chart_display_mode_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
         self.chart_display_mode_description.setProperty(u"settingDescription", True)
         self.chart_display_mode_description.setWordWrap(True)
 
@@ -375,7 +379,9 @@ class Ui_SettingDialog(object):
 
         self.chart_indicators_description = QLabel(self.chart_indicators)
         self.chart_indicators_description.setObjectName(u"chart_indicators_description")
+        self.chart_indicators_description.setMinimumSize(QSize(310, 0))
         self.chart_indicators_description.setMaximumSize(QSize(310, 16777215))
+        self.chart_indicators_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
         self.chart_indicators_description.setWordWrap(True)
         self.chart_indicators_description.setProperty(u"settingDescription", True)
 
@@ -2806,6 +2812,10 @@ class Ui_SettingDialog(object):
         self.gb_aboutLayout.setSpacing(10)
         self.gb_aboutLayout.setObjectName(u"gb_aboutLayout")
         self.gb_aboutLayout.setContentsMargins(10, 15, 10, 10)
+        self.aboutVersionLayout = QHBoxLayout()
+        self.aboutVersionLayout.setSpacing(10)
+        self.aboutVersionLayout.setObjectName(u"aboutVersionLayout")
+        self.aboutVersionLayout.setContentsMargins(0, 0, 0, 0)
         self.label_version_state = QLabel(self.gb_about)
         self.label_version_state.setObjectName(u"label_version_state")
         self.label_version_state.setTextFormat(Qt.TextFormat.RichText)
@@ -2813,7 +2823,23 @@ class Ui_SettingDialog(object):
         self.label_version_state.setMinimumSize(QSize(0, 28))
         self.label_version_state.setMaximumSize(QSize(16777215, 28))
 
-        self.gb_aboutLayout.addWidget(self.label_version_state)
+        self.aboutVersionLayout.addWidget(self.label_version_state)
+
+        self.btn_check_update = QPushButton(self.gb_about)
+        self.btn_check_update.setObjectName(u"btn_check_update")
+        self.btn_check_update.setAutoDefault(False)
+        self.btn_check_update.setFlat(True)
+        self.btn_check_update.setMinimumSize(QSize(140, 28))
+        self.btn_check_update.setMaximumSize(QSize(140, 28))
+
+        self.aboutVersionLayout.addWidget(self.btn_check_update)
+
+        self.aboutVersionSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.aboutVersionLayout.addItem(self.aboutVersionSpacer)
+
+
+        self.gb_aboutLayout.addLayout(self.aboutVersionLayout)
 
         self.label_data_state = QLabel(self.gb_about)
         self.label_data_state.setObjectName(u"label_data_state")
@@ -2832,18 +2858,9 @@ class Ui_SettingDialog(object):
 
         self.gb_aboutLayout.addWidget(self.label_about_info)
 
-        self.aboutActionsLayout = QGridLayout()
+        self.aboutActionsLayout = QHBoxLayout()
         self.aboutActionsLayout.setSpacing(10)
         self.aboutActionsLayout.setObjectName(u"aboutActionsLayout")
-        self.btn_check_update = QPushButton(self.gb_about)
-        self.btn_check_update.setObjectName(u"btn_check_update")
-        self.btn_check_update.setAutoDefault(False)
-        self.btn_check_update.setFlat(True)
-        self.btn_check_update.setMinimumSize(QSize(140, 28))
-        self.btn_check_update.setMaximumSize(QSize(140, 28))
-
-        self.aboutActionsLayout.addWidget(self.btn_check_update, 0, 0, 1, 1)
-
         self.btn_open_cache_dir = QPushButton(self.gb_about)
         self.btn_open_cache_dir.setObjectName(u"btn_open_cache_dir")
         self.btn_open_cache_dir.setAutoDefault(False)
@@ -2851,7 +2868,7 @@ class Ui_SettingDialog(object):
         self.btn_open_cache_dir.setMinimumSize(QSize(140, 28))
         self.btn_open_cache_dir.setMaximumSize(QSize(140, 28))
 
-        self.aboutActionsLayout.addWidget(self.btn_open_cache_dir, 0, 1, 1, 1)
+        self.aboutActionsLayout.addWidget(self.btn_open_cache_dir)
 
         self.btn_clear_cache = QPushButton(self.gb_about)
         self.btn_clear_cache.setObjectName(u"btn_clear_cache")
@@ -2860,7 +2877,11 @@ class Ui_SettingDialog(object):
         self.btn_clear_cache.setMinimumSize(QSize(140, 28))
         self.btn_clear_cache.setMaximumSize(QSize(140, 28))
 
-        self.aboutActionsLayout.addWidget(self.btn_clear_cache, 1, 0, 1, 1)
+        self.aboutActionsLayout.addWidget(self.btn_clear_cache)
+
+        self.aboutActionsSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.aboutActionsLayout.addItem(self.aboutActionsSpacer)
 
 
         self.gb_aboutLayout.addLayout(self.aboutActionsLayout)
@@ -3389,9 +3410,9 @@ class Ui_SettingDialog(object):
 #endif // QT_CONFIG(accessibility)
         self.gb_about.setTitle(QCoreApplication.translate("SettingDialog", u"StockWidget - \u6781\u7b80\u684c\u9762\u76ef\u76d8", None))
         self.label_version_state.setText(QCoreApplication.translate("SettingDialog", u"\U0001f4e6 \U00005f53\U0000524d\U00007a0b\U00005e8f\U00007248\U0000672c", None))
+        self.btn_check_update.setText(QCoreApplication.translate("SettingDialog", u"\u68c0\u67e5\u7a0b\u5e8f\u66f4\u65b0", None))
         self.label_data_state.setText(QCoreApplication.translate("SettingDialog", u"\u5e02\u573a\u4ee3\u7801\u6570\u636e", None))
         self.label_about_info.setText("")
-        self.btn_check_update.setText(QCoreApplication.translate("SettingDialog", u"\u68c0\u67e5\u7a0b\u5e8f\u66f4\u65b0", None))
         self.btn_open_cache_dir.setText(QCoreApplication.translate("SettingDialog", u"\u6253\u5f00\u7f13\u5b58\u76ee\u5f55", None))
         self.btn_clear_cache.setText(QCoreApplication.translate("SettingDialog", u"\u6e05\u7406\u6570\u636e\u7f13\u5b58", None))
 #if QT_CONFIG(tooltip)

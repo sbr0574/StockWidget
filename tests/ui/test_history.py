@@ -87,7 +87,7 @@ class HistoryUITests(HistoryTestCase):
             for label in (dialog.ui.chart_enabled_description, dialog.ui.chart_display_mode_description,
                           dialog.ui.chart_indicators_description):
                 self.assertEqual(label.palette().color(QPalette.WindowText), common)
-                self.assertEqual(label.maximumWidth(), 310)
+                self.assertEqual(label.width(), dialog.ui.cb_head_description.width())
             self.assertEqual(dialog.ui.data_scroll.horizontalScrollBar().maximum(), 0)
 
     def test_four_sizes_and_indicator_preferences_preserve_view_without_refetch(self):
