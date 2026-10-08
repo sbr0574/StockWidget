@@ -2865,14 +2865,6 @@ class Ui_SettingDialog(object):
 
         self.gb_aboutLayout.addLayout(self.aboutActionsLayout)
 
-        self.label_cache_state = QLabel(self.gb_about)
-        self.label_cache_state.setObjectName(u"label_cache_state")
-        self.label_cache_state.setWordWrap(True)
-        self.label_cache_state.setProperty(u"settingDescription", True)
-        self.label_cache_state.setMaximumSize(QSize(310, 16777215))
-
-        self.gb_aboutLayout.addWidget(self.label_cache_state)
-
 
         self.aboutContentLayout.addWidget(self.gb_about)
 
@@ -3401,10 +3393,9 @@ class Ui_SettingDialog(object):
         self.label_about_info.setText("")
         self.btn_check_update.setText(QCoreApplication.translate("SettingDialog", u"\u68c0\u67e5\u7a0b\u5e8f\u66f4\u65b0", None))
         self.btn_open_cache_dir.setText(QCoreApplication.translate("SettingDialog", u"\u6253\u5f00\u7f13\u5b58\u76ee\u5f55", None))
-        self.btn_clear_cache.setText(QCoreApplication.translate("SettingDialog", u"\u6e05\u7406\u7f13\u5b58", None))
+        self.btn_clear_cache.setText(QCoreApplication.translate("SettingDialog", u"\u6e05\u7406\u6570\u636e\u7f13\u5b58", None))
 #if QT_CONFIG(tooltip)
         self.btn_clear_cache.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6e05\u9664\u5206\u65f6\u4e0eK\u7ebf\u56fe\u7684\u672c\u5730\u7f13\u5b58\uff0c\u4e0b\u6b21\u67e5\u770b\u65f6\u91cd\u65b0\u52a0\u8f7d\u3002", None))
 #endif // QT_CONFIG(tooltip)
-        self.label_cache_state.setText(QCoreApplication.translate("SettingDialog", u"\u6e05\u9664\u5206\u65f6\u4e0eK\u7ebf\u56fe\u7684\u672c\u5730\u7f13\u5b58\uff0c\u4e0b\u6b21\u67e5\u770b\u65f6\u91cd\u65b0\u52a0\u8f7d\u3002", None))
     # retranslateUi
 

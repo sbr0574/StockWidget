@@ -402,8 +402,9 @@ class HistoryUITests(HistoryTestCase):
             history._busy = True
             history.open_row("float", 2)
             self.assertIsNotNone(history._pending)
-            dialog.ui.btn_clear_cache.click()
-            self.assertIn("已清理", dialog.ui.label_cache_state.text())
+            with patch("stockwidget.ui.settings.dialog.QToolTip.showText") as tooltip:
+                dialog.ui.btn_clear_cache.click()
+            self.assertIn("已清理", tooltip.call_args.args[1])
             self.assertFalse(history.dialog.isVisible())
             self.assertEqual(history.dialog.chart.bars, ())
             self.assertEqual(history._series, {})

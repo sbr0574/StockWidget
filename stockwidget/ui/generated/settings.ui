@@ -7502,7 +7502,7 @@
                 <item row="1" column="0">
                  <widget class="QPushButton" name="btn_clear_cache">
                   <property name="text">
-                   <string>清理缓存</string>
+                   <string>清理数据缓存</string>
                   </property>
                   <property name="toolTip">
                    <string>清除分时与K线图的本地缓存，下次查看时重新加载。</string>
@@ -7528,25 +7528,6 @@
                  </widget>
                 </item>
                </layout>
-              </item>
-              <item>
-               <widget class="QLabel" name="label_cache_state">
-                <property name="text">
-                 <string>清除分时与K线图的本地缓存，下次查看时重新加载。</string>
-                </property>
-                <property name="wordWrap">
-                 <bool>true</bool>
-                </property>
-                <property name="settingDescription" stdset="0">
-                 <bool>true</bool>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>310</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-               </widget>
               </item>
              </layout>
             </widget>

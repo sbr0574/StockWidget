@@ -43,7 +43,7 @@ class HistoryDialog(QDialog):
         self.view_buttons = {}
         self.view_group = QButtonGroup(self)
         self._view = "intraday"
-        for label, value in (("分时", "intraday"), ("5日", "five_day"), ("K线", "daily")):
+        for label, value in (("分时", "intraday"), ("5日", "five_day"), ("日K", "daily")):
             button = QPushButton(label)
             button.setCheckable(True)
             button.setAutoDefault(False)

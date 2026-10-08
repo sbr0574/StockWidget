@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QScrollBar,
     QScrollArea,
     QSlider,
+    QToolTip,
 )
 
 from stockwidget.constants import APP_VERSION
@@ -911,8 +912,9 @@ class SettingsDialog(QDialog):
 
     def _clear_cache(self):
         cleared = self.win.history.clear_cache()
-        self.ui.label_cache_state.setText("已清理图表缓存，下次查看时重新加载。" if cleared else
-                                          "部分图表缓存未能清理，请稍后重试。")
+        message = "已清理数据缓存。" if cleared else "部分数据缓存未能清理，请稍后重试。"
+        button = self.ui.btn_clear_cache
+        QToolTip.showText(button.mapToGlobal(button.rect().center()), message, button)
 
     def closeEvent(self, event):
         self.watchlist_editor.close()
