@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-07",
+  "last_update": "2026-10-08",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -1284,7 +1284,7 @@
       "market": "hk",
       "type": "港",
       "name": "青島啤酒股份",
-      "name_en": "TSINGTAO BR-500",
+      "name_en": "TSINGTAO BREW",
       "py": "qingdaopijiugufen",
       "abbr": "qdpjgf"
     },
@@ -17448,7 +17448,7 @@
       "market": "hk",
       "type": "港",
       "name": "雲迹",
-      "name_en": "YUNJI",
+      "name_en": "YUNJI-NEW",
       "py": "yunji",
       "abbr": "yj"
     },
@@ -18402,7 +18402,7 @@
       "market": "hk",
       "type": "港",
       "name": "雲迹",
-      "name_en": "YUNJI",
+      "name_en": "YUNJI-OLD",
       "py": "yunji",
       "abbr": "yj"
     },
@@ -18460,15 +18460,6 @@
       "py": "jintainengyuankonggu",
       "abbr": "jtnykg"
     },
-    "hk02929": {
-      "code": "02929",
-      "market": "hk",
-      "type": "港",
-      "name": "青島啤酒(二千)",
-      "name_en": "TSINGTAO BR-2K",
-      "py": "qingdaopijiu(erqian)",
-      "abbr": "qdpj(eq)"
-    },
     "hk02930": {
       "code": "02930",
       "market": "hk",
@@ -18477,15 +18468,6 @@
       "name_en": "ABLE DIGI-100",
       "py": "zhuoyueruixin(yibai)",
       "abbr": "zyrx(yb)"
-    },
-    "hk02933": {
-      "code": "02933",
-      "market": "hk",
-      "type": "港",
-      "name": "煜榮集團股權",
-      "name_en": "YUK WING GP RTS",
-      "py": "yurongjituanguquan",
-      "abbr": "yrjtgq"
     },
     "hk02934": {
       "code": "02934",

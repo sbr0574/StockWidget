@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-07",
+  "last_update": "2026-10-08",
   "codes": {
     "usa": {
       "code": "a",
@@ -1564,6 +1564,15 @@
       "type": "美",
       "name": "Acurx Pharmaceuticals, Inc. - Common Stock",
       "name_en": "Acurx Pharmaceuticals, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usacyb": {
+      "code": "acyb",
+      "market": "us",
+      "type": "美",
+      "name": "FT Vest Laddered Autocallable Buffer & Resilient Income ETF",
+      "name_en": "FT Vest Laddered Autocallable Buffer & Resilient Income ETF",
       "py": "",
       "abbr": ""
     },
@@ -5873,8 +5882,8 @@
       "code": "aoct",
       "market": "us",
       "type": "美",
-      "name": "Innovator Equity Defined Protection ETF - 2 Yr to October 2026",
-      "name_en": "Innovator Equity Defined Protection ETF - 2 Yr to October 2026",
+      "name": "Innovator Equity Defined Protection ETF - 2 Yr to October 2028",
+      "name_en": "Innovator Equity Defined Protection ETF - 2 Yr to October 2028",
       "py": "",
       "abbr": ""
     },
@@ -6694,15 +6703,6 @@
       "type": "美",
       "name": "Arbe Robotics Ltd. - Ordinary Shares",
       "name_en": "Arbe Robotics Ltd. - Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usarbew": {
-      "code": "arbew",
-      "market": "us",
-      "type": "美",
-      "name": "Arbe Robotics Ltd. - Warrant",
-      "name_en": "Arbe Robotics Ltd. - Warrant",
       "py": "",
       "abbr": ""
     },
@@ -10495,15 +10495,6 @@
       "py": "",
       "abbr": ""
     },
-    "usbbbyw": {
-      "code": "bbbyw",
-      "market": "us",
-      "type": "美",
-      "name": "Neighborhood Intelligence, Inc.  - Warrant",
-      "name_en": "Neighborhood Intelligence, Inc.  - Warrant",
-      "py": "",
-      "abbr": ""
-    },
     "usbbc": {
       "code": "bbc",
       "market": "us",
@@ -10528,6 +10519,24 @@
       "type": "美",
       "name": "JPMorgan BetaBuilders USD Investment Grade Corporate Bond ETF",
       "name_en": "JPMorgan BetaBuilders USD Investment Grade Corporate Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usbbci": {
+      "code": "bbci",
+      "market": "us",
+      "type": "美",
+      "name": "Bradbury Capital Inc. - Ordinary Shares",
+      "name_en": "Bradbury Capital Inc. - Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "usbbciw": {
+      "code": "bbciw",
+      "market": "us",
+      "type": "美",
+      "name": "Bradbury Capital Inc. - Warrants",
+      "name_en": "Bradbury Capital Inc. - Warrants",
       "py": "",
       "abbr": ""
     },
@@ -13750,15 +13759,6 @@
       "type": "美",
       "name": "Inspire Global Hope ETF",
       "name_en": "Inspire Global Hope ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usblfs": {
-      "code": "blfs",
-      "market": "us",
-      "type": "美",
-      "name": "BioLife Solutions, Inc. - Common Stock",
-      "name_en": "BioLife Solutions, Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -23794,6 +23794,15 @@
       "type": "美",
       "name": "Global X Morningstar Capital Allocation Leaders ETF",
       "name_en": "Global X Morningstar Capital Allocation Leaders ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "uscpu": {
+      "code": "cpu",
+      "market": "us",
+      "type": "美",
+      "name": "Amplify Top 10 Semiconductors ETF",
+      "name_en": "Amplify Top 10 Semiconductors ETF",
       "py": "",
       "abbr": ""
     },
@@ -53407,24 +53416,6 @@
       "py": "",
       "abbr": ""
     },
-    "usillr": {
-      "code": "illr",
-      "market": "us",
-      "type": "美",
-      "name": "Triller Group Inc. - Common Stock",
-      "name_en": "Triller Group Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usillrw": {
-      "code": "illrw",
-      "market": "us",
-      "type": "美",
-      "name": "Triller Group Inc. - Warrant",
-      "name_en": "Triller Group Inc. - Warrant",
-      "py": "",
-      "abbr": ""
-    },
     "usillu": {
       "code": "illu",
       "market": "us",
@@ -73405,15 +73396,6 @@
       "py": "",
       "abbr": ""
     },
-    "usnmcor": {
-      "code": "nmcor",
-      "market": "us",
-      "type": "美",
-      "name": "Nuveen Municipal Credit Opportunities Fund Rights (expiring October 7, 2026) Rights",
-      "name_en": "Nuveen Municipal Credit Opportunities Fund Rights (expiring October 7, 2026) Rights",
-      "py": "",
-      "abbr": ""
-    },
     "usnmfc": {
       "code": "nmfc",
       "market": "us",
@@ -76111,6 +76093,15 @@
       "type": "美",
       "name": "Oakmark International Large Cap ETF",
       "name_en": "Oakmark International Large Cap ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usoakl": {
+      "code": "oakl",
+      "market": "us",
+      "type": "美",
+      "name": "Oakmark U.S. Concentrated ETF",
+      "name_en": "Oakmark U.S. Concentrated ETF",
       "py": "",
       "abbr": ""
     },
@@ -89542,6 +89533,15 @@
       "py": "",
       "abbr": ""
     },
+    "usrink": {
+      "code": "rink",
+      "market": "us",
+      "type": "美",
+      "name": "Russell Investments Multisector Bond ETF",
+      "name_en": "Russell Investments Multisector Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usrint": {
       "code": "rint",
       "market": "us",
@@ -96220,15 +96220,6 @@
       "py": "",
       "abbr": ""
     },
-    "usslp": {
-      "code": "slp",
-      "market": "us",
-      "type": "美",
-      "name": "Simulations Plus, Inc. - Common Stock",
-      "name_en": "Simulations Plus, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "usslqd": {
       "code": "slqd",
       "market": "us",
@@ -96300,6 +96291,15 @@
       "name_en": "iShares Silver Trust",
       "py": "baiyinetf-ishares",
       "abbr": "byetf-ishares"
+    },
+    "usslvi": {
+      "code": "slvi",
+      "market": "us",
+      "type": "美",
+      "name": "NEOS Silver High Income ETF",
+      "name_en": "NEOS Silver High Income ETF",
+      "py": "",
+      "abbr": ""
     },
     "usslvm": {
       "code": "slvm",
@@ -96946,6 +96946,15 @@
       "type": "美",
       "name": "Sanara MedTech Inc. - Common Stock",
       "name_en": "Sanara MedTech Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "ussmtj": {
+      "code": "smtj",
+      "market": "us",
+      "type": "美",
+      "name": "Synera Funds Takumi+ ETF",
+      "name_en": "Synera Funds Takumi+ ETF",
       "py": "",
       "abbr": ""
     },
@@ -98416,33 +98425,6 @@
       "py": "",
       "abbr": ""
     },
-    "usspkl": {
-      "code": "spkl",
-      "market": "us",
-      "type": "美",
-      "name": "Spark I Acquisition Corp. - Class A Ordinary Share",
-      "name_en": "Spark I Acquisition Corp. - Class A Ordinary Share",
-      "py": "",
-      "abbr": ""
-    },
-    "usspklu": {
-      "code": "spklu",
-      "market": "us",
-      "type": "美",
-      "name": "Spark I Acquisition Corp. - Unit",
-      "name_en": "Spark I Acquisition Corp. - Unit",
-      "py": "",
-      "abbr": ""
-    },
-    "usspklw": {
-      "code": "spklw",
-      "market": "us",
-      "type": "美",
-      "name": "Spark I Acquisition Corp. - Warrant",
-      "name_en": "Spark I Acquisition Corp. - Warrant",
-      "py": "",
-      "abbr": ""
-    },
     "ussplb": {
       "code": "splb",
       "market": "us",
@@ -98881,6 +98863,15 @@
       "type": "美",
       "name": "ProShares S&P 500 Ex-Financials ETF",
       "name_en": "ProShares S&P 500 Ex-Financials ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usspxp": {
+      "code": "spxp",
+      "market": "us",
+      "type": "美",
+      "name": "Direxion U.S. 500 Plus ETF",
+      "name_en": "Direxion U.S. 500 Plus ETF",
       "py": "",
       "abbr": ""
     },
@@ -113158,15 +113149,6 @@
       "py": "weibo",
       "abbr": "wb"
     },
-    "uswbd": {
-      "code": "wbd",
-      "market": "us",
-      "type": "美",
-      "name": "华纳兄弟探索",
-      "name_en": "Warner Bros. Discovery, Inc. - Series A Common Stock",
-      "py": "huanaxiongditansuo",
-      "abbr": "hnxdts"
-    },
     "uswbi": {
       "code": "wbi",
       "market": "us",
@@ -114487,6 +114469,15 @@
       "type": "美",
       "name": "Worthington Enterprises, Inc. Common Shares",
       "name_en": "Worthington Enterprises, Inc. Common Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "usworx": {
+      "code": "worx",
+      "market": "us",
+      "type": "美",
+      "name": "SCWorx Corp. - Common Stock",
+      "name_en": "SCWorx Corp. - Common Stock",
       "py": "",
       "abbr": ""
     },

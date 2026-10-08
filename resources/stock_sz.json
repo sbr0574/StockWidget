@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-30",
+  "last_update": "2026-10-08",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -4028,10 +4028,10 @@
       "code": "001246",
       "market": "sz",
       "type": "深",
-      "name": "N力勤资源",
+      "name": "C力勤资源",
       "name_en": "",
-      "py": "nliqinziyuan",
-      "abbr": "nlqzy"
+      "py": "cliqinziyuan",
+      "abbr": "clqzy"
     },
     "sz001248": {
       "code": "001248",
