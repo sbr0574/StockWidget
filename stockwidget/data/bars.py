@@ -370,6 +370,53 @@ def select_bars(bars, view, instrument):
     return tuple(bar for bar in bars if trading_date(bar, instrument) in selected)
 
 
+def intraday_timeline(bars, instrument, now=None):
+    """Current exchange day's minute slots through close, without fake bars.
+
+    Breaks consume no chart width. Past days/unknown exchanges keep observed
+    timestamps; futures include a night session only when it was observed.
+    """
+    now = now or datetime.now(timezone.utc)
+    if not bars or trading_date(bars[-1], instrument) != history_day(instrument, now):
+        return ()
+    market = instrument.get("market")
+    futures = instrument.get("type") == "期" or not market
+    day = datetime.fromisoformat(trading_date(bars[-1], instrument))
+    clocks = tuple(datetime.fromisoformat(bar.time) for bar in bars)
+    sessions = []
+    if futures:
+        night = next((stamp for stamp in clocks if stamp.hour >= 20 or stamp.hour < 3), None)
+        if night:
+            product = re.match(r"[a-z]+", str(instrument.get("code", "")).lower())
+            product = product[0] if product else ""
+            # Regular hours: shfe.com.cn/services/calenderandholidays/tradinghours/
+            if product in {"au", "ag", "sc"}:
+                duration = 330
+            elif product in {"cu", "bc", "al", "ao", "zn", "pb", "ni", "sn", "ss", "ad"}:
+                duration = 240
+            elif product in {"rb", "hc", "fu", "bu", "ru", "br", "sp", "op", "nr", "lu"}:
+                duration = 120
+            else:
+                return ()
+            night = night.replace(hour=21, minute=0, second=0, microsecond=0) - timedelta(days=night.hour < 3)
+            sessions.append((night, night + timedelta(minutes=duration)))
+        ranges = ((540, 615), (630, 690), (810, 900))
+    elif market in {"sh", "sz", "bj", "hk", "us"}:
+        local = market_now(instrument, now)
+        if day.date() != local.date() or local.weekday() >= 5:
+            return ()
+        ranges = _minute_sessions(instrument)
+    else:
+        return ()
+    sessions += [(day + timedelta(minutes=start), day + timedelta(minutes=end)) for start, end in ranges]
+    times = tuple((start + timedelta(minutes=i)).strftime("%Y-%m-%d %H:%M:%S")
+                  for start, end in sessions for i in range(int((end - start).total_seconds() / 60) + 1))
+    available = set(times)
+    if any(stamp.strftime("%Y-%m-%d %H:%M:00") not in available for stamp in clocks):
+        return ()
+    return times
+
+
 def moving_average(bars, period):
     """Compute on full history, with None until a complete window exists."""
     if period <= 0:

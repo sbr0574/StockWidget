@@ -832,6 +832,21 @@ class SettingsDialogTests(SettingsTestCase):
             self.assertTrue(url.isLocalFile())
             self.assertEqual(os.path.normpath(url.toLocalFile()), os.path.normpath(config_paths()))
 
+    def test_about_clear_cache_reports_failure_and_description_follows_theme(self):
+        dialog, window = self._make_dialog()
+        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.about)
+        dialog.show()
+        for mode in ("light", "dark"):
+            with self.subTest(mode=mode):
+                window.set_view_options(color_mode=mode)
+                self.qt_app.processEvents()
+                with patch.object(window.history.cache, "clear", return_value=False):
+                    dialog.ui.btn_clear_cache.click()
+                self.assertIn("未能清理", dialog.ui.label_cache_state.text())
+                self.assertEqual(dialog.ui.label_cache_state.palette().color(QPalette.WindowText),
+                                 dialog.ui.cb_head_description.palette().color(QPalette.WindowText))
+                self.assertEqual(dialog.ui.about_scroll.horizontalScrollBar().maximum(), 0)
+
     def test_unicolor_defaults_on_and_controls_direction_colors(self):
         dialog, window = self._make_dialog()
 

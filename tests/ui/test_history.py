@@ -6,15 +6,17 @@ from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 import os
 import sys
+import tempfile
 import time
 import unittest
 
-from PySide6.QtCore import QPoint, QRect, Qt
-from PySide6.QtGui import QCursor, QPalette
+from PySide6.QtCore import QEvent, QPoint, QPointF, QRect, Qt
+from PySide6.QtGui import QCursor, QMouseEvent, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
 from stockwidget.data.bars import Bar, BarResult
+from stockwidget.data.bar_cache import BarCache
 from stockwidget.data.quotes import _new_entry
 from stockwidget.ui.floating.taskbar import TaskbarController, render_taskbar
 from stockwidget.ui.controls.history_chart import HistoryChart
@@ -59,6 +61,7 @@ class HistoryTestCase(SettingsTestCase):
         daily = tuple(replace(bar, time=(datetime.fromisoformat(bar.time) + shift).strftime("%Y-%m-%d")) for bar in daily)
         start = datetime(2026, 9, 30, 9, 31)
         minutes = tuple(Bar((start + timedelta(minutes=i)).isoformat(" "), 10, 12, 8, 10, 3, 30, 10) for i in range(30))
+        window.history.cache = BarCache(self.enterContext(tempfile.TemporaryDirectory()))
         window.history.cache.get = Mock(side_effect=lambda instrument, view, source, **kwargs:
                                         BarResult(daily if view == "daily" else minutes, source))
         window.history.cache.clock = lambda: datetime(2026, 9, 30, 2, tzinfo=timezone.utc)
@@ -346,6 +349,71 @@ class HistoryUITests(HistoryTestCase):
                         self.assertTrue(all(chart.rect().contains(rect.toAlignedRect()) for rect, _ in labels))
         finally:
             delete(chart)
+
+    def test_live_intraday_leaves_future_empty_in_all_sizes_and_hover_ignores_it(self):
+        from shiboken6 import delete
+
+        chart = HistoryChart()
+        try:
+            chart.setMinimumSize(220, 110)
+            bars = tuple(Bar(f"2026-09-30 {time}:00", 10, 10, 10, 10, 100, 1000)
+                         for time in ("09:31", "09:32", "10:00"))
+            now = datetime(2026, 9, 30, 2, tzinfo=timezone.utc)
+            for width, height in ((308, 150), (408, 220), (548, 320), (740, 420)):
+                with self.subTest(size=(width, height)):
+                    chart.resize(width, height)
+                    chart.set_data(bars, "intraday", {"market": "sh", "type": "沪"}, now=now)
+                    chart.grab()
+                    labels = chart._time_labels()
+                    self.assertEqual((labels[0][1], labels[-1][1]), ("09:30", "15:00"))
+                    for (previous, _), (current, _) in zip(labels, labels[1:]):
+                        self.assertGreaterEqual(current.left() - previous.right(), 8)
+                    self.assertEqual(chart.bars, bars)
+                    self.assertLess(chart._positions[-1] / len(chart._time_axis), .15)
+                    for slot, expected in ((chart._positions[-1], 2), (len(chart._time_axis) - 10, None)):
+                        point = QPointF(chart._plot.left() + chart._plot.width() * (slot + .5) / len(chart._time_axis),
+                                        chart._plot.center().y())
+                        event = QMouseEvent(QEvent.MouseMove, point, QPointF(chart.mapToGlobal(point.toPoint())),
+                                            Qt.NoButton, Qt.NoButton, Qt.NoModifier)
+                        with patch("stockwidget.ui.controls.history_chart.QToolTip.showText") as tooltip:
+                            QApplication.sendEvent(chart, event)
+                        self.assertEqual(chart._hover, expected)
+                        self.assertEqual(tooltip.call_count, expected is not None)
+            for view, clock in (("five_day", now), ("intraday", now + timedelta(days=1))):
+                chart.set_data(bars, view, {"market": "sh", "type": "沪"}, now=clock)
+                chart.grab()
+                self.assertEqual(chart._time_axis[-1], bars[-1].time)
+        finally:
+            delete(chart)
+
+    def test_about_clear_discards_memory_pending_and_late_results_then_reloads(self):
+        dialog, window = self.make_window(chart_enabled=True)
+        history = window.history
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        chart = history.dialog.chart
+        chart.grab()
+        self.assertEqual(chart._time_labels()[-1][1], "15:00")
+        self.assertLess(chart._positions[-1] / len(chart._time_axis), .15)
+        before, calls = window.current_config(), history.cache.get.call_count
+        with patch.object(history, "_start") as start:
+            history.open_row("float", 1)
+            request = start.call_args.args[0]
+            history._busy = True
+            history.open_row("float", 2)
+            self.assertIsNotNone(history._pending)
+            dialog.ui.btn_clear_cache.click()
+            self.assertIn("已清理", dialog.ui.label_cache_state.text())
+            self.assertFalse(history.dialog.isVisible())
+            self.assertEqual(history.dialog.chart.bars, ())
+            self.assertEqual(history._series, {})
+            self.assertIsNone(history._pending)
+            history._accept((*request, BarResult(sample_bars(), "sina")))
+            self.assertEqual(history._series, {})
+            self.assertEqual(window.current_config(), before)
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        self.assertEqual(history.cache.get.call_count, calls + 1)
 
     def test_display_mode_setting_persists_and_switches_open_chart(self):
         dialog, window = self.make_window()

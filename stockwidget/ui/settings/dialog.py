@@ -240,6 +240,7 @@ class SettingsDialog(QDialog):
 
         self.ui.btn_check_update.clicked.connect(self._check_update_manually)
         self.ui.btn_open_cache_dir.clicked.connect(self._open_cache_dir)
+        self.ui.btn_clear_cache.clicked.connect(self._clear_cache)
         self.ui.btn_clear_watchlist.clicked.connect(self.watchlist_editor.clear_watchlist)
         self.ui.btn_reset_appearance.clicked.connect(self._reset_appearance)
         self.ui.btn_reset_settings.clicked.connect(self._reset_settings)
@@ -907,6 +908,11 @@ class SettingsDialog(QDialog):
         path = config_paths()
         os.makedirs(path, exist_ok=True)
         QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+
+    def _clear_cache(self):
+        cleared = self.win.history.clear_cache()
+        self.ui.label_cache_state.setText("已清理图表缓存，下次查看时重新加载。" if cleared else
+                                          "部分图表缓存未能清理，请稍后重试。")
 
     def closeEvent(self, event):
         self.watchlist_editor.close()

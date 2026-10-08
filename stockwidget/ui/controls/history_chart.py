@@ -1,13 +1,14 @@
 """History plotting with QtGui only; no extra charting/runtime dependency."""
 
 import math
+from datetime import datetime
 
 from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QWidget, QToolTip
 
 from stockwidget.core.quote_presentation import format_value, price_precision, should_use_english_units, volume_lot_size
-from stockwidget.data.bars import MA_PERIODS, intraday_average, moving_average, trading_date
+from stockwidget.data.bars import MA_PERIODS, intraday_average, intraday_timeline, moving_average, trading_date
 
 
 MA_COLORS = ("#e3ac28", "#ba6ee0", "#2a9fd6", "#d97839", "#6fa84c")
@@ -32,13 +33,22 @@ class HistoryChart(QWidget):
         self._plot = QRectF()
         self._volume_plot = QRectF()
         self._reference_y = None
+        self._time_axis = ()
+        self._positions = ()
+        self._indices = {}
 
-    def set_data(self, bars, view, instrument, *, reference_price=None):
+    def set_data(self, bars, view, instrument, *, reference_price=None, now=None):
         self.view, self.instrument = view, instrument
         self.bars = tuple(bars[-30:] if view == "daily" else bars)
         self.averages = {period: moving_average(bars, period)[-30:] for period in MA_PERIODS} if view == "daily" else {}
         self.minute_averages = intraday_average(self.bars, instrument) if view != "daily" else []
         self.reference_price = reference_price if reference_price and math.isfinite(reference_price) and reference_price > 0 else None
+        timeline = intraday_timeline(self.bars, instrument, now) if view == "intraday" else ()
+        self._time_axis = timeline or tuple(bar.time for bar in self.bars)
+        slots = {stamp: i for i, stamp in enumerate(timeline)}
+        self._positions = tuple(slots[datetime.fromisoformat(bar.time).strftime("%Y-%m-%d %H:%M:00")]
+                                for bar in self.bars) if timeline else tuple(range(len(self.bars)))
+        self._indices = {slot: i for i, slot in enumerate(self._positions)}
         self._hover = None
         self.update()
 
@@ -107,8 +117,8 @@ class HistoryChart(QWidget):
         plot = self._plot = QRectF(left, 12, max(1, self.width() - left - right),
                                   max(1, height - volume_height - volume_gap) if self.show_volume else height)
         volume_rect = self._volume_plot = QRectF(plot.left(), plot.bottom() + volume_gap, plot.width(), volume_height)
-        step = plot.width() / len(self.bars)
-        x_at = lambda i: plot.left() + step * (i + .5)
+        step = plot.width() / len(self._time_axis)
+        x_at = lambda i: plot.left() + step * (self._positions[i] + .5)
         y_at = lambda price: plot.bottom() - (price - low) / (high - low) * plot.height()
         text_color = palette.text().color()
         grid_color = palette.mid().color()
@@ -191,14 +201,15 @@ class HistoryChart(QWidget):
         """Keep both endpoints and omit intermediate ticks that would overlap."""
         if not self.bars:
             return []
-        step = self._plot.width() / len(self.bars)
+        times = self._time_axis
+        step = self._plot.width() / len(times)
         labels = []
         compact_dates = (self.view == "five_day" and
-                         sum(self.fontMetrics().horizontalAdvance(bar.time[5:16]) + 4
-                             for bar in (self.bars[0], self.bars[-1])) + 8 > self._plot.width())
-        for i in sorted({0, len(self.bars) // 4, len(self.bars) // 2, 3 * len(self.bars) // 4, len(self.bars) - 1}):
-            label = (self.bars[i].time[5:10] if self.view == "daily" or compact_dates else
-                     self.bars[i].time[11:16] if self.view == "intraday" else self.bars[i].time[5:16])
+                         sum(self.fontMetrics().horizontalAdvance(stamp[5:16]) + 4
+                             for stamp in (times[0], times[-1])) + 8 > self._plot.width())
+        for i in sorted({0, len(times) // 4, len(times) // 2, 3 * len(times) // 4, len(times) - 1}):
+            label = (times[i][5:10] if self.view == "daily" or compact_dates else
+                     times[i][11:16] if self.view == "intraday" else times[i][5:16])
             width = self.fontMetrics().horizontalAdvance(label) + 4
             x = min(self.width() - width - 8, max(8,
                                                 self._plot.left() + step * (i + .5) - width / 2))
@@ -228,10 +239,14 @@ class HistoryChart(QWidget):
         painter.drawPath(path)
 
     def mouseMoveEvent(self, event):
-        if not self.bars or not self._plot.contains(event.position()):
+        slot = (int((event.position().x() - self._plot.left()) / self._plot.width() * len(self._time_axis))
+                if self.bars and self._plot.contains(event.position()) else None)
+        i = self._indices.get(slot)
+        if i is None:
+            self._hover = None
             QToolTip.hideText()
+            self.update()
             return
-        i = min(len(self.bars) - 1, max(0, int((event.position().x() - self._plot.left()) / self._plot.width() * len(self.bars))))
         text = self.tooltip_text(i)
         self._hover = i
         QToolTip.showText(event.globalPosition().toPoint(), text, self)

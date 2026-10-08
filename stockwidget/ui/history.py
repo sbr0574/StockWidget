@@ -140,6 +140,7 @@ class HistoryController(QObject):
         self.instrument = None
         self.cache = BarCache()
         self._generation = 0
+        self._discard_before = 0
         self._busy = False
         self._pending = None
         self._displayed_key = None
@@ -258,6 +259,19 @@ class HistoryController(QObject):
         self._generation += 1
         self._pending = None
 
+    def clear_cache(self):
+        cleared = self.cache.clear()
+        self.click_timer.stop()
+        self._clicked_instrument = None
+        self._closed()
+        self._discard_before = self._generation
+        self._series.clear()
+        self._displayed_key = None
+        if self.dialog:
+            self.dialog.close()
+            self.dialog.chart.set_data((), self.dialog.view, self.instrument or {})
+        return cleared
+
     @staticmethod
     def _key(instrument, view, source):
         return (*(instrument.get(field) for field in ("market", "code", "type")), source,
@@ -312,12 +326,13 @@ class HistoryController(QObject):
     def _start(self, request):
         self._busy = True
         self._pending = None
-        threading.Thread(target=self._worker, args=(request,), daemon=True).start()
+        threading.Thread(target=self._worker, args=(request, self.cache.generation), daemon=True).start()
 
-    def _worker(self, request):
+    def _worker(self, request, cache_generation):
         generation, instrument, view, source, day, repair = request
         try:
-            result = self.cache.get(instrument, "daily" if view == "daily" else "five_day", source, repair=repair)
+            result = self.cache.get(instrument, "daily" if view == "daily" else "five_day", source,
+                                    repair=repair, generation=cache_generation)
         except Exception:
             result = BarResult(message="暂无可用历史数据 · 历史数据处理失败")
         try:
@@ -328,10 +343,11 @@ class HistoryController(QObject):
     def _accept(self, payload):
         self._busy = False
         generation, instrument, view, preferred, day, repair, result = payload
-        series = self._series_for(instrument, view, preferred)
-        series.set_history(result, day, self.cache.clock())
-        if generation == self._generation and self.dialog and self.dialog.isVisible():
-            self._render(series, view, preferred)
+        if generation >= self._discard_before:
+            series = self._series_for(instrument, view, preferred)
+            series.set_history(result, day, self.cache.clock())
+            if generation == self._generation and self.dialog and self.dialog.isVisible():
+                self._render(series, view, preferred)
         if self._pending is not None:
             pending, self._pending = self._pending, None
             if pending[0] == self._generation and self.dialog.isVisible():
@@ -343,7 +359,7 @@ class HistoryController(QObject):
         result = series.result
         instrument = series.instrument
         bars = select_bars(result.bars, view, instrument)
-        self.dialog.chart.set_data(bars, view, instrument, reference_price=series.reference_price)
+        self.dialog.chart.set_data(bars, view, instrument, reference_price=series.reference_price, now=self.cache.clock())
         self._displayed_key = (self._key(instrument, view, preferred), view)
         pieces = [result.message]
         if result.stale:

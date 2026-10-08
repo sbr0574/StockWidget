@@ -2,9 +2,10 @@
 
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
-import json
+import sqlite3
 from pathlib import Path
 import tempfile
+import threading
 import unittest
 from unittest.mock import Mock, patch
 
@@ -14,7 +15,7 @@ from stockwidget.core.config_store import history_cache_dir
 from stockwidget.data.bar_cache import BarCache, cache_state
 from stockwidget.data.bars import (
     Bar, BarResult, DAILY_HISTORY, HistorySeries, fetch_bars, history_day, intraday_average,
-    market_now, merge_quote, minute_gaps, moving_average,
+    intraday_timeline, market_now, merge_quote, minute_gaps, moving_average,
     parse_eastmoney, parse_sina, request_eastmoney_bars, request_sina_bars, select_bars,
 )
 
@@ -230,11 +231,14 @@ class CacheTests(unittest.TestCase):
         result = self.cache.get(A_SHARE, "daily", "sina")
         self.assertTrue(result.stale)
         self.assertEqual(len(result.bars), 100)
-        path = next(Path(self.tmp).glob("*.json"))
-        self.assertEqual(len(json.loads(path.read_text())["bars"]), 100)
+        db = sqlite3.connect(self.cache.database)
+        try:
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM bars").fetchone()[0], 100)
+        finally:
+            db.close()
         self.cache.get(A_SHARE, "daily", "sina")
         self.assertEqual(self.fetch.call_count, 2)  # Five-minute outage backoff.
-        path.write_text("{broken", encoding="utf-8")
+        self.cache.database.write_bytes(b"broken SQLite cache")
         self.fetch.return_value = BarResult(sample_bars(), "sina")
         self.assertTrue(self.cache.get(A_SHARE, "daily", "sina").bars)
 
@@ -245,7 +249,7 @@ class CacheTests(unittest.TestCase):
         self.assertEqual(self.fetch.call_count, 1)
         self.now += timedelta(minutes=6)
         self.fetch.return_value = BarResult(sample_bars(), "sina")
-        with patch("stockwidget.data.bar_cache.os.replace", side_effect=OSError):
+        with patch("stockwidget.data.bar_cache.sqlite3.connect", side_effect=sqlite3.OperationalError("Disk unavailable")):
             self.assertTrue(self.cache.get(A_SHARE, "daily", "sina").bars)
 
     def test_us_and_futures_trading_windows(self):
@@ -277,6 +281,117 @@ class CacheTests(unittest.TestCase):
         self.assertTrue(self.cache.get(A_SHARE, "five_day", "sina", repair=True).stale)
         self.cache.get(A_SHARE, "five_day", "sina", repair=True)
         self.assertEqual(self.fetch.call_count, 3)
+
+    def test_sqlite_roundtrip_preserves_precision_nulls_and_separate_series(self):
+        precise = Bar("2026-09-30", 1234.567890123456, 1235.678901234567,
+                      1233.456789012345, 1234.678901234567, 123456789.5, None, None)
+        for instrument, source, actual in ((A_SHARE, "sina", "eastmoney"),
+                                           (A_SHARE, "eastmoney", "eastmoney"),
+                                           ({**A_SHARE, "market": "sz"}, "sina", "sina")):
+            self.fetch.return_value = BarResult((precise,), actual)
+            self.cache.get(instrument, "daily", source)
+        restarted = BarCache(self.tmp, clock=lambda: self.now, fetcher=Mock(side_effect=AssertionError("Cache miss")))
+        for instrument, source, actual in ((A_SHARE, "sina", "eastmoney"),
+                                           (A_SHARE, "eastmoney", "eastmoney"),
+                                           ({**A_SHARE, "market": "sz"}, "sina", "sina")):
+            with self.subTest(market=instrument["market"], source=source):
+                result = restarted.get(instrument, "daily", source)
+                self.assertTrue(result.cached)
+                self.assertEqual(result.bars, (precise,))
+                self.assertEqual(result.source, actual)
+        self.assertEqual(list(Path(self.tmp).glob("*.json")), [])
+
+    def test_failed_sqlite_transaction_keeps_previous_complete_entry(self):
+        self.cache.get(A_SHARE, "daily", "sina")
+        db = sqlite3.connect(self.cache.database)
+        try:
+            db.execute("CREATE TRIGGER fail_write BEFORE INSERT ON bars BEGIN SELECT RAISE(ABORT, 'disk failure'); END")
+        finally:
+            db.close()
+        original_day = self.now
+        self.now += timedelta(days=1)
+        new = (Bar("2026-10-01", 10, 11, 9, 10),)
+        self.fetch.return_value = BarResult(new, "sina")
+        self.assertEqual(self.cache.get(A_SHARE, "daily", "sina").bars, new)
+        restarted = BarCache(self.tmp, clock=lambda: original_day, fetcher=Mock(side_effect=AssertionError("Cache miss")))
+        self.assertEqual(restarted.get(A_SHARE, "daily", "sina").bars, sample_bars())
+
+    def test_clear_removes_history_only_and_late_download_cannot_restore_it(self):
+        self.cache.get(A_SHARE, "daily", "sina")
+        legacy = Path(self.tmp) / ("a" * 64 + ".json")
+        legacy.write_text("{}", encoding="utf-8")
+        unrelated = Path(self.tmp) / "config.json"
+        unrelated.write_text("{}", encoding="utf-8")
+        started, release = threading.Event(), threading.Event()
+        def download(*_args):
+            started.set()
+            release.wait(3)
+            return BarResult(sample_bars(), "sina")
+        self.cache.fetcher = download
+        old_generation = self.cache.generation
+        worker = threading.Thread(target=lambda: self.cache.get(A_SHARE, "five_day", "sina"))
+        worker.start()
+        try:
+            self.assertTrue(started.wait(2))
+            self.assertTrue(self.cache.clear())
+            self.assertTrue(worker.is_alive())  # Clear doesn't wait for the network.
+            release.set()
+            worker.join(2)
+            self.assertFalse(worker.is_alive())
+            self.assertFalse(self.cache.database.exists())
+            self.assertFalse(legacy.exists())
+            self.assertTrue(unrelated.exists())
+            self.cache.fetcher = Mock(return_value=BarResult(sample_bars(), "sina"))
+            self.cache.get(A_SHARE, "daily", "sina", generation=old_generation)
+            self.cache.fetcher.assert_not_called()  # A worker queued before clear.
+            self.assertTrue(self.cache.get(A_SHARE, "daily", "sina").bars)
+            self.assertTrue(self.cache.database.exists())
+        finally:
+            release.set()
+            worker.join(3)
+
+    def test_locked_database_is_preserved_and_clear_failure_is_reported(self):
+        self.cache.get(A_SHARE, "daily", "sina")
+        before = self.cache.database.read_bytes()
+        with patch("stockwidget.data.bar_cache.sqlite3.connect", side_effect=sqlite3.OperationalError("database is locked")):
+            self.assertTrue(self.cache.get(A_SHARE, "daily", "sina").bars)
+        self.assertEqual(self.cache.database.read_bytes(), before)
+        with patch.object(self.cache, "_remove_database", side_effect=PermissionError("in use")):
+            self.assertFalse(self.cache.clear())
+        self.assertTrue(self.cache.database.exists())
+
+
+class IntradayTimelineTests(unittest.TestCase):
+    def setUp(self):
+        self.now = datetime(2026, 9, 30, 2, tzinfo=timezone.utc)
+
+    def test_intraday_timeline_uses_exchange_close_and_skips_breaks_and_past_days(self):
+        for instrument, stamp, now, opening, closing in (
+                (A_SHARE, "2026-09-30 10:00:00", self.now, "09:30", "15:00"),
+                ({"market": "hk"}, "2026-09-30 10:00:00", self.now, "09:30", "16:00"),
+                ({"market": "us"}, "2026-07-01 10:00:00", datetime(2026, 7, 1, 14, tzinfo=timezone.utc), "09:30", "16:00"),
+                ({"market": "us"}, "2026-01-05 10:00:00", datetime(2026, 1, 5, 15, tzinfo=timezone.utc), "09:30", "16:00")):
+            with self.subTest(instrument=instrument, stamp=stamp):
+                bars = (Bar(stamp, 10, 10, 10, 10),)
+                timeline = intraday_timeline(bars, instrument, now)
+                self.assertEqual((timeline[0][11:16], timeline[-1][11:16]), (opening, closing))
+                self.assertIn(stamp, timeline)
+                self.assertEqual(intraday_timeline(bars, instrument, now + timedelta(days=1)), ())
+                if instrument.get("market") in {"sh", "hk"}:
+                    self.assertFalse(any("12:30" in time for time in timeline))
+        self.assertEqual(intraday_timeline((Bar("2026-09-30 10:00:00", 10, 10, 10, 10),), {"market": "gb"}, self.now), ())
+
+    def test_futures_timeline_keeps_observed_night_and_extends_to_day_close(self):
+        night = Bar("2026-09-25 21:30:00", 10, 10, 10, 10)  # Friday night belongs to Monday.
+        for product, night_close in (("au", "02:30"), ("cu", "01:00"), ("rb", "23:00")):
+            with self.subTest(product=product):
+                instrument = {"market": "sh", "type": "期", "code": product + "0"}
+                timeline = intraday_timeline((night,), instrument, datetime(2026, 9, 25, 14, tzinfo=timezone.utc))
+                self.assertTrue(timeline[-1].endswith("2026-09-28 15:00:00"))
+                self.assertTrue(any(stamp[11:16] == night_close for stamp in timeline))
+                self.assertFalse(any(stamp.startswith("2026-09-27") for stamp in timeline))
+                day_only = (replace(night, time="2026-09-28 10:00:00"),)
+                self.assertTrue(intraday_timeline(day_only, instrument, datetime(2026, 9, 28, 2, tzinfo=timezone.utc))[0].endswith("09:00:00"))
 
 
 class LiveHistoryTests(unittest.TestCase):
