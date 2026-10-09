@@ -371,6 +371,8 @@ class WidgetPositionTests(unittest.TestCase):
         self.assertTrue(window.timer.isActive())
 
     def test_function_controls_defaults_dependency_reset_and_theme(self):
+        # The simulated Windows settings page must not probe the host taskbar.
+        self.enterContext(patch("stockwidget.ui.settings.groups.find_taskbar", return_value=None))
         window = self.window()
         with patch.object(SettingsDialog, "_start_github_check"):
             dialog = SettingsDialog(window, window)
