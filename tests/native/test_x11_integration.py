@@ -179,20 +179,20 @@ class X11IntegrationTests(unittest.TestCase):
             delete(upper)
             delete(lower)
 
-    def test_floating_click_through_survives_repeated_topmost_changes(self):
+    @patch.object(QuotePresenter, "refresh")
+    def test_floating_click_through_survives_repeated_topmost_changes(self, _refresh):
         lower = QPushButton("lower")
         clicks = Mock()
         lower.clicked.connect(clicks)
         lower.setGeometry(100, 100, 400, 300)
         lower.show()
-        with patch.object(QuotePresenter, "refresh"), patch(
-            "stockwidget.ui.floating.widget.GlobalHotkeyManager"
-        ):
+        with patch("stockwidget.ui.floating.widget.GlobalHotkeyManager"):
             upper = FloatLabel({}, {})
         upper.move(140, 140)
         upper.show()
         QTest.qWait(50)
         point = upper.mapToGlobal(upper.rect().center())
+        geometry = upper.geometry()
 
         def click():
             self.xtest.XTestFakeMotionEvent(self.injector, -1, point.x(), point.y(), 0)
@@ -203,18 +203,25 @@ class X11IntegrationTests(unittest.TestCase):
 
         try:
             upper.set_click_through(True)
-            for count, on_top in enumerate((False, True, False, True), 1):
-                upper.set_float_on_top(on_top)
-                upper.raise_()
-                QTest.qWait(50)
-                click()
-                self.assertEqual(clicks.call_count, count)
-                self.assertTrue(upper.isVisible())
+            for count, on_top in enumerate((False, True) * 4, 1):
+                hidden = count > 4
+                with self.subTest(on_top=on_top, hidden=hidden, count=count):
+                    if hidden:
+                        upper.hide()
+                    upper.set_float_on_top(on_top)
+                    if hidden:
+                        upper.show()
+                    upper.raise_()
+                    QTest.qWait(50)
+                    click()
+                    self.assertEqual(clicks.call_count, count)
+                    self.assertTrue(upper.isVisible())
+                    self.assertEqual(upper.geometry(), geometry)
             upper.set_click_through(False)
             upper.raise_()
             QTest.qWait(50)
             click()
-            self.assertEqual(clicks.call_count, 4)
+            self.assertEqual(clicks.call_count, 8)
         finally:
             delete(upper)
             delete(lower)

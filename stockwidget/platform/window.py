@@ -54,7 +54,11 @@ def apply_click_through(widget, enable: bool) -> None:
         _click_through_windows(widget, enable)
     elif system == "linux" and is_x11():
         widget.winId()
-        widget.windowHandle().setFlag(Qt.WindowTransparentForInput, enable)
+        handle = widget.windowHandle()
+        # xcb 重建原生窗口后可能保留旧输入透明缓存；先清除才能重新设置输入区域。
+        if enable:
+            handle.setFlag(Qt.WindowTransparentForInput, False)
+        handle.setFlag(Qt.WindowTransparentForInput, enable)
 
 
 def _click_through_windows(widget, enable: bool) -> None:

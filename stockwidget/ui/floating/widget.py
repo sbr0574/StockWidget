@@ -814,6 +814,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             if visible:
                 self.setAttribute(Qt.WA_ShowWithoutActivating, True)
                 self.show()
+                if is_x11() and self.click_through:
+                    apply_click_through(self, True)
         finally:
             self.setAttribute(Qt.WA_ShowWithoutActivating, show_without_activating)
             self._updating_topmost = False
@@ -922,6 +924,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if self.force_top and self._keep_top_timer and not self._keep_top_timer.isActive():
             self._keep_top_timer.start()
         apply_click_through(self, self.click_through)
+        if is_x11() and self.click_through:
+            # showEvent 先于原生映射 / 重建，呼出时在映射完成后恢复输入区域。
+            QTimer.singleShot(0, self, lambda: apply_click_through(self, self.click_through))
         self._defer_fit()
         self._ensure_on_top()
 
