@@ -12,7 +12,7 @@ from stockwidget.core.window_rules import adjacent_popup_position, adjacent_popu
 from stockwidget.data.bar_cache import BarCache
 from stockwidget.data.bars import BarResult, HistorySeries, history_day, select_bars
 from stockwidget.ui.controls.history_chart import HistoryChart
-from stockwidget.ui.controls.style import build_settings_stylesheet, is_dark_theme, theme_palette
+from stockwidget.ui.controls.style import apply_settings_theme, is_dark_theme, theme_palette
 
 
 class HistoryDialog(QDialog):
@@ -234,8 +234,7 @@ class HistoryController(QObject):
             return
         mode = self.window.view_options.color_mode
         dark = mode == "dark" or (mode == "system" and is_dark_theme())
-        self.dialog.setStyleSheet(build_settings_stylesheet(dark))
-        self.dialog.setPalette(theme_palette(dark, self.window.palette()))
+        apply_settings_theme(self.dialog, dark, theme_palette(dark, self.window.palette()))
         self.dialog.chart.up_color = self.window.up_color
         self.dialog.chart.down_color = self.window.down_color
 

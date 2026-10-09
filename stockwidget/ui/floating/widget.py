@@ -2,7 +2,7 @@
 
 import sys
 
-from PySide6.QtCore import QPoint, Qt, QTimer, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QFont, QColor, QGuiApplication
 from PySide6.QtWidgets import QApplication, QWidget, QHeaderView
 
@@ -14,14 +14,17 @@ from stockwidget.core.quote_presentation import (
 )
 from stockwidget.core.view_options import APPEARANCE_OPTION_KEYS, ViewOptions
 from stockwidget.core.watchlist import normalize_watchlist
-from stockwidget.core.window_rules import normalize_hide_times, resolve_restore_position
+from stockwidget.core.window_rules import normalize_hide_times
 from stockwidget.platform.capabilities import (
     is_wayland,
+    is_x11,
     hotkeys_supported,
     click_through_supported,
     opacity_supported,
     force_top_supported,
     default_font_family,
+    boundary_check_supported,
+    edge_hide_supported,
 )
 from stockwidget.platform.hotkeys import GlobalHotkeyManager, HotkeyResult
 from stockwidget.platform.window import apply_click_through, ensure_topmost
@@ -58,6 +61,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     drag_finished = Signal(bool)
     taskbar_options_changed = Signal()
     taskbar_status_changed = Signal(str)
+    configuration_changed = Signal()
     presentation_changed = Signal()
     hotkey_triggered = Signal()
     click_through_hotkey_triggered = Signal()
@@ -105,6 +109,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self.hotkey_click_through_enabled = False
         if not force_top_supported():
             self.force_top = False
+        self.setWindowFlag(Qt.WindowTransparentForInput, is_x11() and self.click_through)
 
         # Wayland 会话下窗口位置由合成器接管,须用系统级拖动(startSystemMove)
         self._wayland_drag = is_wayland()
@@ -193,7 +198,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.set_window_opacity_percent(self.opacity_pct)
         self._fit_to_contents()
 
-        self._restore_position(cfg.get("pos"))
+        self.position_controller.restore_config(cfg.get("pos"))
         self.hide_controller = HideController(self)
 
         # 定时刷新数据
@@ -248,7 +253,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.auto_hide_enabled = bool(cfg.get("auto_hide_enabled", False))
         self.hide_enabled = bool(cfg.get("hide_enabled", self.scheduled_hide_enabled or self.auto_hide_enabled))
         self.boundary_check_enabled = bool(cfg.get("boundary_check_enabled", False))
-        self.edge_hide_enabled = self.boundary_check_enabled and bool(cfg.get("edge_hide_enabled", False))
+        self.edge_hide_enabled = (edge_hide_supported()
+                                  and (not boundary_check_supported() or self.boundary_check_enabled)
+                                  and bool(cfg.get("edge_hide_enabled", False)))
         self.float_on_top = bool(cfg.get("float_on_top", True))
         self.force_top = self.float_on_top and bool(cfg.get("force_top", False))
         self.click_through = bool(cfg.get("click_through", False))
@@ -287,7 +294,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._load_settings_config({key: getattr(self.view_options, key) for key in APPEARANCE_OPTION_KEYS})
         self.position_controller.recheck()
         self.position_options_changed.emit()
-        self._apply_float_on_top()
+        self._apply_window_options()
         self.topmost_changed.emit()
         self.quotes.invalidate(reset_pages=True)
         self.hide_controller.configure()
@@ -322,6 +329,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._on_change = fn or (lambda: None)
 
     def _notify_change(self):
+        self.configuration_changed.emit()
         self.presentation_changed.emit()
         self._on_change()
 
@@ -381,10 +389,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self.down_color,
             self.neutral_color,
         )
-        self.model.set_colors(*colors)
-        self.right_model.set_colors(*colors)
-        self.k_delegate.set_colors(*colors)
-        self.right_k_delegate.set_colors(*colors)
+        for target in (self.model, self.right_model, self.k_delegate, self.right_k_delegate):
+            target.set_colors(*colors)
         _font, color, _opacity, unicolor = self.get_taskbar_appearance()
         taskbar_colors = (unicolor, color, self.up_color, self.down_color, self.neutral_color)
         self.taskbar_model.set_colors(*taskbar_colors)
@@ -477,24 +483,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def _defer_fit(self):
         QTimer.singleShot(0, self.table, self._fit_to_contents)
 
-    def _restore_position(self, pos_cfg):
-        """默认原样恢复保存位置；启用边界检测时按完整浮窗尺寸调整。"""
-        screens = QApplication.screens()
-        rects = []
-        for s in screens:
-            g = s.availableGeometry()
-            rects.append((g.left(), g.top(), g.width(), g.height()))
-        pg = QApplication.primaryScreen().availableGeometry()
-        primary = (pg.left(), pg.top(), pg.width(), pg.height())
-
-        saved = None
-        if isinstance(pos_cfg, dict) and "x" in pos_cfg and "y" in pos_cfg:
-            saved = (int(pos_cfg["x"]), int(pos_cfg["y"]))
-
-        x, y = saved if saved is not None else resolve_restore_position(
-            None, rects, primary, self.width(), self.height())
-        self.position_controller.restore_position(QPoint(x, y))
-
     # ----- 数据 & 投影 -----
     def _show_message(self, msg: str, is_error: bool = False, *, kind=None):
         """显示顶部提示；is_error=True 时用红色字体，否则用前景色"""
@@ -565,17 +553,19 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.watchlist = normalize_watchlist(self.watchlist, self.codes_list)
         self.quotes.invalidate()
 
-    def set_type_visible(self, visible: bool):
-        self.type_visible = bool(visible)
+    def _set_display_option(self, attr, value):
+        if getattr(self, attr) == value:
+            return
+        setattr(self, attr, value)
         self._notify_change()
         self.quotes.refresh()
         self.display_flags_changed.emit()
 
+    def set_type_visible(self, visible: bool):
+        self._set_display_option("type_visible", bool(visible))
+
     def set_code_visible(self, visible: bool):
-        self.code_visible = bool(visible)
-        self._notify_change()
-        self.quotes.refresh()
-        self.display_flags_changed.emit()
+        self._set_display_option("code_visible", bool(visible))
 
     def set_visible_metrics(self, metric_ids):
         """一次性应用指标的显示状态和顺序。"""
@@ -606,19 +596,13 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def set_name_length(self, name_len: int):
         # -1 全部显示, 0 不显示, >0 显示前 N 个字
         if name_len == -1 or name_len >= 0:
-            self.name_length = name_len
-            self._notify_change()
-            self.quotes.refresh()
+            self._set_display_option("name_length", name_len)
 
     def set_unit_mode(self, mode: str):
         """设置成交量/成交额单位模式：cn=中文, en=英文, auto=自动。"""
         mode = str(mode or "").strip().lower()
-        if mode not in ("cn", "en", "auto") or mode == self.unit_mode:
-            return
-        self.unit_mode = mode
-        self._notify_change()
-        self.quotes.refresh()
-        self.display_flags_changed.emit()
+        if mode in ("cn", "en", "auto"):
+            self._set_display_option("unit_mode", mode)
 
     def set_header_visible(self, vis: bool):
         self.header_visible = bool(vis)
@@ -788,7 +772,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def set_position_options(self, *, boundary_check_enabled=None, edge_hide_enabled=None):
         boundary = self.boundary_check_enabled if boundary_check_enabled is None else bool(boundary_check_enabled)
         edge_hide = self.edge_hide_enabled if edge_hide_enabled is None else bool(edge_hide_enabled)
-        edge_hide = boundary and edge_hide
+        edge_hide = edge_hide_supported() and (not boundary_check_supported() or boundary) and edge_hide
         if (boundary, edge_hide) == (self.boundary_check_enabled, self.edge_hide_enabled):
             return
         self.boundary_check_enabled, self.edge_hide_enabled = boundary, edge_hide
@@ -800,7 +784,10 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         enable = bool(enable)
         if self.click_through == enable:
             return
+        if enable and self._drag_pos is not None:
+            self.finish_drag(False)
         self.click_through = enable
+        self._apply_window_options()
         apply_click_through(self, self.click_through)
         self._ensure_on_top()
         self.click_through_changed.emit(self.click_through)
@@ -809,8 +796,12 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def toggle_click_through(self):
         self.set_click_through(not self.click_through)
 
-    def _apply_float_on_top(self):
-        if bool(self.windowFlags() & Qt.WindowStaysOnTopHint) == self.float_on_top:
+    def _apply_window_options(self):
+        flags = self.windowFlags()
+        for flag, enabled in ((Qt.WindowStaysOnTopHint, self.float_on_top),
+                              (Qt.WindowTransparentForInput, is_x11() and self.click_through)):
+            flags = flags | flag if enabled else flags & ~flag
+        if flags == self.windowFlags():
             return
         visible = self.isVisible()
         geometry = self.geometry()
@@ -818,7 +809,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         # Qt 修改窗口标志会暂时隐藏窗口；这不是用户隐藏，不能联动任务栏或隐藏倒计时。
         self._updating_topmost = True
         try:
-            self.setWindowFlag(Qt.WindowStaysOnTopHint, self.float_on_top)
+            self.setWindowFlags(flags)
             self.setGeometry(geometry)
             if visible:
                 self.setAttribute(Qt.WA_ShowWithoutActivating, True)
@@ -835,7 +826,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if not enabled:
             self.force_top = False
             self._keep_top_timer.stop()
-        self._apply_float_on_top()
+        self._apply_window_options()
         self.topmost_changed.emit()
         self._notify_change()
 

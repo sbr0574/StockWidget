@@ -2,14 +2,14 @@
 
 import logging
 
-from PySide6.QtCore import QObject, QPoint, QRect, Qt, QTimer
+from PySide6.QtCore import QObject, QPoint, QRect, QRectF, Qt, QTimer
 from PySide6.QtGui import QColor, QCursor, QFont, QFontMetrics, QImage, QPainter
 from PySide6.QtWidgets import QApplication, QStyleOptionViewItem
 
 from stockwidget.core.quote_presentation import BidAskCell
 from stockwidget.core.view_options import column_ranges, taskbar_content_height, taskbar_font_pixels
 from stockwidget.platform.taskbar import NativeTaskbarWindow, cursor_over_taskbar, find_taskbar
-from stockwidget.ui.controls.quote_view import bid_ask_width, paint_bid_ask, paint_pager, pager_hit, pager_size
+from stockwidget.ui.controls.quote_view import bid_ask_width, paint_bid_ask, paint_pager, paint_quote_grid, pager_hit, pager_size
 
 
 def taskbar_message(source):
@@ -103,9 +103,13 @@ def render_taskbar(source, height, dpi=96, max_width=480, hit_regions=None):
                     painter.setPen(color)
                     painter.drawLine(x + gap // 2, 2, x + gap // 2, height - 3)
                 x += gap
+            block_left = x
             for c, width in enumerate(widths):
                 for r in range(start, stop):
-                    rect = QRect(x, 2 + (r - start) * row_height, width, row_height)
+                    row = r - start
+                    top = 2 + row * row_height
+                    bottom = height - 2 if row == options.taskbar_rows - 1 else top + row_height
+                    rect = QRect(x, top, width, bottom - top)
                     if hit_regions is not None:
                         hit_regions.append((rect, r - start, block))
                     index = model.index(r, c)
@@ -126,6 +130,17 @@ def render_taskbar(source, height, dpi=96, max_width=480, hit_regions=None):
                                          int(model.data(index, Qt.TextAlignmentRole)), text)
                     painter.restore()
                 x += width
+            if source.grid_visible:
+                grid_color = QColor(color)
+                grid_color.setAlpha(80)
+                bounds = QRectF(block_left, 2, sum(widths), height - 4).adjusted(0.5, 0.5, -0.5, -0.5)
+                edges, edge = [], block_left
+                for width in widths:
+                    edge += width
+                    edges.append(edge - 0.5)
+                row_edges = (2 + row * row_height - 0.5
+                             for row in range(1, min(stop - start + 1, options.taskbar_rows)))
+                paint_quote_grid(painter, bounds, grid_color, edges, row_edges, radius=3 * scale)
     finally:
         painter.end()
     return image
@@ -155,6 +170,7 @@ class TaskbarController(QObject):
         source.taskbar_options_changed.connect(self.apply_mode)
         source.widget_visibility_changed.connect(self.apply_mode)
         source.presentation_changed.connect(self.schedule_refresh)
+        source.click_through_changed.connect(self.schedule_refresh)
         source.drag_started.connect(self.drag_started)
         source.drag_moved.connect(self.drag_moved)
         source.drag_finished.connect(self.drag_finished)
@@ -217,7 +233,8 @@ class TaskbarController(QObject):
             if self.native is None:
                 self.native = NativeTaskbarWindow(self._native_pointer, self._context_menu)
             self.native.present(area, image.width(), image.height(), bytes(image.constBits()),
-                                round(self.source.taskbar_offset * area.dpi / 96))
+                                round(self.source.taskbar_offset * area.dpi / 96),
+                                click_through=self.source.click_through)
             self._active = True
             page = self.source.quotes.get_page("taskbar")
             self._status(f"已显示在主屏任务栏 · 第 {page.index + 1}/{page.count} 页")

@@ -14,9 +14,9 @@ Linux 的关键差异在于 X11 与 Wayland：
 - 窗口拖动：Wayland 需用 QWindow.startSystemMove() 由合成器接管；X11 可直接 move()。
 - 强制置顶：仅 Windows 支持（轮询 SetWindowPos，不激活窗口）；Linux 上 raise_() 受窗口管理器限制不可靠，
   macOS 上轮询 raise_() 会不断抢焦点，故这两个平台禁用该选项。
-  （macOS 浮窗置顶由 WidgetPanel 的 Qt.WA_MacAlwaysShowToolWindow 属性保证。）
+  （macOS 浮窗使用 Qt.WindowStaysOnTopHint，并保留 Qt.WA_MacAlwaysShowToolWindow。）
 
-本模块只做“探测/判断”，不包含原生实现：原生实现见 click_through.py / autostart.py。
+本模块只做“探测/判断”，不包含原生实现：原生实现见 window.py / autostart.py。
 """
 
 import os
@@ -36,10 +36,12 @@ def session_type() -> str | None:
         app = QApplication.instance()
         if app is not None:
             pn = app.platformName()
-            if pn == "wayland":
+            if pn.startswith("wayland"):
                 return "wayland"
-            if pn in ("xcb", "offscreen"):
+            if pn == "xcb":
                 return "x11"
+            # Headless plugins and other platforms expose no X11 capability.
+            return None
     except Exception:
         pass
     # 兜底：按环境变量判断
@@ -90,6 +92,16 @@ def opacity_supported() -> bool:
 def force_top_supported() -> bool:
     """强制置顶是否可用：仅 Windows 支持；Linux / macOS 上 raise_() 不可靠，禁用该选项。"""
     return sys.platform == "win32"
+
+
+def boundary_check_supported() -> bool:
+    """手动边界检测设置仅在 Windows 显示；其他桌面交由窗口管理器约束。"""
+    return sys.platform == "win32"
+
+
+def edge_hide_supported() -> bool:
+    """贴边收起需要客户端能定位与调整窗口；Wayland 不提供该能力。"""
+    return sys.platform in ("win32", "darwin") or (sys.platform == "linux" and is_x11())
 
 
 def start_on_boot_supported() -> bool:

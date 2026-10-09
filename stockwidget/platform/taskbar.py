@@ -226,8 +226,9 @@ class NativeTaskbarWindow:
             if previous:
                 self.user.SetThreadDpiAwarenessContext(previous)
 
-    def present(self, area, width, height, pixels, offset=0):
+    def present(self, area, width, height, pixels, offset=0, *, click_through=False):
         self._attach(area)
+        self.set_click_through(click_through)
         x, y = area.position(width, height, offset)
         if not self.user.SetWindowPos(self.hwnd, 0, x, y, width, height, 0x50):
             raise ctypes.WinError(ctypes.get_last_error())  # NOACTIVATE | SHOWWINDOW
@@ -235,6 +236,23 @@ class NativeTaskbarWindow:
         if frame != self._last_frame:
             self._upload(width, height, pixels)
             self._last_frame = frame
+
+    def set_click_through(self, enabled):
+        """Layered windows use WS_EX_TRANSPARENT to pass input across processes."""
+        if not self.hwnd:
+            return
+        style = self.user.GetWindowLongW(self.hwnd, -20)  # GWL_EXSTYLE
+        updated = style | 0x20 if enabled else style & ~0x20  # WS_EX_TRANSPARENT
+        if updated != style:
+            ctypes.set_last_error(0)
+            previous = self.user.SetWindowLongW(self.hwnd, -20, updated)
+            error = ctypes.get_last_error()
+            if not previous and error:
+                raise ctypes.WinError(error)
+        if enabled and self._pointer_down:
+            # Enabling from a hotkey must also end an existing captured drag.
+            self.release_pointer()
+            self._on_pointer("cancel", 0, 0)
 
     def _upload(self, width, height, pixels):
         class BitmapInfo(ctypes.Structure):

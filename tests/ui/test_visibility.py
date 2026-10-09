@@ -449,6 +449,44 @@ class WidgetTopmostTests(QtTestCase):
                 self.window.set_click_through(enabled)
                 self.native_top.assert_called_once_with(self.window)
 
+    def test_x11_click_through_survives_topmost_and_visibility_changes(self):
+        window = self.window
+        geometry = window.geometry()
+        visibility = Mock()
+        window.widget_visibility_changed.connect(visibility)
+        with patch("stockwidget.ui.floating.widget.is_x11", return_value=True):
+            window.set_click_through(True)
+            for enabled in (False, True, False):
+                window.set_float_on_top(enabled)
+                self.assertTrue(window.windowFlags() & Qt.WindowTransparentForInput)
+                self.assertTrue(window.isVisible())
+                self.assertTrue(window.widget_visible)
+                self.assertEqual(window.geometry(), geometry)
+            visibility.assert_not_called()
+            window.hide_widget()
+            window.set_float_on_top(True)
+            self.assertFalse(window.isVisible())
+            window.toggle_win()
+            self.assertTrue(window.windowFlags() & Qt.WindowTransparentForInput)
+            window.set_click_through(False)
+            self.assertFalse(window.windowFlags() & Qt.WindowTransparentForInput)
+
+    def test_enabling_click_through_cancels_an_active_drag(self):
+        window = self.window
+        origin = window.pos()
+        press = origin + QPoint(5, 5)
+        cancelled = Mock()
+        window.drag_finished.connect(cancelled)
+        window.begin_drag(press)
+        window.move_drag(press + QPoint(60, 30))
+        self.assertTrue(window._dragging)
+        window.set_click_through(True)
+        self.assertEqual(window.pos(), origin)
+        self.assertIsNone(window._drag_pos)
+        self.assertFalse(window._dragging)
+        self.assertIsNone(window.position_controller._drag_origin)
+        cancelled.assert_called_once_with(False)
+
     def test_hidden_or_disabled_window_is_not_raised(self):
         self.window.hide()
         self.window._ensure_on_top()

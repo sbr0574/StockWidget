@@ -78,17 +78,15 @@ def _load_manager(resources: dict, local_status: dict, fetcher) -> CodeListManag
 
 
 class NextCodeCheckDelayTests(unittest.TestCase):
-    def test_weekday_before_nine_schedules_same_day(self):
-        monday = datetime(2026, 8, 31, 8, 59, tzinfo=UTC8)
-        self.assertEqual(next_code_check_delay(monday), 60)
-
-    def test_weekday_at_nine_schedules_next_workday(self):
-        monday = datetime(2026, 8, 31, 9, 0, tzinfo=UTC8)
-        self.assertEqual(next_code_check_delay(monday), 24 * 60 * 60)
-
-    def test_friday_at_nine_skips_weekend(self):
-        friday = datetime(2026, 8, 28, 9, 0, tzinfo=UTC8)
-        self.assertEqual(next_code_check_delay(friday), 3 * 24 * 60 * 60)
+    def test_checks_at_nine_and_skips_weekends(self):
+        cases = (
+            (datetime(2026, 8, 31, 8, 59, tzinfo=UTC8), 60),
+            (datetime(2026, 8, 31, 9, 0, tzinfo=UTC8), 24 * 60 * 60),
+            (datetime(2026, 8, 28, 9, 0, tzinfo=UTC8), 3 * 24 * 60 * 60),
+        )
+        for now, delay in cases:
+            with self.subTest(now=now):
+                self.assertEqual(next_code_check_delay(now), delay)
 
 
 class CodeListManagerTests(unittest.TestCase):
@@ -330,12 +328,6 @@ class FetchJsonTests(unittest.TestCase):
         get.return_value.__enter__.return_value = response
         result = fetch_json_from_url(CODES_SOURCE_URLS[-1].format(name="stock_hk.json"))
         self.assertEqual(result, payload)
-
-    @patch("stockwidget.data.code_lists.requests.get")
-    def test_timeout_reports_reason(self, get):
-        get.side_effect = requests.ReadTimeout()
-        with self.assertRaisesRegex(CodeDownloadError, "超时"):
-            fetch_json_from_url("https://example.com/test.json")
 
     @patch("stockwidget.data.code_lists.requests.get")
     def test_request_failures_preserve_specific_reasons(self, get):

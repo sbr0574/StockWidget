@@ -109,6 +109,55 @@ class TaskbarTests(QtTestCase):
         self.set_rows([["黄金", "1250.45"], ["白银", "67.89"]])
         self.assertNotEqual(before, render_taskbar(self.window, 44))
 
+    def test_grid_draws_cell_boundaries_without_changing_quote_hit_regions(self):
+        for split, dpi, height, limit, count in (
+            (False, 96, 44, 2, 2), (True, 144, 66, 2, 2),
+            (False, 96, 44, 3, 3), (False, 96, 44, 3, 2),
+        ):
+            with self.subTest(split=split, dpi=dpi, limit=limit, count=count):
+                self.window.set_view_options(taskbar_sync_split=False, taskbar_split_enabled=split,
+                                             taskbar_rows=limit)
+                self.set_rows([["黄金", "123.45"], ["白银", "67.89"], ["铜", "51.23"]][:count])
+                self.window.set_grid_visible(False)
+                original_regions, grid_regions = [], []
+                original = render_taskbar(self.window, height, dpi, hit_regions=original_regions)
+                self.window.set_grid_visible(True)
+                grid = render_taskbar(self.window, height, dpi, hit_regions=grid_regions)
+                self.assertEqual(original_regions, grid_regions)
+                rect = grid_regions[0][0]
+                x, y = rect.right(), rect.center().y()
+                self.assertGreater(grid.pixelColor(x, y).alpha(), original.pixelColor(x, y).alpha())
+                if limit == 3:
+                    last = grid_regions[count - 1][0]
+                    x = last.right() - 2  # Empty text padding beside the separator.
+                    self.assertEqual(grid.pixelColor(x, height - 4).alpha(),
+                                     original.pixelColor(x, height - 4).alpha())
+                    self.assertGreater(grid.pixelColor(x, last.bottom()).alpha(),
+                                       original.pixelColor(x, last.bottom()).alpha())
+                    if count == limit:
+                        self.assertEqual(last.bottom(), height - 3)
+                self.window.set_grid_visible(False)
+                self.assertEqual(original, render_taskbar(self.window, height, dpi))
+
+    def test_taskbar_color_menu_respects_independent_and_synced_appearance(self):
+        self.window.set_unicolor(False)
+        for synced, automatic in ((False, False), (True, False), (False, True)):
+            with self.subTest(synced=synced, automatic=automatic):
+                self.window.set_unicolor(False)
+                self.window.set_view_options(taskbar_sync_appearance=synced,
+                                             taskbar_auto_color=automatic, taskbar_unicolor=True)
+                menu = build_quote_menu(self.window, "taskbar")
+                try:
+                    action = next(action for action in menu.actions() if action.text() == "统一颜色")
+                    self.assertEqual(action.isChecked(), not synced)
+                    self.assertEqual(action.isEnabled(), not automatic)
+                    if action.isEnabled():
+                        action.trigger()
+                        self.assertEqual(self.window.unicolor, synced)
+                        self.assertEqual(self.window.view_options.taskbar_unicolor, synced)
+                finally:
+                    delete(menu)
+
     def test_sorted_projection_changes_taskbar_and_preserves_main_rows(self):
         w = self.window
         w.visible_metrics = ["name", "price"]
@@ -262,6 +311,12 @@ class TaskbarTests(QtTestCase):
             self.assertFalse(self.window.isVisible())
             self.assertTrue(self.window.timer.isActive())
             self.assertTrue(self.controller._active)
+            self.window.set_click_through(True)
+            self.app.processEvents()
+            self.assertTrue(native.present.call_args.kwargs["click_through"])
+            self.window.set_click_through(False)
+            self.app.processEvents()
+            self.assertFalse(native.present.call_args.kwargs["click_through"])
             self.window.set_display_mode("float")
             self.assertTrue(self.window.isVisible())
             native.hide.assert_called()
@@ -434,14 +489,21 @@ class NativeTaskbarTests(QtTestCase):
         user = native.user
         user.GetForegroundWindow.argtypes = []
         user.GetForegroundWindow.restype = w.HWND
+        user.ChildWindowFromPointEx.argtypes = [w.HWND, w.POINT, w.UINT]
+        user.ChildWindowFromPointEx.restype = w.HWND
         foreground = user.GetForegroundWindow()
         before = w.RECT()
         user.GetWindowRect(area.hwnd, ctypes.byref(before))
         image = QImage(160, 40, QImage.Format_ARGB32_Premultiplied)
         image.fill(QColor(0, 0, 0, 1))
         try:
-            for _ in range(2):
-                native.present(area, 160, 40, bytes(image.constBits()))
+            for states in ((False, True, False), (True, False)):
+                for through in states:
+                    native.present(area, 160, 40, bytes(image.constBits()), click_through=through)
+                    self.app.processEvents()
+                    x, y = area.position(160, 40)
+                    hit = user.ChildWindowFromPointEx(area.hwnd, w.POINT(x + 80, y + 20), 0x7)
+                    self.assertEqual(hit == native.hwnd, not through)
                 self.app.processEvents()
                 self.assertEqual(user.GetParent(native.hwnd), area.hwnd)
                 self.assertTrue(user.GetWindowLongW(native.hwnd, -16) & 0x40000000)
@@ -458,6 +520,19 @@ class NativeTaskbarTests(QtTestCase):
 
 
 class NativeInputTests(unittest.TestCase):
+    def test_enabling_click_through_cancels_an_existing_captured_drag(self):
+        native = NativeTaskbarWindow.__new__(NativeTaskbarWindow)
+        native.hwnd, native._pointer_down = 1, True
+        native._on_pointer, native.user = Mock(), Mock()
+        native.user.GetWindowLongW.return_value = 0x08080080
+        native.user.GetCapture.return_value = 1
+        with patch("stockwidget.platform.taskbar.ctypes.set_last_error", create=True), \
+             patch("stockwidget.platform.taskbar.ctypes.get_last_error", return_value=0, create=True):
+            native.set_click_through(True)
+        self.assertFalse(native._pointer_down)
+        native.user.ReleaseCapture.assert_called_once()
+        native._on_pointer.assert_called_once_with("cancel", 0, 0)
+
     def test_polling_finishes_background_drag_once_and_supports_escape(self):
         native = NativeTaskbarWindow.__new__(NativeTaskbarWindow)
         native.hwnd, native._pointer_down, native._ignore_release = 1, True, False
@@ -558,7 +633,7 @@ class DockingInteractionTests(PagingTestCase):
         self.assertTrue(controller._active)
         self.assertFalse(self.win.isVisible())
 
-    def test_taskbar_menu_switch_enables_docking_and_can_restore_the_float(self):
+    def test_disabled_taskbar_prevents_docking_and_settings_can_restore_the_float(self):
         controller = self.make_controller()
         self.win.set_view_options(taskbar_enabled=False)
         self.win.move(100, 100)
@@ -580,12 +655,8 @@ class DockingInteractionTests(PagingTestCase):
         try:
             actions = {action.text(): action for action in menu.actions()}
             self.assertNotIn("显示位置", actions)
-            self.assertFalse(actions["任务栏行情"].isChecked())
-            actions["任务栏行情"].trigger()
-            self.assertTrue(self.win.view_options.taskbar_enabled)
-            self.assertEqual(self.win.display_mode, "taskbar")
-            self.assertFalse(self.win.isVisible())
-            self.assertTrue(controller._active)
+            self.assertNotIn("任务栏行情", actions)
+            self.assertIn("显示表头", actions)
             actions["分栏"].trigger()
             self.assertTrue(self.win.view_options.float_split_enabled)
             with patch("stockwidget.ui.floating.widget.apply_click_through"):
@@ -773,6 +844,8 @@ class DockingInteractionTests(PagingTestCase):
             actions = {action.text(): action for action in menu.actions()}
             self.assertIn("排序", actions)
             self.assertIn("设置…", actions)
+            self.assertNotIn("任务栏行情", actions)
+            self.assertNotIn("显示表头", actions)
             metric_actions = {action.text(): action for action in actions["显示指标"].menu().actions()}
             self.assertTrue(metric_actions["成交量"].isEnabled())
             metric_actions["涨幅"].trigger()

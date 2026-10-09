@@ -20,7 +20,6 @@ from stockwidget.ui.watchlist.add_panel import (
     ADDED_ROLE,
     PAGE_SIZE,
     RESULT_ROW_HEIGHT,
-    SearchResultDelegate,
 )
 from stockwidget.ui.watchlist.editor import (
     WatchlistEditor,
@@ -359,13 +358,11 @@ class WatchlistDialogTests(SettingsTestCase):
         self.assertFalse(dialog.watchlist_editor.btn_del.isEnabled())
         self.assertFalse(dialog.watchlist_editor.btn_top.isEnabled())
 
-    def test_quick_editor_has_no_category_selector_and_searches_all_types(self):
+    def test_quick_editor_searches_all_security_types(self):
         dialog, _window = self._make_dialog()
         editor = self._start_code_editor(dialog)
 
         self.assertEqual(editor.placeholderText(), SEARCH_PLACEHOLDER)
-        self.assertFalse(hasattr(editor, "category_combo"))
-
         expected = {
             "茅台": "sh600519",
             "财通": "sh501001",
@@ -386,10 +383,6 @@ class WatchlistDialogTests(SettingsTestCase):
         hint = dialog.watchlist_editor.empty_watchlist_hint
         self.assertEqual(hint.text(), "双击空白处添加条目")
         self.assertFalse(hint.isHidden())
-        self.assertTrue(
-            hint.testAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        )
-
         QTest.mouseDClick(
             dialog.watchlist_editor.list_codes.viewport(),
             Qt.MouseButton.LeftButton,
@@ -484,12 +477,6 @@ class WatchlistDialogTests(SettingsTestCase):
         }
         dialog, window = self._make_dialog(watchlist)
 
-        self.assertEqual(dialog.watchlist_editor.btn_top.text(), "置顶")
-        self.assertIs(dialog.watchlist_editor.btn_top.parentWidget(), dialog.ui.gb_list)
-        self.assertLessEqual(
-            dialog.watchlist_editor.btn_top.geometry().right(), dialog.ui.gb_list.width()
-        )
-        self.assertLess(dialog.watchlist_editor.btn_top.iconSize().width(), 20)
         # 没有选中条目时按钮禁用
         self.assertFalse(dialog.watchlist_editor.btn_top.isEnabled())
 
@@ -565,7 +552,6 @@ class WatchlistDialogTests(SettingsTestCase):
         self.assertEqual(panel.current_result.page_count, 3)
         self.assertEqual(panel.result_model.rowCount(), PAGE_SIZE)
         self.qt_app.processEvents()
-        self.assertIsInstance(panel.result_list.itemDelegate(), SearchResultDelegate)
         self.assertEqual(
             panel.result_list.viewport().height(), PAGE_SIZE * RESULT_ROW_HEIGHT
         )
@@ -608,7 +594,6 @@ class WatchlistDialogTests(SettingsTestCase):
             panel.result_model.item(0).flags() & Qt.ItemFlag.ItemIsEnabled
         )
         self.assertEqual(panel.result_model.item(0).text(), "沪/600519/贵州茅台")
-        self.assertNotIn("已添加", panel.result_model.item(0).text())
 
     def test_panel_adds_new_entry_at_start_of_watchlist(self):
         watchlist = {

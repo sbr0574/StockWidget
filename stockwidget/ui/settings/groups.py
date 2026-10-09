@@ -52,10 +52,7 @@ class _SettingsGroup(QObject):
         return control
 
     def _connect_sync(self):
-        self.source.view_options_changed.connect(self.sync)
-        self.source.taskbar_options_changed.connect(self.sync)
-        self.source.presentation_changed.connect(self.sync)
-        self.source.display_flags_changed.connect(self.sync)
+        self.source.configuration_changed.connect(self.sync)
         self.sync()
 
     def _page_controls(self, prefix):
@@ -75,6 +72,11 @@ class _SettingsGroup(QObject):
 
 
 class _SyncedGroup(_SettingsGroup):
+    def _connect_sync(self):
+        # TaskbarSettings owns source subscriptions and refreshes all children.
+        # Child groups only own their controls (and the style geometry timer).
+        self.sync()
+
     def bind(self, source, key):
         super().bind(source)
         self.sync_key = key

@@ -4570,7 +4570,7 @@
                  <item row="1" column="0">
                   <widget class="QLabel" name="cb_edge_hide_description">
                    <property name="text">
-                    <string>贴住屏幕左、上、右侧时收起为窄条，移入时展开；需先开启边界检测。</string>
+                    <string>贴住屏幕左、上、右侧时收起为窄条，移入时展开。</string>
                    </property>
                    <property name="wordWrap">
                     <bool>true</bool>
@@ -4601,7 +4601,7 @@
                     <string>贴边收起</string>
                    </property>
                    <property name="toolTip">
-                    <string>需先开启边界检测。贴住屏幕左、上、右边时收起为5px窄条，鼠标移入展开、移出收起；收起时暂停浮窗自动翻页，底边不收起。</string>
+                    <string>贴住屏幕左、上、右边时收起为窄条，鼠标移入展开；底边不收起。</string>
                    </property>
                    <property name="checked">
                     <bool>false</bool>
@@ -4625,7 +4625,7 @@
                     <string>贴边收起</string>
                    </property>
                    <property name="accessibleDescription">
-                    <string>贴住屏幕左、上、右侧时收起为窄条，移入时展开；需先开启边界检测。</string>
+                    <string>贴住屏幕左、上、右侧时收起为窄条，移入时展开。</string>
                    </property>
                   </widget>
                  </item>

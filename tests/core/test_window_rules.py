@@ -1,7 +1,6 @@
 """屏幕几何、定时隐藏和行情时间的纯规则。"""
 
 from datetime import datetime, timedelta
-import os
 import unittest
 
 from stockwidget.core.window_rules import (
@@ -20,40 +19,26 @@ from stockwidget.core.window_rules import (
 
 
 PRIMARY = (0, 0, 1920, 1080)
-
-
 SECONDARY = (-1920, 0, 1920, 1080)
-
-
 RECTS = [PRIMARY, SECONDARY]
-
-
 WIDTH = 200
-
-
 HEIGHT = 100
 
 
 class ScreenContainingTests(unittest.TestCase):
-    def test_primary(self):
-        self.assertEqual(screen_containing(100, 100, RECTS), PRIMARY)
-
-    def test_secondary_negative_coords(self):
-        self.assertEqual(screen_containing(-100, 100, RECTS), SECONDARY)
-
-    def test_none_when_outside(self):
-        self.assertIsNone(screen_containing(99999, 99999, RECTS))
+    def test_primary_negative_coordinates_and_outside(self):
+        for point, expected in (((100, 100), PRIMARY), ((-100, 100), SECONDARY),
+                                ((99999, 99999), None)):
+            with self.subTest(point=point):
+                self.assertEqual(screen_containing(*point, RECTS), expected)
 
 
 class ClampPointTests(unittest.TestCase):
-    def test_inside_unchanged(self):
-        self.assertEqual(clamp_point(100, 100, PRIMARY, WIDTH, HEIGHT), (100, 100))
-
-    def test_outside_right_bottom(self):
-        self.assertEqual(clamp_point(5000, 5000, PRIMARY, WIDTH, HEIGHT), (1720, 980))
-
-    def test_outside_left_top(self):
-        self.assertEqual(clamp_point(-5000, -5000, PRIMARY, WIDTH, HEIGHT), (0, 0))
+    def test_inside_and_opposite_screen_boundaries(self):
+        for point, expected in (((100, 100), (100, 100)), ((5000, 5000), (1720, 980)),
+                                ((-5000, -5000), (0, 0))):
+            with self.subTest(point=point):
+                self.assertEqual(clamp_point(*point, PRIMARY, WIDTH, HEIGHT), expected)
 
 
 class BestScreenTests(unittest.TestCase):
@@ -105,43 +90,20 @@ class AdjacentPopupTests(unittest.TestCase):
 
 
 class ResolveRestorePositionTests(unittest.TestCase):
-    def test_restore_on_secondary(self):
-        self.assertEqual(
-            resolve_restore_position((-1500, 200), RECTS, PRIMARY, WIDTH, HEIGHT),
-            (-1500, 200),
+    def test_restore_clamps_saved_positions_and_handles_disconnected_screens(self):
+        cases = (
+            ((-1500, 200), RECTS, (-1500, 200)),
+            ((500, 300), RECTS, (500, 300)),
+            ((-1500, 200), [PRIMARY], (0, 200)),
+            ((-150, 200), RECTS, (-200, 200)),
+            (None, RECTS, (1680, 900)),
         )
-
-    def test_restore_on_primary(self):
-        self.assertEqual(
-            resolve_restore_position((500, 300), RECTS, PRIMARY, WIDTH, HEIGHT),
-            (500, 300),
-        )
-
-    def test_secondary_disconnected_falls_back_to_primary(self):
-        self.assertEqual(
-            resolve_restore_position((-1500, 200), [PRIMARY], PRIMARY, WIDTH, HEIGHT),
-            (0, 200),
-        )
-
-    def test_clamp_into_secondary_when_near_edge(self):
-        self.assertEqual(
-            resolve_restore_position((-150, 200), RECTS, PRIMARY, WIDTH, HEIGHT),
-            (-200, 200),
-        )
-
-    def test_none_saved_uses_primary_default(self):
-        self.assertEqual(
-            resolve_restore_position(None, RECTS, PRIMARY, WIDTH, HEIGHT),
-            (1680, 900),
-        )
-
-
-os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+        for saved, screens, expected in cases:
+            with self.subTest(saved=saved, screens=screens):
+                self.assertEqual(resolve_restore_position(saved, screens, PRIMARY, WIDTH, HEIGHT), expected)
 
 
 NOW = datetime(2026, 9, 30, 15, 0, 0, tzinfo=QUOTE_TIMEZONE)
-
-
 CODES = {"sh600000": {"market": "sh", "code": "600000", "checked": True},
          "sz000001": {"market": "sz", "code": "000001", "checked": True}}
 

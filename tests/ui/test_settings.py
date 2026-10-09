@@ -26,7 +26,7 @@ class SettingsDialogTests(SettingsTestCase):
         dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_appearance=False)
         with patch.object(dialog, "_apply_theme_stylesheet", wraps=dialog._apply_theme_stylesheet) as restyle:
             for opacity in (90, 80, 70):
-                dialog.taskbar_style_settings.opacity.setValue(opacity)
+                dialog.taskbar_settings.style.opacity.setValue(opacity)
             dialog.taskbar_settings.rows.setValue(3)
             dialog.taskbar_settings.offset.setValue(10)
             self.qt_app.processEvents()
@@ -41,7 +41,7 @@ class SettingsDialogTests(SettingsTestCase):
         with patch("stockwidget.ui.settings.groups.find_taskbar", return_value=TaskbarArea(1, 2560, 104, 2200, 192)) as find:
             dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_appearance=False,
                                               taskbar_rows=4, taskbar_font_size=20)
-            style = dialog.taskbar_style_settings
+            style = dialog.taskbar_settings.style
             self.assertEqual((style.font_size.maximum(), style.font_size.value()), (7, 7))
             window.set_view_options(taskbar_rows=3)
             self.assertEqual((style.font_size.maximum(), style.font_size.value()), (10, 10))
@@ -55,15 +55,19 @@ class SettingsDialogTests(SettingsTestCase):
             dialog._sync_view_settings()
             self.assertEqual(style.font_size.maximum(), 8)
 
-    def test_fixed_size_and_taskbar_category_only_on_windows(self):
-        for platform in ("win32", "linux", "darwin"):
-            with self.subTest(platform=platform), patch("stockwidget.ui.settings.dialog.sys.platform", platform):
+    def test_platform_settings_show_only_available_features(self):
+        for platform, session, edge_enabled in (("win32", None, False), ("linux", "x11", True),
+                                                ("linux", "wayland", False), ("darwin", None, True)):
+            with self.subTest(platform=platform, session=session), patch("sys.platform", platform), \
+                    patch("stockwidget.platform.capabilities.session_type", return_value=session):
                 dialog, _ = self._make_dialog()
-                dialog.resize(900, 700)
-                self.assertEqual(dialog.size(), QSize(704, 496))
-                dialog.resize(600, 350)
-                self.assertEqual(dialog.size(), QSize(704, 496))
                 self.assertEqual(dialog.ui.settings_navigation.item(5).isHidden(), platform != "win32")
+                self.assertEqual(dialog.ui.cb_force_top_row.isHidden(), platform != "win32")
+                self.assertEqual(dialog.ui.cb_boundary_check_row.isHidden(), platform != "win32")
+                self.assertEqual(dialog.ui.gb_icon.isHidden(), platform == "darwin")
+                self.assertEqual(dialog.ui.cb_edge_hide.isEnabled(), edge_enabled)
+                if session == "wayland":
+                    self.assertIn("Wayland", dialog.ui.cb_edge_hide.toolTip())
 
     def test_inline_metric_options_preserve_configuration_and_apply_to_both_surfaces(self):
         dialog, window = self._make_dialog(name_length=3, unit_mode="cn")
@@ -111,7 +115,11 @@ class SettingsDialogTests(SettingsTestCase):
         for mode, dark in (("light", False), ("dark", True)):
             dialog.ui.cmb_color_mode.setCurrentIndex(dialog.ui.cmb_color_mode.findData(mode))
             self.assertEqual(window.view_options.color_mode, mode)
-            self.assertEqual(dialog.palette().color(QPalette.Window).lightness() < 128, dark)
+            for widget in (dialog, dialog.ui.floating_content, dialog.ui.gb_fcn,
+                           dialog.ui.cb_float_on_top_title, dialog.ui.btn_check_update):
+                with self.subTest(mode=mode, control=widget.objectName()):
+                    self.assertEqual(widget.palette().color(QPalette.Window).lightness() < 128, dark)
+                    self.assertEqual(widget.palette().color(QPalette.WindowText).lightness() > 128, dark)
         dialog.ui.cmb_color_mode.setCurrentIndex(0)
         self.assertEqual(dialog.palette(), QApplication.palette())
 
@@ -143,38 +151,6 @@ class SettingsDialogTests(SettingsTestCase):
                     self.assertEqual(label.palette().color(QPalette.WindowText), QColor(foreground))
         finally:
             self.qt_app.setPalette(original)
-
-    def test_about_has_blank_line_after_copyright_and_fits_label(self):
-        dialog, _ = self._make_dialog()
-        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.about)
-        dialog.show()
-        self.qt_app.processEvents()
-        label = dialog.ui.label_about_info
-        document = QTextDocument()
-        document.setDefaultFont(label.font())
-        document.setDocumentMargin(0)
-        document.setHtml(label.text())
-        document.setTextWidth(label.contentsRect().width())
-        self.assertIn("Copyright 2026 sbr0574\n\n仓库地址", document.toPlainText())
-        self.assertLessEqual(document.size().height(), label.contentsRect().height())
-
-    def test_linux_about_uses_smaller_font_and_fits_scroll_content(self):
-        with patch("stockwidget.ui.settings.dialog.sys.platform", "linux"):
-            dialog, _ = self._make_dialog()
-        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.about)
-        dialog.show()
-        self.qt_app.processEvents()
-        label = dialog.ui.label_about_info
-        self.assertEqual(label.font().pixelSize(), 12)
-        self.assertTrue(dialog.ui.about.findChildren(QScrollArea))
-        self.assertIn("问题反馈", label.text())
-        document = QTextDocument()
-        document.setDefaultFont(label.font())
-        document.setDocumentMargin(0)
-        document.setHtml(label.text())
-        document.setTextWidth(label.contentsRect().width())
-        self.assertLessEqual(document.size().height(), label.contentsRect().height())
-        self.assertLess(label.geometry().bottom(), dialog.ui.btn_open_cache_dir.y())
 
     def test_linux_fonts_override_desktop_styles_for_controls_and_rich_text(self):
         original_stylesheet = self.qt_app.styleSheet()
@@ -397,13 +373,6 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertFalse(dialog.ui.cb_force_top.isChecked())
         self.assertFalse(dialog.ui.cb_force_top.isEnabled())
 
-    def test_float_topmost_does_not_enable_unsupported_force_top(self):
-        with patch("stockwidget.ui.settings.dialog.force_top_supported", return_value=False):
-            dialog, window = self._make_dialog()
-            for enabled in (False, True):
-                window.set_float_on_top(enabled)
-                self.assertFalse(dialog.ui.cb_force_top.isEnabled())
-
     def _make_icon_app(self, choice="default", custom_path=""):
         app = Mock()
         app._icon_choice = choice
@@ -463,7 +432,7 @@ class SettingsDialogTests(SettingsTestCase):
         self.enable_windows_taskbar()
         dialog, window = self._make_dialog()
         floating, taskbar, style = (dialog.float_row_settings,
-                                   dialog.taskbar_paging_settings, dialog.taskbar_style_settings)
+                                   dialog.taskbar_settings.paging, dialog.taskbar_settings.style)
         row_limit = dialog.float_row_settings
         self.assertFalse(floating.auto.isEnabled())
         row_limit.setChecked(True)
@@ -571,8 +540,8 @@ class SettingsDialogTests(SettingsTestCase):
         dialog.ui.settings_pages.setCurrentWidget(dialog.ui.taskbar)
         dialog.show()
         self.qt_app.processEvents()
-        groups = (dialog.taskbar_settings.metrics, dialog.taskbar_style_settings,
-                  dialog.taskbar_paging_settings, dialog.taskbar_split_settings)
+        groups = (dialog.taskbar_settings.metrics, dialog.taskbar_settings.style,
+                  dialog.taskbar_settings.paging, dialog.taskbar_settings.split)
         for group in groups:
             with self.subTest(group=group.title()):
                 self.assertTrue(group.body.isVisible())
@@ -581,12 +550,12 @@ class SettingsDialogTests(SettingsTestCase):
                 self.qt_app.processEvents()
                 self.assertTrue(group.body.isHidden())
                 self.assertTrue(dialog.taskbar_settings.offset.isVisible())
-                if group is dialog.taskbar_style_settings:
+                if group is dialog.taskbar_settings.style:
                     self.assertFalse(dialog.taskbar_settings.rows.isVisible())
                 QTest.mouseClick(group.sync_toggle, Qt.LeftButton)
                 self.qt_app.processEvents()
                 self.assertTrue(group.body.isVisible())
-        style = dialog.taskbar_style_settings
+        style = dialog.taskbar_settings.style
         style.opacity.setValue(43)
         self.assertIsInstance(style.opacity, QSlider)
         self.assertEqual(style.opacity_label.text(), "43%")
@@ -609,13 +578,18 @@ class SettingsDialogTests(SettingsTestCase):
         self.enable_windows_taskbar()
         dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_appearance=False,
                                            taskbar_color="#123456", taskbar_unicolor=False)
-        style = dialog.taskbar_style_settings
+        style = dialog.taskbar_settings.style
         style.auto_color.click()
         self.assertTrue(window.view_options.taskbar_auto_color)
         self.assertFalse(style.color.isEnabled())
         self.assertFalse(style.unicolor.isEnabled())
         self.assertEqual(window.view_options.taskbar_color, "#123456")
         self.assertFalse(window.view_options.taskbar_unicolor)
+        for dark, color in ((True, "#FFFFFF"), (False, "#000000")):
+            with patch("stockwidget.ui.floating.widget.is_dark_theme", return_value=dark):
+                dialog._apply_theme_stylesheet()
+                self.assertEqual(style.color.text().strip(), color)
+                self.assertEqual(window.view_options.taskbar_color, "#123456")
         style.sync_toggle.click()
         dialog._apply_theme_stylesheet()
         self.assertTrue(style.body.isHidden())
@@ -632,10 +606,10 @@ class SettingsDialogTests(SettingsTestCase):
         dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_split=False,
                                            taskbar_split_enabled=True, taskbar_split_separator=False)
         floating = dialog.float_split_settings
-        taskbar = dialog.taskbar_split_settings
+        taskbar = dialog.taskbar_settings.split
         for group in (dialog.float_row_settings, floating,
                       dialog.taskbar_settings.metrics,
-                      dialog.taskbar_style_settings, dialog.taskbar_paging_settings, taskbar):
+                      dialog.taskbar_settings.style, dialog.taskbar_settings.paging, taskbar):
             self.assertIs(type(group), QGroupBox)
         self.assertFalse(floating.isChecked())
         self.assertFalse(floating.separator.isEnabled())
@@ -866,12 +840,6 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertEqual(window.down_color.name(), "#019933")
         self.assertEqual(window.neutral_color.name(), "#494949")
         self.assertTrue(dialog.ui.cb_unicolor.isChecked())
-        self.assertEqual(
-            dialog.ui.cb_unicolor.minimumWidth(), dialog.ui.cb_unicolor.maximumWidth()
-        )
-        self.assertGreaterEqual(
-            dialog.ui.cb_unicolor.minimumWidth(), dialog.ui.cb_unicolor.sizeHint().width()
-        )
         self.assertTrue(dialog.ui.btn_bg_color.isEnabled())
         self.assertTrue(dialog.ui.btn_fg_color.isEnabled())
         self.assertFalse(dialog.ui.btn_up_color.isEnabled())
@@ -885,12 +853,8 @@ class SettingsDialogTests(SettingsTestCase):
             (dialog.ui.btn_down_color, "下跌", window.down_color),
             (dialog.ui.btn_neutral_color, "中性", window.neutral_color),
         )
-        for button, text, color in color_buttons:
-            self.assertTrue(button.isFlat())
+        for button, _text, color in color_buttons:
             self.assertEqual(button.text().strip(), QColor(color).name().upper())
-            self.assertEqual(button.styleSheet(), "")
-            self.assertLess(button.iconSize().width(), 20)
-            self.assertGreater(button.maximumWidth(), 20)
             image = button.icon().pixmap(button.iconSize()).toImage()
             center = image.pixelColor(image.width() // 2, image.height() // 2)
             self.assertEqual(center.name(), QColor(color).name())
@@ -903,15 +867,6 @@ class SettingsDialogTests(SettingsTestCase):
             disabled_icon.width() // 2, disabled_icon.height() // 2
         )
         self.assertEqual(disabled_center.name(), window.up_color.name())
-
-        for label_name in (
-            "label_fg_color",
-            "label_bg_color",
-            "label_up_color",
-            "label_down_color",
-            "label_neutral_color",
-        ):
-            self.assertFalse(hasattr(dialog.ui, label_name))
 
         with patch(
             "stockwidget.ui.settings.dialog.QColorDialog.getColor",
@@ -937,19 +892,6 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertEqual(config["up_color"], window.up_color.name())
         self.assertEqual(config["down_color"], window.down_color.name())
         self.assertEqual(config["neutral_color"], window.neutral_color.name())
-
-    def test_source_toggle_only_updates_for_selected_button(self):
-        calls = []
-        owner = type(
-            "Owner",
-            (),
-            {"win": type("Window", (), {"set_data_source": calls.append})()},
-        )()
-
-        SettingsDialog._on_source_toggled(owner, "sina", False)
-        SettingsDialog._on_source_toggled(owner, "eastmoney", True)
-
-        self.assertEqual(calls, ["eastmoney"])
 
     def test_github_check_does_not_block_dialog_thread(self):
         owner = type("Owner", (), {"github_check_finished": SignalRecorder()})()

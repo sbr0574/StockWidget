@@ -1,8 +1,8 @@
 """Regenerate the Python adapters for every editable Qt Designer form."""
 
 import argparse
+from importlib.util import find_spec
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 
@@ -13,12 +13,11 @@ def main():
     parser.add_argument("--check", action="store_true", help="Check generated files without writing")
     args = parser.parse_args()
     directory = Path(__file__).resolve().parents[1] / "stockwidget/ui/generated"
-    compiler = Path(sys.executable).with_name("pyside6-uic.exe" if sys.platform == "win32" else "pyside6-uic")
-    if not compiler.is_file():
-        found = shutil.which("pyside6-uic")
-        if found is None:
-            parser.error("找不到 pyside6-uic，请在安装了项目依赖的 Python 环境中运行")
-        compiler = Path(found)
+    if find_spec("PySide6") is None:
+        parser.error("找不到 PySide6，请在安装了项目依赖的 Python 环境中运行")
+    # Invoke the installed console entry point with this interpreter. A moved
+    # virtual environment can leave Windows .exe launchers pointing elsewhere.
+    compiler = [sys.executable, "-c", "from PySide6.scripts.pyside_tool import uic; uic()"]
     forms = sorted(directory.glob("*.ui"))
     if args.forms:
         names = {Path(name).stem for name in args.forms}
@@ -28,7 +27,7 @@ def main():
         forms = [path for path in forms if path.stem in names]
     stale = []
     for source in forms:
-        result = subprocess.run([str(compiler), str(source)], check=True, capture_output=True)
+        result = subprocess.run([*compiler, str(source)], check=True, capture_output=True)
         generated = result.stdout.decode("utf-8").replace("\r\n", "\n")
         target = source.with_name("ui_" + source.stem + ".py")
         if args.check:
