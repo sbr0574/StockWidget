@@ -5,7 +5,7 @@ import math
 import time
 
 from PySide6.QtCore import QPoint, Qt, QEvent, QObject, QRect, QTimer
-from PySide6.QtGui import QCursor
+from PySide6.QtGui import QCursor, QScreen
 from PySide6.QtWidgets import QApplication, QWidget
 
 from stockwidget.core.window_rules import best_screen, clamp_point, all_quotes_stale, due_hide_times
@@ -219,6 +219,17 @@ class PositionController(QObject):
         self._applying = True
         try:
             self.source.setGeometry(rect)
+            if QApplication.platformName() == "windows":
+                # Windows keeps physical screen origins under Qt scaling.
+                # A window crossing a logical screen edge can be attributed
+                # to its neighbour; retain the screen containing most of it.
+                handle = self.source.windowHandle()
+                screens = QApplication.screens()
+                bounds = best_screen(*rect.getRect(), [s.geometry().getRect() for s in screens])
+                screen = next((s for s in screens if s.geometry().getRect() == bounds), None)
+                if handle and isinstance(screen, QScreen) and handle.screen() != screen:
+                    handle.setScreen(screen)
+                    self.source.setGeometry(rect)
             # 收起方向决定露出的内容边缘：左侧露右边，顶部露下边。
             # 只平移完整面板，保留 Designer 布局与圆角；展开恢复原始偏移。
             panel_pos = QPoint(self._panel_origin)
@@ -242,6 +253,10 @@ class PositionController(QObject):
         return strip
 
     def restore_position(self, point):
+        if QApplication.platformName() == "windows":
+            # Create on the initial screen before applying a saved position
+            # that may extend into a gap between scaled logical screens.
+            self.source.winId()
         self._restored = True
         rect = self.full_geometry()
         rect.moveTopLeft(point)

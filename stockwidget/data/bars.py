@@ -13,7 +13,7 @@ import re
 import requests
 
 from stockwidget.data.network_errors import request_error_message
-from stockwidget.data.quotes import _em_secid, _sina_code, _EM_HEADERS, _SINA_HEADERS
+from stockwidget.data.quotes import _em_secid, _sina_code, _SINA_HEADERS, request_eastmoney_json
 from stockwidget.core.window_rules import quote_timestamp
 
 
@@ -464,6 +464,28 @@ def intraday_average(bars, instrument):
     return result
 
 
+def volume_directions(bars, view, instrument):
+    """Minute volumes follow consecutive prices within the same trading day.
+
+    Flat minutes retain the last direction; an unknown first direction is
+    neutral. Daily candles continue to use their own open/close direction.
+    """
+    if view == "daily":
+        return [1 if bar.close >= bar.open else -1 for bar in bars]
+    result = []
+    day = previous = None
+    direction = 0
+    for bar in bars:
+        current_day = trading_date(bar, instrument)
+        if current_day != day:
+            day, previous, direction = current_day, bar.open, 0
+        if bar.close != previous:
+            direction = 1 if bar.close > previous else -1
+        result.append(direction)
+        previous = bar.close
+    return result
+
+
 def _em_candidates(instrument):
     secid = _em_secid(instrument)
     if instrument.get("market") == "us" and secid:
@@ -480,11 +502,11 @@ def request_eastmoney_bars(instrument, view):
             params.update(klt=101, fqt=0, beg=0, end=20500101, lmt=DAILY_HISTORY)
         else:
             params.update(ndays=5, iscr=0)
-        response = requests.get(
-            "https://push2his.eastmoney.com/api/qt/stock/" + ("kline/get" if daily else "trends2/get"),
-            params=params, headers=_EM_HEADERS, timeout=5)
-        response.raise_for_status()
-        bars = parse_eastmoney(response.json(), daily=daily, instrument=instrument)
+        path = "/api/qt/stock/" + ("kline/get" if daily else "trends2/get")
+        payload = request_eastmoney_json(
+            "https://push2his.eastmoney.com" + path, params=params, timeout=5,
+            alternate_url="https://61.push2his.eastmoney.com" + path)
+        bars = parse_eastmoney(payload, daily=daily, instrument=instrument)
         if bars:
             return select_bars(bars, view, instrument)
     return ()
@@ -517,7 +539,7 @@ def fetch_bars(instrument, view, source):
     source = source if source in {"sina", "eastmoney"} else "sina"
     errors = []
     partial = None
-    for provider in (source, "sina" if source == "eastmoney" else "eastmoney"):
+    for provider in (("eastmoney",) if source == "eastmoney" else ("sina", "eastmoney")):
         try:
             request = request_sina_bars if provider == "sina" else request_eastmoney_bars
             bars = request(instrument, view)

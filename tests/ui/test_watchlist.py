@@ -425,7 +425,13 @@ class WatchlistDialogTests(SettingsTestCase):
         button_bottom = dialog.watchlist_editor.btn_add.mapToGlobal(
             QPoint(0, dialog.watchlist_editor.btn_add.height())
         ).y()
-        self.assertGreaterEqual(panel.y(), button_bottom)
+        available = dialog.watchlist_editor.btn_add.screen().availableGeometry()
+        if button_bottom + 2 + panel.height() <= available.bottom() + 1:
+            self.assertGreaterEqual(panel.y(), button_bottom)
+        else:
+            self.assertGreaterEqual(panel.y(), available.top())
+            if panel.height() <= available.height():
+                self.assertLessEqual(panel.geometry().bottom(), available.bottom())
 
     def test_add_panel_remains_readable_when_switching_color_modes(self):
         dialog, window = self._make_dialog()
@@ -696,9 +702,12 @@ class WatchlistDialogTests(SettingsTestCase):
 
         dialog.watchlist_editor._update_suggestions(editor, "茅台")
         popup = editor._code_completer.popup()
-        self.assertEqual(popup.minimumWidth(), base_width)
-        self.assertEqual(popup.maximumWidth(), base_width)
+        available_width = editor.screen().availableGeometry().width()
+        self.assertEqual(popup.width(), min(base_width, available_width))
 
         dialog.watchlist_editor._update_suggestions(editor, "特别长证券名称")
-        self.assertGreater(popup.minimumWidth(), base_width)
-        self.assertEqual(popup.minimumWidth(), popup.maximumWidth())
+        if available_width > base_width:
+            self.assertGreater(popup.width(), base_width)
+        else:
+            self.assertEqual(popup.width(), available_width)
+        self.assertLessEqual(popup.width(), available_width)

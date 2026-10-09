@@ -5,7 +5,7 @@ import os
 import tempfile
 import time
 
-from PySide6.QtCore import QPoint, QPointF, QSize, Qt
+from PySide6.QtCore import QEvent, QPoint, QPointF, QSize, Qt
 from PySide6.QtGui import QColor, QIcon, QPalette, QPixmap, QTextDocument, QKeySequence, QWheelEvent
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QScrollArea, QGroupBox, QSlider
@@ -763,6 +763,9 @@ class SettingsDialogTests(SettingsTestCase):
             dialog.show()
             self.qt_app.processEvents()
             QTest.mouseMove(dialog.ui.btn_icon_custom, QPoint(35, 5))
+            if self.qt_app.platformName() == "offscreen":
+                # No native pointer enter delivery on a scaled headless screen.
+                QApplication.sendEvent(dialog.ui.btn_icon_custom, QEvent(QEvent.Enter))
             # Windows delivers the native hover event asynchronously.
             deadline = time.monotonic() + 1
             while not dialog.ui.btn_icon_custom.underMouse() and time.monotonic() < deadline:

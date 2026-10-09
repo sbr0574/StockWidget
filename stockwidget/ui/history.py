@@ -70,8 +70,13 @@ class HistoryDialog(QDialog):
     def set_display_mode(self, mode):
         if mode == self.display_mode:
             return
-        self.display_mode = mode
         floating = mode != "window"
+        if self.display_mode is not None and floating != (self.display_mode != "window"):
+            # Reusing a Windows handle across Dialog/Popup types lets queued
+            # native close/resize events dismiss or resize the new popup.
+            self.hide()
+            self.destroy()
+        self.display_mode = mode
         # Popup capture also handles outside clicks in other applications.
         self.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint if floating else Qt.Dialog)
         # A dismissal click on a quote row must not replay and reopen the chart.

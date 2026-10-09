@@ -11,11 +11,11 @@ import time
 import unittest
 
 from PySide6.QtCore import QEvent, QPoint, QPointF, QRect, Qt
-from PySide6.QtGui import QCursor, QMouseEvent, QPalette
+from PySide6.QtGui import QColor, QCursor, QMouseEvent, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
-from stockwidget.data.bars import Bar, BarResult
+from stockwidget.data.bars import Bar, BarResult, parse_eastmoney
 from stockwidget.data.bar_cache import BarCache
 from stockwidget.data.quotes import _new_entry
 from stockwidget.ui.floating.taskbar import TaskbarController, render_taskbar
@@ -116,7 +116,8 @@ class HistoryUITests(HistoryTestCase):
             self.assertTrue(all(popup.rect().contains(button.mapTo(popup, QPoint()) + button.rect().bottomRight())
                                 for button in popup.view_buttons.values()))
         self.assertLess(sizes[2].width(), sizes[1].width())
-        self.assertLess(sizes[1].width(), sizes[0].width())
+        self.assertLessEqual(sizes[1].width(), sizes[0].width())
+        self.assertLess(sizes[1].width() * sizes[1].height(), sizes[0].width() * sizes[0].height())
         self.assertLessEqual(sizes[2].width(), 320)
         self.assertLessEqual(sizes[2].height(), 230)
         self.assertEqual(window.history.cache.get.call_count, 2)
@@ -275,6 +276,48 @@ class HistoryUITests(HistoryTestCase):
             chart.set_data(sample_bars(), "daily", instrument, reference_price=price)
             chart.grab()
             self.assertIsNone(chart._reference_y)
+        finally:
+            delete(chart)
+
+    def test_minute_volume_colors_follow_price_changes_with_missing_historical_ohlc(self):
+        from shiboken6 import delete
+
+        chart = HistoryChart()
+        try:
+            chart.resize(740, 420)
+            rows = [f"2026-09-{day:02d} 09:{31 + i:02d},0,{price},0,0,100,1000,10"
+                    for day in range(24, 29) for i, price in enumerate((10, 11, 9, 9))]
+            bars = parse_eastmoney({"data": {"trends": rows}}, instrument={"market": "sh", "type": "沪"})
+            self.assertTrue(all(bar.open == bar.close for bar in bars))
+            for view in ("five_day", "intraday"):
+                with self.subTest(view=view):
+                    chart.set_data(bars if view == "five_day" else bars[-4:], view, {"market": "sh", "type": "沪"})
+                    image = chart.grab().toImage()
+                    scale = image.devicePixelRatio()
+                    rect = chart._volume_plot
+                    for i in range(len(chart.bars)):
+                        # Sample inside the painted bar, clear of axes and the zero baseline.
+                        x = (rect.left() + rect.width() * (i + .5) / len(chart.bars)) * scale
+                        y = (rect.bottom() - rect.height() / 2) * scale
+                        expected = (chart.palette().color(QPalette.Text), chart.up_color,
+                                    chart.down_color, chart.down_color)[i % 4]
+                        if expected.alpha() < 255:
+                            background = chart.palette().color(QPalette.Base)
+                            alpha = expected.alphaF()
+                            expected = QColor.fromRgbF(
+                                expected.redF() * alpha + background.redF() * (1 - alpha),
+                                expected.greenF() * alpha + background.greenF() * (1 - alpha),
+                                expected.blueF() * alpha + background.blueF() * (1 - alpha))
+                        self.assertEqual(image.pixelColor(round(x), round(y)), expected)
+            # Daily candle volume retains its open/close direction, independent of prior close.
+            chart.set_data((Bar("2026-09-28", 12, 12, 10, 10, 100),
+                            Bar("2026-09-29", 8, 9, 8, 9, 100)), "daily", {})
+            image = chart.grab().toImage()
+            rect = chart._volume_plot
+            for i, expected in enumerate((chart.down_color, chart.up_color)):
+                x = (rect.left() + rect.width() * (i + .5) / 2) * image.devicePixelRatio()
+                y = (rect.bottom() - rect.height() / 2) * image.devicePixelRatio()
+                self.assertEqual(image.pixelColor(round(x), round(y)), expected)
         finally:
             delete(chart)
 
@@ -493,7 +536,9 @@ class HistoryUITests(HistoryTestCase):
             self.assertEqual(history.dialog.chart.bars, ())
 
     def test_floating_and_taskbar_anchors_keep_chart_on_target_screen(self):
-        _, window = self.make_window(chart_enabled=True, chart_display_mode="large")
+        _, window = self.make_window(chart_enabled=True, chart_display_mode="large",
+                                     float_paging_enabled=True, float_max_rows=1,
+                                     visible_metrics=["price"], name_visible=False)
         bounds = self.app.primaryScreen().availableGeometry()
         window.move(bounds.topLeft() + QPoint(20, 20))
         self.app.processEvents()

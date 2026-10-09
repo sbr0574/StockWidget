@@ -1,10 +1,11 @@
 from datetime import datetime
 from typing import Tuple
+import time
 
 import requests
 
 from stockwidget.core.window_rules import QUOTE_TIMEZONE, quote_timestamp
-from stockwidget.data.network_errors import request_error_message
+from stockwidget.data.network_errors import request_error_message, retryable_request_error
 
 
 # =====================================================================
@@ -28,6 +29,27 @@ _SINA_HEADERS = {"Referer": "https://finance.sina.com.cn", "User-Agent": "Mozill
 _EM_HEADERS = {"Referer": "https://quote.eastmoney.com", "User-Agent": "Mozilla/5.0"}
 _EM_QUOTE_URL = "https://push2delay.eastmoney.com/api/qt/ulist.np/get"
 _Z5 = (0, 0, 0, 0, 0)   # 空五档（港美股/期货只有一档或无盘口）
+
+
+def request_eastmoney_json(url, *, params, timeout, alternate_url):
+    """Up to three fresh requests with backoff, confined to Eastmoney nodes.
+
+    Keep Requests' environment/system proxy and certificate verification. A
+    failed connection must not become a successful empty quote/history result.
+    """
+    for attempt in range(3):
+        try:
+            response = requests.get(alternate_url if attempt == 2 else url,
+                                    params=params, headers=_EM_HEADERS, timeout=timeout)
+            try:
+                response.raise_for_status()
+                return response.json()
+            finally:
+                response.close()
+        except requests.RequestException as error:
+            if attempt == 2 or not retryable_request_error(error):
+                raise
+            time.sleep(.25 * 2 ** attempt)
 
 
 def _as_float(value) -> float:
@@ -322,14 +344,13 @@ def request_eastmoney(instruments: dict[str, dict]) -> Tuple[list, dict]:
         "fltt": 2,
         "invt": 2,
     }
-    response = requests.get(
+    payload = request_eastmoney_json(
         _EM_QUOTE_URL,
         params=params,
-        headers=_EM_HEADERS,
         timeout=3,
+        alternate_url="https://push2.eastmoney.com/api/qt/ulist.np/get",
     )
-    response.raise_for_status()
-    diff = ((response.json() or {}).get("data") or {}).get("diff") or []
+    diff = ((payload or {}).get("data") or {}).get("diff") or []
     secid_to_request = {s.lower(): (key, instrument) for key, instrument, s in requests_meta}
     raw_to_requests = {}
     for key, instrument, secid in requests_meta:

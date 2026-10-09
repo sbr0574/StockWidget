@@ -8,7 +8,7 @@ from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QWidget, QToolTip
 
 from stockwidget.core.quote_presentation import format_value, price_precision, should_use_english_units, volume_lot_size
-from stockwidget.data.bars import MA_PERIODS, intraday_average, intraday_timeline, moving_average, trading_date
+from stockwidget.data.bars import MA_PERIODS, intraday_average, intraday_timeline, moving_average, trading_date, volume_directions
 
 
 MA_COLORS = ("#e3ac28", "#ba6ee0", "#2a9fd6", "#d97839", "#6fa84c")
@@ -22,6 +22,7 @@ class HistoryChart(QWidget):
         self.bars = ()
         self.averages = {}
         self.minute_averages = []
+        self.volume_directions = []
         self.periods = set(MA_PERIODS)
         self.show_average = self.show_volume = True
         self.view = "intraday"
@@ -42,6 +43,7 @@ class HistoryChart(QWidget):
         self.bars = tuple(bars[-30:] if view == "daily" else bars)
         self.averages = {period: moving_average(bars, period)[-30:] for period in MA_PERIODS} if view == "daily" else {}
         self.minute_averages = intraday_average(self.bars, instrument) if view != "daily" else []
+        self.volume_directions = volume_directions(self.bars, view, instrument)
         self.reference_price = reference_price if reference_price and math.isfinite(reference_price) and reference_price > 0 else None
         timeline = intraday_timeline(self.bars, instrument, now) if view == "intraday" else ()
         self._time_axis = timeline or tuple(bar.time for bar in self.bars)
@@ -181,7 +183,8 @@ class HistoryChart(QWidget):
             painter.drawLine(volume_rect.bottomLeft(), volume_rect.bottomRight())
             scale_volume = max(1, max_volume)
             for i, bar in enumerate(self.bars):
-                color = self.up_color if bar.close >= bar.open else self.down_color
+                direction = self.volume_directions[i]
+                color = self.up_color if direction > 0 else self.down_color if direction < 0 else text_color
                 painter.fillRect(QRectF(x_at(i) - step * .3, volume_rect.bottom() - bar.volume / scale_volume * volume_rect.height(),
                                        max(1, step * .6), bar.volume / scale_volume * volume_rect.height()), color)
             painter.setPen(text_color)

@@ -16,7 +16,7 @@ from stockwidget.data.bar_cache import BarCache, cache_state
 from stockwidget.data.bars import (
     Bar, BarResult, DAILY_HISTORY, HistorySeries, fetch_bars, history_day, intraday_average,
     intraday_timeline, market_now, merge_quote, minute_gaps, moving_average,
-    parse_eastmoney, parse_sina, request_eastmoney_bars, request_sina_bars, select_bars,
+    parse_eastmoney, parse_sina, request_eastmoney_bars, request_sina_bars, select_bars, volume_directions,
 )
 
 
@@ -91,6 +91,20 @@ class HistoryTests(unittest.TestCase):
                  Bar("2026-09-29 10:00:00", 10, 10, 10, 10))
         self.assertEqual(select_bars(night, "intraday", future), night)
 
+    def test_volume_direction_uses_minute_prices_resets_sessions_and_keeps_daily_candles(self):
+        bars = (Bar("2026-09-29 14:58:00", 10, 11, 10, 11),
+                Bar("2026-09-29 14:59:00", 9, 10, 9, 10),
+                Bar("2026-09-29 15:00:00", 10, 10, 10, 10),
+                Bar("2026-09-30 09:31:00", 8, 8, 8, 8),
+                Bar("2026-09-30 09:32:00", 7, 9, 7, 9))
+        for view in ("intraday", "five_day"):
+            self.assertEqual(volume_directions(bars, view, A_SHARE), [1, -1, -1, 0, 1])
+        self.assertEqual(volume_directions(bars, "daily", A_SHARE), [1, 1, 1, 1, 1])
+        future = {"market": "sh", "code": "au0", "type": "期"}
+        night = tuple(replace(bar, time=stamp) for bar, stamp in zip(bars[:3], (
+            "2026-09-29 23:59:00", "2026-09-30 00:00:00", "2026-09-30 09:00:00")))
+        self.assertEqual(volume_directions(night, "five_day", future), [1, -1, -1])
+
     def test_ma60_uses_history_before_visible_30_candles(self):
         bars = sample_bars()
         averages = moving_average(bars, 60)
@@ -155,6 +169,39 @@ class HistoryTests(unittest.TestCase):
             self.assertEqual(len(result.bars), 3)
             self.assertIn("3 个交易日", result.message)
 
+    def test_eastmoney_history_recovers_disconnect_without_changing_provider(self):
+        response = Mock()
+        response.json.return_value = {"data": {"klines": ["2026-09-30,10,11,12,9,100,1100,1"]}}
+        with (patch("stockwidget.data.bars.requests.get", side_effect=[
+                requests.ConnectionError(), requests.ConnectionError(), response]) as get,
+              patch("stockwidget.data.quotes.time.sleep"),
+              patch("stockwidget.data.bars.request_sina_bars") as sina):
+            result = fetch_bars(A_SHARE, "daily", "eastmoney")
+        self.assertEqual(result.source, "eastmoney")
+        self.assertEqual(result.bars[0].volume, 10000)
+        self.assertEqual(get.call_count, 3)
+        self.assertEqual(get.call_args.args[0], "https://61.push2his.eastmoney.com/api/qt/stock/kline/get")
+        self.assertEqual(get.call_args.kwargs["params"]["fqt"], 0)
+        sina.assert_not_called()
+
+    def test_explicit_eastmoney_history_never_uses_sina_on_failure_or_short_window(self):
+        short = tuple(Bar(f"2026-09-{day} 10:00:00", 10, 10, 10, 10) for day in range(27, 30))
+        for response in ((), short, requests.ConnectionError()):
+            with (
+                self.subTest(response=response),
+                patch("stockwidget.data.bars.request_eastmoney_bars",
+                      **({"side_effect": response} if isinstance(response, Exception) else {"return_value": response})),
+                patch("stockwidget.data.bars.request_sina_bars", return_value=sample_bars()) as sina,
+            ):
+                result = fetch_bars(A_SHARE, "five_day", "eastmoney")
+            sina.assert_not_called()
+            if response == short:
+                self.assertEqual(result.source, "eastmoney")
+                self.assertEqual(result.bars, short)
+                self.assertIn("3 个交易日", result.message)
+            else:
+                self.assertFalse(result.bars)
+
     @patch("stockwidget.data.bars.requests.get")
     def test_request_parameters_and_asset_compatibility(self, get):
         get.return_value.text = '=[{"day":"2026-09-30 15:00:00","open":10,"high":12,"low":9,"close":11}]'
@@ -195,6 +242,17 @@ class CacheTests(unittest.TestCase):
         for inst, view, source in (({**A_SHARE, "market": "sz"}, "intraday", "sina"),
                                    (A_SHARE, "daily", "sina"), (A_SHARE, "intraday", "eastmoney")):
             self.assertNotEqual(key, self.cache.key(inst, view, source))
+
+    def test_explicit_eastmoney_discards_older_cross_provider_cache(self):
+        self.fetch.return_value = BarResult(sample_bars(), "sina")
+        self.cache.get(A_SHARE, "daily", "eastmoney")
+        self.fetch.reset_mock()
+        self.fetch.return_value = BarResult(sample_bars(), "eastmoney")
+        result = self.cache.get(A_SHARE, "daily", "eastmoney")
+        self.assertFalse(result.cached)
+        self.assertEqual(result.source, "eastmoney")
+        self.fetch.assert_called_once_with(A_SHARE, "daily", "eastmoney")
+        self.assertTrue(self.cache.get(A_SHARE, "daily", "eastmoney").cached)
 
     def test_shared_minutes_hit_then_expire_during_trading(self):
         bars = tuple(Bar(f"2026-09-{day} 10:00:00", 10, 10, 10, 10) for day in range(24, 30))
@@ -251,36 +309,6 @@ class CacheTests(unittest.TestCase):
         self.fetch.return_value = BarResult(sample_bars(), "sina")
         with patch("stockwidget.data.bar_cache.sqlite3.connect", side_effect=sqlite3.OperationalError("Disk unavailable")):
             self.assertTrue(self.cache.get(A_SHARE, "daily", "sina").bars)
-
-    def test_us_and_futures_trading_windows(self):
-        us = {"market": "us", "code": "aapl"}
-        self.assertTrue(cache_state(us, datetime(2026, 7, 1, 14, tzinfo=timezone.utc))[1])
-        self.assertFalse(cache_state(us, datetime(2026, 7, 1, 22, tzinfo=timezone.utc))[1])
-        futures = {"market": "", "code": "au0", "type": "期"}
-        self.assertTrue(cache_state(futures, datetime(2026, 9, 28, 14, tzinfo=timezone.utc))[1])
-        self.assertTrue(cache_state(futures, datetime(2026, 9, 28, 17, tzinfo=timezone.utc))[1])
-
-    def test_minute_cache_accumulates_short_windows_without_mixing_sources(self):
-        short = lambda days: tuple(Bar(f"2026-09-{day} 10:00:00", 10, 10, 10, 10) for day in days)
-        self.fetch.return_value = BarResult(short(range(24, 27)), "sina", "接口仅返回 3 个交易日")
-        self.cache.get(A_SHARE, "five_day", "sina")
-        self.now += timedelta(minutes=2)
-        self.fetch.return_value = BarResult(short(range(27, 30)), "sina", "接口仅返回 3 个交易日")
-        result = self.cache.get(A_SHARE, "five_day", "sina")
-        self.assertEqual(len(result.bars), 5)
-        self.assertEqual(result.message, "")
-        self.now += timedelta(minutes=2)
-        self.fetch.return_value = BarResult(short(range(27, 30)), "eastmoney", "接口仅返回 3 个交易日")
-        self.assertEqual(len(self.cache.get(A_SHARE, "five_day", "sina").bars), 3)
-
-    def test_missing_minutes_repair_bypasses_ttl_but_preserves_failure_backoff(self):
-        self.cache.get(A_SHARE, "five_day", "sina")
-        self.cache.get(A_SHARE, "five_day", "sina", repair=True)
-        self.assertEqual(self.fetch.call_count, 2)
-        self.fetch.return_value = BarResult(message="暂无可用历史数据")
-        self.assertTrue(self.cache.get(A_SHARE, "five_day", "sina", repair=True).stale)
-        self.cache.get(A_SHARE, "five_day", "sina", repair=True)
-        self.assertEqual(self.fetch.call_count, 3)
 
     def test_sqlite_roundtrip_preserves_precision_nulls_and_separate_series(self):
         precise = Bar("2026-09-30", 1234.567890123456, 1235.678901234567,
@@ -359,6 +387,37 @@ class CacheTests(unittest.TestCase):
         with patch.object(self.cache, "_remove_database", side_effect=PermissionError("in use")):
             self.assertFalse(self.cache.clear())
         self.assertTrue(self.cache.database.exists())
+
+    def test_us_and_futures_trading_windows(self):
+        us = {"market": "us", "code": "aapl"}
+        self.assertTrue(cache_state(us, datetime(2026, 7, 1, 14, tzinfo=timezone.utc))[1])
+        self.assertFalse(cache_state(us, datetime(2026, 7, 1, 22, tzinfo=timezone.utc))[1])
+        futures = {"market": "", "code": "au0", "type": "期"}
+        self.assertTrue(cache_state(futures, datetime(2026, 9, 28, 14, tzinfo=timezone.utc))[1])
+        self.assertTrue(cache_state(futures, datetime(2026, 9, 28, 17, tzinfo=timezone.utc))[1])
+
+    def test_minute_cache_accumulates_short_windows_without_mixing_sources(self):
+        short = lambda days: tuple(Bar(f"2026-09-{day} 10:00:00", 10, 10, 10, 10) for day in days)
+        self.fetch.return_value = BarResult(short(range(24, 27)), "sina", "接口仅返回 3 个交易日")
+        self.cache.get(A_SHARE, "five_day", "sina")
+        self.now += timedelta(minutes=2)
+        self.fetch.return_value = BarResult(short(range(27, 30)), "sina", "接口仅返回 3 个交易日")
+        result = self.cache.get(A_SHARE, "five_day", "sina")
+        self.assertEqual(len(result.bars), 5)
+        self.assertEqual(result.message, "")
+        self.now += timedelta(minutes=2)
+        self.fetch.return_value = BarResult(short(range(27, 30)), "eastmoney", "接口仅返回 3 个交易日")
+        self.assertEqual(len(self.cache.get(A_SHARE, "five_day", "sina").bars), 3)
+
+    def test_missing_minutes_repair_bypasses_ttl_but_preserves_failure_backoff(self):
+        self.cache.get(A_SHARE, "five_day", "sina")
+        self.cache.get(A_SHARE, "five_day", "sina", repair=True)
+        self.assertEqual(self.fetch.call_count, 2)
+        self.fetch.return_value = BarResult(message="暂无可用历史数据")
+        self.assertTrue(self.cache.get(A_SHARE, "five_day", "sina", repair=True).stale)
+        self.cache.get(A_SHARE, "five_day", "sina", repair=True)
+        self.assertEqual(self.fetch.call_count, 3)
+
 
 
 class IntradayTimelineTests(unittest.TestCase):

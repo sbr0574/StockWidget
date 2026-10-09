@@ -168,6 +168,9 @@ class BarCache:
             stamp, active = cache_state(instrument, now)
             key = self.key(instrument, view, source)
             payload, cached = self._read(key)
+            if source == "eastmoney" and cached and cached.bars and cached.source != source:
+                # Older versions could save a Sina fallback under an Eastmoney key.
+                payload = cached = None
             ttl = 86400 if view == "daily" else 60 if active else 43200
             if payload and not cached.bars:
                 ttl = 300  # Temporary outages/unsupported responses aren't permanent.
