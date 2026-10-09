@@ -100,9 +100,13 @@
 
 ## 常见问题
 
+**Windows下任务栏遮挡浮窗怎么办**
+
+在设置-浮窗中开启强制置顶，或打开任务栏行情模式开关，将行情显示固定在任务栏上。
+
 **隐藏或开启鼠标穿透后如何操作？**
 
-通过托盘菜单或已启用的快捷键恢复显示、关闭穿透。鼠标穿透同时作用于浮窗和 Windows 任务栏行情。
+通过托盘菜单或已启用的快捷键恢复显示、关闭穿透。关闭托盘图标显示和快捷键时，不建议使用鼠标穿透
 
 **为什么部分设置没有显示或无法使用？**
 
@@ -120,19 +124,25 @@
 
 <img width="127" height="90" alt="极简行情浮窗" src="https://github.com/user-attachments/assets/69ce08a7-6b55-41e8-bbab-e47b64d6e8a0" />
 
+**任务栏行情模式（仅Windows）**
+
+<img width="361" height="54" alt="任务栏行情模式" src="https://github.com/user-attachments/assets/24302d2a-897f-4dca-b008-80be07aea84d" />
+
+**分时/日K显示**
+
+<img width="330" height="188" alt="分时浮窗" src="https://github.com/user-attachments/assets/a5488528-6f3a-4523-a649-f64db8089e53" />
+<img width="290" height="188" alt="日K浮窗" src="https://github.com/user-attachments/assets/69cb3089-ccd6-4f51-abf5-85f4b3d94d3a" />
+
+
 **浅色与深色设置面板**
 
-<img width="393" height="279" alt="浅色设置面板" src="https://github.com/user-attachments/assets/5ec0170a-bc7a-495d-be36-d62812d4b155" />
-<img width="393" height="279" alt="深色设置面板" src="https://github.com/user-attachments/assets/ea60a6c2-970a-4e29-83d8-600847c21fee" />
+<img width="470" height="350" alt="浅色设置面板" src="https://github.com/user-attachments/assets/1dd6f7c7-0b51-4e9d-981d-0ab6d71fbbb6" />
+<img width="470" height="350" alt="深色设置面板" src="https://github.com/user-attachments/assets/0a8caf56-1a16-45e2-a2de-c600de0ed099" />
 
 **添加与编辑自选**
 
-<img width="393" height="345" alt="添加自选标的" src="https://github.com/user-attachments/assets/1083c49d-6ec1-41c9-8abd-44ecc97737c6" />
-<img width="393" height="332" alt="快捷添加和编辑标的" src="https://github.com/user-attachments/assets/cde49b06-2e14-40b8-9ff5-afe828781fbf" />
-
-**浮窗样式设置**
-
-<img width="393" height="279" alt="浮窗样式设置" src="https://github.com/user-attachments/assets/16e94332-97ee-4707-a917-f55b440a94a8" />
+<img width="470" height="350" alt="添加自选" src="https://github.com/user-attachments/assets/7eb04bea-3f4a-494f-8735-533fd297dbd6" />
+<img width="470" height="350" alt="快捷添加与编辑" src="https://github.com/user-attachments/assets/0d93bba7-71fc-4195-b250-4f09aeffa57c" />
 
 ## 数据说明
 
