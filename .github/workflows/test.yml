@@ -29,7 +29,7 @@ jobs:
       - name: Install Qt system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libdbus-1-3 libfontconfig1 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-xinerama0 libxkbcommon-x11-0 xvfb xauth libxtst6
+          sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libdbus-1-3 libfontconfig1 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcb-xinerama0 libxkbcommon-x11-0 xvfb xauth libxtst6
 
       - name: Install dependencies
         # The code-list updater tests also need these data-processing libraries.
@@ -46,9 +46,12 @@ jobs:
       - name: Run X11 integration tests
         env:
           QT_QPA_PLATFORM: xcb
-          QT_DEBUG_PLUGINS: "1"
           STOCKWIDGET_TEST_X11: "1"
         run: |
           xcb_plugin="$(python -c 'from pathlib import Path; from PySide6.QtCore import QLibraryInfo; print(Path(QLibraryInfo.path(QLibraryInfo.PluginsPath)) / "platforms/libqxcb.so")')"
-          ldd "$xcb_plugin"
+          dependencies="$(ldd "$xcb_plugin")"
+          printf '%s\n' "$dependencies"
+          if [[ "$dependencies" == *"not found"* ]]; then
+            exit 1
+          fi
           xvfb-run -a python -m unittest tests.native.test_x11_integration -v
