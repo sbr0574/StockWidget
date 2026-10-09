@@ -5,7 +5,7 @@ import os
 import tempfile
 import time
 
-from PySide6.QtCore import QPoint, QPointF, QSize, Qt
+from PySide6.QtCore import QEvent, QPoint, QPointF, QSize, Qt
 from PySide6.QtGui import QColor, QIcon, QPalette, QPixmap, QTextDocument, QKeySequence, QWheelEvent
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QScrollArea, QGroupBox, QSlider
@@ -22,6 +22,7 @@ from tests.support import SettingsTestCase, SignalRecorder
 
 class SettingsDialogTests(SettingsTestCase):
     def test_taskbar_adjustments_do_not_restyle_pages_without_a_theme_change(self):
+        self.enable_windows_taskbar()
         dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_appearance=False)
         with patch.object(dialog, "_apply_theme_stylesheet", wraps=dialog._apply_theme_stylesheet) as restyle:
             for opacity in (90, 80, 70):
@@ -36,6 +37,7 @@ class SettingsDialogTests(SettingsTestCase):
             self.assertLess(dialog.palette().color(QPalette.Window).lightness(), 128)
 
     def test_taskbar_font_limit_tracks_rows_height_and_dpi_without_erasing_independent_preferences(self):
+        self.enable_windows_taskbar()
         with patch("stockwidget.ui.settings.groups.find_taskbar", return_value=TaskbarArea(1, 2560, 104, 2200, 192)) as find:
             dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_appearance=False,
                                               taskbar_rows=4, taskbar_font_size=20)
@@ -80,9 +82,10 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertEqual(window.current_config()["unit_mode"], "en")
 
     def test_wheel_scrolls_page_without_changing_slider_or_combo_values(self):
-        dialog, _ = self._make_dialog()
+        dialog, _ = self._make_dialog(chart_enabled=True)
         dialog.show()
-        for page, controls in ((dialog.ui.data, (dialog.ui.cmb_name_length, dialog.ui.cmb_unit_mode)),
+        for page, controls in ((dialog.ui.data, (dialog.ui.cmb_chart_display_mode,
+                                               dialog.ui.cmb_name_length, dialog.ui.cmb_unit_mode)),
                                (dialog.ui.floating, (dialog.ui.cmb_font, dialog.ui.slider_font_size))):
             dialog.ui.settings_pages.setCurrentWidget(page)
             scroll = page.findChild(QScrollArea)
@@ -457,6 +460,7 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertEqual(image.pixelColor(0, 0).alpha(), 0)
 
     def test_shared_paging_and_taskbar_style_groups_preserve_control_behavior(self):
+        self.enable_windows_taskbar()
         dialog, window = self._make_dialog()
         floating, taskbar, style = (dialog.float_row_settings,
                                    dialog.taskbar_paging_settings, dialog.taskbar_style_settings)
@@ -560,6 +564,7 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertEqual(window.view_options.page_settings("float"), ("manual", 60))
 
     def test_taskbar_switches_hide_independent_settings_and_preserve_them_when_reopened(self):
+        self.enable_windows_taskbar()
         dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_metrics=False,
                                            taskbar_sync_appearance=False, taskbar_sync_paging=False,
                                            taskbar_sync_split=False)
@@ -601,6 +606,7 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertFalse(style.unicolor.isChecked())
 
     def test_taskbar_automatic_color_locks_manual_controls_and_restores_saved_preferences(self):
+        self.enable_windows_taskbar()
         dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_appearance=False,
                                            taskbar_color="#123456", taskbar_unicolor=False)
         style = dialog.taskbar_style_settings
@@ -622,6 +628,7 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertFalse(style.unicolor.isChecked())
 
     def test_split_controls_use_native_groups_and_preserve_independent_taskbar_settings(self):
+        self.enable_windows_taskbar()
         dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_split=False,
                                            taskbar_split_enabled=True, taskbar_split_separator=False)
         floating = dialog.float_split_settings
@@ -679,6 +686,8 @@ class SettingsDialogTests(SettingsTestCase):
                  dialog.ui.floating, dialog.ui.taskbar, dialog.ui.about)
         for index, page in enumerate(pages):
             item = navigation.item(index)
+            if item.isHidden():
+                continue
             QTest.mouseClick(navigation.viewport(), Qt.LeftButton,
                              pos=navigation.visualItemRect(item).center())
             self.qt_app.processEvents()
@@ -762,6 +771,9 @@ class SettingsDialogTests(SettingsTestCase):
             dialog.show()
             self.qt_app.processEvents()
             QTest.mouseMove(dialog.ui.btn_icon_custom, QPoint(35, 5))
+            if self.qt_app.platformName() == "offscreen":
+                # No native pointer enter delivery on a scaled headless screen.
+                QApplication.sendEvent(dialog.ui.btn_icon_custom, QEvent(QEvent.Enter))
             # Windows delivers the native hover event asynchronously.
             deadline = time.monotonic() + 1
             while not dialog.ui.btn_icon_custom.underMouse() and time.monotonic() < deadline:
@@ -830,6 +842,21 @@ class SettingsDialogTests(SettingsTestCase):
             url = open_url.call_args[0][0]
             self.assertTrue(url.isLocalFile())
             self.assertEqual(os.path.normpath(url.toLocalFile()), os.path.normpath(config_paths()))
+
+    def test_about_clear_cache_reports_failure_in_tooltip(self):
+        dialog, window = self._make_dialog()
+        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.about)
+        dialog.show()
+        for mode in ("light", "dark"):
+            with self.subTest(mode=mode):
+                window.set_view_options(color_mode=mode)
+                self.qt_app.processEvents()
+                with patch.object(window.history, "clear_cache", return_value=False) as clear_cache, \
+                        patch("stockwidget.ui.settings.dialog.QToolTip.showText") as tooltip:
+                    dialog.ui.btn_clear_cache.click()
+                clear_cache.assert_called_once()
+                self.assertIn("未能清理", tooltip.call_args.args[1])
+                self.assertEqual(dialog.ui.about_scroll.horizontalScrollBar().maximum(), 0)
 
     def test_unicolor_defaults_on_and_controls_direction_colors(self):
         dialog, window = self._make_dialog()

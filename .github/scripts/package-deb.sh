@@ -48,7 +48,7 @@ Version: $VER
 Section: utils
 Priority: optional
 Architecture: $ARCH
-Depends: libxcb-cursor0, libxkbcommon0, libegl1, libgl1, libfontconfig1, libdbus-1-3
+Depends: libxcb-cursor0, libxcb-shape0, libxkbcommon0, libegl1, libgl1, libfontconfig1, libdbus-1-3
 Maintainer: sbr0574 <sbr0574@users.noreply.github.com>
 Description: 极简透明盯盘 Widget 浮窗
 EOF

@@ -91,6 +91,11 @@ class SettingsTestCase(QtTestCase):
         self.enterContext(patch("stockwidget.ui.floating.widget.GlobalHotkeyManager"))
         self.enterContext(patch("stockwidget.ui.floating.widget.apply_click_through"))
         self.enterContext(patch("stockwidget.ui.floating.widget.ensure_topmost"))
+        self.enterContext(patch("stockwidget.ui.settings.groups.find_taskbar", return_value=None))
+
+    def enable_windows_taskbar(self):
+        """Exercise Windows settings without using the host's native taskbar."""
+        self.enterContext(patch("sys.platform", "win32"))
 
     def tearDown(self):
         for dialog, window in reversed(self._windows):

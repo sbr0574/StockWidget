@@ -240,6 +240,75 @@ class EastmoneyQuoteTests(unittest.TestCase):
         self.assertEqual(request.call_count, 1)
         request_sina.assert_not_called()
 
+    def test_transient_failures_retry_then_recover_on_an_eastmoney_node(self):
+        disconnected = RemoteDisconnected("closed without response")
+        response = self._response({"data": {"diff": [
+            {"f12": "600000", "f13": 1, "f14": "浦发银行", "f2": 9.05, "f5": 1724},
+        ]}})
+        instruments = {"sh600000": {"market": "sh", "code": "600000", "type": "沪"}}
+        failures = (requests.ConnectionError(ProtocolError("aborted", disconnected)),
+                    requests.exceptions.ProxyError(ProtocolError("aborted", disconnected)),
+                    requests.ReadTimeout(), requests.exceptions.ChunkedEncodingError())
+        for error in failures:
+            with (
+                self.subTest(error=type(error).__name__),
+                patch.object(quotes.requests, "get", side_effect=[error, error, response]) as get,
+                patch("stockwidget.data.quotes.time.sleep") as sleep,
+                patch.object(quotes, "request_sina") as sina,
+            ):
+                ok, data, reason = quotes.fetch_quote_result(instruments, "eastmoney")
+                self.assertTrue(ok)
+                self.assertIsNone(reason)
+                self.assertEqual(data["sh600000"]["deals_vol"], 172400)
+                self.assertEqual([call.args[0] for call in get.call_args_list], [
+                    quotes._EM_QUOTE_URL, quotes._EM_QUOTE_URL,
+                    "https://push2.eastmoney.com/api/qt/ulist.np/get",
+                ])
+                self.assertEqual([call.args[0] for call in sleep.call_args_list], [.25, .5])
+                for call in get.call_args_list:
+                    self.assertEqual(call.kwargs["params"]["secids"], "1.600000")
+                    self.assertNotIn("proxies", call.kwargs)
+                    self.assertNotIn("verify", call.kwargs)
+                sina.assert_not_called()
+
+    def test_retry_exhaustion_is_bounded_and_preserves_safe_error(self):
+        with (
+            patch.object(quotes.requests, "get", side_effect=requests.ConnectionError(
+                RemoteDisconnected("https://user:secret@example.com"))) as get,
+            patch("stockwidget.data.quotes.time.sleep") as sleep,
+            patch.object(quotes, "request_sina") as sina,
+        ):
+            result = quotes.fetch_quote_result({"sh600000": {"market": "sh", "code": "600000"}}, "eastmoney")
+        self.assertEqual(result, (False, None, "东财：远端关闭连接"))
+        self.assertEqual(get.call_count, 3)
+        self.assertEqual(sleep.call_count, 2)
+        sina.assert_not_called()
+
+    def test_gateway_errors_retry_but_denial_rate_limit_and_ssl_errors_stop(self):
+        instruments = {"sh600000": {"market": "sh", "code": "600000"}}
+        for status in (500, 502, 503, 504, 403, 429):
+            with self.subTest(status=status):
+                response = requests.Response()
+                response.status_code = status
+                response._content = b"unavailable"
+                response._content_consumed = True
+                good = self._response({"data": {"diff": [{"f12": "600000", "f13": 1, "f2": 9.05}]}})
+                with (patch.object(quotes.requests, "get", side_effect=[response, good]) as get,
+                      patch("stockwidget.data.quotes.time.sleep")):
+                    ok, data, reason = quotes.fetch_quote_result(instruments, "eastmoney")
+                self.assertEqual(ok, status in (500, 502, 503, 504))
+                self.assertEqual(get.call_count, 2 if ok else 1)
+        for error in (requests.exceptions.SSLError(), requests.exceptions.InvalidURL(),
+                      requests.exceptions.JSONDecodeError("bad", "", 0)):
+            with (
+                self.subTest(error=type(error).__name__),
+                patch.object(quotes.requests, "get", side_effect=error) as get,
+                patch("stockwidget.data.quotes.time.sleep") as sleep,
+            ):
+                self.assertFalse(quotes.fetch_quote_result(instruments, "eastmoney")[0])
+                get.assert_called_once()
+                sleep.assert_not_called()
+
 
 class NetworkErrorTests(unittest.TestCase):
     def test_specific_request_subclasses_are_not_hidden_by_their_base_classes(self):

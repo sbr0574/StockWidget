@@ -350,61 +350,57 @@ class WidgetHeaderTests(QtTestCase):
                 self.assertEqual(baseline.pixelColor(x, y).name(), "#000000")
         return rect
 
-    def test_sort_does_not_expand_columns_or_clip_header_text(self):
+    def test_rendered_sort_indicators_preserve_labels_widths_colors_and_direction(self):
         self.window.visible_metrics = ["name", "price", "change_pct"]
-        for font_size in (5, 10, 15):
-            with self.subTest(font_size=font_size):
+        for font_size, color in ((5, "#ed952a"), (10, "#ffffff"), (15, "#3768bc")):
+            self.window.set_font_size(font_size)
+            self.window.set_fg_color(QColor(color))
+            compact_gaps = {}
+            for wide in (False, True):
                 self.window.quotes.clear_sort()
-                self.window.set_font_size(font_size)
+                self.window.quotes._last_full_rows[0].update({
+                    "现价": "1234567890.12" if wide else "10",
+                    "涨幅": "+1234567890.12%" if wide else "3",
+                })
                 self.window.quotes.reproject()
                 self.app.processEvents()
-                widths = self._column_widths()
-                window_width = self.window.width()
                 baseline = self.header.viewport().grab().toImage()
-                for name in ("现价", "现价", "现价", "涨幅", "涨幅", "涨幅"):
-                    self._click(name)
-                    self.assertEqual(self._column_widths(), widths)
-                    self.assertEqual(self.window.width(), window_width)
-                    snapshot = self.header.viewport().grab().toImage()
-                    if self.header.isSortIndicatorShown():
-                        self._sort_arrow_bounds(baseline, snapshot)
-                    else:
-                        self.assertEqual(snapshot, baseline)
-
-    def test_sort_arrow_stays_next_to_label_in_wide_columns(self):
-        self.window.visible_metrics = ["name", "price", "change_pct"]
-        self.window.quotes._last_full_rows[0].update({
-            "现价": "1234567890.12", "涨幅": "+1234567890.12%",
-        })
-        for font_size in (5, 10, 15):
-            self.window.quotes.clear_sort()
-            self.window.set_font_size(font_size)
-            self.window.quotes.reproject()
-            self.app.processEvents()
-            baseline = self.header.viewport().grab().toImage()
-            widths = self._column_widths()
-            scale = baseline.devicePixelRatio()
-            for name in ("现价", "涨幅"):
-                for order in (Qt.DescendingOrder, Qt.AscendingOrder):
-                    with self.subTest(font_size=font_size, name=name, order=order):
-                        self.window.quotes.set_sort(name, order)
-                        self.app.processEvents()
-                        snapshot = self.header.viewport().grab().toImage()
-                        arrow = self._sort_arrow_bounds(baseline, snapshot)
-                        section = self.header.sortIndicatorSection()
-                        left = round(self.header.sectionViewportPosition(section) * scale)
-                        right = left + round(self.header.sectionSize(section) * scale)
-                        # 从未排序的截图提取实际文字边界，验证箭头与文字间距固定。
-                        text_right = max(
-                            x for y in range(baseline.height() - round(2 * scale))
-                            for x in range(left, right)
-                            if baseline.pixelColor(x, y).red() > 0
-                        )
-                        gap = (arrow.left() - text_right - 1) / scale
-                        self.assertGreaterEqual(gap, 1)
-                        self.assertLessEqual(gap, 3)
-                        self.assertLess(arrow.right(), right)
-                        self.assertEqual(self._column_widths(), widths)
+                widths, window_width = self._column_widths(), self.window.width()
+                scale = baseline.devicePixelRatio()
+                for name in ("现价", "涨幅"):
+                    for order in (Qt.DescendingOrder, Qt.AscendingOrder):
+                        with self.subTest(font_size=font_size, wide=wide, name=name, order=order):
+                            self.window.quotes.set_sort(name, order)
+                            self.app.processEvents()
+                            snapshot = self.header.viewport().grab().toImage()
+                            arrow = self._sort_arrow_bounds(baseline, snapshot)
+                            section = self.header.sortIndicatorSection()
+                            left = round(self.header.sectionViewportPosition(section) * scale)
+                            right = left + round(self.header.sectionSize(section) * scale)
+                            text_right = max(
+                                x for y in range(baseline.height() - round(2 * scale))
+                                for x in range(left, right) if baseline.pixelColor(x, y).red() > 0
+                            )
+                            gap = arrow.left() - text_right - 1
+                            self.assertGreaterEqual(gap, scale)
+                            # 字形自带留白；加宽后的间距只允许两端各一个物理像素的舍入。
+                            if wide:
+                                self.assertLessEqual(abs(gap - compact_gaps[name, order]), 2)
+                            else:
+                                compact_gaps[name, order] = gap
+                            self.assertLess(arrow.right(), right)
+                            self.assertEqual(self._column_widths(), widths)
+                            self.assertEqual(self.window.width(), window_width)
+                            ink = snapshot.copy(arrow)
+                            rows = [sum(ink.pixelColor(x, y).name() == color for x in range(ink.width()))
+                                    for y in range(ink.height())]
+                            self.assertGreater(sum(rows), 0, "箭头应使用文字颜色")
+                            top, bottom = sum(rows[:len(rows) // 2]), sum(rows[len(rows) // 2:])
+                            self.assertGreater(top if order == Qt.DescendingOrder else bottom,
+                                               bottom if order == Qt.DescendingOrder else top)
+                    self.window.quotes.clear_sort()
+                    self.app.processEvents()
+                    self.assertEqual(self.header.viewport().grab().toImage(), baseline)
 
     def test_sort_keeps_metric_widths_when_name_is_temporarily_added(self):
         widths = self._column_widths()
@@ -501,30 +497,3 @@ class WidgetHeaderTests(QtTestCase):
         self.window.show()
         self._click()
         self.assertEqual(self.window.quotes.sort_order, Qt.DescendingOrder)
-
-    def test_rendered_sort_arrow_matches_text_color_and_direction(self):
-        self.window.visible_metrics = ["name", "price", "change_pct"]
-        for color in ("#ed952a", "#ffffff", "#3768bc"):
-            self.window.set_fg_color(QColor(color))
-            self.window.quotes.clear_sort()
-            self.window.quotes.reproject()
-            self.app.processEvents()
-            baseline = self.header.viewport().grab().toImage()
-            for order in (Qt.DescendingOrder, Qt.AscendingOrder):
-                with self.subTest(color=color, order=order):
-                    self.window.quotes.set_sort("现价", order)
-                    self.app.processEvents()
-                    snapshot = self.header.viewport().grab().toImage()
-                    rect = self._sort_arrow_bounds(baseline, snapshot)
-                    image = snapshot.copy(rect)
-                    rows = [
-                        sum(image.pixelColor(x, y).name() == color for x in range(image.width()))
-                        for y in range(image.height())
-                    ]
-                    self.assertGreater(sum(rows), 0, "箭头应使用与文字相同的颜色")
-                    top = sum(rows[:len(rows) // 2])
-                    bottom = sum(rows[len(rows) // 2:])
-                    if order == Qt.DescendingOrder:
-                        self.assertGreater(top, bottom)
-                    else:
-                        self.assertLess(top, bottom)

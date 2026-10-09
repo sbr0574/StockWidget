@@ -35,6 +35,16 @@ def _connection_reason(error):
     return None
 
 
+def retryable_request_error(error: requests.RequestException) -> bool:
+    """Only retry temporary transport/server errors, not denial or rate limits."""
+    if isinstance(error, requests.exceptions.SSLError):
+        return False
+    if isinstance(error, requests.HTTPError):
+        return error.response is not None and error.response.status_code in {500, 502, 503, 504}
+    return isinstance(error, (requests.ConnectionError, requests.Timeout,
+                              requests.exceptions.ChunkedEncodingError))
+
+
 def request_error_message(error: requests.RequestException) -> str:
     """先判断具体子类，避免代理、证书、JSON 等错误被归为普通连接失败。"""
     if isinstance(error, requests.exceptions.ProxyError):
