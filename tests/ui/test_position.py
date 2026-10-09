@@ -294,6 +294,7 @@ class WidgetPositionTests(unittest.TestCase):
                 self.assertEqual(controller.full_geometry(), full)
 
     def test_shrunk_geometry_survives_deferred_fit_topmost_hide_and_restore(self):
+        self.enterContext(patch("sys.platform", "win32"))
         for mode in ("float", "both"):
             with self.subTest(mode=mode):
                 window = self.window(boundary_check_enabled=True, edge_hide_enabled=True,

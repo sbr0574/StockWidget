@@ -388,6 +388,7 @@ class MetricSettingsTests(SettingsTestCase):
                         self.assertEqual(items._drop_color, QColor(accent))
 
     def test_taskbar_metric_pool_reuses_selection_order_and_preserves_independent_metrics(self):
+        self.enable_windows_taskbar()
         from stockwidget.core.quote_presentation import METRIC_SPECS
         from stockwidget.ui.controls.metrics import MetricPoolWidget
         dialog, window = self._make_dialog()

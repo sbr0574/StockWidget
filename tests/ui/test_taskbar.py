@@ -25,6 +25,7 @@ class TaskbarTests(QtTestCase):
         self.refresh = self.enterContext(patch.object(QuotePresenter, "refresh"))
         self.enterContext(patch("stockwidget.ui.floating.widget.GlobalHotkeyManager"))
         self.enterContext(patch("stockwidget.ui.floating.widget.apply_click_through"))
+        self.enterContext(patch("stockwidget.ui.settings.groups.find_taskbar", return_value=None))
         self.window = FloatLabel({"taskbar_enabled": True, "taskbar_sync_metrics": False, "taskbar_sync_paging": False}, {})
         self.window.visible_metrics = ["name", "price"]
         self.window.set_view_options(taskbar_metrics=["name", "price"])

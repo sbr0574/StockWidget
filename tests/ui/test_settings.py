@@ -22,6 +22,7 @@ from tests.support import SettingsTestCase, SignalRecorder
 
 class SettingsDialogTests(SettingsTestCase):
     def test_taskbar_adjustments_do_not_restyle_pages_without_a_theme_change(self):
+        self.enable_windows_taskbar()
         dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_appearance=False)
         with patch.object(dialog, "_apply_theme_stylesheet", wraps=dialog._apply_theme_stylesheet) as restyle:
             for opacity in (90, 80, 70):
@@ -36,6 +37,7 @@ class SettingsDialogTests(SettingsTestCase):
             self.assertLess(dialog.palette().color(QPalette.Window).lightness(), 128)
 
     def test_taskbar_font_limit_tracks_rows_height_and_dpi_without_erasing_independent_preferences(self):
+        self.enable_windows_taskbar()
         with patch("stockwidget.ui.settings.groups.find_taskbar", return_value=TaskbarArea(1, 2560, 104, 2200, 192)) as find:
             dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_appearance=False,
                                               taskbar_rows=4, taskbar_font_size=20)
@@ -458,6 +460,7 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertEqual(image.pixelColor(0, 0).alpha(), 0)
 
     def test_shared_paging_and_taskbar_style_groups_preserve_control_behavior(self):
+        self.enable_windows_taskbar()
         dialog, window = self._make_dialog()
         floating, taskbar, style = (dialog.float_row_settings,
                                    dialog.taskbar_paging_settings, dialog.taskbar_style_settings)
@@ -561,6 +564,7 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertEqual(window.view_options.page_settings("float"), ("manual", 60))
 
     def test_taskbar_switches_hide_independent_settings_and_preserve_them_when_reopened(self):
+        self.enable_windows_taskbar()
         dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_metrics=False,
                                            taskbar_sync_appearance=False, taskbar_sync_paging=False,
                                            taskbar_sync_split=False)
@@ -602,6 +606,7 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertFalse(style.unicolor.isChecked())
 
     def test_taskbar_automatic_color_locks_manual_controls_and_restores_saved_preferences(self):
+        self.enable_windows_taskbar()
         dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_appearance=False,
                                            taskbar_color="#123456", taskbar_unicolor=False)
         style = dialog.taskbar_style_settings
@@ -623,6 +628,7 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertFalse(style.unicolor.isChecked())
 
     def test_split_controls_use_native_groups_and_preserve_independent_taskbar_settings(self):
+        self.enable_windows_taskbar()
         dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_split=False,
                                            taskbar_split_enabled=True, taskbar_split_separator=False)
         floating = dialog.float_split_settings
@@ -680,6 +686,8 @@ class SettingsDialogTests(SettingsTestCase):
                  dialog.ui.floating, dialog.ui.taskbar, dialog.ui.about)
         for index, page in enumerate(pages):
             item = navigation.item(index)
+            if item.isHidden():
+                continue
             QTest.mouseClick(navigation.viewport(), Qt.LeftButton,
                              pos=navigation.visualItemRect(item).center())
             self.qt_app.processEvents()
