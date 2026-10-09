@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-08",
+  "last_update": "2026-10-09",
   "codes": {
     "usa": {
       "code": "a",
@@ -92836,12 +92836,39 @@
       "py": "",
       "abbr": ""
     },
+    "usscat": {
+      "code": "scat",
+      "market": "us",
+      "type": "美",
+      "name": "Southern Cross Acquisition II Corp. - Ordinary Shares",
+      "name_en": "Southern Cross Acquisition II Corp. - Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "usscatr": {
+      "code": "scatr",
+      "market": "us",
+      "type": "美",
+      "name": "Southern Cross Acquisition II Corp. - Rights",
+      "name_en": "Southern Cross Acquisition II Corp. - Rights",
+      "py": "",
+      "abbr": ""
+    },
     "usscatu": {
       "code": "scatu",
       "market": "us",
       "type": "美",
       "name": "Southern Cross Acquisition II Corp. - Units",
       "name_en": "Southern Cross Acquisition II Corp. - Units",
+      "py": "",
+      "abbr": ""
+    },
+    "usscatw": {
+      "code": "scatw",
+      "market": "us",
+      "type": "美",
+      "name": "Southern Cross Acquisition II Corp. - Warrants",
+      "name_en": "Southern Cross Acquisition II Corp. - Warrants",
       "py": "",
       "abbr": ""
     },
@@ -101975,17 +102002,17 @@
       "code": "tcbi",
       "market": "us",
       "type": "美",
-      "name": "Texas Capital Bancshares, Inc. - Common Stock",
-      "name_en": "Texas Capital Bancshares, Inc. - Common Stock",
+      "name": "Texas Capital Bancshares, Inc. Common Stock",
+      "name_en": "Texas Capital Bancshares, Inc. Common Stock",
       "py": "",
       "abbr": ""
     },
-    "ustcbio": {
-      "code": "tcbio",
+    "ustcbi_b": {
+      "code": "tcbi_b",
       "market": "us",
       "type": "美",
-      "name": "Texas Capital Bancshares, Inc. - Depositary Shares 5.75% Fixed Rate Non-Cumulative Perpetual Preferred Stock Series B",
-      "name_en": "Texas Capital Bancshares, Inc. - Depositary Shares 5.75% Fixed Rate Non-Cumulative Perpetual Preferred Stock Series B",
+      "name": "Texas Capital Bancshares, Inc. Depositary Shares 5.75% Fixed Rate Non-Cumulative Perpetual Preferred Stock Series B",
+      "name_en": "Texas Capital Bancshares, Inc. Depositary Shares 5.75% Fixed Rate Non-Cumulative Perpetual Preferred Stock Series B",
       "py": "",
       "abbr": ""
     },
@@ -114778,6 +114805,15 @@
       "py": "",
       "abbr": ""
     },
+    "uswsls": {
+      "code": "wsls",
+      "market": "us",
+      "type": "美",
+      "name": "WisdomTree Efficient Long/Short U.S. SmallCap Equity Fund",
+      "name_en": "WisdomTree Efficient Long/Short U.S. SmallCap Equity Fund",
+      "py": "",
+      "abbr": ""
+    },
     "uswsm": {
       "code": "wsm",
       "market": "us",
@@ -114883,6 +114919,15 @@
       "type": "美",
       "name": "WisdomTree Artificial Intelligence and Innovation Fund",
       "name_en": "WisdomTree Artificial Intelligence and Innovation Fund",
+      "py": "",
+      "abbr": ""
+    },
+    "uswtal": {
+      "code": "wtal",
+      "market": "us",
+      "type": "美",
+      "name": "WisdomTree Global Alpha Fund",
+      "name_en": "WisdomTree Global Alpha Fund",
       "py": "",
       "abbr": ""
     },

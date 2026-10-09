@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-30",
+  "last_update": "2026-10-09",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -10287,6 +10287,15 @@
       "name_en": "",
       "py": "xiyoujinshuetfzhaoshang",
       "abbr": "xyjsetfzs"
+    },
+    "sz158030": {
+      "code": "158030",
+      "market": "sz",
+      "type": "基",
+      "name": "航空航天ETF汇添富",
+      "name_en": "",
+      "py": "hangkonghangtianetfhuitianfu",
+      "abbr": "hkhtetfhtf"
     },
     "sz158031": {
       "code": "158031",

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-08",
+  "last_update": "2026-10-09",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -7700,10 +7700,10 @@
       "code": "601390",
       "market": "sh",
       "type": "沪",
-      "name": "XD中国中",
+      "name": "中国中铁",
       "name_en": "",
-      "py": "xdzhongguozhong",
-      "abbr": "xdzgz"
+      "py": "zhongguozhongtie",
+      "abbr": "zgzt"
     },
     "sh601398": {
       "code": "601398",
@@ -8816,10 +8816,10 @@
       "code": "603006",
       "market": "sh",
       "type": "沪",
-      "name": "联明股份",
+      "name": "XD联明股",
       "name_en": "",
-      "py": "lianminggufen",
-      "abbr": "lmgf"
+      "py": "xdlianminggu",
+      "abbr": "xdlmg"
     },
     "sh603007": {
       "code": "603007",
@@ -10976,10 +10976,10 @@
       "code": "603303",
       "market": "sh",
       "type": "沪",
-      "name": "得邦照明",
+      "name": "XD得邦照",
       "name_en": "",
-      "py": "debangzhaoming",
-      "abbr": "dbzm"
+      "py": "xddebangzhao",
+      "abbr": "xddbz"
     },
     "sh603305": {
       "code": "603305",
@@ -11003,10 +11003,10 @@
       "code": "603307",
       "market": "sh",
       "type": "沪",
-      "name": "扬州金泉",
+      "name": "XD扬州金",
       "name_en": "",
-      "py": "yangzhoujinquan",
-      "abbr": "yzjq"
+      "py": "xdyangzhoujin",
+      "abbr": "xdyzj"
     },
     "sh603308": {
       "code": "603308",
@@ -11264,10 +11264,10 @@
       "code": "603337",
       "market": "sh",
       "type": "沪",
-      "name": "杰克科技",
+      "name": "XD杰克科",
       "name_en": "",
-      "py": "jiekekeji",
-      "abbr": "jkkj"
+      "py": "xdjiekeke",
+      "abbr": "xdjkk"
     },
     "sh603338": {
       "code": "603338",
@@ -15071,10 +15071,10 @@
       "code": "605337",
       "market": "sh",
       "type": "沪",
-      "name": "XD李子园",
+      "name": "李子园",
       "name_en": "",
-      "py": "xdliziyuan",
-      "abbr": "xdlzy"
+      "py": "liziyuan",
+      "abbr": "lzy"
     },
     "sh605338": {
       "code": "605338",
@@ -20030,10 +20030,10 @@
       "code": "688676",
       "market": "sh",
       "type": "科",
-      "name": "XD金盘科",
+      "name": "金盘科技",
       "name_en": "",
-      "py": "xdjinpanke",
-      "abbr": "xdjpk"
+      "py": "jinpankeji",
+      "abbr": "jpkj"
     },
     "sh688677": {
       "code": "688677",

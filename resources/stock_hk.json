@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-08",
+  "last_update": "2026-10-09",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -8614,6 +8614,15 @@
       "py": "tatajiankang",
       "abbr": "tatajk"
     },
+    "hk01256": {
+      "code": "01256",
+      "market": "hk",
+      "type": "港",
+      "name": "奕斯偉計算",
+      "name_en": "ESWIN COMPUTING",
+      "py": "yisiweijisuan",
+      "abbr": "yswjs"
+    },
     "hk01257": {
       "code": "01257",
       "market": "hk",
@@ -13956,7 +13965,7 @@
       "market": "hk",
       "type": "港",
       "name": "天成控股",
-      "name_en": "TIAN CHENG-NEW",
+      "name_en": "TIAN CHENG HLDG",
       "py": "tianchengkonggu",
       "abbr": "tckg"
     },
@@ -18387,15 +18396,6 @@
       "name_en": "ZIJIN MINING",
       "py": "zijinkuangye",
       "abbr": "zjky"
-    },
-    "hk02913": {
-      "code": "02913",
-      "market": "hk",
-      "type": "港",
-      "name": "天成控股",
-      "name_en": "TIAN CHENG-OLD",
-      "py": "tianchengkonggu",
-      "abbr": "tckg"
     },
     "hk02915": {
       "code": "02915",
