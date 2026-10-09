@@ -24,6 +24,7 @@ from stockwidget.data.quotes import fetch_quote_result
 
 class QuotePresenter(QObject):
     data_ready = Signal(object)
+    quotes_updated = Signal()
 
     def __init__(self, window):
         super().__init__(window)
@@ -36,6 +37,10 @@ class QuotePresenter(QObject):
         self._last_full_rows = []
         self._last_color_roles = []
         self._last_sort_values = []
+        self._last_keys = []
+        self._latest_quotes = {}
+        self._latest_source = None
+        self._ordered_keys = []
         self._quote_generation = 0
         self._refresh_thread = None
         self.data_ready.connect(self.accept_result)
@@ -55,6 +60,8 @@ class QuotePresenter(QObject):
     def invalidate(self, *, reset_pages=False):
         """自选、数据源或配置更改后丢弃在途结果，停止旧行情倒计时。"""
         self._quote_generation += 1
+        self._latest_quotes = {}
+        self._latest_source = None
         if reset_pages:
             self.float_page = self.taskbar_page = 0
         self.window.hide_controller.cancel_countdown()
@@ -85,6 +92,7 @@ class QuotePresenter(QObject):
                                        descending=self.sort_order == Qt.DescendingOrder)
         self._ordered_rows = [full_rows[i] for i in indices]
         self._ordered_color_roles = [color_roles[i] for i in indices]
+        self._ordered_keys = [self._last_keys[i] if i < len(self._last_keys) else None for i in indices]
         self._project_float_page()
         self._project_taskbar_page()
         self.sync_page_timers()
@@ -100,6 +108,28 @@ class QuotePresenter(QObject):
         mode, _interval = options.page_settings(surface)
         return page_slice(len(self._ordered_rows), limit, mode,
                           getattr(self, f"{surface}_page"))
+
+    def instrument_at(self, surface, row, block=0):
+        """Resolve identity through sorting, independent pages and split columns."""
+        page = self.get_page(surface)
+        ranges = column_ranges(page.stop - page.start, self.window.view_options.split_settings(surface)[0])
+        if not 0 <= block < len(ranges):
+            return None
+        start, stop = ranges[block]
+        if not 0 <= row < stop - start:
+            return None
+        offset = page.start + start + row
+        key = self._ordered_keys[offset] if offset < len(self._ordered_keys) else None
+        return self.window.checked_codes.get(key)
+
+    def quote_for(self, instrument):
+        """Return accepted raw data only from the currently selected source."""
+        if self._latest_source != self.window.data_source:
+            return None
+        for key, entry in self.window.watchlist.items():
+            if entry.get("checked") and all(entry.get(field) == instrument.get(field) for field in ("market", "code")):
+                return self._latest_quotes.get(key)
+        return None
 
     def _project_float_page(self):
         page = self.get_page("float")
@@ -268,6 +298,9 @@ class QuotePresenter(QObject):
         self._last_full_rows = full_rows
         self._last_color_roles = full_color_roles
         self._last_sort_values = sort_values
+        self._last_keys = list(data)
+        self._latest_quotes = data
+        self._latest_source = self.window.data_source
 
         if data:
             self.window._clear_message()
@@ -275,6 +308,7 @@ class QuotePresenter(QObject):
             self.window._show_message("请在设置面板中添加自选股", is_error=True)
         self.project_rows(full_rows, full_color_roles, sort_values)
         self.window.hide_controller.quotes_refreshed(data)
+        self.quotes_updated.emit()
 
     def set_sort(self, header: str, order):
         if header not in SORTABLE_HEADERS:

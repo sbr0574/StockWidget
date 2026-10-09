@@ -33,6 +33,39 @@ def best_screen(x, y, width, height, rects):
     return max(rects, key=score) if rects else None
 
 
+def adjacent_popup_size(anchor, bounds, preferred, minimum, gap=8):
+    """小屏幕优先缩小图表，让它仍能放在行情旁；保留可读的最小尺寸。"""
+    left, top, anchor_w, anchor_h = anchor
+    screen_x, screen_y, screen_w, screen_h = bounds
+    width, height = min(preferred[0], screen_w), min(preferred[1], screen_h)
+    candidates = (
+        (min(width, screen_x + screen_w - left - anchor_w - gap), height),
+        (min(width, left - screen_x - gap), height),
+        (width, min(height, screen_y + screen_h - top - anchor_h - gap)),
+        (width, min(height, top - screen_y - gap)),
+    )
+    viable = [size for size in candidates if size[0] >= minimum[0] and size[1] >= minimum[1]]
+    return max(viable, key=lambda size: size[0] * size[1]) if viable else (width, height)
+
+
+def adjacent_popup_position(anchor, bounds, width, height, *, prefer_above=False, gap=8):
+    """把图表放在行情旁，空间不足时换边并限制在当前屏幕可用区域。"""
+    left, top, anchor_w, anchor_h = anchor
+    right = (left + anchor_w + gap, top)
+    left_side = (left - width - gap, top)
+    below = (left, top + anchor_h + gap)
+    above = (left, top - height - gap)
+    candidates = (above, below, right, left_side) if prefer_above else (right, left_side, below, above)
+    for position in candidates:
+        x, y = clamp_point(*position, bounds, width, height)
+        if ((position == right and x >= right[0])
+                or (position == left_side and x <= left_side[0])
+                or (position == below and y >= below[1])
+                or (position == above and y <= above[1])):
+            return x, y
+    return clamp_point(*candidates[0], bounds, width, height)
+
+
 def resolve_restore_position(saved, rects, primary, widget_w=0, widget_h=0,
                              margin_x=40, margin_y=80):
     """根据保存位置决定窗口恢复位置。

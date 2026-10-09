@@ -115,6 +115,10 @@ def format_value(value: float, lot_size: int = 1, unit_cn: bool = True) -> str:
     return f"{value / 1e12:.2f}T"
 
 
+def volume_lot_size(security_type: str | None, market: str = "") -> int:
+    return 100 if market in {"sh", "sz", "bj"} and security_type != "期" else 1
+
+
 def should_use_english_units(unit_mode: str, market: str = "") -> bool:
     """按单位模式决定是否使用英文单位。
 
@@ -172,6 +176,11 @@ class QuoteDisplayOptions:
     unit_mode: str = "auto"
 
 
+def price_precision(security_type, market=""):
+    """Shared price precision for quotes and historical charts."""
+    return 3 if security_type == "基" or market == "us" else 2
+
+
 def format_quote(
     data: dict,
     security_type: str | None,
@@ -182,7 +191,7 @@ def format_quote(
     options: QuoteDisplayOptions = QuoteDisplayOptions(),
 ):
     data = dict(data)
-    lot_size = 100 if market in {"sh", "sz", "bj"} and security_type != "期" else 1
+    lot_size = volume_lot_size(security_type, market)
 
     # 名称显示
     name = f"({security_type})" if security_type is not None and options.type_visible else ""
@@ -243,7 +252,7 @@ def format_quote(
             arrow = "↓"
     k_payload = {"k": (data["opening_price"], data["current_price"], data["high_price"], data["low_price"], data["prev_close"])}
 
-    precision = 3 if security_type == "基" or market == "us" else 2
+    precision = price_precision(security_type, market)
 
     # 浮盈计算（与成本价比较），仅显示百分比
     profit_pct = None

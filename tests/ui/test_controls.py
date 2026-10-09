@@ -15,6 +15,7 @@ from shiboken6 import delete
 from stockwidget.ui.controls.settings_widgets import HotkeySequenceEdit
 from stockwidget.ui.floating.presenter import QuotePresenter
 from stockwidget.ui.floating.widget import FloatLabel
+from stockwidget.platform.taskbar import TaskbarArea
 from stockwidget.ui.settings.groups import TaskbarSettings
 
 from tests.support import QtTestCase
@@ -28,6 +29,7 @@ class HotkeySequenceEditTests(QtTestCase):
         self.editor.setKeySequence(QKeySequence("Ctrl+Alt+F"))
         self.editor.show()
         self.editor.activateWindow()
+        self.assertTrue(QTest.qWaitForWindowActive(self.editor, 1000))
         self.editor.setFocus()
         self.app.processEvents()
 
@@ -104,9 +106,11 @@ class DesignerFormTests(QtTestCase):
             source = FloatLabel({}, {})
         try:
             taskbar = root.findChild(QWidget, "taskbar_settings")
-            binding = TaskbarSettings(taskbar)
-            binding.bind(source)
-            source.set_view_options(taskbar_enabled=True, taskbar_sync_appearance=False, taskbar_font_size=14)
+            with patch("stockwidget.ui.settings.groups.find_taskbar", return_value=TaskbarArea(1, 1920, 96, 1700)):
+                binding = TaskbarSettings(taskbar)
+                binding.bind(source)
+                source.set_view_options(taskbar_enabled=True, taskbar_sync_appearance=False, taskbar_font_size=14,
+                                        taskbar_rows=1)
             self.assertEqual(taskbar.body.layout().spacing(), 9)
             self.assertEqual(taskbar.style.font_size_label.minimumWidth(), 47)
             self.assertEqual(taskbar.style.font_size_label.text(), "14 pt")

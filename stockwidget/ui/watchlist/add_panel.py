@@ -38,7 +38,7 @@ from PySide6.QtWidgets import (
 )
 
 from stockwidget.core.watchlist import query_search_index
-from stockwidget.ui.controls.style import accent_color, accent_rgba
+from stockwidget.ui.controls.style import accent_color, accent_rgba, theme_palette
 
 
 ENTRY_ROLE = Qt.ItemDataRole.UserRole + 1
@@ -507,6 +507,8 @@ class AddCodePanel(QFrame):
                 outline: none;
             }}
         """)
+        # 样式刷新后同步原生搜索框，避免 Tool 窗口沿用系统的另一种颜色模式。
+        self.search_input.setPalette(theme_palette(dark, QApplication.palette()))
 
     def set_context(self, search_index, existing_keys):
         self._search_index = tuple(search_index or ())

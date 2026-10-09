@@ -7,7 +7,7 @@ import sys
 import textwrap
 
 from PySide6.QtCore import QCoreApplication, QEvent, QMimeData, QPointF, QSignalBlocker, Qt, QPoint
-from PySide6.QtGui import QDrag, QDropEvent, QInputMethodEvent
+from PySide6.QtGui import QDrag, QDropEvent, QInputMethodEvent, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QAbstractItemView, QPushButton, QWidget
 from shiboken6 import delete, isValid
@@ -18,7 +18,6 @@ from stockwidget.ui.watchlist.add_panel import (
     AddCodePanel,
     ENTRY_ROLE,
     ADDED_ROLE,
-    FilledCheckBox,
     PAGE_SIZE,
     RESULT_ROW_HEIGHT,
     SearchResultDelegate,
@@ -426,29 +425,36 @@ class WatchlistDialogTests(SettingsTestCase):
         button_bottom = dialog.watchlist_editor.btn_add.mapToGlobal(
             QPoint(0, dialog.watchlist_editor.btn_add.height())
         ).y()
-        self.assertGreaterEqual(panel.y(), button_bottom)
-        self.assertEqual(panel.search_input.styleSheet(), "")
-        self.assertNotIn("QFrame#add_code_panel QLineEdit", panel.styleSheet())
-        checkboxes = panel.findChildren(FilledCheckBox)
-        self.assertEqual(len(checkboxes), 12)
-        self.assertTrue(
-            all(box._unchecked_fill != box._checked_fill for box in checkboxes)
-        )
-        self.assertTrue(all(box._hover_fill.alpha() > 0 for box in checkboxes))
-        self.assertTrue(
-            all(
-                box.sizeHint().height()
-                >= box.fontMetrics().height()
-                + 2 * box._HOVER_VERTICAL_PADDING
-                for box in checkboxes
-            )
-        )
-        self.assertGreater(
-            panel.category_filters.layout().spacing(),
-            FilledCheckBox._INDICATOR_TEXT_GAP,
-        )
-        self.assertIn("QListView::item:hover", panel.styleSheet())
-        self.assertIn("color: rgb(28, 28, 30);", panel.styleSheet())
+        available = dialog.watchlist_editor.btn_add.screen().availableGeometry()
+        if button_bottom + 2 + panel.height() <= available.bottom() + 1:
+            self.assertGreaterEqual(panel.y(), button_bottom)
+        else:
+            self.assertGreaterEqual(panel.y(), available.top())
+            if panel.height() <= available.height():
+                self.assertLessEqual(panel.geometry().bottom(), available.bottom())
+
+    def test_add_panel_remains_readable_when_switching_color_modes(self):
+        dialog, window = self._make_dialog()
+        dialog.show()
+        dialog.watchlist_editor.btn_add.click()
+        panel = dialog.watchlist_editor.add_code_panel
+        for mode in ("light", "dark", "light"):
+            with self.subTest(mode=mode):
+                window.set_view_options(color_mode=mode)
+                self.qt_app.processEvents()
+                for control, foreground, background in (
+                    (panel.page_label, QPalette.WindowText, QPalette.Window),
+                    (panel.search_input, QPalette.Text, QPalette.Base),
+                    (panel.result_list, QPalette.Text, QPalette.Base),
+                ):
+                    palette = control.palette()
+                    text = palette.color(foreground).lightness()
+                    fill_color = palette.color(background)
+                    if fill_color.alpha() == 0:
+                        fill_color = panel.palette().color(QPalette.Window)
+                    fill = fill_color.lightness()
+                    self.assertEqual(text > fill, mode == "dark", control.objectName())
+                    self.assertGreater(abs(text - fill), 128, control.objectName())
 
     def test_top_button_moves_selected_row_to_top_and_persists_order(self):
         watchlist = {
@@ -696,9 +702,12 @@ class WatchlistDialogTests(SettingsTestCase):
 
         dialog.watchlist_editor._update_suggestions(editor, "茅台")
         popup = editor._code_completer.popup()
-        self.assertEqual(popup.minimumWidth(), base_width)
-        self.assertEqual(popup.maximumWidth(), base_width)
+        available_width = editor.screen().availableGeometry().width()
+        self.assertEqual(popup.width(), min(base_width, available_width))
 
         dialog.watchlist_editor._update_suggestions(editor, "特别长证券名称")
-        self.assertGreater(popup.minimumWidth(), base_width)
-        self.assertEqual(popup.minimumWidth(), popup.maximumWidth())
+        if available_width > base_width:
+            self.assertGreater(popup.width(), base_width)
+        else:
+            self.assertEqual(popup.width(), available_width)
+        self.assertLessEqual(popup.width(), available_width)

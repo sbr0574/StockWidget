@@ -21,11 +21,13 @@ from PySide6.QtWidgets import (
     QScrollBar,
     QScrollArea,
     QSlider,
+    QToolTip,
 )
 
 from stockwidget.constants import APP_VERSION
 from stockwidget.core.config_store import config_paths
 from stockwidget.core.window_rules import MAX_HIDE_TIMES
+from stockwidget.data.bars import MA_PERIODS
 from stockwidget.data.update_check import get_update_info, github_available, project_links
 from stockwidget.platform.capabilities import (
     hotkeys_supported,
@@ -223,10 +225,23 @@ class SettingsDialog(QDialog):
             lambda _: self.win.set_view_options(color_mode=self.ui.cmb_color_mode.currentData()))
         self.ui.cb_hide_tray_icon.toggled.connect(
             lambda hidden: self.win.set_view_options(hide_tray_icon=hidden))
+        self.ui.cb_chart_enabled.toggled.connect(
+            lambda enabled: self.win.set_view_options(chart_enabled=enabled))
+        for index, value in enumerate(("window", "large", "medium", "small")):
+            self.ui.cmb_chart_display_mode.setItemData(index, value)
+        self.ui.cmb_chart_display_mode.currentIndexChanged.connect(
+            lambda _: self.win.set_view_options(chart_display_mode=self.ui.cmb_chart_display_mode.currentData()))
+        self.ui.cb_chart_average.toggled.connect(
+            lambda enabled: self.win.set_view_options(chart_average_enabled=enabled))
+        self.ui.cb_chart_volume.toggled.connect(
+            lambda enabled: self.win.set_view_options(chart_volume_enabled=enabled))
+        for period in MA_PERIODS:
+            getattr(self.ui, f"cb_chart_ma{period}").toggled.connect(self._chart_periods_changed)
         self.win.view_options_changed.connect(self._sync_common_options)
 
         self.ui.btn_check_update.clicked.connect(self._check_update_manually)
         self.ui.btn_open_cache_dir.clicked.connect(self._open_cache_dir)
+        self.ui.btn_clear_cache.clicked.connect(self._clear_cache)
         self.ui.btn_clear_watchlist.clicked.connect(self.watchlist_editor.clear_watchlist)
         self.ui.btn_reset_appearance.clicked.connect(self._reset_appearance)
         self.ui.btn_reset_settings.clicked.connect(self._reset_settings)
@@ -674,11 +689,30 @@ class SettingsDialog(QDialog):
             self.ui.cmb_unit_mode.setCurrentIndex(self.ui.cmb_unit_mode.findData(self.win.unit_mode))
 
     def _sync_common_options(self):
+        with QSignalBlocker(self.ui.cb_chart_enabled):
+            self.ui.cb_chart_enabled.setChecked(self.win.view_options.chart_enabled)
+        with QSignalBlocker(self.ui.cmb_chart_display_mode):
+            self.ui.cmb_chart_display_mode.setCurrentIndex(
+                self.ui.cmb_chart_display_mode.findData(self.win.view_options.chart_display_mode))
+        self.ui.chart_display_mode_row.setEnabled(self.win.view_options.chart_enabled)
+        self.ui.chart_indicators.setEnabled(self.win.view_options.chart_enabled)
+        for control, checked in (
+            (self.ui.cb_chart_average, self.win.view_options.chart_average_enabled),
+            (self.ui.cb_chart_volume, self.win.view_options.chart_volume_enabled),
+            *((getattr(self.ui, f"cb_chart_ma{period}"), period in self.win.view_options.chart_ma_periods)
+              for period in MA_PERIODS),
+        ):
+            with QSignalBlocker(control):
+                control.setChecked(checked)
         with QSignalBlocker(self.ui.cmb_color_mode), QSignalBlocker(self.ui.cb_hide_tray_icon):
             self.ui.cmb_color_mode.setCurrentIndex(self.ui.cmb_color_mode.findData(self.win.view_options.color_mode))
             self.ui.cb_hide_tray_icon.setChecked(self.win.view_options.hide_tray_icon)
         if self.win.view_options.color_mode != getattr(self, "_applied_color_mode", None):
             self._apply_theme_stylesheet()
+
+    def _chart_periods_changed(self):
+        self.win.set_view_options(chart_ma_periods=[period for period in MA_PERIODS
+                                                  if getattr(self.ui, f"cb_chart_ma{period}").isChecked()])
 
     def _on_icon_button_toggled(self, key: str, checked: bool):
         if not checked:
@@ -875,6 +909,12 @@ class SettingsDialog(QDialog):
         path = config_paths()
         os.makedirs(path, exist_ok=True)
         QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+
+    def _clear_cache(self):
+        cleared = self.win.history.clear_cache()
+        message = "已清理数据缓存。" if cleared else "部分数据缓存未能清理，请稍后重试。"
+        button = self.ui.btn_clear_cache
+        QToolTip.showText(button.mapToGlobal(button.rect().center()), message, button)
 
     def closeEvent(self, event):
         self.watchlist_editor.close()

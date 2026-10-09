@@ -41,6 +41,7 @@ from stockwidget.ui.floating.interaction import (
     PositionController,
 )
 from stockwidget.ui.floating.presenter import QuotePresenter
+from stockwidget.ui.history import HistoryController
 from stockwidget.ui.menus import build_quote_menu
 
 
@@ -186,6 +187,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
                                   lambda pos: self.quotes.header_clicked(right_header.logicalIndexAt(pos)))
         self.register_drag_region(self.pager, self.pager.activate_at)
         self.position_controller = PositionController(self)
+        self.history = HistoryController(self)
 
         self.apply_style()
         self.set_window_opacity_percent(self.opacity_pct)
@@ -649,6 +651,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             return
         self.data_source = source
         self.quotes.invalidate()
+        self.history.reload()
         self._notify_change()
         self.quotes.refresh()
 

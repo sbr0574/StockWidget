@@ -366,20 +366,26 @@ class FloatLabelMetricLayoutTests(QtTestCase):
 
 class MetricSettingsTests(SettingsTestCase):
     def test_buttons_and_metric_pools_follow_palette_changes(self):
-        dialog, _window = self._make_dialog()
+        dialog, window = self._make_dialog(color_mode="light")
         original = self.qt_app.palette()
-        try:
-            palette = QPalette(original)
-            palette.setColor(QPalette.Accent, QColor("#a23b61"))
-            self.qt_app.setPalette(palette)
-            self.qt_app.processEvents()
-            self.assertIn("#a23b61", dialog.styleSheet())
-            self.assertIn("rgba(162, 59, 97, 0.08)", dialog.styleSheet())
-            for pool in (dialog.metric_pool.displayed_pool, dialog.metric_pool.available_pool):
-                self.assertEqual(pool._drop_color.name(), "#a23b61")
-                self.assertIn("rgba(162, 59, 97, 0.08)", pool.styleSheet())
-        finally:
-            self.qt_app.setPalette(original)
+        self.addCleanup(self.qt_app.setPalette, original)
+        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.general)
+        dialog.show()
+        for mode, accent in (("light", "#a23b61"), ("dark", "#3768bc"), ("light", "#a23b61")):
+            with self.subTest(mode=mode, accent=accent):
+                palette = QPalette(original)
+                palette.setColor(QPalette.Accent, QColor(accent))
+                self.qt_app.setPalette(palette)
+                window.set_view_options(color_mode=mode)
+                self.qt_app.processEvents()
+                button = dialog.ui.btn_icon_default.grab().toImage()
+                # 检查选中按钮实际绘制的边框，不依赖样式表中的透明度或格式。
+                border = [button.pixelColor(x, button.height() // 2).name()
+                          for x in range(round(3 * button.devicePixelRatio()))]
+                self.assertIn(accent, border)
+                for pool in (dialog.metric_pool, dialog.taskbar_settings.metric_pool):
+                    for items in (pool.displayed_pool, pool.available_pool):
+                        self.assertEqual(items._drop_color, QColor(accent))
 
     def test_taskbar_metric_pool_reuses_selection_order_and_preserves_independent_metrics(self):
         from stockwidget.core.quote_presentation import METRIC_SPECS

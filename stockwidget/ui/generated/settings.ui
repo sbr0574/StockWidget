@@ -748,6 +748,131 @@
             </widget>
            </item>
            <item>
+            <widget class="QGroupBox" name="gb_chart">
+             <property name="title"><string>分时 / K线图</string></property>
+             <property name="flat"><bool>false</bool></property>
+             <layout class="QVBoxLayout" name="gb_chart_layout">
+              <property name="leftMargin"><number>10</number></property>
+              <property name="topMargin"><number>15</number></property>
+              <property name="rightMargin"><number>10</number></property>
+              <property name="bottomMargin"><number>10</number></property>
+              <property name="spacing"><number>10</number></property>
+              <item>
+               <widget class="QWidget" name="chart_enabled_row">
+                <layout class="QGridLayout" name="chart_enabled_layout">
+                 <property name="leftMargin"><number>0</number></property>
+                 <property name="topMargin"><number>0</number></property>
+                 <property name="rightMargin"><number>0</number></property>
+                 <property name="bottomMargin"><number>0</number></property>
+                 <property name="horizontalSpacing"><number>10</number></property>
+                 <property name="verticalSpacing"><number>5</number></property>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="chart_enabled_title">
+                   <property name="settingTitle" stdset="0"><bool>true</bool></property>
+                   <property name="text"><string>点击行情行显示图表</string></property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="chart_enabled_description">
+                   <property name="minimumSize"><size><width>310</width><height>0</height></size></property>
+                   <property name="maximumSize"><size><width>310</width><height>16777215</height></size></property>
+                   <property name="alignment"><set>Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set></property>
+                   <property name="settingDescription" stdset="0"><bool>true</bool></property>
+                   <property name="text"><string>查看分时、5日和日K线，跟随行情刷新间隔更新。</string></property>
+                   <property name="wordWrap"><bool>true</bool></property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1" rowspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
+                  <widget class="ToggleSwitch" name="cb_chart_enabled">
+                   <property name="toolTip"><string>开启后，浮窗和任务栏的行情行均可单击打开图表。拖动及双击隐藏保持原有操作；关闭后不请求或显示图表。</string></property>
+                   <property name="text"><string>点击行情行显示图表</string></property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QWidget" name="chart_display_mode_row">
+                <layout class="QGridLayout" name="chart_display_mode_layout">
+                 <property name="leftMargin"><number>0</number></property>
+                 <property name="topMargin"><number>0</number></property>
+                 <property name="rightMargin"><number>0</number></property>
+                 <property name="bottomMargin"><number>0</number></property>
+                 <property name="horizontalSpacing"><number>10</number></property>
+                 <property name="verticalSpacing"><number>5</number></property>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="chart_display_mode_title">
+                   <property name="settingTitle" stdset="0"><bool>true</bool></property>
+                   <property name="text"><string>窗口大小</string></property>
+                   <property name="buddy"><cstring>cmb_chart_display_mode</cstring></property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="chart_display_mode_description">
+                   <property name="minimumSize"><size><width>310</width><height>0</height></size></property>
+                   <property name="maximumSize"><size><width>310</width><height>16777215</height></size></property>
+                   <property name="alignment"><set>Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set></property>
+                   <property name="settingDescription" stdset="0"><bool>true</bool></property>
+                   <property name="text"><string>浮窗靠近行情显示，点击外部或按 Esc 关闭。</string></property>
+                   <property name="wordWrap"><bool>true</bool></property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1" rowspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
+                  <widget class="QComboBox" name="cmb_chart_display_mode">
+                   <property name="minimumSize"><size><width>110</width><height>28</height></size></property>
+                   <property name="maximumSize"><size><width>110</width><height>28</height></size></property>
+                   <property name="toolTip"><string>独立窗口可调整大小。大、中、小浮窗均为半透明，分别约560×400、420×300、320×230；从任务栏打开时靠近点击位置，自动避让屏幕边缘。</string></property>
+                   <item><property name="text"><string>独立窗口</string></property></item>
+                   <item><property name="text"><string>大浮窗</string></property></item>
+                   <item><property name="text"><string>中浮窗</string></property></item>
+                   <item><property name="text"><string>小浮窗</string></property></item>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QWidget" name="chart_indicators">
+                <layout class="QVBoxLayout" name="chart_indicators_layout">
+                 <property name="leftMargin"><number>0</number></property>
+                 <property name="topMargin"><number>0</number></property>
+                 <property name="rightMargin"><number>0</number></property>
+                 <property name="bottomMargin"><number>0</number></property>
+                 <property name="spacing"><number>5</number></property>
+                 <item><widget class="QLabel" name="chart_indicators_title">
+                  <property name="text"><string>图表指标</string></property>
+                  <property name="settingTitle" stdset="0"><bool>true</bool></property>
+                 </widget></item>
+                 <item><widget class="QLabel" name="chart_indicators_description">
+                  <property name="minimumSize"><size><width>310</width><height>0</height></size></property>
+                  <property name="maximumSize"><size><width>310</width><height>16777215</height></size></property>
+                  <property name="alignment"><set>Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set></property>
+                  <property name="text"><string>分时均线用于分时 / 5日图，MA均线用于日K线。</string></property>
+                  <property name="wordWrap"><bool>true</bool></property>
+                  <property name="settingDescription" stdset="0"><bool>true</bool></property>
+                 </widget></item>
+                 <item><layout class="QHBoxLayout" name="chart_lines_layout">
+                  <property name="spacing"><number>10</number></property>
+                  <item><widget class="QCheckBox" name="cb_chart_average"><property name="text"><string>分时均线</string></property><property name="toolTip"><string>优先使用行情均价，缺失时按当日分钟数据计算。股票使用累计成交均价，指数使用分钟点位平均；缺少成交额及期货按分钟价格和成交量估算。</string></property></widget></item>
+                  <item><widget class="QCheckBox" name="cb_chart_volume"><property name="text"><string>成交量</string></property></widget></item>
+                  <item><spacer name="chart_lines_spacer"><property name="orientation"><enum>Qt::Orientation::Horizontal</enum></property><property name="sizeHint" stdset="0"><size><width>0</width><height>0</height></size></property></spacer></item>
+                 </layout></item>
+                 <item><layout class="QHBoxLayout" name="chart_ma_layout">
+                  <property name="spacing"><number>10</number></property>
+                  <item><widget class="QCheckBox" name="cb_chart_ma5"><property name="text"><string>MA5</string></property></widget></item>
+                  <item><widget class="QCheckBox" name="cb_chart_ma10"><property name="text"><string>MA10</string></property></widget></item>
+                  <item><widget class="QCheckBox" name="cb_chart_ma20"><property name="text"><string>MA20</string></property></widget></item>
+                  <item><widget class="QCheckBox" name="cb_chart_ma30"><property name="text"><string>MA30</string></property></widget></item>
+                  <item><widget class="QCheckBox" name="cb_chart_ma60"><property name="text"><string>MA60</string></property></widget></item>
+                  <item><spacer name="chart_ma_spacer"><property name="orientation"><enum>Qt::Orientation::Horizontal</enum></property><property name="sizeHint" stdset="0"><size><width>0</width><height>0</height></size></property></spacer></item>
+                 </layout></item>
+                </layout>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
             <widget class="QGroupBox" name="gb_data">
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignLeft</set>
@@ -2341,13 +2466,13 @@
                   <property name="minimumSize">
                    <size>
                     <width>170</width>
-                    <height>80</height>
+                    <height>82</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
                     <width>170</width>
-                    <height>80</height>
+                    <height>82</height>
                    </size>
                   </property>
                   <property name="uniformItemSizes">
@@ -7257,29 +7382,69 @@
                <number>15</number>
               </property>
               <item>
-               <widget class="QLabel" name="label_version_state">
-                <property name="text">
-                 <string>📦 当前程序版本</string>
-                </property>
-                <property name="textFormat">
-                 <enum>Qt::TextFormat::RichText</enum>
-                </property>
-                <property name="openExternalLinks">
-                 <bool>true</bool>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>28</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>16777215</width>
-                  <height>28</height>
-                 </size>
-                </property>
-               </widget>
+               <layout class="QHBoxLayout" name="aboutVersionLayout">
+                <property name="leftMargin"><number>0</number></property>
+                <property name="topMargin"><number>0</number></property>
+                <property name="rightMargin"><number>0</number></property>
+                <property name="bottomMargin"><number>0</number></property>
+                <property name="spacing"><number>10</number></property>
+                <item>
+                 <widget class="QLabel" name="label_version_state">
+                  <property name="text">
+                   <string>📦 当前程序版本</string>
+                  </property>
+                  <property name="textFormat">
+                   <enum>Qt::TextFormat::RichText</enum>
+                  </property>
+                  <property name="openExternalLinks">
+                   <bool>true</bool>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>28</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>28</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_check_update">
+                  <property name="text">
+                   <string>检查程序更新</string>
+                  </property>
+                  <property name="autoDefault">
+                   <bool>false</bool>
+                  </property>
+                  <property name="flat">
+                   <bool>true</bool>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>140</width>
+                    <height>28</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>140</width>
+                    <height>28</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="aboutVersionSpacer">
+                  <property name="orientation"><enum>Qt::Orientation::Horizontal</enum></property>
+                  <property name="sizeHint" stdset="0"><size><width>0</width><height>0</height></size></property>
+                 </spacer>
+                </item>
+               </layout>
               </item>
               <item>
                <widget class="QLabel" name="label_data_state">
@@ -7326,36 +7491,11 @@
                </widget>
               </item>
               <item>
-               <layout class="QGridLayout" name="aboutActionsLayout">
+               <layout class="QHBoxLayout" name="aboutActionsLayout">
                 <property name="spacing">
                  <number>10</number>
                 </property>
-                <item row="0" column="0">
-                 <widget class="QPushButton" name="btn_check_update">
-                  <property name="text">
-                   <string>检查程序更新</string>
-                  </property>
-                  <property name="autoDefault">
-                   <bool>false</bool>
-                  </property>
-                  <property name="flat">
-                   <bool>true</bool>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>140</width>
-                    <height>28</height>
-                   </size>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>140</width>
-                    <height>28</height>
-                   </size>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
+                <item>
                  <widget class="QPushButton" name="btn_open_cache_dir">
                   <property name="text">
                    <string>打开缓存目录</string>
@@ -7379,6 +7519,40 @@
                    </size>
                   </property>
                  </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_clear_cache">
+                  <property name="text">
+                   <string>清理数据缓存</string>
+                  </property>
+                  <property name="toolTip">
+                   <string>清除分时与K线图的本地缓存，下次查看时重新加载。</string>
+                  </property>
+                  <property name="autoDefault">
+                   <bool>false</bool>
+                  </property>
+                  <property name="flat">
+                   <bool>true</bool>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>140</width>
+                    <height>28</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>140</width>
+                    <height>28</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="aboutActionsSpacer">
+                  <property name="orientation"><enum>Qt::Orientation::Horizontal</enum></property>
+                  <property name="sizeHint" stdset="0"><size><width>0</width><height>0</height></size></property>
+                 </spacer>
                 </item>
                </layout>
               </item>

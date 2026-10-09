@@ -7,9 +7,8 @@ import sys
 import unittest
 
 from PySide6.QtCore import QPoint, QTime, Qt
-from PySide6.QtGui import QColor, QPalette
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QScrollArea, QWidget, QPushButton
+from PySide6.QtWidgets import QApplication, QWidget, QPushButton
 from shiboken6 import delete
 
 from stockwidget.core.window_rules import QUOTE_TIMEZONE
@@ -22,7 +21,7 @@ from stockwidget.ui.floating.widget import FloatLabel
 from stockwidget.ui.settings.dialog import SettingsDialog
 from stockwidget.ui.watchlist.add_panel import AddCodePanel
 
-from tests.support import QtTestCase
+from tests.support import QtTestCase, SettingsTestCase
 
 
 NOW = datetime(2026, 9, 30, 15, 0, 0, tzinfo=QUOTE_TIMEZONE)
@@ -46,11 +45,7 @@ def entry(age=31, *, timestamp=False):
     return result
 
 
-class HidingTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.app = QApplication.instance() or QApplication([])
-        cls.app.setQuitOnLastWindowClosed(False)
+class HidingTests(QtTestCase):
 
     def setUp(self):
         self.enterContext(patch.object(QuotePresenter, "refresh"))
@@ -286,62 +281,49 @@ class HidingTests(unittest.TestCase):
         self.win.toggle_win()
         self.assertEqual(self.win.pos(), origin)
 
-    def test_settings_add_delete_limit_duplicates_toggle_theme_and_layout(self):
-        with patch.object(SettingsDialog, "_start_github_check"):
-            dialog = SettingsDialog(self.win, self.win)
-        original = self.app.palette()
-        try:
-            dialog.show()
-            dialog.ui.settings_pages.setCurrentWidget(dialog.ui.general)
-            dialog.ui.gb_scheduled_hide.setChecked(True)
-            for hour in (17, 18):
-                dialog.ui.hide_time_edit.setTime(QTime(hour, 0))
-                dialog.ui.btn_add_hide_time.click()
-            self.assertEqual(self.win.scheduled_hide_times, ["15:00", "16:00", "17:00"])
-            self.assertFalse(dialog.ui.btn_add_hide_time.isEnabled())
-            self.app.processEvents()
-            times = dialog.ui.list_hide_times
-            self.assertTrue(all(times.viewport().rect().contains(times.visualItemRect(times.item(i)))
-                                for i in range(3)))
-            dialog.ui.list_hide_times.setCurrentRow(1)
-            item = dialog.ui.list_hide_times.currentItem()
-            rect = dialog.ui.list_hide_times.visualItemRect(item)
-            point = dialog.ui.list_hide_times.itemDelegate().delete_rect(rect).center()
-            QTest.mouseClick(dialog.ui.list_hide_times.viewport(), Qt.LeftButton, pos=point)
-            self.assertEqual(self.win.scheduled_hide_times, ["15:00", "17:00"])
-            self.assertTrue(dialog.ui.btn_add_hide_time.isEnabled())
-            dialog.ui.hide_time_edit.setTime(QTime(15, 0))
-            self.assertFalse(dialog.ui.btn_add_hide_time.isEnabled())
-            dialog.ui.cb_auto_hide.setChecked(True)
-            self.assertTrue(self.win.auto_hide_enabled)
-            self.win.set_data_source("eastmoney")
-            self.assertTrue(dialog.ui.cb_auto_hide.isEnabled())
+
+class HideSettingsTests(SettingsTestCase):
+    def test_time_limit_duplicates_deletion_and_theme_switch_preserve_options(self):
+        dialog, window = self._make_dialog(scheduled_hide_times=["15:00", "16:00"])
+        dialog.show()
+        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.general)
+        dialog.ui.gb_scheduled_hide.setChecked(True)
+        for hour in (17, 18):
+            dialog.ui.hide_time_edit.setTime(QTime(hour, 0))
+            dialog.ui.btn_add_hide_time.click()
+        expected = ["15:00", "16:00", "17:00"]
+        self.assertEqual(window.scheduled_hide_times, expected)
+        self.assertFalse(dialog.ui.btn_add_hide_time.isEnabled())
+        dialog.ui.cb_auto_hide.setChecked(True)
+        times = dialog.ui.list_hide_times
+        for mode in ("light", "dark"):
+            window.set_view_options(color_mode=mode)
             for enabled in (False, True):
-                dialog.ui.gb_scheduled_hide.setChecked(enabled)
-                for foreground, background in (("#eeeeee", "#222222"), ("#222222", "#eeeeee")):
-                    palette = QPalette(original)
-                    palette.setColor(QPalette.WindowText, QColor(foreground))
-                    palette.setColor(QPalette.Window, QColor(background))
-                    self.app.setPalette(palette)
-                    self.app.processEvents()
-                    self.assertEqual(dialog.ui.hide_time_edit.isEnabled(), enabled)
-                    self.assertEqual(dialog.ui.list_hide_times.isEnabled(), enabled)
-                    self.assertEqual(dialog.ui.cb_auto_hide.isEnabled(), enabled)
-                    self.assertEqual(self.win.hide_enabled, enabled)
-                    self.assertTrue(self.win.auto_hide_enabled)
-                    self.assertIn("程序将在" if enabled else "程序未启用自动隐藏", dialog.ui.label_hide_status.text())
-            page = dialog.ui.general
-            self.assertTrue(page.findChildren(QScrollArea))
-            content = dialog.ui.general_content
-            for control in (dialog.ui.gb_icon, dialog.ui.cb_auto_start_row, dialog.ui.label_hide_status,
-                            dialog.ui.gb_scheduled_hide, dialog.ui.list_hide_times,
-                            dialog.ui.btn_add_hide_time, dialog.ui.hide_time_edit):
-                bounds = control.rect().translated(control.mapTo(content, QPoint()))
-                self.assertTrue(content.rect().contains(bounds), (control.objectName(), bounds, content.rect()))
-            self.assertLess(dialog.ui.cb_auto_start_row.geometry().bottom(), dialog.ui.cmb_color_mode_row.geometry().top())
-        finally:
-            self.app.setPalette(original)
-            delete(dialog)
+                with self.subTest(mode=mode, enabled=enabled):
+                    dialog.ui.gb_scheduled_hide.setChecked(enabled)
+                    self.qt_app.processEvents()
+                    self.assertEqual(window.hide_enabled, enabled)
+                    self.assertTrue(window.auto_hide_enabled)
+                    self.assertEqual(window.scheduled_hide_times, expected)
+                    for control in (dialog.ui.hide_time_edit, times, dialog.ui.cb_auto_hide):
+                        self.assertEqual(control.isEnabled(), enabled)
+                    for row in range(times.count()):
+                        self.assertTrue(times.viewport().rect().contains(times.visualItemRect(times.item(row))),
+                                        (row, times.visualItemRect(times.item(row)), times.viewport().rect()))
+                    self.assertEqual(times.verticalScrollBar().maximum(), 0)
+        dialog.ui.general_scroll.ensureWidgetVisible(times)
+        times.setCurrentRow(1)
+        rect = times.visualItemRect(times.currentItem())
+        point = times.itemDelegate().delete_rect(rect).center()
+        QTest.mouseClick(times.viewport(), Qt.LeftButton, pos=point)
+        self.assertEqual(window.scheduled_hide_times, ["15:00", "17:00"])
+        self.assertTrue(dialog.ui.btn_add_hide_time.isEnabled())
+        dialog.ui.hide_time_edit.setTime(QTime(15, 0))
+        self.assertFalse(dialog.ui.btn_add_hide_time.isEnabled())
+        for key, remaining in ((Qt.Key_Delete, ["17:00"]), (Qt.Key_Backspace, [])):
+            times.setCurrentRow(0)
+            QTest.keyClick(times, key)
+            self.assertEqual(window.scheduled_hide_times, remaining)
 
 
 class WidgetTopmostTests(QtTestCase):

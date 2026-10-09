@@ -5,7 +5,7 @@ import os
 import unittest
 
 from PySide6.QtCore import QEvent, QPoint, QPointF, QRect, Qt
-from PySide6.QtGui import QEnterEvent, QKeyEvent, QMouseEvent
+from PySide6.QtGui import QColor, QEnterEvent, QKeyEvent, QMouseEvent
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 from shiboken6 import delete
@@ -77,7 +77,11 @@ class WidgetPositionTests(unittest.TestCase):
         window = self.window(boundary_check_enabled=True,
                              pos={"x": self.screen.right() - 10, "y": self.screen.bottom() - 10})
         self.assertTrue(self.screen.contains(window.geometry()))
-        window._show_message("窗口内容变宽" * 8)
+        # Exercise growth while the content can still fit this logical screen.
+        # The headless screen is only 400 pixels wide at 200% scaling.
+        unit_width = window.message_label.fontMetrics().horizontalAdvance("窗口内容变宽")
+        repeats = min(8, max(1, (self.screen.width() - 24) // (unit_width * 2)))
+        window._show_message("窗口内容变宽" * repeats)
         self.app.processEvents()
         self.assertTrue(self.screen.contains(window.geometry()))
         window.set_font_size(15)
@@ -211,18 +215,13 @@ class WidgetPositionTests(unittest.TestCase):
                 window.move(80, 100)
                 origin = window.panel.pos()
                 complete = window.grab().toImage()
-                ratio = window.devicePixelRatioF()
-                strip = round(5 * ratio)
-                if edge == "left":
-                    crop = QRect(complete.width() - strip, 0, strip, complete.height())
-                elif edge == "top":
-                    crop = QRect(0, complete.height() - strip, complete.width(), strip)
-                else:
-                    crop = QRect(0, 0, strip, complete.height())
-                expected = complete.copy(crop)
                 window.move(self.edge_position(window, edge))
                 self.assertTrue(window.position_controller.collapsed)
-                self.assertEqual(window.grab().toImage(), expected)
+                # At fractional DPI the translated panel has a different
+                # antialiasing phase. Check the exposed edge's colour directly.
+                strip = window.grab().toImage()
+                color = {"left": "#0000ff", "top": "#00ff00", "right": "#ff0000"}[edge]
+                self.assertEqual(strip.pixelColor(strip.width() // 2, strip.height() // 2), QColor(color))
                 self.pointer.return_value = window.geometry().center()
                 window.position_controller.check_pointer()
                 self.assertEqual(window.panel.pos(), origin)
