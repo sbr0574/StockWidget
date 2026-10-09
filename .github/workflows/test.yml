@@ -46,5 +46,9 @@ jobs:
       - name: Run X11 integration tests
         env:
           QT_QPA_PLATFORM: xcb
+          QT_DEBUG_PLUGINS: "1"
           STOCKWIDGET_TEST_X11: "1"
-        run: xvfb-run -a python -m unittest tests.native.test_x11_integration -v
+        run: |
+          xcb_plugin="$(python -c 'from pathlib import Path; from PySide6.QtCore import QLibraryInfo; print(Path(QLibraryInfo.path(QLibraryInfo.PluginsPath)) / "platforms/libqxcb.so")')"
+          ldd "$xcb_plugin"
+          xvfb-run -a python -m unittest tests.native.test_x11_integration -v
