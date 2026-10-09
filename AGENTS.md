@@ -238,6 +238,7 @@ git diff --check
 - 设置测试的原生任务栏查询由共用场景隔离；测试 Windows 任务栏编辑行为时显式启用 Windows 平台场景，平台禁用和侧栏导航按实际可见分类验证。仅修改 `sys.platform` 不能代替原生接口隔离。
 - 无头 Qt 测试使用 `QT_QPA_PLATFORM=offscreen`；高 DPI 验证可使用 `QT_SCALE_FACTOR=1.5` / `2`。字体像素比较需确认中文字体可用；Qt 主题测试同进程卡住时可隔离运行并如实说明。
 - Linux X11 集成验证按 `.github/workflows/test.yml` 使用 `xvfb-run` 和 `STOCKWIDGET_TEST_X11=1`；维护代码列表脚本另需 `pandas`、`openpyxl` 和 `pypinyin`。
+- X11 测试启动前用 `ldd` 检查 Qt 的 `libqxcb.so`，缺库时直接失败并保留依赖日志。`libxcb-shape0` 同时声明在测试 / Linux 构建环境和 Debian / RPM 运行时依赖中，不能只依赖构建机预装。
 
 ## 文档与记录要求
 
