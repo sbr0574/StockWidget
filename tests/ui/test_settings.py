@@ -60,11 +60,15 @@ class SettingsDialogTests(SettingsTestCase):
                                                 ("linux", "wayland", False), ("darwin", None, True)):
             with self.subTest(platform=platform, session=session), patch("sys.platform", platform), \
                     patch("stockwidget.platform.capabilities.session_type", return_value=session):
-                dialog, _ = self._make_dialog()
+                app = self._make_icon_app()
+                dialog, _ = self._make_dialog(app=app)
                 self.assertEqual(dialog.ui.settings_navigation.item(5).isHidden(), platform != "win32")
                 self.assertEqual(dialog.ui.cb_force_top_row.isHidden(), platform != "win32")
                 self.assertEqual(dialog.ui.cb_boundary_check_row.isHidden(), platform != "win32")
-                self.assertEqual(dialog.ui.gb_icon.isHidden(), platform == "darwin")
+                self.assertFalse(dialog.ui.gb_icon.isHidden())
+                dialog.ui.btn_icon_dark.click()
+                app.set_app_icon.assert_called_once_with("dark")
+                app.save_now.assert_called_once_with()
                 self.assertEqual(dialog.ui.cb_edge_hide.isEnabled(), edge_enabled)
                 if session == "wayland":
                     self.assertIn("Wayland", dialog.ui.cb_edge_hide.toolTip())

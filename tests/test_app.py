@@ -77,19 +77,34 @@ class AppIconTests(QtTestCase):
     def test_set_custom_icon_applies_it_immediately(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             path = self._write_icon(temp_dir)
-            app = SimpleNamespace(
-                _icon_choice="default",
-                _custom_icon_path="",
-                setWindowIcon=Mock(),
-                tray=Mock(),
-            )
+            for platform in ("win32", "darwin", "linux"):
+                with self.subTest(platform=platform), patch("stockwidget.app.sys.platform", platform):
+                    app = SimpleNamespace(
+                        _icon_choice="default",
+                        _custom_icon_path="",
+                        setWindowIcon=Mock(),
+                        tray=Mock(),
+                    )
+                    self.assertTrue(App.set_custom_icon(app, path))
+                    self.assertEqual(app._icon_choice, "custom")
+                    self.assertEqual(app._custom_icon_path, os.path.abspath(path))
+                    app.setWindowIcon.assert_called_once()
+                    app.tray.setIcon.assert_called_once()
 
-            self.assertTrue(App.set_custom_icon(app, path))
-
-        self.assertEqual(app._icon_choice, "custom")
-        self.assertEqual(app._custom_icon_path, os.path.abspath(path))
-        app.setWindowIcon.assert_called_once()
-        app.tray.setIcon.assert_called_once()
+    def test_builtin_icons_load_and_apply_on_each_platform(self):
+        app = SimpleNamespace(_custom_icon_path="", setWindowIcon=Mock(), tray=Mock())
+        app.find_icon = lambda choice: App.find_icon(app, choice)
+        for platform in ("win32", "darwin", "linux"):
+            for choice in ("default", "dark", "lightG", "darkG"):
+                with self.subTest(platform=platform, choice=choice), patch("stockwidget.app.sys.platform", platform):
+                    app.setWindowIcon.reset_mock()
+                    app.tray.reset_mock()
+                    App.set_app_icon(app, choice)
+                    self.assertEqual(app._icon_choice, choice)
+                    icon = app.setWindowIcon.call_args.args[0]
+                    self.assertFalse(icon.isNull())
+                    self.assertFalse(icon.pixmap(24, 24).isNull())
+                    app.tray.setIcon.assert_called_once_with(icon)
 
     def test_save_now_writes_custom_choice_and_path(self):
         app = SimpleNamespace(

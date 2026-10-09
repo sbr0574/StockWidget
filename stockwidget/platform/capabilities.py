@@ -116,11 +116,6 @@ def default_font_family() -> str:
     return "PingFang SC" if sys.platform == "darwin" else "Microsoft YaHei"
 
 
-def custom_icon_supported() -> bool:
-    """自定义/切换应用图标是否可用（macOS 下图标切换不可用）。"""
-    return sys.platform != "darwin"
-
-
 def tray_click_toggles() -> bool:
     """托盘单击是否切换显示/隐藏：仅 Windows 支持；macOS/Linux 单击直接弹出菜单。"""
     return sys.platform == "win32"

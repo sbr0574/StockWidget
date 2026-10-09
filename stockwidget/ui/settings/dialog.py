@@ -36,7 +36,6 @@ from stockwidget.platform.capabilities import (
     force_top_supported,
     boundary_check_supported,
     edge_hide_supported,
-    custom_icon_supported,
     start_on_boot_supported,
     unsupported_tooltip,
 )
@@ -436,7 +435,6 @@ class SettingsDialog(QDialog):
     def _apply_platform_limits(self):
         """隐藏其他平台的专属设置；受会话限制的通用功能保留说明。"""
         self.ui.settings_navigation.item(5).setHidden(sys.platform != "win32")
-        self.ui.gb_icon.setVisible(custom_icon_supported())
         if not hotkeys_supported():
             for w in (self.ui.cb_hotkey_hide, self.ui.cb_hotkey_click_through,
                       self.ui.keyseq_hide, self.ui.keyseq_click_through):
