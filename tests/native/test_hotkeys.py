@@ -4,6 +4,8 @@ from unittest.mock import Mock, patch
 import ctypes
 import unittest
 
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QWidget
 from shiboken6 import delete
 
 from stockwidget.platform import window as click_through
@@ -211,32 +213,18 @@ class X11HotkeyTests(QtTestCase):
         self.manager._x11_notifier.setEnabled.assert_called_with(False)
 
 
-class X11ClickThroughTests(unittest.TestCase):
-    def test_shape_abi_enable_disable_and_retry_after_missing_display(self):
-        lib = Mock()
-        lib.XOpenDisplay.side_effect = [None, 1234]
-        # 使用 ctypes 函数校验参数数量和类型，防止 Mock 掩盖 ABI 错误。
-        rectangles_calls, mask_calls = [], []
-        rect_type = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_ulong,
-                                    ctypes.c_int, ctypes.c_int, ctypes.c_int,
-                                    ctypes.c_void_p, ctypes.c_int, ctypes.c_int, ctypes.c_int)
-        mask_type = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_ulong,
-                                    ctypes.c_int, ctypes.c_int, ctypes.c_int,
-                                    ctypes.c_ulong, ctypes.c_int)
-        ext = Mock()
-        ext.XShapeCombineRectangles = rect_type(lambda *args: rectangles_calls.append(args))
-        ext.XShapeCombineMask = mask_type(lambda *args: mask_calls.append(args))
-        widget = Mock()
-        widget.winId.return_value = 42
-        with patch.object(click_through, "_x11_xlib", None), patch.object(
-            click_through, "_x11_xext", None
-        ), patch.object(click_through, "_x11_shape_display", None), patch.object(
-            click_through.ctypes, "CDLL", side_effect=lambda name: ext if "Xext" in name else lib
-        ), patch.object(click_through.QGuiApplication, "sync"):
-            click_through._click_through_x11(widget, True)
-            self.assertFalse(rectangles_calls)
-            click_through._click_through_x11(widget, True)
-            click_through._click_through_x11(widget, False)
-        self.assertEqual(rectangles_calls, [(1234, 42, 2, 0, 0, None, 0, 0, 0)])
-        self.assertEqual(mask_calls, [(1234, 42, 2, 0, 0, 0, 0)])
-        self.assertEqual(lib.XSync.call_count, 2)
+class X11ClickThroughTests(QtTestCase):
+    def test_input_transparency_roundtrips_without_changing_topmost(self):
+        widget = QWidget()
+        widget.setWindowFlag(Qt.WindowStaysOnTopHint, True)
+        try:
+            with patch.object(click_through.sys, "platform", "linux"), \
+                    patch.object(click_through, "is_x11", return_value=True):
+                for enabled in (False, True, False, True):
+                    with self.subTest(enabled=enabled):
+                        click_through.apply_click_through(widget, enabled)
+                        flags = widget.windowHandle().flags()
+                        self.assertEqual(bool(flags & Qt.WindowTransparentForInput), enabled)
+                        self.assertTrue(flags & Qt.WindowStaysOnTopHint)
+        finally:
+            delete(widget)

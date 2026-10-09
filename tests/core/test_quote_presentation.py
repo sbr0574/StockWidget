@@ -23,22 +23,17 @@ from stockwidget.core.quote_presentation import (
 
 
 class FormatterTests(unittest.TestCase):
-    def test_format_value_chinese_units(self):
-        self.assertEqual(format_value(100000, unit_cn=True), "10.00万")
-        self.assertEqual(format_value(123456, unit_cn=True), "12.35万")
-        self.assertEqual(format_value(100000000, unit_cn=True), "1.00亿")
-        self.assertEqual(format_value(1000000000000, unit_cn=True), "1.00万亿")
-
-    def test_format_value_english_units(self):
-        self.assertEqual(format_value(999, unit_cn=False), "999")
-        self.assertEqual(format_value(1500, unit_cn=False), "1.50k")
-        self.assertEqual(format_value(2500000, unit_cn=False), "2.50M")
-        self.assertEqual(format_value(3000000000, unit_cn=False), "3.00B")
-        self.assertEqual(format_value(4000000000000, unit_cn=False), "4.00T")
-
-    def test_format_value_applies_lot_size(self):
-        self.assertEqual(format_value(100000, lot_size=100, unit_cn=True), "1000")
-        self.assertEqual(format_value(100000, lot_size=1, unit_cn=True), "10.00万")
+    def test_value_units_rounding_and_lot_conversion(self):
+        cases = (
+            (100000, True, 1, "10.00万"), (123456, True, 1, "12.35万"),
+            (100000000, True, 1, "1.00亿"), (1000000000000, True, 1, "1.00万亿"),
+            (999, False, 1, "999"), (1500, False, 1, "1.50k"),
+            (2500000, False, 1, "2.50M"), (3000000000, False, 1, "3.00B"),
+            (4000000000000, False, 1, "4.00T"), (100000, True, 100, "1000"),
+        )
+        for value, unit_cn, lot_size, expected in cases:
+            with self.subTest(value=value, unit_cn=unit_cn, lot_size=lot_size):
+                self.assertEqual(format_value(value, lot_size=lot_size, unit_cn=unit_cn), expected)
 
     def test_should_use_english_units_by_mode_and_market(self):
         # 自动：美股与国际指数用英文，国内/港股等用中文
@@ -151,51 +146,22 @@ class WidgetFormattingTests(unittest.TestCase):
         self.assertEqual(row["名称"], "(基)501001 Te")
         self.assertEqual(row["现价"], "12.346 ")
 
-    def test_auto_mode_uses_english_units_for_us_securities(self):
-        row, _, _sort_values = format_quote(
-            _quote(123456), "美", "aapl", market="us"
+    def test_market_units_and_explicit_overrides_apply_to_volume_and_amount(self):
+        cases = (
+            ("us", "美", "aapl", 123456, "auto",
+             {"现价": "12.346 ", "涨跌": "+1.235", "成交量": "123.46k", "成交额": "123.46M"}),
+            ("us", "指", "dji", 2500000, "auto", {"成交量": "2.50M"}),
+            ("sh", "沪", "600000", 123400, "auto", {"成交量": "1234", "成交额": "1.23亿"}),
+            ("", "期", "au0", 604495, "auto", {"成交量": "60.45万"}),
+            ("sh", "期", "au0", 604495, "auto", {"成交量": "60.45万"}),
+            ("sh", "沪", "600000", 123400, "en", {"成交量": "1.23k"}),
+            ("us", "美", "aapl", 123456, "cn", {"成交量": "12.35万"}),
         )
-        self.assertEqual(row["现价"], "12.346 ")
-        self.assertEqual(row["涨跌"], "+1.235")
-        self.assertEqual(row["成交量"], "123.46k")
-
-    def test_auto_mode_uses_english_units_for_international_indices(self):
-        row, _, _sort_values = format_quote(
-            _quote(2500000), "指", "dji", market="us"
-        )
-        self.assertEqual(row["成交量"], "2.50M")
-
-    def test_domestic_equities_display_lots_in_chinese(self):
-        row, _, _sort_values = format_quote(
-            _quote(123400), "沪", "600000", market="sh"
-        )
-        self.assertEqual(row["成交量"], "1234")
-
-    def test_futures_volume_is_not_divided_by_one_hundred(self):
-        for market in ("", "sh"):
-            with self.subTest(market=market):
-                row, _, _sort_values = format_quote(_quote(604495), "期", "au0", market=market)
-                self.assertEqual(row["成交量"], "60.45万")
-
-    def test_explicit_unit_modes_override_market(self):
-        row, _, _sort_values = format_quote(
-            _quote(123400), "沪", "600000", market="sh", options=QuoteDisplayOptions(unit_mode="en")
-        )
-        self.assertEqual(row["成交量"], "1.23k")
-        row, _, _sort_values = format_quote(
-            _quote(123456), "美", "aapl", market="us", options=QuoteDisplayOptions(unit_mode="cn")
-        )
-        self.assertEqual(row["成交量"], "12.35万")
-
-    def test_amount_uses_the_same_unit_mode_as_volume(self):
-        row, _, _sort_values = format_quote(
-            _quote(0, amount=123456789), "美", "aapl", market="us"
-        )
-        self.assertEqual(row["成交额"], "123.46M")
-        row, _, _sort_values = format_quote(
-            _quote(0, amount=123456789), "沪", "600000", market="sh"
-        )
-        self.assertEqual(row["成交额"], "1.23亿")
+        for market, security_type, code, volume, mode, expected in cases:
+            with self.subTest(market=market, security_type=security_type, mode=mode):
+                row, _, _ = format_quote(_quote(volume, amount=123456789), security_type, code,
+                                         market=market, options=QuoteDisplayOptions(unit_mode=mode))
+                self.assertEqual({header: row[header] for header in expected}, expected)
 
     def test_ordinary_text_and_directional_values_have_separate_color_roles(self):
         _row, roles, _sort_values = format_quote(
@@ -257,7 +223,7 @@ class MetricLayoutTests(unittest.TestCase):
             ["kline", "name"],
         )
 
-    def test_normalize_and_expand_combined_level_one_metric(self):
+    def test_normalize_and_project_combined_level_one_metric(self):
         normalized = normalize_visible_metrics(
             ["amount", "b1s1", "change_pct"]
         )

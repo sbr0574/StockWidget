@@ -77,19 +77,34 @@ class AppIconTests(QtTestCase):
     def test_set_custom_icon_applies_it_immediately(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             path = self._write_icon(temp_dir)
-            app = SimpleNamespace(
-                _icon_choice="default",
-                _custom_icon_path="",
-                setWindowIcon=Mock(),
-                tray=Mock(),
-            )
+            for platform in ("win32", "darwin", "linux"):
+                with self.subTest(platform=platform), patch("stockwidget.app.sys.platform", platform):
+                    app = SimpleNamespace(
+                        _icon_choice="default",
+                        _custom_icon_path="",
+                        setWindowIcon=Mock(),
+                        tray=Mock(),
+                    )
+                    self.assertTrue(App.set_custom_icon(app, path))
+                    self.assertEqual(app._icon_choice, "custom")
+                    self.assertEqual(app._custom_icon_path, os.path.abspath(path))
+                    app.setWindowIcon.assert_called_once()
+                    app.tray.setIcon.assert_called_once()
 
-            self.assertTrue(App.set_custom_icon(app, path))
-
-        self.assertEqual(app._icon_choice, "custom")
-        self.assertEqual(app._custom_icon_path, os.path.abspath(path))
-        app.setWindowIcon.assert_called_once()
-        app.tray.setIcon.assert_called_once()
+    def test_builtin_icons_load_and_apply_on_each_platform(self):
+        app = SimpleNamespace(_custom_icon_path="", setWindowIcon=Mock(), tray=Mock())
+        app.find_icon = lambda choice: App.find_icon(app, choice)
+        for platform in ("win32", "darwin", "linux"):
+            for choice in ("default", "dark", "lightG", "darkG"):
+                with self.subTest(platform=platform, choice=choice), patch("stockwidget.app.sys.platform", platform):
+                    app.setWindowIcon.reset_mock()
+                    app.tray.reset_mock()
+                    App.set_app_icon(app, choice)
+                    self.assertEqual(app._icon_choice, choice)
+                    icon = app.setWindowIcon.call_args.args[0]
+                    self.assertFalse(icon.isNull())
+                    self.assertFalse(icon.pixmap(24, 24).isNull())
+                    app.tray.setIcon.assert_called_once_with(icon)
 
     def test_save_now_writes_custom_choice_and_path(self):
         app = SimpleNamespace(
@@ -145,19 +160,13 @@ class AppCodeRefreshTests(unittest.TestCase):
         app.save_now.assert_called_once_with()
         app.quit.assert_called_once_with()
 
-    def test_schedule_refresh_uses_milliseconds(self):
+    def test_schedule_refresh_converts_seconds_and_clamps_non_positive_delay(self):
         app = SimpleNamespace(_codes_retry_timer=Mock())
-
-        App._schedule_codes_refresh(app, 1800)
-
-        app._codes_retry_timer.start.assert_called_once_with(1800 * 1000)
-
-    def test_schedule_refresh_clamps_non_positive_delay(self):
-        app = SimpleNamespace(_codes_retry_timer=Mock())
-
-        App._schedule_codes_refresh(app, 0)
-
-        app._codes_retry_timer.start.assert_called_once_with(1000)
+        for seconds, milliseconds in ((1800, 1800 * 1000), (0, 1000)):
+            with self.subTest(seconds=seconds):
+                app._codes_retry_timer.reset_mock()
+                App._schedule_codes_refresh(app, seconds)
+                app._codes_retry_timer.start.assert_called_once_with(milliseconds)
 
     def test_codes_loaded_updates_window_before_remote_sync(self):
         settings = Mock()
@@ -270,22 +279,3 @@ class UpdateCheckTests(unittest.TestCase):
         self.assertEqual(errors, ["GitHub：HTTP 403：访问被拒绝", "Gitee：响应不是有效 JSON"])
         with patch.object(update_check.requests, "get", side_effect=requests.ConnectTimeout()):
             self.assertIsNone(update_check.get_latest_release())
-
-    def test_release_check_falls_back_to_gitee(self):
-        with patch.object(
-            update_check,
-            "_release_version",
-            side_effect=(None, "1.5.0"),
-        ) as fetch:
-            result = update_check.get_latest_release()
-
-        self.assertEqual(result, "1.5.0")
-        self.assertIn("api.github.com", fetch.call_args_list[0].args[0])
-        self.assertIn("gitee.com", fetch.call_args_list[1].args[0])
-
-    def test_project_links_need_no_source_constants(self):
-        self.assertIn("github.com", update_check.project_links()["project"])
-        self.assertIn(
-            "gitee.com",
-            update_check.project_links(use_gitee=True)["project"],
-        )

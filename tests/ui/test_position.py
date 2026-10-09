@@ -25,6 +25,8 @@ class WidgetPositionTests(unittest.TestCase):
         cls.app.setQuitOnLastWindowClosed(False)
 
     def setUp(self):
+        # This suite exercises the Windows boundary policy; native calls remain isolated.
+        self.enterContext(patch("sys.platform", "win32"))
         self.refresh = self.enterContext(patch.object(QuotePresenter, "refresh"))
         self.enterContext(patch("stockwidget.ui.floating.widget.GlobalHotkeyManager"))
         self.enterContext(patch("stockwidget.ui.floating.widget.apply_click_through"))
@@ -88,6 +90,20 @@ class WidgetPositionTests(unittest.TestCase):
         self.app.processEvents()
         self.assertTrue(self.screen.contains(window.geometry()))
 
+    def test_non_windows_edge_hide_can_start_without_the_boundary_setting(self):
+        for platform in ("linux", "darwin"):
+            with self.subTest(platform=platform), patch("sys.platform", platform), \
+                    patch("stockwidget.platform.capabilities.session_type", return_value="x11"):
+                window = self.window(edge_hide_enabled=True, boundary_check_enabled=False,
+                                     pos={"x": self.screen.left(), "y": self.screen.top() + 100})
+                self.assertFalse(window.boundary_check_enabled)
+                self.assertTrue(window.edge_hide_enabled)
+                self.assertTrue(window.position_controller.collapsed)
+                window.position_controller.expand()
+                self.assertTrue(self.screen.contains(window.position_controller.full_geometry()))
+                self.assertTrue(window.current_config()["edge_hide_enabled"])
+                window.set_position_options(edge_hide_enabled=False)
+                self.assertFalse(window.position_controller.collapsed)
     def test_quotes_resize_immediately_for_longer_shorter_content_and_row_counts(self):
         for split in (False, True):
             with self.subTest(split=split):
@@ -355,6 +371,8 @@ class WidgetPositionTests(unittest.TestCase):
         self.assertTrue(window.timer.isActive())
 
     def test_function_controls_defaults_dependency_reset_and_theme(self):
+        # The simulated Windows settings page must not probe the host taskbar.
+        self.enterContext(patch("stockwidget.ui.settings.groups.find_taskbar", return_value=None))
         window = self.window()
         with patch.object(SettingsDialog, "_start_github_check"):
             dialog = SettingsDialog(window, window)

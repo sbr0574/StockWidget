@@ -34,13 +34,15 @@ from stockwidget.platform.capabilities import (
     click_through_supported,
     opacity_supported,
     force_top_supported,
+    boundary_check_supported,
+    edge_hide_supported,
     start_on_boot_supported,
     unsupported_tooltip,
 )
 from stockwidget.platform.hotkeys import HotkeyResult
 from stockwidget.ui.controls.style import (
     LINUX_FONT_RULES,
-    build_settings_stylesheet,
+    apply_settings_theme,
     is_dark_theme,
     set_color_button,
     settings_navigation_icon,
@@ -99,7 +101,7 @@ class SettingsDialog(QDialog):
             # 在指标池按文字宽度计算尺寸前应用字号，最终主题仍保留这些规则。
             self.setStyleSheet(LINUX_FONT_RULES)
         self._init_hotkey_status()
-        self._init_metric_pool()
+        self.metric_pool = self.ui.float_metric_pool
         self.setModal(False)
         self.watchlist_editor = WatchlistEditor(
             self.ui.list_codes, self.ui.btn_add, self.ui.btn_del, self.ui.btn_top,
@@ -140,9 +142,6 @@ class SettingsDialog(QDialog):
             message = "已生效" if result else _hotkey_error_message(result)
             status.set_result(result, message)
 
-    def _init_metric_pool(self):
-        self.metric_pool = self.ui.float_metric_pool
-
     def _start_github_check(self):
         """后台选择关于页链接平台，不阻塞设置窗口构造。"""
 
@@ -165,15 +164,16 @@ class SettingsDialog(QDialog):
         mode = self.win.view_options.color_mode
         self._applied_color_mode = mode
         dark = mode == "dark" or (mode == "system" and is_dark_theme())
-        self.setStyleSheet(build_settings_stylesheet(dark, linux_fonts=sys.platform == "linux")
-                          + "\n" + self._designer_stylesheet)
-        self.setPalette(QApplication.palette() if mode == "system" else theme_palette(dark, QApplication.palette()))
+        palette = QApplication.palette() if mode == "system" else theme_palette(dark, QApplication.palette())
+        apply_settings_theme(self, dark, palette, linux_fonts=sys.platform == "linux",
+                             extra_stylesheet=self._designer_stylesheet)
         for component in (self.metric_pool, self.taskbar_settings.metric_pool, self.watchlist_editor):
             component.set_theme(dark)
         self._refresh_color_buttons()
         navigation = self.ui.settings_navigation
         for index in range(navigation.count()):
             navigation.item(index).setIcon(settings_navigation_icon(index, self.devicePixelRatioF(), self.palette()))
+        self._sync_view_settings()
 
     def _on_settings_page_changed(self, _index):
         self.watchlist_editor.add_code_panel.hide()
@@ -304,10 +304,6 @@ class SettingsDialog(QDialog):
             binding = kind(group)
             binding.bind(self.win)
             self._view_bindings.append(binding)
-        self.taskbar_paging_settings = self.taskbar_settings.paging
-        self.taskbar_style_settings = self.taskbar_settings.style
-        self.taskbar_split_settings = self.taskbar_settings.split
-
     def _sync_view_settings(self):
         for binding in self._view_bindings:
             binding.sync()
@@ -359,7 +355,20 @@ class SettingsDialog(QDialog):
     def _sync_position_settings(self):
         self._set_checked_blocked(self.ui.cb_boundary_check, self.win.boundary_check_enabled)
         self._set_checked_blocked(self.ui.cb_edge_hide, self.win.edge_hide_enabled)
-        self.ui.cb_edge_hide.setEnabled(self.win.boundary_check_enabled)
+        self.ui.cb_boundary_check_row.setVisible(boundary_check_supported())
+        supported = edge_hide_supported()
+        needs_boundary = boundary_check_supported()
+        self.ui.cb_edge_hide.setEnabled(supported and (not needs_boundary or self.win.boundary_check_enabled))
+        description = "贴住屏幕左、上、右侧时收起为窄条，移入时展开。"
+        if needs_boundary:
+            description += "需先开启边界检测。"
+        self.ui.cb_edge_hide_description.setText(description)
+        self.ui.cb_edge_hide.setAccessibleDescription(description)
+        self.ui.cb_edge_hide.setToolTip(
+            unsupported_tooltip("贴边收起") if not supported else
+            "请先开启边界检测" if needs_boundary and not self.win.boundary_check_enabled else
+            "贴住屏幕左、上、右边时收起为窄条，鼠标移入展开；底边不收起。"
+        )
 
     def _sync_hide_settings(self):
         with QSignalBlocker(self.ui.cb_auto_hide), QSignalBlocker(self.ui.gb_scheduled_hide):
@@ -424,10 +433,7 @@ class SettingsDialog(QDialog):
         self._load_settings()
 
     def _apply_platform_limits(self):
-        """按当前平台禁用不支持的功能控件:
-        - Wayland 下:全局快捷键、鼠标穿透、窗口整体透明度不可用。
-        - Linux 下:强制置顶不可用(raise_ 受窗口管理器/合成器限制)。
-        """
+        """隐藏其他平台的专属设置；受会话限制的通用功能保留说明。"""
         self.ui.settings_navigation.item(5).setHidden(sys.platform != "win32")
         if not hotkeys_supported():
             for w in (self.ui.cb_hotkey_hide, self.ui.cb_hotkey_click_through,
@@ -455,6 +461,7 @@ class SettingsDialog(QDialog):
         self._set_checked_blocked(self.ui.cb_float_on_top, self.win.float_on_top)
         self._set_checked_blocked(self.ui.cb_force_top, self.win.force_top)
         supported = force_top_supported()
+        self.ui.cb_force_top_row.setVisible(supported)
         self.ui.cb_force_top.setEnabled(self.win.float_on_top and supported)
         self.ui.cb_force_top.setToolTip(
             unsupported_tooltip("强制置顶", suggest_x11=False) if not supported else
@@ -800,11 +807,6 @@ class SettingsDialog(QDialog):
     def _on_click_through_hotkey_enabled_toggled(self, checked: bool):
         self.ui.keyseq_click_through.setEnabled(bool(checked))
         self.win.set_click_through_hotkey_enabled(bool(checked))
-        self._refresh_hotkey_status()
-
-    def _on_click_through_hotkey_changed(self):
-        new_hotkey = self.ui.keyseq_click_through.keySequence().toString()
-        self.win.update_click_through_hotkey(new_hotkey)
         self._refresh_hotkey_status()
 
     def _setup_about(self):

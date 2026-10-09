@@ -1,6 +1,6 @@
 """可选 X11 桌面的快捷键及输入穿透集成。"""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 import ctypes
 import os
 import sys
@@ -20,6 +20,8 @@ from stockwidget.platform.hotkeys import (
 )
 from stockwidget.platform.window import apply_click_through
 from stockwidget.ui.controls.settings_widgets import HotkeySequenceEdit
+from stockwidget.ui.floating.presenter import QuotePresenter
+from stockwidget.ui.floating.widget import FloatLabel
 
 
 @unittest.skipUnless(sys.platform == "linux" and os.environ.get("STOCKWIDGET_TEST_X11") == "1",
@@ -173,6 +175,53 @@ class X11IntegrationTests(unittest.TestCase):
             click()
             self.assertEqual(upper_clicks.call_count, 2)
             self.assertEqual(lower_clicks.call_count, 1)
+        finally:
+            delete(upper)
+            delete(lower)
+
+    @patch.object(QuotePresenter, "refresh")
+    def test_floating_click_through_survives_repeated_topmost_changes(self, _refresh):
+        lower = QPushButton("lower")
+        clicks = Mock()
+        lower.clicked.connect(clicks)
+        lower.setGeometry(100, 100, 400, 300)
+        lower.show()
+        with patch("stockwidget.ui.floating.widget.GlobalHotkeyManager"):
+            upper = FloatLabel({}, {})
+        upper.move(140, 140)
+        upper.show()
+        QTest.qWait(50)
+        point = upper.mapToGlobal(upper.rect().center())
+        geometry = upper.geometry()
+
+        def click():
+            self.xtest.XTestFakeMotionEvent(self.injector, -1, point.x(), point.y(), 0)
+            self.xtest.XTestFakeButtonEvent(self.injector, 1, True, 0)
+            self.xtest.XTestFakeButtonEvent(self.injector, 1, False, 0)
+            self.lib.XSync(self.injector, False)
+            QTest.qWait(QApplication.doubleClickInterval() + 20)
+
+        try:
+            upper.set_click_through(True)
+            for count, on_top in enumerate((False, True) * 4, 1):
+                hidden = count > 4
+                with self.subTest(on_top=on_top, hidden=hidden, count=count):
+                    if hidden:
+                        upper.hide()
+                    upper.set_float_on_top(on_top)
+                    if hidden:
+                        upper.show()
+                    upper.raise_()
+                    QTest.qWait(50)
+                    click()
+                    self.assertEqual(clicks.call_count, count)
+                    self.assertTrue(upper.isVisible())
+                    self.assertEqual(upper.geometry(), geometry)
+            upper.set_click_through(False)
+            upper.raise_()
+            QTest.qWait(50)
+            click()
+            self.assertEqual(clicks.call_count, 8)
         finally:
             delete(upper)
             delete(lower)

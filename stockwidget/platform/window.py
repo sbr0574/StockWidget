@@ -6,7 +6,7 @@ import ctypes
 import logging
 import sys
 
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtCore import Qt
 
 from stockwidget.platform.capabilities import is_x11
 
@@ -47,19 +47,18 @@ def ensure_topmost(widget) -> bool:
     return True
 
 
-# X11 相关库与显示连接的缓存（延迟初始化，复用同一连接）
-_x11_xlib = None
-_x11_xext = None
-_x11_shape_display = None
-
-
 def apply_click_through(widget, enable: bool) -> None:
-    """开关鼠标穿透。Windows 用扩展样式，Linux/X11 用 XShape，其余平台为 no-op。"""
+    """Windows 使用扩展样式；X11 让 Qt 管理输入区域及窗口重建。"""
     system = sys.platform
     if system == "win32":
         _click_through_windows(widget, enable)
     elif system == "linux" and is_x11():
-        _click_through_x11(widget, enable)
+        widget.winId()
+        handle = widget.windowHandle()
+        # xcb 重建原生窗口后可能保留旧输入透明缓存；先清除才能重新设置输入区域。
+        if enable:
+            handle.setFlag(Qt.WindowTransparentForInput, False)
+        handle.setFlag(Qt.WindowTransparentForInput, enable)
 
 
 def _click_through_windows(widget, enable: bool) -> None:
@@ -85,49 +84,5 @@ def _click_through_windows(widget, enable: bool) -> None:
         user32.SetWindowPos(hwnd, 0, 0, 0, 0, 0,
                             SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER
                             | SWP_NOACTIVATE | SWP_FRAMECHANGED)
-    except Exception:
-        pass
-
-
-def _click_through_x11(widget, enable: bool) -> None:
-    """Linux/X11：通过 XShape 扩展设置输入区域。
-    启用 = 清空输入区域（窗口不接收鼠标事件，实现穿透）；关闭 = 恢复默认输入区域（整个窗口）。
-    """
-    global _x11_xlib, _x11_xext, _x11_shape_display
-    try:
-        if not _x11_shape_display:
-            xlib = ctypes.CDLL("libX11.so.6")
-            xext = ctypes.CDLL("libXext.so.6")
-            xlib.XOpenDisplay.restype = ctypes.c_void_p
-            xlib.XOpenDisplay.argtypes = [ctypes.c_char_p]
-            xext.XShapeCombineRectangles.argtypes = [
-                ctypes.c_void_p, ctypes.c_ulong, ctypes.c_int,
-                ctypes.c_int, ctypes.c_int, ctypes.c_void_p,
-                ctypes.c_int, ctypes.c_int, ctypes.c_int]
-            xext.XShapeCombineRectangles.restype = None
-            xext.XShapeCombineMask.argtypes = [
-                ctypes.c_void_p, ctypes.c_ulong, ctypes.c_int,
-                ctypes.c_int, ctypes.c_int, ctypes.c_ulong, ctypes.c_int]
-            xext.XShapeCombineMask.restype = None
-            xlib.XSync.argtypes = [ctypes.c_void_p, ctypes.c_int]
-            dpy = xlib.XOpenDisplay(None)  # 使用 $DISPLAY；失败时允许下次重试
-            if not dpy:
-                return
-            _x11_xlib, _x11_xext, _x11_shape_display = xlib, xext, dpy
-        dpy = _x11_shape_display
-        win = ctypes.c_ulong(int(widget.winId()))
-        # 窗口由 Qt 的另一条连接创建，先确保服务器已经收到创建/映射请求。
-        QGuiApplication.sync()
-        ShapeInput = 2  # XInputShape
-        ShapeSet = 0
-        if enable:
-            # 0 个矩形 + ShapeSet -> 输入区域为空 -> 鼠标穿透
-            _x11_xext.XShapeCombineRectangles(
-                dpy, win, ShapeInput, 0, 0, None, 0, ShapeSet, 0)  # Unsorted
-        else:
-            # mask 为 None + ShapeSet -> 恢复默认输入区域（整个窗口）
-            _x11_xext.XShapeCombineMask(
-                dpy, win, ShapeInput, 0, 0, 0, ShapeSet)  # X11 None 是整数 0
-        _x11_xlib.XSync(dpy, False)
     except Exception:
         pass

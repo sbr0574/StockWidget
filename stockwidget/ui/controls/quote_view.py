@@ -354,6 +354,29 @@ class SortIndicatorStyle(QProxyStyle):
         painter.restore()
 
 
+def paint_quote_grid(painter, bounds, color, column_edges=(), row_edges=(), radius=3):
+    """Draw all cell separators and the rounded frame in one shared stroke."""
+    path = QPainterPath()
+    path.addRoundedRect(bounds, radius, radius)
+    for x in column_edges:
+        if bounds.left() < x < bounds.right():
+            path.moveTo(x, bounds.top())
+            path.lineTo(x, bounds.bottom())
+    for y in row_edges:
+        if bounds.top() < y < bounds.bottom():
+            path.moveTo(bounds.left(), y)
+            path.lineTo(bounds.right(), y)
+    painter.save()
+    painter.setRenderHint(QPainter.Antialiasing)
+    pen = QPen(color, 1)
+    pen.setCapStyle(Qt.FlatCap)
+    painter.setPen(pen)
+    painter.setBrush(Qt.NoBrush)
+    # One stroke prevents alpha accumulating where cell and frame edges meet.
+    painter.drawPath(path)
+    painter.restore()
+
+
 class _TableGrid(QWidget):
     def __init__(self, table):
         super().__init__(table)
@@ -369,8 +392,7 @@ class _TableGrid(QWidget):
         if model is None or self.width() < 2 or self.height() < 2:
             return
         bounds = QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
-        path = QPainterPath()
-        path.addRoundedRect(bounds, 3, 3)
+        column_edges, row_edges = [], []
         viewport = table.viewport()
         origin = viewport.mapTo(table, QPoint())
         header = table.horizontalHeader()
@@ -378,27 +400,16 @@ class _TableGrid(QWidget):
             if table.isColumnHidden(c):
                 continue
             x = origin.x() + table.columnViewportPosition(c) + table.columnWidth(c) - 0.5
-            if bounds.left() < x < bounds.right():
-                path.moveTo(x, bounds.top())
-                path.lineTo(x, bounds.bottom())
+            column_edges.append(x)
         if header.isVisible() and bounds.top() < origin.y() - 0.5 < bounds.bottom():
-            path.moveTo(bounds.left(), origin.y() - 0.5)
-            path.lineTo(bounds.right(), origin.y() - 0.5)
+            row_edges.append(origin.y() - 0.5)
         for r in range(model.rowCount()):
             if table.isRowHidden(r):
                 continue
             y = origin.y() + table.rowViewportPosition(r) + table.rowHeight(r) - 0.5
-            if bounds.top() < y < bounds.bottom():
-                path.moveTo(bounds.left(), y)
-                path.lineTo(bounds.right(), y)
+            row_edges.append(y)
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        pen = QPen(self.color, 1)
-        pen.setCapStyle(Qt.FlatCap)
-        painter.setPen(pen)
-        painter.setBrush(Qt.NoBrush)
-        # One stroke prevents alpha accumulating where cell and frame edges meet.
-        painter.drawPath(path)
+        paint_quote_grid(painter, bounds, self.color, column_edges, row_edges)
         painter.end()
 
 

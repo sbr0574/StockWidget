@@ -19,6 +19,7 @@ class WatchlistTests(unittest.TestCase):
                 self.assertIsNone(entry["cost"])
 
     def test_normalize(self):
+        self.assertEqual(normalize_watchlist(None), {})
         watchlist = normalize_watchlist(
             {
                 "SH600519": {
@@ -29,6 +30,7 @@ class WatchlistTests(unittest.TestCase):
                 },
                 "": {"checked": True},
                 "sz000001": {"cost": None},
+                "sh600036": {"cost": "1500"},
             }
         )
         self.assertTrue(watchlist["sh600519"]["checked"])
@@ -37,14 +39,8 @@ class WatchlistTests(unittest.TestCase):
         self.assertEqual(watchlist["sh600519"]["type"], "沪")
         self.assertNotIn("", watchlist)
         self.assertIsNone(watchlist["sz000001"]["cost"])
-
-    def test_integer_cost_stays_int(self):
-        watchlist = normalize_watchlist({"sh600519": {"cost": "1500"}})
-        self.assertEqual(watchlist["sh600519"]["cost"], 1500)
-        self.assertIsInstance(watchlist["sh600519"]["cost"], int)
-
-    def test_none_watchlist(self):
-        self.assertEqual(normalize_watchlist(None), {})
+        self.assertEqual(watchlist["sh600036"]["cost"], 1500)
+        self.assertIsInstance(watchlist["sh600036"]["cost"], int)
 
     def test_old_watchlist_is_hydrated_from_codes(self):
         codes = {
@@ -130,20 +126,17 @@ CODES = {
 
 
 class NormalizeEntryTests(unittest.TestCase):
-    def test_key_built_from_market_and_code(self):
-        entry = normalize_stock_entry(
-            {"market": "sh", "code": "600519", "name": "茅台"}
+    def test_entry_identity_and_legacy_names_are_normalized(self):
+        cases = (
+            ({"market": "sh", "code": "600519", "name": "茅台"},
+             {"key": "sh600519", "code": "600519"}),
+            ({"market": "sz", "code": "1"}, {"code": "000001"}),
+            ({"engname": "Microsoft Corporation"}, {"name_en": "microsoft corporation"}),
         )
-        self.assertEqual(entry["key"], "sh600519")
-        self.assertEqual(entry["code"], "600519")
-
-    def test_code_zfill_for_a_share(self):
-        entry = normalize_stock_entry({"market": "sz", "code": "1"})
-        self.assertEqual(entry["code"], "000001")
-
-    def test_name_en_accepts_legacy_engname(self):
-        entry = normalize_stock_entry({"engname": "Microsoft Corporation"})
-        self.assertEqual(entry["name_en"], "microsoft corporation")
+        for raw, expected in cases:
+            with self.subTest(raw=raw):
+                entry = normalize_stock_entry(raw)
+                self.assertEqual({key: entry[key] for key in expected}, expected)
 
 
 class SearchSuggestionsTests(unittest.TestCase):
@@ -151,43 +144,22 @@ class SearchSuggestionsTests(unittest.TestCase):
     def setUpClass(cls):
         cls.index = build_search_index(CODES)
 
-    def search(self, text):
-        return search_suggestions(self.index, text)
+    def test_search_fields_and_keyword_intersections(self):
+        cases = (
+            ("600519", "sh600519"), ("gzmt", "sh600519"),
+            ("zhaoshang", "sh600036"), ("apple", "usaapl"),
+            ("microsoft", "usmsft"), ("gbnky", "gbnky"), ("nky", "gbnky"),
+            ("万科", "sz000002"), ("600519 茅台", "sh600519"),
+            ("茅台 gzmt", "sh600519"), ("  600519\t  茅台　", "sh600519"),
+        )
+        for query, key in cases:
+            with self.subTest(query=query):
+                self.assertEqual([item["key"] for item in search_suggestions(self.index, query)], [key])
 
-    def test_by_code(self):
-        self.assertEqual(self.search("600519")[0]["key"], "sh600519")
-
-    def test_by_pinyin_abbr(self):
-        self.assertEqual(self.search("gzmt")[0]["name"], "贵州茅台")
-
-    def test_by_pinyin_full(self):
-        self.assertEqual(self.search("zhaoshang")[0]["name"], "招商银行")
-
-    def test_by_english_name(self):
-        self.assertEqual(self.search("apple")[0]["key"], "usaapl")
-
-    def test_by_legacy_english_name(self):
-        self.assertEqual(self.search("microsoft")[0]["key"], "usmsft")
-
-    def test_by_global_index_prefix(self):
-        self.assertEqual(self.search("gbnky")[0]["key"], "gbnky")
-        self.assertEqual(self.search("nky")[0]["key"], "gbnky")
-
-    def test_multiple_keywords_can_match_different_fields(self):
-        result = self.search("600519 茅台")
-        self.assertEqual([item["key"] for item in result], ["sh600519"])
-        result = self.search("茅台 gzmt")
-        self.assertEqual([item["key"] for item in result], ["sh600519"])
-
-    def test_multiple_keywords_use_and_semantics(self):
-        self.assertEqual(self.search("茅台 zsyh"), [])
-
-    def test_arbitrary_whitespace_splits_keywords(self):
-        result = self.search("  600519\t  茅台　")
-        self.assertEqual([item["key"] for item in result], ["sh600519"])
-
-    def test_compact_query_matches_name_with_layout_spaces(self):
-        self.assertEqual(self.search("万科")[0]["key"], "sz000002")
+    def test_empty_unmatched_and_conflicting_keywords_return_no_suggestions(self):
+        for query in ("", "zzzzzznothing", "茅台 zsyh"):
+            with self.subTest(query=query):
+                self.assertEqual(search_suggestions(self.index, query), [])
 
     def test_unknown_type_stays_in_stock_category(self):
         codes = {"custom": {"code": "custom", "name": "自定义", "type": ""}}
@@ -195,18 +167,6 @@ class SearchSuggestionsTests(unittest.TestCase):
             build_search_index(codes), "自定义", categories={"stock"}
         )
         self.assertEqual(result.items[0]["key"], "custom")
-
-    def test_prebuilt_index_can_be_reused(self):
-        first = search_suggestions(self.index, "apple inc")
-        second = search_suggestions(self.index, "apple inc")
-        self.assertEqual(second, first)
-
-    def test_empty_query(self):
-        self.assertEqual(self.search(""), [])
-
-    def test_no_match(self):
-        self.assertEqual(self.search("zzzzzznothing"), [])
-
 
 class PagedSearchTests(unittest.TestCase):
     @classmethod

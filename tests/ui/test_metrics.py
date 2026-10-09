@@ -238,9 +238,6 @@ class FloatLabelMetricLayoutTests(QtTestCase):
         window.set_visible_metrics(["amount", "price"])
 
         self.assertEqual(window.visible_metrics, ["amount", "price"])
-        self.assertIn("amount", window.visible_metrics)
-        self.assertIn("price", window.visible_metrics)
-        self.assertNotIn("change_pct", window.visible_metrics)
         config = window.current_config()
         self.assertEqual(config["visible_metrics"], ["amount", "price"])
         self.assertTrue(config["amount_visible"])
@@ -390,7 +387,6 @@ class MetricSettingsTests(SettingsTestCase):
     def test_taskbar_metric_pool_reuses_selection_order_and_preserves_independent_metrics(self):
         self.enable_windows_taskbar()
         from stockwidget.core.quote_presentation import METRIC_SPECS
-        from stockwidget.ui.controls.metrics import MetricPoolWidget
         dialog, window = self._make_dialog()
         taskbar = dialog.taskbar_settings
         self.assertFalse(taskbar.enabled.isChecked())
@@ -400,7 +396,6 @@ class MetricSettingsTests(SettingsTestCase):
         self.assertTrue(window.view_options.taskbar_enabled)
         self.assertTrue(taskbar.metrics.sync_toggle.isChecked())
         self.assertFalse(taskbar.metric_pool.isEnabled())
-        self.assertIsInstance(taskbar.metric_pool, MetricPoolWidget)
         window.set_visible_metrics(["volume", "name", "price"])
         self.assertEqual(taskbar.metric_pool.visible_metrics, ["volume", "name", "price"])
         taskbar.metrics.sync_toggle.setChecked(False)

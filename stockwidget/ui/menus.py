@@ -24,7 +24,7 @@ def _sync_toggles(toggles):
             action.setChecked(bool(getter()))
 
 
-def _view_toggles(menu, source, surface="float"):
+def _view_toggles(menu, source, surface="float", *, include_taskbar=False):
     """Bind both menus to the same saved options as the settings page."""
     toggles = []
 
@@ -35,7 +35,7 @@ def _view_toggles(menu, source, surface="float"):
         toggles.append((action, getter))
         return action
 
-    if sys.platform == "win32":
+    if include_taskbar and sys.platform == "win32":
         add("任务栏行情", lambda: source.view_options.taskbar_enabled,
             lambda enabled: source.set_view_options(taskbar_enabled=enabled))
 
@@ -66,7 +66,10 @@ class TrayIcon(QSystemTrayIcon):
 
         menu = QMenu()
         menu.addAction(QAction("显示/隐藏", self, triggered=self._on_toggle))
-        self._toggles = _view_toggles(menu, source, lambda: "taskbar" if source.display_mode == "taskbar" else "float")
+        self._toggles = _view_toggles(
+            menu, source, lambda: "taskbar" if source.display_mode == "taskbar" else "float",
+            include_taskbar=True,
+        )
 
         menu.addAction(QAction("设置…", self, triggered=on_open_settings))
         menu.addSeparator()
@@ -131,19 +134,25 @@ def build_quote_menu(source, surface="float"):
     sort_menu.addAction(clear_action)
     menu.addMenu(sort_menu)
 
-    act_header = QAction("显示表头", menu, checkable=True)
-    act_header.setChecked(source.header_visible)
-    act_header.toggled.connect(source.set_header_visible)
-    menu.addAction(act_header)
+    if surface == "float":
+        act_header = QAction("显示表头", menu, checkable=True)
+        act_header.setChecked(source.header_visible)
+        act_header.toggled.connect(source.set_header_visible)
+        menu.addAction(act_header)
 
-    act_grid = QAction("显示网格",menu, checkable=True)
+    act_grid = QAction("显示网格", menu, checkable=True)
     act_grid.setChecked(source.grid_visible)
     act_grid.toggled.connect(source.set_grid_visible)
     menu.addAction(act_grid)
 
     act_color = QAction("统一颜色", menu, checkable=True)
-    act_color.setChecked(source.unicolor)
-    act_color.toggled.connect(source.set_unicolor)
+    independent_color = surface == "taskbar" and not source.view_options.taskbar_sync_appearance
+    act_color.setChecked(source.get_taskbar_appearance()[3] if surface == "taskbar" else source.unicolor)
+    if independent_color:
+        act_color.setEnabled(not source.view_options.taskbar_auto_color)
+        act_color.toggled.connect(lambda enabled: source.set_view_options(taskbar_unicolor=enabled))
+    else:
+        act_color.toggled.connect(source.set_unicolor)
     menu.addAction(act_color)
 
     _view_toggles(menu, source, surface)

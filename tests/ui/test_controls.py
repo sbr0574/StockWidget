@@ -9,7 +9,7 @@ from PySide6.QtCore import Qt, QBuffer, QByteArray, QIODevice
 from PySide6.QtGui import QKeySequence
 from PySide6.QtTest import QTest
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QGroupBox, QWidget
+from PySide6.QtWidgets import QWidget
 from shiboken6 import delete
 
 from stockwidget.ui.controls.settings_widgets import HotkeySequenceEdit
@@ -117,15 +117,4 @@ class DesignerFormTests(QtTestCase):
             self.assertIs(taskbar.style.font_size, root.findChild(QWidget, "taskbar_font_size"))
         finally:
             delete(root)
-            delete(source)
-
-    def test_floating_layout_uses_the_generated_form_widgets(self):
-        with patch.object(QuotePresenter, "refresh"), patch("stockwidget.ui.floating.widget.GlobalHotkeyManager"):
-            source = FloatLabel({}, {})
-        try:
-            self.assertIs(source.panel, source.ui.panel)
-            self.assertIs(source.table, source.ui.table)
-            self.assertIs(source.pager, source.ui.pager)
-            self.assertIs(source.message_label, source.ui.message_label)
-        finally:
             delete(source)

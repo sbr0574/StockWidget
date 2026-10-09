@@ -8,7 +8,9 @@ from PySide6.QtCore import QPoint, Qt, QEvent, QObject, QRect, QTimer
 from PySide6.QtGui import QCursor, QScreen
 from PySide6.QtWidgets import QApplication, QWidget
 
-from stockwidget.core.window_rules import best_screen, clamp_point, all_quotes_stale, due_hide_times
+from stockwidget.core.window_rules import (
+    best_screen, clamp_point, all_quotes_stale, due_hide_times, resolve_restore_position,
+)
 
 
 class DragBehaviorMixin:
@@ -192,7 +194,7 @@ class PositionController(QObject):
         return QRect(self._full if self.collapsed else self.source.geometry())
 
     def _bounded(self, rect):
-        if not self.source.boundary_check_enabled:
+        if not (self.source.boundary_check_enabled or self.source.edge_hide_enabled):
             return rect, None
         # 使用整个屏幕，允许双开浮窗经过任务栏；任务栏停靠仍由共用拖动处理。
         screens = [s.geometry() for s in QApplication.screens()]
@@ -251,6 +253,17 @@ class PositionController(QObject):
             if self.edge == "right":
                 strip.moveRight(self._full.right())
         return strip
+
+    def restore_config(self, position):
+        """从配置恢复完整位置，缺少位置时按主屏计算默认位置。"""
+        if isinstance(position, dict) and "x" in position and "y" in position:
+            point = QPoint(int(position["x"]), int(position["y"]))
+        else:
+            screens = [screen.availableGeometry().getRect() for screen in QApplication.screens()]
+            primary = QApplication.primaryScreen().availableGeometry().getRect()
+            point = QPoint(*resolve_restore_position(
+                None, screens, primary, self.source.width(), self.source.height()))
+        self.restore_position(point)
 
     def restore_position(self, point):
         if QApplication.platformName() == "windows":
