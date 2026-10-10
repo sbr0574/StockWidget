@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
 )
 
 from stockwidget.core.window_rules import adjacent_popup_position, adjacent_popup_size, best_screen
+from stockwidget.core.config_store import history_cache_dir
 from stockwidget.data.bar_cache import BarCache
 from stockwidget.data.bars import BarResult, HistorySeries, history_day, select_bars
 from stockwidget.ui.controls.history_chart import HistoryChart
@@ -143,7 +144,7 @@ class HistoryController(QObject):
                                             "float", table.indexAt(pos).row(), block))
         self.dialog = None
         self.instrument = None
-        self.cache = BarCache()
+        self.cache = BarCache(history_cache_dir(window.cache_directory))
         self._generation = 0
         self._discard_before = 0
         self._busy = False
@@ -265,6 +266,18 @@ class HistoryController(QObject):
 
     def clear_cache(self):
         cleared = self.cache.clear()
+        self._discard_cached_history()
+        return cleared
+
+    def set_cache_directory(self, directory):
+        previous = self.cache.generation
+        if not self.cache.set_directory(directory):
+            return False
+        if previous != self.cache.generation:
+            self._discard_cached_history()
+        return True
+
+    def _discard_cached_history(self):
         self.click_timer.stop()
         self._clicked_instrument = None
         self._closed()
@@ -274,7 +287,6 @@ class HistoryController(QObject):
         if self.dialog:
             self.dialog.close()
             self.dialog.chart.set_data((), self.dialog.view, self.instrument or {})
-        return cleared
 
     @staticmethod
     def _key(instrument, view, source):

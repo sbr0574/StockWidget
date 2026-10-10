@@ -25,7 +25,6 @@ from PySide6.QtWidgets import (
 )
 
 from stockwidget.constants import APP_VERSION
-from stockwidget.core.config_store import config_paths
 from stockwidget.core.window_rules import MAX_HIDE_TIMES
 from stockwidget.data.bars import MA_PERIODS
 from stockwidget.data.update_check import get_update_info, github_available, project_links
@@ -241,6 +240,9 @@ class SettingsDialog(QDialog):
 
         self.ui.btn_check_update.clicked.connect(self._check_update_manually)
         self.ui.btn_open_cache_dir.clicked.connect(self._open_cache_dir)
+        self.ui.btn_choose_cache_dir.clicked.connect(self._choose_cache_dir)
+        self.ui.btn_default_cache_dir.clicked.connect(lambda: self._set_cache_directory(""))
+        self.win.configuration_changed.connect(self._sync_cache_directory)
         self.ui.btn_clear_cache.clicked.connect(self._clear_cache)
         self.ui.btn_clear_watchlist.clicked.connect(self.watchlist_editor.clear_watchlist)
         self.ui.btn_reset_appearance.clicked.connect(self._reset_appearance)
@@ -316,6 +318,7 @@ class SettingsDialog(QDialog):
             self.metric_pool.set_visible_metrics(self.win.visible_metrics)
             self._sync_metric_options()
             self._sync_common_options()
+            self._sync_cache_directory()
 
             self._set_checked_blocked(self.ui.cb_unicolor, self.win.unicolor)
             self._update_direction_color_controls()
@@ -443,7 +446,7 @@ class SettingsDialog(QDialog):
         if not click_through_supported():
             self.ui.cb_click_through.setEnabled(False)
             self.ui.cb_click_through.setToolTip(unsupported_tooltip("鼠标穿透"))
-            # 鼠标穿透不可用（如 macOS）时，其快捷键一并关闭
+            # 鼠标穿透不可用时，其快捷键一并关闭
             for w in (self.ui.cb_hotkey_click_through, self.ui.keyseq_click_through):
                 w.setEnabled(False)
                 w.setToolTip(unsupported_tooltip("鼠标穿透"))
@@ -907,16 +910,42 @@ class SettingsDialog(QDialog):
             )
 
     def _open_cache_dir(self):
-        """打开配置/缓存目录所在的文件夹。"""
-        path = config_paths()
-        os.makedirs(path, exist_ok=True)
-        QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+        path = str(self.win.history.cache.directory)
+        try:
+            os.makedirs(path, exist_ok=True)
+            opened = QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+        except OSError:
+            opened = False
+        if not opened:
+            self._cache_tooltip(self.ui.btn_open_cache_dir, "无法打开缓存目录，请检查目录权限。")
+
+    def _sync_cache_directory(self):
+        path = str(self.win.history.cache.directory)
+        if self.ui.edit_cache_directory.text() != path:
+            self.ui.edit_cache_directory.setText(path)
+            self.ui.edit_cache_directory.setCursorPosition(0)
+        self.ui.edit_cache_directory.setToolTip(path)
+        self.ui.btn_default_cache_dir.setEnabled(bool(self.win.cache_directory))
+
+    def _choose_cache_dir(self):
+        path = QFileDialog.getExistingDirectory(self, "选择图表缓存目录", str(self.win.history.cache.directory))
+        if path:
+            self._set_cache_directory(path)
+
+    def _set_cache_directory(self, path):
+        if not self.win.set_cache_directory(path):
+            self._cache_tooltip(self.ui.btn_choose_cache_dir, "无法写入该目录，请选择可写目录。")
+        self._sync_cache_directory()
+
+    @staticmethod
+    def _cache_tooltip(button, message):
+        QToolTip.showText(button.mapToGlobal(button.rect().center()), message, button)
 
     def _clear_cache(self):
         cleared = self.win.history.clear_cache()
         message = "已清理数据缓存。" if cleared else "部分数据缓存未能清理，请稍后重试。"
         button = self.ui.btn_clear_cache
-        QToolTip.showText(button.mapToGlobal(button.rect().center()), message, button)
+        self._cache_tooltip(button, message)
 
     def closeEvent(self, event):
         self.watchlist_editor.close()

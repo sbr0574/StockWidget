@@ -213,18 +213,20 @@ class X11HotkeyTests(QtTestCase):
         self.manager._x11_notifier.setEnabled.assert_called_with(False)
 
 
-class X11ClickThroughTests(QtTestCase):
+class QtClickThroughTests(QtTestCase):
     def test_input_transparency_roundtrips_without_changing_topmost(self):
         widget = QWidget()
         widget.setWindowFlag(Qt.WindowStaysOnTopHint, True)
         try:
-            with patch.object(click_through.sys, "platform", "linux"), \
-                    patch.object(click_through, "is_x11", return_value=True):
-                for enabled in (False, True, False, True):
-                    with self.subTest(enabled=enabled):
-                        click_through.apply_click_through(widget, enabled)
-                        flags = widget.windowHandle().flags()
-                        self.assertEqual(bool(flags & Qt.WindowTransparentForInput), enabled)
-                        self.assertTrue(flags & Qt.WindowStaysOnTopHint)
+            for platform in ("linux", "darwin"):
+                with patch.object(click_through.sys, "platform", platform), \
+                        patch.object(click_through, "is_x11", return_value=platform == "linux"), \
+                        patch.object(click_through, "is_cocoa", return_value=platform == "darwin"):
+                    for enabled in (False, True, False, True):
+                        with self.subTest(platform=platform, enabled=enabled):
+                            click_through.apply_click_through(widget, enabled)
+                            flags = widget.windowHandle().flags()
+                            self.assertEqual(bool(flags & Qt.WindowTransparentForInput), enabled)
+                            self.assertTrue(flags & Qt.WindowStaysOnTopHint)
         finally:
             delete(widget)

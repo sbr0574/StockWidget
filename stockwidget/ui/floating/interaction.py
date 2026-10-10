@@ -72,7 +72,8 @@ class DragBehaviorMixin:
             if win is not None and hasattr(win, "startSystemMove"):
                 win.startSystemMove()
             return
-        self.move(global_pos - self._drag_pos)
+        if self._drag_surface != "taskbar" or self.display_mode != "both":
+            self.move(global_pos - self._drag_pos)
         self._ensure_on_top()
         self.drag_moved.emit()
 

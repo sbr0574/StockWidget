@@ -3,9 +3,10 @@
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from stockwidget.constants import APP_NAME
-from stockwidget.core.config_store import config_paths, load_file, save_file
+from stockwidget.core.config_store import config_paths, history_cache_dir, load_file, normalize_cache_directory, save_file
 from stockwidget.core.view_options import ViewOptions, column_ranges, page_slice, taskbar_font_size_limit, taskbar_font_pixels
 
 
@@ -24,6 +25,24 @@ class ConfigStoreTests(unittest.TestCase):
 
     def test_config_paths(self):
         self.assertEqual(config_paths(), os.path.join(self._tmp.name, APP_NAME))
+
+    def test_history_directory_uses_macos_caches_and_preserves_other_platform_defaults(self):
+        for platform in ("win32", "linux", "darwin"):
+            with self.subTest(platform=platform), patch("stockwidget.core.config_store.sys.platform", platform):
+                expected = (os.path.join(os.path.expanduser("~"), "Library", "Caches", "com.sbr0574.StockWidget")
+                            if platform == "darwin" else os.path.join(config_paths(), "cache"))
+                self.assertEqual(history_cache_dir(), expected)
+                custom = os.path.join(self._tmp.name, "custom")
+                self.assertEqual(history_cache_dir(custom), custom)
+                self.assertEqual(config_paths(), os.path.join(self._tmp.name, APP_NAME))
+
+    def test_custom_cache_path_normalizes_and_invalid_config_uses_default(self):
+        for value in (None, 123, [], {}, "", "  ", "bad\0path"):
+            with self.subTest(value=value):
+                self.assertEqual(normalize_cache_directory(value), "")
+                self.assertEqual(history_cache_dir(value), history_cache_dir())
+        self.assertEqual(normalize_cache_directory("  ~/chart-cache  "),
+                         os.path.abspath(os.path.expanduser("~/chart-cache")))
 
     def test_save_and_load_roundtrip(self):
         save_file({"a": 1, "中文": "值"}, "c.json")

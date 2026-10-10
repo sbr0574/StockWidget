@@ -2,7 +2,7 @@
 """全局常量：应用名/版本、配置文件、市场代码列表文件与下载地址。"""
 
 APP_NAME = "StockWidget"
-APP_VERSION = "2.0.0"
+APP_VERSION = "2.0.1"
 CONFIG_FILE = "stock_widget_config.json"
 
 # 分类代码列表（服务器更新到独立数据分支，客户端按状态清单整组同步）。

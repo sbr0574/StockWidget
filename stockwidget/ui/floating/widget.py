@@ -12,12 +12,14 @@ from stockwidget.core.quote_presentation import (
     normalize_visible_metrics,
     visible_metrics_from_config,
 )
+from stockwidget.core.config_store import history_cache_dir, normalize_cache_directory
 from stockwidget.core.view_options import APPEARANCE_OPTION_KEYS, ViewOptions
 from stockwidget.core.watchlist import normalize_watchlist
 from stockwidget.core.window_rules import normalize_hide_times
 from stockwidget.platform.capabilities import (
     is_wayland,
     is_x11,
+    is_cocoa,
     hotkeys_supported,
     click_through_supported,
     opacity_supported,
@@ -96,7 +98,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._load_settings_config(cfg)
         self.setWindowFlag(Qt.WindowStaysOnTopHint, self.float_on_top)
 
-
         # 平台能力限制:当前平台不支持时强制关闭对应功能
         # (如 Wayland 下无法实现全局快捷键/鼠标穿透,Linux 下强制置顶不可靠),
         # 并交由设置面板/托盘菜单将相关控件置为不可点按。
@@ -105,11 +106,11 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self.hotkey_click_through_enabled = False
         if not click_through_supported():
             self.click_through = False
-            # 鼠标穿透不可用（如 macOS）时，其快捷键一并关闭，避免"按了没效果"
+            # 鼠标穿透不可用时，其快捷键一并关闭，避免"按了没效果"
             self.hotkey_click_through_enabled = False
         if not force_top_supported():
             self.force_top = False
-        self.setWindowFlag(Qt.WindowTransparentForInput, is_x11() and self.click_through)
+        self.setWindowFlag(Qt.WindowTransparentForInput, (is_x11() or is_cocoa()) and self.click_through)
 
         # Wayland 会话下窗口位置由合成器接管,须用系统级拖动(startSystemMove)
         self._wayland_drag = is_wayland()
@@ -264,6 +265,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.hotkey_click_through_enabled = bool(cfg.get("hotkey_click_through_enabled", False))
         self.hotkey_click_through = cfg.get("hotkey_click_through", "Ctrl+Alt+C")
         self.start_on_boot = bool(cfg.get("start_on_boot", False))
+        self.cache_directory = normalize_cache_directory(cfg.get("cache_directory", ""))
+        self.taskbar_screen = cfg.get("taskbar_screen", "") if isinstance(cfg.get("taskbar_screen", ""), str) else ""
         mode = cfg.get("display_mode", "float")
         self.display_mode = mode if sys.platform == "win32" and mode in ("float", "taskbar", "both") else "float"
         try:
@@ -291,7 +294,10 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.display_flags_changed.emit()
 
     def reset_settings(self):
+        previous_cache_directory = self.cache_directory
         self._load_settings_config({key: getattr(self.view_options, key) for key in APPEARANCE_OPTION_KEYS})
+        if not self.history.set_cache_directory(history_cache_dir(self.cache_directory)):
+            self.cache_directory = previous_cache_directory
         self.position_controller.recheck()
         self.position_options_changed.emit()
         self._apply_window_options()
@@ -339,42 +345,24 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
             "code_visible": self.code_visible,
             "type_visible": self.type_visible,
-            "name_length": self.name_length,
-            "unit_mode": self.unit_mode,
             "visible_metrics": list(self.visible_metrics),
             **legacy_visibility(self.visible_metrics),
-
-            "header_visible": self.header_visible,
-            "grid_visible": self.grid_visible,
             "font_family": self.font.family(),
             "font_size": self.font.pointSize(),
             "line_extra_px": self.line_extra_px,
             "fg": self.fg.name(QColor.HexRgb),
             "bg": {"r": self.bg.red(), "g": self.bg.green(), "b": self.bg.blue(), "a": self.bg.alpha()},
-            "opacity_pct": self.opacity_pct,
-            "unicolor": self.unicolor,
             "up_color": self.up_color.name(QColor.HexRgb),
             "down_color": self.down_color.name(QColor.HexRgb),
             "neutral_color": self.neutral_color.name(QColor.HexRgb),
-
-            "refresh_seconds": self.refresh_seconds,
-            "data_source": self.data_source,
-            "hide_enabled": self.hide_enabled,
-            "scheduled_hide_enabled": self.scheduled_hide_enabled,
             "scheduled_hide_times": list(self.scheduled_hide_times),
-            "auto_hide_enabled": self.auto_hide_enabled,
-            "boundary_check_enabled": self.boundary_check_enabled,
-            "edge_hide_enabled": self.edge_hide_enabled,
-            "float_on_top": self.float_on_top,
-            "force_top": self.force_top,
-            "click_through": self.click_through,
-            "hotkey_enabled": self.hotkey_enabled,
-            "hotkey": self.hotkey,
-            "hotkey_click_through_enabled": self.hotkey_click_through_enabled,
-            "hotkey_click_through": self.hotkey_click_through,
-            "start_on_boot": self.start_on_boot,
-            "display_mode": self.display_mode,
-            "taskbar_offset": self.taskbar_offset,
+            **{key: getattr(self, key) for key in (
+                "name_length", "unit_mode", "header_visible", "grid_visible", "opacity_pct", "unicolor",
+                "refresh_seconds", "data_source", "hide_enabled", "scheduled_hide_enabled", "auto_hide_enabled",
+                "boundary_check_enabled", "edge_hide_enabled", "float_on_top", "force_top", "click_through",
+                "hotkey_enabled", "hotkey", "hotkey_click_through_enabled", "hotkey_click_through",
+                "start_on_boot", "cache_directory", "display_mode", "taskbar_offset", "taskbar_screen",
+            )},
             **self.view_options.to_config(),
             "pos": {"x": self.position_controller.full_geometry().x(),
                     "y": self.position_controller.full_geometry().y()},
@@ -526,6 +514,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if old["taskbar_enabled"] and not options.taskbar_enabled:
             self.finish_drag(False)
         self.view_options = options
+        if not old["taskbar_enabled"] and options.taskbar_enabled:
+            self.taskbar_screen = ""
         if not options.taskbar_enabled:
             self.display_mode = "float"
             self.taskbar_preview_active = False
@@ -540,6 +530,16 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._notify_change()
 
     # ----- 应用设置 -----
+    def set_cache_directory(self, directory):
+        directory = normalize_cache_directory(directory)
+        if directory == self.cache_directory:
+            return True
+        if not self.history.set_cache_directory(history_cache_dir(directory)):
+            return False
+        self.cache_directory = directory
+        self._notify_change()
+        return True
+
     def set_watchlist(self, watchlist: dict):
         """整体替换自选列表（key -> {code, market, checked, cost, name, type}）。"""
         self.watchlist = normalize_watchlist(watchlist, self.codes_list)
@@ -735,11 +735,15 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.display_flags_changed.emit()
 
     # ----- 鼠标穿透 / 浮窗置顶 / 强制置顶 / 快捷键开关 -----
-    def set_display_mode(self, mode):
+    def set_display_mode(self, mode, *, taskbar_screen=None):
         if mode not in ("float", "taskbar", "both"):
             return
         if sys.platform != "win32" or not self.view_options.taskbar_enabled:
             mode = "float"
+        if taskbar_screen is not None:
+            self.taskbar_screen = taskbar_screen
+        elif self.display_mode == "float" and mode != "float":
+            self.taskbar_screen = ""
         if mode == self.display_mode:
             self.set_widget_visible(True)
             return
@@ -799,7 +803,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def _apply_window_options(self):
         flags = self.windowFlags()
         for flag, enabled in ((Qt.WindowStaysOnTopHint, self.float_on_top),
-                              (Qt.WindowTransparentForInput, is_x11() and self.click_through)):
+                              (Qt.WindowTransparentForInput, (is_x11() or is_cocoa()) and self.click_through)):
             flags = flags | flag if enabled else flags & ~flag
         if flags == self.windowFlags():
             return
@@ -814,7 +818,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             if visible:
                 self.setAttribute(Qt.WA_ShowWithoutActivating, True)
                 self.show()
-                if is_x11() and self.click_through:
+                if (is_x11() or is_cocoa()) and self.click_through:
                     apply_click_through(self, True)
         finally:
             self.setAttribute(Qt.WA_ShowWithoutActivating, show_without_activating)
@@ -924,7 +928,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if self.force_top and self._keep_top_timer and not self._keep_top_timer.isActive():
             self._keep_top_timer.start()
         apply_click_through(self, self.click_through)
-        if is_x11() and self.click_through:
+        if (is_x11() or is_cocoa()) and self.click_through:
             # showEvent 先于原生映射 / 重建，呼出时在映射完成后恢复输入区域。
             QTimer.singleShot(0, self, lambda: apply_click_through(self, self.click_through))
         self._defer_fit()

@@ -62,6 +62,15 @@ def is_x11() -> bool:
     return session_type() == "x11"
 
 
+def is_cocoa() -> bool:
+    """macOS 原生 Qt 会话；无头插件不能提供 AppKit 窗口能力。"""
+    if sys.platform != "darwin":
+        return False
+    from PySide6.QtWidgets import QApplication
+    app = QApplication.instance()
+    return app is not None and app.platformName() == "cocoa"
+
+
 def hotkeys_supported() -> bool:
     """全局快捷键是否可用：Windows / macOS 支持；Linux 仅 X11 支持，Wayland 不支持。"""
     system = sys.platform
@@ -73,10 +82,12 @@ def hotkeys_supported() -> bool:
 
 
 def click_through_supported() -> bool:
-    """鼠标穿透是否可用：Windows 支持；Linux 仅 X11 支持（XShape 输入区域），Wayland 不支持。"""
+    """Windows、macOS Cocoa 及 Linux X11 支持；Wayland 不支持。"""
     system = sys.platform
     if system == "win32":
         return True
+    if system == "darwin":
+        return is_cocoa()
     if system == "linux":
         return is_x11()
     return False

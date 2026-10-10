@@ -161,6 +161,7 @@ class TaskbarController(QObject):
         self._dpi = 96
         self._pager_rect = QRect()
         self._hit_regions = []
+        self._area = None
         self.timer = QTimer(self)
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.refresh)
@@ -179,12 +180,28 @@ class TaskbarController(QObject):
     @property
     def enabled(self):
         return self.source.view_options.taskbar_enabled and self.source.widget_visible and (
-            self._drag_over if self._dragging else self.source.display_mode != "float")
+            (self._drag_over or self._drag_origin_mode == "both") if self._dragging
+            else self.source.display_mode != "float")
 
     def _status(self, text):
         if self.source.taskbar_status != text:
             self.source.taskbar_status = text
             self.source.taskbar_status_changed.emit(text)
+
+    def screen(self):
+        """Qt may use a friendly monitor name instead of the Win32 device name.
+
+        Windows keeps physical screen origins when Qt scales screen sizes, so
+        the monitor origin maps both naming schemes without scaling global points.
+        """
+        if not self._active or self._area is None:
+            return None
+        screens = QApplication.screens()
+        named = next((s for s in screens if s.name() == self._area.device_name), None)
+        if named is not None or self._area.monitor_rect is None:
+            return named
+        origin = self._area.monitor_rect[:2]
+        return next((s for s in screens if (s.geometry().x(), s.geometry().y()) == origin), None)
 
     def apply_mode(self):
         if self._closed:
@@ -220,7 +237,8 @@ class TaskbarController(QObject):
         try:
             if QApplication.platformName() != "windows":
                 raise OSError("任务栏显示需要 Windows 桌面会话")
-            area = find_taskbar()
+            target = self._drag_over if self._dragging and not isinstance(self._drag_over, bool) else None
+            area = find_taskbar(window=int(self.source.winId()), device_name=self.source.taskbar_screen, hwnd=target)
             if area is None:
                 raise OSError("等待 Windows 任务栏恢复")
             height = taskbar_content_height(area.height, area.dpi)
@@ -235,9 +253,13 @@ class TaskbarController(QObject):
             self.native.present(area, image.width(), image.height(), bytes(image.constBits()),
                                 round(self.source.taskbar_offset * area.dpi / 96),
                                 click_through=self.source.click_through)
+            if area.device_name:
+                self.source.taskbar_screen = area.device_name
+            self._area = area
             self._active = True
             page = self.source.quotes.get_page("taskbar")
-            self._status(f"已显示在主屏任务栏 · 第 {page.index + 1}/{page.count} 页")
+            screen = area.device_name or "当前屏幕"
+            self._status(f"已显示在 {screen} 任务栏 · 第 {page.index + 1}/{page.count} 页")
             if not was_active and self.source.display_mode == "taskbar" and not self._dragging:
                 self.source.hide()
         except (OSError, ValueError) as error:
@@ -267,7 +289,7 @@ class TaskbarController(QObject):
     def _native_pointer(self, kind, x, y):
         # Snapshot before queuing: the pointer can move again before Qt runs.
         position = QCursor.pos()
-        over = False if self.source.display_mode == "both" else cursor_over_taskbar()
+        over = cursor_over_taskbar() or False
         QTimer.singleShot(0, self, lambda: self._dispatch_pointer(kind, x, y, position, over))
 
     def _dispatch_pointer(self, kind, x, y, position, over):
@@ -303,13 +325,15 @@ class TaskbarController(QObject):
             self._pointer_over = None
 
     def drag_started(self):
-        # 双开时任务栏固定显示，浮窗可在整个桌面自由移动。
-        if (not self.source.view_options.taskbar_enabled or self.source.display_mode == "both"
+        # 双开时拖动浮窗保持自由移动，原生任务栏仍可跨屏停靠。
+        if (not self.source.view_options.taskbar_enabled
+                or (self.source.display_mode == "both" and self.source._drag_surface == "float")
                 or QApplication.platformName() != "windows"):
             return
         self._dragging = True
         self._drag_over = None  # force the first hover update, even outside the bar
         self._drag_origin_mode = self.source.display_mode
+        self._drag_origin_screen = self.source.taskbar_screen
         self._drag_origin_position = self.source._drag_start_window_pos
         self.drag_moved()
 
@@ -322,12 +346,15 @@ class TaskbarController(QObject):
     def drag_moved(self):
         if not self._dragging:
             return
-        over = cursor_over_taskbar() if self._pointer_over is None else self._pointer_over
+        over = (cursor_over_taskbar() or False) if self._pointer_over is None else self._pointer_over
         if over == self._drag_over:
             return
         self._drag_over = over
-        self.source.taskbar_preview_active = over
+        dual = self._drag_origin_mode == "both"
+        self.source.taskbar_preview_active = bool(over) and not dual
         self.apply_mode()
+        if dual:
+            return
         if over and self._active:
             self.source.hide()
             if self.source._drag_surface == "float" and self.native:
@@ -361,14 +388,19 @@ class TaskbarController(QObject):
         self.source.taskbar_preview_active = False
         if not accepted:
             mode = self._drag_origin_mode
+            self.source.taskbar_screen = self._drag_origin_screen
             self.source.move(self._drag_origin_position)
+        elif self._drag_origin_mode == "both":
+            mode = "both"
+            if not docked:
+                self.source.taskbar_screen = self._drag_origin_screen
         elif docked:
             mode = "both" if self.source.view_options.taskbar_dual_open else "taskbar"
             # Remember a usable position for a later drag out of the bar.
             self.source.move(self._drag_origin_position)
         else:
             mode = "float"
-        self.source.set_display_mode(mode)
+        self.source.set_display_mode(mode, taskbar_screen=self.source.taskbar_screen)
         self.apply_mode()
 
     def _context_menu(self):

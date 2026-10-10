@@ -808,10 +808,87 @@ class SettingsDialogTests(SettingsTestCase):
             dialog._on_update_check_finished((False, None))
             warn.assert_called_once()
 
-    def test_open_cache_dir_button_opens_folder(self):
-        from stockwidget.core.config_store import config_paths
+    def test_cache_group_layout_and_theme_remain_readable_and_scrollable(self):
+        dialog, window = self._make_dialog()
+        dialog.show()
+        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.general)
+        for mode in ("light", "dark"):
+            window.set_view_options(color_mode=mode)
+            self.qt_app.processEvents()
+            group = dialog.ui.gb_cache
+            position = dialog.ui.cache_directory_title.mapTo(group, QPoint())
+            self.assertGreaterEqual(position.x(), 10)
+            self.assertGreaterEqual(position.y(), 25)
+            self.assertEqual(dialog.ui.cache_directory_description.width(), 310)
+            self.assertEqual(dialog.ui.cache_directory_description.palette().color(QPalette.WindowText),
+                             dialog.ui.cb_head_description.palette().color(QPalette.WindowText))
+            for button in (dialog.ui.btn_choose_cache_dir, dialog.ui.btn_open_cache_dir,
+                           dialog.ui.btn_clear_cache, dialog.ui.btn_default_cache_dir):
+                self.assertTrue(group.isAncestorOf(button))
+                self.assertTrue(group.rect().contains(button.mapTo(group, button.rect().bottomRight())))
+            scroll = dialog.ui.general_scroll
+            scroll.ensureWidgetVisible(dialog.ui.btn_clear_cache)
+            self.qt_app.processEvents()
+            self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
+            self.assertTrue(scroll.viewport().rect().contains(
+                dialog.ui.btn_clear_cache.mapTo(scroll.viewport(), dialog.ui.btn_clear_cache.rect().center())))
 
-        dialog, _window = self._make_dialog()
+    def test_cache_directory_selection_persists_reloads_and_can_restore_default(self):
+        root = self.enterContext(tempfile.TemporaryDirectory())
+        old, new = os.path.join(root, "old"), os.path.join(root, "new")
+        dialog, window = self._make_dialog(cache_directory=old)
+        with patch("stockwidget.ui.settings.dialog.QFileDialog.getExistingDirectory", return_value=new):
+            dialog.ui.btn_choose_cache_dir.click()
+        self.assertEqual(window.current_config()["cache_directory"], new)
+        self.assertEqual(str(window.history.cache.directory), new)
+        self.assertEqual(dialog.ui.edit_cache_directory.text(), new)
+        _, restored = self._make_dialog(**window.current_config())
+        self.assertEqual(str(restored.history.cache.directory), new)
+        dialog.ui.btn_default_cache_dir.click()
+        self.assertEqual(window.current_config()["cache_directory"], "")
+        self.assertFalse(dialog.ui.btn_default_cache_dir.isEnabled())
+        self.assertNotEqual(str(window.history.cache.directory), new)
+
+    def test_cache_directory_failure_and_cancel_preserve_the_current_preference(self):
+        root = self.enterContext(tempfile.TemporaryDirectory())
+        dialog, window = self._make_dialog(cache_directory=root)
+        saved = Mock()
+        window.set_on_change(saved)
+        with patch("stockwidget.ui.settings.dialog.QFileDialog.getExistingDirectory", return_value=""):
+            dialog.ui.btn_choose_cache_dir.click()
+        saved.assert_not_called()
+        invalid = os.path.join(root, "file")
+        with open(invalid, "w", encoding="utf-8") as file:
+            file.write("keep")
+        with patch("stockwidget.ui.settings.dialog.QFileDialog.getExistingDirectory", return_value=invalid), \
+                patch("stockwidget.ui.settings.dialog.QToolTip.showText") as tooltip:
+            dialog.ui.btn_choose_cache_dir.click()
+        self.assertIn("无法写入", tooltip.call_args.args[1])
+        self.assertEqual(window.cache_directory, root)
+        self.assertEqual(str(window.history.cache.directory), root)
+        saved.assert_not_called()
+
+    def test_macos_click_through_requires_cocoa_and_remains_available_from_settings_and_hotkey(self):
+        from stockwidget.platform.capabilities import click_through_supported
+        with patch("sys.platform", "darwin"):
+            with patch("PySide6.QtWidgets.QApplication.platformName", return_value="offscreen"):
+                self.assertFalse(click_through_supported())
+            with patch("PySide6.QtWidgets.QApplication.platformName", return_value="cocoa"):
+                dialog, window = self._make_dialog()
+                self.assertTrue(click_through_supported())
+                self.assertTrue(dialog.ui.cb_click_through.isEnabled())
+                self.assertTrue(dialog.ui.cb_hotkey_click_through.isEnabled())
+                dialog.ui.cb_click_through.click()
+                self.assertTrue(window.click_through)
+                self.assertTrue(window.windowFlags() & Qt.WindowTransparentForInput)
+                window.click_through_hotkey_triggered.emit()
+                self.assertFalse(window.click_through)
+                self.assertFalse(dialog.ui.cb_click_through.isChecked())
+                self.assertFalse(window.windowFlags() & Qt.WindowTransparentForInput)
+
+    def test_open_cache_dir_button_opens_folder(self):
+        directory = self.enterContext(tempfile.TemporaryDirectory())
+        dialog, window = self._make_dialog(cache_directory=directory)
         with patch(
             "stockwidget.ui.settings.dialog.QDesktopServices.openUrl"
         ) as open_url:
@@ -819,11 +896,11 @@ class SettingsDialogTests(SettingsTestCase):
             open_url.assert_called_once()
             url = open_url.call_args[0][0]
             self.assertTrue(url.isLocalFile())
-            self.assertEqual(os.path.normpath(url.toLocalFile()), os.path.normpath(config_paths()))
+            self.assertEqual(os.path.normpath(url.toLocalFile()), os.path.normpath(str(window.history.cache.directory)))
 
-    def test_about_clear_cache_reports_failure_in_tooltip(self):
+    def test_general_clear_cache_reports_failure_in_tooltip(self):
         dialog, window = self._make_dialog()
-        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.about)
+        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.general)
         dialog.show()
         for mode in ("light", "dark"):
             with self.subTest(mode=mode):
@@ -834,7 +911,7 @@ class SettingsDialogTests(SettingsTestCase):
                     dialog.ui.btn_clear_cache.click()
                 clear_cache.assert_called_once()
                 self.assertIn("未能清理", tooltip.call_args.args[1])
-                self.assertEqual(dialog.ui.about_scroll.horizontalScrollBar().maximum(), 0)
+                self.assertEqual(dialog.ui.general_scroll.horizontalScrollBar().maximum(), 0)
 
     def test_unicolor_defaults_on_and_controls_direction_colors(self):
         dialog, window = self._make_dialog()

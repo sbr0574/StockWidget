@@ -15,7 +15,7 @@ from PySide6.QtGui import QColor, QCursor, QMouseEvent, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
-from stockwidget.data.bars import Bar, BarResult, parse_eastmoney
+from stockwidget.data.bars import Bar, BarResult, history_day, parse_eastmoney
 from stockwidget.data.bar_cache import BarCache
 from stockwidget.data.quotes import _new_entry
 from stockwidget.ui.floating.taskbar import TaskbarController, render_taskbar
@@ -458,6 +458,28 @@ class HistoryUITests(HistoryTestCase):
         history.open_row("float", 0)
         self.wait_ready(window)
         self.assertEqual(history.cache.get.call_count, calls + 1)
+
+    def test_directory_change_closes_chart_and_discards_late_results_before_reopening(self):
+        _, window = self.make_window(chart_enabled=True)
+        history = window.history
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        old_directory = str(history.cache.directory)
+        request = (history._generation, dict(history.instrument), history.dialog.view, window.data_source,
+                   history_day(history.instrument, history.cache.clock()), False)
+        target = self.enterContext(tempfile.TemporaryDirectory())
+        self.assertTrue(window.set_cache_directory(target))
+        self.assertFalse(history.dialog.isVisible())
+        self.assertEqual(history._series, {})
+        history._accept((*request, BarResult(sample_bars(), "sina")))
+        self.assertEqual(history._series, {})
+        self.assertFalse(history.dialog.isVisible())
+        self.assertEqual(str(history.cache.directory), target)
+        self.assertNotEqual(old_directory, target)
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        self.assertTrue(history.dialog.isVisible())
+        self.assertTrue(history.dialog.chart.bars)
 
     def test_display_mode_setting_persists_and_switches_open_chart(self):
         dialog, window = self.make_window()

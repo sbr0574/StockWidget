@@ -15,6 +15,7 @@ from pathlib import Path
 import re
 import sqlite3
 import threading
+import tempfile
 
 from stockwidget.core.config_store import history_cache_dir
 from stockwidget.data.bars import BarResult, fetch_bars, history_day, make_bar, market_now, select_bars, trading_date
@@ -156,6 +157,24 @@ class BarCache:
                 return True
             except OSError:
                 return False
+
+    def set_directory(self, directory):
+        """Switch future downloads atomically; keep files in the previous directory."""
+        directory = Path(directory)
+        if directory == self.directory:
+            return True
+        try:
+            directory.mkdir(parents=True, exist_ok=True)
+            with tempfile.TemporaryFile(dir=directory):
+                pass  # Verify actual write access before changing the preference.
+        except OSError:
+            return False
+        with self._lock:
+            self._generation += 1
+            self._retry_after.clear()
+            self.directory = directory
+            self.database = directory / "history.sqlite3"
+        return True
 
     def get(self, instrument, view, source, *, repair=False, generation=None):
         if view not in {"intraday", "five_day", "daily"}:

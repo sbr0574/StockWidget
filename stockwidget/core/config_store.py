@@ -3,6 +3,7 @@
 
 import json
 import os
+import sys
 
 from stockwidget.constants import APP_NAME
 
@@ -17,8 +18,19 @@ def data_cache_dir() -> str:
     return os.path.join(config_paths(), "data")
 
 
-def history_cache_dir() -> str:
-    """History downloads are separate from market-code metadata in data/."""
+def normalize_cache_directory(value) -> str:
+    """空值使用平台默认目录；自定义路径以绝对路径保存。"""
+    if not isinstance(value, str) or not value.strip() or "\0" in value:
+        return ""
+    return os.path.abspath(os.path.expandvars(os.path.expanduser(value.strip())))
+
+
+def history_cache_dir(directory="") -> str:
+    """图表缓存可自定义；macOS 使用与应用 bundle ID 对应的系统缓存目录。"""
+    if custom := normalize_cache_directory(directory):
+        return custom
+    if sys.platform == "darwin":
+        return os.path.join(os.path.expanduser("~"), "Library", "Caches", "com.sbr0574.StockWidget")
     return os.path.join(config_paths(), "cache")
 
 

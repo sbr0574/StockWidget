@@ -388,6 +388,50 @@ class CacheTests(unittest.TestCase):
             self.assertFalse(self.cache.clear())
         self.assertTrue(self.cache.database.exists())
 
+    def test_directory_switch_preserves_old_files_and_discards_running_and_queued_downloads(self):
+        self.cache.get(A_SHARE, "daily", "sina")
+        old_database = self.cache.database
+        before = old_database.read_bytes()
+        started, release = threading.Event(), threading.Event()
+        def download(*_args):
+            started.set()
+            release.wait(3)
+            return BarResult(sample_bars(), "sina")
+        self.cache.fetcher = download
+        old_generation = self.cache.generation
+        worker = threading.Thread(target=lambda: self.cache.get(A_SHARE, "daily", "sina", repair=True))
+        worker.start()
+        try:
+            self.assertTrue(started.wait(2))
+            target = Path(self.tmp) / "new-cache"
+            self.assertTrue(self.cache.set_directory(target))
+            release.set()
+            worker.join(2)
+            self.assertFalse(worker.is_alive())
+            self.assertEqual(old_database.read_bytes(), before)
+            self.assertFalse(self.cache.database.exists())
+            self.cache.fetcher = Mock(return_value=BarResult(sample_bars(), "sina"))
+            self.cache.get(A_SHARE, "daily", "sina", generation=old_generation)
+            self.cache.fetcher.assert_not_called()
+            self.cache.get(A_SHARE, "daily", "sina")
+            self.assertTrue(self.cache.database.exists())
+            self.assertTrue(self.cache.clear())
+            self.assertEqual(old_database.read_bytes(), before)
+        finally:
+            release.set()
+            worker.join(3)
+
+    def test_unwritable_directory_switch_preserves_directory_generation_and_cached_data(self):
+        self.cache.get(A_SHARE, "daily", "sina")
+        before = self.cache.database.read_bytes()
+        generation, directory = self.cache.generation, self.cache.directory
+        target = Path(self.tmp) / "new-cache"
+        with patch("stockwidget.data.bar_cache.tempfile.TemporaryFile", side_effect=PermissionError):
+            self.assertFalse(self.cache.set_directory(target))
+        self.assertEqual(self.cache.generation, generation)
+        self.assertEqual(self.cache.directory, directory)
+        self.assertEqual(self.cache.database.read_bytes(), before)
+
     def test_us_and_futures_trading_windows(self):
         us = {"market": "us", "code": "aapl"}
         self.assertTrue(cache_state(us, datetime(2026, 7, 1, 14, tzinfo=timezone.utc))[1])
