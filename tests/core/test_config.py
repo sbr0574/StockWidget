@@ -3,27 +3,24 @@
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from stockwidget.constants import APP_NAME
-from stockwidget.core.config_store import config_paths, load_file, save_file
+from stockwidget.core.config_store import config_paths, history_cache_dir, load_file, save_file
 from stockwidget.core.view_options import ViewOptions, column_ranges, page_slice, taskbar_font_size_limit, taskbar_font_pixels
 
 
 class ConfigStoreTests(unittest.TestCase):
     def setUp(self):
-        self._old_appdata = os.environ.get("APPDATA")
-        self._tmp = tempfile.TemporaryDirectory()
-        os.environ["APPDATA"] = self._tmp.name
-
-    def tearDown(self):
-        self._tmp.cleanup()
-        if self._old_appdata is None:
-            os.environ.pop("APPDATA", None)
-        else:
-            os.environ["APPDATA"] = self._old_appdata
+        self._tmp = self.enterContext(tempfile.TemporaryDirectory())
+        self.enterContext(patch("stockwidget.core.config_store.sys.platform", "linux"))
+        self.enterContext(patch("stockwidget.core.config_store.os.path.expanduser", return_value=self._tmp))
 
     def test_config_paths(self):
-        self.assertEqual(config_paths(), os.path.join(self._tmp.name, APP_NAME))
+        self.assertEqual(config_paths(), os.path.join(self._tmp, APP_NAME))
+
+    def test_history_directory_is_within_the_fixed_program_directory(self):
+        self.assertEqual(history_cache_dir(), os.path.join(config_paths(), "cache"))
 
     def test_save_and_load_roundtrip(self):
         save_file({"a": 1, "中文": "值"}, "c.json")

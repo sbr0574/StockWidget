@@ -3,6 +3,7 @@
 from unittest.mock import Mock, patch
 import os
 import threading
+import tempfile
 import unittest
 
 from PySide6.QtCore import Qt, QPointF
@@ -86,6 +87,9 @@ class QtTestCase(unittest.TestCase):
 class SettingsTestCase(QtTestCase):
 
     def setUp(self):
+        root = self.enterContext(tempfile.TemporaryDirectory())
+        for module in ("stockwidget.core.config_store", "stockwidget.ui.settings.dialog"):
+            self.enterContext(patch(module + ".config_paths", return_value=os.path.join(root, "StockWidget")))
         self._windows = []
         self.enterContext(patch.object(QuotePresenter, "refresh"))
         self.enterContext(patch("stockwidget.ui.floating.widget.GlobalHotkeyManager"))

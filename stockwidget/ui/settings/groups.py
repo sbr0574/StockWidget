@@ -162,7 +162,8 @@ class TaskbarStyleSettings(_SyncedGroup):
 
     def _font_size_limit(self):
         try:
-            area = find_taskbar() if sys.platform == "win32" else None
+            area = (find_taskbar(window=int(self.source.winId()), device_name=self.source.taskbar_screen)
+                    if sys.platform == "win32" else None)
         except OSError:
             area = None
         if area:

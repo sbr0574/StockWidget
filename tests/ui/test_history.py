@@ -15,7 +15,7 @@ from PySide6.QtGui import QColor, QCursor, QMouseEvent, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
-from stockwidget.data.bars import Bar, BarResult, parse_eastmoney
+from stockwidget.data.bars import Bar, BarResult, history_day, parse_eastmoney
 from stockwidget.data.bar_cache import BarCache
 from stockwidget.data.quotes import _new_entry
 from stockwidget.ui.floating.taskbar import TaskbarController, render_taskbar
@@ -388,7 +388,8 @@ class HistoryUITests(HistoryTestCase):
                         self.assertIn(labels[0][1], (chart.bars[0].time[begin:stop], chart.bars[0].time[5:10]))
                         self.assertIn(labels[-1][1], (chart.bars[-1].time[begin:stop], chart.bars[-1].time[5:10]))
                         for (previous, _), (current, _) in zip(labels, labels[1:]):
-                            self.assertGreaterEqual(current.left() - previous.right(), 8)
+                            # QRectF subtraction can round an exact 8px gap below 8.
+                            self.assertGreaterEqual(current.left() - previous.right(), 8 - 1e-9)
                         self.assertTrue(all(chart.rect().contains(rect.toAlignedRect()) for rect, _ in labels))
         finally:
             delete(chart)
@@ -410,7 +411,7 @@ class HistoryUITests(HistoryTestCase):
                     labels = chart._time_labels()
                     self.assertEqual((labels[0][1], labels[-1][1]), ("09:30", "15:00"))
                     for (previous, _), (current, _) in zip(labels, labels[1:]):
-                        self.assertGreaterEqual(current.left() - previous.right(), 8)
+                        self.assertGreaterEqual(current.left() - previous.right(), 8 - 1e-9)
                     self.assertEqual(chart.bars, bars)
                     self.assertLess(chart._positions[-1] / len(chart._time_axis), .15)
                     for slot, expected in ((chart._positions[-1], 2), (len(chart._time_axis) - 10, None)):

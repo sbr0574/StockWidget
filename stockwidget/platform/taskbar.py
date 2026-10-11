@@ -20,6 +20,8 @@ class TaskbarArea:
     height: int
     right: int
     dpi: int = 96
+    device_name: str = ""
+    monitor_rect: tuple[int, int, int, int] | None = None
 
     def position(self, width, height, offset=0):
         # Keep clear of the notification area. Offset moves towards the left.
@@ -38,6 +40,8 @@ def _api():
         "FindWindowExW": ([w.HWND, w.HWND, w.LPCWSTR, w.LPCWSTR], w.HWND),
         "GetWindowRect": ([w.HWND, ctypes.POINTER(w.RECT)], w.BOOL),
         "GetCursorPos": ([ctypes.POINTER(w.POINT)], w.BOOL),
+        "MonitorFromWindow": ([w.HWND, w.DWORD], w.HANDLE),
+        "GetMonitorInfoW": ([w.HANDLE, w.LPVOID], w.BOOL),
         "ScreenToClient": ([w.HWND, ctypes.POINTER(w.POINT)], w.BOOL),
         "SetCapture": ([w.HWND], w.HWND),
         "GetCapture": ([], w.HWND),
@@ -83,39 +87,95 @@ def _api():
     return user, gdi, kernel
 
 
-def find_taskbar():
-    """Use the primary taskbar; follow its height, DPI and notification area."""
+def _taskbar_windows(user):
+    primary = user.FindWindowW("Shell_TrayWnd", None)
+    windows = [primary] if primary else []
+    previous = None
+    while hwnd := user.FindWindowExW(None, previous, "Shell_SecondaryTrayWnd", None):
+        windows.append(hwnd)
+        previous = hwnd
+    return windows
+
+
+def _monitor_info(user, hwnd):
+    class MonitorInfo(ctypes.Structure):
+        _fields_ = [("size", w.DWORD), ("monitor", w.RECT), ("work", w.RECT),
+                    ("flags", w.DWORD), ("device", w.WCHAR * 32)]
+
+    info = MonitorInfo()
+    info.size = ctypes.sizeof(info)
+    monitor = user.MonitorFromWindow(hwnd, 2)  # MONITOR_DEFAULTTONEAREST
+    if not monitor or not user.GetMonitorInfoW(monitor, ctypes.byref(info)):
+        raise ctypes.WinError(ctypes.get_last_error())
+    return info
+
+
+def _find_child(user, parent, class_name):
+    found = user.FindWindowExW(parent, None, class_name, None)
+    if found:
+        return found
+    child = None
+    while child := user.FindWindowExW(parent, child, None, None):
+        if found := _find_child(user, child, class_name):
+            return found
+    return None
+
+
+def find_taskbar(*, window=None, device_name="", hwnd=None):
+    """Select a bar by pointer target, saved display, or the floating HWND.
+
+    Monitor selection stays in native coordinates, including mixed-DPI desktops.
+    A missing display/bar falls back to the floating window's display or primary.
+    """
     user, _, _ = _api()
-    hwnd = user.FindWindowW("Shell_TrayWnd", None)
-    if not hwnd:
+    windows = _taskbar_windows(user)
+    if not windows:
         return None
+    if hwnd is not None:
+        if hwnd not in windows:
+            return None
+    else:
+        preferred = device_name or (_monitor_info(user, window).device if window else "")
+        hwnd = next((bar for bar in windows if _monitor_info(user, bar).device == preferred), None)
+        if hwnd is None and window:
+            monitor = user.MonitorFromWindow(window, 2)
+            hwnd = next((bar for bar in windows if user.MonitorFromWindow(bar, 2) == monitor), None)
+        hwnd = hwnd or windows[0]
     rect = w.RECT()
     if not user.GetClientRect(hwnd, ctypes.byref(rect)):
         raise ctypes.WinError(ctypes.get_last_error())
     width, height = rect.right, rect.bottom
     if height > width:
-        raise OSError("请将主屏任务栏设置为横向，再启用任务栏显示")
-    tray = user.FindWindowExW(hwnd, None, "TrayNotifyWnd", None)
-    if not tray:
+        raise OSError("请将目标屏幕任务栏设置为横向，再启用任务栏显示")
+    tray = _find_child(user, hwnd, "TrayNotifyWnd") or _find_child(user, hwnd, "ClockButton")
+    if not tray and hwnd == user.FindWindowW("Shell_TrayWnd", None):
         raise OSError("无法定位系统托盘，任务栏显示将在恢复后自动重试")
-    if not user.GetWindowRect(tray, ctypes.byref(rect)):
-        raise ctypes.WinError(ctypes.get_last_error())
-    point = w.POINT(rect.left, rect.top)
-    user.MapWindowPoints(None, hwnd, ctypes.byref(point), 1)
     dpi = user.GetDpiForWindow(hwnd) or 96
-    return TaskbarArea(hwnd, width, height, max(0, point.x - 6 * dpi // 96), dpi)
+    right = width - 120 * dpi // 96  # Reserve clock space on secondary bars without a legacy tray HWND.
+    if tray:
+        if not user.GetWindowRect(tray, ctypes.byref(rect)):
+            raise ctypes.WinError(ctypes.get_last_error())
+        point = w.POINT(rect.left, rect.top)
+        user.MapWindowPoints(None, hwnd, ctypes.byref(point), 1)
+        right = point.x - 6 * dpi // 96
+    info = _monitor_info(user, hwnd)
+    monitor = info.monitor
+    return TaskbarArea(hwnd, width, height, max(0, right), dpi, info.device,
+                       (monitor.left, monitor.top, monitor.right - monitor.left, monitor.bottom - monitor.top))
 
 
 def cursor_over_taskbar():
-    """Compare native coordinates, avoiding Qt logical/physical DPI conversion."""
+    """Return the bar HWND under the native pointer, or None outside all bars."""
     if sys.platform != "win32":
-        return False
+        return None
     user, _, _ = _api()
-    hwnd = user.FindWindowW("Shell_TrayWnd", None)
     point, rect = w.POINT(), w.RECT()
-    return bool(hwnd and user.GetCursorPos(ctypes.byref(point))
-                and user.GetWindowRect(hwnd, ctypes.byref(rect))
-                and rect.left <= point.x < rect.right and rect.top <= point.y < rect.bottom)
+    if user.GetCursorPos(ctypes.byref(point)):
+        for hwnd in _taskbar_windows(user):
+            if (user.GetWindowRect(hwnd, ctypes.byref(rect))
+                    and rect.left <= point.x < rect.right and rect.top <= point.y < rect.bottom):
+                return hwnd
+    return None
 
 
 class NativeTaskbarWindow:
@@ -198,19 +258,22 @@ class NativeTaskbarWindow:
     def _attach(self, area):
         if self.hwnd and self.user.IsWindow(self.hwnd) and self.user.GetParent(self.hwnd) == area.hwnd:
             return
-        self.hide()
+        # Reparent the same input owner when crossing displays. Destroying it
+        # would release pointer capture and interrupt the shared drag gesture.
+        existing = self.hwnd if self.hwnd and self.user.IsWindow(self.hwnd) else None
         # Match Explorer at creation; avoid SetParent changing Qt's process DPI mode.
         context = self.user.GetWindowDpiAwarenessContext(area.hwnd)
         previous = self.user.SetThreadDpiAwarenessContext(context)
         try:
-            self.hwnd = self.user.CreateWindowExW(
-                0x08080080, self._class_name, "StockWidget 任务栏行情", 0x80000000,
-                0, 0, 1, 1, None, None, self._instance, None,
-            )  # NOACTIVATE | LAYERED | TOOLWINDOW; POPUP, initially hidden
-            if not self.hwnd:
-                raise ctypes.WinError(ctypes.get_last_error())
-            style = self.user.GetWindowLongW(self.hwnd, -16)
-            self.user.SetWindowLongW(self.hwnd, -16, (style & ~0x80000000) | 0x40000000)
+            if not existing:
+                self.hwnd = self.user.CreateWindowExW(
+                    0x08080080, self._class_name, "StockWidget 任务栏行情", 0x80000000,
+                    0, 0, 1, 1, None, None, self._instance, None,
+                )  # NOACTIVATE | LAYERED | TOOLWINDOW; POPUP, initially hidden
+                if not self.hwnd:
+                    raise ctypes.WinError(ctypes.get_last_error())
+                style = self.user.GetWindowLongW(self.hwnd, -16)
+                self.user.SetWindowLongW(self.hwnd, -16, (style & ~0x80000000) | 0x40000000)
             ctypes.set_last_error(0)
             old_parent = self.user.SetParent(self.hwnd, area.hwnd)
             error = ctypes.get_last_error()
@@ -219,6 +282,7 @@ class NativeTaskbarWindow:
             if self.user.GetParent(self.hwnd) != area.hwnd:
                 raise OSError("无法嵌入任务栏")
             self.parent = area.hwnd
+            self._last_frame = None
         except Exception:
             self.hide()
             raise

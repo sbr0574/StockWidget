@@ -1,4 +1,4 @@
-"""浮窗原生能力：Windows 无激活置顶与 Windows / X11 鼠标穿透。"""
+"""浮窗原生能力：Windows 无激活置顶与 Windows / Cocoa / X11 鼠标穿透。"""
 
 from ctypes import wintypes
 from functools import lru_cache
@@ -8,7 +8,7 @@ import sys
 
 from PySide6.QtCore import Qt
 
-from stockwidget.platform.capabilities import is_x11
+from stockwidget.platform.capabilities import is_cocoa, is_x11
 
 
 @lru_cache(maxsize=1)
@@ -48,15 +48,15 @@ def ensure_topmost(widget) -> bool:
 
 
 def apply_click_through(widget, enable: bool) -> None:
-    """Windows 使用扩展样式；X11 让 Qt 管理输入区域及窗口重建。"""
+    """Windows 使用扩展样式；Cocoa / X11 由 Qt 管理原生输入透明状态。"""
     system = sys.platform
     if system == "win32":
         _click_through_windows(widget, enable)
-    elif system == "linux" and is_x11():
+    elif is_cocoa() or (system == "linux" and is_x11()):
         widget.winId()
         handle = widget.windowHandle()
         # xcb 重建原生窗口后可能保留旧输入透明缓存；先清除才能重新设置输入区域。
-        if enable:
+        if enable and is_x11():
             handle.setFlag(Qt.WindowTransparentForInput, False)
         handle.setFlag(Qt.WindowTransparentForInput, enable)
 

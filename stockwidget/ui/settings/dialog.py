@@ -24,8 +24,8 @@ from PySide6.QtWidgets import (
     QToolTip,
 )
 
-from stockwidget.constants import APP_VERSION
 from stockwidget.core.config_store import config_paths
+from stockwidget.constants import APP_VERSION
 from stockwidget.core.window_rules import MAX_HIDE_TIMES
 from stockwidget.data.bars import MA_PERIODS
 from stockwidget.data.update_check import get_update_info, github_available, project_links
@@ -166,6 +166,7 @@ class SettingsDialog(QDialog):
         dark = mode == "dark" or (mode == "system" and is_dark_theme())
         palette = QApplication.palette() if mode == "system" else theme_palette(dark, QApplication.palette())
         apply_settings_theme(self, dark, palette, linux_fonts=sys.platform == "linux",
+                             macos_groups=sys.platform == "darwin",
                              extra_stylesheet=self._designer_stylesheet)
         for component in (self.metric_pool, self.taskbar_settings.metric_pool, self.watchlist_editor):
             component.set_theme(dark)
@@ -240,7 +241,7 @@ class SettingsDialog(QDialog):
         self.win.view_options_changed.connect(self._sync_common_options)
 
         self.ui.btn_check_update.clicked.connect(self._check_update_manually)
-        self.ui.btn_open_cache_dir.clicked.connect(self._open_cache_dir)
+        self.ui.btn_open_cache_dir.clicked.connect(self._open_data_dir)
         self.ui.btn_clear_cache.clicked.connect(self._clear_cache)
         self.ui.btn_clear_watchlist.clicked.connect(self.watchlist_editor.clear_watchlist)
         self.ui.btn_reset_appearance.clicked.connect(self._reset_appearance)
@@ -443,7 +444,7 @@ class SettingsDialog(QDialog):
         if not click_through_supported():
             self.ui.cb_click_through.setEnabled(False)
             self.ui.cb_click_through.setToolTip(unsupported_tooltip("鼠标穿透"))
-            # 鼠标穿透不可用（如 macOS）时，其快捷键一并关闭
+            # 鼠标穿透不可用时，其快捷键一并关闭
             for w in (self.ui.cb_hotkey_click_through, self.ui.keyseq_click_through):
                 w.setEnabled(False)
                 w.setToolTip(unsupported_tooltip("鼠标穿透"))
@@ -906,17 +907,25 @@ class SettingsDialog(QDialog):
                 self, "检查更新", "检查更新失败。\n" + (error or "未获取到版本信息，请稍后重试。")
             )
 
-    def _open_cache_dir(self):
-        """打开配置/缓存目录所在的文件夹。"""
+    def _open_data_dir(self):
         path = config_paths()
-        os.makedirs(path, exist_ok=True)
-        QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+        try:
+            os.makedirs(path, exist_ok=True)
+            opened = QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+        except OSError:
+            opened = False
+        if not opened:
+            self._cache_tooltip(self.ui.btn_open_cache_dir, "无法打开程序数据目录，请检查目录权限。")
+
+    @staticmethod
+    def _cache_tooltip(button, message):
+        QToolTip.showText(button.mapToGlobal(button.rect().center()), message, button)
 
     def _clear_cache(self):
         cleared = self.win.history.clear_cache()
-        message = "已清理数据缓存。" if cleared else "部分数据缓存未能清理，请稍后重试。"
+        message = "已清理图表缓存。" if cleared else "部分图表缓存未能清理，请稍后重试。"
         button = self.ui.btn_clear_cache
-        QToolTip.showText(button.mapToGlobal(button.rect().center()), message, button)
+        self._cache_tooltip(button, message)
 
     def closeEvent(self, event):
         self.watchlist_editor.close()

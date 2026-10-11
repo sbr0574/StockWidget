@@ -808,22 +808,66 @@ class SettingsDialogTests(SettingsTestCase):
             dialog._on_update_check_finished((False, None))
             warn.assert_called_once()
 
-    def test_open_cache_dir_button_opens_folder(self):
-        from stockwidget.core.config_store import config_paths
+    def test_general_footer_actions_share_a_row_and_remain_visible_when_scrolled(self):
+        dialog, window = self._make_dialog()
+        dialog.show()
+        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.general)
+        for mode in ("light", "dark"):
+            window.set_view_options(color_mode=mode)
+            self.qt_app.processEvents()
+            buttons = (dialog.ui.btn_reset_appearance, dialog.ui.btn_reset_settings,
+                       dialog.ui.btn_open_cache_dir, dialog.ui.btn_clear_cache)
+            positions = [button.mapTo(dialog.ui.general_content, QPoint()) for button in buttons]
+            self.assertEqual(len({position.y() for position in positions}), 1)
+            self.assertGreater(positions[0].y(), dialog.ui.gb_scheduled_hide.geometry().bottom())
+            for index, button in enumerate(buttons):
+                self.assertTrue(dialog.ui.general_content.rect().contains(
+                    button.mapTo(dialog.ui.general_content, button.rect().bottomRight())))
+                self.assertEqual(button.size(), buttons[0].size())
+                if index:
+                    self.assertGreaterEqual(positions[index].x() - positions[index - 1].x()
+                                            - buttons[index - 1].width(), 5)
+            scroll = dialog.ui.general_scroll
+            scroll.ensureWidgetVisible(dialog.ui.btn_clear_cache)
+            self.qt_app.processEvents()
+            self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
+            for button in buttons:
+                self.assertTrue(scroll.viewport().rect().contains(
+                    button.mapTo(scroll.viewport(), button.rect().center())))
 
-        dialog, _window = self._make_dialog()
+    def test_macos_click_through_requires_cocoa_and_remains_available_from_settings_and_hotkey(self):
+        from stockwidget.platform.capabilities import click_through_supported
+        with patch("sys.platform", "darwin"):
+            with patch("PySide6.QtWidgets.QApplication.platformName", return_value="offscreen"):
+                self.assertFalse(click_through_supported())
+            with patch("PySide6.QtWidgets.QApplication.platformName", return_value="cocoa"):
+                dialog, window = self._make_dialog()
+                self.assertTrue(click_through_supported())
+                self.assertTrue(dialog.ui.cb_click_through.isEnabled())
+                self.assertTrue(dialog.ui.cb_hotkey_click_through.isEnabled())
+                dialog.ui.cb_click_through.click()
+                self.assertTrue(window.click_through)
+                self.assertTrue(window.windowFlags() & Qt.WindowTransparentForInput)
+                window.click_through_hotkey_triggered.emit()
+                self.assertFalse(window.click_through)
+                self.assertFalse(dialog.ui.cb_click_through.isChecked())
+                self.assertFalse(window.windowFlags() & Qt.WindowTransparentForInput)
+
+    def test_open_data_dir_button_opens_folder(self):
+        dialog, window = self._make_dialog()
+        directory = str(window.history.cache.directory.parent)
         with patch(
             "stockwidget.ui.settings.dialog.QDesktopServices.openUrl"
         ) as open_url:
-            dialog._open_cache_dir()
+            dialog._open_data_dir()
             open_url.assert_called_once()
             url = open_url.call_args[0][0]
             self.assertTrue(url.isLocalFile())
-            self.assertEqual(os.path.normpath(url.toLocalFile()), os.path.normpath(config_paths()))
+            self.assertEqual(os.path.normpath(url.toLocalFile()), os.path.normpath(directory))
 
-    def test_about_clear_cache_reports_failure_in_tooltip(self):
+    def test_general_clear_cache_reports_failure_in_tooltip(self):
         dialog, window = self._make_dialog()
-        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.about)
+        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.general)
         dialog.show()
         for mode in ("light", "dark"):
             with self.subTest(mode=mode):
@@ -834,7 +878,7 @@ class SettingsDialogTests(SettingsTestCase):
                     dialog.ui.btn_clear_cache.click()
                 clear_cache.assert_called_once()
                 self.assertIn("未能清理", tooltip.call_args.args[1])
-                self.assertEqual(dialog.ui.about_scroll.horizontalScrollBar().maximum(), 0)
+                self.assertEqual(dialog.ui.general_scroll.horizontalScrollBar().maximum(), 0)
 
     def test_unicolor_defaults_on_and_controls_direction_colors(self):
         dialog, window = self._make_dialog()

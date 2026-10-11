@@ -15,7 +15,8 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 import resources.resources_rc  # noqa: F401  加载 Qt 内嵌资源（图标、内置代码列表）
 
 from stockwidget.constants import APP_NAME, APP_VERSION, CONFIG_FILE
-from stockwidget.core.config_store import load_file, save_file
+from stockwidget.core.config_store import initialize_data_directory, save_file
+from stockwidget.core.window_rules import best_screen
 from stockwidget.data.code_lists import CODES_RETRY_SECONDS, CodeListManager
 from stockwidget.data.update_check import get_update_info
 from stockwidget.platform.autostart import set_start_on_boot
@@ -84,10 +85,14 @@ class App(QApplication):
         # macOS 不在程序坞显示图标；Linux 由窗口的 Qt.Tool 标志避开任务栏
         _hide_macos_dock_icon()
         self.app_version = APP_VERSION
+        try:
+            cfg = initialize_data_directory()
+        except OSError:
+            QMessageBox.critical(None, "程序数据目录错误", "无法完成程序数据迁移或旧目录清理，请检查目录权限与可用性。迁移失败时不会删除旧目录。")
+            raise SystemExit(1)
         self.code_manager = CodeListManager()
 
         self.setQuitOnLastWindowClosed(False)
-        cfg = load_file(CONFIG_FILE)
         self.theme = ApplicationTheme(self)
 
         # 加载图标
@@ -167,17 +172,23 @@ class App(QApplication):
         self.tray.setVisible(not (sys.platform == "win32" and options.hide_tray_icon))
 
     def open_settings(self):
-        if self.settings_dlg and self.settings_dlg.isVisible():
-            self.settings_dlg.raise_()
-            self.settings_dlg.activateWindow()
-            return
-        try:
-            self.settings_dlg = SettingsDialog(self.win, self.win, app=self)
-        except Exception as exc:
-            QMessageBox.critical(None, "设置窗口错误", f"无法打开设置窗口：\n{exc}")
-            return
-        # 将设置窗口放在屏幕正中
-        screen = QApplication.primaryScreen().availableGeometry()
+        if not self.settings_dlg or not self.settings_dlg.isVisible():
+            try:
+                self.settings_dlg = SettingsDialog(self.win, self.win, app=self)
+            except Exception as exc:
+                QMessageBox.critical(None, "设置窗口错误", f"无法打开设置窗口：\n{exc}")
+                return
+        screens = QApplication.screens()
+        target = None
+        if self.win.display_mode == "taskbar":
+            target = self.taskbar.screen()
+        if target is None:
+            bounds = best_screen(*self.win.position_controller.full_geometry().getRect(),
+                                 [s.geometry().getRect() for s in screens])
+            target = next((s for s in screens if s.geometry().getRect() == bounds), QApplication.primaryScreen())
+        self.settings_dlg.winId()
+        self.settings_dlg.windowHandle().setScreen(target)
+        screen = target.availableGeometry()
         self.settings_dlg.adjustSize()
         cx = screen.left() + (screen.width() - self.settings_dlg.width()) // 2
         cy = screen.top() + (screen.height() - self.settings_dlg.height()) // 2
