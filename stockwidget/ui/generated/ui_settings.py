@@ -18,10 +18,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComboBox,
     QDialog, QFontComboBox, QFrame, QGridLayout,
     QGroupBox, QHBoxLayout, QHeaderView, QLabel,
-    QLineEdit, QListView, QListWidget, QListWidgetItem,
-    QPushButton, QRadioButton, QScrollArea, QSizePolicy,
-    QSlider, QSpacerItem, QSpinBox, QStackedWidget,
-    QTableWidgetItem, QTimeEdit, QVBoxLayout, QWidget)
+    QListView, QListWidget, QListWidgetItem, QPushButton,
+    QRadioButton, QScrollArea, QSizePolicy, QSlider,
+    QSpacerItem, QSpinBox, QStackedWidget, QTableWidgetItem,
+    QTimeEdit, QVBoxLayout, QWidget)
 
 from stockwidget.ui.controls.metrics import MetricPoolWidget
 from stockwidget.ui.controls.settings_widgets import (CustomIconButton, HideTimeList, HotkeySequenceEdit, HotkeyStatus,
@@ -812,103 +812,6 @@ class Ui_SettingDialog(object):
 
         self.generalContentLayout.addWidget(self.cmb_color_mode_row)
 
-        self.gb_cache = QGroupBox(self.general_content)
-        self.gb_cache.setObjectName(u"gb_cache")
-        self.gb_cache.setFlat(False)
-        sizePolicy1.setHeightForWidth(self.gb_cache.sizePolicy().hasHeightForWidth())
-        self.gb_cache.setSizePolicy(sizePolicy1)
-        self.cacheLayout = QVBoxLayout(self.gb_cache)
-        self.cacheLayout.setSpacing(8)
-        self.cacheLayout.setObjectName(u"cacheLayout")
-        self.cacheLayout.setContentsMargins(16, 15, 16, 16)
-        self.cache_directory_row = QWidget(self.gb_cache)
-        self.cache_directory_row.setObjectName(u"cache_directory_row")
-        self.cache_directory_layout = QGridLayout(self.cache_directory_row)
-        self.cache_directory_layout.setSpacing(5)
-        self.cache_directory_layout.setObjectName(u"cache_directory_layout")
-        self.cache_directory_layout.setHorizontalSpacing(12)
-        self.cache_directory_layout.setContentsMargins(0, 0, 0, 0)
-        self.cache_directory_title = QLabel(self.cache_directory_row)
-        self.cache_directory_title.setObjectName(u"cache_directory_title")
-        self.cache_directory_title.setProperty(u"settingTitle", True)
-
-        self.cache_directory_layout.addWidget(self.cache_directory_title, 0, 0, 1, 1)
-
-        self.cache_directory_description = QLabel(self.cache_directory_row)
-        self.cache_directory_description.setObjectName(u"cache_directory_description")
-        self.cache_directory_description.setWordWrap(True)
-        self.cache_directory_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.cache_directory_description.setProperty(u"settingDescription", True)
-        self.cache_directory_description.setMinimumSize(QSize(310, 0))
-        self.cache_directory_description.setMaximumSize(QSize(310, 16777215))
-
-        self.cache_directory_layout.addWidget(self.cache_directory_description, 1, 0, 1, 1)
-
-        self.btn_choose_cache_dir = QPushButton(self.cache_directory_row)
-        self.btn_choose_cache_dir.setObjectName(u"btn_choose_cache_dir")
-        self.btn_choose_cache_dir.setAutoDefault(False)
-        self.btn_choose_cache_dir.setFlat(True)
-        self.btn_choose_cache_dir.setMinimumSize(QSize(110, 28))
-        self.btn_choose_cache_dir.setMaximumSize(QSize(110, 28))
-
-        self.cache_directory_layout.addWidget(self.btn_choose_cache_dir, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
-
-
-        self.cacheLayout.addWidget(self.cache_directory_row)
-
-        self.edit_cache_directory = QLineEdit(self.gb_cache)
-        self.edit_cache_directory.setObjectName(u"edit_cache_directory")
-        self.edit_cache_directory.setReadOnly(True)
-        self.edit_cache_directory.setMinimumSize(QSize(0, 28))
-        self.edit_cache_directory.setMaximumSize(QSize(16777215, 28))
-        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
-        sizePolicy4.setHorizontalStretch(0)
-        sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.edit_cache_directory.sizePolicy().hasHeightForWidth())
-        self.edit_cache_directory.setSizePolicy(sizePolicy4)
-
-        self.cacheLayout.addWidget(self.edit_cache_directory)
-
-        self.cacheActionsLayout = QHBoxLayout()
-        self.cacheActionsLayout.setSpacing(10)
-        self.cacheActionsLayout.setObjectName(u"cacheActionsLayout")
-        self.btn_open_cache_dir = QPushButton(self.gb_cache)
-        self.btn_open_cache_dir.setObjectName(u"btn_open_cache_dir")
-        self.btn_open_cache_dir.setAutoDefault(False)
-        self.btn_open_cache_dir.setFlat(True)
-        self.btn_open_cache_dir.setMinimumSize(QSize(140, 28))
-        self.btn_open_cache_dir.setMaximumSize(QSize(140, 28))
-
-        self.cacheActionsLayout.addWidget(self.btn_open_cache_dir)
-
-        self.btn_clear_cache = QPushButton(self.gb_cache)
-        self.btn_clear_cache.setObjectName(u"btn_clear_cache")
-        self.btn_clear_cache.setAutoDefault(False)
-        self.btn_clear_cache.setFlat(True)
-        self.btn_clear_cache.setMinimumSize(QSize(140, 28))
-        self.btn_clear_cache.setMaximumSize(QSize(140, 28))
-
-        self.cacheActionsLayout.addWidget(self.btn_clear_cache)
-
-        self.btn_default_cache_dir = QPushButton(self.gb_cache)
-        self.btn_default_cache_dir.setObjectName(u"btn_default_cache_dir")
-        self.btn_default_cache_dir.setAutoDefault(False)
-        self.btn_default_cache_dir.setFlat(True)
-        self.btn_default_cache_dir.setMinimumSize(QSize(110, 28))
-        self.btn_default_cache_dir.setMaximumSize(QSize(110, 28))
-
-        self.cacheActionsLayout.addWidget(self.btn_default_cache_dir)
-
-        self.cacheActionsSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.cacheActionsLayout.addItem(self.cacheActionsSpacer)
-
-
-        self.cacheLayout.addLayout(self.cacheActionsLayout)
-
-
-        self.generalContentLayout.addWidget(self.gb_cache)
-
         self.gb_icon = QGroupBox(self.general_content)
         self.gb_icon.setObjectName(u"gb_icon")
         self.gb_icon.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -1151,6 +1054,24 @@ class Ui_SettingDialog(object):
         self.btn_reset_settings.setMaximumSize(QSize(110, 28))
 
         self.generalResetLayout.addWidget(self.btn_reset_settings)
+
+        self.btn_open_cache_dir = QPushButton(self.general_content)
+        self.btn_open_cache_dir.setObjectName(u"btn_open_cache_dir")
+        self.btn_open_cache_dir.setAutoDefault(False)
+        self.btn_open_cache_dir.setFlat(True)
+        self.btn_open_cache_dir.setMinimumSize(QSize(110, 28))
+        self.btn_open_cache_dir.setMaximumSize(QSize(110, 28))
+
+        self.generalResetLayout.addWidget(self.btn_open_cache_dir)
+
+        self.btn_clear_cache = QPushButton(self.general_content)
+        self.btn_clear_cache.setObjectName(u"btn_clear_cache")
+        self.btn_clear_cache.setAutoDefault(False)
+        self.btn_clear_cache.setFlat(True)
+        self.btn_clear_cache.setMinimumSize(QSize(110, 28))
+        self.btn_clear_cache.setMaximumSize(QSize(110, 28))
+
+        self.generalResetLayout.addWidget(self.btn_clear_cache)
 
         self.generalResetSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -3129,19 +3050,6 @@ class Ui_SettingDialog(object):
         self.cmb_color_mode.setItemText(1, QCoreApplication.translate("SettingDialog", u"\u6d45\u8272", None))
         self.cmb_color_mode.setItemText(2, QCoreApplication.translate("SettingDialog", u"\u6df1\u8272", None))
 
-        self.gb_cache.setTitle(QCoreApplication.translate("SettingDialog", u"\u6570\u636e\u7f13\u5b58", None))
-        self.cache_directory_title.setText(QCoreApplication.translate("SettingDialog", u"\u7f13\u5b58\u76ee\u5f55", None))
-        self.cache_directory_description.setText(QCoreApplication.translate("SettingDialog", u"\u5b58\u653e\u5206\u65f6\u4e0e K \u7ebf\u7f13\u5b58\u3002\u5207\u6362\u540e\u91cd\u65b0\u7f13\u5b58\uff0c\u539f\u76ee\u5f55\u6587\u4ef6\u4fdd\u7559\u3002", None))
-        self.btn_choose_cache_dir.setText(QCoreApplication.translate("SettingDialog", u"\u9009\u62e9\u76ee\u5f55\u2026", None))
-#if QT_CONFIG(accessibility)
-        self.edit_cache_directory.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u5f53\u524d\u56fe\u8868\u7f13\u5b58\u76ee\u5f55", None))
-#endif // QT_CONFIG(accessibility)
-        self.btn_open_cache_dir.setText(QCoreApplication.translate("SettingDialog", u"\u6253\u5f00\u7f13\u5b58\u76ee\u5f55", None))
-        self.btn_clear_cache.setText(QCoreApplication.translate("SettingDialog", u"\u6e05\u7406\u6570\u636e\u7f13\u5b58", None))
-#if QT_CONFIG(tooltip)
-        self.btn_clear_cache.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6e05\u9664\u5206\u65f6\u4e0eK\u7ebf\u56fe\u7684\u672c\u5730\u7f13\u5b58\uff0c\u4e0b\u6b21\u67e5\u770b\u65f6\u91cd\u65b0\u52a0\u8f7d\u3002", None))
-#endif // QT_CONFIG(tooltip)
-        self.btn_default_cache_dir.setText(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u9ed8\u8ba4", None))
         self.gb_icon.setTitle(QCoreApplication.translate("SettingDialog", u"\u56fe\u6807", None))
 #if QT_CONFIG(tooltip)
         self.btn_icon_default.setToolTip(QCoreApplication.translate("SettingDialog", u"\u9ed8\u8ba4\u56fe\u6807", None))
@@ -3197,6 +3105,11 @@ class Ui_SettingDialog(object):
         self.btn_reset_settings.setText(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u9ed8\u8ba4\u8bbe\u7f6e", None))
 #if QT_CONFIG(tooltip)
         self.btn_reset_settings.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u5237\u65b0\u95f4\u9694\u3001\u6570\u636e\u6e90\u3001\u6307\u6807\u3001\u529f\u80fd\u5f00\u5173\u548c\u5feb\u6377\u952e", None))
+#endif // QT_CONFIG(tooltip)
+        self.btn_open_cache_dir.setText(QCoreApplication.translate("SettingDialog", u"\u6253\u5f00\u6570\u636e\u76ee\u5f55", None))
+        self.btn_clear_cache.setText(QCoreApplication.translate("SettingDialog", u"\u6e05\u7406\u7f13\u5b58\u6570\u636e", None))
+#if QT_CONFIG(tooltip)
+        self.btn_clear_cache.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6e05\u9664\u5206\u65f6\u4e0eK\u7ebf\u56fe\u7684\u672c\u5730\u7f13\u5b58\uff0c\u4e0b\u6b21\u67e5\u770b\u65f6\u91cd\u65b0\u52a0\u8f7d\u3002", None))
 #endif // QT_CONFIG(tooltip)
         self.shortcuts_title.setText(QCoreApplication.translate("SettingDialog", u"\u5feb\u6377\u952e", None))
 #if QT_CONFIG(accessibility)

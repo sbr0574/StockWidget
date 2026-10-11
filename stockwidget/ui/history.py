@@ -144,7 +144,7 @@ class HistoryController(QObject):
                                             "float", table.indexAt(pos).row(), block))
         self.dialog = None
         self.instrument = None
-        self.cache = BarCache(history_cache_dir(window.cache_directory))
+        self.cache = BarCache(history_cache_dir())
         self._generation = 0
         self._discard_before = 0
         self._busy = False
@@ -268,14 +268,6 @@ class HistoryController(QObject):
         cleared = self.cache.clear()
         self._discard_cached_history()
         return cleared
-
-    def set_cache_directory(self, directory):
-        previous = self.cache.generation
-        if not self.cache.set_directory(directory):
-            return False
-        if previous != self.cache.generation:
-            self._discard_cached_history()
-        return True
 
     def _discard_cached_history(self):
         self.click_timer.stop()

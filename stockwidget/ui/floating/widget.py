@@ -12,7 +12,6 @@ from stockwidget.core.quote_presentation import (
     normalize_visible_metrics,
     visible_metrics_from_config,
 )
-from stockwidget.core.config_store import history_cache_dir, normalize_cache_directory
 from stockwidget.core.view_options import APPEARANCE_OPTION_KEYS, ViewOptions
 from stockwidget.core.watchlist import normalize_watchlist
 from stockwidget.core.window_rules import normalize_hide_times
@@ -265,7 +264,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.hotkey_click_through_enabled = bool(cfg.get("hotkey_click_through_enabled", False))
         self.hotkey_click_through = cfg.get("hotkey_click_through", "Ctrl+Alt+C")
         self.start_on_boot = bool(cfg.get("start_on_boot", False))
-        self.cache_directory = normalize_cache_directory(cfg.get("cache_directory", ""))
         self.taskbar_screen = cfg.get("taskbar_screen", "") if isinstance(cfg.get("taskbar_screen", ""), str) else ""
         mode = cfg.get("display_mode", "float")
         self.display_mode = mode if sys.platform == "win32" and mode in ("float", "taskbar", "both") else "float"
@@ -294,10 +292,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.display_flags_changed.emit()
 
     def reset_settings(self):
-        previous_cache_directory = self.cache_directory
         self._load_settings_config({key: getattr(self.view_options, key) for key in APPEARANCE_OPTION_KEYS})
-        if not self.history.set_cache_directory(history_cache_dir(self.cache_directory)):
-            self.cache_directory = previous_cache_directory
         self.position_controller.recheck()
         self.position_options_changed.emit()
         self._apply_window_options()
@@ -361,7 +356,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
                 "refresh_seconds", "data_source", "hide_enabled", "scheduled_hide_enabled", "auto_hide_enabled",
                 "boundary_check_enabled", "edge_hide_enabled", "float_on_top", "force_top", "click_through",
                 "hotkey_enabled", "hotkey", "hotkey_click_through_enabled", "hotkey_click_through",
-                "start_on_boot", "cache_directory", "display_mode", "taskbar_offset", "taskbar_screen",
+                "start_on_boot", "display_mode", "taskbar_offset", "taskbar_screen",
             )},
             **self.view_options.to_config(),
             "pos": {"x": self.position_controller.full_geometry().x(),
@@ -530,16 +525,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._notify_change()
 
     # ----- 应用设置 -----
-    def set_cache_directory(self, directory):
-        directory = normalize_cache_directory(directory)
-        if directory == self.cache_directory:
-            return True
-        if not self.history.set_cache_directory(history_cache_dir(directory)):
-            return False
-        self.cache_directory = directory
-        self._notify_change()
-        return True
-
     def set_watchlist(self, watchlist: dict):
         """整体替换自选列表（key -> {code, market, checked, cost, name, type}）。"""
         self.watchlist = normalize_watchlist(watchlist, self.codes_list)

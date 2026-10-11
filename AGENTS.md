@@ -36,7 +36,7 @@ StockWidget 是 Windows、macOS 和 Linux 桌面行情工具，只展示行情�
 ## 配置、数据与请求
 
 - 用户配置与自选读取 / 保存兼容必须保留；删除旧配置迁移需有明确迁移方案，不能把仍在使用的兼容字段当作死代码。
-- 配置路径由 `config_store.py` 管理：Windows 为 `%APPDATA%/StockWidget`，其他平台为 `~/StockWidget`；市场代码在 `data/`。历史缓存支持独立目录，默认在配置目录的 `cache/`，macOS 默认在 `~/Library/Caches/com.sbr0574.StockWidget`；数据库为 `history.sqlite3`。切换缓存目录保留旧文件，并使旧请求失效，不更换配置 / 自选目录。
+- 程序数据路径由 `config_store.py` 统一管理并固定：Windows 为 `%APPDATA%/StockWidget`，Linux 为 `~/StockWidget`，macOS 为 `~/Library/Application Support/StockWidget`；市场代码在 `data/`，历史缓存为 `cache/history.sqlite3`。不提供自定义目录或运行时切换接口。仅保留 macOS 从旧 `~/StockWidget` 到固定目录的一次性迁移，完整迁移或备份成功后才删除旧目录，失败保留，已有新版数据优先；不迁移其他目录或恢复旧目录偏好。
 - 服务器代码列表发布到 `codes-data` 分支，业务代码在 `main`；更新脚本支持 `CODES_OUTPUT_DIR`。
 - 请求错误使用共用分类及安全文本，不展示原始 URL、代理地址、凭据或长异常栈。沿用代理与证书校验，仅重试已分类的临时错误，不伪造空行情成功。
 - 明确选择东财时保持东财来源，包括同源备用节点及缓存；不得悄悄切换新浪。缓存记录实际来源，不跨源拼接。

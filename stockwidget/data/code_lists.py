@@ -4,7 +4,6 @@
 import base64
 from datetime import datetime, time as date_time, timedelta, timezone
 import json
-import os
 from threading import RLock
 from time import monotonic
 
@@ -16,7 +15,7 @@ from stockwidget.constants import (
     CODES_STATUS_FILE,
     CODE_LIST_FILES,
 )
-from stockwidget.core.config_store import config_paths, data_cache_dir, load_file, save_file
+from stockwidget.core.config_store import data_cache_dir, load_file, save_file
 from stockwidget.data.network_errors import request_error_message
 
 
@@ -152,26 +151,13 @@ class CodeListManager:
         self._pending_run = ""
         self._pending_downloads: dict[str, dict] = {}
 
-    def _load_cached(self, filename, validator):
-        cached = load_file(filename, directory=data_cache_dir())
-        if validator(cached):
-            return cached
-        legacy = load_file(filename)
-        if not validator(legacy):
-            return {}
-        try:
-            save_file(legacy, filename, directory=data_cache_dir())
-            os.remove(os.path.join(config_paths(), filename))
-        except OSError:
-            pass
-        return legacy
-
     def load_local(self) -> dict:
         """逐份选择 qrc 与本地缓存中内容日期较新的有效版本。"""
         selected = {}
+        directory = data_cache_dir()
         for filename in CODE_LIST_FILES:
             resource = load_json_from_resource(f":/{filename}")
-            local = self._load_cached(filename, _valid_codes)
+            local = load_file(filename, directory=directory)
             candidates = [data for data in (resource, local) if _valid_codes(data)]
             if candidates:
                 # 同日时本地缓存排在后面并胜出。
@@ -179,7 +165,7 @@ class CodeListManager:
                     enumerate(candidates),
                     key=lambda item: (str(item[1].get("last_update") or ""), item[0]),
                 )[1]
-        local_status = self._load_cached(CODES_STATUS_FILE, _valid_status)
+        local_status = load_file(CODES_STATUS_FILE, directory=directory)
         with self._lock:
             self._payloads = selected
             self._local_status = local_status if _valid_status(local_status) else {}

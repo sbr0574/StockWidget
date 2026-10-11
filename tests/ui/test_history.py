@@ -388,7 +388,8 @@ class HistoryUITests(HistoryTestCase):
                         self.assertIn(labels[0][1], (chart.bars[0].time[begin:stop], chart.bars[0].time[5:10]))
                         self.assertIn(labels[-1][1], (chart.bars[-1].time[begin:stop], chart.bars[-1].time[5:10]))
                         for (previous, _), (current, _) in zip(labels, labels[1:]):
-                            self.assertGreaterEqual(current.left() - previous.right(), 8)
+                            # QRectF subtraction can round an exact 8px gap below 8.
+                            self.assertGreaterEqual(current.left() - previous.right(), 8 - 1e-9)
                         self.assertTrue(all(chart.rect().contains(rect.toAlignedRect()) for rect, _ in labels))
         finally:
             delete(chart)
@@ -410,7 +411,7 @@ class HistoryUITests(HistoryTestCase):
                     labels = chart._time_labels()
                     self.assertEqual((labels[0][1], labels[-1][1]), ("09:30", "15:00"))
                     for (previous, _), (current, _) in zip(labels, labels[1:]):
-                        self.assertGreaterEqual(current.left() - previous.right(), 8)
+                        self.assertGreaterEqual(current.left() - previous.right(), 8 - 1e-9)
                     self.assertEqual(chart.bars, bars)
                     self.assertLess(chart._positions[-1] / len(chart._time_axis), .15)
                     for slot, expected in ((chart._positions[-1], 2), (len(chart._time_axis) - 10, None)):
@@ -458,28 +459,6 @@ class HistoryUITests(HistoryTestCase):
         history.open_row("float", 0)
         self.wait_ready(window)
         self.assertEqual(history.cache.get.call_count, calls + 1)
-
-    def test_directory_change_closes_chart_and_discards_late_results_before_reopening(self):
-        _, window = self.make_window(chart_enabled=True)
-        history = window.history
-        history.open_row("float", 0)
-        self.wait_ready(window)
-        old_directory = str(history.cache.directory)
-        request = (history._generation, dict(history.instrument), history.dialog.view, window.data_source,
-                   history_day(history.instrument, history.cache.clock()), False)
-        target = self.enterContext(tempfile.TemporaryDirectory())
-        self.assertTrue(window.set_cache_directory(target))
-        self.assertFalse(history.dialog.isVisible())
-        self.assertEqual(history._series, {})
-        history._accept((*request, BarResult(sample_bars(), "sina")))
-        self.assertEqual(history._series, {})
-        self.assertFalse(history.dialog.isVisible())
-        self.assertEqual(str(history.cache.directory), target)
-        self.assertNotEqual(old_directory, target)
-        history.open_row("float", 0)
-        self.wait_ready(window)
-        self.assertTrue(history.dialog.isVisible())
-        self.assertTrue(history.dialog.chart.bars)
 
     def test_display_mode_setting_persists_and_switches_open_chart(self):
         dialog, window = self.make_window()

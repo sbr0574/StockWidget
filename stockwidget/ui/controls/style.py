@@ -1,9 +1,9 @@
 """系统调色板、设置页样式与颜色预览图标，供自绘控件共用。"""
 
 from PySide6.QtCore import QByteArray, QObject, QRectF, Qt
-from PySide6.QtGui import QColor, QGuiApplication, QPalette, QIcon, QPainter, QPixmap
+from PySide6.QtGui import QColor, QFont, QFontInfo, QFontMetrics, QGuiApplication, QPalette, QIcon, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
-from PySide6.QtWidgets import QApplication, QWidget
+from PySide6.QtWidgets import QApplication, QGroupBox, QWidget
 
 
 def accent_color() -> QColor:
@@ -144,12 +144,29 @@ def set_color_button(button, color: QColor, title: str):
     button.setIcon(color_swatch_icon(color, button.devicePixelRatioF()))
 
 
-def build_settings_stylesheet(dark: bool, *, linux_fonts: bool = False, palette: QPalette | None = None) -> str:
+def build_settings_stylesheet(dark: bool, *, linux_fonts: bool = False, palette: QPalette | None = None,
+                              macos_group_font: QFont | None = None) -> str:
     """按系统深浅色生成设置窗口样式表"""
     # 在设置窗口的样式表中直接匹配每个子控件，覆盖 Linux 桌面主题的字号。
     # 仅对父窗口 setFont 无法覆盖子控件的样式字体；后创建的编辑器也要匹配。
     # 保留字体家族与字重，Qt 继续按屏幕像素比缩放这些逻辑像素。
     font_rules = LINUX_FONT_RULES if linux_fonts else ""
+    if macos_group_font is not None:
+        # Cocoa paints native group titles using a smaller font. An explicit
+        # stylesheet font keeps the native frame while sizing title and checkbox
+        # together. Reserve the full title height above that frame.
+        font_rules += f"""
+QGroupBox {{
+    font-size: {QFontInfo(macos_group_font).pixelSize()}px;
+    margin-top: {QFontMetrics(macos_group_font).height() + 8}px;
+}}
+QGroupBox::title {{
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 10px;
+    top: 2px;
+}}
+"""
     foreground = (palette or QApplication.palette()).color(QPalette.WindowText).name()
     sidebar_bg = "rgba(255, 255, 255, 0.04)" if dark else "rgba(0, 0, 0, 0.03)"
     nav_hover = "rgba(255, 255, 255, 0.06)" if dark else "rgba(0, 0, 0, 0.05)"
@@ -341,14 +358,21 @@ QLabel#empty_watchlist_hint {{
 
 
 def apply_settings_theme(widget: QWidget, dark: bool, palette: QPalette, *,
-                         linux_fonts: bool = False, extra_stylesheet: str = "") -> None:
+                         linux_fonts: bool = False, macos_groups: bool = False,
+                         extra_stylesheet: str = "") -> None:
     """Apply shared dialog styles and palettes to native and styled controls."""
     widgets = (widget, *widget.findChildren(QWidget))
     # CSS palette references need the selected palette before polish. Native
     # controls can be reset by polish, so restore their palettes afterwards.
     for control in widgets:
         control.setPalette(palette)
-    widget.setStyleSheet(build_settings_stylesheet(dark, linux_fonts=linux_fonts, palette=palette)
+    if macos_groups:
+        for group in widget.findChildren(QGroupBox):
+            # Cocoa's default layout item trims the native title margin, which
+            # would crowd adjacent groups after increasing the title font.
+            group.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
+    widget.setStyleSheet(build_settings_stylesheet(dark, linux_fonts=linux_fonts, palette=palette,
+                                                   macos_group_font=widget.font() if macos_groups else None)
                         + "\n" + extra_stylesheet)
     for control in widgets:
         control.setPalette(palette)

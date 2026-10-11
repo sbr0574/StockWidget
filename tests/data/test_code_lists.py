@@ -7,7 +7,6 @@ from unittest.mock import MagicMock, Mock, call, patch
 from urllib.parse import urlsplit
 import base64
 import json
-import os
 import tempfile
 import unittest
 
@@ -17,7 +16,7 @@ import pandas as pd
 import requests
 
 from stockwidget.constants import CODES_SOURCE_URLS, CODES_STATUS_FILE, CODE_LIST_FILES
-from stockwidget.core.config_store import config_paths, data_cache_dir, load_file, save_file
+from stockwidget.core.config_store import data_cache_dir, load_file, save_file
 from stockwidget.data.code_lists import (
     CODES_HTTP_TIMEOUT,
     CodeDownloadError,
@@ -389,21 +388,21 @@ class CodeCacheTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        env = patch.dict(os.environ, {"APPDATA": self.temp.name})
+        env = patch("stockwidget.core.config_store.os.path.expanduser", return_value=self.temp.name)
         env.start()
         self.addCleanup(env.stop)
-        # 缓存路径和迁移测试不应受内置代码表更新影响。
+        # 固定缓存路径测试不应受内置代码表更新影响。
         resources = patch(
             "stockwidget.data.code_lists.load_json_from_resource", return_value={}
         )
         resources.start()
         self.addCleanup(resources.stop)
 
-    def test_legacy_cache_is_migrated_without_moving_configuration(self):
+    def test_fixed_data_cache_is_loaded_without_touching_configuration(self):
         payload = _payload("stock_sh.json", "2026-09-09")
         status = _status("2026-09-09", "2026-09-09T09:00:00+08:00")
-        save_file(payload, "stock_sh.json")
-        save_file(status, CODES_STATUS_FILE)
+        save_file(payload, "stock_sh.json", directory=data_cache_dir())
+        save_file(status, CODES_STATUS_FILE, directory=data_cache_dir())
         save_file({"watchlist": {}}, "stock_widget_config.json")
 
         manager = CodeListManager()
@@ -411,26 +410,41 @@ class CodeCacheTests(unittest.TestCase):
 
         self.assertEqual(load_file("stock_sh.json", directory=data_cache_dir()), payload)
         self.assertEqual(load_file(CODES_STATUS_FILE, directory=data_cache_dir()), status)
-        self.assertFalse(os.path.exists(os.path.join(config_paths(), "stock_sh.json")))
+        self.assertIn("stock_sh", manager.codes())
         self.assertEqual(load_file("stock_widget_config.json"), {"watchlist": {}})
         self.assertEqual(manager.state(), ("cached", "2026-09-09"))
 
-    def test_failed_migration_keeps_legacy_cache_usable(self):
-        payload = _payload("stock_sh.json", "2026-09-09")
-        save_file(payload, "stock_sh.json")
-        with patch("stockwidget.data.code_lists.save_file", side_effect=OSError("read only")):
+    def test_root_cache_is_ignored_and_retained_when_using_builtin_resources(self):
+        root_payload = _payload("stock_sh.json", "2026-09-10")
+        root_status = _status("2026-09-10", "2026-09-10T09:00:00+08:00")
+        resource = _payload("stock_sh.json", "2026-09-09")
+        save_file(root_payload, "stock_sh.json")
+        save_file(root_status, CODES_STATUS_FILE)
+        with patch("stockwidget.data.code_lists.load_json_from_resource", side_effect=lambda path:
+                   resource if path == ":/stock_sh.json" else {}):
             manager = CodeListManager()
             manager.load_local()
-        self.assertIn("stock_sh", manager.codes())
-        self.assertEqual(load_file("stock_sh.json"), payload)
+        self.assertEqual(manager._payloads["stock_sh.json"], resource)
+        self.assertEqual(manager.state(), ("cached", ""))
+        self.assertEqual(load_file("stock_sh.json"), root_payload)
+        self.assertEqual(load_file(CODES_STATUS_FILE), root_status)
+        self.assertFalse(Path(data_cache_dir()).exists())
 
-    def test_new_cache_takes_precedence_over_legacy(self):
-        save_file(_payload("stock_sh.json", "2026-09-08"), "stock_sh.json")
+    def test_root_files_do_not_override_fixed_data_cache(self):
+        root_payload = _payload("stock_sh.json", "2026-09-10")
+        root_status = _status("2026-09-10", "2026-09-10T09:00:00+08:00")
+        save_file(root_payload, "stock_sh.json")
+        save_file(root_status, CODES_STATUS_FILE)
         payload = _payload("stock_sh.json", "2026-09-09")
+        status = _status("2026-09-09", "2026-09-09T09:00:00+08:00")
         save_file(payload, "stock_sh.json", directory=data_cache_dir())
+        save_file(status, CODES_STATUS_FILE, directory=data_cache_dir())
         manager = CodeListManager()
         manager.load_local()
         self.assertEqual(manager._payloads["stock_sh.json"], payload)
+        self.assertEqual(manager.state(), ("cached", "2026-09-09"))
+        self.assertEqual(load_file("stock_sh.json"), root_payload)
+        self.assertEqual(load_file(CODES_STATUS_FILE), root_status)
 
 
 def _frame(code: str, name: str) -> pd.DataFrame:

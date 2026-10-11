@@ -15,7 +15,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 import resources.resources_rc  # noqa: F401  加载 Qt 内嵌资源（图标、内置代码列表）
 
 from stockwidget.constants import APP_NAME, APP_VERSION, CONFIG_FILE
-from stockwidget.core.config_store import load_file, save_file
+from stockwidget.core.config_store import initialize_data_directory, save_file
 from stockwidget.core.window_rules import best_screen
 from stockwidget.data.code_lists import CODES_RETRY_SECONDS, CodeListManager
 from stockwidget.data.update_check import get_update_info
@@ -85,10 +85,14 @@ class App(QApplication):
         # macOS 不在程序坞显示图标；Linux 由窗口的 Qt.Tool 标志避开任务栏
         _hide_macos_dock_icon()
         self.app_version = APP_VERSION
+        try:
+            cfg = initialize_data_directory()
+        except OSError:
+            QMessageBox.critical(None, "程序数据目录错误", "无法完成程序数据迁移或旧目录清理，请检查目录权限与可用性。迁移失败时不会删除旧目录。")
+            raise SystemExit(1)
         self.code_manager = CodeListManager()
 
         self.setQuitOnLastWindowClosed(False)
-        cfg = load_file(CONFIG_FILE)
         self.theme = ApplicationTheme(self)
 
         # 加载图标

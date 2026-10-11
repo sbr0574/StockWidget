@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QToolTip,
 )
 
+from stockwidget.core.config_store import config_paths
 from stockwidget.constants import APP_VERSION
 from stockwidget.core.window_rules import MAX_HIDE_TIMES
 from stockwidget.data.bars import MA_PERIODS
@@ -165,6 +166,7 @@ class SettingsDialog(QDialog):
         dark = mode == "dark" or (mode == "system" and is_dark_theme())
         palette = QApplication.palette() if mode == "system" else theme_palette(dark, QApplication.palette())
         apply_settings_theme(self, dark, palette, linux_fonts=sys.platform == "linux",
+                             macos_groups=sys.platform == "darwin",
                              extra_stylesheet=self._designer_stylesheet)
         for component in (self.metric_pool, self.taskbar_settings.metric_pool, self.watchlist_editor):
             component.set_theme(dark)
@@ -239,10 +241,7 @@ class SettingsDialog(QDialog):
         self.win.view_options_changed.connect(self._sync_common_options)
 
         self.ui.btn_check_update.clicked.connect(self._check_update_manually)
-        self.ui.btn_open_cache_dir.clicked.connect(self._open_cache_dir)
-        self.ui.btn_choose_cache_dir.clicked.connect(self._choose_cache_dir)
-        self.ui.btn_default_cache_dir.clicked.connect(lambda: self._set_cache_directory(""))
-        self.win.configuration_changed.connect(self._sync_cache_directory)
+        self.ui.btn_open_cache_dir.clicked.connect(self._open_data_dir)
         self.ui.btn_clear_cache.clicked.connect(self._clear_cache)
         self.ui.btn_clear_watchlist.clicked.connect(self.watchlist_editor.clear_watchlist)
         self.ui.btn_reset_appearance.clicked.connect(self._reset_appearance)
@@ -318,7 +317,6 @@ class SettingsDialog(QDialog):
             self.metric_pool.set_visible_metrics(self.win.visible_metrics)
             self._sync_metric_options()
             self._sync_common_options()
-            self._sync_cache_directory()
 
             self._set_checked_blocked(self.ui.cb_unicolor, self.win.unicolor)
             self._update_direction_color_controls()
@@ -909,33 +907,15 @@ class SettingsDialog(QDialog):
                 self, "检查更新", "检查更新失败。\n" + (error or "未获取到版本信息，请稍后重试。")
             )
 
-    def _open_cache_dir(self):
-        path = str(self.win.history.cache.directory)
+    def _open_data_dir(self):
+        path = config_paths()
         try:
             os.makedirs(path, exist_ok=True)
             opened = QDesktopServices.openUrl(QUrl.fromLocalFile(path))
         except OSError:
             opened = False
         if not opened:
-            self._cache_tooltip(self.ui.btn_open_cache_dir, "无法打开缓存目录，请检查目录权限。")
-
-    def _sync_cache_directory(self):
-        path = str(self.win.history.cache.directory)
-        if self.ui.edit_cache_directory.text() != path:
-            self.ui.edit_cache_directory.setText(path)
-            self.ui.edit_cache_directory.setCursorPosition(0)
-        self.ui.edit_cache_directory.setToolTip(path)
-        self.ui.btn_default_cache_dir.setEnabled(bool(self.win.cache_directory))
-
-    def _choose_cache_dir(self):
-        path = QFileDialog.getExistingDirectory(self, "选择图表缓存目录", str(self.win.history.cache.directory))
-        if path:
-            self._set_cache_directory(path)
-
-    def _set_cache_directory(self, path):
-        if not self.win.set_cache_directory(path):
-            self._cache_tooltip(self.ui.btn_choose_cache_dir, "无法写入该目录，请选择可写目录。")
-        self._sync_cache_directory()
+            self._cache_tooltip(self.ui.btn_open_cache_dir, "无法打开程序数据目录，请检查目录权限。")
 
     @staticmethod
     def _cache_tooltip(button, message):
@@ -943,7 +923,7 @@ class SettingsDialog(QDialog):
 
     def _clear_cache(self):
         cleared = self.win.history.clear_cache()
-        message = "已清理数据缓存。" if cleared else "部分数据缓存未能清理，请稍后重试。"
+        message = "已清理图表缓存。" if cleared else "部分图表缓存未能清理，请稍后重试。"
         button = self.ui.btn_clear_cache
         self._cache_tooltip(button, message)
 
