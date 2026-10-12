@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-09",
+  "last_update": "2026-10-12",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -18523,6 +18523,15 @@
       "py": "yijunjituan(erqian)",
       "abbr": "yjjt(eq)"
     },
+    "hk02940": {
+      "code": "02940",
+      "market": "hk",
+      "type": "港",
+      "name": "首惠產業金融股權",
+      "name_en": "CAPITAL IND RTS",
+      "py": "shouhuichanyejinrongguquan",
+      "abbr": "shcyjrgq"
+    },
     "hk02944": {
       "code": "02944",
       "market": "hk",
@@ -20633,10 +20642,10 @@
       "code": "03483",
       "market": "hk",
       "type": "基",
-      "name": "易方達高股息",
+      "name": "易方達亞太高股息",
       "name_en": "EFUND APAC HD",
-      "py": "yifangdagaoguxi",
-      "abbr": "yfdggx"
+      "py": "yifangdayataigaoguxi",
+      "abbr": "yfdytggx"
     },
     "hk03486": {
       "code": "03486",
@@ -24157,15 +24166,6 @@
       "py": "zhongguoshengwukejifuwu",
       "abbr": "zgswkjfw"
     },
-    "hk08039": {
-      "code": "08039",
-      "market": "hk",
-      "type": "港",
-      "name": "中國來騎哦",
-      "name_en": "CHINA COME RIDE",
-      "py": "zhongguolaiqio",
-      "abbr": "zglqo"
-    },
     "hk08040": {
       "code": "08040",
       "market": "hk",
@@ -27433,24 +27433,6 @@
       "py": "ahuilimeiyuan-u",
       "abbr": "ahlmy-u"
     },
-    "hk09483": {
-      "code": "09483",
-      "market": "hk",
-      "type": "基",
-      "name": "易方達高股息-U",
-      "name_en": "EFUND APAC HD-U",
-      "py": "yifangdagaoguxi-u",
-      "abbr": "yfdggx-u"
-    },
-    "hk09489": {
-      "code": "09489",
-      "market": "hk",
-      "type": "基",
-      "name": "易方達AI-U",
-      "name_en": "EFUND AI-U",
-      "py": "yifangdaai-u",
-      "abbr": "yfdai-u"
-    },
     "hk09600": {
       "code": "09600",
       "market": "hk",
@@ -29448,24 +29430,6 @@
       "name_en": "CAM HKUS HALO-R",
       "py": "huaxiahalo-r",
       "abbr": "hxhalo-r"
-    },
-    "hk83483": {
-      "code": "83483",
-      "market": "hk",
-      "type": "基",
-      "name": "易方達高股息-R",
-      "name_en": "EFUND APAC HD-R",
-      "py": "yifangdagaoguxi-r",
-      "abbr": "yfdggx-r"
-    },
-    "hk83489": {
-      "code": "83489",
-      "market": "hk",
-      "type": "基",
-      "name": "易方達AI-R",
-      "name_en": "EFUND AI-R",
-      "py": "yifangdaai-r",
-      "abbr": "yfdai-r"
     },
     "hk83520": {
       "code": "83520",

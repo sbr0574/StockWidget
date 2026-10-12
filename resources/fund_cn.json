@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-09",
+  "last_update": "2026-10-12",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -10350,6 +10350,15 @@
       "name_en": "",
       "py": "hengshengkejietffuguo",
       "abbr": "hskjetffg"
+    },
+    "sz158046": {
+      "code": "158046",
+      "market": "sz",
+      "type": "基",
+      "name": "卫星ETF南方",
+      "name_en": "",
+      "py": "weixingetfnanfang",
+      "abbr": "wxetfnf"
     },
     "sz158049": {
       "code": "158049",

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-09",
+  "last_update": "2026-10-12",
   "codes": {
     "usa": {
       "code": "a",
@@ -3625,6 +3625,15 @@
       "type": "美",
       "name": "Virtus Artificial Intelligence & Technology Opportunities Fund Common Shares of Beneficial Interest",
       "name_en": "Virtus Artificial Intelligence & Technology Opportunities Fund Common Shares of Beneficial Interest",
+      "py": "",
+      "abbr": ""
+    },
+    "usaiok": {
+      "code": "aiok",
+      "market": "us",
+      "type": "美",
+      "name": "AI OKTO CORP. - Common Stock",
+      "name_en": "AI OKTO CORP. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -11356,6 +11365,15 @@
       "type": "美",
       "name": "Russell Investments Core Plus Bond ETF",
       "name_en": "Russell Investments Core Plus Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usbdai": {
+      "code": "bdai",
+      "market": "us",
+      "type": "美",
+      "name": "Biddance AI Systems, Inc. - Class A Ordinary Share",
+      "name_en": "Biddance AI Systems, Inc. - Class A Ordinary Share",
       "py": "",
       "abbr": ""
     },
@@ -29481,7 +29499,7 @@
       "market": "us",
       "type": "美",
       "name": "天成科技",
-      "name_en": "Top KingWin Ltd - Class A Ordinary Shares",
+      "name_en": "Nexpu Ltd. - Class A Ordinary Shares",
       "py": "tianchengkeji",
       "abbr": "tckj"
     },
@@ -49069,15 +49087,6 @@
       "py": "shangchengshuke",
       "abbr": "scsk"
     },
-    "ushkit": {
-      "code": "hkit",
-      "market": "us",
-      "type": "美",
-      "name": "海天-A",
-      "name_en": "Hitek Global Inc. - Class A Ordinary Share",
-      "py": "haitian-a",
-      "abbr": "ht-a"
-    },
     "ushkpd": {
       "code": "hkpd",
       "market": "us",
@@ -64990,15 +64999,6 @@
       "py": "",
       "abbr": ""
     },
-    "usmamk": {
-      "code": "mamk",
-      "market": "us",
-      "type": "美",
-      "name": "迈克丽斯",
-      "name_en": "MaxsMaking Inc. - Class A Ordinary Shares",
-      "py": "maikelisi",
-      "abbr": "mkls"
-    },
     "usmamo": {
       "code": "mamo",
       "market": "us",
@@ -67325,8 +67325,8 @@
       "code": "mid",
       "market": "us",
       "type": "美",
-      "name": "American Century Mid Cap Growth Impact ETF",
-      "name_en": "American Century Mid Cap Growth Impact ETF",
+      "name": "American Century Mid Cap Growth Insights ETF",
+      "name_en": "American Century Mid Cap Growth Insights ETF",
       "py": "",
       "abbr": ""
     },
@@ -75304,24 +75304,6 @@
       "py": "",
       "abbr": ""
     },
-    "usnvni": {
-      "code": "nvni",
-      "market": "us",
-      "type": "美",
-      "name": "Nvni Group Limited - Ordinary Shares",
-      "name_en": "Nvni Group Limited - Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usnvniw": {
-      "code": "nvniw",
-      "market": "us",
-      "type": "美",
-      "name": "Nvni Group Limited - Warrants",
-      "name_en": "Nvni Group Limited - Warrants",
-      "py": "",
-      "abbr": ""
-    },
     "usnvno": {
       "code": "nvno",
       "market": "us",
@@ -77920,6 +77902,15 @@
       "type": "美",
       "name": "Optimi Health Corp. - Common Shares",
       "name_en": "Optimi Health Corp. - Common Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "usopto": {
+      "code": "opto",
+      "market": "us",
+      "type": "美",
+      "name": "Tuttle Capital Photonics Income Blast ETF",
+      "name_en": "Tuttle Capital Photonics Income Blast ETF",
       "py": "",
       "abbr": ""
     },
@@ -91285,6 +91276,15 @@
       "type": "美",
       "name": "Rareview Total Return Bond ETF",
       "name_en": "Rareview Total Return Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usrtsn": {
+      "code": "rtsn",
+      "market": "us",
+      "type": "美",
+      "name": "Retension Pharmaceuticals, Inc. - Common Stock",
+      "name_en": "Retension Pharmaceuticals, Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -105994,6 +105994,15 @@
       "py": "",
       "abbr": ""
     },
+    "ustrxb": {
+      "code": "trxb",
+      "market": "us",
+      "type": "美",
+      "name": "TRex Bio, Inc. - Common stock",
+      "name_en": "TRex Bio, Inc. - Common stock",
+      "py": "",
+      "abbr": ""
+    },
     "ustrxs": {
       "code": "trxs",
       "market": "us",
@@ -110952,6 +110961,15 @@
       "name_en": "Vanguard Information Tech ETF",
       "py": "xinxikejizhishuetf-vanguard",
       "abbr": "xxkjzsetf-vanguard"
+    },
+    "usvgtx": {
+      "code": "vgtx",
+      "market": "us",
+      "type": "美",
+      "name": "XFUNDS Technology Income ETF",
+      "name_en": "XFUNDS Technology Income ETF",
+      "py": "",
+      "abbr": ""
     },
     "usvgus": {
       "code": "vgus",
@@ -117676,12 +117694,30 @@
       "py": "",
       "abbr": ""
     },
+    "usxxqq": {
+      "code": "xxqq",
+      "market": "us",
+      "type": "美",
+      "name": "Subversive Growth 100 Redacted ETF",
+      "name_en": "Subversive Growth 100 Redacted ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usxxrp": {
       "code": "xxrp",
       "market": "us",
       "type": "美",
       "name": "Teucrium 2x Long Daily XRP ETF",
       "name_en": "Teucrium 2x Long Daily XRP ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usxxsp": {
+      "code": "xxsp",
+      "market": "us",
+      "type": "美",
+      "name": "Subversive S&P 500 Redacted ETF",
+      "name_en": "Subversive S&P 500 Redacted ETF",
       "py": "",
       "abbr": ""
     },
