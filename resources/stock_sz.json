@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-08",
+  "last_update": "2026-10-13",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -26281,6 +26281,15 @@
       "py": "shouhangxinneng",
       "abbr": "shxn"
     },
+    "sz301660": {
+      "code": "301660",
+      "market": "sz",
+      "type": "创",
+      "name": "N粤芯半导体-U",
+      "name_en": "",
+      "py": "nyuexinbandaoti-u",
+      "abbr": "nyxbdt-u"
+    },
     "sz301662": {
       "code": "301662",
       "market": "sz",
@@ -26456,10 +26465,10 @@
       "code": "301716",
       "market": "sz",
       "type": "创",
-      "name": "C鸿富诚",
+      "name": "鸿富诚",
       "name_en": "",
-      "py": "chongfucheng",
-      "abbr": "chfc"
+      "py": "hongfucheng",
+      "abbr": "hfc"
     },
     "sz301717": {
       "code": "301717",

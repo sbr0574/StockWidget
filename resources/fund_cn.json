@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-12",
+  "last_update": "2026-10-13",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -7173,6 +7173,15 @@
       "name_en": "",
       "py": "guoqihonglietfhuaan",
       "abbr": "gqhletfha"
+    },
+    "sh561070": {
+      "code": "561070",
+      "market": "sh",
+      "type": "基",
+      "name": "工程机械ETF工银",
+      "name_en": "",
+      "py": "gongchengjixieetfgongyin",
+      "abbr": "gcjxetfgy"
     },
     "sh561080": {
       "code": "561080",

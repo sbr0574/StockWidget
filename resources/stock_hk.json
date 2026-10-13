@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-12",
+  "last_update": "2026-10-13",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -1738,15 +1738,6 @@
       "py": "liminshiye",
       "abbr": "lmsy"
     },
-    "hk00232": {
-      "code": "00232",
-      "market": "hk",
-      "type": "港",
-      "name": "大陸航空科技控股",
-      "name_en": "CON AERO TECH",
-      "py": "daluhangkongkejikonggu",
-      "abbr": "dlhkkjkg"
-    },
     "hk00234": {
       "code": "00234",
       "market": "hk",
@@ -2097,15 +2088,6 @@
       "name_en": "BYD ELECTRONIC",
       "py": "biyadidianzi",
       "abbr": "byddz"
-    },
-    "hk00286": {
-      "code": "00286",
-      "market": "hk",
-      "type": "港",
-      "name": "愛帝宮",
-      "name_en": "AIDIGONG",
-      "py": "aidigong",
-      "abbr": "adg"
     },
     "hk00287": {
       "code": "00287",
@@ -6427,15 +6409,6 @@
       "py": "zonghehuanbaojituan",
       "abbr": "zhhbjt"
     },
-    "hk00924": {
-      "code": "00924",
-      "market": "hk",
-      "type": "港",
-      "name": "坤集團",
-      "name_en": "KHOON GROUP",
-      "py": "kunjituan",
-      "abbr": "kjt"
-    },
     "hk00926": {
       "code": "00926",
       "market": "hk",
@@ -10701,15 +10674,6 @@
       "name_en": "NATURE ENERGY T",
       "py": "naquannengyuankeji",
       "abbr": "nqnykj"
-    },
-    "hk01598": {
-      "code": "01598",
-      "market": "hk",
-      "type": "港",
-      "name": "21世紀教育",
-      "name_en": "21CENTURY EDU",
-      "py": "21shijijiaoyu",
-      "abbr": "21sjjy"
     },
     "hk01599": {
       "code": "01599",
@@ -17556,7 +17520,7 @@
       "market": "hk",
       "type": "港",
       "name": "卓越睿新",
-      "name_en": "ABLE DIGI-50",
+      "name_en": "ABLE DIGITAL",
       "py": "zhuoyueruixin",
       "abbr": "zyrx"
     },
@@ -18118,6 +18082,15 @@
       "py": "nanfangshate",
       "abbr": "nfst"
     },
+    "hk02831": {
+      "code": "02831",
+      "market": "hk",
+      "type": "基",
+      "name": "潘渡SOL",
+      "name_en": "PANDO SOL",
+      "py": "pandusol",
+      "abbr": "pdsol"
+    },
     "hk02832": {
       "code": "02832",
       "market": "hk",
@@ -18460,15 +18433,6 @@
       "py": "jintainengyuankonggu",
       "abbr": "jtnykg"
     },
-    "hk02930": {
-      "code": "02930",
-      "market": "hk",
-      "type": "港",
-      "name": "卓越睿新(一百)",
-      "name_en": "ABLE DIGI-100",
-      "py": "zhuoyueruixin(yibai)",
-      "abbr": "zyrx(yb)"
-    },
     "hk02934": {
       "code": "02934",
       "market": "hk",
@@ -18495,15 +18459,6 @@
       "name_en": "SG GROUP HLDGS",
       "py": "huaxinkonggu",
       "abbr": "hxkg"
-    },
-    "hk02937": {
-      "code": "02937",
-      "market": "hk",
-      "type": "港",
-      "name": "LONG投資股權",
-      "name_en": "LONG INV C RTS",
-      "py": "longtouziguquan",
-      "abbr": "longtzgq"
     },
     "hk02938": {
       "code": "02938",
@@ -24612,7 +24567,7 @@
       "market": "hk",
       "type": "港",
       "name": "中華節能",
-      "name_en": "SINO ENGY CONS",
+      "name_en": "SINO ENGY C-NEW",
       "py": "zhonghuajieneng",
       "abbr": "zhjn"
     },
@@ -26524,6 +26479,15 @@
       "py": "jinyeguojijituan",
       "abbr": "jygjjt"
     },
+    "hk08556": {
+      "code": "08556",
+      "market": "hk",
+      "type": "港",
+      "name": "神通機器人教育",
+      "name_en": "S ROBOT EDU",
+      "py": "shentongjiqirenjiaoyu",
+      "abbr": "stjqrjy"
+    },
     "hk08567": {
       "code": "08567",
       "market": "hk",
@@ -26547,7 +26511,7 @@
       "market": "hk",
       "type": "港",
       "name": "中華節能",
-      "name_en": "SINO ENGY CONS",
+      "name_en": "SINO ENGY C-OLD",
       "py": "zhonghuajieneng",
       "abbr": "zhjn"
     },

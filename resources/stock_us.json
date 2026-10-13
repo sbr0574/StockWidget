@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-12",
+  "last_update": "2026-10-13",
   "codes": {
     "usa": {
       "code": "a",
@@ -1222,6 +1222,15 @@
       "type": "美",
       "name": "AECOM Common Stock",
       "name_en": "AECOM Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usacmg": {
+      "code": "acmg",
+      "market": "us",
+      "type": "美",
+      "name": "American Century Mid Cap Growth Insights ETF",
+      "name_en": "American Century Mid Cap Growth Insights ETF",
       "py": "",
       "abbr": ""
     },
@@ -55405,6 +55414,15 @@
       "py": "ailidekesi",
       "abbr": "aldks"
     },
+    "usirla": {
+      "code": "irla",
+      "market": "us",
+      "type": "美",
+      "name": "IRulya Therapeutics Inc. - Common Stock",
+      "name_en": "IRulya Therapeutics Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
     "usirm": {
       "code": "irm",
       "market": "us",
@@ -67318,15 +67336,6 @@
       "type": "美",
       "name": "The Magnum Ice Cream Company N.V. Ordinary Shares",
       "name_en": "The Magnum Ice Cream Company N.V. Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usmid": {
-      "code": "mid",
-      "market": "us",
-      "type": "美",
-      "name": "American Century Mid Cap Growth Insights ETF",
-      "name_en": "American Century Mid Cap Growth Insights ETF",
       "py": "",
       "abbr": ""
     },
@@ -86506,15 +86515,6 @@
       "type": "美",
       "name": "Quantum eMotion Corp. Common Shares",
       "name_en": "Quantum eMotion Corp. Common Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usqncx": {
-      "code": "qncx",
-      "market": "us",
-      "type": "美",
-      "name": "Quince Therapeutics, Inc. - Common Stock",
-      "name_en": "Quince Therapeutics, Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -113055,7 +113055,7 @@
       "market": "us",
       "type": "美",
       "name": "华富教育",
-      "name_en": "Wah Fu Education Group Limited - Ordinary Shares",
+      "name_en": "Wah Fu Education & Technology Group Ltd. - Ordinary Shares",
       "py": "huafujiaoyu",
       "abbr": "hfjy"
     },
@@ -117086,17 +117086,8 @@
       "code": "xrpn",
       "market": "us",
       "type": "美",
-      "name": "Armada Acquisition Corp. II - Class A Ordinary Shares",
-      "name_en": "Armada Acquisition Corp. II - Class A Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usxrpnu": {
-      "code": "xrpnu",
-      "market": "us",
-      "type": "美",
-      "name": "Armada Acquisition Corp. II - Units",
-      "name_en": "Armada Acquisition Corp. II - Units",
+      "name": "Evernorth Holdings Inc. - Class A Ordinary Shares",
+      "name_en": "Evernorth Holdings Inc. - Class A Ordinary Shares",
       "py": "",
       "abbr": ""
     },
@@ -117104,8 +117095,8 @@
       "code": "xrpnw",
       "market": "us",
       "type": "美",
-      "name": "Armada Acquisition Corp. II - Warrant",
-      "name_en": "Armada Acquisition Corp. II - Warrant",
+      "name": "Evernorth Holdings Inc. - Warrants",
+      "name_en": "Evernorth Holdings Inc. - Warrants",
       "py": "",
       "abbr": ""
     },
