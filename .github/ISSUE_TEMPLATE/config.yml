@@ -1,0 +1,6 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: Discussions / 讨论区
+    url: https://github.com/sbr0574/StockWidget/discussions
+    about: 使用问题或需要帮助请前往 Discussions。
