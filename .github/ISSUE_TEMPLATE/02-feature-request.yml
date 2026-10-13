@@ -1,0 +1,36 @@
+name: 功能建议
+description: 描述使用场景，以及你希望增加或改进的功能。
+title: "[建议] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢分享想法！请先搜索已有 Issue，重复建议可以在原帖补充使用场景。
+        若已有功能出现异常，请使用「Bug 反馈」模板。
+
+        功能建议会结合项目定位和维护成本评估，提交建议不代表承诺实现。
+  - type: textarea
+    id: problem
+    attributes:
+      label: 使用场景与当前困难
+      description: 你在什么情况下遇到什么不便？请尽量描述实际需求。
+      placeholder: 使用……时，我需要……，目前只能……
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 希望增加或改进的功能
+      description: 描述期望的操作和结果；无需提供代码或技术实现方案。
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 已尝试的办法（可选）
+      description: 现有设置或其他工具能否满足需求？它们有什么不便？
+  - type: textarea
+    id: context
+    attributes:
+      label: 补充说明（可选）
+      description: 可补充操作系统、浮窗 / 任务栏模式、示意图或相关 Issue 链接。

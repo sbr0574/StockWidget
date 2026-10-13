@@ -1,0 +1,70 @@
+name: Bug 反馈
+description: 反馈已有功能的异常，帮助定位和修复问题。
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈！请先搜索已有 Issue，重复问题可以在原帖补充信息。
+        若你希望增加新功能，请使用「功能建议」模板。
+  - type: input
+    id: version
+    attributes:
+      label: StockWidget 版本
+      description: 可在「设置 → 关于」查看；源码运行请同时提供提交版本（如已知）。
+      placeholder: 例如 2.0.1
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 操作系统
+      options:
+        - Windows
+        - macOS
+        - Linux
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 系统版本与运行方式
+      description: 请填写系统版本。Linux 可补充桌面环境和 X11 / Wayland。如为源码运行请注明。
+      placeholder: 例如 Windows 11; macOS 27.0.1; Ubuntu 24.04, X11 （源码运行）
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 请写明操作过程和相关设置；偶发问题可描述发生时的操作。
+      placeholder: |
+        1. 打开……
+        2. 设置……
+        3. 执行……后出现异常
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果
+      description: 描述具体异常；若出现错误提示，请提供完整提示文字。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期结果
+      description: 你期望已有功能如何表现？
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: 相关信息（可选）
+      description: 行情问题请补充数据来源、标的代码和发生时间；显示问题请补充浮窗 / 任务栏模式、屏幕数量与缩放比例。
+  - type: textarea
+    id: attachments
+    attributes:
+      label: 截图或日志（可选）
+      description: 可粘贴错误文本或拖入截图。请先遮盖个人信息、代理凭据等敏感内容，无需上传完整配置文件。
