@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-13",
+  "last_update": "2026-10-14",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -4028,10 +4028,10 @@
       "code": "001246",
       "market": "sz",
       "type": "深",
-      "name": "C力勤资源",
+      "name": "力勤资源",
       "name_en": "",
-      "py": "cliqinziyuan",
-      "abbr": "clqzy"
+      "py": "liqinziyuan",
+      "abbr": "lqzy"
     },
     "sz001248": {
       "code": "001248",
@@ -26285,10 +26285,10 @@
       "code": "301660",
       "market": "sz",
       "type": "创",
-      "name": "N粤芯半导体-U",
+      "name": "C粤芯半导体-U",
       "name_en": "",
-      "py": "nyuexinbandaoti-u",
-      "abbr": "nyxbdt-u"
+      "py": "cyuexinbandaoti-u",
+      "abbr": "cyxbdt-u"
     },
     "sz301662": {
       "code": "301662",

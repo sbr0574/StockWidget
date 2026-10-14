@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-13",
+  "last_update": "2026-10-14",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -10347,7 +10347,7 @@
       "market": "hk",
       "type": "港",
       "name": "金斯瑞生物科技",
-      "name_en": "GENSCRIPT BIO",
+      "name_en": "GENSCRIPT B-1K",
       "py": "jinsiruishengwukeji",
       "abbr": "jsrswkj"
     },
@@ -18370,6 +18370,15 @@
       "py": "zijinkuangye",
       "abbr": "zjky"
     },
+    "hk02911": {
+      "code": "02911",
+      "market": "hk",
+      "type": "港",
+      "name": "松景科技股權",
+      "name_en": "PINE TECH RTS",
+      "py": "songjingkejiguquan",
+      "abbr": "sjkjgq"
+    },
     "hk02915": {
       "code": "02915",
       "market": "hk",
@@ -18487,6 +18496,24 @@
       "py": "shouhuichanyejinrongguquan",
       "abbr": "shcyjrgq"
     },
+    "hk02942": {
+      "code": "02942",
+      "market": "hk",
+      "type": "港",
+      "name": "星星集團",
+      "name_en": "STAR GROUP ASIA",
+      "py": "xingxingjituan",
+      "abbr": "xxjt"
+    },
+    "hk02943": {
+      "code": "02943",
+      "market": "hk",
+      "type": "港",
+      "name": "百宏實業",
+      "name_en": "BILLION IND",
+      "py": "baihongshiye",
+      "abbr": "bhsy"
+    },
     "hk02944": {
       "code": "02944",
       "market": "hk",
@@ -18495,6 +18522,15 @@
       "name_en": "UNI HEALTH RTS",
       "py": "dajiankangguojiguquan",
       "abbr": "djkgjgq"
+    },
+    "hk02945": {
+      "code": "02945",
+      "market": "hk",
+      "type": "港",
+      "name": "金斯瑞生物-二千",
+      "name_en": "GENSCRIPT B-2K",
+      "py": "jinsiruishengwu-erqian",
+      "abbr": "jsrsw-eq"
     },
     "hk03001": {
       "code": "03001",
@@ -26294,10 +26330,10 @@
       "code": "08507",
       "market": "hk",
       "type": "港",
-      "name": "愛世紀集團",
-      "name_en": "I.CENTURY HLDG",
-      "py": "aishijijituan",
-      "abbr": "asjjt"
+      "name": "中國生態土地治理",
+      "name_en": "CHI ECO LAND MT",
+      "py": "zhongguoshengtaitudizhili",
+      "abbr": "zgsttdzl"
     },
     "hk08509": {
       "code": "08509",

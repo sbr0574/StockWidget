@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-13",
+  "last_update": "2026-10-14",
   "codes": {
     "usa": {
       "code": "a",
@@ -5671,15 +5671,6 @@
       "py": "",
       "abbr": ""
     },
-    "usanew": {
-      "code": "anew",
-      "market": "us",
-      "type": "美",
-      "name": "ProShares MSCI Transformational Changes ETF",
-      "name_en": "ProShares MSCI Transformational Changes ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usanf": {
       "code": "anf",
       "market": "us",
@@ -9532,6 +9523,15 @@
       "py": "",
       "abbr": ""
     },
+    "usaxnx": {
+      "code": "axnx",
+      "market": "us",
+      "type": "美",
+      "name": "Axonex AI Group Limited - Class A Ordinary Shares",
+      "name_en": "Axonex AI Group Limited - Class A Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
     "usaxon": {
       "code": "axon",
       "market": "us",
@@ -10708,15 +10708,6 @@
       "type": "美",
       "name": "Bone Biologics Corp - Common Stock",
       "name_en": "Bone Biologics Corp - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usbblgw": {
-      "code": "bblgw",
-      "market": "us",
-      "type": "美",
-      "name": "Bone Biologics Corp - warrants",
-      "name_en": "Bone Biologics Corp - warrants",
       "py": "",
       "abbr": ""
     },
@@ -21520,15 +21511,6 @@
       "py": "",
       "abbr": ""
     },
-    "usclix": {
-      "code": "clix",
-      "market": "us",
-      "type": "美",
-      "name": "ProShares Long Online/Short Stores ETF",
-      "name_en": "ProShares Long Online/Short Stores ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usclls": {
       "code": "clls",
       "market": "us",
@@ -25111,15 +25093,6 @@
       "py": "",
       "abbr": ""
     },
-    "usctex": {
-      "code": "ctex",
-      "market": "us",
-      "type": "美",
-      "name": "ProShares S&P Kensho Cleantech ETF",
-      "name_en": "ProShares S&P Kensho Cleantech ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usctgg": {
       "code": "ctgg",
       "market": "us",
@@ -26404,15 +26377,6 @@
       "type": "美",
       "name": "DoorDash, Inc. - Common Stock",
       "name_en": "DoorDash, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usdat": {
-      "code": "dat",
-      "market": "us",
-      "type": "美",
-      "name": "ProShares Big Data Refiners ETF",
-      "name_en": "ProShares Big Data Refiners ETF",
       "py": "",
       "abbr": ""
     },
@@ -46153,15 +46117,6 @@
       "py": "",
       "abbr": ""
     },
-    "usgreel": {
-      "code": "greel",
-      "market": "us",
-      "type": "美",
-      "name": "Vulcan Infrastructure and Power Inc. - 8.50% Senior Notes due 2026",
-      "name_en": "Vulcan Infrastructure and Power Inc. - 8.50% Senior Notes due 2026",
-      "py": "",
-      "abbr": ""
-    },
     "usgrek": {
       "code": "grek",
       "market": "us",
@@ -64990,15 +64945,6 @@
       "py": "",
       "abbr": ""
     },
-    "usmakx": {
-      "code": "makx",
-      "market": "us",
-      "type": "美",
-      "name": "ProShares S&P Kensho Smart Factories ETF",
-      "name_en": "ProShares S&P Kensho Smart Factories ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usmama": {
       "code": "mama",
       "market": "us",
@@ -67399,15 +67345,6 @@
       "type": "美",
       "name": "Global X Millennial Consumer ETF",
       "name_en": "Global X Millennial Consumer ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usmimi": {
-      "code": "mimi",
-      "market": "us",
-      "type": "美",
-      "name": "Mint Incorporation Limited - Class A Ordinary Shares",
-      "name_en": "Mint Incorporation Limited - Class A Ordinary Shares",
       "py": "",
       "abbr": ""
     },
@@ -77380,15 +77317,6 @@
       "type": "美",
       "name": "Oncolytics Biotech Inc. - Common Stock",
       "name_en": "Oncolytics Biotech Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usond": {
-      "code": "ond",
-      "market": "us",
-      "type": "美",
-      "name": "ProShares On-Demand ETF",
-      "name_en": "ProShares On-Demand ETF",
       "py": "",
       "abbr": ""
     },
@@ -90388,6 +90316,15 @@
       "py": "",
       "abbr": ""
     },
+    "usrntz": {
+      "code": "rntz",
+      "market": "us",
+      "type": "美",
+      "name": "Rantizo - Class A Ordinary Shares",
+      "name_en": "Rantizo - Class A Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
     "usrnw": {
       "code": "rnw",
       "market": "us",
@@ -95824,15 +95761,6 @@
       "py": "",
       "abbr": ""
     },
-    "usskk": {
-      "code": "skk",
-      "market": "us",
-      "type": "美",
-      "name": "SKK Holdings Limited - Class A Ordinary Shares",
-      "name_en": "SKK Holdings Limited - Class A Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
     "usskm": {
       "code": "skm",
       "market": "us",
@@ -95920,6 +95848,15 @@
       "type": "美",
       "name": "Skydance Corporation Class B Common Stock",
       "name_en": "Skydance Corporation Class B Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usskyd_wsw": {
+      "code": "skyd_wsw",
+      "market": "us",
+      "type": "美",
+      "name": "Skydance Corporation Warrants to Purchase Class B Common Stock When-Issued",
+      "name_en": "Skydance Corporation Warrants to Purchase Class B Common Stock When-Issued",
       "py": "",
       "abbr": ""
     },
@@ -100558,15 +100495,6 @@
       "py": "",
       "abbr": ""
     },
-    "ussupl": {
-      "code": "supl",
-      "market": "us",
-      "type": "美",
-      "name": "ProShares Supply Chain Logistics ETF",
-      "name_en": "ProShares Supply Chain Logistics ETF",
-      "py": "",
-      "abbr": ""
-    },
     "ussupn": {
       "code": "supn",
       "market": "us",
@@ -103642,15 +103570,6 @@
       "type": "美",
       "name": "Templeton International Insights ETF",
       "name_en": "Templeton International Insights ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "ustint": {
-      "code": "tint",
-      "market": "us",
-      "type": "美",
-      "name": "ProShares Smart Materials ETF",
-      "name_en": "ProShares Smart Materials ETF",
       "py": "",
       "abbr": ""
     },
@@ -107740,15 +107659,6 @@
       "py": "",
       "abbr": ""
     },
-    "usucyb": {
-      "code": "ucyb",
-      "market": "us",
-      "type": "美",
-      "name": "ProShares Ultra Nasdaq Cybersecurity",
-      "name_en": "ProShares Ultra Nasdaq Cybersecurity",
-      "py": "",
-      "abbr": ""
-    },
     "usudec": {
       "code": "udec",
       "market": "us",
@@ -110662,15 +110572,6 @@
       "type": "美",
       "name": "Veritone, Inc. - Common Stock",
       "name_en": "Veritone, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usvers": {
-      "code": "vers",
-      "market": "us",
-      "type": "美",
-      "name": "ProShares Metaverse ETF",
-      "name_en": "ProShares Metaverse ETF",
       "py": "",
       "abbr": ""
     },

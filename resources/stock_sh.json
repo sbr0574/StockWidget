@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-13",
+  "last_update": "2026-10-14",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -671,10 +671,10 @@
       "code": "600105",
       "market": "sh",
       "type": "沪",
-      "name": "永鼎股份",
+      "name": "XD永鼎股",
       "name_en": "",
-      "py": "yongdinggufen",
-      "abbr": "ydgf"
+      "py": "xdyongdinggu",
+      "abbr": "xdydg"
     },
     "sh600106": {
       "code": "600106",
@@ -824,10 +824,10 @@
       "code": "600125",
       "market": "sh",
       "type": "沪",
-      "name": "XD铁龙物",
+      "name": "铁龙物流",
       "name_en": "",
-      "py": "xdtielongwu",
-      "abbr": "xdtlw"
+      "py": "tielongwuliu",
+      "abbr": "tlwl"
     },
     "sh600126": {
       "code": "600126",
@@ -2129,10 +2129,10 @@
       "code": "600320",
       "market": "sh",
       "type": "沪",
-      "name": "振华重工",
+      "name": "XD振华重",
       "name_en": "",
-      "py": "zhenhuazhonggong",
-      "abbr": "zhzg"
+      "py": "xdzhenhuazhong",
+      "abbr": "xdzhz"
     },
     "sh600322": {
       "code": "600322",
@@ -2471,10 +2471,10 @@
       "code": "600369",
       "market": "sh",
       "type": "沪",
-      "name": "西南证券",
+      "name": "XD西南证",
       "name_en": "",
-      "py": "xinanzhengquan",
-      "abbr": "xnzq"
+      "py": "xdxinanzheng",
+      "abbr": "xdxnz"
     },
     "sh600370": {
       "code": "600370",
@@ -2678,10 +2678,10 @@
       "code": "600398",
       "market": "sh",
       "type": "沪",
-      "name": "海澜之家",
+      "name": "XD海澜之",
       "name_en": "",
-      "py": "hailanzhijia",
-      "abbr": "hlzj"
+      "py": "xdhailanzhi",
+      "abbr": "xdhlz"
     },
     "sh600399": {
       "code": "600399",
@@ -4055,10 +4055,10 @@
       "code": "600609",
       "market": "sh",
       "type": "沪",
-      "name": "XD金杯汽",
+      "name": "金杯汽车",
       "name_en": "",
-      "py": "xdjinbeiqi",
-      "abbr": "xdjbq"
+      "py": "jinbeiqiche",
+      "abbr": "jbqc"
     },
     "sh600610": {
       "code": "600610",
@@ -4082,10 +4082,10 @@
       "code": "600612",
       "market": "sh",
       "type": "沪",
-      "name": "老凤祥",
+      "name": "XD老凤祥",
       "name_en": "",
-      "py": "laofengxiang",
-      "abbr": "lfx"
+      "py": "xdlaofengxiang",
+      "abbr": "xdlfx"
     },
     "sh600613": {
       "code": "600613",
@@ -6863,10 +6863,10 @@
       "code": "601019",
       "market": "sh",
       "type": "沪",
-      "name": "XD山东出",
+      "name": "山东出版",
       "name_en": "",
-      "py": "xdshandongchu",
-      "abbr": "xdsdc"
+      "py": "shandongchuban",
+      "abbr": "sdcb"
     },
     "sh601020": {
       "code": "601020",
@@ -9725,10 +9725,10 @@
       "code": "603120",
       "market": "sh",
       "type": "沪",
-      "name": "XD肯特催",
+      "name": "肯特催化",
       "name_en": "",
-      "py": "xdkentecui",
-      "abbr": "xdktc"
+      "py": "kentecuihua",
+      "abbr": "ktch"
     },
     "sh603121": {
       "code": "603121",
@@ -10310,10 +10310,10 @@
       "code": "603203",
       "market": "sh",
       "type": "沪",
-      "name": "XD快克智",
+      "name": "快克智能",
       "name_en": "",
-      "py": "xdkuaikezhi",
-      "abbr": "xdkkz"
+      "py": "kuaikezhineng",
+      "abbr": "kkzn"
     },
     "sh603205": {
       "code": "603205",
@@ -10688,10 +10688,10 @@
       "code": "603262",
       "market": "sh",
       "type": "沪",
-      "name": "技源集团",
+      "name": "XD技源集",
       "name_en": "",
-      "py": "jiyuanjituan",
-      "abbr": "jyjt"
+      "py": "xdjiyuanji",
+      "abbr": "xdjyj"
     },
     "sh603266": {
       "code": "603266",
@@ -12713,10 +12713,10 @@
       "code": "603678",
       "market": "sh",
       "type": "沪",
-      "name": "XD火炬电",
+      "name": "火炬电子",
       "name_en": "",
-      "py": "xdhuojudian",
-      "abbr": "xdhjd"
+      "py": "huojudianzi",
+      "abbr": "hjdz"
     },
     "sh603679": {
       "code": "603679",
@@ -12911,10 +12911,10 @@
       "code": "603708",
       "market": "sh",
       "type": "沪",
-      "name": "XD家家悦",
+      "name": "家家悦",
       "name_en": "",
-      "py": "xdjiajiayue",
-      "abbr": "xdjjy"
+      "py": "jiajiayue",
+      "abbr": "jjy"
     },
     "sh603709": {
       "code": "603709",
@@ -13307,10 +13307,10 @@
       "code": "603806",
       "market": "sh",
       "type": "沪",
-      "name": "福斯特",
+      "name": "XD福斯特",
       "name_en": "",
-      "py": "fusite",
-      "abbr": "fst"
+      "py": "xdfusite",
+      "abbr": "xdfst"
     },
     "sh603808": {
       "code": "603808",
@@ -13901,10 +13901,10 @@
       "code": "603919",
       "market": "sh",
       "type": "沪",
-      "name": "XD金徽酒",
+      "name": "金徽酒",
       "name_en": "",
-      "py": "xdjinhuijiu",
-      "abbr": "xdjhj"
+      "py": "jinhuijiu",
+      "abbr": "jhj"
     },
     "sh603920": {
       "code": "603920",
@@ -14279,10 +14279,10 @@
       "code": "603995",
       "market": "sh",
       "type": "沪",
-      "name": "甬金股份",
+      "name": "XD甬金股",
       "name_en": "",
-      "py": "yongjingufen",
-      "abbr": "yjgf"
+      "py": "xdyongjingu",
+      "abbr": "xdyjg"
     },
     "sh603997": {
       "code": "603997",
@@ -14612,10 +14612,10 @@
       "code": "605117",
       "market": "sh",
       "type": "沪",
-      "name": "德业股份",
+      "name": "XD德业股",
       "name_en": "",
-      "py": "deyegufen",
-      "abbr": "dygf"
+      "py": "xddeyegu",
+      "abbr": "xddyg"
     },
     "sh605118": {
       "code": "605118",
@@ -16574,10 +16574,10 @@
       "code": "688161",
       "market": "sh",
       "type": "科",
-      "name": "XD威高骨",
+      "name": "威高骨科",
       "name_en": "",
-      "py": "xdweigaogu",
-      "abbr": "xdwgg"
+      "py": "weigaoguke",
+      "abbr": "wggk"
     },
     "sh688162": {
       "code": "688162",
@@ -20921,10 +20921,10 @@
       "code": "900905",
       "market": "sh",
       "type": "沪",
-      "name": "老凤祥B",
+      "name": "XD老凤B",
       "name_en": "",
-      "py": "laofengxiangb",
-      "abbr": "lfxb"
+      "py": "xdlaofengb",
+      "abbr": "xdlfb"
     },
     "sh900906": {
       "code": "900906",
@@ -21236,10 +21236,10 @@
       "code": "900947",
       "market": "sh",
       "type": "沪",
-      "name": "振华B股",
+      "name": "XD振华B",
       "name_en": "",
-      "py": "zhenhuabgu",
-      "abbr": "zhbg"
+      "py": "xdzhenhuab",
+      "abbr": "xdzhb"
     },
     "sh900948": {
       "code": "900948",

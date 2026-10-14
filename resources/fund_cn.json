@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-13",
+  "last_update": "2026-10-14",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -7993,6 +7993,15 @@
       "py": "zhongyaoetfyinhua",
       "abbr": "zyetfyh"
     },
+    "sh562400": {
+      "code": "562400",
+      "market": "sh",
+      "type": "基",
+      "name": "金融科技ETF万家",
+      "name_en": "",
+      "py": "jinrongkejietfwanjia",
+      "abbr": "jrkjetfwj"
+    },
     "sh562450": {
       "code": "562450",
       "market": "sh",
@@ -10342,6 +10351,15 @@
       "py": "ganggutonghonglidiboetfguangfa",
       "abbr": "ggthldbetfgf"
     },
+    "sz158040": {
+      "code": "158040",
+      "market": "sz",
+      "type": "基",
+      "name": "科创创业人工智能ETF国联安",
+      "name_en": "",
+      "py": "kechuangchuangyerengongzhinengetfguolianan",
+      "abbr": "kccyrgznetfgla"
+    },
     "sz158041": {
       "code": "158041",
       "market": "sz",
@@ -10413,6 +10431,15 @@
       "name_en": "",
       "py": "chuangyebansuanlietfpenghua",
       "abbr": "cybsletfph"
+    },
+    "sz158058": {
+      "code": "158058",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板金融科技ETF华泰柏瑞",
+      "name_en": "",
+      "py": "chuangyebanjinrongkejietfhuataibairui",
+      "abbr": "cybjrkjetfhtbr"
     },
     "sz158059": {
       "code": "158059",
