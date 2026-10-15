@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-14",
+  "last_update": "2026-10-15",
   "codes": {
     "usa": {
       "code": "a",
@@ -1080,6 +1080,15 @@
       "name_en": "Acadia Healthcare Company, Inc. - Common Stock",
       "py": "akadiyayiliaobaojian",
       "abbr": "akdyylbj"
+    },
+    "usachp": {
+      "code": "achp",
+      "market": "us",
+      "type": "美",
+      "name": "Global X Asia Semiconductor ETF",
+      "name_en": "Global X Asia Semiconductor ETF",
+      "py": "",
+      "abbr": ""
     },
     "usachr": {
       "code": "achr",
@@ -13528,15 +13537,6 @@
       "py": "",
       "abbr": ""
     },
-    "usbkkt_ws": {
-      "code": "bkkt_ws",
-      "market": "us",
-      "type": "美",
-      "name": "Bakkt, Inc. Warrants to purchase Class A Common Stock, each Warrant entitles a holder to purchase 1/25th of a share of Class A common stock at an exercise price of $287.50 for one share",
-      "name_en": "Bakkt, Inc. Warrants to purchase Class A Common Stock, each Warrant entitles a holder to purchase 1/25th of a share of Class A common stock at an exercise price of $287.50 for one share",
-      "py": "",
-      "abbr": ""
-    },
     "usbklc": {
       "code": "bklc",
       "market": "us",
@@ -16182,6 +16182,15 @@
       "name_en": "Sierra Bancorp - Common Stock",
       "py": "sailayinhang",
       "abbr": "slyh"
+    },
+    "usbsrt": {
+      "code": "bsrt",
+      "market": "us",
+      "type": "美",
+      "name": "BSR Real Estate Investment Trust Units",
+      "name_en": "BSR Real Estate Investment Trust Units",
+      "py": "",
+      "abbr": ""
     },
     "usbssx": {
       "code": "bssx",
@@ -19033,15 +19042,6 @@
       "type": "美",
       "name": "ALPS/CoreCommodity Natural Resources ETF",
       "name_en": "ALPS/CoreCommodity Natural Resources ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "uscco": {
-      "code": "cco",
-      "market": "us",
-      "type": "美",
-      "name": "Clear Channel Outdoor Holdings, Inc. Common Stock",
-      "name_en": "Clear Channel Outdoor Holdings, Inc. Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -27640,6 +27640,15 @@
       "py": "",
       "abbr": ""
     },
+    "usdfgv": {
+      "code": "dfgv",
+      "market": "us",
+      "type": "美",
+      "name": "DFA Intermediate Government Fixed Income Portfolio: ETF Class Shares",
+      "name_en": "DFA Intermediate Government Fixed Income Portfolio: ETF Class Shares",
+      "py": "",
+      "abbr": ""
+    },
     "usdfgx": {
       "code": "dfgx",
       "market": "us",
@@ -33201,15 +33210,6 @@
       "name_en": "Emerson Electric Company Common Stock",
       "py": "aimoshengdianqi",
       "abbr": "amsdq"
-    },
-    "usemsc": {
-      "code": "emsc",
-      "market": "us",
-      "type": "美",
-      "name": "Sophus Capital Emerging Market Small Cap ETF",
-      "name_en": "Sophus Capital Emerging Market Small Cap ETF",
-      "py": "",
-      "abbr": ""
     },
     "usemse": {
       "code": "emse",
@@ -39409,6 +39409,15 @@
       "type": "美",
       "name": "Franklin FTSE Saudi Arabia ETF",
       "name_en": "Franklin FTSE Saudi Arabia ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usflsc": {
+      "code": "flsc",
+      "market": "us",
+      "type": "美",
+      "name": "Frazier Life Sciences Acquisition Corp. II - Class A Ordinary Shares",
+      "name_en": "Frazier Life Sciences Acquisition Corp. II - Class A Ordinary Shares",
       "py": "",
       "abbr": ""
     },
@@ -51103,15 +51112,6 @@
       "py": "",
       "abbr": ""
     },
-    "usiae": {
-      "code": "iae",
-      "market": "us",
-      "type": "美",
-      "name": "Voya Asia Pacific High Dividend Equity Income Fund ING Asia Pacific High Dividend Equity Income Fund Common Shares of Beneficial Interest",
-      "name_en": "Voya Asia Pacific High Dividend Equity Income Fund ING Asia Pacific High Dividend Equity Income Fund Common Shares of Beneficial Interest",
-      "py": "",
-      "abbr": ""
-    },
     "usiaf": {
       "code": "iaf",
       "market": "us",
@@ -53071,15 +53071,6 @@
       "type": "美",
       "name": "iShares Cybersecurity and Tech ETF",
       "name_en": "iShares Cybersecurity and Tech ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usihd": {
-      "code": "ihd",
-      "market": "us",
-      "type": "美",
-      "name": "Voya Emerging Markets High Income Dividend Equity Fund Common Shares",
-      "name_en": "Voya Emerging Markets High Income Dividend Equity Fund Common Shares",
       "py": "",
       "abbr": ""
     },
@@ -61583,8 +61574,8 @@
       "code": "lb",
       "market": "us",
       "type": "美",
-      "name": "LandBridge Company LLC Class A Shares Representing Limited Liability Company Interests",
-      "name_en": "LandBridge Company LLC Class A Shares Representing Limited Liability Company Interests",
+      "name": "LandBridge Corporation Class A Common Stock",
+      "name_en": "LandBridge Corporation Class A Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -66985,6 +66976,15 @@
       "type": "美",
       "name": "MacroGenics, Inc. - Common Stock",
       "name_en": "MacroGenics, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usmgol": {
+      "code": "mgol",
+      "market": "us",
+      "type": "美",
+      "name": "Leverage Shares MANGOS ETF",
+      "name_en": "Leverage Shares MANGOS ETF",
       "py": "",
       "abbr": ""
     },
@@ -75578,8 +75578,8 @@
       "code": "nxdr",
       "market": "us",
       "type": "美",
-      "name": "Nextdoor Holdings, Inc. Class A Common Stock",
-      "name_en": "Nextdoor Holdings, Inc. Class A Common Stock",
+      "name": "Nextdoor Holdings, Inc. - Common Stock",
+      "name_en": "Nextdoor Holdings, Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -80812,6 +80812,15 @@
       "py": "",
       "abbr": ""
     },
+    "uspept": {
+      "code": "pept",
+      "market": "us",
+      "type": "美",
+      "name": "REX Peptide ETF",
+      "name_en": "REX Peptide ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usperf": {
       "code": "perf",
       "market": "us",
@@ -83719,15 +83728,6 @@
       "py": "",
       "abbr": ""
     },
-    "usprif_l": {
-      "code": "prif_l",
-      "market": "us",
-      "type": "美",
-      "name": "Priority Income Fund, Inc. 6.375% Series L Term Preferred Stock Due 2029",
-      "name_en": "Priority Income Fund, Inc. 6.375% Series L Term Preferred Stock Due 2029",
-      "py": "",
-      "abbr": ""
-    },
     "usprim": {
       "code": "prim",
       "market": "us",
@@ -86011,33 +86011,6 @@
       "type": "美",
       "name": "State Street SPDR MSCI Emerging Markets StrategicFactors ETF",
       "name_en": "State Street SPDR MSCI Emerging Markets StrategicFactors ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usqeta": {
-      "code": "qeta",
-      "market": "us",
-      "type": "美",
-      "name": "Quetta Acquisition Corporation - Common Stock",
-      "name_en": "Quetta Acquisition Corporation - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usqetar": {
-      "code": "qetar",
-      "market": "us",
-      "type": "美",
-      "name": "Quetta Acquisition Corporation - Right",
-      "name_en": "Quetta Acquisition Corporation - Right",
-      "py": "",
-      "abbr": ""
-    },
-    "usqetau": {
-      "code": "qetau",
-      "market": "us",
-      "type": "美",
-      "name": "Quetta Acquisition Corporation - Unit",
-      "name_en": "Quetta Acquisition Corporation - Unit",
       "py": "",
       "abbr": ""
     },
@@ -91189,6 +91162,15 @@
       "py": "lingshouetf-vaneck",
       "abbr": "lsetf-vaneck"
     },
+    "usrthy": {
+      "code": "rthy",
+      "market": "us",
+      "type": "美",
+      "name": "F/m Long-Term Treasury Inflation-Protected Security (TIPS) ETF",
+      "name_en": "F/m Long-Term Treasury Inflation-Protected Security (TIPS) ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usrto": {
       "code": "rto",
       "market": "us",
@@ -95851,12 +95833,12 @@
       "py": "",
       "abbr": ""
     },
-    "usskyd_wsw": {
-      "code": "skyd_wsw",
+    "usskyd_ws": {
+      "code": "skyd_ws",
       "market": "us",
       "type": "美",
-      "name": "Skydance Corporation Warrants to Purchase Class B Common Stock When-Issued",
-      "name_en": "Skydance Corporation Warrants to Purchase Class B Common Stock When-Issued",
+      "name": "Skydance Corporation Warrants to Purchase Class B Common Stock",
+      "name_en": "Skydance Corporation Warrants to Purchase Class B Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -116209,6 +116191,15 @@
       "py": "",
       "abbr": ""
     },
+    "usxlem": {
+      "code": "xlem",
+      "market": "us",
+      "type": "美",
+      "name": "State Street S&P 500 Energy Market Sector SPDR ETF",
+      "name_en": "State Street S&P 500 Energy Market Sector SPDR ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usxlex": {
       "code": "xlex",
       "market": "us",
@@ -116299,6 +116290,15 @@
       "py": "",
       "abbr": ""
     },
+    "usxlkm": {
+      "code": "xlkm",
+      "market": "us",
+      "type": "美",
+      "name": "State Street S&P 500 Technology Market Sector SPDR ETF",
+      "name_en": "State Street S&P 500 Technology Market Sector SPDR ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usxlkx": {
       "code": "xlkx",
       "market": "us",
@@ -116332,6 +116332,15 @@
       "type": "美",
       "name": "MicroSectors -3x Short Consumer Staples (XLP) ETNs",
       "name_en": "MicroSectors -3x Short Consumer Staples (XLP) ETNs",
+      "py": "",
+      "abbr": ""
+    },
+    "usxlpm": {
+      "code": "xlpm",
+      "market": "us",
+      "type": "美",
+      "name": "State Street S&P 500 Consumer Staples Market Sector SPDR ETF",
+      "name_en": "State Street S&P 500 Consumer Staples Market Sector SPDR ETF",
       "py": "",
       "abbr": ""
     },
@@ -116458,6 +116467,15 @@
       "type": "美",
       "name": "State Street Consumer Discretionary Select Sector SPDR Premium Income ETF",
       "name_en": "State Street Consumer Discretionary Select Sector SPDR Premium Income ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usxlym": {
+      "code": "xlym",
+      "market": "us",
+      "type": "美",
+      "name": "State Street S&P 500 Consumer Discretionary Market Sector SPDR ETF",
+      "name_en": "State Street S&P 500 Consumer Discretionary Market Sector SPDR ETF",
       "py": "",
       "abbr": ""
     },

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-14",
+  "last_update": "2026-10-15",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -25866,6 +25866,15 @@
       "name_en": "",
       "py": "sitaike",
       "abbr": "stk"
+    },
+    "sz301569": {
+      "code": "301569",
+      "market": "sz",
+      "type": "创",
+      "name": "N联亚药业",
+      "name_en": "",
+      "py": "nlianyayaoye",
+      "abbr": "nlyyy"
     },
     "sz301571": {
       "code": "301571",

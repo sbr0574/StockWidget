@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-14",
+  "last_update": "2026-10-15",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -10333,6 +10333,15 @@
       "py": "huagongetfjingshun",
       "abbr": "hgetfjs"
     },
+    "sz158037": {
+      "code": "158037",
+      "market": "sz",
+      "type": "基",
+      "name": "机器人ETF博时",
+      "name_en": "",
+      "py": "jiqirenetfboshi",
+      "abbr": "jqretfbs"
+    },
     "sz158038": {
       "code": "158038",
       "market": "sz",
@@ -10378,6 +10387,15 @@
       "py": "hengshengkejietffuguo",
       "abbr": "hskjetffg"
     },
+    "sz158043": {
+      "code": "158043",
+      "market": "sz",
+      "type": "基",
+      "name": "价值ETF南方",
+      "name_en": "",
+      "py": "jiazhietfnanfang",
+      "abbr": "jzetfnf"
+    },
     "sz158046": {
       "code": "158046",
       "market": "sz",
@@ -10386,6 +10404,15 @@
       "name_en": "",
       "py": "weixingetfnanfang",
       "abbr": "wxetfnf"
+    },
+    "sz158047": {
+      "code": "158047",
+      "market": "sz",
+      "type": "基",
+      "name": "粮食ETF永赢",
+      "name_en": "",
+      "py": "liangshietfyongying",
+      "abbr": "lsetfyy"
     },
     "sz158049": {
       "code": "158049",

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-14",
+  "last_update": "2026-10-15",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -6432,7 +6432,7 @@
       "market": "hk",
       "type": "港",
       "name": "帝王國際投資",
-      "name_en": "KING INTL INV",
+      "name_en": "KING INTL-NEW",
       "py": "diwangguojitouzi",
       "abbr": "dwgjtz"
     },
@@ -17227,6 +17227,15 @@
       "py": "nuobikan",
       "abbr": "nbk"
     },
+    "hk02636": {
+      "code": "02636",
+      "market": "hk",
+      "type": "港",
+      "name": "傳音控股",
+      "name_en": "TRANSSION",
+      "py": "chuanyinkonggu",
+      "abbr": "cykg"
+    },
     "hk02637": {
       "code": "02637",
       "market": "hk",
@@ -18474,7 +18483,7 @@
       "market": "hk",
       "type": "港",
       "name": "帝王國際投資",
-      "name_en": "KING INTL INV",
+      "name_en": "KING INTL-OLD",
       "py": "diwangguojitouzi",
       "abbr": "dwgjtz"
     },
@@ -18496,6 +18505,15 @@
       "py": "shouhuichanyejinrongguquan",
       "abbr": "shcyjrgq"
     },
+    "hk02941": {
+      "code": "02941",
+      "market": "hk",
+      "type": "港",
+      "name": "帝王國際投資股權",
+      "name_en": "KING INTL I RTS",
+      "py": "diwangguojitouziguquan",
+      "abbr": "dwgjtzgq"
+    },
     "hk02942": {
       "code": "02942",
       "market": "hk",
@@ -18513,15 +18531,6 @@
       "name_en": "BILLION IND",
       "py": "baihongshiye",
       "abbr": "bhsy"
-    },
-    "hk02944": {
-      "code": "02944",
-      "market": "hk",
-      "type": "港",
-      "name": "大健康國際股權",
-      "name_en": "UNI HEALTH RTS",
-      "py": "dajiankangguojiguquan",
-      "abbr": "djkgjgq"
     },
     "hk02945": {
       "code": "02945",
@@ -25511,10 +25520,10 @@
       "code": "08316",
       "market": "hk",
       "type": "港",
-      "name": "中國紅包",
-      "name_en": "CHINA HONGBAO",
-      "py": "zhongguohongbao",
-      "abbr": "zghb"
+      "name": "隨叫隨到",
+      "name_en": "SWIFTLIFE",
+      "py": "suijiaosuidao",
+      "abbr": "sjsd"
     },
     "hk08317": {
       "code": "08317",
@@ -25827,7 +25836,7 @@
       "market": "hk",
       "type": "港",
       "name": "中顯智能齊家控股",
-      "name_en": "ZXZN QI-HOUSE",
+      "name_en": "ZXZN QI-HSE-5K",
       "py": "zhongxianzhinengqijiakonggu",
       "abbr": "zxznqjkg"
     },
@@ -26514,6 +26523,24 @@
       "name_en": "GOLDEN LEAF INT",
       "py": "jinyeguojijituan",
       "abbr": "jygjjt"
+    },
+    "hk08551": {
+      "code": "08551",
+      "market": "hk",
+      "type": "港",
+      "name": "中顯智能(二萬)",
+      "name_en": "ZXZN QI-HSE-20K",
+      "py": "zhongxianzhineng(erwan)",
+      "abbr": "zxzn(ew)"
+    },
+    "hk08552": {
+      "code": "08552",
+      "market": "hk",
+      "type": "港",
+      "name": "新華聯合投資",
+      "name_en": "CU VENTURE INV",
+      "py": "xinhualianhetouzi",
+      "abbr": "xhlhtz"
     },
     "hk08556": {
       "code": "08556",
