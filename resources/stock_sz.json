@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-15",
+  "last_update": "2026-10-16",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -13735,15 +13735,6 @@
       "py": "changanb",
       "abbr": "cab"
     },
-    "sz200706": {
-      "code": "200706",
-      "market": "sz",
-      "type": "深",
-      "name": "瓦轴B",
-      "name_en": "",
-      "py": "wazhoub",
-      "abbr": "wzb"
-    },
     "sz200725": {
       "code": "200725",
       "market": "sz",
@@ -25871,10 +25862,10 @@
       "code": "301569",
       "market": "sz",
       "type": "创",
-      "name": "N联亚药业",
+      "name": "C联亚药业",
       "name_en": "",
-      "py": "nlianyayaoye",
-      "abbr": "nlyyy"
+      "py": "clianyayaoye",
+      "abbr": "clyyy"
     },
     "sz301571": {
       "code": "301571",

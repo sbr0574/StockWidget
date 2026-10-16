@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-15",
+  "last_update": "2026-10-16",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -6148,6 +6148,15 @@
       "py": "hengzhiganggutongetfboshi",
       "abbr": "hzggtetfbs"
     },
+    "sh526090": {
+      "code": "526090",
+      "market": "sh",
+      "type": "基",
+      "name": "港股通金融ETF富国",
+      "name_en": "",
+      "py": "ganggutongjinrongetffuguo",
+      "abbr": "ggtjretffg"
+    },
     "sh530000": {
       "code": "530000",
       "market": "sh",
@@ -8001,6 +8010,15 @@
       "name_en": "",
       "py": "jinrongkejietfwanjia",
       "abbr": "jrkjetfwj"
+    },
+    "sh562420": {
+      "code": "562420",
+      "market": "sh",
+      "type": "基",
+      "name": "卫星ETF平安",
+      "name_en": "",
+      "py": "weixingetfpingan",
+      "abbr": "wxetfpa"
     },
     "sh562450": {
       "code": "562450",
@@ -10432,6 +10450,15 @@
       "py": "chuangyebansuanlietfyifangda",
       "abbr": "cybsletfyfd"
     },
+    "sz158052": {
+      "code": "158052",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板金融科技ETF景顺",
+      "name_en": "",
+      "py": "chuangyebanjinrongkejietfjingshun",
+      "abbr": "cybjrkjetfjs"
+    },
     "sz158053": {
       "code": "158053",
       "market": "sz",
@@ -10440,6 +10467,15 @@
       "name_en": "",
       "py": "chuangyebansuanlietfdacheng",
       "abbr": "cybsletfdc"
+    },
+    "sz158055": {
+      "code": "158055",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板算力ETF国泰",
+      "name_en": "",
+      "py": "chuangyebansuanlietfguotai",
+      "abbr": "cybsletfgt"
     },
     "sz158056": {
       "code": "158056",

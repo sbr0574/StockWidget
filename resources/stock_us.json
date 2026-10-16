@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-15",
+  "last_update": "2026-10-16",
   "codes": {
     "usa": {
       "code": "a",
@@ -5374,6 +5374,15 @@
       "py": "amalin",
       "abbr": "aml"
     },
+    "usamro": {
+      "code": "amro",
+      "market": "us",
+      "type": "美",
+      "name": "Amaero Inc. - Common Stock",
+      "name_en": "Amaero Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
     "usamrx": {
       "code": "amrx",
       "market": "us",
@@ -7606,15 +7615,6 @@
       "py": "",
       "abbr": ""
     },
-    "usasgir": {
-      "code": "asgir",
-      "market": "us",
-      "type": "美",
-      "name": "abrdn Global Infrastructure Income Fund Rights (expiring October 15, 2026) Rights",
-      "name_en": "abrdn Global Infrastructure Income Fund Rights (expiring October 15, 2026) Rights",
-      "py": "",
-      "abbr": ""
-    },
     "usasgm": {
       "code": "asgm",
       "market": "us",
@@ -9322,6 +9322,15 @@
       "type": "美",
       "name": "Avalo Therapeutics, Inc. - Common Stock",
       "name_en": "Avalo Therapeutics, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usavuc": {
+      "code": "avuc",
+      "market": "us",
+      "type": "美",
+      "name": "Avantis U.S. Core Equity ETF",
+      "name_en": "Avantis U.S. Core Equity ETF",
       "py": "",
       "abbr": ""
     },
@@ -14239,6 +14248,15 @@
       "py": "",
       "abbr": ""
     },
+    "usbmmx": {
+      "code": "bmmx",
+      "market": "us",
+      "type": "美",
+      "name": "Black Mammoth Metals Corporation - Common Shares",
+      "name_en": "Black Mammoth Metals Corporation - Common Shares",
+      "py": "",
+      "abbr": ""
+    },
     "usbmn": {
       "code": "bmn",
       "market": "us",
@@ -17233,15 +17251,6 @@
       "type": "美",
       "name": "Betterware de Mexico, S.A.P.I. de C.V. Ordinary Shares",
       "name_en": "Betterware de Mexico, S.A.P.I. de C.V. Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usbwow": {
-      "code": "bwow",
-      "market": "us",
-      "type": "美",
-      "name": "Bitwise Dogecoin ETF",
-      "name_en": "Bitwise Dogecoin ETF",
       "py": "",
       "abbr": ""
     },
@@ -42616,6 +42625,15 @@
       "py": "",
       "abbr": ""
     },
+    "usganz": {
+      "code": "ganz",
+      "market": "us",
+      "type": "美",
+      "name": "Tuttle Capital Thematic ETF",
+      "name_en": "Tuttle Capital Thematic ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usgap": {
       "code": "gap",
       "market": "us",
@@ -50819,8 +50837,8 @@
       "code": "hygw",
       "market": "us",
       "type": "美",
-      "name": "iShares High Yield Corporate Bond BuyWrite Strategy ETF",
-      "name_en": "iShares High Yield Corporate Bond BuyWrite Strategy ETF",
+      "name": "iShares HYG Premium Income+ ETF",
+      "name_en": "iShares HYG Premium Income+ ETF",
       "py": "",
       "abbr": ""
     },
@@ -51163,6 +51181,15 @@
       "type": "美",
       "name": "iShares Systematic Alternatives Active ETF",
       "name_en": "iShares Systematic Alternatives Active ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usiam": {
+      "code": "iam",
+      "market": "us",
+      "type": "美",
+      "name": "Iambic Therapeutics, Inc. - Common Stock",
+      "name_en": "Iambic Therapeutics, Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -56246,8 +56273,8 @@
       "code": "ivvw",
       "market": "us",
       "type": "美",
-      "name": "iShares S&P 500 BuyWrite ETF",
-      "name_en": "iShares S&P 500 BuyWrite ETF",
+      "name": "iShares IVV Premium Income+ ETF",
+      "name_en": "iShares IVV Premium Income+ ETF",
       "py": "",
       "abbr": ""
     },
@@ -56354,8 +56381,8 @@
       "code": "iwmw",
       "market": "us",
       "type": "美",
-      "name": "iShares Russell 2000 BuyWrite ETF",
-      "name_en": "iShares Russell 2000 BuyWrite ETF",
+      "name": "iShares IWM Premium Income+ ETF",
+      "name_en": "iShares IWM Premium Income+ ETF",
       "py": "",
       "abbr": ""
     },
@@ -63806,8 +63833,8 @@
       "code": "lqdw",
       "market": "us",
       "type": "美",
-      "name": "iShares Investment Grade Corporate Bond BuyWrite Strategy ETF",
-      "name_en": "iShares Investment Grade Corporate Bond BuyWrite Strategy ETF",
+      "name": "iShares LQD Premium Income+ ETF",
+      "name_en": "iShares LQD Premium Income+ ETF",
       "py": "",
       "abbr": ""
     },
@@ -96841,6 +96868,15 @@
       "py": "erbeizuoduosmretf-corgi",
       "abbr": "ebzdsmretf-corgi"
     },
+    "ussmrz": {
+      "code": "smrz",
+      "market": "us",
+      "type": "美",
+      "name": "Global X Small Modular Reactor ETF",
+      "name_en": "Global X Small Modular Reactor ETF",
+      "py": "",
+      "abbr": ""
+    },
     "ussmsi": {
       "code": "smsi",
       "market": "us",
@@ -97333,15 +97369,6 @@
       "type": "美",
       "name": "Santander Holdings USA, Inc. Depositary Shares, Each Representing a 1/1,000th Interest in a Share of Fixed-Rate Reset Non-Cumulative Perpetual Preferred Stock, Series H",
       "name_en": "Santander Holdings USA, Inc. Depositary Shares, Each Representing a 1/1,000th Interest in a Share of Fixed-Rate Reset Non-Cumulative Perpetual Preferred Stock, Series H",
-      "py": "",
-      "abbr": ""
-    },
-    "ussnus_i": {
-      "code": "snus_i",
-      "market": "us",
-      "type": "美",
-      "name": "Santander Holdings USA, Inc. Depositary Shares, Each Representing a 1/40th Interest in a Share of Fixed-Rate Reset Non-Cumulative Perpetual Preferred Stock, Series I",
-      "name_en": "Santander Holdings USA, Inc. Depositary Shares, Each Representing a 1/40th Interest in a Share of Fixed-Rate Reset Non-Cumulative Perpetual Preferred Stock, Series I",
       "py": "",
       "abbr": ""
     },
@@ -104081,8 +104108,8 @@
       "code": "tltw",
       "market": "us",
       "type": "美",
-      "name": "iShares 20+ Year Treasury Bond BuyWrite Strategy ETF",
-      "name_en": "iShares 20+ Year Treasury Bond BuyWrite Strategy ETF",
+      "name": "iShares TLT Premium Income+ ETF",
+      "name_en": "iShares TLT Premium Income+ ETF",
       "py": "",
       "abbr": ""
     },
@@ -113077,12 +113104,30 @@
       "py": "weibo",
       "abbr": "wb"
     },
+    "uswbem": {
+      "code": "wbem",
+      "market": "us",
+      "type": "美",
+      "name": "William Blair Emerging Markets Equity ETF",
+      "name_en": "William Blair Emerging Markets Equity ETF",
+      "py": "",
+      "abbr": ""
+    },
     "uswbi": {
       "code": "wbi",
       "market": "us",
       "type": "美",
       "name": "WaterBridge Infrastructure LLC Class A Shares Representing Limited Liability Company Interests",
       "name_en": "WaterBridge Infrastructure LLC Class A Shares Representing Limited Liability Company Interests",
+      "py": "",
+      "abbr": ""
+    },
+    "uswbie": {
+      "code": "wbie",
+      "market": "us",
+      "type": "美",
+      "name": "William Blair International Equity ETF",
+      "name_en": "William Blair International Equity ETF",
       "py": "",
       "abbr": ""
     },

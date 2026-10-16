@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-15",
+  "last_update": "2026-10-16",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -5136,7 +5136,7 @@
       "market": "hk",
       "type": "港",
       "name": "首惠產業金融",
-      "name_en": "CAPITAL IND-NEW",
+      "name_en": "CAPITAL IND FIN",
       "py": "shouhuichanyejinrong",
       "abbr": "shcyjr"
     },
@@ -18415,15 +18415,6 @@
       "py": "zhuoyuekonggu",
       "abbr": "zykg"
     },
-    "hk02921": {
-      "code": "02921",
-      "market": "hk",
-      "type": "港",
-      "name": "首惠產業金融",
-      "name_en": "CAPITAL IND-OLD",
-      "py": "shouhuichanyejinrong",
-      "abbr": "shcyjr"
-    },
     "hk02922": {
       "code": "02922",
       "market": "hk",
@@ -18540,6 +18531,15 @@
       "name_en": "GENSCRIPT B-2K",
       "py": "jinsiruishengwu-erqian",
       "abbr": "jsrsw-eq"
+    },
+    "hk02947": {
+      "code": "02947",
+      "market": "hk",
+      "type": "港",
+      "name": "深演智能",
+      "name_en": "DEEPZERO",
+      "py": "shenyanzhineng",
+      "abbr": "syzn"
     },
     "hk03001": {
       "code": "03001",
@@ -24081,7 +24081,7 @@
       "market": "hk",
       "type": "港",
       "name": "朗華國際集團",
-      "name_en": "CB GLOBAL",
+      "name_en": "CB GLOBAL-NEW",
       "py": "langhuaguojijituan",
       "abbr": "lhgjjt"
     },
@@ -26592,7 +26592,7 @@
       "market": "hk",
       "type": "港",
       "name": "朗華國際集團",
-      "name_en": "CB GLOBAL",
+      "name_en": "CB GLOBAL-OLD",
       "py": "langhuaguojijituan",
       "abbr": "lhgjjt"
     },
