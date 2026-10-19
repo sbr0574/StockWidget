@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-16",
+  "last_update": "2026-10-19",
   "codes": {
     "usa": {
       "code": "a",
@@ -34,6 +34,15 @@
       "type": "美",
       "name": "Amplius Aggressive Asset Allocation ETF",
       "name_en": "Amplius Aggressive Asset Allocation ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usaaab": {
+      "code": "aaab",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi FTSE Aaa-A Intermediate Corporate Bond ETF",
+      "name_en": "Corgi FTSE Aaa-A Intermediate Corporate Bond ETF",
       "py": "",
       "abbr": ""
     },
@@ -2197,15 +2206,6 @@
       "py": "xianjinnengyuangongye",
       "abbr": "xjnygy"
     },
-    "usaelv": {
-      "code": "aelv",
-      "market": "us",
-      "type": "美",
-      "name": "Harbor AlphaEdge Large Cap Value ETF",
-      "name_en": "Harbor AlphaEdge Large Cap Value ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usaem": {
       "code": "aem",
       "market": "us",
@@ -2770,6 +2770,15 @@
       "type": "美",
       "name": "EA Astoria Beacon Dynamic Core US Fixed Income ETF",
       "name_en": "EA Astoria Beacon Dynamic Core US Fixed Income ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usaggb": {
+      "code": "aggb",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi FTSE U.S. Aggregate Bond ETF",
+      "name_en": "Corgi FTSE U.S. Aggregate Bond ETF",
       "py": "",
       "abbr": ""
     },
@@ -5697,6 +5706,15 @@
       "name_en": "Abercrombie & Fitch Company Common Stock",
       "py": "abeikelongbi&feiqi",
       "abbr": "abklb&fq"
+    },
+    "usang": {
+      "code": "ang",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi FTSE Fallen Angels Bond ETF",
+      "name_en": "Corgi FTSE Fallen Angels Bond ETF",
+      "py": "",
+      "abbr": ""
     },
     "usang_d": {
       "code": "ang_d",
@@ -10501,6 +10519,15 @@
       "type": "美",
       "name": "CYBER HORNET S&P 500 and Bitcoin 75/25 Strategy ETF",
       "name_en": "CYBER HORNET S&P 500 and Bitcoin 75/25 Strategy ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usbbbb": {
+      "code": "bbbb",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi FTSE BBB Rated Corporate Bond ETF",
+      "name_en": "Corgi FTSE BBB Rated Corporate Bond ETF",
       "py": "",
       "abbr": ""
     },
@@ -25351,6 +25378,15 @@
       "type": "美",
       "name": "Citius Pharmaceuticals, Inc. - Common Stock",
       "name_en": "Citius Pharmaceuticals, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "uscty": {
+      "code": "cty",
+      "market": "us",
+      "type": "美",
+      "name": "City Therapeutics, Inc. - Common Stock",
+      "name_en": "City Therapeutics, Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -41563,6 +41599,15 @@
       "py": "",
       "abbr": ""
     },
+    "usftn": {
+      "code": "ftn",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi FTSE 5-10 Year IG Corporate Bond ETF",
+      "name_en": "Corgi FTSE 5-10 Year IG Corporate Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usftnj": {
       "code": "ftnj",
       "market": "us",
@@ -42865,6 +42910,15 @@
       "type": "美",
       "name": "Goldman Sachs Dynamic California Municipal Income ETF",
       "name_en": "Goldman Sachs Dynamic California Municipal Income ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usgcb": {
+      "code": "gcb",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi FTSE Intermediate Government/Credit Bond ETF",
+      "name_en": "Corgi FTSE Intermediate Government/Credit Bond ETF",
       "py": "",
       "abbr": ""
     },
@@ -48781,6 +48835,15 @@
       "py": "xierdundujiajiudian",
       "abbr": "xeddjjd"
     },
+    "ushh": {
+      "code": "hh",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi FTSE High Yield Corporate Bond ETF",
+      "name_en": "Corgi FTSE High Yield Corporate Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
     "ushhh": {
       "code": "hhh",
       "market": "us",
@@ -49410,6 +49473,15 @@
       "name_en": "Harley-Davidson, Inc. Common Stock",
       "py": "haleidaiweisen",
       "abbr": "hldws"
+    },
+    "ushoid": {
+      "code": "hoid",
+      "market": "us",
+      "type": "美",
+      "name": "Tuttle - Rareview Humanoid Robotics ETF",
+      "name_en": "Tuttle - Rareview Humanoid Robotics ETF",
+      "py": "",
+      "abbr": ""
     },
     "ushola": {
       "code": "hola",
@@ -51589,15 +51661,6 @@
       "py": "",
       "abbr": ""
     },
-    "usibic": {
-      "code": "ibic",
-      "market": "us",
-      "type": "美",
-      "name": "iShares iBonds Oct 2026 Term TIPS ETF",
-      "name_en": "iShares iBonds Oct 2026 Term TIPS ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usibid": {
       "code": "ibid",
       "market": "us",
@@ -52891,6 +52954,15 @@
       "type": "美",
       "name": "Invest Green Acquisition Corporation - Units",
       "name_en": "Invest Green Acquisition Corporation - Units",
+      "py": "",
+      "abbr": ""
+    },
+    "usigb": {
+      "code": "igb",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi FTSE U.S. IG Corporate Bond ETF",
+      "name_en": "Corgi FTSE U.S. IG Corporate Bond ETF",
       "py": "",
       "abbr": ""
     },
@@ -62704,6 +62776,15 @@
       "py": "",
       "abbr": ""
     },
+    "usligb": {
+      "code": "ligb",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi FTSE 10 Year IG Corporate Bond ETF",
+      "name_en": "Corgi FTSE 10 Year IG Corporate Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
     "uslii": {
       "code": "lii",
       "market": "us",
@@ -64132,6 +64213,15 @@
       "type": "美",
       "name": "Nomura Tax-Free USA ETF",
       "name_en": "Nomura Tax-Free USA ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usltb": {
+      "code": "ltb",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi FTSE 20 Year U.S. Treasury Bond ETF",
+      "name_en": "Corgi FTSE 20 Year U.S. Treasury Bond ETF",
       "py": "",
       "abbr": ""
     },
@@ -68065,6 +68155,15 @@
       "type": "美",
       "name": "MiniMed Group, Inc. - Common Stock When Issued",
       "name_en": "MiniMed Group, Inc. - Common Stock When Issued",
+      "py": "",
+      "abbr": ""
+    },
+    "usmmf": {
+      "code": "mmf",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi Money Market ETF",
+      "name_en": "Corgi Money Market ETF",
       "py": "",
       "abbr": ""
     },
@@ -100810,6 +100909,15 @@
       "py": "",
       "abbr": ""
     },
+    "ussvtn": {
+      "code": "svtn",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi FTSE 7-10 Year U.S. Treasury Bond ETF",
+      "name_en": "Corgi FTSE 7-10 Year U.S. Treasury Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
     "ussvv": {
       "code": "svv",
       "market": "us",
@@ -102094,6 +102202,15 @@
       "type": "美",
       "name": "Tucows Inc. - Common Stock",
       "name_en": "Tucows Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "ustcxb": {
+      "code": "tcxb",
+      "market": "us",
+      "type": "美",
+      "name": "TCGX Acquisition Corp. II - Class A Ordinary Shares",
+      "name_en": "TCGX Acquisition Corp. II - Class A Ordinary Shares",
       "py": "",
       "abbr": ""
     },
@@ -104617,6 +104734,15 @@
       "py": "",
       "abbr": ""
     },
+    "ustntw": {
+      "code": "tntw",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi FTSE 10-20 Year U.S. Treasury Bond ETF",
+      "name_en": "Corgi FTSE 10-20 Year U.S. Treasury Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
     "ustnuk": {
       "code": "tnuk",
       "market": "us",
@@ -106615,6 +106741,15 @@
       "py": "",
       "abbr": ""
     },
+    "ustttt": {
+      "code": "tttt",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi FTSE U.S. TIPS Bond ETF",
+      "name_en": "Corgi FTSE U.S. TIPS Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usttwo": {
       "code": "ttwo",
       "market": "us",
@@ -107442,6 +107577,15 @@
       "name_en": "AgEagle Aerial Systems, Inc. Common Stock",
       "py": "ageagletianxianxitong",
       "abbr": "ageagletxxt"
+    },
+    "usub": {
+      "code": "ub",
+      "market": "us",
+      "type": "美",
+      "name": "Corgi FTSE U.S. Treasury Bond ETF",
+      "name_en": "Corgi FTSE U.S. Treasury Bond ETF",
+      "py": "",
+      "abbr": ""
     },
     "usubcp": {
       "code": "ubcp",

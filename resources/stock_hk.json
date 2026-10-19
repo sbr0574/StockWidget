@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-16",
+  "last_update": "2026-10-19",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -2673,15 +2673,6 @@
       "name_en": "HANFORT DEV H",
       "py": "hanchengfazhankonggu",
       "abbr": "hcfzkg"
-    },
-    "hk00362": {
-      "code": "00362",
-      "market": "hk",
-      "type": "港",
-      "name": "中國天化工",
-      "name_en": "C ZENITH CHEM",
-      "py": "zhongguotianhuagong",
-      "abbr": "zgthg"
     },
     "hk00363": {
       "code": "00363",
@@ -11049,7 +11040,7 @@
       "market": "hk",
       "type": "港",
       "name": "樺欣控股",
-      "name_en": "SG GROUP HLDGS",
+      "name_en": "SG GROUP H-NEW",
       "py": "huaxinkonggu",
       "abbr": "hxkg"
     },
@@ -18465,7 +18456,7 @@
       "market": "hk",
       "type": "港",
       "name": "樺欣控股",
-      "name_en": "SG GROUP HLDGS",
+      "name_en": "SG GROUP H-OLD",
       "py": "huaxinkonggu",
       "abbr": "hxkg"
     },
@@ -20277,15 +20268,6 @@
       "name_en": "A DOO WEB3",
       "py": "adouhuiweb3",
       "abbr": "adhweb3"
-    },
-    "hk03427": {
-      "code": "03427",
-      "market": "hk",
-      "type": "基",
-      "name": "富邦多元資產",
-      "name_en": "FB MULTIASSET",
-      "py": "fubangduoyuanzichan",
-      "abbr": "fbdyzc"
     },
     "hk03428": {
       "code": "03428",
