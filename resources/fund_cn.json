@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-19",
+  "last_update": "2026-10-20",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -10557,6 +10557,15 @@
       "name_en": "",
       "py": "chuangyebanjinrongkejietfwanjia",
       "abbr": "cybjrkjetfwj"
+    },
+    "sz158072": {
+      "code": "158072",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板软件ETF南方",
+      "name_en": "",
+      "py": "chuangyebanruanjianetfnanfang",
+      "abbr": "cybrjetfnf"
     },
     "sz159001": {
       "code": "159001",

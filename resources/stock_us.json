@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-19",
+  "last_update": "2026-10-20",
   "codes": {
     "usa": {
       "code": "a",
@@ -1180,6 +1180,15 @@
       "py": "",
       "abbr": ""
     },
+    "usaciv": {
+      "code": "aciv",
+      "market": "us",
+      "type": "美",
+      "name": "Hartford Alpha Capture International Value ETF",
+      "name_en": "Hartford Alpha Capture International Value ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usaciw": {
       "code": "aciw",
       "market": "us",
@@ -1519,15 +1528,6 @@
       "type": "美",
       "name": "Virtus Diversified Income & Convertible Fund Common Shares of Beneficial Interest",
       "name_en": "Virtus Diversified Income & Convertible Fund Common Shares of Beneficial Interest",
-      "py": "",
-      "abbr": ""
-    },
-    "usacva": {
-      "code": "acva",
-      "market": "us",
-      "type": "美",
-      "name": "ACV Auctions Inc. Class A Common Stock",
-      "name_en": "ACV Auctions Inc. Class A Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -3421,6 +3421,15 @@
       "py": "",
       "abbr": ""
     },
+    "usaied": {
+      "code": "aied",
+      "market": "us",
+      "type": "美",
+      "name": "Defiance LLM Catalyst Momentum ETF",
+      "name_en": "Defiance LLM Catalyst Momentum ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usaieq": {
       "code": "aieq",
       "market": "us",
@@ -5266,15 +5275,6 @@
       "py": "",
       "abbr": ""
     },
-    "usamom": {
-      "code": "amom",
-      "market": "us",
-      "type": "美",
-      "name": "QRAFT AI-Enhanced U.S. Large Cap Momentum ETF",
-      "name_en": "QRAFT AI-Enhanced U.S. Large Cap Momentum ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usamp": {
       "code": "amp",
       "market": "us",
@@ -5478,7 +5478,7 @@
       "market": "us",
       "type": "美",
       "name": "尚乘IDEA集团",
-      "name_en": "AMTD IDEA Group American Depositary Shares, each representing six (6) Class A Ordinary Shares",
+      "name_en": "AMTD IDEA Group American Depositary Shares, each representing three hundred sixty (360) Class A Ordinary Shares",
       "py": "shangchengideajituan",
       "abbr": "scideajt"
     },
@@ -8269,15 +8269,6 @@
       "type": "美",
       "name": "Archimedes Tech SPAC Partners II Co. - Warrant",
       "name_en": "Archimedes Tech SPAC Partners II Co. - Warrant",
-      "py": "",
-      "abbr": ""
-    },
-    "usatkr": {
-      "code": "atkr",
-      "market": "us",
-      "type": "美",
-      "name": "Atkore Inc. Common Stock",
-      "name_en": "Atkore Inc. Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -16615,15 +16606,6 @@
       "py": "",
       "abbr": ""
     },
-    "usbtrn": {
-      "code": "btrn",
-      "market": "us",
-      "type": "美",
-      "name": "Global X Bitcoin Trend Strategy ETF",
-      "name_en": "Global X Bitcoin Trend Strategy ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usbtsg": {
       "code": "btsg",
       "market": "us",
@@ -19500,7 +19482,7 @@
       "market": "us",
       "type": "美",
       "name": "CECO环保",
-      "name_en": "CECO Environmental Corp. - Common Stock",
+      "name_en": "CECO Environmental Corp. Common Stock",
       "py": "cecohuanbao",
       "abbr": "cecohb"
     },
@@ -26758,6 +26740,15 @@
       "py": "tangnasen",
       "abbr": "tns"
     },
+    "usdcm": {
+      "code": "dcm",
+      "market": "us",
+      "type": "美",
+      "name": "DeFi Capital Markets, Inc. Common Stock",
+      "name_en": "DeFi Capital Markets, Inc. Common Stock",
+      "py": "",
+      "abbr": ""
+    },
     "usdcmt": {
       "code": "dcmt",
       "market": "us",
@@ -32108,8 +32099,8 @@
       "code": "efty",
       "market": "us",
       "type": "美",
-      "name": "Etoiles Capital Group Co., Ltd. - Class A Ordinary Shares",
-      "name_en": "Etoiles Capital Group Co., Ltd. - Class A Ordinary Shares",
+      "name": "Etoiles Capital Group Co., Ltd. - Common Stock",
+      "name_en": "Etoiles Capital Group Co., Ltd. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -49006,6 +48997,15 @@
       "py": "erbeizuoduohimsetf-defiance",
       "abbr": "ebzdhimsetf-defiance"
     },
+    "ushinc": {
+      "code": "hinc",
+      "market": "us",
+      "type": "美",
+      "name": "Hartford High Yield ETF",
+      "name_en": "Hartford High Yield ETF",
+      "py": "",
+      "abbr": ""
+    },
     "ushind": {
       "code": "hind",
       "market": "us",
@@ -51918,7 +51918,7 @@
       "market": "us",
       "type": "美",
       "name": "国际银行",
-      "name_en": "International Bancshares Corporation - Common Stock",
+      "name_en": "International Bancshares Corporation Common Stock",
       "py": "guojiyinhang",
       "abbr": "gjyh"
     },
@@ -55537,15 +55537,6 @@
       "type": "美",
       "name": "iShares LifePath Retirement ETF",
       "name_en": "iShares LifePath Retirement ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usirvh": {
-      "code": "irvh",
-      "market": "us",
-      "type": "美",
-      "name": "Global X Interest Rate Volatility & Inflation Hedge ETF",
-      "name_en": "Global X Interest Rate Volatility & Inflation Hedge ETF",
       "py": "",
       "abbr": ""
     },
@@ -61948,6 +61939,15 @@
       "py": "",
       "abbr": ""
     },
+    "uslcu": {
+      "code": "lcu",
+      "market": "us",
+      "type": "美",
+      "name": "Lion Copper Corp. - Common Shares",
+      "name_en": "Lion Copper Corp. - Common Shares",
+      "py": "",
+      "abbr": ""
+    },
     "uslcut": {
       "code": "lcut",
       "market": "us",
@@ -64006,15 +64006,6 @@
       "type": "美",
       "name": "Nomura Focused Large Growth ETF",
       "name_en": "Nomura Focused Large Growth ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "uslrhc": {
-      "code": "lrhc",
-      "market": "us",
-      "type": "美",
-      "name": "La Rosa Holdings Corp. - Common Stock",
-      "name_en": "La Rosa Holdings Corp. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -68146,15 +68137,6 @@
       "type": "美",
       "name": "MiniMed Group, Inc. - Common Stock",
       "name_en": "MiniMed Group, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usmmedv": {
-      "code": "mmedv",
-      "market": "us",
-      "type": "美",
-      "name": "MiniMed Group, Inc. - Common Stock When Issued",
-      "name_en": "MiniMed Group, Inc. - Common Stock When Issued",
       "py": "",
       "abbr": ""
     },
@@ -72977,8 +72959,8 @@
       "code": "nhp",
       "market": "us",
       "type": "美",
-      "name": "National Healthcare Properties, Inc. - Class A Common Stock",
-      "name_en": "National Healthcare Properties, Inc. - Class A Common Stock",
+      "name": "National Healthcare Properties, Inc. - Common Stock",
+      "name_en": "National Healthcare Properties, Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -85969,15 +85951,6 @@
       "py": "",
       "abbr": ""
     },
-    "usqclr": {
-      "code": "qclr",
-      "market": "us",
-      "type": "美",
-      "name": "Global X NASDAQ 100 Collar 95-110 ETF",
-      "name_en": "Global X NASDAQ 100 Collar 95-110 ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usqcls": {
       "code": "qcls",
       "market": "us",
@@ -93961,15 +93934,6 @@
       "py": "",
       "abbr": ""
     },
-    "usseatw": {
-      "code": "seatw",
-      "market": "us",
-      "type": "美",
-      "name": "Vivid Seats Inc. - Warrant",
-      "name_en": "Vivid Seats Inc. - Warrant",
-      "py": "",
-      "abbr": ""
-    },
     "usseb": {
       "code": "seb",
       "market": "us",
@@ -94318,6 +94282,15 @@
       "type": "美",
       "name": "TrueShares Structured Outcome (September) ETF",
       "name_en": "TrueShares Structured Outcome (September) ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usseq": {
+      "code": "seq",
+      "market": "us",
+      "type": "美",
+      "name": "Sequoia ETF",
+      "name_en": "Sequoia ETF",
       "py": "",
       "abbr": ""
     },
@@ -99118,6 +99091,15 @@
       "py": "",
       "abbr": ""
     },
+    "ussqbr": {
+      "code": "sqbr",
+      "market": "us",
+      "type": "美",
+      "name": "FT Vest U.S. Equity Quarterly 20 Barrier ETF",
+      "name_en": "FT Vest U.S. Equity Quarterly 20 Barrier ETF",
+      "py": "",
+      "abbr": ""
+    },
     "ussqft": {
       "code": "sqft",
       "market": "us",
@@ -99394,6 +99376,15 @@
       "type": "美",
       "name": "Strata Critical Medical, Inc. - Class A Common Stock",
       "name_en": "Strata Critical Medical, Inc. - Class A Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "ussrtm": {
+      "code": "srtm",
+      "market": "us",
+      "type": "美",
+      "name": "Stratum Holdings Corp. - Common Stock",
+      "name_en": "Stratum Holdings Corp. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -109693,15 +109684,6 @@
       "py": "",
       "abbr": ""
     },
-    "usuuu": {
-      "code": "uuu",
-      "market": "us",
-      "type": "美",
-      "name": "Universal Safety Products, Inc. Common Stock",
-      "name_en": "Universal Safety Products, Inc. Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "usuuuc": {
       "code": "uuuc",
       "market": "us",
@@ -114157,6 +114139,15 @@
       "py": "weimake",
       "abbr": "wmk"
     },
+    "uswinc": {
+      "code": "winc",
+      "market": "us",
+      "type": "美",
+      "name": "William Blair Emerging Income ETF",
+      "name_en": "William Blair Emerging Income ETF",
+      "py": "",
+      "abbr": ""
+    },
     "uswing": {
       "code": "wing",
       "market": "us",
@@ -115747,15 +115738,6 @@
       "type": "美",
       "name": "AB US Equity ETF",
       "name_en": "AB US Equity ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usxclr": {
-      "code": "xclr",
-      "market": "us",
-      "type": "美",
-      "name": "Global X S&P 500 Collar 95-110 ETF",
-      "name_en": "Global X S&P 500 Collar 95-110 ETF",
       "py": "",
       "abbr": ""
     },
