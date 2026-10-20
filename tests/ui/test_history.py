@@ -240,6 +240,41 @@ class HistoryUITests(HistoryTestCase):
         finally:
             delete(chart)
 
+    def test_opening_and_isolated_minute_prices_are_visible_before_a_second_bar_arrives(self):
+        from shiboken6 import delete
+
+        chart = HistoryChart()
+        try:
+            chart.setMinimumSize(220, 110)
+            chart.set_options([], False, False)
+            palette = QPalette(chart.palette())
+            price_color = QColor("#125fed")
+            palette.setColor(QPalette.Highlight, price_color)
+            chart.setPalette(palette)
+            for view in ("intraday", "five_day"):
+                for opening in (False, True):
+                    for width, height in ((308, 150), (740, 420)):
+                        with self.subTest(view=view, opening=opening, size=(width, height)):
+                            chart.resize(width, height)
+                            bar = Bar(f"2026-09-30 09:{30 if opening else 31}:00",
+                                      10 if opening else 11, 11, 10 if opening else 11, 11)
+                            chart.set_data((bar,), view, {"market": "sh", "type": "沪"},
+                                           now=datetime(2026, 9, 30, 1, 30, 20, tzinfo=timezone.utc))
+                            image = chart.grab().toImage()
+                            low, high = chart.price_range()
+                            point_price = bar.open if opening else bar.close
+                            x = (chart._plot.left() if opening else
+                                 chart._plot.left() + chart._plot.width() * (chart._positions[0] + .5) / len(chart._time_axis))
+                            y = chart._plot.bottom() - (point_price - low) / (high - low) * chart._plot.height()
+                            scale = image.devicePixelRatio()
+                            self.assertTrue(any(image.pixelColor(px, py) == price_color
+                                                for px in range(round(x * scale) - 2, round(x * scale) + 3)
+                                                for py in range(round(y * scale) - 2, round(y * scale) + 3)))
+                            if opening:
+                                self.assertLess(low, bar.open)
+        finally:
+            delete(chart)
+
     def test_index_zero_axis_and_volume_separator_in_compact_charts(self):
         from shiboken6 import delete
 
@@ -332,10 +367,11 @@ class HistoryUITests(HistoryTestCase):
         popup = history.dialog
         self.assertTrue(popup.status.isHidden())
         self.assertEqual(popup.chart.reference_price, 9)
+        first_minute = next(i for i, bar in enumerate(popup.chart.bars) if bar.time.endswith("09:31:00"))
         for mode, volume in (("cn", "2.00万手"), ("en", "20.00k手"), ("auto", "2.00万手")):
             with self.subTest(mode=mode):
                 dialog.ui.cmb_unit_mode.setCurrentIndex(dialog.ui.cmb_unit_mode.findData(mode))
-                self.assertIn(f"成交量 {volume}", popup.chart.tooltip_text(0))
+                self.assertIn(f"成交量 {volume}", popup.chart.tooltip_text(first_minute))
                 self.assertEqual(history.cache.get.call_count, 1)
         series = next(iter(history._series.values()))
         series.result = replace(series.result, stale=True, message="历史数据更新失败")
@@ -355,16 +391,17 @@ class HistoryUITests(HistoryTestCase):
         history.open_row("float", 0)
         self.wait_ready(window)
         chart = history.dialog.chart
-        self.assertIn("均价 10.50", chart.tooltip_text(10))
+        observed_minute = next(i for i, bar in enumerate(chart.bars) if bar.time.endswith("09:41:00"))
+        self.assertIn("均价 10.50", chart.tooltip_text(observed_minute))
         with_average = chart.grab().toImage()
         dialog.ui.cb_chart_average.setChecked(False)
-        self.assertNotIn("均价", chart.tooltip_text(10))
+        self.assertNotIn("均价", chart.tooltip_text(observed_minute))
         self.assertNotEqual(with_average, chart.grab().toImage())
         dialog.ui.cb_chart_average.setChecked(True)
-        self.assertIn("均价 10.50", chart.tooltip_text(10))
+        self.assertIn("均价 10.50", chart.tooltip_text(observed_minute))
         history.dialog.set_view("five_day")
         self.wait_ready(window)
-        self.assertIn("均价 10.50", chart.tooltip_text(10))
+        self.assertIn("均价 10.50", chart.tooltip_text(observed_minute))
         self.assertEqual(history.cache.get.call_count, 1)
 
     def test_compact_chart_time_labels_keep_endpoints_without_overlap(self):
@@ -463,7 +500,7 @@ class HistoryUITests(HistoryTestCase):
     def test_display_mode_setting_persists_and_switches_open_chart(self):
         dialog, window = self.make_window()
         combo = dialog.ui.cmb_chart_display_mode
-        self.assertEqual(combo.currentData(), "window")
+        self.assertEqual(combo.currentData(), "small")
         self.assertFalse(combo.isEnabled())
         dialog.ui.cb_chart_enabled.setChecked(True)
         combo.setCurrentIndex(combo.findData("large"))
@@ -491,7 +528,7 @@ class HistoryUITests(HistoryTestCase):
         self.assertEqual(combo.currentData(), "large")
         window.reset_settings()
         self.assertFalse(dialog.ui.cb_chart_enabled.isChecked())
-        self.assertEqual(combo.currentData(), "window")
+        self.assertEqual(combo.currentData(), "small")
 
     def test_floating_view_buttons_outside_click_and_escape(self):
         _, window = self.make_window(chart_enabled=True, chart_display_mode="large")

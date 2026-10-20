@@ -156,8 +156,8 @@ class Ui_AddCodePanel(object):
         self.add_code_results.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.add_code_results.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.add_code_results.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.add_code_results.setMinimumSize(QSize(0, 242))
-        self.add_code_results.setMaximumSize(QSize(16777215, 242))
+        self.add_code_results.setMinimumSize(QSize(0, 250))
+        self.add_code_results.setMaximumSize(QSize(16777215, 250))
 
         self.addCodeLayout.addWidget(self.add_code_results)
 

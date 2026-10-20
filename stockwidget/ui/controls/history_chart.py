@@ -22,6 +22,7 @@ class HistoryChart(QWidget):
         self.bars = ()
         self.averages = {}
         self.minute_averages = []
+        self.opening_prices = {}
         self.volume_directions = []
         self.periods = set(MA_PERIODS)
         self.show_average = self.show_volume = True
@@ -43,6 +44,10 @@ class HistoryChart(QWidget):
         self.bars = tuple(bars[-30:] if view == "daily" else bars)
         self.averages = {period: moving_average(bars, period)[-30:] for period in MA_PERIODS} if view == "daily" else {}
         self.minute_averages = intraday_average(self.bars, instrument) if view != "daily" else []
+        self.opening_prices = ({i: bar.open for i, bar in enumerate(self.bars)
+                                if bar.time[11:16] == "09:30"}
+                               if view != "daily" and instrument.get("type") != "期"
+                               and instrument.get("market") in {"sh", "sz", "bj", "hk", "us"} else {})
         self.volume_directions = volume_directions(self.bars, view, instrument)
         self.reference_price = reference_price if reference_price and math.isfinite(reference_price) and reference_price > 0 else None
         timeline = intraday_timeline(self.bars, instrument, now) if view == "intraday" else ()
@@ -85,6 +90,7 @@ class HistoryChart(QWidget):
         if self.view == "daily":
             values += [value for period in self.periods for value in self.averages[period] if value is not None]
         else:
+            values += list(self.opening_prices.values())
             if self.show_average:
                 values += self.minute_averages
             if self.reference_price:
@@ -169,7 +175,10 @@ class HistoryChart(QWidget):
                     self._line(painter, self.averages[period], x_at, y_at, QColor(color),
                                width=self._indicator_width())
         else:
-            self._line(painter, [bar.close for bar in self.bars], x_at, y_at, palette.highlight().color(), dates)
+            openings = {i: QPointF(x_at(i) - step / 2, y_at(price))
+                        for i, price in self.opening_prices.items()}
+            self._line(painter, [bar.close for bar in self.bars], x_at, y_at, palette.highlight().color(), dates,
+                       openings=openings)
             if self.show_average:
                 self._line(painter, self.minute_averages, x_at, y_at, QColor(MA_COLORS[0]), dates,
                            width=self._indicator_width())
@@ -224,22 +233,46 @@ class HistoryChart(QWidget):
         return visible + labels[-1:] if len(labels) > 1 else visible
 
     @staticmethod
-    def _line(painter, values, x_at, y_at, color, dates=None, *, width=1.5):
+    def _line(painter, values, x_at, y_at, color, dates=None, *, width=1.5, openings=None):
         path, started = QPainterPath(), False
+        singletons, segment = [], []
         for i, value in enumerate(values):
             if value is None:
+                if len(segment) == 1:
+                    singletons.extend(segment)
+                segment = []
                 started = False
                 continue
             if dates and i and dates[i] != dates[i - 1]:
+                if len(segment) == 1:
+                    singletons.extend(segment)
+                segment = []
                 started = False
             point = QPointF(x_at(i), y_at(value))
             if started:
                 path.lineTo(point)
             else:
-                path.moveTo(point)
+                opening = openings.get(i) if openings else None
+                path.moveTo(opening if opening is not None else point)
+                if opening is not None:
+                    path.lineTo(point)
+                    singletons.append(opening)
+                    segment.append(opening)
                 started = True
+            segment.append(point)
+        if len(segment) == 1:
+            singletons.extend(segment)
         painter.setPen(QPen(color, width))
         painter.drawPath(path)
+        # A move-only QPainterPath draws nothing. Show the observed price even
+        # while the exchange has supplied only the opening minute of a session.
+        if singletons:
+            painter.save()
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(color)
+            for point in singletons:
+                painter.drawEllipse(point, max(1.5, width), max(1.5, width))
+            painter.restore()
 
     def mouseMoveEvent(self, event):
         slot = (int((event.position().x() - self._plot.left()) / self._plot.width() * len(self._time_axis))

@@ -33,11 +33,11 @@ from stockwidget.ui.controls.quote_view import (
     DEFAULT_DOWN_COLOR,
     DEFAULT_NEUTRAL_COLOR,
     DEFAULT_UP_COLOR,
-    KLineDelegate,
     QuoteItemDelegate,
     SimpleTableModel,
     SortIndicatorStyle,
 )
+from stockwidget.ui.controls.mini_chart import MiniChartDelegate
 from stockwidget.ui.controls.style import is_dark_theme
 from stockwidget.ui.floating.interaction import (
     DragBehaviorMixin,
@@ -160,9 +160,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.table.setModel(self.model)
         self.right_table.setModel(self.right_model)
 
-        self.k_delegate = KLineDelegate(self.table, base_pt=12)
-        self.right_k_delegate = KLineDelegate(self.right_table, base_pt=12)
-        self.taskbar_k_delegate = KLineDelegate(self, base_pt=12)
+        self.k_delegate = MiniChartDelegate(self.table, base_pt=12)
+        self.right_k_delegate = MiniChartDelegate(self.right_table, base_pt=12)
+        self.taskbar_k_delegate = MiniChartDelegate(self, base_pt=12)
         self._default_item_delegate = QuoteItemDelegate(self.table)
         self._right_default_delegate = QuoteItemDelegate(self.right_table)
         self.table.setItemDelegate(self._default_item_delegate)
@@ -268,7 +268,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         mode = cfg.get("display_mode", "float")
         self.display_mode = mode if sys.platform == "win32" and mode in ("float", "taskbar", "both") else "float"
         try:
-            self.taskbar_offset = max(0, min(2000, int(cfg.get("taskbar_offset", 0))))
+            self.taskbar_offset = max(-2000, min(2000, int(cfg.get("taskbar_offset", 0))))
         except (TypeError, ValueError):
             self.taskbar_offset = 0
         self.view_options = ViewOptions.from_config(cfg, self.font.family(), self.visible_metrics)
@@ -744,7 +744,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._notify_change()
 
     def set_taskbar_offset(self, value):
-        self.taskbar_offset = max(0, min(2000, int(value)))
+        self.taskbar_offset = max(-2000, min(2000, int(value)))
         self.taskbar_options_changed.emit()
         self._notify_change()
 
@@ -910,6 +910,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self.widget_visibility_changed.emit()
         self.quotes.sync_page_timers()
         self.sync_refresh_timer()
+        self.history.schedule_mini_refresh()
         if self.force_top and self._keep_top_timer and not self._keep_top_timer.isActive():
             self._keep_top_timer.start()
         apply_click_through(self, self.click_through)

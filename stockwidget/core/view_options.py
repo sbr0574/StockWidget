@@ -37,8 +37,9 @@ def taskbar_font_size_limit(height, dpi, rows):
 
 @dataclass
 class ViewOptions:
+    mini_chart_type: str = "kline"
     chart_enabled: bool = False
-    chart_display_mode: str = "window"
+    chart_display_mode: str = "small"
     chart_ma_periods: list[int] = field(default_factory=lambda: [5, 10, 20, 30, 60])
     chart_average_enabled: bool = True
     chart_volume_enabled: bool = True
@@ -84,10 +85,12 @@ class ViewOptions:
                 setattr(result, key, getattr(defaults, key))
         if result.color_mode not in ("system", "light", "dark"):
             result.color_mode = "system"
+        if result.mini_chart_type not in ("kline", "trend", "amplitude"):
+            result.mini_chart_type = "kline"
         if result.chart_display_mode == "floating":
             result.chart_display_mode = "large"
         if result.chart_display_mode not in ("window", "large", "medium", "small"):
-            result.chart_display_mode = "window"
+            result.chart_display_mode = defaults.chart_display_mode
         if not isinstance(result.chart_ma_periods, (list, tuple)):
             result.chart_ma_periods = defaults.chart_ma_periods
         result.chart_ma_periods = [period for period in (5, 10, 20, 30, 60) if period in result.chart_ma_periods]

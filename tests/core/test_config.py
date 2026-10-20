@@ -59,11 +59,11 @@ class PageMathTests(unittest.TestCase):
     def test_chart_display_mode_legacy_default_validation_and_roundtrip(self):
         legacy = ViewOptions.from_config({"chart_enabled": True})
         self.assertTrue(legacy.chart_enabled)
-        self.assertEqual(legacy.chart_display_mode, "window")
+        self.assertEqual(legacy.chart_display_mode, "small")
         for mode in ("window", "large", "medium", "small", "floating", None, "invalid", True):
             with self.subTest(mode=mode):
                 options = ViewOptions.from_config({"chart_display_mode": mode})
-                expected = "large" if mode == "floating" else mode if mode in ("window", "large", "medium", "small") else "window"
+                expected = "large" if mode == "floating" else mode if mode in ("window", "large", "medium", "small") else "small"
                 self.assertEqual(options.chart_display_mode, expected)
                 self.assertEqual(ViewOptions.from_config(options.to_config()), options)
 

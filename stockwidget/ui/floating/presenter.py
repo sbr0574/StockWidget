@@ -5,12 +5,15 @@ FloatLabel 持有配置和 Qt 视图，QuotePresenter 独占行情缓存、请�
 """
 
 from functools import partial
+from dataclasses import replace
 import threading
 
 from PySide6.QtCore import QObject, Qt, QTimer, Signal
 
 from stockwidget.core.quote_presentation import (
     NAME_METRIC_ID,
+    MiniChartCell,
+    amplitude_limits,
     SORTABLE_HEADERS,
     QuoteDisplayOptions,
     format_quote,
@@ -19,6 +22,7 @@ from stockwidget.core.quote_presentation import (
     project_quote_columns,
 )
 from stockwidget.core.view_options import column_ranges, page_slice
+from stockwidget.core.window_rules import quote_timestamp
 from stockwidget.data.quotes import fetch_quote_result
 
 
@@ -57,6 +61,14 @@ class QuotePresenter(QObject):
             metrics.insert(0, NAME_METRIC_ID)
         return metrics
 
+    def _available_sort_headers(self):
+        """Shared sorting can use either enabled surface's effective metrics."""
+        headers = set(metric_headers(self.window.visible_metrics))
+        options = self.window.view_options
+        if options.taskbar_enabled and not options.taskbar_sync_metrics:
+            headers.update(metric_headers(options.taskbar_metrics))
+        return headers
+
     def invalidate(self, *, reset_pages=False):
         """自选、数据源或配置更改后丢弃在途结果，停止旧行情倒计时。"""
         self._quote_generation += 1
@@ -65,6 +77,8 @@ class QuotePresenter(QObject):
         if reset_pages:
             self.float_page = self.taskbar_page = 0
         self.window.hide_controller.cancel_countdown()
+        if hasattr(self.window, "history"):
+            self.window.history.invalidate_quotes()
 
     def view_options_changed(self, previous):
         """同步设置只改变有效视图；两处的页码仍独立维护。"""
@@ -77,12 +91,13 @@ class QuotePresenter(QObject):
                     or previous.split_settings(surface)[0] != options.split_settings(surface)[0]
                     or (surface == "float" and previous.float_paging_enabled != options.float_paging_enabled)):
                 setattr(self, f"{surface}_page", 0)
-        self.reproject()
+        self.metrics_changed()
 
     def metrics_changed(self):
-        """隐藏当前排序指标时清除排序，不改写自选顺序。"""
-        if self.sort_header not in metric_headers(self.window.visible_metrics):
+        """两处均不再使用当前排序指标时恢复自选顺序。"""
+        if self.sort_header is not None and self.sort_header not in self._available_sort_headers():
             self.sort_header = None
+            self.float_page = self.taskbar_page = 0
             self.window.table.horizontalHeader().setSortIndicatorShown(False)
         self.reproject()
 
@@ -131,6 +146,46 @@ class QuotePresenter(QObject):
                 return self._latest_quotes.get(key)
         return None
 
+    def mini_instruments(self):
+        """Only request histories represented by a currently visible chart column."""
+        result = {}
+        if not self.window.widget_visible or self.window.view_options.mini_chart_type != "trend":
+            return result
+        for surface in ("float", "taskbar"):
+            if (surface == "float" and (not self.window.isVisible() or self.window.position_controller.collapsed)
+                    or surface == "taskbar" and self.window.display_mode == "float" and not self.window.taskbar_preview_active):
+                continue
+            if "kline" not in self.window.get_surface_metrics(surface):
+                continue
+            page = self.get_page(surface)
+            for key in self._ordered_keys[page.start:page.stop]:
+                if key in self.window.checked_codes:
+                    result[key] = self.window.checked_codes[key]
+        return result
+
+    def _mini_cells(self, rows, headers, keys, split=False):
+        if "迷你图" not in headers:
+            return rows
+        column = headers.index("迷你图")
+        kind = self.window.view_options.mini_chart_type
+        for i, row in enumerate(rows):
+            key = keys[i] if i < len(keys) else None
+            raw = row[column]
+            candle = raw.get("k", ()) if isinstance(raw, dict) else ()
+            instrument = self.window.checked_codes.get(key)
+            points = ()
+            if kind == "trend" and instrument and hasattr(self.window, "history"):
+                points, reference = self.window.history.mini_chart_data(instrument)
+                if len(candle) == 5:
+                    candle = (*candle[:4], reference or 0)
+            row[column] = MiniChartCell(kind, candle, points)
+        if kind == "amplitude":
+            for start, stop in column_ranges(len(rows), split):
+                limits = amplitude_limits(row[column] for row in rows[start:stop])
+                for row in rows[start:stop]:
+                    row[column] = replace(row[column], limits=limits)
+        return rows
+
     def _project_float_page(self):
         page = self.get_page("float")
         self.float_page = page.index
@@ -142,6 +197,7 @@ class QuotePresenter(QObject):
 
         proj_rows, projected_roles, right_cols = project_quote_columns(full_rows, color_roles, headers)
         split, separator = self.window.view_options.split_settings("float")
+        self._mini_cells(proj_rows, headers, self._ordered_keys[page.start:page.stop], split)
         ranges = column_ranges(len(proj_rows), split)
         for model, (start, stop) in zip((self.window.model, self.window.right_model), ranges):
             model.set_align_right_cols(right_cols)
@@ -154,7 +210,7 @@ class QuotePresenter(QObject):
         self.window._sync_colors_to_views()
 
         old_kline_col = self.window.k_column_visible_index
-        new_kline_col = headers.index("K线") if "K线" in headers else None
+        new_kline_col = headers.index("迷你图") if "迷你图" in headers else None
         for table, delegate, default in ((self.window.table, self.window.k_delegate, self.window._default_item_delegate),
                                          (self.window.right_table, self.window.right_k_delegate, self.window._right_default_delegate)):
             if old_kline_col is not None and old_kline_col != new_kline_col:
@@ -188,6 +244,8 @@ class QuotePresenter(QObject):
         headers = metric_headers(metrics)
         rows, roles, right_cols = project_quote_columns(
             self._ordered_rows[page.start:page.stop], self._ordered_color_roles[page.start:page.stop], headers)
+        self._mini_cells(rows, headers, self._ordered_keys[page.start:page.stop],
+                         self.window.view_options.split_settings("taskbar")[0])
         self.window.taskbar_model.set_align_right_cols(right_cols)
         self.window.taskbar_model.set_rows_headers(rows, headers, roles)
         self.window._sync_colors_to_views()
@@ -272,6 +330,16 @@ class QuotePresenter(QObject):
             self.window._fit_to_contents()
             return
 
+        previous = self._latest_quotes if self._latest_source == self.window.data_source else {}
+        for code, quote in data.items():
+            old = previous.get(code)
+            old_time = quote_timestamp(old) if old is not None else None
+            new_time = quote_timestamp(quote)
+            # Equal-second snapshots can contain newer prices/volumes. A known
+            # accepted timestamp must not be replaced by an older or unknown one.
+            if old_time is not None and (new_time is None or new_time < old_time):
+                data[code] = old
+
         full_rows = []
         full_color_roles = []
         sort_values = []
@@ -299,7 +367,10 @@ class QuotePresenter(QObject):
         self._last_color_roles = full_color_roles
         self._last_sort_values = sort_values
         self._last_keys = list(data)
-        self._latest_quotes = data
+        # Retain the last accepted time through partial/empty responses, so a
+        # later response cannot roll back an instrument that was briefly absent.
+        self._latest_quotes = {code: dict(data.get(code, previous.get(code)))
+                               for code in checked_codes if code in data or code in previous}
         self._latest_source = self.window.data_source
 
         if data:
@@ -313,8 +384,7 @@ class QuotePresenter(QObject):
     def set_sort(self, header: str, order):
         if header not in SORTABLE_HEADERS:
             return
-        visible_headers = metric_headers(self.window.visible_metrics)
-        if header not in visible_headers:
+        if header not in self._available_sort_headers():
             return
         order = Qt.SortOrder(order)
         if self.sort_header == header and self.sort_order == order:

@@ -127,7 +127,7 @@ class WidgetFormattingTests(unittest.TestCase):
         row, roles, _sort_values = format_quote(quote, "沪", "600000", market="sh")
 
         self.assertEqual(quote, original)
-        self.assertEqual(row["K线"]["k"], (quote["prev_close"],) * 5)
+        self.assertEqual(row["迷你图"]["k"], (quote["prev_close"],) * 5)
         self.assertEqual(row["涨幅"], "+0.00%")
         self.assertEqual(roles["现价"], COLOR_ROLE_NEUTRAL)
 

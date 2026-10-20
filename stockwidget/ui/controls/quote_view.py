@@ -20,6 +20,7 @@ from PySide6.QtGui import (
     QPalette,
     QPolygonF,
     QPainterPath,
+    QRegion,
 )
 from PySide6.QtWidgets import (
     QStyledItemDelegate,
@@ -34,6 +35,7 @@ from PySide6.QtWidgets import (
 
 from stockwidget.core.quote_presentation import (
     BidAskCell,
+    MiniChartCell,
     COLOR_ROLE_TEXT,
     COLOR_ROLE_UP,
     COLOR_ROLE_DOWN,
@@ -101,14 +103,14 @@ class SimpleTableModel(QAbstractTableModel):
         cell = self._rows[r][c]
 
         if role == Qt.UserRole:
-            if isinstance(cell, BidAskCell):
+            if isinstance(cell, (BidAskCell, MiniChartCell)):
                 return cell
             if isinstance(cell, dict) and "k" in cell:
                 return cell["k"]
             return None
 
         if role == Qt.DisplayRole:
-            return "" if isinstance(cell, dict) else str(cell)
+            return "" if isinstance(cell, (dict, MiniChartCell)) else str(cell)
 
         if role == Qt.TextAlignmentRole:
             if isinstance(cell, BidAskCell):
@@ -246,10 +248,15 @@ class KLineDelegate(QStyledItemDelegate):
             super().paint(painter, option, index)
             return
 
+        self.paint_candle(painter, option.rect, k)
+
+    def paint_candle(self, painter, cell, k):
+        """Shared unchanged candle geometry for table, taskbar and previews."""
+
         o, c, h, l, p = k
         if h < l: h, l = l, h
 
-        cell = option.rect
+        cell = QRect(cell)
         rect = cell.adjusted(2, 2, -2, -2)
 
         sc = max(0.5, min(1.5, self.scale))
@@ -414,6 +421,8 @@ class _TableGrid(QWidget):
 
 
 class QuoteTableView(QTableView):
+    _shared_amplitude_axis = True
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.grid_layer = _TableGrid(self)
@@ -447,6 +456,58 @@ class QuoteTableView(QTableView):
         super().resizeEvent(event)
         self.grid_layer.setGeometry(self.rect())
         self.grid_layer.raise_()
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        model = self.model()
+        if model is None:
+            return
+        # Imported here because the chart delegate retains the original candle
+        # renderer from this module.
+        from stockwidget.ui.controls.mini_chart import amplitude_x, mini_chart_stroke, paint_amplitude_axis
+        painter = None
+        for column in range(model.columnCount()):
+            if self.isColumnHidden(column):
+                continue
+            cells = []
+            for row in range(model.rowCount()):
+                if self.isRowHidden(row):
+                    continue
+                index = model.index(row, column)
+                cell = index.data(Qt.UserRole)
+                if isinstance(cell, MiniChartCell) and cell.kind == "amplitude" and cell.limits is not None:
+                    rect = QRectF(self.visualRect(index))
+                    if rect.intersects(QRectF(self.viewport().rect())):
+                        cells.append((cell, rect))
+            if not cells:
+                continue
+            limits = cells[0][0].limits
+            bounds = cells[0][1].united(cells[-1][1])
+            clip = event.region().intersected(QRegion(bounds.toAlignedRect()))
+            # The continuous axis lies behind each solid range and current-price
+            # dot. Excluding those shapes preserves their exact fill colors.
+            for cell, rect in cells:
+                if cell.amplitude is None:
+                    continue
+                low, current, high = cell.amplitude
+                left, right = (amplitude_x(rect, v, limits, self.font()) for v in (low, high))
+                center_y = rect.center().y()
+                stroke = mini_chart_stroke(self.font(), rect.height())
+                clip -= QRegion(QRectF(left - stroke / 2, center_y - stroke / 2,
+                                      right - left + stroke, stroke).toAlignedRect())
+                radius = stroke * 1.5
+                center_x = amplitude_x(rect, current, limits, self.font())
+                dot = QRectF(center_x - radius, center_y - radius, radius * 2, radius * 2)
+                clip -= QRegion(dot.toAlignedRect(), QRegion.Ellipse)
+            if painter is None:
+                painter = QPainter(self.viewport())
+                painter.setFont(self.font())
+            painter.save()
+            painter.setClipRegion(clip)
+            paint_amplitude_axis(painter, bounds, limits)
+            painter.restore()
+        if painter is not None:
+            painter.end()
 
 
 def pager_regions(rect):

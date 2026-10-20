@@ -223,12 +223,25 @@ class TaskbarTests(QtTestCase):
         self.assertEqual(self.window.display_mode, "float")
         self.assertEqual(self.window.taskbar_offset, 0)
 
+    def test_signed_offset_moves_both_directions_and_clamps_to_taskbar(self):
+        area = TaskbarArea(1, 1280, 48, 1000)
+        for offset, expected in ((0, 840), (100, 740), (-100, 940), (-2000, 1120), (2000, 0)):
+            with self.subTest(offset=offset):
+                self.window.set_taskbar_offset(offset)
+                self.assertEqual(area.position(160, 40, self.window.taskbar_offset), (expected, 4))
+        self.window.set_taskbar_offset(-150)
+        restored = FloatLabel(self.window.current_config(), {})
+        try:
+            self.assertEqual(restored.taskbar_offset, -150)
+        finally:
+            delete(restored)
+
     def test_kline_and_empty_watchlist_render(self):
         self.window.visible_metrics = ["kline"]
         self.window.set_view_options(taskbar_metrics=["kline"])
         self.window.quotes.project_rows(
-            [{"K线": {"k": (10, 12, 13, 9, 10)}}, {"K线": {"k": (12, 11, 14, 10, 12)}}],
-            [{"K线": "up"}, {"K线": "down"}])
+            [{"迷你图": {"k": (10, 12, 13, 9, 10)}}, {"迷你图": {"k": (12, 11, 14, 10, 12)}}],
+            [{"迷你图": "up"}, {"迷你图": "down"}])
         image = render_taskbar(self.window, 44)
         self.assertFalse(image.isNull())
         self.window.quotes.accept_result((True, {}, None))
@@ -497,11 +510,11 @@ class NativeTaskbarTests(QtTestCase):
         image = QImage(160, 40, QImage.Format_ARGB32_Premultiplied)
         image.fill(QColor(0, 0, 0, 1))
         try:
-            for states in ((False, True, False), (True, False)):
+            for offset, states in ((0, (False, True, False)), (-80, (True, False)), (80, (False,))):
                 for through in states:
-                    native.present(area, 160, 40, bytes(image.constBits()), click_through=through)
+                    native.present(area, 160, 40, bytes(image.constBits()), offset, click_through=through)
                     self.app.processEvents()
-                    x, y = area.position(160, 40)
+                    x, y = area.position(160, 40, offset)
                     hit = user.ChildWindowFromPointEx(area.hwnd, w.POINT(x + 80, y + 20), 0x7)
                     self.assertEqual(hit == native.hwnd, not through)
                 self.app.processEvents()

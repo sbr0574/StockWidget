@@ -178,7 +178,7 @@ class FloatLabelMetricLayoutTests(QtTestCase):
 
         self.assertEqual(
             window.model._headers,
-            ["名称", "K线", "现价", "买一/卖一"],
+            ["名称", "迷你图", "现价", "买一/卖一"],
         )
         self.assertEqual(
             window.visible_metrics,
@@ -221,7 +221,7 @@ class FloatLabelMetricLayoutTests(QtTestCase):
 
         self.assertEqual(
             window.model._headers,
-            ["K线", "现价", "名称"],
+            ["迷你图", "现价", "名称"],
         )
         self.assertEqual(
             window.model._headers,
@@ -351,7 +351,7 @@ class FloatLabelMetricLayoutTests(QtTestCase):
         window.quotes._last_sort_values = [{"现价": 1.0}]
         window.quotes.project_rows([row], [roles], [{"现价": 1.0}])
 
-        window.quotes.header_clicked(window.model._headers.index("K线"))
+        window.quotes.header_clicked(window.model._headers.index("迷你图"))
         self.assertIsNone(window.quotes.sort_header)
 
         window.quotes.header_clicked(window.model._headers.index("现价"))

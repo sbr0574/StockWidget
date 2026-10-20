@@ -1,6 +1,7 @@
 """指标定义、旧配置迁移、数值格式化及行情展示投影；不依赖 Qt。"""
 
 from dataclasses import dataclass
+import math
 from typing import Mapping, Sequence
 
 
@@ -27,7 +28,8 @@ METRIC_SPECS = (
     MetricSpec("volume", "成交量", "成交量", "vol_visible"),
     MetricSpec("amount", "成交额", "成交额", "amount_visible"),
     MetricSpec("average", "均价", "均价", "avg_visible"),
-    MetricSpec("kline", "日K线", "K线", "kline_visible"),
+    # Keep the stored ID / legacy visibility flag so existing layouts migrate intact.
+    MetricSpec("kline", "迷你图", "迷你图", "kline_visible"),
 )
 
 METRIC_BY_ID = {spec.metric_id: spec for spec in METRIC_SPECS}
@@ -150,6 +152,33 @@ class BidAskCell:
 
     def __str__(self):
         return f"{self.buy} {self.marker or ' '} {self.sell}"
+
+
+@dataclass(frozen=True)
+class MiniChartCell:
+    """Shared chart payload; amplitude limits belong to the visible column."""
+    kind: str = "kline"
+    candle: tuple[float, ...] = ()
+    points: tuple[tuple[float, float], ...] = ()
+    limits: tuple[float, float] | None = None
+
+    @property
+    def reference(self):
+        return self.candle[4] if len(self.candle) == 5 else 0
+
+    @property
+    def amplitude(self):
+        if len(self.candle) != 5 or not all(math.isfinite(v) for v in self.candle):
+            return None
+        _opening, current, high, low, previous = self.candle
+        if min(current, high, low, previous) <= 0:
+            return None
+        return tuple((v / previous - 1) * 100 for v in (min(low, current), current, max(high, current)))
+
+
+def amplitude_limits(cells):
+    ranges = [cell.amplitude for cell in cells if isinstance(cell, MiniChartCell) and cell.amplitude is not None]
+    return (min(v[0] for v in ranges), max(v[2] for v in ranges)) if ranges else None
 
 
 def _format_book_volume(value, lot_size, *, signed=False):
@@ -293,7 +322,7 @@ def format_quote(
             )
         ),
         "均价": f"{avg:.{precision}f}",
-        "K线": k_payload,
+        "迷你图": k_payload,
     }
     color_roles = {
         "名称": COLOR_ROLE_TEXT,
@@ -306,7 +335,7 @@ def format_quote(
         "成交量": COLOR_ROLE_TEXT,
         "成交额": COLOR_ROLE_TEXT,
         "均价": direction_color_role(avg - data["prev_close"]),
-        "K线": COLOR_ROLE_TEXT,
+        "迷你图": COLOR_ROLE_TEXT,
     }
     sort_values = {
         "现价": data["current_price"],
@@ -353,5 +382,5 @@ def project_quote_columns(rows, color_roles, headers):
     """浮窗和任务栏共用相同的缺省文字、颜色及对齐规则。"""
     values = [[row.get(h, "-") for h in headers] for row in rows]
     roles = [[row.get(h, COLOR_ROLE_TEXT) for h in headers] for row in color_roles]
-    right_columns = [i for i, h in enumerate(headers) if h not in ("名称", "K线", "买一/卖一")]
+    right_columns = [i for i, h in enumerate(headers) if h not in ("名称", "迷你图", "买一/卖一")]
     return values, roles, right_columns

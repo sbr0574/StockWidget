@@ -3,7 +3,7 @@
 from PySide6.QtCore import QByteArray, QObject, QRectF, Qt
 from PySide6.QtGui import QColor, QFont, QFontInfo, QFontMetrics, QGuiApplication, QPalette, QIcon, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
-from PySide6.QtWidgets import QApplication, QGroupBox, QWidget
+from PySide6.QtWidgets import QApplication, QCheckBox, QGroupBox, QRadioButton, QWidget
 
 
 def accent_color() -> QColor:
@@ -31,6 +31,7 @@ def theme_palette(dark: bool, base: QPalette) -> QPalette:
         palette.setColor(role, QColor(color))
     for role in (QPalette.WindowText, QPalette.Text, QPalette.ButtonText):
         palette.setColor(QPalette.Disabled, role, QColor("#888888"))
+    palette.setColor(QPalette.PlaceholderText, QColor("#aaaaaa" if dark else "#707070"))
     return palette
 
 
@@ -251,6 +252,10 @@ QPushButton#btn_icon_custom {{
     font-size: 22px;
     font-weight: 300;
 }}
+QPushButton[miniChartOption="true"] {{
+    font-size: 11px;
+    border-radius: 8px;
+}}
 {icon_states}
 """
 
@@ -261,6 +266,7 @@ QFrame#settings_sidebar {{
     border: none;
 }}
 QLabel#settings_sidebar_title {{
+    background: transparent;
     font-size: 16px;
     font-weight: 600;
     padding-left: 8px;
@@ -362,10 +368,17 @@ def apply_settings_theme(widget: QWidget, dark: bool, palette: QPalette, *,
                          extra_stylesheet: str = "") -> None:
     """Apply shared dialog styles and palettes to native and styled controls."""
     widgets = (widget, *widget.findChildren(QWidget))
+    # An explicit Button brush makes Qt's Windows 11 style use the same fill
+    # for checked and unchecked choices instead of its native accent. Keep all
+    # theme colors, but leave that role to the style on radio/check controls.
+    choice_palette = QPalette(palette)
+    button_override = QPalette()
+    button_override.setColor(QPalette.Button, palette.color(QPalette.Button))
+    choice_palette.setResolveMask(palette.resolveMask() & ~button_override.resolveMask())
     # CSS palette references need the selected palette before polish. Native
     # controls can be reset by polish, so restore their palettes afterwards.
     for control in widgets:
-        control.setPalette(palette)
+        control.setPalette(choice_palette if isinstance(control, (QRadioButton, QCheckBox)) else palette)
     if macos_groups:
         for group in widget.findChildren(QGroupBox):
             # Cocoa's default layout item trims the native title margin, which
@@ -375,4 +388,4 @@ def apply_settings_theme(widget: QWidget, dark: bool, palette: QPalette, *,
                                                    macos_group_font=widget.font() if macos_groups else None)
                         + "\n" + extra_stylesheet)
     for control in widgets:
-        control.setPalette(palette)
+        control.setPalette(choice_palette if isinstance(control, (QRadioButton, QCheckBox)) else palette)

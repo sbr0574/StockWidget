@@ -170,6 +170,7 @@ class SettingsDialog(QDialog):
                              extra_stylesheet=self._designer_stylesheet)
         for component in (self.metric_pool, self.taskbar_settings.metric_pool, self.watchlist_editor):
             component.set_theme(dark)
+        self._sync_mini_chart()
         self._refresh_color_buttons()
         navigation = self.ui.settings_navigation
         for index in range(navigation.count()):
@@ -228,6 +229,15 @@ class SettingsDialog(QDialog):
             lambda hidden: self.win.set_view_options(hide_tray_icon=hidden))
         self.ui.cb_chart_enabled.toggled.connect(
             lambda enabled: self.win.set_view_options(chart_enabled=enabled))
+        self._mini_chart_buttons = {kind: getattr(self.ui, f"btn_mini_{kind}")
+                                    for kind in ("kline", "trend", "amplitude")}
+        self._mini_chart_group = QButtonGroup(self)
+        for kind, button in self._mini_chart_buttons.items():
+            button.set_kind(kind)
+            self._mini_chart_group.addButton(button)
+            button.toggled.connect(lambda checked, kind=kind: checked and
+                                   self.win.set_view_options(mini_chart_type=kind))
+        self.win.configuration_changed.connect(self._sync_mini_chart)
         for index, value in enumerate(("window", "large", "medium", "small")):
             self.ui.cmb_chart_display_mode.setItemData(index, value)
         self.ui.cmb_chart_display_mode.currentIndexChanged.connect(
@@ -717,6 +727,11 @@ class SettingsDialog(QDialog):
             self.ui.cb_hide_tray_icon.setChecked(self.win.view_options.hide_tray_icon)
         if self.win.view_options.color_mode != getattr(self, "_applied_color_mode", None):
             self._apply_theme_stylesheet()
+
+    def _sync_mini_chart(self):
+        self._select_button(self._mini_chart_buttons, self.win.view_options.mini_chart_type)
+        for button in self._mini_chart_buttons.values():
+            button.sync(self.win)
 
     def _chart_periods_changed(self):
         self.win.set_view_options(chart_ma_periods=[period for period in MA_PERIODS

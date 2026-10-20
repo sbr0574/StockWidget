@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
 from stockwidget.core.window_rules import adjacent_popup_position, adjacent_popup_size, best_screen
 from stockwidget.core.config_store import history_cache_dir
 from stockwidget.data.bar_cache import BarCache
-from stockwidget.data.bars import BarResult, HistorySeries, history_day, select_bars
+from stockwidget.data.bars import BarResult, HistorySeries, history_day, merge_quote, mini_trend_points, select_bars
 from stockwidget.ui.controls.history_chart import HistoryChart
 from stockwidget.ui.controls.style import apply_settings_theme, is_dark_theme, theme_palette
 
@@ -151,10 +151,13 @@ class HistoryController(QObject):
         self._pending = None
         self._displayed_key = None
         self._series = {}
+        self._mini_pending = {}
+        self._mini_scheduled = False
         self.result_ready.connect(self._accept)
         self.window.view_options_changed.connect(self._options_changed)
         self.window.display_flags_changed.connect(self._apply_chart_options)
         self.window.quotes.quotes_updated.connect(self._quotes_updated)
+        self.window.presentation_changed.connect(self.schedule_mini_refresh)
         self.click_timer = QTimer(self)
         self.click_timer.setSingleShot(True)
         self.click_timer.setTimerType(Qt.PreciseTimer)
@@ -180,8 +183,13 @@ class HistoryController(QObject):
     def _visibility_changed(self):
         if not self.window.widget_visible:
             self.click_timer.stop()
+            self._closed()
+            self._discard_before = self._generation
+            self._mini_pending.clear()
             if self.dialog:
                 self.dialog.close()
+        else:
+            self.schedule_mini_refresh()
 
     def open_row(self, surface, row, block=0, *, global_pos=None):
         if not self.window.view_options.chart_enabled:
@@ -240,6 +248,7 @@ class HistoryController(QObject):
         self.dialog.chart.down_color = self.window.down_color
 
     def _options_changed(self):
+        self.schedule_mini_refresh()
         if not self.window.view_options.chart_enabled:
             self.click_timer.stop()
             if self.dialog:
@@ -264,6 +273,16 @@ class HistoryController(QObject):
         self._generation += 1
         self._pending = None
 
+    def invalidate_quotes(self):
+        """Source / watchlist changes invalidate both consumers of history."""
+        self._closed()
+        self._discard_before = self._generation
+        self._mini_pending.clear()
+        self._series.clear()
+        self._displayed_key = None
+        if self.window.view_options.mini_chart_type == "trend":
+            self.window.quotes.reproject()
+
     def clear_cache(self):
         cleared = self.cache.clear()
         self._discard_cached_history()
@@ -275,6 +294,7 @@ class HistoryController(QObject):
         self._closed()
         self._discard_before = self._generation
         self._series.clear()
+        self._mini_pending.clear()
         self._displayed_key = None
         if self.dialog:
             self.dialog.close()
@@ -307,6 +327,51 @@ class HistoryController(QObject):
                 self._render(series, self.dialog.view, self.window.data_source)
             if not self._busy and series.needs_download(self.cache.clock()):
                 self.reload()
+        if self.window.view_options.mini_chart_type == "trend":
+            self.window.quotes.reproject()
+            self.schedule_mini_refresh()
+
+    def mini_chart_data(self, instrument):
+        """Use the popup's minute series and live quote at the same cadence."""
+        series = self._series_for(instrument, "intraday", self.window.data_source)
+        bars = series.result.bars
+        quote = self.window.quotes.quote_for(instrument)
+        if quote:
+            bars = merge_quote(bars, instrument, "five_day", quote)
+        reference = series.reference_price_for(bars)
+        bars = select_bars(bars, "intraday", instrument)
+        return mini_trend_points(bars, instrument, self.cache.clock()), reference
+
+    def schedule_mini_refresh(self):
+        if not self._mini_scheduled:
+            self._mini_scheduled = True
+            QTimer.singleShot(0, self, self._refresh_minis)
+
+    def _refresh_minis(self):
+        self._mini_scheduled = False
+        wanted = self.window.quotes.mini_instruments()
+        source = self.window.data_source
+        self._mini_pending = {self._key(instrument, "intraday", source): instrument
+                              for instrument in wanted.values()}
+        self._start_next_mini()
+
+    def _start_next_mini(self):
+        if self._busy:
+            return
+        wanted = {self._key(entry, "intraday", self.window.data_source)
+                  for entry in self.window.quotes.mini_instruments().values()}
+        while self._mini_pending:
+            key = next(iter(self._mini_pending))
+            instrument = self._mini_pending.pop(key)
+            if key not in wanted:
+                continue
+            now = self.cache.clock()
+            series = self._series_for(instrument, "intraday", self.window.data_source)
+            if series.needs_download(now):
+                self._start((self._generation, dict(instrument), "intraday", self.window.data_source,
+                             history_day(instrument, now), series.loaded_day == history_day(instrument, now)
+                             and series.repair_needed))
+                return
 
     def reload(self):
         if not self.dialog or not self.dialog.isVisible() or not self.instrument or not self.window.view_options.chart_enabled:
@@ -351,17 +416,21 @@ class HistoryController(QObject):
     def _accept(self, payload):
         self._busy = False
         generation, instrument, view, preferred, day, repair, result = payload
-        if generation >= self._discard_before:
+        if generation >= self._discard_before and preferred == self.window.data_source and self.window.widget_visible:
             series = self._series_for(instrument, view, preferred)
             series.set_history(result, day, self.cache.clock())
-            if generation == self._generation and self.dialog and self.dialog.isVisible():
-                self._render(series, view, preferred)
+            if (generation == self._generation and self.dialog and self.dialog.isVisible() and self.instrument
+                    and self._key(instrument, view, preferred) == self._key(self.instrument, self.dialog.view, preferred)):
+                self._render(series, self.dialog.view, preferred)
+            if self.window.view_options.mini_chart_type == "trend":
+                self.window.quotes.reproject()
         if self._pending is not None:
             pending, self._pending = self._pending, None
-            if pending[0] == self._generation and self.dialog.isVisible():
+            if pending[0] == self._generation and self.dialog and self.dialog.isVisible():
                 # The completed worker may have loaded the same minute family
                 # while the user switched from intraday to five-day view.
                 self.reload()
+        self._start_next_mini()
 
     def _render(self, series, view, preferred):
         result = series.result

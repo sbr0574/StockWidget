@@ -166,23 +166,41 @@ def merge_quote(bars, instrument, view, quote, previous=None, *, gaps=False):
             return tuple(bars)
         if not any(start <= minute <= end for start, end in _minute_sessions(instrument)):
             return tuple(bars)
+        # Minute endpoints commonly begin at 09:31. The accepted quote still
+        # supplies the actual 09:30 opening price, even before that first bar
+        # arrives. Keep it without inventing a minute's volume or extrema.
+        opening_stamp = (current.replace(hour=9, minute=30, second=0, microsecond=0)
+                         .strftime("%Y-%m-%d %H:%M:%S")
+                         if not futures and instrument.get("market") in {"sh", "sz", "bj", "hk", "us"}
+                         else None)
+        if opening_stamp and key >= opening_stamp:
+            opening_bar = next((bar for bar in bars if bar.time == opening_stamp), None)
+            if opening_bar:
+                corrected = replace(opening_bar, open=opening, high=max(opening_bar.high, opening),
+                                    low=min(opening_bar.low, opening))
+                bars = tuple(corrected if bar.time == opening_stamp else bar for bar in bars)
+                old = corrected if key == opening_stamp else old
+            elif key > opening_stamp:
+                bars = tuple(sorted((*bars, Bar(opening_stamp, opening, opening, opening, opening, 0, 0)),
+                                    key=lambda bar: bar.time))
         prefix = [bar for bar in bars if bar.time < key and trading_date(bar, instrument) == day]
         old_volume, old_amount = (old.volume, old.amount or 0) if old else (0, 0)
         previous_clock = quote_clock(previous, instrument) if previous else None
         same_minute = previous_clock and previous_clock.replace(second=0, microsecond=0) == current.replace(second=0, microsecond=0)
-        volume = (max(old_volume, total_volume - sum(bar.volume for bar in prefix)) if not gaps
+        volume = (max(old_volume, total_volume - sum(bar.volume for bar in prefix)) if not gaps or key == opening_stamp
                   else old_volume + (max(0, total_volume - _number(previous.get("deals_vol"), 0)) if same_minute else 0))
         amount = None
         if total_amount:
-            if not gaps and all(bar.amount is not None for bar in prefix):
+            if (not gaps or key == opening_stamp) and all(bar.amount is not None for bar in prefix):
                 amount = max(old_amount, total_amount - sum(bar.amount for bar in prefix))
             elif same_minute:
                 amount = old_amount + max(0, total_amount - _number(previous.get("deals_amt"), 0))
         # Index turnover/volume is the components' price, not index points.
         index = instrument.get("type") == "指"
         average = total_amount / total_volume if total_volume and total_amount and instrument.get("type") not in {"期", "指"} else None
-        bar = Bar(key, old.open if old else price, max(old.high, price) if old else price,
-                  min(old.low, price) if old else price, price, volume, amount,
+        bar_open = opening if key == opening_stamp else old.open if old else price
+        bar = Bar(key, bar_open, max(old.high if old else bar_open, price),
+                  min(old.low if old else bar_open, price), price, volume, amount,
                   None if index else average or (old.average if old else None))
     merged = (*bars[:-1], bar) if old else (*bars, bar)
     return select_bars(merged, "daily" if daily else "five_day", instrument)
@@ -202,15 +220,19 @@ class HistorySeries:
     @property
     def reference_price(self):
         """Latest plotted session's previous close, never a guessed opening."""
-        if not self.result.bars:
+        return self.reference_price_for(self.result.bars)
+
+    def reference_price_for(self, bars):
+        """Resolve the same session baseline for cached or live bootstrap bars."""
+        if not bars:
             return None
-        day = trading_date(self.result.bars[-1], self.instrument)
+        day = trading_date(bars[-1], self.instrument)
         clock = quote_clock(self._quote, self.instrument) if self._quote else None
         if clock and trading_date(Bar(clock.isoformat(), 0, 0, 0, 0), self.instrument) == day:
             previous = _number(self._quote.get("prev_close"), 0)
             if previous > 0:
                 return previous
-        previous = next((bar for bar in reversed(self.result.bars)
+        previous = next((bar for bar in reversed(bars)
                          if trading_date(bar, self.instrument) < day), None)
         if previous and previous.close > 0:
             if len(previous.time) == 10:
@@ -415,6 +437,26 @@ def intraday_timeline(bars, instrument, now=None):
     if any(stamp.strftime("%Y-%m-%d %H:%M:00") not in available for stamp in clocks):
         return ()
     return times
+
+
+def mini_trend_points(bars, instrument, now=None):
+    """Keep the latest close of each three-minute bucket on the full session axis.
+
+    Minute histories remain intact for detailed charts and the shared cache.
+    The unfinished bucket follows the latest quote, including across breaks.
+    """
+    timeline = intraday_timeline(bars, instrument, now)
+    slots = {time: index for index, time in enumerate(timeline)}
+    count = max(1, len(timeline or bars))
+    samples = {}
+    for index, bar in enumerate(bars):
+        stamp = datetime.fromisoformat(bar.time)
+        bucket = stamp.replace(minute=stamp.minute // 3 * 3, second=0, microsecond=0)
+        samples[bucket] = ((slots.get(bar.time, index) + .5) / count, bar.close)
+    points = tuple(samples.values())
+    if bars and bars[0].time[11:16] == "09:30" and instrument.get("market") in {"sh", "sz", "bj", "hk", "us"}:
+        points = ((0.0, bars[0].open), *points)
+    return points
 
 
 def moving_average(bars, period):

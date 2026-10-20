@@ -33,6 +33,7 @@ from PySide6.QtWidgets import (
     QStyle,
     QStyledItemDelegate,
     QStyleOptionButton,
+    QStyleOption,
     QStyleOptionViewItem,
     QWidget,
 )
@@ -409,7 +410,7 @@ class AddCodePanel(QFrame):
         # 使用可激活的工具窗口，让 Windows 输入法获得搜索框所在窗口的焦点。
         super().__init__(parent, Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint)
         self.setObjectName("add_code_panel")
-        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
@@ -459,20 +460,21 @@ class AddCodePanel(QFrame):
         if dark:
             background = "rgb(44, 44, 46)"
             foreground = "rgb(242, 242, 247)"
-            border = "rgba(255, 255, 255, 0.28)"
+            border = "rgb(103, 103, 104)"
             field = "rgb(58, 58, 60)"
             selected = accent_rgba(0.22)
             hovered = accent_rgba(0.12)
         else:
             background = "rgb(250, 250, 250)"
             foreground = "rgb(28, 28, 30)"
-            border = "rgba(0, 0, 0, 0.28)"
+            border = "rgb(180, 180, 180)"
             field = "rgb(255, 255, 255)"
             selected = accent_rgba(0.16)
             hovered = accent_rgba(0.08)
         self.result_delegate.set_theme(dark)
         for checkbox in self.findChildren(FilledCheckBox):
             checkbox.set_theme(dark)
+        # QSS 将圆角与直边分段绘制；预混合为不透明边框，避免接缝处叠色。
         self.setStyleSheet(f"""
             QFrame#add_code_panel {{
                 background-color: {background};
@@ -491,6 +493,7 @@ class AddCodePanel(QFrame):
                 background-color: {field};
                 border: 1px solid {border};
                 border-radius: 5px;
+                padding: 4px;
                 outline: none;
             }}
             QFrame#add_code_panel QListView::item {{
@@ -509,6 +512,13 @@ class AddCodePanel(QFrame):
         """)
         # 样式刷新后同步原生搜索框，避免 Tool 窗口沿用系统的另一种颜色模式。
         self.search_input.setPalette(theme_palette(dark, QApplication.palette()))
+
+    def paintEvent(self, event):
+        # 透明工具窗口不自动填充矩形底色，只绘制一次带圆角的面板表面。
+        option = QStyleOption()
+        option.initFrom(self)
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, option, painter, self)
 
     def set_context(self, search_index, existing_keys):
         self._search_index = tuple(search_index or ())
