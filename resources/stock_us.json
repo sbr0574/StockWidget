@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-20",
+  "last_update": "2026-10-21",
   "codes": {
     "usa": {
       "code": "a",
@@ -3385,6 +3385,15 @@
       "py": "",
       "abbr": ""
     },
+    "usaibn": {
+      "code": "aibn",
+      "market": "us",
+      "type": "美",
+      "name": "Defiance AI Infrastructure Bond ETF",
+      "name_en": "Defiance AI Infrastructure Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usaibu": {
       "code": "aibu",
       "market": "us",
@@ -4165,15 +4174,6 @@
       "type": "美",
       "name": "Albemarle Corporation Depositary Shares each representing a 1/20th of 7.25% Series A Mandatory Convertible Preferred Stock",
       "name_en": "Albemarle Corporation Depositary Shares each representing a 1/20th of 7.25% Series A Mandatory Convertible Preferred Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usalbg": {
-      "code": "albg",
-      "market": "us",
-      "type": "美",
-      "name": "Leverage Shares 2X Long ALB Daily ETF",
-      "name_en": "Leverage Shares 2X Long ALB Daily ETF",
       "py": "",
       "abbr": ""
     },
@@ -7963,15 +7963,6 @@
       "type": "美",
       "name": "Algoma Steel Group Inc. - Common Shares",
       "name_en": "Algoma Steel Group Inc. - Common Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usastlw": {
-      "code": "astlw",
-      "market": "us",
-      "type": "美",
-      "name": "Algoma Steel Group Inc. - Warrant",
-      "name_en": "Algoma Steel Group Inc. - Warrant",
       "py": "",
       "abbr": ""
     },
@@ -13951,15 +13942,6 @@
       "py": "",
       "abbr": ""
     },
-    "usblsg": {
-      "code": "blsg",
-      "market": "us",
-      "type": "美",
-      "name": "Leverage Shares 2X Long BLSH Daily ETF",
-      "name_en": "Leverage Shares 2X Long BLSH Daily ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usblsh": {
       "code": "blsh",
       "market": "us",
@@ -17496,15 +17478,6 @@
       "name_en": "BuzzFeed, Inc. - Warrant",
       "py": "",
       "abbr": ""
-    },
-    "usbzh": {
-      "code": "bzh",
-      "market": "us",
-      "type": "美",
-      "name": "贝哲房屋",
-      "name_en": "Beazer Homes USA, Inc. Common Stock",
-      "py": "beizhefangwu",
-      "abbr": "bzfw"
     },
     "usbzq": {
       "code": "bzq",
@@ -24372,15 +24345,6 @@
       "name_en": "America's Car-Mart, Inc. - Common Stock",
       "py": "meiguoqichexing",
       "abbr": "mgqcx"
-    },
-    "uscrmu": {
-      "code": "crmu",
-      "market": "us",
-      "type": "美",
-      "name": "Leverage Shares 2x Long CRML Daily ETF",
-      "name_en": "Leverage Shares 2x Long CRML Daily ETF",
-      "py": "",
-      "abbr": ""
     },
     "uscrmx": {
       "code": "crmx",
@@ -37009,15 +36973,6 @@
       "py": "ziyougangmaikemolan",
       "abbr": "zygmkml"
     },
-    "usfcxg": {
-      "code": "fcxg",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多FCX ETF-Leverage",
-      "name_en": "Leverage Shares 2x Long FCX Daily ETF",
-      "py": "erbeizuoduofcxetf-leverage",
-      "abbr": "ebzdfcxetf-leverage"
-    },
     "usfdat": {
       "code": "fdat",
       "market": "us",
@@ -43516,15 +43471,6 @@
       "py": "",
       "abbr": ""
     },
-    "usgemg": {
-      "code": "gemg",
-      "market": "us",
-      "type": "美",
-      "name": "Leverage Shares 2X Long GEMI Daily ETF",
-      "name_en": "Leverage Shares 2X Long GEMI Daily ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usgemi": {
       "code": "gemi",
       "market": "us",
@@ -44692,15 +44638,6 @@
       "type": "美",
       "name": "GalaxyEdge Acquisition Corporation Rights to receive one-fourth (1/4) of one ordinary share",
       "name_en": "GalaxyEdge Acquisition Corporation Rights to receive one-fourth (1/4) of one ordinary share",
-      "py": "",
-      "abbr": ""
-    },
-    "usglgg": {
-      "code": "glgg",
-      "market": "us",
-      "type": "美",
-      "name": "Leverage Shares 2X Long GLXY Daily ETF",
-      "name_en": "Leverage Shares 2X Long GLXY Daily ETF",
       "py": "",
       "abbr": ""
     },
@@ -70129,6 +70066,15 @@
       "py": "",
       "abbr": ""
     },
+    "usmtgg": {
+      "code": "mtgg",
+      "market": "us",
+      "type": "美",
+      "name": "MayTech Global Growth ETF",
+      "name_en": "MayTech Global Growth ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usmtgp": {
       "code": "mtgp",
       "market": "us",
@@ -72369,15 +72315,6 @@
       "name_en": "Neuberger Emerging Markets Debt Hard Currency ETF",
       "py": "",
       "abbr": ""
-    },
-    "usnemg": {
-      "code": "nemg",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多NEM ETF-Leverage",
-      "name_en": "Leverage Shares 2x Long NEM Daily ETF",
-      "py": "erbeizuoduonemetf-leverage",
-      "abbr": "ebzdnemetf-leverage"
     },
     "usnen": {
       "code": "nen",
@@ -74862,15 +74799,6 @@
       "name_en": "Nuveen ESG Emerging Markets Equity ETF",
       "py": "",
       "abbr": ""
-    },
-    "usnug": {
-      "code": "nug",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多NU ETF-Leverage",
-      "name_en": "Leverage Shares 2X Long NU Daily ETF",
-      "py": "erbeizuoduonuetf-leverage",
-      "abbr": "ebzdnuetf-leverage"
     },
     "usnugo": {
       "code": "nugo",
@@ -77734,15 +77662,6 @@
       "py": "",
       "abbr": ""
     },
-    "usopeg": {
-      "code": "opeg",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多OPEN ETF-Leverage",
-      "name_en": "Leverage Shares 2X Long OPEN Daily ETF",
-      "py": "erbeizuoduoopenetf-leverage",
-      "abbr": "ebzdopenetf-leverage"
-    },
     "usopen": {
       "code": "open",
       "market": "us",
@@ -79965,15 +79884,6 @@
       "name_en": "Petroleo Brasileiro S.A. Petrobras American Depositary Shares representing Preferred Shares",
       "py": "baxishiyou-youxiangu",
       "abbr": "bxsy-yxg"
-    },
-    "uspbrg": {
-      "code": "pbrg",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多PBR ETF-Leverage",
-      "name_en": "Leverage Shares 2X Long PBR Daily ETF",
-      "py": "erbeizuoduopbretf-leverage",
-      "abbr": "ebzdpbretf-leverage"
     },
     "uspbsc": {
       "code": "pbsc",
@@ -84499,15 +84409,6 @@
       "type": "美",
       "name": "Innovator U.S. Equity Power Buffer ETF - September",
       "name_en": "Innovator U.S. Equity Power Buffer ETF - September",
-      "py": "",
-      "abbr": ""
-    },
-    "uspset": {
-      "code": "pset",
-      "market": "us",
-      "type": "美",
-      "name": "Principal Quality ETF",
-      "name_en": "Principal Quality ETF",
       "py": "",
       "abbr": ""
     },
@@ -92467,6 +92368,15 @@
       "py": "",
       "abbr": ""
     },
+    "ussats": {
+      "code": "sats",
+      "market": "us",
+      "type": "美",
+      "name": "Strive, Inc. - 15.00% Series A Perpetual SATS Preferred Stock",
+      "name_en": "Strive, Inc. - 15.00% Series A Perpetual SATS Preferred Stock",
+      "py": "",
+      "abbr": ""
+    },
     "ussaug": {
       "code": "saug",
       "market": "us",
@@ -97493,8 +97403,8 @@
       "code": "soar",
       "market": "us",
       "type": "美",
-      "name": "Volato Group, Inc. Class A Common Stock",
-      "name_en": "Volato Group, Inc. Class A Common Stock",
+      "name": "SOAR AI, Inc. Class A Common Stock",
+      "name_en": "SOAR AI, Inc. Class A Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -107875,15 +107785,6 @@
       "py": "",
       "abbr": ""
     },
-    "usuecg": {
-      "code": "uecg",
-      "market": "us",
-      "type": "美",
-      "name": "Leverage Shares 2x Long UEC Daily ETF",
-      "name_en": "Leverage Shares 2x Long UEC Daily ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usueic": {
       "code": "ueic",
       "market": "us",
@@ -110025,15 +109926,6 @@
       "name_en": "VALE S.A.  American Depositary Shares Each Representing one common share",
       "py": "danshuihegu",
       "abbr": "dshg"
-    },
-    "usvalg": {
-      "code": "valg",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多VALE ETF-Leverage",
-      "name_en": "Leverage Shares 2X Long VALE Daily ETF",
-      "py": "erbeizuoduovaleetf-leverage",
-      "abbr": "ebzdvaleetf-leverage"
     },
     "usvaln": {
       "code": "valn",
@@ -119221,15 +119113,6 @@
       "type": "美",
       "name": "Zscaler, Inc. - Common Stock",
       "name_en": "Zscaler, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "uszsb": {
-      "code": "zsb",
-      "market": "us",
-      "type": "美",
-      "name": "USCF Sustainable Battery Metals Strategy Fund",
-      "name_en": "USCF Sustainable Battery Metals Strategy Fund",
       "py": "",
       "abbr": ""
     },

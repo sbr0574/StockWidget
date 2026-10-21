@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-19",
+  "last_update": "2026-10-21",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -6288,7 +6288,7 @@
       "market": "hk",
       "type": "港",
       "name": "中國三迪",
-      "name_en": "CHINA SANDI",
+      "name_en": "CHINA SANDI-NEW",
       "py": "zhongguosandi",
       "abbr": "zgsd"
     },
@@ -8160,7 +8160,7 @@
       "market": "hk",
       "type": "港",
       "name": "偉祿科技股份",
-      "name_en": "REALORD TEC-NEW",
+      "name_en": "REALORD TECH",
       "py": "weilukejigufen",
       "abbr": "wlkjgf"
     },
@@ -13947,7 +13947,7 @@
       "market": "hk",
       "type": "港",
       "name": "世紀集團國際",
-      "name_en": "CENTURY GP-NEW",
+      "name_en": "CENTURY GP INTL",
       "py": "shijijituanguoji",
       "abbr": "sjjtgj"
     },
@@ -18406,24 +18406,6 @@
       "py": "zhuoyuekonggu",
       "abbr": "zykg"
     },
-    "hk02922": {
-      "code": "02922",
-      "market": "hk",
-      "type": "港",
-      "name": "偉祿科技股份",
-      "name_en": "REALORD TEC-OLD",
-      "py": "weilukejigufen",
-      "abbr": "wlkjgf"
-    },
-    "hk02923": {
-      "code": "02923",
-      "market": "hk",
-      "type": "港",
-      "name": "世紀集團國際",
-      "name_en": "CENTURY GP-OLD",
-      "py": "shijijituanguoji",
-      "abbr": "sjjtgj"
-    },
     "hk02925": {
       "code": "02925",
       "market": "hk",
@@ -18438,7 +18420,7 @@
       "market": "hk",
       "type": "港",
       "name": "中國三迪",
-      "name_en": "CHINA SANDI",
+      "name_en": "CHINA SANDI-OLD",
       "py": "zhongguosandi",
       "abbr": "zgsd"
     },
@@ -18477,15 +18459,6 @@
       "name_en": "EASY SMART-2K",
       "py": "yijunjituan(erqian)",
       "abbr": "yjjt(eq)"
-    },
-    "hk02940": {
-      "code": "02940",
-      "market": "hk",
-      "type": "港",
-      "name": "首惠產業金融股權",
-      "name_en": "CAPITAL IND RTS",
-      "py": "shouhuichanyejinrongguquan",
-      "abbr": "shcyjrgq"
     },
     "hk02941": {
       "code": "02941",
@@ -24252,7 +24225,7 @@
       "market": "hk",
       "type": "港",
       "name": "朝威控股",
-      "name_en": "GLORY FLAME",
+      "name_en": "GLORY FLAME-NEW",
       "py": "chaoweikonggu",
       "abbr": "cwkg"
     },
@@ -26547,7 +26520,7 @@
       "market": "hk",
       "type": "港",
       "name": "朝威控股",
-      "name_en": "GLORY FLAME",
+      "name_en": "GLORY FLAME-OLD",
       "py": "chaoweikonggu",
       "abbr": "cwkg"
     },

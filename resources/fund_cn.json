@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-20",
+  "last_update": "2026-10-21",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -10918,6 +10918,15 @@
       "py": "lvdianetftianhong",
       "abbr": "ldetfth"
     },
+    "sz159047": {
+      "code": "159047",
+      "market": "sz",
+      "type": "基",
+      "name": "港股信息技术ETF银华",
+      "name_en": "",
+      "py": "gangguxinxijishuetfyinhua",
+      "abbr": "ggxxjsetfyh"
+    },
     "sz159048": {
       "code": "159048",
       "market": "sz",
@@ -11223,6 +11232,15 @@
       "name_en": "",
       "py": "huagongetfwanjia",
       "abbr": "hgetfwj"
+    },
+    "sz159089": {
+      "code": "159089",
+      "market": "sz",
+      "type": "基",
+      "name": "港股通互联网ETF国联",
+      "name_en": "",
+      "py": "ganggutonghulianwangetfguolian",
+      "abbr": "ggthlwetfgl"
     },
     "sz159091": {
       "code": "159091",
