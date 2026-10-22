@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-21",
+  "last_update": "2026-10-22",
   "codes": {
     "usa": {
       "code": "a",
@@ -1828,15 +1828,6 @@
       "py": "",
       "abbr": ""
     },
-    "usadds": {
-      "code": "adds",
-      "market": "us",
-      "type": "美",
-      "name": "Hedgeye Index Adds ETF",
-      "name_en": "Hedgeye Index Adds ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usadea": {
       "code": "adea",
       "market": "us",
@@ -3196,6 +3187,15 @@
       "py": "",
       "abbr": ""
     },
+    "usahic": {
+      "code": "ahic",
+      "market": "us",
+      "type": "美",
+      "name": "Allspring Short-Term High Income Fund ETF",
+      "name_en": "Allspring Short-Term High Income Fund ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usahl_d": {
       "code": "ahl_d",
       "market": "us",
@@ -3328,6 +3328,15 @@
       "type": "美",
       "name": "American Century Select High Yield ETF",
       "name_en": "American Century Select High Yield ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usahym": {
+      "code": "ahym",
+      "market": "us",
+      "type": "美",
+      "name": "Allspring High Yield Municipal Bond Fund ETF",
+      "name_en": "Allspring High Yield Municipal Bond Fund ETF",
       "py": "",
       "abbr": ""
     },
@@ -7966,6 +7975,15 @@
       "py": "",
       "abbr": ""
     },
+    "usastm": {
+      "code": "astm",
+      "market": "us",
+      "type": "美",
+      "name": "Allspring Strategic Municipal Bond Fund ETF",
+      "name_en": "Allspring Strategic Municipal Bond Fund ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usastn": {
       "code": "astn",
       "market": "us",
@@ -10951,15 +10969,6 @@
       "type": "美",
       "name": "BlackRock Capital Allocation Term Trust Common Shares of Beneficial Interest",
       "name_en": "BlackRock Capital Allocation Term Trust Common Shares of Beneficial Interest",
-      "py": "",
-      "abbr": ""
-    },
-    "usbcatr": {
-      "code": "bcatr",
-      "market": "us",
-      "type": "美",
-      "name": "BlackRock Capital Allocation Term Trust Rights (expiring October 21, 2026) Rights",
-      "name_en": "BlackRock Capital Allocation Term Trust Rights (expiring October 21, 2026) Rights",
       "py": "",
       "abbr": ""
     },
@@ -16486,15 +16495,6 @@
       "type": "美",
       "name": "Baytex Energy Corp Common Shares",
       "name_en": "Baytex Energy Corp Common Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usbtf": {
-      "code": "btf",
-      "market": "us",
-      "type": "美",
-      "name": "CoinShares Bitcoin and Ether ETF",
-      "name_en": "CoinShares Bitcoin and Ether ETF",
       "py": "",
       "abbr": ""
     },
@@ -23563,15 +23563,6 @@
       "py": "",
       "abbr": ""
     },
-    "uscpnx": {
-      "code": "cpnx",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多CPNG ETF-Tradr",
-      "name_en": "Tradr 2X Long CPNG Daily ETF",
-      "py": "erbeizuoduocpngetf-tradr",
-      "abbr": "ebzdcpngetf-tradr"
-    },
     "uscpop": {
       "code": "cpop",
       "market": "us",
@@ -28357,15 +28348,6 @@
       "type": "美",
       "name": "WisdomTree International MidCap Dividend Fund",
       "name_en": "WisdomTree International MidCap Dividend Fund",
-      "py": "",
-      "abbr": ""
-    },
-    "usdime": {
-      "code": "dime",
-      "market": "us",
-      "type": "美",
-      "name": "CoinShares Altcoins ETF",
-      "name_en": "CoinShares Altcoins ETF",
       "py": "",
       "abbr": ""
     },
@@ -45082,6 +45064,15 @@
       "py": "jiayoukonggu",
       "abbr": "jykg"
     },
+    "usgmie": {
+      "code": "gmie",
+      "market": "us",
+      "type": "美",
+      "name": "GMO International Equity Fund, ETF Class",
+      "name_en": "GMO International Equity Fund, ETF Class",
+      "py": "",
+      "abbr": ""
+    },
     "usgmm": {
       "code": "gmm",
       "market": "us",
@@ -48430,15 +48421,6 @@
       "py": "",
       "abbr": ""
     },
-    "ushels": {
-      "code": "hels",
-      "market": "us",
-      "type": "美",
-      "name": "Hedgeye 130/30 Equity ETF",
-      "name_en": "Hedgeye 130/30 Equity ETF",
-      "py": "",
-      "abbr": ""
-    },
     "ushelx": {
       "code": "helx",
       "market": "us",
@@ -49491,15 +49473,6 @@
       "name_en": "Honeywell Aerospace Inc. - Common Stock",
       "py": "",
       "abbr": ""
-    },
-    "ushong": {
-      "code": "hong",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多HON ETF-Leverage",
-      "name_en": "Leverage Shares 2X Long HON Daily ETF",
-      "py": "erbeizuoduohonetf-leverage",
-      "abbr": "ebzdhonetf-leverage"
     },
     "ushooc": {
       "code": "hooc",
@@ -53269,6 +53242,15 @@
       "type": "美",
       "name": "Innovative Industrial Properties, Inc. 9.00% Series A Cumulative Redeemable Preferred Stock",
       "name_en": "Innovative Industrial Properties, Inc. 9.00% Series A Cumulative Redeemable Preferred Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usiipr_b": {
+      "code": "iipr_b",
+      "market": "us",
+      "type": "美",
+      "name": "Innovative Industrial Properties, Inc. 9.25% Series B Cumulative Redeemable Preferred Stock",
+      "name_en": "Innovative Industrial Properties, Inc. 9.25% Series B Cumulative Redeemable Preferred Stock",
       "py": "",
       "abbr": ""
     },
@@ -69553,12 +69535,30 @@
       "py": "",
       "abbr": ""
     },
+    "usmsgkw": {
+      "code": "msgkw",
+      "market": "us",
+      "type": "美",
+      "name": "Madison Square Garden Sports Corp. Class A Common Stock When-Issued",
+      "name_en": "Madison Square Garden Sports Corp. Class A Common Stock When-Issued",
+      "py": "",
+      "abbr": ""
+    },
     "usmsgm": {
       "code": "msgm",
       "market": "us",
       "type": "美",
       "name": "Motorsport Games Inc. - Class A Common Stock",
       "name_en": "Motorsport Games Inc. - Class A Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usmsgrw": {
+      "code": "msgrw",
+      "market": "us",
+      "type": "美",
+      "name": "MSG Rangers Corp. Class A Common Stock When-Issued",
+      "name_en": "MSG Rangers Corp. Class A Common Stock When-Issued",
       "py": "",
       "abbr": ""
     },
@@ -70486,15 +70486,6 @@
       "type": "美",
       "name": "TCW Multisector Credit Income ETF",
       "name_en": "TCW Multisector Credit Income ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usmusq": {
-      "code": "musq",
-      "market": "us",
-      "type": "美",
-      "name": "MUSQ Global Music Industry Index ETF",
-      "name_en": "MUSQ Global Music Industry Index ETF",
       "py": "",
       "abbr": ""
     },
@@ -75726,15 +75717,6 @@
       "name_en": "NextPlat Corp - Common Stock",
       "py": "",
       "abbr": ""
-    },
-    "usnxpx": {
-      "code": "nxpx",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多NXPI ETF-Tradr",
-      "name_en": "Tradr 2X Long NXPI Daily ETF",
-      "py": "erbeizuoduonxpietf-tradr",
-      "abbr": "ebzdnxpietf-tradr"
     },
     "usnxrt": {
       "code": "nxrt",
@@ -83103,9 +83085,18 @@
       "market": "us",
       "type": "美",
       "name": "石榴云医",
-      "name_en": "POMDOCTOR LIMITED - American Depositary Shares",
+      "name_en": "POMDOCTOR LIMITED - Class A Ordinary Shares",
       "py": "shiliuyunyi",
       "abbr": "slyy"
+    },
+    "uspomg": {
+      "code": "pomg",
+      "market": "us",
+      "type": "美",
+      "name": "PRIMECAP Odyssey Discovery ETF",
+      "name_en": "PRIMECAP Odyssey Discovery ETF",
+      "py": "",
+      "abbr": ""
     },
     "uspono": {
       "code": "pono",
@@ -83131,15 +83122,6 @@
       "type": "美",
       "name": "Pono Capital Four, Inc. - Units",
       "name_en": "Pono Capital Four, Inc. - Units",
-      "py": "",
-      "abbr": ""
-    },
-    "usponx": {
-      "code": "ponx",
-      "market": "us",
-      "type": "美",
-      "name": "Tradr 2X Long PONY Daily ETF",
-      "name_en": "Tradr 2X Long PONY Daily ETF",
       "py": "",
       "abbr": ""
     },
@@ -87838,6 +87820,15 @@
       "type": "美",
       "name": "Rubrik, Inc. Class A Common Stock",
       "name_en": "Rubrik, Inc. Class A Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usrbtx": {
+      "code": "rbtx",
+      "market": "us",
+      "type": "美",
+      "name": "iShares Future Robotics and Related Technologies Active ETF",
+      "name_en": "iShares Future Robotics and Related Technologies Active ETF",
       "py": "",
       "abbr": ""
     },
@@ -93205,6 +93196,15 @@
       "py": "",
       "abbr": ""
     },
+    "usscin": {
+      "code": "scin",
+      "market": "us",
+      "type": "美",
+      "name": "Schwab International Bond ETF",
+      "name_en": "Schwab International Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usscio": {
       "code": "scio",
       "market": "us",
@@ -96993,15 +96993,6 @@
       "name_en": "GraniteShares YieldBOOST SMCI ETF",
       "py": "",
       "abbr": ""
-    },
-    "ussmz": {
-      "code": "smz",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做空SMR ETF-Tradr",
-      "name_en": "Tradr 2X Short SMR Daily ETF",
-      "py": "erbeizuokongsmretf-tradr",
-      "abbr": "ebzksmretf-tradr"
     },
     "ussn": {
       "code": "sn",
@@ -103915,6 +103906,15 @@
       "py": "",
       "abbr": ""
     },
+    "ustlce": {
+      "code": "tlce",
+      "market": "us",
+      "type": "美",
+      "name": "Thrivent Large Cap Stock ETF",
+      "name_en": "Thrivent Large Cap Stock ETF",
+      "py": "",
+      "abbr": ""
+    },
     "ustlci": {
       "code": "tlci",
       "market": "us",
@@ -104225,8 +104225,8 @@
       "code": "tmde",
       "market": "us",
       "type": "美",
-      "name": "TMD Energy Limited Ordinary Shares",
-      "name_en": "TMD Energy Limited Ordinary Shares",
+      "name": "TMD Energy Limited Class A Ordinary Shares",
+      "name_en": "TMD Energy Limited Class A Ordinary Shares",
       "py": "",
       "abbr": ""
     },
@@ -106102,15 +106102,6 @@
       "py": "",
       "abbr": ""
     },
-    "ustseu": {
-      "code": "tseu",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多TSEM ETF-Tradr",
-      "name_en": "Tradr 2X Long TSEM Daily ETF",
-      "py": "erbeizuoduotsemetf-tradr",
-      "abbr": "ebzdtsemetf-tradr"
-    },
     "ustsha": {
       "code": "tsha",
       "market": "us",
@@ -106144,6 +106135,15 @@
       "type": "美",
       "name": "Truth Social American Icons ETF",
       "name_en": "Truth Social American Icons ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "ustsie": {
+      "code": "tsie",
+      "market": "us",
+      "type": "美",
+      "name": "Thrivent Securitized Income ETF",
+      "name_en": "Thrivent Securitized Income ETF",
       "py": "",
       "abbr": ""
     },

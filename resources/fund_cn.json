@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-21",
+  "last_update": "2026-10-22",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -10548,6 +10548,15 @@
       "name_en": "",
       "py": "chuangyebansuanlietfnanfang",
       "abbr": "cybsletfnf"
+    },
+    "sz158066": {
+      "code": "158066",
+      "market": "sz",
+      "type": "基",
+      "name": "大数据ETF前海开源",
+      "name_en": "",
+      "py": "dashujuetfqianhaikaiyuan",
+      "abbr": "dsjetfqhky"
     },
     "sz158067": {
       "code": "158067",

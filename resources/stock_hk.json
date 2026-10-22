@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-21",
+  "last_update": "2026-10-22",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -17718,7 +17718,7 @@
       "market": "hk",
       "type": "港",
       "name": "金泰能源控股",
-      "name_en": "JINTAI ENGY-NEW",
+      "name_en": "JINTAI ENERGY H",
       "py": "jintainengyuankonggu",
       "abbr": "jtnykg"
     },
@@ -18405,15 +18405,6 @@
       "name_en": "BONJOUR H-OLD",
       "py": "zhuoyuekonggu",
       "abbr": "zykg"
-    },
-    "hk02925": {
-      "code": "02925",
-      "market": "hk",
-      "type": "港",
-      "name": "金泰能源控股",
-      "name_en": "JINTAI ENGY-OLD",
-      "py": "jintainengyuankonggu",
-      "abbr": "jtnykg"
     },
     "hk02934": {
       "code": "02934",
@@ -24157,15 +24148,6 @@
       "py": "",
       "abbr": ""
     },
-    "hk08047": {
-      "code": "08047",
-      "market": "hk",
-      "type": "港",
-      "name": "中國海洋發展",
-      "name_en": "CHINA OCEAN GP",
-      "py": "zhongguohaiyangfazhan",
-      "abbr": "zghyfz"
-    },
     "hk08049": {
       "code": "08049",
       "market": "hk",
@@ -25125,7 +25107,7 @@
       "market": "hk",
       "type": "港",
       "name": "首都金融控股",
-      "name_en": "CAPITAL FIN",
+      "name_en": "CAPITAL FIN-NEW",
       "py": "shoudujinrongkonggu",
       "abbr": "sdjrkg"
     },
@@ -26556,7 +26538,7 @@
       "market": "hk",
       "type": "港",
       "name": "首都金融控股",
-      "name_en": "CAPITAL FIN",
+      "name_en": "CAPITAL FIN-OLD",
       "py": "shoudujinrongkonggu",
       "abbr": "sdjrkg"
     },

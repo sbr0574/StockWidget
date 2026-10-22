@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-20",
+  "last_update": "2026-10-22",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -25862,10 +25862,10 @@
       "code": "301569",
       "market": "sz",
       "type": "创",
-      "name": "C联亚药业",
+      "name": "联亚药业",
       "name_en": "",
-      "py": "clianyayaoye",
-      "abbr": "clyyy"
+      "py": "lianyayaoye",
+      "abbr": "lyyy"
     },
     "sz301571": {
       "code": "301571",
@@ -26478,6 +26478,15 @@
       "name_en": "",
       "py": "chaochunyingcai",
       "abbr": "ccyc"
+    },
+    "sz301718": {
+      "code": "301718",
+      "market": "sz",
+      "type": "创",
+      "name": "N通则康威",
+      "name_en": "",
+      "py": "ntongzekangwei",
+      "abbr": "ntzkw"
     },
     "sz302132": {
       "code": "302132",

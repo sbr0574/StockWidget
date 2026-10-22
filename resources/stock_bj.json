@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-30",
+  "last_update": "2026-10-22",
   "codes": {
     "bj810011": {
       "code": "810011",
@@ -59,10 +59,10 @@
       "code": "920000",
       "market": "bj",
       "type": "京",
-      "name": "XD安徽凤",
+      "name": "安徽凤凰",
       "name_en": "",
-      "py": "xdanhuifeng",
-      "abbr": "xdahf"
+      "py": "anhuifenghuang",
+      "abbr": "ahfh"
     },
     "bj920001": {
       "code": "920001",
@@ -518,10 +518,10 @@
       "code": "920072",
       "market": "bj",
       "type": "京",
-      "name": "XD科莱瑞",
+      "name": "科莱瑞迪",
       "name_en": "",
-      "py": "xdkelairui",
-      "abbr": "xdklr"
+      "py": "kelairuidi",
+      "abbr": "klrd"
     },
     "bj920075": {
       "code": "920075",
@@ -1184,10 +1184,10 @@
       "code": "920186",
       "market": "bj",
       "type": "京",
-      "name": "XD中科仪",
+      "name": "中科仪",
       "name_en": "",
-      "py": "xdzhongkeyi",
-      "abbr": "xdzky"
+      "py": "zhongkeyi",
+      "abbr": "zky"
     },
     "bj920187": {
       "code": "920187",
@@ -1391,10 +1391,10 @@
       "code": "920222",
       "market": "bj",
       "type": "京",
-      "name": "XD益坤电",
+      "name": "益坤电气",
       "name_en": "",
-      "py": "xdyikundian",
-      "abbr": "xdykd"
+      "py": "yikundianqi",
+      "abbr": "ykdq"
     },
     "bj920223": {
       "code": "920223",
@@ -1657,6 +1657,15 @@
       "py": "linggekeji",
       "abbr": "lgkj"
     },
+    "bj920285": {
+      "code": "920285",
+      "market": "bj",
+      "type": "京",
+      "name": "远大健科",
+      "name_en": "",
+      "py": "yuandajianke",
+      "abbr": "ydjk"
+    },
     "bj920288": {
       "code": "920288",
       "market": "bj",
@@ -1674,6 +1683,15 @@
       "name_en": "",
       "py": "huahuizhineng",
       "abbr": "hhzn"
+    },
+    "bj920296": {
+      "code": "920296",
+      "market": "bj",
+      "type": "京",
+      "name": "文峰光电",
+      "name_en": "",
+      "py": "wenfengguangdian",
+      "abbr": "wfgd"
     },
     "bj920298": {
       "code": "920298",
@@ -1710,6 +1728,15 @@
       "name_en": "",
       "py": "dierhuagong",
       "abbr": "dehg"
+    },
+    "bj920306": {
+      "code": "920306",
+      "market": "bj",
+      "type": "京",
+      "name": "天元重工",
+      "name_en": "",
+      "py": "tianyuanzhonggong",
+      "abbr": "tyzg"
     },
     "bj920339": {
       "code": "920339",
