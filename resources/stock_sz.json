@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-22",
+  "last_update": "2026-10-23",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -90,15 +90,6 @@
       "name_en": "",
       "py": "shahegufen",
       "abbr": "shgf"
-    },
-    "sz000016": {
-      "code": "000016",
-      "market": "sz",
-      "type": "深",
-      "name": "*ST康佳A",
-      "name_en": "",
-      "py": "*stkangjiaa",
-      "abbr": "*stkja"
     },
     "sz000017": {
       "code": "000017",
@@ -10922,10 +10913,10 @@
       "code": "002731",
       "market": "sz",
       "type": "深",
-      "name": "*ST萃华",
+      "name": "萃华退",
       "name_en": "",
-      "py": "*stcuihua",
-      "abbr": "*stch"
+      "py": "cuihuatui",
+      "abbr": "cht"
     },
     "sz002732": {
       "code": "002732",
@@ -13473,15 +13464,6 @@
       "name_en": "",
       "py": "nanbob",
       "abbr": "nbb"
-    },
-    "sz200016": {
-      "code": "200016",
-      "market": "sz",
-      "type": "深",
-      "name": "*ST康佳B",
-      "name_en": "",
-      "py": "*stkangjiab",
-      "abbr": "*stkjb"
     },
     "sz200017": {
       "code": "200017",
@@ -26483,10 +26465,10 @@
       "code": "301718",
       "market": "sz",
       "type": "创",
-      "name": "N通则康威",
+      "name": "C通则康威",
       "name_en": "",
-      "py": "ntongzekangwei",
-      "abbr": "ntzkw"
+      "py": "ctongzekangwei",
+      "abbr": "ctzkw"
     },
     "sz302132": {
       "code": "302132",

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-22",
+  "last_update": "2026-10-23",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -8474,10 +8474,10 @@
       "code": "563390",
       "market": "sh",
       "type": "基",
-      "name": "全指现金流ETF华泰柏瑞",
+      "name": "现金流ETF华泰柏瑞",
       "name_en": "",
-      "py": "quanzhixianjinliuetfhuataibairui",
-      "abbr": "qzxjletfhtbr"
+      "py": "xianjinliuetfhuataibairui",
+      "abbr": "xjletfhtbr"
     },
     "sh563500": {
       "code": "563500",
@@ -10350,6 +10350,15 @@
       "name_en": "",
       "py": "huagongetfjingshun",
       "abbr": "hgetfjs"
+    },
+    "sz158036": {
+      "code": "158036",
+      "market": "sz",
+      "type": "基",
+      "name": "卫星ETF华夏",
+      "name_en": "",
+      "py": "weixingetfhuaxia",
+      "abbr": "wxetfhx"
     },
     "sz158037": {
       "code": "158037",
@@ -19764,6 +19773,15 @@
       "name_en": "",
       "py": "zhonghangbeijingchangbaozulinzhufangreit",
       "abbr": "zhbjcbzlzfreit"
+    },
+    "sz180505": {
+      "code": "180505",
+      "market": "sz",
+      "type": "基",
+      "name": "中金杭州安居宁巢REIT",
+      "name_en": "",
+      "py": "zhongjinhangzhouanjuningchaoreit",
+      "abbr": "zjhzajncreit"
     },
     "sz180601": {
       "code": "180601",

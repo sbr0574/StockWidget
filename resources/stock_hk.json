@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-22",
+  "last_update": "2026-10-23",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -4551,7 +4551,7 @@
       "market": "hk",
       "type": "港",
       "name": "卓悅控股",
-      "name_en": "BONJOUR H-NEW",
+      "name_en": "BONJOUR HOLD",
       "py": "zhuoyuekonggu",
       "abbr": "zykg"
     },
@@ -17938,6 +17938,15 @@
       "py": "sanxingzhongguolongwang",
       "abbr": "sxzglw"
     },
+    "hk02813": {
+      "code": "02813",
+      "market": "hk",
+      "type": "基",
+      "name": "A惠理PCB",
+      "name_en": "A VP PCB",
+      "py": "ahuilipcb",
+      "abbr": "ahlpcb"
+    },
     "hk02814": {
       "code": "02814",
       "market": "hk",
@@ -18370,15 +18379,6 @@
       "py": "zijinkuangye",
       "abbr": "zjky"
     },
-    "hk02911": {
-      "code": "02911",
-      "market": "hk",
-      "type": "港",
-      "name": "松景科技股權",
-      "name_en": "PINE TECH RTS",
-      "py": "songjingkejiguquan",
-      "abbr": "sjkjgq"
-    },
     "hk02915": {
       "code": "02915",
       "market": "hk",
@@ -18396,15 +18396,6 @@
       "name_en": "TECHTRONIC-500",
       "py": "chuangkeshiye(wubai)",
       "abbr": "cksy(wb)"
-    },
-    "hk02920": {
-      "code": "02920",
-      "market": "hk",
-      "type": "港",
-      "name": "卓悅控股",
-      "name_en": "BONJOUR H-OLD",
-      "py": "zhuoyuekonggu",
-      "abbr": "zykg"
     },
     "hk02934": {
       "code": "02934",
@@ -18495,6 +18486,15 @@
       "name_en": "DEEPZERO",
       "py": "shenyanzhineng",
       "abbr": "syzn"
+    },
+    "hk02948": {
+      "code": "02948",
+      "market": "hk",
+      "type": "港",
+      "name": "天瑞汽車內飾",
+      "name_en": "TR INTERIORS",
+      "py": "tianruiqicheneishi",
+      "abbr": "trqcns"
     },
     "hk03001": {
       "code": "03001",
@@ -20709,6 +20709,15 @@
       "name_en": "CSOP HKJPCF",
       "py": "nanfanggangrixianjinliu",
       "abbr": "nfgrxjl"
+    },
+    "hk03536": {
+      "code": "03536",
+      "market": "hk",
+      "type": "基",
+      "name": "添富中國全球半導",
+      "name_en": "CUAM CNGBL SEMI",
+      "py": "tianfuzhongguoquanqiubandao",
+      "abbr": "tfzgqqbd"
     },
     "hk03537": {
       "code": "03537",
@@ -24486,7 +24495,7 @@
       "market": "hk",
       "type": "港",
       "name": "清大東方",
-      "name_en": "QINGDA ORI-500",
+      "name_en": "QINGDA ORIENTAL",
       "py": "qingdadongfang",
       "abbr": "qddf"
     },
@@ -26514,15 +26523,6 @@
       "name_en": "SINO ENGY C-OLD",
       "py": "zhonghuajieneng",
       "abbr": "zhjn"
-    },
-    "hk08582": {
-      "code": "08582",
-      "market": "hk",
-      "type": "港",
-      "name": "清大東方(四千)",
-      "name_en": "QINGDA ORI-4000",
-      "py": "qingdadongfang(siqian)",
-      "abbr": "qddf(sq)"
     },
     "hk08583": {
       "code": "08583",

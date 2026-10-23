@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-22",
+  "last_update": "2026-10-23",
   "codes": {
     "usa": {
       "code": "a",
@@ -8253,33 +8253,6 @@
       "name_en": "ATI Inc. Common Stock",
       "py": "aleigenijishu",
       "abbr": "algnjs"
-    },
-    "usatii": {
-      "code": "atii",
-      "market": "us",
-      "type": "美",
-      "name": "Archimedes Tech SPAC Partners II Co. - Ordinary Shares",
-      "name_en": "Archimedes Tech SPAC Partners II Co. - Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usatiiu": {
-      "code": "atiiu",
-      "market": "us",
-      "type": "美",
-      "name": "Archimedes Tech SPAC Partners II Co. - Unit",
-      "name_en": "Archimedes Tech SPAC Partners II Co. - Unit",
-      "py": "",
-      "abbr": ""
-    },
-    "usatiiw": {
-      "code": "atiiw",
-      "market": "us",
-      "type": "美",
-      "name": "Archimedes Tech SPAC Partners II Co. - Warrant",
-      "name_en": "Archimedes Tech SPAC Partners II Co. - Warrant",
-      "py": "",
-      "abbr": ""
     },
     "usatlc": {
       "code": "atlc",
@@ -26398,6 +26371,15 @@
       "py": "",
       "abbr": ""
     },
+    "usdavi": {
+      "code": "davi",
+      "market": "us",
+      "type": "美",
+      "name": "Davion Healthcare Plc - Ordinary Shares",
+      "name_en": "Davion Healthcare Plc - Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
     "usdax": {
       "code": "dax",
       "market": "us",
@@ -32779,6 +32761,15 @@
       "py": "",
       "abbr": ""
     },
+    "usemag": {
+      "code": "emag",
+      "market": "us",
+      "type": "美",
+      "name": "Emerging Markets AI Mag 3 ETF",
+      "name_en": "Emerging Markets AI Mag 3 ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usemat": {
       "code": "emat",
       "market": "us",
@@ -38338,6 +38329,15 @@
       "type": "美",
       "name": "FiEE, Inc - Common Stock",
       "name_en": "FiEE, Inc - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usfift": {
+      "code": "fift",
+      "market": "us",
+      "type": "美",
+      "name": "HCM Select 50 ETF",
+      "name_en": "HCM Select 50 ETF",
       "py": "",
       "abbr": ""
     },
@@ -52126,6 +52126,15 @@
       "type": "美",
       "name": "Symmetry Panoramic International Country Momentum ETF",
       "name_en": "Symmetry Panoramic International Country Momentum ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usicom": {
+      "code": "icom",
+      "market": "us",
+      "type": "美",
+      "name": "Tema Commodity Income ETF",
+      "name_en": "Tema Commodity Income ETF",
       "py": "",
       "abbr": ""
     },
@@ -71368,6 +71377,24 @@
       "type": "美",
       "name": "Subversive Congressional Democrats Trading ETF",
       "name_en": "Subversive Congressional Democrats Trading ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usnano": {
+      "code": "nano",
+      "market": "us",
+      "type": "美",
+      "name": "Forge Nano Holdings Inc. - Common stock",
+      "name_en": "Forge Nano Holdings Inc. - Common stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usnanow": {
+      "code": "nanow",
+      "market": "us",
+      "type": "美",
+      "name": "Forge Nano Holdings Inc. - Warrants",
+      "name_en": "Forge Nano Holdings Inc. - Warrants",
       "py": "",
       "abbr": ""
     },
@@ -103381,6 +103408,15 @@
       "type": "美",
       "name": "iShares U.S. Thematic Rotation Active ETF",
       "name_en": "iShares U.S. Thematic Rotation Active ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usthru": {
+      "code": "thru",
+      "market": "us",
+      "type": "美",
+      "name": "Tema Commodity Infrastructure ETF",
+      "name_en": "Tema Commodity Infrastructure ETF",
       "py": "",
       "abbr": ""
     },
