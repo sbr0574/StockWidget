@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-23",
+  "last_update": "2026-10-26",
   "codes": {
     "usa": {
       "code": "a",
@@ -6579,6 +6579,15 @@
       "name_en": "Asia Pacific Wire & Cable Corporation Limited  - Common shares, Par value .01 per share",
       "py": "yataidianxiandianlan",
       "abbr": "ytdxdl"
+    },
+    "usapxc": {
+      "code": "apxc",
+      "market": "us",
+      "type": "美",
+      "name": "Apex Critical Metals Corp. - American Depositary Shares",
+      "name_en": "Apex Critical Metals Corp. - American Depositary Shares",
+      "py": "",
+      "abbr": ""
     },
     "usapxm": {
       "code": "apxm",
@@ -35146,15 +35155,6 @@
       "py": "",
       "abbr": ""
     },
-    "usevex_ws": {
-      "code": "evex_ws",
-      "market": "us",
-      "type": "美",
-      "name": "Eve Holding, Inc. Warrants, each exercisable for one share of Common Stock at an exercise price of $11.50 per share",
-      "name_en": "Eve Holding, Inc. Warrants, each exercisable for one share of Common Stock at an exercise price of $11.50 per share",
-      "py": "",
-      "abbr": ""
-    },
     "usevf": {
       "code": "evf",
       "market": "us",
@@ -57750,7 +57750,7 @@
       "market": "us",
       "type": "美",
       "name": "晶科能源",
-      "name_en": "JinkoSolar Holding Company Limited American Depositary Shares (each representing 4 Common Shares)",
+      "name_en": "Jinko Holdings Limited American Depositary Shares (each representing 4 Ordinary Shares)",
       "py": "jingkenengyuan",
       "abbr": "jkny"
     },
@@ -64284,7 +64284,7 @@
       "market": "us",
       "type": "美",
       "name": "陆金所控股",
-      "name_en": "Lufax Holding Ltd American Depositary Shares, each representing two (2) Ordinary Shares",
+      "name_en": "Lufax Holding Ltd American Depositary Shares (each representing twenty (20) Ordinary Shares)",
       "py": "lujinsuokonggu",
       "abbr": "ljskg"
     },
@@ -64656,6 +64656,15 @@
       "name_en": "LyondellBasell Industries NV Ordinary Shares Class A (Netherlands)",
       "py": "liandebasaiergongye",
       "abbr": "ladbsegy"
+    },
+    "uslyca": {
+      "code": "lyca",
+      "market": "us",
+      "type": "美",
+      "name": "Lycia Therapeutics, Inc. - Common Stock",
+      "name_en": "Lycia Therapeutics, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
     },
     "uslyel": {
       "code": "lyel",
@@ -78607,6 +78616,15 @@
       "py": "",
       "abbr": ""
     },
+    "usovq": {
+      "code": "ovq",
+      "market": "us",
+      "type": "美",
+      "name": "Overlay Shares Nasdaq 100 Income ETF",
+      "name_en": "Overlay Shares Nasdaq 100 Income ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usovs": {
       "code": "ovs",
       "market": "us",
@@ -79441,6 +79459,24 @@
       "type": "美",
       "name": "Patria Investments Limited - Class A Common Shares",
       "name_en": "Patria Investments Limited - Class A Common Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "uspaxg": {
+      "code": "paxg",
+      "market": "us",
+      "type": "美",
+      "name": "Pine Tree Acquisition Corp. - Class A Ordinary Shares",
+      "name_en": "Pine Tree Acquisition Corp. - Class A Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "uspaxgr": {
+      "code": "paxgr",
+      "market": "us",
+      "type": "美",
+      "name": "Pine Tree Acquisition Corp. - Rights",
+      "name_en": "Pine Tree Acquisition Corp. - Rights",
       "py": "",
       "abbr": ""
     },
@@ -80847,15 +80883,6 @@
       "name_en": "REX Peptide ETF",
       "py": "",
       "abbr": ""
-    },
-    "usperf": {
-      "code": "perf",
-      "market": "us",
-      "type": "美",
-      "name": "玩美",
-      "name_en": "Perfect Corp. Class A Ordinary Share",
-      "py": "wanmei",
-      "abbr": "wm"
     },
     "usperi": {
       "code": "peri",
@@ -86554,6 +86581,15 @@
       "py": "",
       "abbr": ""
     },
+    "usqqdh": {
+      "code": "qqdh",
+      "market": "us",
+      "type": "美",
+      "name": "Tuttle Capital Innovation 100 Income & Hedge ETF",
+      "name_en": "Tuttle Capital Innovation 100 Income & Hedge ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usqqdn": {
       "code": "qqdn",
       "market": "us",
@@ -91981,15 +92017,6 @@
       "py": "",
       "abbr": ""
     },
-    "ussabsw": {
-      "code": "sabsw",
-      "market": "us",
-      "type": "美",
-      "name": "SAB Biotherapeutics, Inc. - Warrant",
-      "name_en": "SAB Biotherapeutics, Inc. - Warrant",
-      "py": "",
-      "abbr": ""
-    },
     "ussac": {
       "code": "sac",
       "market": "us",
@@ -93760,24 +93787,6 @@
       "type": "美",
       "name": "American Century Short Duration Strategic Income ETF",
       "name_en": "American Century Short Duration Strategic Income ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "ussdst": {
-      "code": "sdst",
-      "market": "us",
-      "type": "美",
-      "name": "Stardust Power Inc. - Common Stock",
-      "name_en": "Stardust Power Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "ussdstw": {
-      "code": "sdstw",
-      "market": "us",
-      "type": "美",
-      "name": "Stardust Power Inc. - Warrant",
-      "name_en": "Stardust Power Inc. - Warrant",
       "py": "",
       "abbr": ""
     },
@@ -96777,6 +96786,15 @@
       "name_en": "ProShares UltraShort Materials",
       "py": "erbeizuokongjichucailiaoetf-proshares",
       "abbr": "ebzkjccletf-proshares"
+    },
+    "ussmng": {
+      "code": "smng",
+      "market": "us",
+      "type": "美",
+      "name": "xETFs Samsung Group ETF",
+      "name_en": "xETFs Samsung Group ETF",
+      "py": "",
+      "abbr": ""
     },
     "ussmog": {
       "code": "smog",

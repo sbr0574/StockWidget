@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-23",
+  "last_update": "2026-10-26",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -12385,15 +12385,6 @@
       "py": "zhongguofeijizulin",
       "abbr": "zgfjzl"
     },
-    "hk01849": {
-      "code": "01849",
-      "market": "hk",
-      "type": "港",
-      "name": "秀商時代控股",
-      "name_en": "AM GROUP",
-      "py": "xiushangshidaikonggu",
-      "abbr": "xssdkg"
-    },
     "hk01850": {
       "code": "01850",
       "market": "hk",
@@ -13173,7 +13164,7 @@
       "market": "hk",
       "type": "港",
       "name": "中科聞歌",
-      "name_en": "WENGE AI-50",
+      "name_en": "WENGE AI",
       "py": "zhongkewenge",
       "abbr": "zkwg"
     },
@@ -18406,15 +18397,6 @@
       "py": "zhongguosandi",
       "abbr": "zgsd"
     },
-    "hk02935": {
-      "code": "02935",
-      "market": "hk",
-      "type": "港",
-      "name": "中科聞歌(二百)",
-      "name_en": "WENGE AI-200",
-      "py": "zhongkewenge(erbai)",
-      "abbr": "zkwg(eb)"
-    },
     "hk02936": {
       "code": "02936",
       "market": "hk",
@@ -18441,15 +18423,6 @@
       "name_en": "EASY SMART-2K",
       "py": "yijunjituan(erqian)",
       "abbr": "yjjt(eq)"
-    },
-    "hk02941": {
-      "code": "02941",
-      "market": "hk",
-      "type": "港",
-      "name": "帝王國際投資股權",
-      "name_en": "KING INTL I RTS",
-      "py": "diwangguojitouziguquan",
-      "abbr": "dwgjtzgq"
     },
     "hk02942": {
       "code": "02942",
@@ -28247,10 +28220,10 @@
       "code": "09929",
       "market": "hk",
       "type": "港",
-      "name": "澳達控股",
-      "name_en": "SEM HLDGS",
-      "py": "aodakonggu",
-      "abbr": "adkg"
+      "name": "耀寶",
+      "name_en": "YAOPOP",
+      "py": "yaobao",
+      "abbr": "yb"
     },
     "hk09930": {
       "code": "09930",
