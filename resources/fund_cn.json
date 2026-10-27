@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-23",
+  "last_update": "2026-10-27",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -2813,10 +2813,10 @@
       "code": "512390",
       "market": "sh",
       "type": "基",
-      "name": "中国低波ETF平安",
+      "name": "MSCI低波",
       "name_en": "",
-      "py": "zhongguodiboetfpingan",
-      "abbr": "zgdbetfpa"
+      "py": "mscidibo",
+      "abbr": "mscidb"
     },
     "sh512400": {
       "code": "512400",

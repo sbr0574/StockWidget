@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-26",
+  "last_update": "2026-10-27",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -4668,7 +4668,7 @@
       "market": "hk",
       "type": "港",
       "name": "創科實業",
-      "name_en": "TECHTRONIC-100",
+      "name_en": "TECHTRONIC IND",
       "py": "chuangkeshiye",
       "abbr": "cksy"
     },
@@ -4923,15 +4923,6 @@
       "name_en": "CNT GROUP",
       "py": "",
       "abbr": ""
-    },
-    "hk00702": {
-      "code": "00702",
-      "market": "hk",
-      "type": "港",
-      "name": "中國油氣控股",
-      "name_en": "SINO OIL & GAS",
-      "py": "zhongguoyouqikonggu",
-      "abbr": "zgyqkg"
     },
     "hk00703": {
       "code": "00703",
@@ -18379,15 +18370,6 @@
       "py": "yunji",
       "abbr": "yj"
     },
-    "hk02916": {
-      "code": "02916",
-      "market": "hk",
-      "type": "港",
-      "name": "創科實業(五百)",
-      "name_en": "TECHTRONIC-500",
-      "py": "chuangkeshiye(wubai)",
-      "abbr": "cksy(wb)"
-    },
     "hk02934": {
       "code": "02934",
       "market": "hk",
@@ -18468,6 +18450,15 @@
       "name_en": "TR INTERIORS",
       "py": "tianruiqicheneishi",
       "abbr": "trqcns"
+    },
+    "hk02950": {
+      "code": "02950",
+      "market": "hk",
+      "type": "港",
+      "name": "阿爾法企業股權",
+      "name_en": "ALPHA PRO H RTS",
+      "py": "aerfaqiyeguquan",
+      "abbr": "aefqygq"
     },
     "hk03001": {
       "code": "03001",
@@ -23148,15 +23139,6 @@
       "name_en": "TE HEALTHCARE",
       "py": "",
       "abbr": ""
-    },
-    "hk06878": {
-      "code": "06878",
-      "market": "hk",
-      "type": "港",
-      "name": "鼎豐集團汽車",
-      "name_en": "DIFFER GP AUTO",
-      "py": "dingfengjituanqiche",
-      "abbr": "dfjtqc"
     },
     "hk06880": {
       "code": "06880",
