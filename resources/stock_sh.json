@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-27",
+  "last_update": "2026-10-28",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -104,10 +104,10 @@
       "code": "600017",
       "market": "sh",
       "type": "沪",
-      "name": "XD日照港",
+      "name": "日照港",
       "name_en": "",
-      "py": "xdrizhaogang",
-      "abbr": "xdrzg"
+      "py": "rizhaogang",
+      "abbr": "rzg"
     },
     "sh600018": {
       "code": "600018",
@@ -2399,10 +2399,10 @@
       "code": "600360",
       "market": "sh",
       "type": "沪",
-      "name": "XD华微电",
+      "name": "华微电子",
       "name_en": "",
-      "py": "xdhuaweidian",
-      "abbr": "xdhwd"
+      "py": "huaweidianzi",
+      "abbr": "hwdz"
     },
     "sh600361": {
       "code": "600361",
@@ -3083,10 +3083,10 @@
       "code": "600479",
       "market": "sh",
       "type": "沪",
-      "name": "XD千金药",
+      "name": "千金药业",
       "name_en": "",
-      "py": "xdqianjinyao",
-      "abbr": "xdqjy"
+      "py": "qianjinyaoye",
+      "abbr": "qjyy"
     },
     "sh600480": {
       "code": "600480",
@@ -7466,10 +7466,10 @@
       "code": "601229",
       "market": "sh",
       "type": "沪",
-      "name": "XD上海银",
+      "name": "上海银行",
       "name_en": "",
-      "py": "xdshanghaiyin",
-      "abbr": "xdshy"
+      "py": "shanghaiyinhang",
+      "abbr": "shyh"
     },
     "sh601231": {
       "code": "601231",
@@ -7529,10 +7529,10 @@
       "code": "601298",
       "market": "sh",
       "type": "沪",
-      "name": "青岛港",
+      "name": "XD青岛港",
       "name_en": "",
-      "py": "qingdaogang",
-      "abbr": "qdg"
+      "py": "xdqingdaogang",
+      "abbr": "xdqdg"
     },
     "sh601311": {
       "code": "601311",
@@ -8690,10 +8690,10 @@
       "code": "601991",
       "market": "sh",
       "type": "沪",
-      "name": "大唐发电",
+      "name": "XD大唐发",
       "name_en": "",
-      "py": "datangfadian",
-      "abbr": "dtfd"
+      "py": "xddatangfa",
+      "abbr": "xddtf"
     },
     "sh601992": {
       "code": "601992",
@@ -12785,10 +12785,10 @@
       "code": "603689",
       "market": "sh",
       "type": "沪",
-      "name": "皖天然气",
+      "name": "XD皖天然",
       "name_en": "",
-      "py": "wantianranqi",
-      "abbr": "wtrq"
+      "py": "xdwantianran",
+      "abbr": "xdwtr"
     },
     "sh603690": {
       "code": "603690",
@@ -15980,10 +15980,10 @@
       "code": "688087",
       "market": "sh",
       "type": "科",
-      "name": "英科再生",
+      "name": "XD英科再",
       "name_en": "",
-      "py": "yingkezaisheng",
-      "abbr": "ykzs"
+      "py": "xdyingkezai",
+      "abbr": "xdykz"
     },
     "sh688088": {
       "code": "688088",
@@ -17582,10 +17582,10 @@
       "code": "688293",
       "market": "sh",
       "type": "科",
-      "name": "XD奥浦迈",
+      "name": "奥浦迈",
       "name_en": "",
-      "py": "xdaopumai",
-      "abbr": "xdapm"
+      "py": "aopumai",
+      "abbr": "apm"
     },
     "sh688295": {
       "code": "688295",

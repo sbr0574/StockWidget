@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-27",
+  "last_update": "2026-10-28",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -3083,10 +3083,10 @@
       "code": "00419",
       "market": "hk",
       "type": "港",
-      "name": "弘毅文化集團",
-      "name_en": "HONY MEDIA",
-      "py": "hongyiwenhuajituan",
-      "abbr": "hywhjt"
+      "name": "AIROBO平台",
+      "name_en": "AIROBO PLATFORM",
+      "py": "airobopingtai",
+      "abbr": "airobopt"
     },
     "hk00420": {
       "code": "00420",
@@ -14324,10 +14324,10 @@
       "code": "02175",
       "market": "hk",
       "type": "港",
-      "name": "中國通才教育",
-      "name_en": "CH GENERAL EDU",
-      "py": "zhongguotongcaijiaoyu",
-      "abbr": "zgtcjy"
+      "name": "萬藝控股集團",
+      "name_en": "TRILLION HLDG",
+      "py": "wanyikonggujituan",
+      "abbr": "wykgjt"
     },
     "hk02176": {
       "code": "02176",
@@ -15670,6 +15670,15 @@
       "py": "tomjituan",
       "abbr": "tomjt"
     },
+    "hk02384": {
+      "code": "02384",
+      "market": "hk",
+      "type": "港",
+      "name": "東山精密",
+      "name_en": "DSBJ",
+      "py": "dongshanjingmi",
+      "abbr": "dsjm"
+    },
     "hk02385": {
       "code": "02385",
       "market": "hk",
@@ -15999,7 +16008,7 @@
       "market": "hk",
       "type": "港",
       "name": "怡俊集團控股",
-      "name_en": "EASY SMART-100",
+      "name_en": "EASY SMART GP",
       "py": "yijunjituankonggu",
       "abbr": "yjjtkg"
     },
@@ -18397,15 +18406,6 @@
       "py": "diwangguojitouzi",
       "abbr": "dwgjtz"
     },
-    "hk02939": {
-      "code": "02939",
-      "market": "hk",
-      "type": "港",
-      "name": "怡俊集團(二千)",
-      "name_en": "EASY SMART-2K",
-      "py": "yijunjituan(erqian)",
-      "abbr": "yjjt(eq)"
-    },
     "hk02942": {
       "code": "02942",
       "market": "hk",
@@ -18459,6 +18459,24 @@
       "name_en": "ALPHA PRO H RTS",
       "py": "aerfaqiyeguquan",
       "abbr": "aefqygq"
+    },
+    "hk02952": {
+      "code": "02952",
+      "market": "hk",
+      "type": "港",
+      "name": "植華集團",
+      "name_en": "GROWN UP GROUP",
+      "py": "zhihuajituan",
+      "abbr": "zhjt"
+    },
+    "hk02955": {
+      "code": "02955",
+      "market": "hk",
+      "type": "港",
+      "name": "金潯資源(二百)",
+      "name_en": "JINXUN RES-200",
+      "py": "jinxunziyuan(erbai)",
+      "abbr": "jxzy(eb)"
     },
     "hk03001": {
       "code": "03001",
@@ -20895,7 +20913,7 @@
       "market": "hk",
       "type": "港",
       "name": "金潯資源",
-      "name_en": "JINXUN RESOURCE",
+      "name_en": "JINXUN RES-500",
       "py": "jinxunziyuan",
       "abbr": "jxzy"
     },
@@ -24909,7 +24927,7 @@
       "market": "hk",
       "type": "港",
       "name": "神通機器人教育",
-      "name_en": "S ROBOT EDU",
+      "name_en": "S ROBOT EDU-NEW",
       "py": "shentongjiqirenjiaoyu",
       "abbr": "stjqrjy"
     },
@@ -26448,7 +26466,7 @@
       "market": "hk",
       "type": "港",
       "name": "神通機器人教育",
-      "name_en": "S ROBOT EDU",
+      "name_en": "S ROBOT EDU-OLD",
       "py": "shentongjiqirenjiaoyu",
       "abbr": "stjqrjy"
     },

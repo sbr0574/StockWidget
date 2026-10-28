@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-27",
+  "last_update": "2026-10-28",
   "codes": {
     "usa": {
       "code": "a",
@@ -59023,30 +59023,12 @@
       "py": "",
       "abbr": ""
     },
-    "uskbab": {
-      "code": "kbab",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多阿里巴巴ETF-KraneShares",
-      "name_en": "KraneShares 2x Long BABA Daily ETF",
-      "py": "erbeizuoduoalibabaetf-kraneshares",
-      "abbr": "ebzdalbbetf-kraneshares"
-    },
     "uskbdc": {
       "code": "kbdc",
       "market": "us",
       "type": "美",
       "name": "Kayne Anderson BDC, Inc. Common Stock",
       "name_en": "Kayne Anderson BDC, Inc. Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "uskbdu": {
-      "code": "kbdu",
-      "market": "us",
-      "type": "美",
-      "name": "KraneShares 2x Long BIDU Daily ETF",
-      "name_en": "KraneShares 2x Long BIDU Daily ETF",
       "py": "",
       "abbr": ""
     },
@@ -59200,15 +59182,6 @@
       "type": "美",
       "name": "Kensington Capital Acquisition Corp. VI Class 1 redeemable warrants, each exercisable for one Class A ordinary share at an exercise price of $11.50",
       "name_en": "Kensington Capital Acquisition Corp. VI Class 1 redeemable warrants, each exercisable for one Class A ordinary share at an exercise price of $11.50",
-      "py": "",
-      "abbr": ""
-    },
-    "uskcai": {
-      "code": "kcai",
-      "market": "us",
-      "type": "美",
-      "name": "KraneShares China Alpha Index ETF",
-      "name_en": "KraneShares China Alpha Index ETF",
       "py": "",
       "abbr": ""
     },
@@ -59716,15 +59689,6 @@
       "py": "",
       "abbr": ""
     },
-    "uskhyb": {
-      "code": "khyb",
-      "market": "us",
-      "type": "美",
-      "name": "KraneShares Asia Pacific High Income USD Bond ETF",
-      "name_en": "KraneShares Asia Pacific High Income USD Bond ETF",
-      "py": "",
-      "abbr": ""
-    },
     "uskids": {
       "code": "kids",
       "market": "us",
@@ -59850,15 +59814,6 @@
       "name_en": "Innovator U.S. Small Cap Power Buffer ETF - January",
       "py": "",
       "abbr": ""
-    },
-    "uskjd": {
-      "code": "kjd",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多京东ETF-KraneShares",
-      "name_en": "KraneShares 2x Long JD Daily ETF",
-      "py": "erbeizuoduojingdongetf-kraneshares",
-      "abbr": "ebzdjdetf-kraneshares"
     },
     "uskjul": {
       "code": "kjul",
@@ -60093,15 +60048,6 @@
       "name_en": "Virtus KAR Mid-Cap ETF",
       "py": "",
       "abbr": ""
-    },
-    "uskmli": {
-      "code": "kmli",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多MELI ETF-KraneShares",
-      "name_en": "KraneShares 2x Long MELI Daily ETF",
-      "py": "erbeizuoduomelietf-kraneshares",
-      "abbr": "ebzdmelietf-kraneshares"
     },
     "uskmlm": {
       "code": "kmlm",
@@ -60489,15 +60435,6 @@
       "name_en": "CSLM Digital Asset Acquisition Corp III - Warrants",
       "py": "",
       "abbr": ""
-    },
-    "uskpdd": {
-      "code": "kpdd",
-      "market": "us",
-      "type": "美",
-      "name": "二倍做多拼多多ETF-KraneShares",
-      "name_en": "KraneShares 2x Long PDD Daily ETF",
-      "py": "erbeizuoduopinduoduoetf-kraneshares",
-      "abbr": "ebzdpddetf-kraneshares"
     },
     "uskpet": {
       "code": "kpet",
@@ -69562,12 +69499,12 @@
       "py": "",
       "abbr": ""
     },
-    "usmsgkw": {
-      "code": "msgkw",
+    "usmsgk": {
+      "code": "msgk",
       "market": "us",
       "type": "美",
-      "name": "Madison Square Garden Sports Corp. Class A Common Stock When-Issued",
-      "name_en": "Madison Square Garden Sports Corp. Class A Common Stock When-Issued",
+      "name": "MSG Knickerbockers Corp. Class A Common Stock",
+      "name_en": "MSG Knickerbockers Corp. Class A Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -69580,23 +69517,14 @@
       "py": "",
       "abbr": ""
     },
-    "usmsgrw": {
-      "code": "msgrw",
+    "usmsgr": {
+      "code": "msgr",
       "market": "us",
       "type": "美",
-      "name": "MSG Rangers Corp. Class A Common Stock When-Issued",
-      "name_en": "MSG Rangers Corp. Class A Common Stock When-Issued",
+      "name": "MSG Rangers Corp. Class A Common Stock",
+      "name_en": "MSG Rangers Corp. Class A Common Stock",
       "py": "",
       "abbr": ""
-    },
-    "usmsgs": {
-      "code": "msgs",
-      "market": "us",
-      "type": "美",
-      "name": "麦迪逊广场花园体育",
-      "name_en": "Madison Square Garden Sports Corp. Class A Common Stock (New)",
-      "py": "maidixunguangchanghuayuantiyu",
-      "abbr": "mdxgchyty"
     },
     "usmsgy": {
       "code": "msgy",
@@ -71449,15 +71377,6 @@
       "type": "美",
       "name": "Nordic American Tankers Limited Common Stock",
       "name_en": "Nordic American Tankers Limited Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usnath": {
-      "code": "nath",
-      "market": "us",
-      "type": "美",
-      "name": "Nathan's Famous, Inc. - Common Stock",
-      "name_en": "Nathan's Famous, Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -79322,8 +79241,8 @@
       "code": "para",
       "market": "us",
       "type": "美",
-      "name": "Banzai International, Inc. - Class A Common Stock",
-      "name_en": "Banzai International, Inc. - Class A Common Stock",
+      "name": "Parabolic Technologies, Inc. - Class A Common Stock",
+      "name_en": "Parabolic Technologies, Inc. - Class A Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -79331,8 +79250,8 @@
       "code": "paraw",
       "market": "us",
       "type": "美",
-      "name": "Banzai International, Inc. - Warrant",
-      "name_en": "Banzai International, Inc. - Warrant",
+      "name": "Parabolic Technologies, Inc. - Warrant",
+      "name_en": "Parabolic Technologies, Inc. - Warrant",
       "py": "",
       "abbr": ""
     },
@@ -93484,6 +93403,15 @@
       "py": "",
       "abbr": ""
     },
+    "usscqcu": {
+      "code": "scqcu",
+      "market": "us",
+      "type": "美",
+      "name": "SPACCircle Acquisition Corp. - Units",
+      "name_en": "SPACCircle Acquisition Corp. - Units",
+      "py": "",
+      "abbr": ""
+    },
     "usscsb": {
       "code": "scsb",
       "market": "us",
@@ -104968,15 +104896,6 @@
       "py": "",
       "abbr": ""
     },
-    "ustot": {
-      "code": "tot",
-      "market": "us",
-      "type": "美",
-      "name": "LionShares U.S. Equity Total Return ETF",
-      "name_en": "LionShares U.S. Equity Total Return ETF",
-      "py": "",
-      "abbr": ""
-    },
     "ustotl": {
       "code": "totl",
       "market": "us",
@@ -113248,6 +113167,15 @@
       "py": "",
       "abbr": ""
     },
+    "uswbmo": {
+      "code": "wbmo",
+      "market": "us",
+      "type": "美",
+      "name": "VanEck Wealth Builder ETF",
+      "name_en": "VanEck Wealth Builder ETF",
+      "py": "",
+      "abbr": ""
+    },
     "uswbtn": {
       "code": "wbtn",
       "market": "us",
@@ -118449,6 +118377,15 @@
       "name_en": "Yatsen Holding Limited American Depositary Shares, each representing twenty (20) Class A Ordinary Shares",
       "py": "yixiandianshang",
       "abbr": "yxds"
+    },
+    "usyskh": {
+      "code": "yskh",
+      "market": "us",
+      "type": "美",
+      "name": "YieldMax SKHY Option Income Strategy ETF",
+      "name_en": "YieldMax SKHY Option Income Strategy ETF",
+      "py": "",
+      "abbr": ""
     },
     "usyspc": {
       "code": "yspc",

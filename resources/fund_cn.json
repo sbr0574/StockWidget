@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-27",
+  "last_update": "2026-10-28",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -1549,6 +1549,15 @@
       "py": "yifangdaguangxibeitougaosureit",
       "abbr": "yfdgxbtgsreit"
     },
+    "sh508095": {
+      "code": "508095",
+      "market": "sh",
+      "type": "基",
+      "name": "国泰海通中建租赁住房REIT",
+      "name_en": "",
+      "py": "guotaihaitongzhongjianzulinzhufangreit",
+      "abbr": "gthtzjzlzfreit"
+    },
     "sh508096": {
       "code": "508096",
       "market": "sh",
@@ -2808,15 +2817,6 @@
       "name_en": "",
       "py": "mscizhongguoetfyinhua",
       "abbr": "mscizgetfyh"
-    },
-    "sh512390": {
-      "code": "512390",
-      "market": "sh",
-      "type": "基",
-      "name": "MSCI低波",
-      "name_en": "",
-      "py": "mscidibo",
-      "abbr": "mscidb"
     },
     "sh512400": {
       "code": "512400",
@@ -8654,10 +8654,10 @@
       "code": "563760",
       "market": "sh",
       "type": "基",
-      "name": "全指现金流ETF中银",
+      "name": "现金流ETF中银",
       "name_en": "",
-      "py": "quanzhixianjinliuetfzhongyin",
-      "abbr": "qzxjletfzy"
+      "py": "xianjinliuetfzhongyin",
+      "abbr": "xjletfzy"
     },
     "sh563770": {
       "code": "563770",
@@ -10584,6 +10584,15 @@
       "name_en": "",
       "py": "chuangyebanruanjianetfnanfang",
       "abbr": "cybrjetfnf"
+    },
+    "sz158078": {
+      "code": "158078",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板电池ETF华宝",
+      "name_en": "",
+      "py": "chuangyebandianchietfhuabao",
+      "abbr": "cybdcetfhb"
     },
     "sz159001": {
       "code": "159001",
@@ -19189,15 +19198,6 @@
       "py": "zhongxinbaocheng500lof",
       "abbr": "zxbc500lof"
     },
-    "sz165512": {
-      "code": "165512",
-      "market": "sz",
-      "type": "基",
-      "name": "中信保诚机遇LOF",
-      "name_en": "",
-      "py": "zhongxinbaochengjiyulof",
-      "abbr": "zxbcjylof"
-    },
     "sz165513": {
       "code": "165513",
       "market": "sz",
@@ -19845,6 +19845,15 @@
       "name_en": "",
       "py": "yinhuashaoxingyuanshuishuilireit",
       "abbr": "yhsxysslreit"
+    },
+    "sz180702": {
+      "code": "180702",
+      "market": "sz",
+      "type": "基",
+      "name": "银华粤海水务水利REIT",
+      "name_en": "",
+      "py": "yinhuayuehaishuiwushuilireit",
+      "abbr": "yhyhswslreit"
     },
     "sz180801": {
       "code": "180801",

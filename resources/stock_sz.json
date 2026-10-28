@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-23",
+  "last_update": "2026-10-28",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -23337,15 +23337,6 @@
       "name_en": "",
       "py": "huayanjingji",
       "abbr": "hyjj"
-    },
-    "sz301139": {
-      "code": "301139",
-      "market": "sz",
-      "type": "创",
-      "name": "元道退",
-      "name_en": "",
-      "py": "yuandaotui",
-      "abbr": "ydt"
     },
     "sz301141": {
       "code": "301141",
