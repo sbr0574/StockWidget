@@ -15,7 +15,7 @@ from PySide6.QtGui import QColor, QCursor, QMouseEvent, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
-from stockwidget.data.bars import Bar, BarResult, history_day, parse_eastmoney
+from stockwidget.data.bars import Bar, BarResult, history_day, parse_sina
 from stockwidget.data.bar_cache import BarCache
 from stockwidget.data.quotes import _new_entry
 from stockwidget.ui.floating.taskbar import TaskbarController, render_taskbar
@@ -62,8 +62,8 @@ class HistoryTestCase(SettingsTestCase):
         start = datetime(2026, 9, 30, 9, 31)
         minutes = tuple(Bar((start + timedelta(minutes=i)).isoformat(" "), 10, 12, 8, 10, 3, 30, 10) for i in range(30))
         window.history.cache = BarCache(self.enterContext(tempfile.TemporaryDirectory()))
-        window.history.cache.get = Mock(side_effect=lambda instrument, view, source, **kwargs:
-                                        BarResult(daily if view == "daily" else minutes, source))
+        window.history.cache.get = Mock(side_effect=lambda instrument, view, **kwargs:
+                                        BarResult(daily if view == "daily" else minutes, "sina"))
         window.history.cache.clock = lambda: datetime(2026, 9, 30, 2, tzinfo=timezone.utc)
         window.show()
         self.app.processEvents()
@@ -320,9 +320,9 @@ class HistoryUITests(HistoryTestCase):
         chart = HistoryChart()
         try:
             chart.resize(740, 420)
-            rows = [f"2026-09-{day:02d} 09:{31 + i:02d},0,{price},0,0,100,1000,10"
+            rows = [f'{{"day":"2026-09-{day:02d} 09:{31 + i:02d}","o":{price},"h":{price},"l":{price},"c":{price},"v":100}}'
                     for day in range(24, 29) for i, price in enumerate((10, 11, 9, 9))]
-            bars = parse_eastmoney({"data": {"trends": rows}}, instrument={"market": "sh", "type": "沪"})
+            bars = parse_sina("[" + ",".join(rows) + "]")
             self.assertTrue(all(bar.open == bar.close for bar in bars))
             for view in ("five_day", "intraday"):
                 with self.subTest(view=view):
@@ -359,7 +359,7 @@ class HistoryUITests(HistoryTestCase):
     def test_volume_units_update_from_settings_without_fetch_and_normal_footer_is_hidden(self):
         dialog, window = self.make_window(chart_enabled=True, unit_mode="cn")
         history = window.history
-        minutes = history.cache.get.side_effect({}, "five_day", "sina").bars
+        minutes = history.cache.get.side_effect({}, "five_day").bars
         history.cache.get.side_effect = None
         history.cache.get.return_value = BarResult((replace(minutes[0], volume=2_000_000), *minutes[1:]), "sina")
         history.open_row("float", 0)
@@ -382,7 +382,7 @@ class HistoryUITests(HistoryTestCase):
     def test_missing_historical_average_is_drawn_and_switching_it_off_does_not_refetch(self):
         dialog, window = self.make_window(chart_enabled=True)
         history = window.history
-        minutes = history.cache.get.side_effect({}, "five_day", "sina").bars
+        minutes = history.cache.get.side_effect({}, "five_day").bars
         minutes = tuple(replace(bar, open=10 + i / 10, high=10 + i / 10, low=10 + i / 10,
                                 close=10 + i / 10, volume=100, amount=(10 + i / 10) * 100, average=None)
                         for i, bar in enumerate(minutes))
@@ -650,15 +650,12 @@ class HistoryUITests(HistoryTestCase):
                     open_chart.assert_not_called()
                     self.assertFalse(window.widget_visible)
 
-    def test_data_source_and_views_follow_settings_and_ma60_is_warmed(self):
+    def test_views_follow_settings_and_ma60_is_warmed(self):
         _, window = self.make_window(chart_enabled=True)
         window.history.open_row("float", 0)
         self.wait_ready(window)
         history = window.history.dialog
-        self.assertEqual(window.history.cache.get.call_args.args[2], "sina")
-        window.set_data_source("eastmoney")
-        self.wait_ready(window)
-        self.assertEqual(window.history.cache.get.call_args.args[2], "eastmoney")
+        self.assertEqual(window.history.cache.get.call_args.args[1], "five_day")
         history.set_view("daily")
         self.wait_ready(window)
         self.assertEqual(len(history.chart.bars), 30)
@@ -681,7 +678,7 @@ class HistoryUITests(HistoryTestCase):
             self.assertEqual(history.dialog.chart.bars, ())
             self.assertIn("标的1", history.dialog.windowTitle())
             history.dialog.close()
-            history._accept((history._generation, history.instrument, "daily", "sina", "2026-10-06", False, BarResult(sample_bars(), "sina")))
+            history._accept((history._generation, history.instrument, "daily", "2026-10-06", False, BarResult(sample_bars(), "sina")))
             self.assertFalse(history.dialog.isVisible())
 
     def test_taskbar_hit_regions_match_split_rows_and_empty_states(self):

@@ -388,6 +388,7 @@ class CodeCacheTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
+        self.enterContext(patch.dict("os.environ", {"APPDATA": self.temp.name}))
         env = patch("stockwidget.core.config_store.os.path.expanduser", return_value=self.temp.name)
         env.start()
         self.addCleanup(env.stop)
@@ -577,7 +578,7 @@ class UpdateCodeFilesTests(unittest.TestCase):
 
         self.assertEqual(frame["code"].tolist(), ["00001", "02800", "00405"])
         by_code = frame.set_index("code")
-        self.assertEqual(by_code.at["00001", "name"], "長和")
+        self.assertEqual(by_code.at["00001", "name"], "长和")
         self.assertEqual(by_code.at["00001", "name_en"], "CKH HOLDINGS")
         self.assertEqual(by_code.at["00001", "type"], "港")
         self.assertEqual(by_code.at["02800", "type"], "基")
@@ -633,7 +634,7 @@ class UpdateCodeFilesTests(unittest.TestCase):
             ],
         )
 
-    def test_us_names_use_git_cached_aliases_without_daily_eastmoney_request(self):
+    def test_us_names_use_git_cached_aliases_without_daily_name_request(self):
         nasdaq, other = _us_directory_texts()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -708,7 +709,7 @@ class UpdateCodeFilesTests(unittest.TestCase):
             self.assertEqual(by_code.at["spy", "name"], "标普500ETF")
             self.assertEqual(by_code.at["qqq", "name"], "Invesco QQQ Trust, Series 1")
             self.assertEqual(set(frame["type"]), {"美"})
-            fetch_aliases.assert_called_once_with()
+            fetch_aliases.assert_called_once_with(set(frame["code"]))
             cache = json.loads(Path(cache_path).read_text(encoding="utf-8"))
             self.assertEqual(cache["last_update"], "2026-09-01")
             self.assertNotIn("not_listed", cache["aliases"])
@@ -762,7 +763,7 @@ class UpdateCodeFilesTests(unittest.TestCase):
                 patch.object(
                     update_codes,
                     "_fetch_us_cn_aliases",
-                    side_effect=RuntimeError("eastmoney unavailable"),
+                    side_effect=RuntimeError("name service unavailable"),
                 ),
             ):
                 frame = update_codes._stock_us_name_code(
@@ -846,7 +847,7 @@ class UpdateCodeFilesTests(unittest.TestCase):
             nonlocal calls
             calls += 1
             if calls < 3:
-                raise RuntimeError("temporary")
+                raise requests.ConnectionError("temporary")
             return _frame("ok", "OK")
 
         task = ("test.json", "测试", flaky, (), {})

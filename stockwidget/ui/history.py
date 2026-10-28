@@ -274,7 +274,7 @@ class HistoryController(QObject):
         self._pending = None
 
     def invalidate_quotes(self):
-        """Source / watchlist changes invalidate both consumers of history."""
+        """Watchlist changes invalidate both consumers of history."""
         self._closed()
         self._discard_before = self._generation
         self._mini_pending.clear()
@@ -301,30 +301,29 @@ class HistoryController(QObject):
             self.dialog.chart.set_data((), self.dialog.view, self.instrument or {})
 
     @staticmethod
-    def _key(instrument, view, source):
-        return (*(instrument.get(field) for field in ("market", "code", "type")), source,
+    def _key(instrument, view):
+        return (*(instrument.get(field) for field in ("market", "code", "type")),
                 "daily" if view == "daily" else "five_day")
 
-    def _series_for(self, instrument, view, source):
-        key = self._key(instrument, view, source)
+    def _series_for(self, instrument, view):
+        key = self._key(instrument, view)
         if key not in self._series:
             self._series[key] = HistorySeries(instrument, view)
         series = self._series[key]
-        quote = self.window.quotes.quote_for(instrument) if source == self.window.data_source else None
+        quote = self.window.quotes.quote_for(instrument)
         if quote:
             series.update_quote(quote)
         return series
 
     def _quotes_updated(self):
-        for key, series in self._series.items():
-            if key[-2] == self.window.data_source:
-                quote = self.window.quotes.quote_for(series.instrument)
-                if quote:
-                    series.update_quote(quote)
+        for series in self._series.values():
+            quote = self.window.quotes.quote_for(series.instrument)
+            if quote:
+                series.update_quote(quote)
         if self.dialog and self.dialog.isVisible() and self.instrument:
-            series = self._series_for(self.instrument, self.dialog.view, self.window.data_source)
+            series = self._series_for(self.instrument, self.dialog.view)
             if series.loaded_day is not None:
-                self._render(series, self.dialog.view, self.window.data_source)
+                self._render(series, self.dialog.view)
             if not self._busy and series.needs_download(self.cache.clock()):
                 self.reload()
         if self.window.view_options.mini_chart_type == "trend":
@@ -333,7 +332,7 @@ class HistoryController(QObject):
 
     def mini_chart_data(self, instrument):
         """Use the popup's minute series and live quote at the same cadence."""
-        series = self._series_for(instrument, "intraday", self.window.data_source)
+        series = self._series_for(instrument, "intraday")
         bars = series.result.bars
         quote = self.window.quotes.quote_for(instrument)
         if quote:
@@ -350,15 +349,14 @@ class HistoryController(QObject):
     def _refresh_minis(self):
         self._mini_scheduled = False
         wanted = self.window.quotes.mini_instruments()
-        source = self.window.data_source
-        self._mini_pending = {self._key(instrument, "intraday", source): instrument
+        self._mini_pending = {self._key(instrument, "intraday"): instrument
                               for instrument in wanted.values()}
         self._start_next_mini()
 
     def _start_next_mini(self):
         if self._busy:
             return
-        wanted = {self._key(entry, "intraday", self.window.data_source)
+        wanted = {self._key(entry, "intraday")
                   for entry in self.window.quotes.mini_instruments().values()}
         while self._mini_pending:
             key = next(iter(self._mini_pending))
@@ -366,9 +364,9 @@ class HistoryController(QObject):
             if key not in wanted:
                 continue
             now = self.cache.clock()
-            series = self._series_for(instrument, "intraday", self.window.data_source)
+            series = self._series_for(instrument, "intraday")
             if series.needs_download(now):
-                self._start((self._generation, dict(instrument), "intraday", self.window.data_source,
+                self._start((self._generation, dict(instrument), "intraday",
                              history_day(instrument, now), series.loaded_day == history_day(instrument, now)
                              and series.repair_needed))
                 return
@@ -377,18 +375,18 @@ class HistoryController(QObject):
         if not self.dialog or not self.dialog.isVisible() or not self.instrument or not self.window.view_options.chart_enabled:
             return
         self._generation += 1
-        view, source = self.dialog.view, self.window.data_source
-        series = self._series_for(self.instrument, view, source)
+        view = self.dialog.view
+        series = self._series_for(self.instrument, view)
         now = self.cache.clock()
         day = history_day(self.instrument, now)
-        request = (self._generation, dict(self.instrument), view, source, day,
+        request = (self._generation, dict(self.instrument), view, day,
                    series.loaded_day == day and series.repair_needed)
-        key = (self._key(self.instrument, view, source), view)
+        key = (self._key(self.instrument, view), view)
         if key != self._displayed_key:
             self.dialog.chart.set_data((), self.dialog.view, self.instrument)
         if not series.needs_download(now):
             self._pending = None
-            self._render(series, view, source)
+            self._render(series, view)
             return
         self.dialog.set_status("更新中…" if self.dialog.chart.bars else "加载中…")
         if self._busy:
@@ -402,9 +400,9 @@ class HistoryController(QObject):
         threading.Thread(target=self._worker, args=(request, self.cache.generation), daemon=True).start()
 
     def _worker(self, request, cache_generation):
-        generation, instrument, view, source, day, repair = request
+        generation, instrument, view, day, repair = request
         try:
-            result = self.cache.get(instrument, "daily" if view == "daily" else "five_day", source,
+            result = self.cache.get(instrument, "daily" if view == "daily" else "five_day",
                                     repair=repair, generation=cache_generation)
         except Exception:
             result = BarResult(message="暂无可用历史数据 · 历史数据处理失败")
@@ -415,13 +413,13 @@ class HistoryController(QObject):
 
     def _accept(self, payload):
         self._busy = False
-        generation, instrument, view, preferred, day, repair, result = payload
-        if generation >= self._discard_before and preferred == self.window.data_source and self.window.widget_visible:
-            series = self._series_for(instrument, view, preferred)
+        generation, instrument, view, day, repair, result = payload
+        if generation >= self._discard_before and self.window.widget_visible:
+            series = self._series_for(instrument, view)
             series.set_history(result, day, self.cache.clock())
             if (generation == self._generation and self.dialog and self.dialog.isVisible() and self.instrument
-                    and self._key(instrument, view, preferred) == self._key(self.instrument, self.dialog.view, preferred)):
-                self._render(series, self.dialog.view, preferred)
+                    and self._key(instrument, view) == self._key(self.instrument, self.dialog.view)):
+                self._render(series, self.dialog.view)
             if self.window.view_options.mini_chart_type == "trend":
                 self.window.quotes.reproject()
         if self._pending is not None:
@@ -432,12 +430,12 @@ class HistoryController(QObject):
                 self.reload()
         self._start_next_mini()
 
-    def _render(self, series, view, preferred):
+    def _render(self, series, view):
         result = series.result
         instrument = series.instrument
         bars = select_bars(result.bars, view, instrument)
         self.dialog.chart.set_data(bars, view, instrument, reference_price=series.reference_price, now=self.cache.clock())
-        self._displayed_key = (self._key(instrument, view, preferred), view)
+        self._displayed_key = (self._key(instrument, view), view)
         pieces = [result.message]
         if result.stale:
             pieces.append("缓存（更新失败）")

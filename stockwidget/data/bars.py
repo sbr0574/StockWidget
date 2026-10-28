@@ -9,11 +9,12 @@ from datetime import datetime, timedelta, timezone
 import json
 import math
 import re
+from zoneinfo import ZoneInfo
 
 import requests
 
 from stockwidget.data.network_errors import request_error_message
-from stockwidget.data.quotes import _em_secid, _sina_code, _SINA_HEADERS, request_eastmoney_json
+from stockwidget.data.quotes import _sina_code, _SINA_HEADERS, request_quote
 from stockwidget.core.window_rules import quote_timestamp
 
 
@@ -36,29 +37,21 @@ class Bar:
 @dataclass(frozen=True)
 class BarResult:
     bars: tuple[Bar, ...] = ()
-    source: str = ""
+    source: str = "sina"
     message: str = ""
     cached: bool = False
     stale: bool = False
-
-
-def us_offset(utc_time):
-    """US DST boundaries in UTC, without a tzdata dependency on Windows."""
-    year = utc_time.year
-    march = datetime(year, 3, 8, 7, tzinfo=timezone.utc)
-    start = march + timedelta(days=(6 - march.weekday()) % 7)
-    november = datetime(year, 11, 1, 6, tzinfo=timezone.utc)
-    end = november + timedelta(days=(6 - november.weekday()) % 7)
-    return -4 if start <= utc_time < end else -5
 
 
 def market_now(instrument, now=None):
     now = now or datetime.now(timezone.utc)
     if now.tzinfo is None:
         now = now.replace(tzinfo=timezone.utc)
-    now = now.astimezone(timezone.utc)
-    hours = us_offset(now) if instrument.get("market") == "us" else 8
-    return now.astimezone(timezone(timedelta(hours=hours)))
+    market = instrument.get("market")
+    zone = ("America/New_York" if market == "us" else
+            instrument.get("timezone", "Asia/Shanghai")
+            if market == "gb" else "Asia/Shanghai")
+    return now.astimezone(ZoneInfo(zone))
 
 
 def history_day(instrument, now):
@@ -73,6 +66,8 @@ def history_day(instrument, now):
 
 
 def quote_clock(quote, instrument):
+    if instrument.get("market") == "gb" and not instrument.get("timezone"):
+        return None  # Unknown exchange clock must not create a guessed daily candle.
     stamp = quote_timestamp(quote)
     if stamp is None:
         return None
@@ -256,7 +251,7 @@ class HistorySeries:
     def set_history(self, result, day, now):
         if not result.bars and self.result.bars:
             result = replace(result, bars=self.result.bars, source=self.result.source, cached=True, stale=True)
-        elif self.result.bars and result.source == self.result.source:
+        elif self.result.bars:
             # Repairs must keep minutes observed live while the endpoint was
             # delayed/offline. Fresh downloaded candles correct sampled OHLC.
             first, second = ((result.bars, self.result.bars) if result.stale else (self.result.bars, result.bars))
@@ -309,7 +304,7 @@ def make_bar(time, opening, high, low, close, volume=0, amount=None, average=Non
     if any(value is None for value in prices):
         raise ValueError("Missing OHLC")
     opening, high, low, close = prices
-    # trends2 can report zero open/high/low for US opening minutes.
+    # A minute point may contain a close without separate OHLC observations.
     if close == 0:
         raise ValueError("Missing close")
     opening = opening or close
@@ -323,29 +318,6 @@ def make_bar(time, opening, high, low, close, volume=0, amount=None, average=Non
 
 def _ordered(bars):
     return tuple(sorted({bar.time: bar for bar in bars}.values(), key=lambda bar: bar.time))
-
-
-def parse_eastmoney(payload, *, daily=False, instrument=None):
-    data = payload.get("data") if isinstance(payload, dict) else None
-    if not isinstance(data, dict):
-        return ()
-    rows = data.get("klines" if daily else "trends") or []
-    bars = []
-    for row in rows:
-        try:
-            parts = row.split(",")
-            stamp = parts[0]
-            if not daily and (instrument or {}).get("market") == "us":
-                beijing = datetime.fromisoformat(stamp).replace(tzinfo=timezone(timedelta(hours=8)))
-                stamp = market_now(instrument, beijing).strftime("%Y-%m-%d %H:%M:%S")
-            volume = _number(parts[5], 0)
-            if (instrument or {}).get("market") in {"sh", "sz", "bj"} and (instrument or {}).get("type") != "期":
-                volume *= 100  # Eastmoney history uses lots; quotes use shares.
-            bars.append(make_bar(stamp, parts[1], parts[3], parts[4], parts[2],
-                                 volume, parts[6], None if daily or (instrument or {}).get("type") == "指" else parts[7]))
-        except (ValueError, TypeError, IndexError, AttributeError):
-            continue
-    return _ordered(bars)
 
 
 def parse_sina(text, *, daily=False):
@@ -528,75 +500,276 @@ def volume_directions(bars, view, instrument):
     return result
 
 
-def _em_candidates(instrument):
-    secid = _em_secid(instrument)
-    if instrument.get("market") == "us" and secid:
-        return [f"{market}.{secid.split('.', 1)[1]}" for market in (105, 106, 107)]
-    return [secid] if secid else []
+class _SinaDailyBits:
+    """Read the little-endian six-bit stream used by Sina's KLC K2 daily data."""
+    def __init__(self, text):
+        alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+        self.values = [alphabet.index(char) for char in text]
+        self.position = 0
+
+    def read(self, width=1, signed=False):
+        if not 0 <= width <= 64 or self.position + width > len(self.values) * 6:
+            raise ValueError("Invalid Sina daily bit stream")
+        value = 0
+        for bit in range(width):
+            index, shift = divmod(self.position, 6)
+            value |= ((self.values[index] >> shift) & 1) << bit
+            self.position += 1
+        return value - (1 << width) if signed and width and value & (1 << (width - 1)) else value
+
+    def delta(self):
+        sign, value = self.read(), 1
+        while self.read():
+            value += 1
+            if value > 64:
+                raise ValueError("Invalid Sina daily delta")
+        return value if sign else -value
 
 
-def request_eastmoney_bars(instrument, view):
-    daily = view == "daily"
-    for secid in _em_candidates(instrument):
-        params = {"secid": secid, "fields1": "f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13",
-                  "fields2": "f51,f52,f53,f54,f55,f56,f57,f58"}
-        if daily:
-            params.update(klt=101, fqt=0, beg=0, end=20500101, lmt=DAILY_HISTORY)
+def decode_sina_daily(text):
+    """Decode Sina's K2 OHLC/volume locally, without executing downloaded JS.
+
+    Format reference: Sina finance SDK utils.util, xh5_S_KLC_D, format 3466.
+    Only the quoted data assignment is consumed; JavaScript is never evaluated.
+    """
+    text = re.sub(r"/\*.*?\*/", "", text, flags=re.DOTALL)
+    match = re.fullmatch(r'\s*var\s+[\w$]+\s*=\s*"([A-Za-z0-9+/]+)"\s*;?\s*', text)
+    if not match:
+        raise ValueError("Invalid Sina daily assignment")
+    bits = _SinaDailyBits(match.group(1))
+    if bits.read(12) != 3466 or bits.read(6) ^ 63:
+        raise ValueError("Unsupported Sina daily format")
+    state = dict(b_avp=1, b_ph=0, b_phx=0, b_sep=0, wd=62, d=0,
+                 p_p=6, p_v=0, p_a=0, p_e=0, p_t=0,
+                 l_o=3, l_h=3, l_l=3, l_c=3, l_v=5, l_a=5, l_e=3, l_t=0,
+                 u_p=0, u_v=0, u_a=0)
+
+    def precision(value):
+        sign = 1 if value >= 0 else -1
+        whole, fraction = divmod(abs(value), 3)
+        return sign * (whole + (fraction == 1)), sign * (whole + (fraction == 2))
+
+    def scale(value, old, new=0, *, rounding=False):
+        old = precision(old) if isinstance(old, int) else old
+        new = precision(new)
+        value *= 2 ** (new[0] - old[0]) * 5 ** (new[1] - old[1])
+        return round(value) if rounding else value
+
+    def date_delta():
+        value = bits.read(3)
+        if value == 1:
+            state["d"] = bits.read(18, True)
+            return 0
+        return value or bits.read(6)
+
+    rows, previous_amount = [], 0
+    for _ in range(100000):
+        day_delta, controls = 1, 0
+        if bits.read():
+            if bits.read():
+                if bits.read():
+                    controls += 1
+                    was_average = state["b_avp"]
+                    if bits.read():
+                        for flag in ("b_avp", "b_ph", "b_phx"):
+                            state[flag] ^= bits.read()
+                        was_separate = state["b_sep"]
+                        state["b_sep"] ^= bits.read()
+                        if bits.read():
+                            state["wd"] = bits.read(7) or 62
+                        if was_separate != state["b_sep"]:
+                            if was_separate:
+                                state["u_p"] = state["u_c"]
+                            else:
+                                for field in "ohlc":
+                                    state["u_" + field] = state["u_p"]
+                    for field in "pvaet"[:3 + 2 * state["b_ph"]]:
+                        if bits.read():
+                            old = state["p_" + field]
+                            state["p_" + field] += bits.delta()
+                            new = state["p_" + field]
+                            state["u_" + field] = scale(state.get("u_" + field, 0), old, new, rounding=True)
+                            if state["b_sep"] and field == "p":
+                                for price in "ohlc":
+                                    state["u_" + price] = scale(state["u_" + price], old, new, rounding=True)
+                    if not state["b_avp"] and was_average:
+                        state["u_a"] = scale(previous_amount, 0, state["p_a"], rounding=True)
+                if bits.read():
+                    controls += 1
+                    for index in range(7 + state["b_ph"] + state["b_phx"]):
+                        if bits.read():
+                            if index == 6:
+                                day_delta = date_delta()
+                            else:
+                                state["l_" + "ohlcva*et"[index]] += bits.delta()
+                if bits.read():
+                    controls += 1
+                    width = state["l_o"] + (bits.delta() if bits.read() else 0)
+                    change = bits.read(3 * width, True)
+                    if not state["b_sep"]:
+                        state["u_p"] += change
+                if not controls:
+                    return _ordered(rows)
+            elif bits.read():
+                if bits.read():
+                    if bits.read():
+                        day_delta = date_delta()
+                    else:
+                        state["l_v"] += bits.delta()
+                elif state["b_ph"] and bits.read():
+                    field = "t" if state["b_phx"] and bits.read() else "e"
+                    state["l_" + field] += bits.delta()
+                else:
+                    state["l_a"] += bits.delta()
+            else:
+                state["l_" + "ohlc"[bits.read(2)]] += bits.delta()
+        values = {}
+        for index, field in enumerate("ohlcvaet"[:6 + state["b_ph"] + state["b_phx"]]):
+            values[field] = bits.read(3 * state["l_" + field], bool((191 if state["b_sep"] else 185) >> index & 1))
+        for _ in range(day_delta):
+            state["d"] += 1
+            while not state["wd"] & (1 << ((state["d"] % 7 + 10) % 7)):
+                state["d"] += 1
+        day = (datetime(1970, 1, 1) + timedelta(days=7657 + state["d"])).strftime("%Y-%m-%d")
+        if state["b_sep"]:
+            prices = []
+            for field in "ohlc":
+                state["u_" + field] += values[field]
+                prices.append(scale(state["u_" + field], state["p_p"]))
+            implied = sum(state["u_" + field] for field in "ohlc") / 4
         else:
-            params.update(ndays=5, iscr=0)
-        path = "/api/qt/stock/" + ("kline/get" if daily else "trends2/get")
-        payload = request_eastmoney_json(
-            "https://push2his.eastmoney.com" + path, params=params, timeout=5,
-            alternate_url="https://61.push2his.eastmoney.com" + path)
-        bars = parse_eastmoney(payload, daily=daily, instrument=instrument)
-        if bars:
-            return select_bars(bars, view, instrument)
-    return ()
+            opening = state["u_p"] + values["o"]
+            state["u_p"] = opening + values["c"]
+            prices = [scale(value, state["p_p"]) for value in (
+                opening, opening + values["h"], opening - values["l"], state["u_p"])]
+            implied = opening + (values["h"] - values["l"] + values["c"]) / 4
+        state["u_v"] += values["v"]
+        if state["b_avp"]:
+            price_precision, volume_precision = precision(state["p_p"]), precision(state["p_v"])
+            combined = tuple(a + b for a, b in zip(price_precision, volume_precision))
+            amount = scale(math.floor(implied * state["u_v"] + .5), combined, state["p_a"], rounding=True)
+            previous_amount = scale(amount + values["a"], state["p_a"])
+        else:
+            state["u_a"] += values["a"]
+            previous_amount = scale(state["u_a"], state["p_a"])
+        try:
+            if any(price <= 0 for price in prices):
+                continue
+            rows.append(make_bar(day, *prices, scale(state["u_v"], state["p_v"]), previous_amount))
+        except (ValueError, TypeError):
+            # Old source records can have missing opens or inconsistent OHLC.
+            # Keep decoding subsequent deltas; never repair prices by guessing.
+            continue
+    raise ValueError("Sina daily history exceeds limit")
+
+
+def _sina_payload(text):
+    text = re.sub(r"^\s*/\*.*?\*/\s*", "", text, flags=re.DOTALL).strip()
+    if not text.startswith(("[", "{", '"', "null")):
+        match = re.search(r'(?:=|\()\s*([\[{"]|null\b)', text)
+        if not match:
+            raise ValueError("Invalid Sina history response")
+        text = text[match.start(1):]
+    value, end = json.JSONDecoder().raw_decode(text)
+    if text[end:].strip().strip(");").strip():
+        raise ValueError("Invalid Sina history suffix")
+    return value
+
+
+def _parse_us_minutes(text):
+    payload = _sina_payload(text)
+    if not isinstance(payload, str):
+        raise ValueError("Invalid Sina US minutes")
+    bars = []
+    for session in payload.split():
+        day = None
+        for index, row in enumerate(session.split(";")):
+            fields = row.split(",")
+            if index == 0:
+                day, fields = fields[0], fields[1:]
+                datetime.strptime(day, "%Y-%m-%d")
+            if len(fields) < 4 or not re.fullmatch(r"\d{2}:\d{2}:\d{2}", fields[0]):
+                raise ValueError("Invalid Sina US minute row")
+            price, volume, average = _number(fields[3]), _number(fields[1]), _number(fields[2])
+            bars.append(make_bar(day + " " + fields[0], price, price, price, price, volume,
+                                 average=average if average and average > 0 else None))
+    return _ordered(bars)
 
 
 def request_sina_bars(instrument, view):
-    market = instrument.get("market", "")
+    market, code = instrument.get("market", ""), str(instrument.get("code", ""))
+    daily = view == "daily"
     futures = instrument.get("type") == "期" or not market
     if futures:
-        method = "getDailyKLine" if view == "daily" else "getFewMinLine"
+        method = "getDailyKLine" if daily else "getFewMinLine"
         url = "https://stock2.finance.sina.com.cn/futures/api/jsonp.php/=/InnerFuturesNewService." + method
-        params = {"symbol": str(instrument.get("code", "")).upper(),
-                  "type": market_now(instrument).strftime("%Y_%m_%d") if view == "daily" else "1"}
+        params = {"symbol": code.upper(), "type": market_now(instrument).strftime("%Y_%m_%d") if daily else "1"}
     elif market in {"sh", "sz", "bj"}:
         url = "https://quotes.sina.cn/cn/api/jsonp_v2.php/=/CN_MarketDataService.getKLineData"
-        params = {"symbol": _sina_code(instrument), "scale": 240 if view == "daily" else 1,
-                  "ma": "no", "datalen": DAILY_HISTORY if view == "daily" else 1970}
+        params = {"symbol": _sina_code(instrument), "scale": 240 if daily else 1,
+                  "ma": "no", "datalen": DAILY_HISTORY if daily else 1970}
+    elif market in {"hk", "us"} and daily:
+        symbol = code.upper().replace("_", ".")
+        if market == "us" and instrument.get("type") == "指":
+            symbol = "." + symbol.lstrip(".")
+        url = (f"https://finance.sina.com.cn/stock/hkstock/{symbol}/klc2_kl.js" if market == "hk"
+               else f"https://finance.sina.com.cn/staticdata/us/{symbol}")
+        params = {}
+    elif market == "us":
+        symbol = code.upper().replace("_", ".")
+        if instrument.get("type") == "指":
+            symbol = "." + symbol.lstrip(".")
+        url = "https://stock.finance.sina.com.cn/usstock/api/jsonp_v2.php/=/US_MinlineNService.getMinline"
+        params = {"symbol": symbol, "day": 5}
+    elif market == "hk":
+        url = "https://stock.finance.sina.com.cn/hkstock/api/openapi.php/HK_StockService.getHKMinline"
+        params = {"symbol": code.upper(), "callback": "sw"}
+    elif market == "gb" and daily:
+        url = "https://gi.finance.sina.com.cn/hq/daily"
+        params = {"symbol": code.upper(), "num": DAILY_HISTORY}
     else:
-        # HK/US daily use encoded JS; no JS engine dependency for charting.
-        # Unsupported adapters return empty so the other provider can be tried.
         return ()
     response = requests.get(url, params=params, headers=_SINA_HEADERS, timeout=5)
-    response.raise_for_status()
-    return select_bars(parse_sina(response.text, daily=view == "daily"), view, instrument)
+    try:
+        response.raise_for_status()
+        text = response.text
+    finally:
+        response.close()
+    if market in {"hk", "us"} and daily:
+        bars = decode_sina_daily(text)
+    elif market == "us":
+        bars = _parse_us_minutes(text)
+    elif market == "hk":
+        payload = _sina_payload(text)
+        result = payload["result"]
+        if result.get("status", {}).get("code") != 0 or not isinstance(result.get("data"), list):
+            raise ValueError("Invalid Sina HK minutes")
+        quote = request_quote({"hk" + code.lower(): instrument}).get("hk" + code.lower(), {})
+        day = str(quote.get("date", "")).replace("/", "-")
+        datetime.strptime(day, "%Y-%m-%d")
+        bars = _ordered(make_bar(day + " " + row["m"], *([row["p"]] * 4), row["v"], row.get("a"),
+                                 row.get("avg_p")) for row in result["data"])
+    elif market == "gb":
+        payload = _sina_payload(text)
+        bars = parse_sina(json.dumps(payload["result"]["data"]), daily=True)
+    else:
+        bars = parse_sina(text, daily=daily)
+    return select_bars(bars, view, instrument)
 
 
-def fetch_bars(instrument, view, source):
+def fetch_bars(instrument, view):
     if view not in {"intraday", "five_day", "daily"}:
         raise ValueError("Unknown history view")
-    source = source if source in {"sina", "eastmoney"} else "sina"
-    errors = []
-    partial = None
-    for provider in (("eastmoney",) if source == "eastmoney" else ("sina", "eastmoney")):
-        try:
-            request = request_sina_bars if provider == "sina" else request_eastmoney_bars
-            bars = request(instrument, view)
-            if bars:
-                dates = {trading_date(bar, instrument) for bar in bars}
-                message = ""
-                if view == "five_day" and len(dates) < 5:
-                    message = f"接口仅返回 {len(dates)} 个交易日"
-                    candidate = BarResult(tuple(bars), provider, message)
-                    if partial is None or len(dates) > len({trading_date(bar, instrument) for bar in partial.bars}):
-                        partial = candidate
-                    continue  # Try the backup before settling for partial history.
-                return BarResult(tuple(bars), provider, message)
-        except requests.RequestException as exc:
-            errors.append(f"{'新浪' if provider == 'sina' else '东财'}：{request_error_message(exc)}")
-        except (ValueError, TypeError, KeyError, AttributeError):
-            errors.append(f"{'新浪' if provider == 'sina' else '东财'}：历史数据格式不可用")
-    return partial or BarResult(message="暂无可用历史数据" + (" · " + "；".join(errors) if errors else ""))
+    if instrument.get("market") == "gb" and view != "daily":
+        return BarResult(message="新浪暂未提供该指数的分钟历史")
+    try:
+        bars = request_sina_bars(instrument, view)
+        if bars:
+            dates = {trading_date(bar, instrument) for bar in bars}
+            message = f"接口仅返回 {len(dates)} 个交易日" if view == "five_day" and len(dates) < 5 else ""
+            return BarResult(tuple(bars), "sina", message)
+    except requests.RequestException as error:
+        return BarResult(message="暂无可用历史数据 · 新浪：" + request_error_message(error))
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError, OverflowError):
+        return BarResult(message="暂无可用历史数据 · 新浪：历史数据格式不可用")
+    return BarResult(message="暂无可用历史数据")

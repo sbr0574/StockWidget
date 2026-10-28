@@ -76,10 +76,10 @@ class QuoteFreshnessTests(SettingsTestCase):
             self.accept({"sh600000": self.quote(50, time="09:59:00")})
             self.assertEqual(self.window.quotes.quote_for(self.codes["sh600000"])["current_price"], 100)
 
-    def test_source_switch_accepts_its_own_time_and_rejects_late_previous_source_result(self):
+    def test_invalidation_accepts_fresh_state_and_rejects_late_previous_result(self):
         self.accept({"sh600000": self.quote()})
         generation = self.window.quotes._quote_generation
-        self.window.set_data_source("eastmoney")
+        self.window.quotes.invalidate()
         self.accept({"sh600000": self.quote(95, time="09:55:00")})
         self.window.quotes.accept_result((True, {"sh600000": self.quote(200, time="11:00:00")}, None, generation))
         self.assertEqual(self.window.quotes.quote_for(self.codes["sh600000"])["current_price"], 95)
@@ -93,24 +93,23 @@ class QuoteFreshnessTests(SettingsTestCase):
 
 class QuoteWorkerTests(unittest.TestCase):
     def test_errors_identify_source_and_keep_generation(self):
-        for source, label in (("sina", "新浪"), ("eastmoney", "东财")):
-            for error, text in ((requests.ConnectTimeout(), "连接超时"),
+        for error, text in ((requests.ConnectTimeout(), "连接超时"),
                                 (requests.ConnectionError(RemoteDisconnected()), "远端关闭连接"),
                                 (requests.exceptions.JSONDecodeError("bad", "", 0), "响应不是有效 JSON"),
                                 (ValueError("sensitive response"), "行情处理失败（ValueError）")):
-                with self.subTest(source=source, error=type(error).__name__):
-                    signal = Mock()
-                    owner = SimpleNamespace(data_ready=signal)
-                    with patch("stockwidget.data.quotes.request_quote", side_effect=error):
-                        QuotePresenter._fetch_worker(owner, CODES, source, 7)
-                    signal.emit.assert_called_once_with((False, None, f"{label}：{text}", 7))
+            with self.subTest(error=type(error).__name__):
+                signal = Mock()
+                owner = SimpleNamespace(data_ready=signal)
+                with patch("stockwidget.data.quotes.request_quote", side_effect=error):
+                    QuotePresenter._fetch_worker(owner, CODES, 7)
+                signal.emit.assert_called_once_with((False, None, f"新浪：{text}", 7))
 
     def test_successful_quote_payload_is_unchanged(self):
         signal = Mock()
         data = {"sh600000": {"current_price": 9.48}}
         with patch("stockwidget.data.quotes.request_quote", return_value=data) as fetch:
-            QuotePresenter._fetch_worker(SimpleNamespace(data_ready=signal), CODES, "eastmoney", 3)
-        fetch.assert_called_once_with(CODES, source="eastmoney")
+            QuotePresenter._fetch_worker(SimpleNamespace(data_ready=signal), CODES, 3)
+        fetch.assert_called_once_with(CODES)
         signal.emit.assert_called_once_with((True, data, None, 3))
 
 
@@ -126,15 +125,15 @@ class RequestMessageIntegrationTests(QtTestCase):
             with patch("stockwidget.data.quotes.request_quote", side_effect=requests.ConnectionError(
                 RemoteDisconnected("closed")
             )):
-                window.quotes._fetch_worker(CODES, "eastmoney", window.quotes._quote_generation)
-            self.assertEqual(window.message_label.text(), "东财：远端关闭连接")
-            self.assertEqual(taskbar_message(window), "东财：远端关闭连接")
+                window.quotes._fetch_worker(CODES, window.quotes._quote_generation)
+            self.assertEqual(window.message_label.text(), "新浪：远端关闭连接")
+            self.assertEqual(taskbar_message(window), "新浪：远端关闭连接")
             for dpi in (96, 144, 192):
                 image = render_taskbar(window, round(48 * dpi / 96), dpi=dpi)
                 self.assertFalse(image.isNull())
                 self.assertLessEqual(image.width(), 480)
             window.quotes.accept_result((False, None, "新浪：连接超时", window.quotes._quote_generation - 1))
-            self.assertEqual(window.message_label.text(), "东财：远端关闭连接")
+            self.assertEqual(window.message_label.text(), "新浪：远端关闭连接")
         finally:
             delete(window)
             self.app.processEvents()

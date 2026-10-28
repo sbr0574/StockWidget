@@ -30,7 +30,7 @@ class MiniChartTests(SettingsTestCase):
         start = datetime(2026, 9, 30, 9, 31)
         minutes = tuple(Bar((start + timedelta(minutes=i)).isoformat(" "), 100, 102, 98, 100 + i, 1)
                         for i in range(2))
-        history.cache.get = Mock(side_effect=lambda instrument, view, source, **kwargs: BarResult(minutes, source))
+        history.cache.get = Mock(side_effect=lambda instrument, view, **kwargs: BarResult(minutes, "sina"))
         data = {key: _new_entry(value["name"], 100, 100, 101 + i, 103 + i, 98 - i, 100, 10000,
                                [0] * 5, [0] * 5, [0] * 5, [0] * 5, "2026-09-30", quote_time)
                 for i, (key, value) in enumerate(codes.items())}
@@ -123,19 +123,19 @@ class MiniChartTests(SettingsTestCase):
                 self.assertTrue(all(not series.result.bars for series in history._series.values()))
                 self.assertIsNone(history.dialog)
 
-    def test_source_change_ignores_old_trend_and_reuses_new_source_for_popup(self):
+    def test_watchlist_change_ignores_old_trend_and_reuses_new_bootstrap_for_popup(self):
         _, window = self.make_window(chart_enabled=True, float_paging_enabled=True, float_max_rows=1)
         history = window.history
         window.set_view_options(mini_chart_type="trend")
         self.ready(history, 1)
-        window.set_data_source("eastmoney")
+        window.set_watchlist({key: {**value, "name": "更新后的名称"} for key, value in window.watchlist.items()})
         self.assertEqual(self.charts(window.model)[0].points, ())
         data = {key: _new_entry("新源", 100, 100, 106, 108, 98, 1, 100,
                          [0] * 5, [0] * 5, [0] * 5, [0] * 5, "2026-09-30", "09:32:00")
                 for key in window.checked_codes}
         window.quotes.accept_result((True, data, None))
         self.ready(history, 2)
-        self.assertEqual(history.cache.get.call_args.args[2], "eastmoney")
+        self.assertEqual(history.cache.get.call_args.args[1], "five_day")
         self.assertEqual(self.charts(window.model)[0].points[-1][1], 106)
         window.history.open_row("float", 0)
         self.app.processEvents()
@@ -177,7 +177,7 @@ class MiniChartTests(SettingsTestCase):
         self.ready(history, 1)
         history.open_row("float", 0)
         history.dialog.set_view("five_day")
-        series = history._series_for(history.instrument, "five_day", window.data_source)
+        series = history._series_for(history.instrument, "five_day")
         series.repair_needed = True
         series.retry_after = 0
         history._refresh_minis()

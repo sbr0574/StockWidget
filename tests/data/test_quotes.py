@@ -1,4 +1,4 @@
-"""新浪 / 东财行情解析和安全的网络错误分类。"""
+"""新浪行情解析和安全的网络错误分类。"""
 
 from http.client import RemoteDisconnected
 from unittest.mock import Mock, patch
@@ -11,35 +11,24 @@ import requests
 
 from stockwidget.data import quotes
 from stockwidget.data.network_errors import request_error_message
-from stockwidget.data.quotes import _em_secid, _sina_code
+from stockwidget.data.quotes import _sina_code
 
 
 class ExplicitMarketMetadataTests(unittest.TestCase):
     def test_shanghai_futures_use_futures_provider_symbols(self):
-        for code, secid in (("au0", "113.aum"), ("au2610", "113.au2610"),
-                            ("sc0", "142.scm"), ("sc2610", "142.sc2610")):
+        for code in ("au0", "au2610", "sc0", "sc2610"):
             with self.subTest(code=code):
                 future = {"market": "sh", "code": code, "type": "期"}
                 self.assertEqual(_sina_code(future), "nf_" + code.upper())
-                self.assertEqual(_em_secid(future), secid)
 
     def test_shanghai_futures_sina_parser_and_volume(self):
         parts = ["黄金连续", "150000"] + ["0"] * 26
         parts[7], parts[10], parts[14] = "800", "790", "1234"
         response = Mock(text='var hq_str_nf_AU0="' + ','.join(parts) + '";')
         with patch.object(quotes.requests, "get", return_value=response):
-            data = quotes.request_sina({"au0": {"market": "sh", "code": "au0", "type": "期"}})
+            data = quotes.request_quote({"au0": {"market": "sh", "code": "au0", "type": "期"}})
         self.assertEqual(data["au0"]["current_price"], 800)
         self.assertEqual(data["au0"]["prev_close"], 790)
-        self.assertEqual(data["au0"]["deals_vol"], 1234)
-
-    def test_shanghai_futures_eastmoney_volume_stays_in_contracts(self):
-        response = Mock()
-        response.json.return_value = {"data": {"diff": [
-            {"f12": "aum", "f13": 113, "f14": "黄金连续", "f5": 1234},
-        ]}}
-        with patch.object(quotes.requests, "get", return_value=response):
-            _, data = quotes.request_eastmoney({"au0": {"market": "sh", "code": "au0", "type": "期"}})
         self.assertEqual(data["au0"]["deals_vol"], 1234)
 
     def test_same_raw_code_keeps_markets_distinct(self):
@@ -48,13 +37,10 @@ class ExplicitMarketMetadataTests(unittest.TestCase):
 
         self.assertEqual(_sina_code(shanghai), "sh000001")
         self.assertEqual(_sina_code(shenzhen), "sz000001")
-        self.assertEqual(_em_secid(shanghai), "1.000001")
-        self.assertEqual(_em_secid(shenzhen), "0.000001")
 
     def test_futures_uses_empty_market_and_raw_code(self):
         future = {"market": "", "code": "au0"}
         self.assertEqual(_sina_code(future), "nf_AU0")
-        self.assertEqual(_em_secid(future), "113.aum")
 
 
 class SinaVolumeUnitTests(unittest.TestCase):
@@ -115,199 +101,13 @@ class SinaRequestFailureTests(unittest.TestCase):
         response.status_code = 403
         response.url = "https://hq.sinajs.cn/list=sh600000"
         response._content = b"Access denied"
+        response._content_consumed = True
         with patch.object(quotes.requests, "get", return_value=response):
             with self.assertRaises(requests.HTTPError) as caught:
-                quotes.request_sina({"sh600000": {"market": "sh", "code": "600000"}})
+                quotes.request_quote({"sh600000": {"market": "sh", "code": "600000"}})
         self.assertIs(caught.exception.response, response)
 
 
-class EastmoneyQuoteTests(unittest.TestCase):
-    @staticmethod
-    def _response(payload):
-        response = Mock()
-        response.json.return_value = payload
-        return response
-
-    def test_quote_timestamp_is_requested_and_normalized_for_each_market(self):
-        instruments = {"sh600000": {"market": "sh", "code": "600000"},
-                       "hk00700": {"market": "hk", "code": "00700"},
-                       "usaapl": {"market": "us", "code": "aapl"},
-                       "au0": {"market": "sh", "code": "au0", "type": "期"}}
-        response = self._response({"data": {"diff": [
-            {"f12": code, "f13": market, "f124": 1790753121}
-            for code, market in (("600000", 1), ("00700", 116), ("AAPL", 105), ("aum", 113))
-        ]}})
-        with patch.object(quotes.requests, "get", return_value=response) as request:
-            _, data = quotes.request_eastmoney(instruments)
-        self.assertIn("f124", request.call_args.kwargs["params"]["fields"].split(","))
-        for key in instruments:
-            self.assertEqual(data[key]["timestamp"], 1790753121)
-            self.assertEqual(data[key]["date"], "2026-09-30")
-            self.assertEqual(data[key]["time"], "15:25:21")
-
-    def test_missing_or_invalid_quote_time_is_not_replaced_by_request_time(self):
-        for invalid in (None, "-", 0, "bad", 1e99):
-            with self.subTest(invalid=invalid):
-                response = self._response({"data": {"diff": [
-                    {"f12": "600000", "f13": 1, "f124": invalid}
-                ]}})
-                with patch.object(quotes.requests, "get", return_value=response):
-                    _, data = quotes.request_eastmoney({"sh600000": {"market": "sh", "code": "600000"}})
-                self.assertIsNone(data["sh600000"]["timestamp"])
-                self.assertEqual((data["sh600000"]["date"], data["sh600000"]["time"]), ("", ""))
-
-    def test_stable_host_and_preopen_placeholders(self):
-        response = self._response(
-            {
-                "data": {
-                    "diff": [
-                        {
-                            "f12": "600000",
-                            "f13": 1,
-                            "f14": "浦发银行",
-                            "f2": "-",
-                            "f5": "-",
-                            "f6": "-",
-                            "f15": "-",
-                            "f16": "-",
-                            "f17": "-",
-                            "f18": 9.08,
-                            "f31": "-",
-                            "f32": "-",
-                        }
-                    ]
-                }
-            }
-        )
-        instruments = {
-            "sh600000": {"market": "sh", "code": "600000", "type": "沪"}
-        }
-        with patch.object(quotes.requests, "get", return_value=response) as request:
-            _, data = quotes.request_eastmoney(instruments)
-
-        self.assertEqual(
-            quotes._EM_QUOTE_URL,
-            "https://push2delay.eastmoney.com/api/qt/ulist.np/get",
-        )
-        self.assertEqual(data["sh600000"]["current_price"], 0)
-        self.assertEqual(data["sh600000"]["prev_close"], 9.08)
-        self.assertEqual(data["sh600000"]["deals_vol"], 0)
-        self.assertEqual(data["sh600000"]["purchaser_price"], [0, 0, 0, 0, 0])
-        self.assertEqual(data["sh600000"]["seller_price"], [0, 0, 0, 0, 0])
-        self.assertNotIn("f31", request.call_args.kwargs["params"]["fields"])
-        self.assertEqual(request.call_count, 1)
-
-    def test_eastmoney_does_not_call_sina(self):
-        response = self._response(
-            {
-                "data": {
-                    "diff": [
-                        {
-                            "f12": "600000",
-                            "f13": 1,
-                            "f14": "浦发银行",
-                            "f2": 9.05,
-                            "f5": 1724,
-                            "f6": 1560220,
-                            "f15": 9.05,
-                            "f16": 9.05,
-                            "f17": 9.05,
-                            "f18": 9.08,
-                            "f31": 9.05,
-                            "f32": 9.06,
-                        }
-                    ]
-                }
-            }
-        )
-        instruments = {
-            "sh600000": {"market": "sh", "code": "600000", "type": "沪"}
-        }
-        with (
-            patch.object(quotes.requests, "get", return_value=response) as request,
-            patch.object(quotes, "request_sina") as request_sina,
-        ):
-            _, data = quotes.request_eastmoney(instruments)
-
-        entry = data["sh600000"]
-        self.assertEqual(entry["name"], "浦发银行")
-        self.assertEqual(entry["current_price"], 9.05)
-        self.assertEqual(entry["deals_vol"], 172400)
-        self.assertEqual(entry["purchaser_price"], [0, 0, 0, 0, 0])
-        self.assertEqual(entry["purchaser_vol"], [0, 0, 0, 0, 0])
-        self.assertEqual(entry["seller_price"], [0, 0, 0, 0, 0])
-        self.assertEqual(entry["seller_vol"], [0, 0, 0, 0, 0])
-        self.assertEqual(request.call_count, 1)
-        request_sina.assert_not_called()
-
-    def test_transient_failures_retry_then_recover_on_an_eastmoney_node(self):
-        disconnected = RemoteDisconnected("closed without response")
-        response = self._response({"data": {"diff": [
-            {"f12": "600000", "f13": 1, "f14": "浦发银行", "f2": 9.05, "f5": 1724},
-        ]}})
-        instruments = {"sh600000": {"market": "sh", "code": "600000", "type": "沪"}}
-        failures = (requests.ConnectionError(ProtocolError("aborted", disconnected)),
-                    requests.exceptions.ProxyError(ProtocolError("aborted", disconnected)),
-                    requests.ReadTimeout(), requests.exceptions.ChunkedEncodingError())
-        for error in failures:
-            with (
-                self.subTest(error=type(error).__name__),
-                patch.object(quotes.requests, "get", side_effect=[error, error, response]) as get,
-                patch("stockwidget.data.quotes.time.sleep") as sleep,
-                patch.object(quotes, "request_sina") as sina,
-            ):
-                ok, data, reason = quotes.fetch_quote_result(instruments, "eastmoney")
-                self.assertTrue(ok)
-                self.assertIsNone(reason)
-                self.assertEqual(data["sh600000"]["deals_vol"], 172400)
-                self.assertEqual([call.args[0] for call in get.call_args_list], [
-                    quotes._EM_QUOTE_URL, quotes._EM_QUOTE_URL,
-                    "https://push2.eastmoney.com/api/qt/ulist.np/get",
-                ])
-                self.assertEqual([call.args[0] for call in sleep.call_args_list], [.25, .5])
-                for call in get.call_args_list:
-                    self.assertEqual(call.kwargs["params"]["secids"], "1.600000")
-                    self.assertNotIn("proxies", call.kwargs)
-                    self.assertNotIn("verify", call.kwargs)
-                sina.assert_not_called()
-
-    def test_retry_exhaustion_is_bounded_and_preserves_safe_error(self):
-        with (
-            patch.object(quotes.requests, "get", side_effect=requests.ConnectionError(
-                RemoteDisconnected("https://user:secret@example.com"))) as get,
-            patch("stockwidget.data.quotes.time.sleep") as sleep,
-            patch.object(quotes, "request_sina") as sina,
-        ):
-            result = quotes.fetch_quote_result({"sh600000": {"market": "sh", "code": "600000"}}, "eastmoney")
-        self.assertEqual(result, (False, None, "东财：远端关闭连接"))
-        self.assertEqual(get.call_count, 3)
-        self.assertEqual(sleep.call_count, 2)
-        sina.assert_not_called()
-
-    def test_gateway_errors_retry_but_denial_rate_limit_and_ssl_errors_stop(self):
-        instruments = {"sh600000": {"market": "sh", "code": "600000"}}
-        for status in (500, 502, 503, 504, 403, 429):
-            with self.subTest(status=status):
-                response = requests.Response()
-                response.status_code = status
-                response._content = b"unavailable"
-                response._content_consumed = True
-                good = self._response({"data": {"diff": [{"f12": "600000", "f13": 1, "f2": 9.05}]}})
-                with (patch.object(quotes.requests, "get", side_effect=[response, good]) as get,
-                      patch("stockwidget.data.quotes.time.sleep")):
-                    ok, data, reason = quotes.fetch_quote_result(instruments, "eastmoney")
-                self.assertEqual(ok, status in (500, 502, 503, 504))
-                self.assertEqual(get.call_count, 2 if ok else 1)
-        for error in (requests.exceptions.SSLError(), requests.exceptions.InvalidURL(),
-                      requests.exceptions.JSONDecodeError("bad", "", 0)):
-            with (
-                self.subTest(error=type(error).__name__),
-                patch.object(quotes.requests, "get", side_effect=error) as get,
-                patch("stockwidget.data.quotes.time.sleep") as sleep,
-            ):
-                self.assertFalse(quotes.fetch_quote_result(instruments, "eastmoney")[0])
-                get.assert_called_once()
-                sleep.assert_not_called()
 
 
 class NetworkErrorTests(unittest.TestCase):

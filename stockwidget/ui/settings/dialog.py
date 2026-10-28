@@ -190,11 +190,6 @@ class SettingsDialog(QDialog):
 
     def _connect_controls(self):
         """连接设置控件与浮窗状态，静态控件统一从 self.ui 访问。"""
-        self._source_buttons = {
-            "sina": self.ui.rb_sina,
-            "eastmoney": self.ui.rb_em,
-        }
-
         self._color_buttons = (
             (self.ui.btn_bg_color, "bg", "背景颜色"),
             (self.ui.btn_fg_color, "fg", "文字颜色"),
@@ -204,8 +199,6 @@ class SettingsDialog(QDialog):
         )
 
         self.ui.sb_interval.valueChanged.connect(self.win.set_refresh_interval)
-        for source, button in self._source_buttons.items():
-            button.toggled.connect(partial(self._on_source_toggled, source))
 
         self.metric_pool.visible_metrics_changed.connect(
             self.win.set_visible_metrics
@@ -359,7 +352,6 @@ class SettingsDialog(QDialog):
             self._apply_platform_limits()
             self._sync_view_settings()
             self._refresh_hotkey_status()
-            self._setup_source_buttons()
             self._setup_about()
             self.refresh_data_state()
 
@@ -561,10 +553,6 @@ class SettingsDialog(QDialog):
             self.app.clear_custom_icon()
             self.app.save_now()
 
-    def _setup_source_buttons(self):
-        """按当前配置选中行情数据源单选按钮。"""
-        source = self.win.data_source
-        self._select_button(self._source_buttons, source)
 
     def refresh_data_state(self):
         """更新市场代码状态；qrc 与本地文件都属于缓存。"""
@@ -671,9 +659,6 @@ class SettingsDialog(QDialog):
             if obj is self:
                 self.setFocus()
 
-    def _on_source_toggled(self, source: str, checked: bool):
-        if checked:
-            self.win.set_data_source(source)
 
     def _update_direction_color_controls(self):
         enabled = not self.win.unicolor

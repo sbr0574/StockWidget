@@ -60,10 +60,10 @@ class BarCache:
             return self._generation
 
     @staticmethod
-    def key(instrument, view, source):
+    def key(instrument, view):
         identity = {name: str(instrument.get(name, "")).strip().lower()
-                    for name in ("market", "code", "type")}
-        identity.update(version=2, source=source, view="daily" if view == "daily" else "five_day",
+                    for name in ("market", "code", "type", "timezone")}
+        identity.update(version=3, view="daily" if view == "daily" else "five_day",
                         adjustment="none", daily_count=100)
         return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
 
@@ -157,7 +157,7 @@ class BarCache:
             except OSError:
                 return False
 
-    def get(self, instrument, view, source, *, repair=False, generation=None):
+    def get(self, instrument, view, *, repair=False, generation=None):
         if view not in {"intraday", "five_day", "daily"}:
             raise ValueError("Unknown history view")
         with self._lock:
@@ -166,11 +166,8 @@ class BarCache:
             generation = self._generation
             now = self.clock()
             stamp, active = cache_state(instrument, now)
-            key = self.key(instrument, view, source)
+            key = self.key(instrument, view)
             payload, cached = self._read(key)
-            if source == "eastmoney" and cached and cached.bars and cached.source != source:
-                # Older versions could save a Sina fallback under an Eastmoney key.
-                payload = cached = None
             ttl = 86400 if view == "daily" else 60 if active else 43200
             if payload and not cached.bars:
                 ttl = 300  # Temporary outages/unsupported responses aren't permanent.
@@ -184,7 +181,7 @@ class BarCache:
                     return replace(cached, bars=select_bars(cached.bars, view, instrument), stale=True,
                                    message="缓存数据，稍后重试更新")
         request_view = "daily" if view == "daily" else "five_day"
-        result = self.fetcher(instrument, request_view, source)
+        result = self.fetcher(instrument, request_view)
         with self._lock:
             if generation != self._generation:
                 return result  # A clear must not be undone by a late download.
@@ -194,9 +191,9 @@ class BarCache:
                 return replace(cached, bars=select_bars(cached.bars, view, instrument), stale=True,
                                message="缓存数据，更新失败 · " + result.message)
             self._retry_after.pop(key, None)
-            if request_view == "five_day" and cached and cached.bars and cached.source == result.source:
+            if request_view == "five_day" and cached and cached.bars:
                 # Especially useful for short futures minute windows: accumulate
-                # observed sessions without mixing providers or adjustment bases.
+                # observed Sina sessions without changing adjustment bases.
                 merged = {bar.time: bar for bar in (*cached.bars, *result.bars)}
                 bars = select_bars(tuple(sorted(merged.values(), key=lambda bar: bar.time)), "five_day", instrument)
                 result = replace(result, bars=bars)

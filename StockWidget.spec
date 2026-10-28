@@ -8,6 +8,7 @@
 import sys
 from pathlib import Path
 from runpy import run_path
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 metadata = run_path(str(Path(SPECPATH) / 'stockwidget/constants.py'))
 APP_NAME = metadata['APP_NAME']
@@ -57,7 +58,7 @@ if sys.platform == 'win32':
         ],
     )
 
-datas = []
+datas = collect_data_files('tzdata')
 if sys.platform.startswith('linux'):
     datas.append(('resources/icons/StockWidget.png', 'icons'))
 
@@ -67,7 +68,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=datas,
-    hiddenimports=[],
+    hiddenimports=collect_submodules('tzdata'),
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

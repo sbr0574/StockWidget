@@ -43,7 +43,6 @@ class QuotePresenter(QObject):
         self._last_sort_values = []
         self._last_keys = []
         self._latest_quotes = {}
-        self._latest_source = None
         self._ordered_keys = []
         self._quote_generation = 0
         self._refresh_thread = None
@@ -73,7 +72,6 @@ class QuotePresenter(QObject):
         """自选、数据源或配置更改后丢弃在途结果，停止旧行情倒计时。"""
         self._quote_generation += 1
         self._latest_quotes = {}
-        self._latest_source = None
         if reset_pages:
             self.float_page = self.taskbar_page = 0
         self.window.hide_controller.cancel_countdown()
@@ -138,9 +136,7 @@ class QuotePresenter(QObject):
         return self.window.checked_codes.get(key)
 
     def quote_for(self, instrument):
-        """Return accepted raw data only from the currently selected source."""
-        if self._latest_source != self.window.data_source:
-            return None
+        """Return the latest accepted quote for this instrument."""
         for key, entry in self.window.watchlist.items():
             if entry.get("checked") and all(entry.get(field) == instrument.get(field) for field in ("market", "code")):
                 return self._latest_quotes.get(key)
@@ -297,14 +293,14 @@ class QuotePresenter(QObject):
             return
         self._refresh_thread = threading.Thread(
             target=self._fetch_worker,
-            args=(checked_codes, self.window.data_source, self._quote_generation),
+            args=(checked_codes, self._quote_generation),
             daemon=True,
         )
         self._refresh_thread.start()
 
-    def _fetch_worker(self, codes: dict, source: str, generation: int):
+    def _fetch_worker(self, codes: dict, generation: int):
         """后台线程：执行网络请求，结果经 data_ready 信号回到主线程。"""
-        payload = fetch_quote_result(codes, source)
+        payload = fetch_quote_result(codes)
         try:
             self.data_ready.emit((*payload, generation))
         except RuntimeError:
@@ -330,7 +326,7 @@ class QuotePresenter(QObject):
             self.window._fit_to_contents()
             return
 
-        previous = self._latest_quotes if self._latest_source == self.window.data_source else {}
+        previous = self._latest_quotes
         for code, quote in data.items():
             old = previous.get(code)
             old_time = quote_timestamp(old) if old is not None else None
@@ -371,7 +367,6 @@ class QuotePresenter(QObject):
         # later response cannot roll back an instrument that was briefly absent.
         self._latest_quotes = {code: dict(data.get(code, previous.get(code)))
                                for code in checked_codes if code in data or code in previous}
-        self._latest_source = self.window.data_source
 
         if data:
             self.window._clear_message()

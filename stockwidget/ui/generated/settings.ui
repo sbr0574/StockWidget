@@ -624,84 +624,6 @@
                <number>15</number>
               </property>
               <item row="0" column="0" alignment="Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter">
-               <widget class="QLabel" name="label_source">
-                <property name="text">
-                 <string>数据源：</string>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>140</width>
-                  <height>28</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>140</width>
-                  <height>28</height>
-                 </size>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <layout class="QHBoxLayout" name="dataSourceRow">
-                <property name="spacing">
-                 <number>8</number>
-                </property>
-                <item>
-                 <spacer name="dataSourceSpacer">
-                  <property name="orientation">
-                   <enum>Qt::Orientation::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint">
-                   <size>
-                    <width>0</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item>
-                 <widget class="QRadioButton" name="rb_sina">
-                  <property name="text">
-                   <string>新浪</string>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>100</width>
-                    <height>28</height>
-                   </size>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>100</width>
-                    <height>28</height>
-                   </size>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QRadioButton" name="rb_em">
-                  <property name="text">
-                   <string>东方财富</string>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>100</width>
-                    <height>28</height>
-                   </size>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>100</width>
-                    <height>28</height>
-                   </size>
-                  </property>
-                 </widget>
-                </item>
-
-               </layout>
-              </item>
-              <item row="1" column="0" alignment="Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter">
                <widget class="QLabel" name="label_interval">
                 <property name="text">
                  <string>刷新间隔：</string>
@@ -720,7 +642,7 @@
                 </property>
                </widget>
               </item>
-              <item row="1" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
+              <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
                <widget class="QSpinBox" name="sb_interval">
                 <property name="minimum">
                  <number>1</number>
@@ -2351,7 +2273,7 @@
                     <string>自动识别</string>
                    </property>
                    <property name="toolTip">
-                    <string>刷新时，所有勾选标的的行情时间均超过30秒则隐藏浮窗和任务栏。新浪与东财均支持；缺失时间或请求失败不触发。手动呼出后会提示并倒计时5秒；新行情到达会取消倒计时。定时隐藏仍同时生效。</string>
+                    <string>刷新时，所有勾选标的的行情时间均超过30秒则隐藏浮窗和任务栏。缺失时间或请求失败不触发。手动呼出后会提示并倒计时5秒；新行情到达会取消倒计时。定时隐藏仍同时生效。</string>
                    </property>
                    <property name="minimumSize">
                     <size>

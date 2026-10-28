@@ -245,9 +245,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.visible_metrics = visible_metrics_from_config(cfg)
         # 加载其他配置
         self.refresh_seconds = int(cfg.get("refresh_seconds", 2))
-        self.data_source = str(cfg.get("data_source", "sina"))
-        if self.data_source not in ("sina", "eastmoney"):
-            self.data_source = "sina"
         self.scheduled_hide_enabled = bool(cfg.get("scheduled_hide_enabled", False))
         self.scheduled_hide_times = normalize_hide_times(cfg.get("scheduled_hide_times", []))
         self.auto_hide_enabled = bool(cfg.get("auto_hide_enabled", False))
@@ -353,7 +350,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             "scheduled_hide_times": list(self.scheduled_hide_times),
             **{key: getattr(self, key) for key in (
                 "name_length", "unit_mode", "header_visible", "grid_visible", "opacity_pct", "unicolor",
-                "refresh_seconds", "data_source", "hide_enabled", "scheduled_hide_enabled", "auto_hide_enabled",
+                "refresh_seconds", "hide_enabled", "scheduled_hide_enabled", "auto_hide_enabled",
                 "boundary_check_enabled", "edge_hide_enabled", "float_on_top", "force_top", "click_through",
                 "hotkey_enabled", "hotkey", "hotkey_click_through_enabled", "hotkey_click_through",
                 "start_on_boot", "display_mode", "taskbar_offset", "taskbar_screen",
@@ -613,16 +610,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self.timer.setInterval(seconds * 1000)
         self._notify_change()
 
-    def set_data_source(self, source: str):
-        """切换行情数据源：'sina'（新浪）或 'eastmoney'（东方财富）。"""
-        source = str(source or "").strip().lower()
-        if source not in ("sina", "eastmoney") or source == self.data_source:
-            return
-        self.data_source = source
-        self.quotes.invalidate()
-        self.history.reload()
-        self._notify_change()
-        self.quotes.refresh()
 
     def set_hide_options(self, *, hide_enabled=None, scheduled_hide_enabled=None, scheduled_hide_times=None,
                          auto_hide_enabled=None):

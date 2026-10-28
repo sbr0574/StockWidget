@@ -130,7 +130,7 @@ class HideRuleTests(unittest.TestCase):
         for invalid in (None, "15:00", 15, {}):
             self.assertEqual(normalize_hide_times(invalid), [])
 
-    def test_sina_beijing_time_and_eastmoney_epoch_ignore_computer_timezone(self):
+    def test_beijing_time_and_absolute_epoch_ignore_computer_timezone(self):
         self.assertEqual(quote_timestamp(entry()), NOW.timestamp() - 31)
         self.assertEqual(quote_timestamp(entry(timestamp=True)), NOW.timestamp() - 31)
         self.assertEqual(quote_timestamp({"date": "2026-09-30", "time": "07:00:00+00:00"}),

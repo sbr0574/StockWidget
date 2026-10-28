@@ -1,56 +1,28 @@
 """迷你图选择、固定示例及主题同步的用户行为。"""
 
-from PySide6.QtCore import QPoint, QRect, Qt
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QStyle, QStyleOptionButton
 
 from tests.support import SettingsTestCase
 
 
 class MiniChartSettingsTests(SettingsTestCase):
-    def test_source_radio_selection_stays_visible_in_every_theme(self):
-        dialog, window = self._make_dialog()
+    def test_refresh_settings_work_in_all_themes_and_do_not_save_old_provider(self):
+        dialog, window = self._make_dialog(data_source="retired-provider")
         dialog.show()
         dialog.ui.settings_pages.setCurrentWidget(dialog.ui.data)
         self.qt_app.processEvents()
-
-        def indicator_image(button):
-            dialog.ui.data_scroll.ensureWidgetVisible(button)
-            self.qt_app.processEvents()
-            # Windows animates the native indicator when its state changes.
-            if self.qt_app.style().objectName() == "windows11":
-                QTest.qWait(180)
-            option = QStyleOptionButton()
-            button.initStyleOption(option)
-            bounds = button.style().subElementRect(QStyle.SE_RadioButtonIndicator, option, button)
-            image = button.grab().toImage()
-            ratio = image.devicePixelRatio()
-            return image.copy(QRect(round(bounds.x() * ratio), round(bounds.y() * ratio),
-                                    round(bounds.width() * ratio), round(bounds.height() * ratio)))
-
-        for mode in ("system", "light", "dark"):
-            window.set_view_options(color_mode=mode)
-            for selected, alternative in ((dialog.ui.rb_sina, dialog.ui.rb_em),):
-                with self.subTest(mode=mode, radio=selected.objectName()):
-                    selected.click()
-                    checked = indicator_image(selected)
-                    alternative.click()
-                    unchecked = indicator_image(selected)
-                    changed = sum(
-                        max(abs(a - b) for a, b in zip(checked.pixelColor(x, y).getRgb()[:3],
-                                                      unchecked.pixelColor(x, y).getRgb()[:3])) > 40
-                        for x in range(checked.width()) for y in range(checked.height())
-                    )
-                    self.assertGreater(changed, checked.width() * checked.height() * 0.05)
-                    if self.qt_app.style().objectName() == "windows11":
-                        accent = selected.palette().color(QPalette.Accent)
-                        accent_pixels = sum(
-                            max(abs(a - b) for a, b in zip(checked.pixelColor(x, y).getRgb()[:3],
-                                                          accent.getRgb()[:3])) < 20
-                            for x in range(checked.width()) for y in range(checked.height())
-                        )
-                        self.assertGreater(accent_pixels, checked.width() * checked.height() * 0.05)
+        for value, mode in enumerate(("system", "light", "dark"), 3):
+            with self.subTest(mode=mode):
+                window.set_view_options(color_mode=mode)
+                dialog.ui.data_scroll.ensureWidgetVisible(dialog.ui.sb_interval)
+                self.qt_app.processEvents()
+                dialog.ui.sb_interval.setValue(value)
+                self.assertEqual(window.refresh_seconds, value)
+                self.assertEqual(window.current_config()["refresh_seconds"], value)
+                self.assertNotIn("data_source", window.current_config())
+                self.assertFalse(dialog.ui.sb_interval.grab().isNull())
 
     def test_data_page_keeps_all_three_preview_rows_inside_the_group(self):
         dialog, _window = self._make_dialog()

@@ -19,9 +19,9 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComb
     QDialog, QFontComboBox, QFrame, QGridLayout,
     QGroupBox, QHBoxLayout, QHeaderView, QLabel,
     QListView, QListWidget, QListWidgetItem, QPushButton,
-    QRadioButton, QScrollArea, QSizePolicy, QSlider,
-    QSpacerItem, QSpinBox, QStackedWidget, QTableWidgetItem,
-    QTimeEdit, QVBoxLayout, QWidget)
+    QScrollArea, QSizePolicy, QSlider, QSpacerItem,
+    QSpinBox, QStackedWidget, QTableWidgetItem, QTimeEdit,
+    QVBoxLayout, QWidget)
 
 from stockwidget.ui.controls.metrics import MetricPoolWidget
 from stockwidget.ui.controls.mini_chart_preview import MiniChartOption
@@ -241,43 +241,12 @@ class Ui_SettingDialog(object):
         self.gb_data_settingLayout.setSpacing(10)
         self.gb_data_settingLayout.setObjectName(u"gb_data_settingLayout")
         self.gb_data_settingLayout.setContentsMargins(10, 15, 10, 10)
-        self.label_source = QLabel(self.gb_data_setting)
-        self.label_source.setObjectName(u"label_source")
-        self.label_source.setMinimumSize(QSize(140, 28))
-        self.label_source.setMaximumSize(QSize(140, 28))
-
-        self.gb_data_settingLayout.addWidget(self.label_source, 0, 0, 1, 1, Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
-
-        self.dataSourceRow = QHBoxLayout()
-        self.dataSourceRow.setSpacing(8)
-        self.dataSourceRow.setObjectName(u"dataSourceRow")
-        self.dataSourceSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.dataSourceRow.addItem(self.dataSourceSpacer)
-
-        self.rb_sina = QRadioButton(self.gb_data_setting)
-        self.rb_sina.setObjectName(u"rb_sina")
-        self.rb_sina.setMinimumSize(QSize(100, 28))
-        self.rb_sina.setMaximumSize(QSize(100, 28))
-
-        self.dataSourceRow.addWidget(self.rb_sina)
-
-        self.rb_em = QRadioButton(self.gb_data_setting)
-        self.rb_em.setObjectName(u"rb_em")
-        self.rb_em.setMinimumSize(QSize(100, 28))
-        self.rb_em.setMaximumSize(QSize(100, 28))
-
-        self.dataSourceRow.addWidget(self.rb_em)
-
-
-        self.gb_data_settingLayout.addLayout(self.dataSourceRow, 0, 1, 1, 1)
-
         self.label_interval = QLabel(self.gb_data_setting)
         self.label_interval.setObjectName(u"label_interval")
         self.label_interval.setMinimumSize(QSize(140, 28))
         self.label_interval.setMaximumSize(QSize(140, 28))
 
-        self.gb_data_settingLayout.addWidget(self.label_interval, 1, 0, 1, 1, Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
+        self.gb_data_settingLayout.addWidget(self.label_interval, 0, 0, 1, 1, Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
         self.sb_interval = QSpinBox(self.gb_data_setting)
         self.sb_interval.setObjectName(u"sb_interval")
@@ -286,7 +255,7 @@ class Ui_SettingDialog(object):
         self.sb_interval.setMinimumSize(QSize(100, 28))
         self.sb_interval.setMaximumSize(QSize(100, 28))
 
-        self.gb_data_settingLayout.addWidget(self.sb_interval, 1, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.gb_data_settingLayout.addWidget(self.sb_interval, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.dataContentLayout.addWidget(self.gb_data_setting)
@@ -3012,9 +2981,6 @@ class Ui_SettingDialog(object):
         self.data_title.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u6570\u636e\u8bbe\u7f6e", None))
 #endif // QT_CONFIG(accessibility)
         self.gb_data_setting.setTitle(QCoreApplication.translate("SettingDialog", u"\u884c\u60c5\u6570\u636e", None))
-        self.label_source.setText(QCoreApplication.translate("SettingDialog", u"\u6570\u636e\u6e90\uff1a", None))
-        self.rb_sina.setText(QCoreApplication.translate("SettingDialog", u"\u65b0\u6d6a", None))
-        self.rb_em.setText(QCoreApplication.translate("SettingDialog", u"\u4e1c\u65b9\u8d22\u5bcc", None))
         self.label_interval.setText(QCoreApplication.translate("SettingDialog", u"\u5237\u65b0\u95f4\u9694\uff1a", None))
         self.sb_interval.setSuffix(QCoreApplication.translate("SettingDialog", u" \u79d2", None))
         self.gb_data.setTitle(QCoreApplication.translate("SettingDialog", u"\u6307\u6807\u663e\u793a", None))
@@ -3169,7 +3135,7 @@ class Ui_SettingDialog(object):
         self.cb_auto_hide_description.setText(QCoreApplication.translate("SettingDialog", u"\u5168\u90e8\u52fe\u9009\u6807\u7684\u7684\u884c\u60c5\u5747\u8d85\u8fc7 30 \u79d2\u672a\u66f4\u65b0\u65f6\uff0c\u81ea\u52a8\u9690\u85cf\u884c\u60c5\u7ec4\u4ef6\u3002", None))
         self.cb_auto_hide.setText(QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8\u8bc6\u522b", None))
 #if QT_CONFIG(tooltip)
-        self.cb_auto_hide.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5237\u65b0\u65f6\uff0c\u6240\u6709\u52fe\u9009\u6807\u7684\u7684\u884c\u60c5\u65f6\u95f4\u5747\u8d85\u8fc730\u79d2\u5219\u9690\u85cf\u6d6e\u7a97\u548c\u4efb\u52a1\u680f\u3002\u65b0\u6d6a\u4e0e\u4e1c\u8d22\u5747\u652f\u6301\uff1b\u7f3a\u5931\u65f6\u95f4\u6216\u8bf7\u6c42\u5931\u8d25\u4e0d\u89e6\u53d1\u3002\u624b\u52a8\u547c\u51fa\u540e\u4f1a\u63d0\u793a\u5e76\u5012\u8ba1\u65f65\u79d2\uff1b\u65b0\u884c\u60c5\u5230\u8fbe\u4f1a\u53d6\u6d88\u5012\u8ba1\u65f6\u3002\u5b9a\u65f6\u9690\u85cf\u4ecd\u540c\u65f6\u751f\u6548\u3002", None))
+        self.cb_auto_hide.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5237\u65b0\u65f6\uff0c\u6240\u6709\u52fe\u9009\u6807\u7684\u7684\u884c\u60c5\u65f6\u95f4\u5747\u8d85\u8fc730\u79d2\u5219\u9690\u85cf\u6d6e\u7a97\u548c\u4efb\u52a1\u680f\u3002\u7f3a\u5931\u65f6\u95f4\u6216\u8bf7\u6c42\u5931\u8d25\u4e0d\u89e6\u53d1\u3002\u624b\u52a8\u547c\u51fa\u540e\u4f1a\u63d0\u793a\u5e76\u5012\u8ba1\u65f65\u79d2\uff1b\u65b0\u884c\u60c5\u5230\u8fbe\u4f1a\u53d6\u6d88\u5012\u8ba1\u65f6\u3002\u5b9a\u65f6\u9690\u85cf\u4ecd\u540c\u65f6\u751f\u6548\u3002", None))
 #endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(accessibility)
         self.cb_auto_hide.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8\u8bc6\u522b", None))
