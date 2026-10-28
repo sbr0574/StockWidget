@@ -66,7 +66,7 @@ class HistoryChart(QWidget):
     def set_options(self, periods, average, volume, unit_mode="auto"):
         self.show_average, self.show_volume = average, volume
         self.unit_mode = unit_mode
-        self.set_periods(periods)
+        self.set_periods(periods if average else ())
 
     def _price(self, value):
         precision = price_precision(self.instrument.get("type"), self.instrument.get("market", ""))
@@ -78,7 +78,7 @@ class HistoryChart(QWidget):
     def _volume(self, value):
         market, security_type = self.instrument.get("market", ""), self.instrument.get("type")
         lot = volume_lot_size(security_type, market)
-        unit = "手" if lot == 100 else "合约" if security_type == "期" else "股"
+        unit = "" if lot == 100 else "合约" if security_type == "期" else "股"
         return format_value(value, lot, not should_use_english_units(self.unit_mode, market)) + unit
 
     def _percent(self, price):

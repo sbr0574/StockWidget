@@ -180,7 +180,7 @@ class MiniChartTests(SettingsTestCase):
         series = history._series_for(history.instrument, "five_day")
         series.repair_needed = True
         series.retry_after = 0
-        history._refresh_minis()
+        history._refresh_background()
         self.ready(history, 2)
         self.assertEqual(history.dialog.view, "five_day")
         self.assertEqual(history.dialog.chart.view, "five_day")

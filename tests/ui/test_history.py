@@ -11,7 +11,7 @@ import time
 import unittest
 
 from PySide6.QtCore import QEvent, QPoint, QPointF, QRect, Qt
-from PySide6.QtGui import QColor, QCursor, QMouseEvent, QPalette
+from PySide6.QtGui import QColor, QCursor, QIcon, QMouseEvent, QPalette, QPixmap
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
@@ -78,19 +78,18 @@ class HistoryUITests(HistoryTestCase):
         for mode in ("light", "dark"):
             window.set_view_options(color_mode=mode)
             self.app.processEvents()
-            group = dialog.ui.gb_chart
+            group = dialog.ui.gb_data_setting
             title = dialog.ui.chart_enabled_title
             position = title.mapTo(group, QPoint())
             self.assertGreaterEqual(position.x(), 10)
             self.assertGreaterEqual(position.y(), 25)
             common = dialog.ui.cb_head_description.palette().color(QPalette.WindowText)
-            for label in (dialog.ui.chart_enabled_description, dialog.ui.chart_display_mode_description,
-                          dialog.ui.chart_indicators_description):
+            for label in (dialog.ui.chart_enabled_description, dialog.ui.average_period_description):
                 self.assertEqual(label.palette().color(QPalette.WindowText), common)
                 self.assertEqual(label.width(), dialog.ui.cb_head_description.width())
             self.assertEqual(dialog.ui.data_scroll.horizontalScrollBar().maximum(), 0)
 
-    def test_four_sizes_and_indicator_preferences_preserve_view_without_refetch(self):
+    def test_resizing_and_indicator_preferences_preserve_view_without_refetch(self):
         dialog, window = self.make_window(chart_enabled=True)
         window.move(self.app.primaryScreen().availableGeometry().topLeft() + QPoint(20, 20))
         window.history.open_row("float", 0)
@@ -98,13 +97,12 @@ class HistoryUITests(HistoryTestCase):
         popup = window.history.dialog
         popup.set_view("daily")
         self.wait_ready(window)
-        dialog.ui.cb_chart_average.setChecked(False)
-        dialog.ui.cb_chart_volume.setChecked(False)
-        dialog.ui.cb_chart_ma60.setChecked(False)
+        popup.ui.cb_average.setChecked(False)
+        popup.ui.cb_volume.setChecked(False)
+        popup.ui.cb_ma60.setChecked(False)
         sizes = []
-        for mode in ("large", "medium", "small"):
-            combo = dialog.ui.cmb_chart_display_mode
-            combo.setCurrentIndex(combo.findData(mode))
+        for size in ((420, 300), (500, 360), (550, 400)):
+            popup.resize(*size)
             self.wait_until(lambda: popup.rect().contains(popup.chart.geometry()))
             sizes.append(popup.size())
             self.assertEqual(popup.view, "daily")
@@ -115,14 +113,12 @@ class HistoryUITests(HistoryTestCase):
             self.assertTrue(self.app.primaryScreen().availableGeometry().contains(popup.geometry()))
             self.assertTrue(all(popup.rect().contains(button.mapTo(popup, QPoint()) + button.rect().bottomRight())
                                 for button in popup.view_buttons.values()))
-        self.assertLess(sizes[2].width(), sizes[1].width())
-        self.assertLessEqual(sizes[1].width(), sizes[0].width())
-        self.assertLess(sizes[1].width() * sizes[1].height(), sizes[0].width() * sizes[0].height())
-        self.assertLessEqual(sizes[2].width(), 320)
-        self.assertLessEqual(sizes[2].height(), 230)
+        self.assertEqual([(size.width(), size.height()) for size in sizes], [(420, 300), (500, 360), (550, 400)])
+        popup.save_size()
         self.assertEqual(window.history.cache.get.call_count, 2)
         cfg = window.current_config()
-        self.assertEqual(cfg["chart_display_mode"], "small")
+        self.assertEqual(cfg["chart_popup_size"], [550, 400])
+        self.assertNotIn("chart_display_mode", cfg)
         self.assertEqual(cfg["chart_ma_periods"], [5, 10, 20, 30])
 
     def test_live_quotes_update_chart_at_quote_cadence_and_repair_only_missing_minutes(self):
@@ -222,8 +218,8 @@ class HistoryUITests(HistoryTestCase):
             bars = tuple(replace(bar, open=10.1, high=12.1234, low=9.1, close=11.1234, volume=2_000_000)
                          for bar in sample_bars())
             for market, type_, expected, unit_mode, volume in (
-                    ("sh", "沪", "11.12", "cn", "2.00万手"),
-                    ("sz", "基", "11.123", "en", "20.00k手"),
+                    ("sh", "沪", "11.12", "cn", "2.00万"),
+                    ("sz", "基", "11.123", "en", "20.00k"),
                     ("us", "美", "11.123", "auto", "2.00M股"),
                     ("hk", "港", "11.12", "cn", "200.00万股"),
                     ("", "期", "11.12", "en", "2.00M合约")):
@@ -368,7 +364,7 @@ class HistoryUITests(HistoryTestCase):
         self.assertTrue(popup.status.isHidden())
         self.assertEqual(popup.chart.reference_price, 9)
         first_minute = next(i for i, bar in enumerate(popup.chart.bars) if bar.time.endswith("09:31:00"))
-        for mode, volume in (("cn", "2.00万手"), ("en", "20.00k手"), ("auto", "2.00万手")):
+        for mode, volume in (("cn", "2.00万"), ("en", "20.00k"), ("auto", "2.00万")):
             with self.subTest(mode=mode):
                 dialog.ui.cmb_unit_mode.setCurrentIndex(dialog.ui.cmb_unit_mode.findData(mode))
                 self.assertIn(f"成交量 {volume}", popup.chart.tooltip_text(first_minute))
@@ -377,7 +373,7 @@ class HistoryUITests(HistoryTestCase):
         series.result = replace(series.result, stale=True, message="历史数据更新失败")
         history.reload()
         self.assertFalse(popup.status.isHidden())
-        self.assertIn("更新失败", popup.status.toolTip())
+        self.assertIn("更新失败", popup._status_text)
 
     def test_missing_historical_average_is_drawn_and_switching_it_off_does_not_refetch(self):
         dialog, window = self.make_window(chart_enabled=True)
@@ -394,10 +390,10 @@ class HistoryUITests(HistoryTestCase):
         observed_minute = next(i for i, bar in enumerate(chart.bars) if bar.time.endswith("09:41:00"))
         self.assertIn("均价 10.50", chart.tooltip_text(observed_minute))
         with_average = chart.grab().toImage()
-        dialog.ui.cb_chart_average.setChecked(False)
+        window.history.dialog.ui.cb_average.setChecked(False)
         self.assertNotIn("均价", chart.tooltip_text(observed_minute))
         self.assertNotEqual(with_average, chart.grab().toImage())
-        dialog.ui.cb_chart_average.setChecked(True)
+        window.history.dialog.ui.cb_average.setChecked(True)
         self.assertIn("均价 10.50", chart.tooltip_text(observed_minute))
         history.dialog.set_view("five_day")
         self.wait_ready(window)
@@ -497,38 +493,37 @@ class HistoryUITests(HistoryTestCase):
         self.wait_ready(window)
         self.assertEqual(history.cache.get.call_count, calls + 1)
 
-    def test_display_mode_setting_persists_and_switches_open_chart(self):
+    def test_pop_out_preserves_view_and_preferences_and_disable_closes_chart(self):
         dialog, window = self.make_window()
-        combo = dialog.ui.cmb_chart_display_mode
-        self.assertEqual(combo.currentData(), "small")
-        self.assertFalse(combo.isEnabled())
         dialog.ui.cb_chart_enabled.setChecked(True)
-        combo.setCurrentIndex(combo.findData("large"))
-        self.assertEqual(window.current_config()["chart_display_mode"], "large")
         window.history.open_row("float", 0)
         self.wait_ready(window)
         popup = window.history.dialog
+        popup.ui.cb_order_book.setChecked(True)
         popup.set_view("daily")
         self.wait_ready(window)
-        dialog.ui.cb_chart_ma60.setChecked(False)
-        combo.setCurrentIndex(combo.findData("window"))
+        popup.ui.cb_ma60.setChecked(False)
+        calls = window.history.cache.get.call_count
+        QTest.mouseClick(popup.pop_out_button, Qt.LeftButton)
         self.wait_ready(window)
-        self.assertTrue(popup.isVisible())
-        self.assertEqual(popup.view, "daily")
-        self.assertNotIn(60, popup.chart.periods)
-        self.assertEqual(len(popup.chart.bars), 30)
-        combo.setCurrentIndex(combo.findData("large"))
-        self.wait_ready(window)
-        self.wait_until(lambda: QApplication.activePopupWidget() is popup)
+        detached = window.history.dialog
+        self.assertIsNot(detached, popup)
+        self.assertTrue(detached.isVisible())
+        self.assertEqual(detached.display_mode, "window")
+        self.assertEqual(detached.view, "daily")
+        self.assertNotIn(60, detached.chart.periods)
+        self.assertEqual(len(detached.chart.bars), 30)
+        self.assertEqual(window.history.cache.get.call_count, calls)
+        self.assertIsNone(QApplication.activePopupWidget())
         dialog.ui.cb_chart_enabled.setChecked(False)
-        self.assertFalse(popup.isVisible())
-        self.assertFalse(combo.isEnabled())
-        self.assertEqual(window.current_config()["chart_display_mode"], "large")
+        self.assertFalse(detached.isVisible())
+        self.assertTrue(window.current_config()["chart_order_book_enabled"])
         dialog.ui.cb_chart_enabled.setChecked(True)
-        self.assertEqual(combo.currentData(), "large")
+        window.history.open_row("float", 0)
+        self.assertTrue(window.history.dialog.ui.cb_order_book.isChecked())
         window.reset_settings()
         self.assertFalse(dialog.ui.cb_chart_enabled.isChecked())
-        self.assertEqual(combo.currentData(), "small")
+        self.assertFalse(window.current_config()["chart_order_book_enabled"])
 
     def test_floating_view_buttons_outside_click_and_escape(self):
         _, window = self.make_window(chart_enabled=True, chart_display_mode="large")
@@ -627,9 +622,9 @@ class HistoryUITests(HistoryTestCase):
         self.assertIsNone(window.quotes.instrument_at("float", -1))
 
     def test_click_opens_but_drag_and_double_click_do_not(self):
-        for mode in ("window", "large", "medium", "small"):
-            with self.subTest(mode=mode):
-                _, window = self.make_window(chart_enabled=True, chart_display_mode=mode)
+        for book in (False, True):
+            with self.subTest(order_book=book):
+                _, window = self.make_window(chart_enabled=True, chart_order_book_enabled=book)
                 target = window.table.viewport()
                 pos = window.table.visualRect(window.model.index(0, 0)).center()
                 with patch.object(window.history, "_open") as open_chart:
@@ -733,6 +728,46 @@ class HistoryUITests(HistoryTestCase):
 @unittest.skipUnless(sys.platform == "win32" and os.environ.get("STOCKWIDGET_TEST_WINDOWS") == "1",
                      "Requires an opt-in Windows desktop session")
 class WindowsHistoryPopupTests(HistoryTestCase):
+    def test_detached_window_has_taskbar_identity_and_minimizing_keeps_request_alive(self):
+        import ctypes
+        from ctypes import wintypes as w
+
+        original_icon = self.app.windowIcon()
+        self.addCleanup(self.app.setWindowIcon, original_icon)
+        icon = QPixmap(24, 24)
+        icon.fill(QColor("#2a9fd6"))
+        self.app.setWindowIcon(QIcon(icon))
+        _, window = self.make_window(chart_enabled=True)
+        history = window.history
+        with patch.object(history, "_start") as start:
+            history.open_row("float", 0)
+            request = start.call_args.args[0]
+            history._busy = True
+            history.dialog.pop_out_button.click()
+            detached = history.dialog
+            self.app.processEvents()
+            self.assertIsNone(detached.parentWidget())
+            self.assertIsNone(detached.windowHandle().transientParent())
+            self.assertFalse(detached.windowIcon().isNull())
+            self.assertEqual(detached.windowIcon().cacheKey(), self.app.windowIcon().cacheKey())
+            user32 = ctypes.WinDLL("user32", use_last_error=True)
+            user32.GetWindow.argtypes = (w.HWND, w.UINT)
+            user32.GetWindow.restype = w.HWND
+            get_style = user32.GetWindowLongPtrW if hasattr(user32, "GetWindowLongPtrW") else user32.GetWindowLongW
+            get_style.argtypes = (w.HWND, ctypes.c_int)
+            get_style.restype = ctypes.c_ssize_t
+            hwnd = int(detached.winId())
+            self.assertFalse(user32.GetWindow(hwnd, 4))  # No hidden owner suppressing the taskbar entry.
+            self.assertFalse(get_style(hwnd, -20) & 0x80)  # WS_EX_TOOLWINDOW
+            detached.showMinimized()
+            self.wait_until(detached.isMinimized)
+            self.assertEqual(history._generation, request[0])
+            history._accept((*request, BarResult(sample_bars(), "sina")))
+            detached.showNormal()
+            self.wait_until(lambda: detached.isVisible() and not detached.isMinimized())
+            self.assertTrue(detached.chart.bars)
+            self.assertEqual(detached.display_mode, "window")
+
     def test_native_outside_press_closes_popup_without_hiding_quotes(self):
         import ctypes
         from ctypes import wintypes as w

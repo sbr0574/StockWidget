@@ -9,7 +9,7 @@ from stockwidget.core.quote_presentation import (
     METRIC_SPECS,
     normalize_visible_metrics,
 )
-from stockwidget.ui.controls.style import accent_color, accent_rgba
+from stockwidget.ui.controls.style import accent_color, accent_rgba, theme_palette
 
 
 _METRIC_MIME_TYPE = "application/x-stockwidget-metric"
@@ -84,6 +84,7 @@ class MetricListWidget(QListWidget):
         return metric_id if metric_id in METRIC_BY_ID else None
 
     def set_theme(self, dark: bool):
+        foreground = theme_palette(dark, self.palette()).color(QPalette.Text).name()
         if dark:
             pool_bg = "rgba(255, 255, 255, 0.06)"
             chip = "rgba(255, 255, 255, 0.12)"
@@ -103,12 +104,14 @@ class MetricListWidget(QListWidget):
             pool_bg = "transparent"
         self.setStyleSheet(f"""
             QListWidget {{
+                color: {foreground};
                 background-color: {pool_bg};
                 border: none;
                 border-radius: 8px;
                 outline: none;
             }}
             QListWidget::item {{
+                color: {foreground};
                 background: {chip};
                 border: none;
                 border-radius: 5px;

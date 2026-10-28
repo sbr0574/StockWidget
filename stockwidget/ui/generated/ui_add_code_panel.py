@@ -19,8 +19,8 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QHBoxLay
     QLabel, QPushButton, QSizePolicy, QSpacerItem,
     QVBoxLayout, QWidget)
 
-from stockwidget.ui.watchlist.add_panel import (CodeSearchInput, FilledCheckBox, FilterCheckRow, SearchResultList,
-    SelectAllCheckBox)
+from stockwidget.ui.controls.settings_widgets import FilledCheckBox
+from stockwidget.ui.watchlist.add_panel import (CodeSearchInput, FilterCheckRow, SearchResultList, SelectAllCheckBox)
 
 class Ui_AddCodePanel(object):
     def setupUi(self, add_code_panel):
@@ -213,4 +213,3 @@ class Ui_AddCodePanel(object):
         self.add_code_next_page.setText(QCoreApplication.translate("AddCodePanel", u"\u4e0b\u4e00\u9875", None))
         pass
     # retranslateUi
-

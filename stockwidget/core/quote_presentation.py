@@ -27,7 +27,8 @@ METRIC_SPECS = (
     MetricSpec("commi", "委比", "委比", "commi_visible"),
     MetricSpec("volume", "成交量", "成交量", "vol_visible"),
     MetricSpec("amount", "成交额", "成交额", "amount_visible"),
-    MetricSpec("average", "均价", "均价", "avg_visible"),
+    MetricSpec("average", "均值", "均值", "avg_visible"),
+    MetricSpec("volume_ratio", "量比", "量比", "volume_ratio_visible"),
     # Keep the stored ID / legacy visibility flag so existing layouts migrate intact.
     MetricSpec("kline", "迷你图", "迷你图", "kline_visible"),
 )
@@ -203,6 +204,7 @@ class QuoteDisplayOptions:
     code_visible: bool = False
     type_visible: bool = False
     unit_mode: str = "auto"
+    average_period: int = 0
 
 
 def price_precision(security_type, market=""):
@@ -218,6 +220,8 @@ def format_quote(
     market: str = "",
     cost: float | None = None,
     options: QuoteDisplayOptions = QuoteDisplayOptions(),
+    average_price: float | None = None,
+    volume_ratio: float | None = None,
 ):
     data = dict(data)
     lot_size = volume_lot_size(security_type, market)
@@ -270,7 +274,12 @@ def format_quote(
     # 指标计算
     change = data["current_price"] - data["prev_close"] if data["prev_close"] else 0.0
     change_pct = (data["current_price"] / data["prev_close"] - 1) * 100 if data["prev_close"] else 0.0
-    avg = (data["deals_amt"] / data["deals_vol"]) if data["deals_vol"] > 0 else data["prev_close"]
+    avg = (average_price if options.average_period else
+           data["deals_amt"] / data["deals_vol"] if data["deals_vol"] > 0 and data["deals_amt"] > 0 else None)
+    if avg is not None and not math.isfinite(avg):
+        avg = None
+    if volume_ratio is not None and (not math.isfinite(volume_ratio) or volume_ratio < 0):
+        volume_ratio = None
     p_sum, s_sum = sum(data["purchaser_vol"]), sum(data["seller_vol"])
     committee = (100 * (p_sum - s_sum) / (p_sum + s_sum)) if (p_sum + s_sum) > 0 else 0.0
     arrow = " "
@@ -321,7 +330,8 @@ def format_quote(
                 unit_cn=not english_units,
             )
         ),
-        "均价": f"{avg:.{precision}f}",
+        "均值": f"{avg:.{precision}f}" if avg is not None else "-",
+        "量比": f"{volume_ratio:.2f}" if volume_ratio is not None else "-",
         "迷你图": k_payload,
     }
     color_roles = {
@@ -334,7 +344,8 @@ def format_quote(
         "委比": direction_color_role(committee),
         "成交量": COLOR_ROLE_TEXT,
         "成交额": COLOR_ROLE_TEXT,
-        "均价": direction_color_role(avg - data["prev_close"]),
+        "均值": direction_color_role(avg - data["prev_close"]) if avg is not None else COLOR_ROLE_NEUTRAL,
+        "量比": COLOR_ROLE_TEXT,
         "迷你图": COLOR_ROLE_TEXT,
     }
     sort_values = {
@@ -345,17 +356,19 @@ def format_quote(
         "委比": committee if (p_sum + s_sum) > 0 else None,
         "成交量": data["deals_vol"],
         "成交额": data["deals_amt"],
-        "均价": avg,
+        "均值": avg,
+        "量比": volume_ratio,
     }
 
-    # 指数不显示浮盈/买一卖一/委比/均价（均置为"-"）
+    # 指数的成交额/成交量不是指数点位；日K的 MA 点位仍然有效。
     if is_index:
-        for key in ("浮盈", "委比", "均价"):
+        for key in ("浮盈", "委比", *(("均值",) if not options.average_period else ())):
             format_data[key] = "-"
             color_roles[key] = direction_color_role(0)
         sort_values["浮盈"] = None
         sort_values["委比"] = None
-        sort_values["均价"] = None
+        if not options.average_period:
+            sort_values["均值"] = None
         if not data["deals_vol"]:
             sort_values["成交量"] = None
         if not data["deals_amt"]:
@@ -364,7 +377,7 @@ def format_quote(
     return format_data, color_roles, sort_values
 
 
-SORTABLE_HEADERS = ("现价", "涨跌", "涨幅", "浮盈", "委比", "成交量", "成交额", "均价")
+SORTABLE_HEADERS = ("现价", "涨跌", "涨幅", "浮盈", "委比", "成交量", "成交额", "均值", "量比")
 
 
 def sorted_quote_indices(sort_values, header, *, descending=True):

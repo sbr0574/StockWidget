@@ -142,21 +142,30 @@ class QuotePresenter(QObject):
                 return self._latest_quotes.get(key)
         return None
 
-    def mini_instruments(self):
-        """Only request histories represented by a currently visible chart column."""
+    def history_instruments(self, view="intraday"):
+        """Request only histories needed by visible charts or derived metrics."""
         result = {}
-        if not self.window.widget_visible or self.window.view_options.mini_chart_type != "trend":
+        if not self.window.widget_visible:
             return result
         for surface in ("float", "taskbar"):
             if (surface == "float" and (not self.window.isVisible() or self.window.position_controller.collapsed)
                     or surface == "taskbar" and self.window.display_mode == "float" and not self.window.taskbar_preview_active):
                 continue
-            if "kline" not in self.window.get_surface_metrics(surface):
+            metrics = self.window.get_surface_metrics(surface)
+            options = self.window.view_options
+            trend = view == "intraday" and options.mini_chart_type == "trend" and "kline" in metrics
+            average = view == "daily" and options.average_period and "average" in metrics
+            ratio = view == "daily" and "volume_ratio" in metrics
+            if not (trend or average or ratio):
                 continue
             page = self.get_page(surface)
-            for key in self._ordered_keys[page.start:page.stop]:
-                if key in self.window.checked_codes:
-                    result[key] = self.window.checked_codes[key]
+            keys = (self._ordered_keys if view == "daily" and self.sort_header in {"均值", "量比"}
+                    else self._ordered_keys[page.start:page.stop])
+            for key in keys:
+                instrument = self.window.checked_codes.get(key)
+                if instrument and (trend or average or (instrument.get("market") in {"sh", "sz", "bj"}
+                                                        and instrument.get("type") not in {"指", "期"})):
+                    result[key] = instrument
         return result
 
     def _mini_cells(self, rows, headers, keys, split=False):
@@ -274,6 +283,8 @@ class QuotePresenter(QObject):
                 timer.stop()
 
     def reproject(self):
+        if self._latest_quotes and self._last_keys:
+            self._format_rows({key: self._latest_quotes[key] for key in self._last_keys if key in self._latest_quotes})
         self.project_rows(
             self._last_full_rows,
             self._last_color_roles,
@@ -307,6 +318,37 @@ class QuotePresenter(QObject):
             # The owning window may have been destroyed while the request was running.
             pass
 
+    def _format_rows(self, data):
+        full_rows = []
+        full_color_roles = []
+        sort_values = []
+        options = QuoteDisplayOptions(
+            name_length=self.window.name_length,
+            code_visible=self.window.code_visible,
+            type_visible=self.window.type_visible,
+            unit_mode=self.window.unit_mode,
+            average_period=self.window.view_options.average_period,
+        )
+        for c, d in data.items():
+            entry = self.window.watchlist.get(c) or {}
+            code_info = self.window.codes_list.get(c, {})
+            type_ = entry.get("type") or code_info.get("type")
+            market = entry.get("market") or code_info.get("market") or ""
+            display_code = entry.get("code") or code_info.get("code") or c
+            derived = (self.window.history.quote_metrics({**code_info, **entry}, d)
+                       if hasattr(self.window, "history") else {})
+            row, color_roles, row_sort_values = format_quote(
+                d, type_, display_code, market=market,
+                cost=entry.get("cost"), options=options, **derived,
+            )
+            full_rows.append(row)
+            full_color_roles.append(color_roles)
+            sort_values.append(row_sort_values)
+
+        self._last_full_rows = full_rows
+        self._last_color_roles = full_color_roles
+        self._last_sort_values = sort_values
+
     def accept_result(self, payload):
         """主线程：处理请求结果并更新表格。payload = (ok, data, error)"""
         if self.window.position_controller.collapsed:
@@ -336,32 +378,7 @@ class QuotePresenter(QObject):
             if old_time is not None and (new_time is None or new_time < old_time):
                 data[code] = old
 
-        full_rows = []
-        full_color_roles = []
-        sort_values = []
-        options = QuoteDisplayOptions(
-            name_length=self.window.name_length,
-            code_visible=self.window.code_visible,
-            type_visible=self.window.type_visible,
-            unit_mode=self.window.unit_mode,
-        )
-        for c, d in data.items():
-            entry = self.window.watchlist.get(c) or {}
-            code_info = self.window.codes_list.get(c, {})
-            type_ = entry.get("type") or code_info.get("type")
-            market = entry.get("market") or code_info.get("market") or ""
-            display_code = entry.get("code") or code_info.get("code") or c
-            row, color_roles, row_sort_values = format_quote(
-                d, type_, display_code, market=market,
-                cost=entry.get("cost"), options=options,
-            )
-            full_rows.append(row)
-            full_color_roles.append(color_roles)
-            sort_values.append(row_sort_values)
-
-        self._last_full_rows = full_rows
-        self._last_color_roles = full_color_roles
-        self._last_sort_values = sort_values
+        self._format_rows(data)
         self._last_keys = list(data)
         # Retain the last accepted time through partial/empty responses, so a
         # later response cannot roll back an instrument that was briefly absent.
@@ -372,7 +389,7 @@ class QuotePresenter(QObject):
             self.window._clear_message()
         else:
             self.window._show_message("请在设置面板中添加自选股", is_error=True)
-        self.project_rows(full_rows, full_color_roles, sort_values)
+        self.project_rows(self._last_full_rows, self._last_color_roles, self._last_sort_values)
         self.window.hide_controller.quotes_refreshed(data)
         self.quotes_updated.emit()
 

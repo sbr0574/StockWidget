@@ -76,11 +76,14 @@ class SettingsDialogTests(SettingsTestCase):
     def test_inline_metric_options_preserve_configuration_and_apply_to_both_surfaces(self):
         dialog, window = self._make_dialog(name_length=3, unit_mode="cn")
         self.assertEqual(dialog.ui.cmb_name_length.currentData(), 3)
-        dialog.ui.cb_name_visible.click()
+        dialog.ui.cmb_name_length.setCurrentIndex(dialog.ui.cmb_name_length.findData(0))
         self.assertEqual(window.name_length, 0)
-        self.assertFalse(dialog.ui.cmb_name_length.isEnabled())
-        dialog.ui.cb_name_visible.click()
+        self.assertTrue(dialog.ui.cmb_name_length.isEnabled())
+        dialog.ui.cmb_name_length.setCurrentIndex(dialog.ui.cmb_name_length.findData(3))
         self.assertEqual(window.name_length, 3)
+        for value in (0, -1, 1, 2, 3, 4):
+            dialog.ui.cmb_name_length.setCurrentIndex(dialog.ui.cmb_name_length.findData(value))
+            self.assertEqual(window.current_config()["name_length"], value)
         dialog.ui.cb_code_visible.click()
         dialog.ui.cb_type_visible.click()
         dialog.ui.cmb_unit_mode.setCurrentIndex(dialog.ui.cmb_unit_mode.findData("en"))
@@ -92,8 +95,7 @@ class SettingsDialogTests(SettingsTestCase):
     def test_wheel_scrolls_page_without_changing_slider_or_combo_values(self):
         dialog, _ = self._make_dialog(chart_enabled=True)
         dialog.show()
-        for page, controls in ((dialog.ui.data, (dialog.ui.cmb_chart_display_mode,
-                                               dialog.ui.cmb_name_length, dialog.ui.cmb_unit_mode)),
+        for page, controls in ((dialog.ui.data, (dialog.ui.cmb_name_length, dialog.ui.cmb_unit_mode)),
                                (dialog.ui.floating, (dialog.ui.cmb_font, dialog.ui.slider_font_size))):
             dialog.ui.settings_pages.setCurrentWidget(page)
             scroll = page.findChild(QScrollArea)
@@ -342,9 +344,9 @@ class SettingsDialogTests(SettingsTestCase):
             self.assertTrue(dialog.ui.cb_force_top.isChecked())
             self.assertTrue(dialog.ui.cb_force_top.isEnabled())
             dialog.show()
-            dialog.ui.settings_pages.setCurrentWidget(dialog.ui.floating)
+            dialog.ui.settings_pages.setCurrentWidget(dialog.ui.general)
             self.qt_app.processEvents()
-            dialog.ui.floating_scroll.ensureWidgetVisible(dialog.ui.gb_fcn)
+            dialog.ui.general_scroll.ensureWidgetVisible(dialog.ui.gb_fcn)
             QTest.mouseClick(dialog.ui.cb_float_on_top, Qt.LeftButton)
             self.assertFalse(window.float_on_top)
             self.assertFalse(window.force_top)
@@ -501,17 +503,17 @@ class SettingsDialogTests(SettingsTestCase):
 
     def test_nested_paging_switch_controls_first_manual_auto_and_synced_taskbar(self):
         dialog, window = self._make_dialog(float_paging_enabled=True, float_page_mode="first")
-        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.floating)
+        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.general)
         dialog.show()
         self.qt_app.processEvents()
         rows = dialog.float_row_settings
         paging = rows.paging
-        dialog.ui.floating_scroll.ensureWidgetVisible(paging)
+        dialog.ui.general_scroll.ensureWidgetVisible(paging)
         self.assertTrue(rows.rows.isEnabled())
         self.assertFalse(rows.auto.isEnabled())
 
         def click_paging():
-            dialog.ui.floating_scroll.ensureWidgetVisible(paging)
+            dialog.ui.general_scroll.ensureWidgetVisible(paging)
             QTest.mouseClick(paging, Qt.LeftButton)
             self.qt_app.processEvents()
 
@@ -644,7 +646,7 @@ class SettingsDialogTests(SettingsTestCase):
         taskbar.enabled.setChecked(True)
         self.assertTrue(taskbar.separator.isEnabled())
         dialog.show()
-        for page, group in ((dialog.ui.floating, floating), (dialog.ui.taskbar, taskbar)):
+        for page, group in ((dialog.ui.general, floating), (dialog.ui.taskbar, taskbar)):
             dialog.ui.settings_pages.setCurrentWidget(page)
             self.qt_app.processEvents()
             scroll = page.findChild(QScrollArea)

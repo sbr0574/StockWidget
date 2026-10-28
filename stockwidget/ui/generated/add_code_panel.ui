@@ -355,7 +355,7 @@
   <customwidget>
    <class>FilledCheckBox</class>
    <extends>QCheckBox</extends>
-   <header>stockwidget.ui.watchlist.add_panel</header>
+   <header>stockwidget.ui.controls.settings_widgets</header>
   </customwidget>
   <customwidget>
    <class>SelectAllCheckBox</class>

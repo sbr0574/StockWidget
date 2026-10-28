@@ -87,6 +87,42 @@ def _minute_sessions(instrument):
     return ((0, 1440),)  # Unknown exchange: retain its observed clock.
 
 
+def quote_volume_ratio(bars, quote, instrument):
+    """Domestic regular-session volume pace against five completed daily bars.
+
+    Sina's basic quote has no volume-ratio field. Keep this calculation tied to
+    its quote clock and cached daily history; never substitute turnover rate.
+    """
+    if not quote or instrument.get("market") not in {"sh", "sz", "bj"} or instrument.get("type") in {"期", "指"}:
+        return None
+    current = quote_clock(quote, instrument)
+    if current is None or current.weekday() >= 5:
+        return None
+    minute = current.hour * 60 + current.minute + current.second / 60
+    elapsed = sum(max(0, min(minute, end) - start) for start, end in _minute_sessions(instrument))
+    if elapsed <= 0 or not quote.get("opening_price"):
+        return None
+    previous = sorted({bar.time[:10]: bar.volume for bar in bars
+                       if len(bar.time) == 10 and bar.time < current.date().isoformat()}.items())[-5:]
+    total = sum(volume for _day, volume in previous)
+    volume = _number(quote.get("deals_vol"), 0)
+    if len(previous) != 5 or total <= 0 or volume <= 0:
+        return None
+    return volume / elapsed / (total / 5 / 240)
+
+
+def quote_moving_average(bars, quote, instrument, period):
+    """Use the same unadjusted daily closes and live daily supplement as charts."""
+    if period not in MA_PERIODS or not bars:
+        return None
+    current = quote_clock(quote, instrument) if quote else None
+    if current:
+        bars = tuple(bar for bar in bars if bar.time[:10] <= current.date().isoformat())
+        bars = merge_quote(bars, instrument, "daily", quote)
+    values = moving_average(bars, period)
+    return values[-1] if values else None
+
+
 def minute_gaps(bars, instrument, current):
     """Detect missing completed minutes; lunch/overnight breaks aren't gaps.
 

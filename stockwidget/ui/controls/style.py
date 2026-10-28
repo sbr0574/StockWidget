@@ -5,6 +5,8 @@ from PySide6.QtGui import QColor, QFont, QFontInfo, QFontMetrics, QGuiApplicatio
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QApplication, QCheckBox, QGroupBox, QRadioButton, QWidget
 
+from stockwidget.ui.controls.settings_widgets import FilledCheckBox
+
 
 def accent_color() -> QColor:
     palette = QApplication.palette()
@@ -221,6 +223,13 @@ QPushButton:checked:hover {{
 QPushButton:checked:pressed {{
     background-color: {selected_pressed_bg};
 }}
+QPushButton[chartTab="true"]:checked, QPushButton[chartTab="true"]:checked:hover {{
+    background-color: {color_hover_bg};
+    border: 1px solid transparent;
+}}
+QPushButton[chartTab="true"]:checked:pressed {{
+    background-color: {color_pressed_bg};
+}}
 QPushButton:disabled {{
     background-color: {color_disabled_bg};
     color: {color_disabled_text};
@@ -297,9 +306,15 @@ QLabel#shortcuts_title, QLabel#floating_title, QLabel#taskbar_title, QLabel#abou
 QLabel[settingTitle="true"] {{
     font-weight: 600;
 }}
+QLabel#label_interval {{
+    font-weight: 700;
+}}
 QLabel[settingDescription="true"] {{
     color: {description};
     font-size: 12px;
+}}
+QLabel[quoteCaption="true"] {{
+    color: {description};
 }}
 QPushButton[destructive="true"] {{
     background-color: rgba(220, 60, 60, 0.16);
@@ -379,6 +394,8 @@ def apply_settings_theme(widget: QWidget, dark: bool, palette: QPalette, *,
     # controls can be reset by polish, so restore their palettes afterwards.
     for control in widgets:
         control.setPalette(choice_palette if isinstance(control, (QRadioButton, QCheckBox)) else palette)
+        if isinstance(control, FilledCheckBox):
+            control.set_theme(dark)
     if macos_groups:
         for group in widget.findChildren(QGroupBox):
             # Cocoa's default layout item trims the native title margin, which

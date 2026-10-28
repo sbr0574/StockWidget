@@ -11,7 +11,7 @@ StockWidget 是 Windows、macOS 和 Linux 桌面行情工具，只展示行情�
 | `core/quote_presentation.py` | 指标目录、显示值 / 颜色角色 / 原始排序值，统一列投影 |
 | `core/view_options.py`、`window_rules.py` | 显示偏好、同步、分页与分栏，屏幕位置与隐藏的纯规则 |
 | `data/quotes.py`、`network_errors.py` | 行情请求、统一数据结构、共享请求策略与安全错误结果 |
-| `data/bars.py`、`bar_cache.py` | 历史适配、交易日与实时补充规则，同源 SQLite 缓存 |
+| `data/bars.py`、`bar_cache.py` | 历史适配、交易日、实时补充与派生指标计算，同源 SQLite 缓存 |
 | `data/code_lists.py`、`update_check.py` | 市场代码列表同步与应用更新检查 |
 | `scripts/update_codes.py` | 单文件服务端代码列表更新、官方名录与名称补充分页，不依赖桌面应用运行时 |
 | `platform/capabilities.py` | 平台 / 实际 Qt 会话能力及默认值 |
@@ -70,9 +70,9 @@ StockWidget 是 Windows、macOS 和 Linux 桌面行情工具，只展示行情�
 
 ## 设置 UI 与新增条目
 
-设置按“自选列表 / 数据 / 常规 / 快捷键 / 浮窗 / 任务栏 / 关于”分类：数据负责刷新、指标与图表，常规负责应用偏好，浮窗和任务栏分别管理显示面。新增参数按用户用途归类，复用已有控件和行样式。
+设置按“自选列表 / 数据 / 常规 / 快捷键 / 外观 / 任务栏 / 关于”分类：数据负责刷新、指标与图表，常规负责应用与窗口行为、分页及分栏，外观负责字体、颜色、透明度、配色模式和图标，任务栏管理其显示面。新增参数按用户用途归类，复用已有控件和行样式。
 
-- 所有设置控件及静态布局维护在 `ui/generated/settings.ui`；指标池、添加面板和浮窗对应各自 `.ui`。绑定代码只做信号、配置同步、能力与编辑状态，不动态创建另一套布局。
+- 设置页控件及静态布局维护在 `ui/generated/settings.ui`；图表窗口维护在 `ui/generated/history.ui`，指标池、添加面板和浮窗对应各自 `.ui`。绑定代码只做信号、配置同步、能力与编辑状态，不动态创建另一套布局。
 - 修改 `.ui` 后运行 `python scripts/generate_ui.py`，用 `--check` 验证同步；禁止手改 `ui_*.py`。保留 `objectName`、提升类及枚举与绑定的对应关系。
 - 设置窗口固定为704×496，分类页单栏纵向滚动，无横向滚动；组框使用原生 non-flat 外观。说明列宽统一310逻辑像素，左 / 顶对齐；数值、下拉框、字体与开关右对齐。
 - 新增设置行沿用现有 Designer 行结构、`ToggleSwitch`、`settingDescription`、颜色按钮和主题样式；不要为单条设置新增独立配色或硬编码浅深背景。

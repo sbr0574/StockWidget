@@ -897,7 +897,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self.widget_visibility_changed.emit()
         self.quotes.sync_page_timers()
         self.sync_refresh_timer()
-        self.history.schedule_mini_refresh()
+        self.history.schedule_history_refresh()
         if self.force_top and self._keep_top_timer and not self._keep_top_timer.isActive():
             self._keep_top_timer.start()
         apply_click_through(self, self.click_through)

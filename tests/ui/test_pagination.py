@@ -466,7 +466,7 @@ class PagingInteractionTests(PagingTestCase):
         all_metrics = [spec.metric_id for spec in METRIC_SPECS]
         self.win.set_view_options(taskbar_metrics=all_metrics)
         self.assertEqual(self.win.view_options.taskbar_metrics, all_metrics)
-        self.assertEqual(self.win.taskbar_model.columnCount(), 11)
+        self.assertEqual(self.win.taskbar_model.columnCount(), len(all_metrics))
         self.assertFalse(render_taskbar(self.win, 44).isNull())
         independent = ["volume", "price", "name", "change"]
         self.win.set_view_options(taskbar_metrics=independent, taskbar_sync_metrics=True)

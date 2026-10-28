@@ -131,9 +131,29 @@ class WidgetFormattingTests(unittest.TestCase):
         self.assertEqual(row["涨幅"], "+0.00%")
         self.assertEqual(roles["现价"], COLOR_ROLE_NEUTRAL)
 
+    def test_mean_period_and_volume_ratio_have_shared_display_and_sort_values(self):
+        quote = _quote(1000, 12500)
+        row, roles, values = format_quote(quote, "沪", "600000", market="sh", volume_ratio=1.25)
+        self.assertEqual(row["均值"], "12.50")
+        self.assertEqual(row["量比"], "1.25")
+        self.assertEqual(values["量比"], 1.25)
+        row, roles, values = format_quote(quote, "沪", "600000", market="sh", average_price=13.25,
+                                         options=QuoteDisplayOptions(average_period=5))
+        self.assertEqual(row["均值"], "13.25")
+        self.assertEqual(values["均值"], 13.25)
+        self.assertEqual(roles["均值"], "up")
+        for kind, period in (("沪", 5), ("指", 0)):
+            row, roles, values = format_quote(quote, kind, "600000", options=QuoteDisplayOptions(average_period=period))
+            self.assertEqual(row["均值"], "-")
+            self.assertIsNone(values["均值"])
+            self.assertEqual(row["量比"], "-")
+        row, _, _ = format_quote(quote, "指", "000001", average_price=3000,
+                                 options=QuoteDisplayOptions(average_period=20))
+        self.assertEqual(row["均值"], "3000.00")
+
     def test_index_hides_unavailable_metrics_even_with_cost(self):
         row, roles, _sort_values = format_quote(_quote(0), "指", "000001", cost=10)
-        for header in ("浮盈", "委比", "均价", "成交量", "成交额"):
+        for header in ("浮盈", "委比", "均值", "成交量", "成交额"):
             self.assertEqual(row[header], "-")
         self.assertEqual(roles["浮盈"], COLOR_ROLE_NEUTRAL)
         self.assertEqual(row["买一/卖一"], BidAskCell("-", "-"))
