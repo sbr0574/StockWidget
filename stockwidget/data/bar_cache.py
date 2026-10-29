@@ -86,6 +86,9 @@ class BarCache:
                     close REAL NOT NULL, volume REAL NOT NULL, amount REAL, average REAL,
                     PRIMARY KEY (entry_id, time)
                 ) WITHOUT ROWID""")
+                db.execute("""CREATE TABLE IF NOT EXISTS fundamentals (
+                    security_key TEXT PRIMARY KEY, saved_at REAL NOT NULL, payload TEXT NOT NULL
+                ) WITHOUT ROWID""")
                 if version == 0:
                     db.execute("PRAGMA user_version = 1")
                 return db
@@ -100,6 +103,50 @@ class BarCache:
     def _remove_database(self):
         for suffix in ("", "-journal", "-wal", "-shm"):
             Path(str(self.database) + suffix).unlink(missing_ok=True)
+
+    @staticmethod
+    def _fundamentals_key(instrument):
+        return "sina-fundamentals:1:" + ":".join(str(instrument.get(k, "")).lower() for k in ("market", "code"))
+
+    def fundamentals_fresh(self, instrument, values, saved_at):
+        now = self.clock()
+        if not math.isfinite(saved_at) or saved_at > now.timestamp():
+            return False
+        saved = datetime.fromtimestamp(saved_at, timezone.utc)
+        same_day = market_now(instrument, saved).date() == market_now(instrument, now).date()
+        # A failed optional fetch backs off instead of hammering at quote speed.
+        return same_day and (bool(values) or now.timestamp() - saved_at < 600)
+
+    def read_fundamentals(self, instrument):
+        with self._lock:
+            if self.database.exists():
+                try:
+                    with closing(self._connect()) as db:
+                        row = db.execute("SELECT saved_at, payload FROM fundamentals WHERE security_key = ?",
+                                         (self._fundamentals_key(instrument),)).fetchone()
+                    if row:
+                        values = json.loads(row[1])
+                        if (isinstance(values, dict) and all(v is None or
+                                (k == "report_date" and isinstance(v, str) and re.fullmatch(r"\d{8}", v)) or
+                                (type(v) in {int, float} and math.isfinite(v)) for k, v in values.items())
+                                and self.fundamentals_fresh(instrument, values, row[0])):
+                            return values, row[0]
+                except (OSError, sqlite3.Error, ValueError, TypeError, OverflowError):
+                    pass
+        return None
+
+    def write_fundamentals(self, instrument, values, saved_at, *, generation):
+        with self._lock:
+            if generation != self._generation:
+                return False
+            try:
+                payload = json.dumps(values, ensure_ascii=False, allow_nan=False)
+                with closing(self._connect()) as db, db:
+                    db.execute("INSERT OR REPLACE INTO fundamentals VALUES (?, ?, ?)",
+                               (self._fundamentals_key(instrument), saved_at, payload))
+                return True
+            except (OSError, sqlite3.Error, ValueError, TypeError):
+                return False
 
     def _read(self, key):
         if self.database.exists():

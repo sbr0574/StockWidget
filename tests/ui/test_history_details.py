@@ -1,22 +1,261 @@
 """Resizable chart geometry, detachment, and accepted live quote presentation."""
 
 from dataclasses import replace
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
-from PySide6.QtCore import QPoint, Qt
-from PySide6.QtGui import QColor, QPainter, QPixmap
+from PySide6.QtCore import QEvent, QPoint, QPointF, Qt
+from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPixmap
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QStyle, QStyleOptionButton
 
-from stockwidget.data.bars import BarResult
+from stockwidget.data.bars import Bar, BarResult
+from stockwidget.data.bar_cache import BarCache
 from stockwidget.data.bars import quote_moving_average, quote_volume_ratio
-from stockwidget.ui.controls.history_chart import MA_COLORS
+from stockwidget.ui.controls.history_chart import HistoryChart, MA_COLORS
 from stockwidget.ui.controls.quote_view import DEFAULT_DOWN_COLOR, DEFAULT_UP_COLOR
 from tests.data.test_bars import sample_bars
 from tests.ui.test_history import HistoryTestCase
 
 
 class HistoryDetailsTests(HistoryTestCase):
+    def test_navigation_cycles_checked_canonical_order_and_keeps_window_view_and_size(self):
+        _, window = self.make_window(chart_enabled=True, float_paging_enabled=True, float_max_rows=1)
+        for entry in window.watchlist.values():
+            entry["name"] = "同名标的"
+        window.quotes.set_sort("现价", Qt.DescendingOrder)
+        history = window.history
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        history.dialog.pop_out_button.click()
+        self.wait_ready(window)
+        detached = history.dialog
+        detached.set_view("daily")
+        self.wait_ready(window)
+        geometry = detached.geometry()
+        for button, code in ((detached.ui.btn_next, "600000"), (detached.ui.btn_previous, "600006"),
+                             (detached.ui.btn_previous, "600005"), (detached.ui.btn_next, "600006")):
+            button.click()
+            self.wait_ready(window)
+            self.assertEqual(history.instrument["code"], code)
+            self.assertIs(history.dialog, detached)
+            self.assertEqual(detached.geometry(), geometry)
+            self.assertEqual(detached.view, "daily")
+            self.assertEqual(detached.quote_header.code.text(), "SH" + code)
+            self.assertEqual(button.toolTip(), "")
+
+    def test_twenty_header_values_share_live_quotes_and_optional_detail_result(self):
+        _, window = self.make_window(chart_enabled=True)
+        details = {"annual_profit": 2_000_000, "ttm_profit": 4_000_000, "annualized_profit": 5_000_000, "book_value_per_share": 8,
+                   "total_shares": 1000000, "float_shares": 500000}
+        with patch("stockwidget.ui.floating.presenter.request_quote_details", return_value=(details, {"inside_volume": 50, "outside_volume": 50})) as request:
+            history = window.history
+            history.open_row("float", 0)
+            self.wait_ready(window)
+            history.dialog.pop_out_button.click()
+            self.wait_ready(window)
+            self.wait_until(lambda: not window.quotes._detail_busy)
+            header = history.dialog.quote_header
+            self.assertEqual(header.values["市盈（TTM）"].text(), "2.50")
+            self.assertEqual(header.values["市盈（静）"].text(), "5.00")
+            self.assertEqual(header.values["市净率"].text(), "1.25")
+            self.assertEqual(header.values["总股本"].text(), "100.00万")
+            self.assertEqual(header.values["流通股"].text(), "50.00万")
+            self.assertEqual(header.values["市盈（动）"].text(), "2.00")
+            self.assertNotIn("每股收益", header.values)
+            for row, caption in enumerate(("市盈（静）", "市盈（动）", "市盈（TTM）", "市净率")):
+                self.assertEqual(history.dialog.ui.quote_column_3_layout.itemAtPosition(row, 0).widget().text(), caption)
+            for theme in ("light", "dark"):
+                window.set_view_options(color_mode=theme)
+                history.dialog.resize(780, 400)
+                self.app.processEvents()
+                for col in range(5):
+                    block = getattr(history.dialog.ui, f"quote_column_{col}")
+                    for row in range(4):
+                        caption = block.layout().itemAtPosition(row, 0).widget()
+                        value = block.layout().itemAtPosition(row, 1).widget()
+                        self.assertTrue(block.rect().contains(caption.geometry()))
+                        self.assertTrue(block.rect().contains(value.geometry()))
+                        self.assertLess(caption.geometry().right(), value.geometry().left())
+            quote = window.quotes._latest_quotes["sh600000"]
+            data = {**window.quotes._latest_quotes, "sh600000": {**quote, "current_price": 12, "time": "10:00:01"}}
+            window.quotes.accept_result((True, data, None))
+            self.assertEqual(header.values["市盈（TTM）"].text(), "3.00")
+            self.assertEqual(header.values["总市值"].text(), "1200.00万")
+            self.wait_until(lambda: not window.quotes._detail_busy)
+            self.assertEqual(request.call_count, 2)
+            self.assertEqual(request.call_args.args[1], details)
+
+    def test_daily_detail_cache_and_selection_close_reject_late_activity(self):
+        _, window = self.make_window(chart_enabled=True)
+        presenter = window.quotes
+        first, second = list(window.checked_codes.values())[:2]
+        cache = window.history.cache
+        clock = [cache.clock()]
+        cache.clock = lambda: clock[0]
+        saved_at, cache_generation = clock[0].timestamp(), cache.generation
+        values = {"annual_profit": 2_000_000}
+        with patch.object(presenter, "_detail_worker") as worker:
+            presenter.set_detail_instrument(first)
+            self.wait_until(lambda: worker.call_count == 1)
+            generation = presenter._detail_generation
+            presenter._accept_details((generation, first, "2026-09-30", values, {"inside_volume": 50}, saved_at, cache_generation, True))
+            key = presenter._detail_key(first)
+            clock[0] += timedelta(hours=2)
+            presenter._refresh_details()
+            self.wait_until(lambda: worker.call_count == 2)
+            self.assertEqual(worker.call_args.args[3], values)
+            presenter._accept_details((generation, first, "2026-09-30", values, {}, saved_at, cache_generation, False))
+            self.assertEqual(presenter._fundamentals[key][1], saved_at)
+            clock[0] += timedelta(days=1)
+            presenter._refresh_details()
+            self.wait_until(lambda: worker.call_count == 3)
+            self.assertIsNone(worker.call_args.args[3])
+            presenter.set_detail_instrument(second)
+            presenter._accept_details((generation, first, "2026-09-30", {"annual_profit": 999}, {"inside_volume": 999}, saved_at, cache_generation, True))
+            self.wait_until(lambda: worker.call_count == 4)
+            self.assertEqual(presenter._fundamentals[key][0], values)
+            self.assertNotIn("inside_volume", presenter.details_for(second))
+            generation = presenter._detail_generation
+            presenter.set_detail_instrument(None)
+            presenter._accept_details((generation, second, "2026-09-30", {"annual_profit": 3}, {"inside_volume": 3}, saved_at, cache_generation, True))
+            self.assertNotIn(presenter._detail_key(second), presenter._fundamentals)
+
+    def test_reopening_reuses_daily_disk_financials_and_clearing_rejects_inflight_writes(self):
+        _, window = self.make_window(chart_enabled=True)
+        presenter, cache = window.quotes, window.history.cache
+        instrument = next(iter(window.checked_codes.values()))
+        details = {"annual_profit": 2_000_000, "total_shares": 1_000_000}
+        with patch("stockwidget.ui.floating.presenter.request_quote_details", return_value=(details, {})) as request:
+            presenter.set_detail_instrument(instrument)
+            self.wait_until(lambda: not presenter._detail_busy)
+            self.assertIsNone(request.call_args.args[1])
+            presenter.clear_details()
+            restarted = BarCache(cache.directory, clock=cache.clock)
+            window.history.cache = restarted
+            presenter.set_detail_instrument(instrument)
+            self.wait_until(lambda: not presenter._detail_busy)
+            self.assertEqual(request.call_args.args[1], details)
+            self.assertEqual(request.call_count, 2)
+        with patch.object(presenter, "_detail_worker") as worker:
+            presenter._refresh_details()
+            self.wait_until(lambda: worker.called)
+            generation, cache_generation = presenter._detail_generation, restarted.generation
+            self.assertTrue(window.history.clear_cache())
+            presenter._accept_details((generation, instrument, "2026-09-30", details, {},
+                                       restarted.clock().timestamp(), cache_generation, True))
+            self.assertFalse(restarted.database.exists())
+            self.assertFalse(presenter.details_for(instrument))
+
+    def test_hover_readout_and_crosshair_leave_restore_latest_without_tooltip(self):
+        _, window = self.make_window(chart_enabled=True)
+        history = window.history
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = history.dialog
+        popup.resize(560, 380)
+        self.app.processEvents()
+        chart = popup.chart
+        latest = chart.bars[-1]
+        selected = next(i for i, bar in enumerate(chart.bars) if bar.time.endswith("09:40:00"))
+        bars = list(chart.bars)
+        bars[selected] = replace(bars[selected], close=10.25, volume=300, amount=3000)
+        chart.set_data(bars, "intraday", history.instrument, reference_price=9, now=history.cache.clock())
+        self.app.processEvents()
+        geometry = (popup.geometry(), chart.geometry(), popup.ui.chart_readout.geometry())
+        baseline = chart.grab().toImage()
+        point = QPointF(chart._plot.left() + chart._plot.width() * (chart._positions[selected] + .5) / len(chart._time_axis),
+                        chart._plot.top() + chart._plot.height() * .31)
+        event = QMouseEvent(QEvent.MouseMove, point, QPointF(chart.mapToGlobal(point.toPoint())), Qt.NoButton, Qt.NoButton, Qt.NoModifier)
+        with patch("PySide6.QtWidgets.QToolTip.showText") as tooltip:
+            self.app.sendEvent(chart, event)
+            self.app.processEvents()
+            tooltip.assert_not_called()
+        self.assertEqual(chart._hover, selected)
+        self.assertEqual((popup.geometry(), chart.geometry(), popup.ui.chart_readout.geometry()), geometry)
+        self.assertEqual(popup.ui.chart_readout.text(), "均 10.00  价格 10.25 (+13.89%)  量 3")
+        hovered = chart.grab().toImage()
+        scale = hovered.devicePixelRatio()
+        x, y = round(point.x() * scale), round(point.y() * scale)
+        self.assertTrue(any(hovered.pixelColor(px, y) != baseline.pixelColor(px, y)
+                            for px in range(round(chart._plot.left() * scale), round(chart._plot.right() * scale))))
+        self.assertTrue(any(hovered.pixelColor(x, py) != baseline.pixelColor(x, py)
+                            for py in range(round(chart._plot.top() * scale), round(chart._plot.bottom() * scale))))
+        self.app.sendEvent(chart, QEvent(QEvent.Leave))
+        self.assertIn(f"价格 {chart._price(latest.close)}", popup.ui.chart_readout.text())
+        self.assertIsNone(chart._cursor_pos)
+        popup.set_view("daily")
+        self.wait_ready(window)
+        readout = popup.ui.chart_readout.text().splitlines()
+        self.assertEqual(len(readout), 2)
+        self.assertIn("量 ", readout[0])
+        self.assertNotIn("均", "".join(readout))
+        self.assertTrue(readout[1].startswith("MA5:"))
+        chart.grab()
+        point = chart._plot.center()
+        event = QMouseEvent(QEvent.MouseMove, point, QPointF(chart.mapToGlobal(point.toPoint())), Qt.NoButton, Qt.NoButton, Qt.NoModifier)
+        self.app.sendEvent(chart, event)
+        image = chart.grab().toImage()
+        scale = image.devicePixelRatio()
+        # Daily candles have only a left price scale, so no cropped percentage
+        # badge may spill into the narrow right margin.
+        self.assertEqual(image.pixelColor(round((chart.width() - 4) * scale), round(point.y() * scale)), chart.palette().base().color())
+
+    def test_ratio_and_trade_direction_colors_follow_global_up_down_colors(self):
+        _, window = self.make_window(chart_enabled=True)
+        window.history.open_row("float", 0)
+        self.wait_ready(window)
+        window.history.dialog.pop_out_button.click()
+        self.wait_ready(window)
+        header = window.history.dialog.quote_header
+        instrument = window.history.instrument
+        quote = window.quotes.quote_for(instrument)
+        for ratio, expected in ((2, QColor("blue")), (.5, QColor("orange")), (1, None)):
+            header.set_quote(instrument, quote, "cn", "blue", "orange", ratio, {"inside_volume": 50, "outside_volume": 50})
+            self.assertEqual(header.values["外盘"].palette().windowText().color(), QColor("blue"))
+            self.assertEqual(header.values["内盘"].palette().windowText().color(), QColor("orange"))
+            if expected:
+                self.assertEqual(header.values["量比"].palette().windowText().color(), expected)
+            else:
+                self.assertNotIn(header.values["量比"].palette().windowText().color(), (QColor("blue"), QColor("orange")))
+
+    def test_zero_center_and_five_session_dates_are_centered_under_their_columns(self):
+        from shiboken6 import delete
+        chart = HistoryChart()
+        try:
+            chart.resize(740, 420)
+            days = ("2026-10-22", "2026-10-23", "2026-10-26", "2026-10-27", "2026-10-28")
+            bars = tuple(Bar(day + " " + time, 10, 12, 9, 11, 100, 1100)
+                         for day in days for time in ("09:31:00", "09:32:00", "15:00:00"))
+            chart.set_data(bars[-3:], "intraday", {"market": "sh", "type": "沪"}, reference_price=10,
+                           now=datetime(2026, 10, 28, 2, tzinfo=timezone.utc))
+            chart.grab()
+            self.assertAlmostEqual(chart._reference_y, chart._plot.center().y())
+            chart.set_data(bars, "five_day", {"market": "sh", "type": "沪"}, reference_price=10)
+            chart.grab()
+            labels = chart._time_labels()
+            self.assertEqual([label for rect, label in labels], [day[5:] for day in days])
+            for i, (rect, label) in enumerate(labels):
+                self.assertAlmostEqual(rect.center().x(), chart._plot.left() + chart._plot.width() * (i + .5) / 5)
+            point = QPointF(chart._plot.left() + chart._plot.width() * (chart._positions[0] + .5) / len(chart._time_axis),
+                            chart._plot.center().y())
+            event = QMouseEvent(QEvent.MouseMove, point, QPointF(chart.mapToGlobal(point.toPoint())),
+                                Qt.NoButton, Qt.NoButton, Qt.NoModifier)
+            self.app.sendEvent(chart, event)
+            texts = []
+
+            class Recorder(QPainter):
+                def drawText(self, *args):
+                    texts.append(args[-1])
+                    return super().drawText(*args)
+
+            with patch("stockwidget.ui.controls.history_chart.QPainter", Recorder):
+                chart.grab()
+            self.assertIn("10-22 09:31", texts)
+            self.assertEqual(chart.readout_text(), "均 11.00  价格 11.00 (+10.00%)  量 1")
+        finally:
+            delete(chart)
+
     def test_panel_buttons_use_hover_for_selected_view_and_quote_columns_align(self):
         _, window = self.make_window(chart_enabled=True)
         window.history.open_row("float", 0)
@@ -164,6 +403,8 @@ class HistoryDetailsTests(HistoryTestCase):
         self.assertFalse(popup.order_book.isHidden())
         self.assertTrue(popup.rect().contains(popup.order_book.geometry()))
         self.assertTrue(popup.rect().contains(popup.chart.geometry()))
+        self.assertLess(popup.order_book.geometry().bottom(), popup.ui.chart_readout.geometry().top())
+        self.assertLess(popup.chart.geometry().bottom(), popup.ui.chart_readout.geometry().top())
         self.assertGreaterEqual(popup.chart.width(), 200)
         popup.set_view("five_day")
         self.wait_ready(window)
@@ -185,6 +426,7 @@ class HistoryDetailsTests(HistoryTestCase):
         self.app.processEvents()
         self.assertTrue(detached.rect().contains(detached.order_book.geometry()))
         self.assertTrue(detached.rect().contains(detached.quote_header.geometry()))
+        self.assertLess(detached.order_book.geometry().bottom(), detached.ui.chart_readout.geometry().top())
 
     def test_pop_out_keeps_inflight_result_and_uses_one_worker(self):
         _, window = self.make_window(chart_enabled=True)

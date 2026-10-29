@@ -2967,7 +2967,7 @@ class Ui_SettingDialog(object):
 #endif // QT_CONFIG(accessibility)
         self.btn_mini_trend.setText(QCoreApplication.translate("SettingDialog", u"\u8d70\u52bf", None))
 #if QT_CONFIG(tooltip)
-        self.btn_mini_trend.setToolTip(QCoreApplication.translate("SettingDialog", u"\u63093\u5206\u949f\u5206\u8fa8\u7387\u663e\u793a\u5f53\u65e5\u8d70\u52bf\uff0c\u6700\u65b0\u4e00\u6bb5\u968f\u884c\u60c5\u66f4\u65b0\uff1b\u7070\u8272\u865a\u7ebf\u4e3a\u6628\u6536\u96f6\u8f74\u3002", None))
+        self.btn_mini_trend.setToolTip(QCoreApplication.translate("SettingDialog", u"\u63095\u5206\u949f\u5206\u8fa8\u7387\u663e\u793a\u5f53\u65e5\u8d70\u52bf\uff0c\u6574\u6761\u7ebf\u6309\u5f53\u524d\u4ef7\u683c\u76f8\u5bf9\u6628\u6536\u7740\u8272\uff1b\u7070\u8272\u865a\u7ebf\u4e3a\u6628\u6536\u96f6\u8f74\u3002", None))
 #endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(accessibility)
         self.btn_mini_trend.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u8d70\u52bf\uff0c\u70b9\u51fb\u9009\u62e9\uff1b\u4e0b\u65b9\u4e3a\u4e09\u884c\u793a\u4f8b\u9884\u89c8", None))

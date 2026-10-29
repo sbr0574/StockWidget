@@ -1,3 +1,6 @@
+import math
+import re
+
 import requests
 
 from stockwidget.data.network_errors import request_error_message
@@ -6,6 +9,115 @@ from stockwidget.data.network_errors import request_error_message
 # 新浪行情统一为价格、成交量额、买卖盘和北京时间字段。
 _SINA_HEADERS = {"Referer": "https://finance.sina.com.cn", "User-Agent": "Mozilla/5.0"}
 _Z5 = (0, 0, 0, 0, 0)   # 空五档（港美股/期货只有一档或无盘口）
+
+
+def _optional_number(value):
+    try:
+        result = float(value)
+        return result if math.isfinite(result) else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _sina_text(url, *, params=None):
+    response = requests.get(url, params=params, headers=_SINA_HEADERS, timeout=3)
+    try:
+        response.raise_for_status()
+        response.encoding = "gb18030"
+        return response.text
+    finally:
+        response.close()
+
+
+def parse_sina_fundamentals(text, instrument):
+    """Optional values retain missingness; share counts are normalized to shares.
+
+    Domestic profit fields are CNY 100-million units; report aggregates use
+    CNY. EPS isn't used as a denominator: its weighted share basis can differ
+    from today's capital. HK listed shares are not treated as free float.
+    """
+    if instrument.get("type") in {"指", "基", "期"}:
+        return {}
+    label = _sina_code(instrument).removeprefix("rt_") + "_i"
+    match = re.search(r'hq_str_' + re.escape(label) + r'="([^"]*)"', text, re.I)
+    if not match or not match[1]:
+        return {}
+    parts = match[1].split(",")
+    market = instrument.get("market")
+    if market in {"sh", "sz", "bj"}:
+        fields = {"annual_profit": 12, "ttm_profit": 13,
+                  "book_value_per_share": 5, "total_shares": 7, "float_shares": 9}
+        # B shares need FX conversion before using company earnings/equity.
+        if len(parts) < 16 or parts[0] != "A":
+            return {}
+        result = {key: _optional_number(parts[index]) for key, index in fields.items()}
+        for key in ("total_shares", "float_shares"):
+            result[key] = result[key] * 10000 if result[key] is not None and result[key] > 0 else None
+        for key in ("annual_profit", "ttm_profit"):
+            result[key] = result[key] * 100000000 if result[key] is not None else None
+        result["annualized_profit"] = None
+        report = parts[39].split("|") if len(parts) > 39 else []
+        if len(report) > 1 and re.fullmatch(r"\d{4}(?:03|06|09|12)\d{2}", report[0]):
+            profit = _optional_number(report[1])
+            result["report_date"] = report[0]
+            if profit is not None:
+                result["annualized_profit"] = profit * 12 / int(report[0][4:6])
+        if result["annualized_profit"] is None and len(parts) > 25:
+            quarter = parts[25].split("|")
+            if len(quarter) == 2 and re.fullmatch(r"\d{4}(?:03|06|09|12)\d{2}", quarter[0]):
+                profit = _optional_number(quarter[1])  # Average of disclosed YTD quarters.
+                result["report_date"] = quarter[0]
+                result["annualized_profit"] = profit * 4 if profit is not None else None
+        if len(parts) > 29:
+            ratio = parts[29].split("/")
+            if len(ratio) == 2:
+                numerator, denominator = map(_optional_number, ratio)
+                if numerator and denominator and result["book_value_per_share"] is not None:
+                    result["book_value_per_share"] *= numerator / denominator
+        return result
+    if market == "hk" and len(parts) > 13:
+        return {"total_shares": _optional_number(parts[7])}
+    return {}
+
+
+def parse_sina_trade_volumes(text):
+    """Sina's own page reads this pair as outside volume, then inside volume."""
+    match = re.search(r"\btrade_INVOL_OUTVOL\s*=\s*\[\s*([\d.]+)\s*,\s*([\d.]+)\s*\]", text)
+    if not match:
+        return {}
+    outside, inside = map(_optional_number, match.groups())
+    if outside is None or inside is None:
+        return {}
+    return {"outside_volume": outside, "inside_volume": inside}
+
+
+def request_quote_details(instrument, fundamentals=None):
+    """Supplement the selected chart, independently of basic quote success.
+
+    Reuse a recently fetched fundamentals dict; activity is a fresh cumulative
+    snapshot. Each optional endpoint fails independently without fake zeros.
+    """
+    market = instrument.get("market")
+    if instrument.get("type") in {"指", "基", "期"} or market not in {"sh", "sz", "bj", "hk", "us"}:
+        return {}, {}
+    if fundamentals is None:
+        fundamentals = {}
+        if market != "us":
+            try:
+                label = _sina_code(instrument).removeprefix("rt_") + "_i"
+                fundamentals = parse_sina_fundamentals(_sina_text("https://hq.sinajs.cn/list=" + label), instrument)
+            except (requests.RequestException, ValueError, IndexError):
+                pass
+    activity = {}
+    if market in {"sh", "sz", "bj"}:
+        try:
+            activity = parse_sina_trade_volumes(_sina_text(
+                "https://vip.stock.finance.sina.com.cn/quotes_service/view/CN_TransListV2.php",
+                params={"num": 11, "symbol": _sina_code(instrument)},
+            ))
+        except (requests.RequestException, ValueError):
+            pass
+    return fundamentals, activity
 
 
 def _as_float(value) -> float:
@@ -147,7 +259,7 @@ def _parse_sina_us(parts: list, is_index: bool = False) -> dict:
             pur_vol=_Z5, pur_price=_Z5, sell_vol=_Z5, sell_price=_Z5,
             date=t[0], time=t[1],
         )
-    return _new_entry(
+    entry = _new_entry(
         name=parts[0],
         opening=parts[5], prev_close=parts[26] if len(parts) > 26 else 0,
         current=parts[1], high=parts[6], low=parts[7],
@@ -156,6 +268,9 @@ def _parse_sina_us(parts: list, is_index: bool = False) -> dict:
         pur_vol=_Z5, pur_price=_Z5, sell_vol=_Z5, sell_price=_Z5,
         date=t[0], time=t[1],
     )
+    entry.update({key: _optional_number(parts[index]) if len(parts) > index else None
+                  for key, index in (("market_cap", 12), ("eps_ttm", 13), ("total_shares", 19))})
+    return entry
 
 
 def _parse_sina_futures(parts: list) -> dict:

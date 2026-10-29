@@ -23,12 +23,14 @@ from stockwidget.core.quote_presentation import (
 )
 from stockwidget.core.view_options import column_ranges, page_slice
 from stockwidget.core.window_rules import quote_timestamp
-from stockwidget.data.quotes import fetch_quote_result
+from stockwidget.data.quotes import fetch_quote_result, request_quote_details
 
 
 class QuotePresenter(QObject):
     data_ready = Signal(object)
     quotes_updated = Signal()
+    details_ready = Signal(object)
+    details_updated = Signal()
 
     def __init__(self, window):
         super().__init__(window)
@@ -47,6 +49,12 @@ class QuotePresenter(QObject):
         self._quote_generation = 0
         self._refresh_thread = None
         self.data_ready.connect(self.accept_result)
+        self.details_ready.connect(self._accept_details)
+        self._detail_instrument = None
+        self._detail_generation = 0
+        self._detail_busy = False
+        self._detail_values = {}
+        self._fundamentals = {}
         self.page_timers = {}
         for surface in ("float", "taskbar"):
             timer = QTimer(self)
@@ -69,9 +77,10 @@ class QuotePresenter(QObject):
         return headers
 
     def invalidate(self, *, reset_pages=False):
-        """自选、数据源或配置更改后丢弃在途结果，停止旧行情倒计时。"""
+        """自选或配置更改后丢弃在途结果，停止旧行情倒计时。"""
         self._quote_generation += 1
         self._latest_quotes = {}
+        self.clear_details()
         if reset_pages:
             self.float_page = self.taskbar_page = 0
         self.window.hide_controller.cancel_countdown()
@@ -141,6 +150,85 @@ class QuotePresenter(QObject):
             if entry.get("checked") and all(entry.get(field) == instrument.get(field) for field in ("market", "code")):
                 return self._latest_quotes.get(key)
         return None
+
+    @staticmethod
+    def _detail_key(instrument):
+        return tuple(instrument.get(field) for field in ("market", "code", "type"))
+
+    def clear_details(self):
+        self.set_detail_instrument(None)
+        self._detail_values.clear()
+        self._fundamentals.clear()
+
+    def set_detail_instrument(self, instrument):
+        """One active detached chart; selection/close invalidates late results."""
+        key = self._detail_key(instrument) if instrument else None
+        old_key = self._detail_key(self._detail_instrument) if self._detail_instrument else None
+        if old_key != key:
+            self._detail_generation += 1
+            self._detail_instrument = dict(instrument) if instrument else None
+            self._refresh_details()
+
+    def details_for(self, instrument):
+        key = self._detail_key(instrument)
+        quote = self.quote_for(instrument) or {}
+        data = self._detail_values.get(key, {})
+        return {**self._fundamentals.get(key, ({}, 0))[0],
+                **(data.get("activity", {}) if data.get("date") == quote.get("date") else {})}
+
+    def _refresh_details(self):
+        instrument = self._detail_instrument
+        if not instrument or self._detail_busy or not self.window.widget_visible:
+            return
+        if not any((entry.get("market"), entry.get("code")) == (instrument.get("market"), instrument.get("code"))
+                   for entry in self.window.checked_codes.values()):
+            return
+        # Fundamentals don't need the global quote cadence. Activity uses the
+        # existing refresh events, with no separate refresh timer.
+        key = self._detail_key(instrument)
+        cache = self.window.history.cache
+        fundamentals, saved = self._fundamentals.get(key, (None, 0))
+        if fundamentals is None or not cache.fundamentals_fresh(instrument, fundamentals, saved):
+            fundamentals = None
+        quote = self.quote_for(instrument) or {}
+        self._detail_busy = True
+        threading.Thread(target=self._detail_worker,
+                         args=(self._detail_generation, dict(instrument), quote.get("date"), fundamentals, saved, cache, cache.generation),
+                         daemon=True).start()
+
+    def _detail_worker(self, generation, instrument, date, fundamentals, saved_at, cache, cache_generation):
+        try:
+            if fundamentals is None:
+                cached = cache.read_fundamentals(instrument)
+                if cached is not None:
+                    fundamentals, saved_at = cached
+            downloaded = fundamentals is None
+            fundamental, activity = request_quote_details(instrument, fundamentals)
+        except Exception:
+            fundamental, activity, downloaded = fundamentals or {}, {}, fundamentals is None
+        if downloaded:
+            saved_at = cache.clock().timestamp()
+        try:
+            self.details_ready.emit((generation, instrument, date, fundamental, activity, saved_at, cache_generation, downloaded))
+        except RuntimeError:
+            pass
+
+    def _accept_details(self, payload):
+        self._detail_busy = False
+        generation, instrument, date, fundamental, activity, saved_at, cache_generation, downloaded = payload
+        cache = self.window.history.cache
+        if (generation != self._detail_generation or not self._detail_instrument
+                or not self.window.widget_visible or cache_generation != cache.generation):
+            self._refresh_details()
+            return
+        key = self._detail_key(instrument)
+        if key != self._detail_key(self._detail_instrument):
+            return
+        self._fundamentals[key] = dict(fundamental), saved_at
+        if downloaded:
+            cache.write_fundamentals(instrument, fundamental, saved_at, generation=cache_generation)
+        self._detail_values[key] = {"activity": dict(activity), "date": date}
+        self.details_updated.emit()
 
     def history_instruments(self, view="intraday"):
         """Request only histories needed by visible charts or derived metrics."""
@@ -392,6 +480,7 @@ class QuotePresenter(QObject):
         self.project_rows(self._last_full_rows, self._last_color_roles, self._last_sort_values)
         self.window.hide_controller.quotes_refreshed(data)
         self.quotes_updated.emit()
+        self._refresh_details()
 
     def set_sort(self, header: str, order):
         if header not in SORTABLE_HEADERS:

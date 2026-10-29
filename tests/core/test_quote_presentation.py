@@ -68,6 +68,13 @@ def _quote(volume: int = 123456, amount: float = 0) -> dict:
 
 
 class WidgetFormattingTests(unittest.TestCase):
+    def test_volume_ratio_color_compares_to_one_on_both_shared_display_surfaces(self):
+        for ratio, role in ((2, COLOR_ROLE_UP), (.5, COLOR_ROLE_DOWN),
+                            (1, COLOR_ROLE_NEUTRAL), (None, COLOR_ROLE_NEUTRAL)):
+            with self.subTest(ratio=ratio):
+                _, colors, _ = format_quote(_quote(), "沪", "600000", market="sh", volume_ratio=ratio)
+                self.assertEqual(colors["量比"], role)
+
     def test_single_bid_ask_cell_preserves_continuous_trade_markers_and_both_colors(self):
         quote = _quote()
         quote["purchaser_price"][0], quote["seller_price"][0] = 11, 13

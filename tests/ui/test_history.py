@@ -199,7 +199,7 @@ class HistoryUITests(HistoryTestCase):
             release.set()
             self.wait_ready(window)
             self.assertEqual(history.dialog.chart.bars[-1].close, 11.125)
-            self.assertIn("收 11.12", history.dialog.chart.tooltip_text(len(history.dialog.chart.bars) - 1))
+            self.assertIn("价格 11.12", history.dialog.chart.readout_text(len(history.dialog.chart.bars) - 1))
             window.quotes.accept_result((False, {}, "请求失败"))
             window.quotes.invalidate()
             self.assertIsNone(window.quotes.quote_for(history.instrument))
@@ -211,7 +211,7 @@ class HistoryUITests(HistoryTestCase):
             release.set()
             self.wait_ready(window)
 
-    def test_chart_tooltip_prices_match_live_quote_precision(self):
+    def test_chart_readout_prices_match_live_quote_precision(self):
         from shiboken6 import delete
         chart = HistoryChart()
         try:
@@ -225,13 +225,13 @@ class HistoryUITests(HistoryTestCase):
                     ("", "期", "11.12", "en", "2.00M合约")):
                 chart.set_options([5, 10, 20, 30, 60], True, True, unit_mode)
                 chart.set_data(bars, "daily", {"market": market, "type": type_})
-                text = chart.tooltip_text(29)
+                text = chart.readout_text(29)
                 self.assertIn(f"收 {expected}", text)
                 self.assertIn(f"MA60: {expected}", text)
-                self.assertIn(f"成交量 {volume}", text)
+                self.assertIn(f"量 {volume}", text)
                 chart.set_options([], False, False)
-                self.assertNotIn("MA60", chart.tooltip_text(29))
-                self.assertNotIn("成交量", chart.tooltip_text(29))
+                self.assertNotIn("MA60", chart.readout_text(29))
+                self.assertIn("量 ", chart.readout_text(29))
                 chart.set_options([5, 10, 20, 30, 60], True, True)
         finally:
             delete(chart)
@@ -248,12 +248,12 @@ class HistoryUITests(HistoryTestCase):
             palette.setColor(QPalette.Highlight, price_color)
             chart.setPalette(palette)
             for view in ("intraday", "five_day"):
-                for opening in (False, True):
+                for clock in ("09:30", "09:31", "10:00"):
+                    opening = clock != "10:00"
                     for width, height in ((308, 150), (740, 420)):
-                        with self.subTest(view=view, opening=opening, size=(width, height)):
+                        with self.subTest(view=view, clock=clock, size=(width, height)):
                             chart.resize(width, height)
-                            bar = Bar(f"2026-09-30 09:{30 if opening else 31}:00",
-                                      10 if opening else 11, 11, 10 if opening else 11, 11)
+                            bar = Bar(f"2026-09-30 {clock}:00", 10 if opening else 11, 11, 10 if opening else 11, 11)
                             chart.set_data((bar,), view, {"market": "sh", "type": "沪"},
                                            now=datetime(2026, 9, 30, 1, 30, 20, tzinfo=timezone.utc))
                             image = chart.grab().toImage()
@@ -263,7 +263,7 @@ class HistoryUITests(HistoryTestCase):
                                  chart._plot.left() + chart._plot.width() * (chart._positions[0] + .5) / len(chart._time_axis))
                             y = chart._plot.bottom() - (point_price - low) / (high - low) * chart._plot.height()
                             scale = image.devicePixelRatio()
-                            self.assertTrue(any(image.pixelColor(px, py) == price_color
+                            self.assertTrue(any(abs(image.pixelColor(px, py).hueF() - price_color.hueF()) < .03 and image.pixelColor(px, py).saturationF() > .3
                                                 for px in range(round(x * scale) - 2, round(x * scale) + 3)
                                                 for py in range(round(y * scale) - 2, round(y * scale) + 3)))
                             if opening:
@@ -292,8 +292,8 @@ class HistoryUITests(HistoryTestCase):
                             self.assertGreater(low, price * .98)
                             self.assertLess(high, price * 1.02)
                             self.assertTrue(chart._plot.top() < chart._reference_y < chart._plot.bottom())
-                            self.assertNotIn("均价", chart.tooltip_text(0))
-                            self.assertIn("分时均线", chart.tooltip_text(0))
+                            self.assertNotIn("均价", chart.readout_text(0))
+                            self.assertTrue(chart.readout_text(0).startswith("均 "))
                             # The separator extends into the otherwise empty axis margin.
                             scale = image.devicePixelRatio()
                             y = round((chart._plot.bottom() + chart._volume_plot.top()) / 2 * scale)
@@ -323,12 +323,15 @@ class HistoryUITests(HistoryTestCase):
             for view in ("five_day", "intraday"):
                 with self.subTest(view=view):
                     chart.set_data(bars if view == "five_day" else bars[-4:], view, {"market": "sh", "type": "沪"})
+                    # Five-day sessions reserve missing minutes, too. Give each
+                    # minute enough physical pixels to inspect its own color.
+                    chart.resize(max(740, len(chart._time_axis) * 3), 420)
                     image = chart.grab().toImage()
                     scale = image.devicePixelRatio()
                     rect = chart._volume_plot
                     for i in range(len(chart.bars)):
                         # Sample inside the painted bar, clear of axes and the zero baseline.
-                        x = (rect.left() + rect.width() * (i + .5) / len(chart.bars)) * scale
+                        x = (rect.left() + rect.width() * (chart._positions[i] + .5) / len(chart._time_axis)) * scale
                         y = (rect.bottom() - rect.height() / 2) * scale
                         expected = (chart.palette().color(QPalette.Text), chart.up_color,
                                     chart.down_color, chart.down_color)[i % 4]
@@ -367,7 +370,7 @@ class HistoryUITests(HistoryTestCase):
         for mode, volume in (("cn", "2.00万"), ("en", "20.00k"), ("auto", "2.00万")):
             with self.subTest(mode=mode):
                 dialog.ui.cmb_unit_mode.setCurrentIndex(dialog.ui.cmb_unit_mode.findData(mode))
-                self.assertIn(f"成交量 {volume}", popup.chart.tooltip_text(first_minute))
+                self.assertIn(f"量 {volume}", popup.chart.readout_text(first_minute))
                 self.assertEqual(history.cache.get.call_count, 1)
         series = next(iter(history._series.values()))
         series.result = replace(series.result, stale=True, message="历史数据更新失败")
@@ -388,16 +391,16 @@ class HistoryUITests(HistoryTestCase):
         self.wait_ready(window)
         chart = history.dialog.chart
         observed_minute = next(i for i, bar in enumerate(chart.bars) if bar.time.endswith("09:41:00"))
-        self.assertIn("均价 10.50", chart.tooltip_text(observed_minute))
+        self.assertIn("均 10.50", chart.readout_text(observed_minute))
         with_average = chart.grab().toImage()
         window.history.dialog.ui.cb_average.setChecked(False)
-        self.assertNotIn("均价", chart.tooltip_text(observed_minute))
+        self.assertIn("均 10.50", chart.readout_text(observed_minute))
         self.assertNotEqual(with_average, chart.grab().toImage())
         window.history.dialog.ui.cb_average.setChecked(True)
-        self.assertIn("均价 10.50", chart.tooltip_text(observed_minute))
+        self.assertIn("均 10.50", chart.readout_text(observed_minute))
         history.dialog.set_view("five_day")
         self.wait_ready(window)
-        self.assertIn("均价 10.50", chart.tooltip_text(observed_minute))
+        self.assertIn("均 10.50", chart.readout_text(observed_minute))
         self.assertEqual(history.cache.get.call_count, 1)
 
     def test_compact_chart_time_labels_keep_endpoints_without_overlap(self):
@@ -452,14 +455,14 @@ class HistoryUITests(HistoryTestCase):
                                         chart._plot.center().y())
                         event = QMouseEvent(QEvent.MouseMove, point, QPointF(chart.mapToGlobal(point.toPoint())),
                                             Qt.NoButton, Qt.NoButton, Qt.NoModifier)
-                        with patch("stockwidget.ui.controls.history_chart.QToolTip.showText") as tooltip:
+                        with patch("PySide6.QtWidgets.QToolTip.showText") as tooltip:
                             QApplication.sendEvent(chart, event)
                         self.assertEqual(chart._hover, expected)
-                        self.assertEqual(tooltip.call_count, expected is not None)
+                        tooltip.assert_not_called()
             for view, clock in (("five_day", now), ("intraday", now + timedelta(days=1))):
                 chart.set_data(bars, view, {"market": "sh", "type": "沪"}, now=clock)
                 chart.grab()
-                self.assertEqual(chart._time_axis[-1], bars[-1].time)
+                self.assertEqual(chart._time_axis[-1], "2026-09-30 15:00:00" if view == "five_day" else bars[-1].time)
         finally:
             delete(chart)
 

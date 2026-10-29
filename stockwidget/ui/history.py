@@ -2,8 +2,8 @@
 
 import threading
 
-from PySide6.QtCore import QObject, QPoint, QRect, QSize, Qt, QTimer, QSignalBlocker, Signal
-from PySide6.QtGui import QColor, QCursor, QPalette
+from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QTimer, QSignalBlocker, Signal
+from PySide6.QtGui import QColor, QCursor, QFontInfo, QFontMetrics, QPalette
 from PySide6.QtWidgets import QApplication, QButtonGroup, QDialog, QToolTip
 
 from stockwidget.core.window_rules import adjacent_popup_position, best_screen
@@ -12,7 +12,7 @@ from stockwidget.data.bar_cache import BarCache
 from stockwidget.data.bars import MA_PERIODS, BarResult, HistorySeries, history_day, merge_quote, mini_trend_points, quote_moving_average, quote_volume_ratio, select_bars
 from stockwidget.ui.controls.history_chart import MA_COLORS
 from stockwidget.ui.generated.ui_history import Ui_HistoryDialog
-from stockwidget.ui.controls.style import apply_settings_theme, is_dark_theme, theme_palette
+from stockwidget.ui.controls.style import apply_settings_theme, is_dark_theme, navigation_arrow_icon, theme_palette
 
 
 class HistoryDialog(QDialog):
@@ -21,6 +21,7 @@ class HistoryDialog(QDialog):
     pop_out = Signal()
     size_changed = Signal(str, object)
     options_changed = Signal(object)
+    instrument_changed = Signal(int)
 
     def __init__(self, parent, display_mode="popup"):
         floating = display_mode == "popup"
@@ -41,6 +42,13 @@ class HistoryDialog(QDialog):
         for name in ("title_row", "title", "pop_out_button", "close_button", "quote_header", "chart", "order_book", "status"):
             setattr(self, name, getattr(self.ui, name))
         self.quote_header.bind_fields()
+        for name, direction in (("previous", -1), ("next", 1)):
+            button = getattr(self.ui, f"btn_{name}")
+            button.setIconSize(QSize(14, 14))
+            button.clicked.connect(lambda checked=False, direction=direction: self.instrument_changed.emit(direction))
+        self._set_navigation_icons()
+        self.chart.readout_changed.connect(self.ui.chart_readout.setText)
+        self.chart.readout_layout_changed.connect(self._sync_readout_height)
         self._title_text = self._status_text = ""
         self.title_row.setVisible(floating)
         self.quote_header.setVisible(not floating)
@@ -107,9 +115,12 @@ class HistoryDialog(QDialog):
         # Reserve native title-bar/frame space for the detached window.
         frame = self.frameGeometry().size() - self.size() if self.isVisible() else QSize(16, 40)
         maximum = bounds.size() if self.display_mode == "popup" else bounds.size() - frame
-        minimum = QSize(680, 400) if self.display_mode == "window" else QSize(300, 210)
+        minimum = QSize(780, 400) if self.display_mode == "window" else QSize(300, 210)
         if self._book_enabled:
             minimum = minimum.expandedTo(QSize(460, 300))
+        if self.layout():
+            self.layout().invalidate()
+            minimum = minimum.expandedTo(self.layout().minimumSize())
         maximum = maximum.expandedTo(QSize(200, 200))
         self.setMinimumSize(minimum.boundedTo(maximum))
         self.setMaximumSize(maximum)
@@ -117,8 +128,13 @@ class HistoryDialog(QDialog):
     def restore_size(self, size, bounds):
         self._restoring = True
         self.update_size_limits(bounds)
-        self.resize(QSize(*size).expandedTo(self.minimumSize()).boundedTo(self.maximumSize()))
-        self.layout().activate()
+        # Settle the footer's fitted font before saving the restored geometry.
+        for _ in range(3):
+            self.resize(QSize(*size).expandedTo(self.minimumSize()).boundedTo(self.maximumSize()))
+            self.layout().activate()
+            self._sync_readout_height()
+            if self.size() == QSize(*size).expandedTo(self.minimumSize()).boundedTo(self.maximumSize()):
+                break
         self._restoring = False
 
     def save_size(self):
@@ -170,6 +186,7 @@ class HistoryDialog(QDialog):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.layout().activate()
+        self._sync_readout_height()
         self._elide_labels()
         if self.isVisible() and not self._restoring and not self.isMaximized() and not self.isMinimized():
             screen = QApplication.screenAt(self.frameGeometry().center()) or QApplication.primaryScreen()
@@ -180,6 +197,33 @@ class HistoryDialog(QDialog):
                 self.move(self.pos() + QPoint(x - frame.x(), y - frame.y()))
             self._saved_size = [self.width(), self.height()]
             self._save_timer.start()
+
+    def _sync_readout_height(self):
+        if not hasattr(self, "chart") or not hasattr(self.ui, "chart_readout"):
+            return
+        label = self.ui.chart_readout
+        lines = self.chart.readout_size_sample().splitlines()
+        metrics = QFontMetrics(self.font())
+        width = max(metrics.horizontalAdvance(line) for line in lines) + 2
+        # Fit whole rows in compact panels without changing font on hover.
+        scale = min(1, max(1, label.contentsRect().width() - 2) / width)
+        pixels = max(1, int(QFontInfo(self.font()).pixelSize() * scale))
+        style = f"font-size: {pixels}px;"
+        if label.styleSheet() != style:
+            label.setStyleSheet(style)
+        height = label.fontMetrics().height() * len(lines) + 2
+        if label.minimumHeight() != height or label.maximumHeight() != height:
+            label.setFixedHeight(height)
+            self.update_size_limits()
+
+    def _set_navigation_icons(self):
+        for name, direction in (("previous", -1), ("next", 1)):
+            getattr(self.ui, f"btn_{name}").setIcon(navigation_arrow_icon(direction, self.devicePixelRatioF(), self.palette()))
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
+        if event.type() in {QEvent.PaletteChange, QEvent.DevicePixelRatioChange} and hasattr(self, "chart"):
+            self._set_navigation_icons()
 
     def moveEvent(self, event):
         super().moveEvent(event)
@@ -275,6 +319,7 @@ class HistoryController(QObject):
         self.window.view_options_changed.connect(self._options_changed)
         self.window.display_flags_changed.connect(self._apply_chart_options)
         self.window.quotes.quotes_updated.connect(self._quotes_updated)
+        self.window.quotes.details_updated.connect(self._update_details)
         self.window.presentation_changed.connect(self.schedule_history_refresh)
         self.click_timer = QTimer(self)
         self.click_timer.setSingleShot(True)
@@ -344,7 +389,23 @@ class HistoryController(QObject):
         dialog.pop_out.connect(self._pop_out)
         dialog.size_changed.connect(self._save_size)
         dialog.options_changed.connect(lambda changes: self.window.set_view_options(**changes))
+        dialog.instrument_changed.connect(self._navigate)
         return dialog
+
+    def _navigate(self, direction):
+        if not self.dialog or self.dialog.display_mode != "window" or not self.dialog.isVisible():
+            return
+        instruments = list(self.window.checked_codes.values())
+        if not instruments:
+            self.dialog.close()
+            return
+        identity = lambda entry: (entry.get("market"), entry.get("code"))
+        current = next((i for i, entry in enumerate(instruments) if identity(entry) == identity(self.instrument or {})), -1)
+        if current == -1 and direction < 0:
+            current = 0
+        target = instruments[(current + direction) % len(instruments)]
+        if identity(target) != identity(self.instrument or {}):
+            self._open(target)
 
     def _save_size(self, mode, size):
         self.window.set_view_options(**{f"chart_{mode}_size": size})
@@ -378,6 +439,7 @@ class HistoryController(QObject):
     def _show(self):
         self._place_floating(restore=not self.dialog.isVisible())
         self.dialog.show()
+        self.window.quotes.set_detail_instrument(self.instrument if self.dialog.display_mode == "window" else None)
         self.dialog.raise_()
         self.dialog.activateWindow()
 
@@ -432,6 +494,11 @@ class HistoryController(QObject):
     def _update_details(self):
         if not self.dialog or not self.instrument:
             return
+        if (self.dialog.display_mode == "window" and self.dialog.isVisible()
+                and not any((entry.get("market"), entry.get("code")) == (self.instrument.get("market"), self.instrument.get("code"))
+                            for entry in self.window.checked_codes.values())):
+            self._navigate(1)
+            return
         quote = self.window.quotes.quote_for(self.instrument)
         self.dialog.order_book.set_quote(self.instrument, quote, self.window.unit_mode,
                                          self.window.up_color, self.window.down_color)
@@ -439,11 +506,16 @@ class HistoryController(QObject):
             daily = self._series_for(self.instrument, "daily")
             ratio = None if daily.result.stale else quote_volume_ratio(daily.result.bars, quote, self.instrument)
             self.dialog.quote_header.set_quote(self.instrument, quote, self.window.unit_mode,
-                                               self.window.up_color, self.window.down_color, ratio)
+                                               self.window.up_color, self.window.down_color, ratio,
+                                               self.window.quotes.details_for(self.instrument))
+            enabled = len(self.window.checked_codes) > 1
+            self.dialog.ui.btn_previous.setEnabled(enabled)
+            self.dialog.ui.btn_next.setEnabled(enabled)
 
     def _closed(self, *_args):
         self._generation += 1
         self._pending = None
+        self.window.quotes.set_detail_instrument(None)
 
     def invalidate_quotes(self):
         """Watchlist changes invalidate both consumers of history."""
@@ -464,6 +536,7 @@ class HistoryController(QObject):
         self.click_timer.stop()
         self._clicked_instrument = None
         self._closed()
+        self.window.quotes.clear_details()
         self._discard_before = self._generation
         self._series.clear()
         self._history_pending.clear()
@@ -488,6 +561,8 @@ class HistoryController(QObject):
         return series
 
     def _quotes_updated(self):
+        if self.dialog and self.dialog.isVisible() and self.dialog.display_mode == "window" and self.instrument:
+            self.window.quotes.set_detail_instrument(self.instrument)
         for series in self._series.values():
             quote = self.window.quotes.quote_for(series.instrument)
             if quote:

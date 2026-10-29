@@ -176,14 +176,10 @@ class MiniChartDelegate(KLineDelegate):
         pen = QPen()
         pen.setWidthF(stroke)
         pen.setCapStyle(Qt.RoundCap)
+        current = cell.candle[1] if len(cell.candle) == 5 else points[-1][1]
+        pen.setColor(self._trend_color(current, reference))
+        painter.setPen(pen)
         if len(points) > 1:
             for (x0, p0), (x1, p1) in zip(points, points[1:]):
-                segments = [(x0, p0), (x1, p1)]
-                if reference is not None and (p0 - reference) * (p1 - reference) < 0:
-                    fraction = (reference - p0) / (p1 - p0)
-                    segments.insert(1, (x0 + fraction * (x1 - x0), reference))
-                for start, end in zip(segments, segments[1:]):
-                    pen.setColor(self._trend_color((start[1] + end[1]) / 2, reference))
-                    painter.setPen(pen)
-                    painter.drawLine(position(*start), position(*end))
+                painter.drawLine(position(x0, p0), position(x1, p1))
         painter.restore()

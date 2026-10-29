@@ -1620,7 +1620,7 @@
                       <string>走势</string>
                      </property>
                      <property name="toolTip">
-                      <string>按3分钟分辨率显示当日走势，最新一段随行情更新；灰色虚线为昨收零轴。</string>
+                      <string>按5分钟分辨率显示当日走势，整条线按当前价格相对昨收着色；灰色虚线为昨收零轴。</string>
                      </property>
                      <property name="checkable">
                       <bool>true</bool>

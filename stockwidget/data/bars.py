@@ -448,7 +448,7 @@ def intraday_timeline(bars, instrument, now=None):
 
 
 def mini_trend_points(bars, instrument, now=None):
-    """Keep the latest close of each three-minute bucket on the full session axis.
+    """Keep the latest close of each five-minute bucket on the full session axis.
 
     Minute histories remain intact for detailed charts and the shared cache.
     The unfinished bucket follows the latest quote, including across breaks.
@@ -459,7 +459,7 @@ def mini_trend_points(bars, instrument, now=None):
     samples = {}
     for index, bar in enumerate(bars):
         stamp = datetime.fromisoformat(bar.time)
-        bucket = stamp.replace(minute=stamp.minute // 3 * 3, second=0, microsecond=0)
+        bucket = stamp.replace(minute=stamp.minute // 5 * 5, second=0, microsecond=0)
         samples[bucket] = ((slots.get(bar.time, index) + .5) / count, bar.close)
     points = tuple(samples.values())
     if bars and bars[0].time[11:16] == "09:30" and instrument.get("market") in {"sh", "sz", "bj", "hk", "us"}:

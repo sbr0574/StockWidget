@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QLabel, QWidget
 
 from stockwidget.core.quote_presentation import (
     COLOR_ROLE_DOWN, COLOR_ROLE_UP, QuoteDisplayOptions, direction_color_role,
-    format_quote, format_value, price_precision, should_use_english_units, volume_lot_size,
+    format_quote, format_value, price_precision, quote_detail_values, should_use_english_units, volume_lot_size,
 )
 from stockwidget.ui.controls.quote_view import DEFAULT_DOWN_COLOR, DEFAULT_UP_COLOR
 
@@ -23,14 +23,21 @@ class HistoryQuoteHeader(QWidget):
 
     def bind_fields(self):
         self.name = self.findChild(QLabel, "quote_name")
+        self.code = self.findChild(QLabel, "quote_code")
         self.values = {key: self.findChild(QLabel, f"quote_{field}") for key, field in (
             ("现价", "current"), ("涨跌", "change"), ("涨幅", "change_pct"),
             ("最高价", "high"), ("最低价", "low"), ("开盘价", "open"),
             ("成交额", "amount"), ("成交量", "volume"), ("均价", "average"), ("量比", "volume_ratio"),
+            ("昨收", "prev_close"), ("内盘", "inside"), ("外盘", "outside"),
+            ("换手率", "turnover"), ("振幅", "amplitude"), ("市盈（TTM）", "pe_ttm"),
+            ("市盈（静）", "pe_static"), ("市盈（动）", "pe_dynamic"), ("市净率", "pb"),
+            ("总市值", "market_cap"), ("总股本", "total_shares"), ("流通市值", "float_market_cap"), ("流通股", "float_shares"),
         )}
 
-    def set_quote(self, instrument, quote, unit_mode, up, down, volume_ratio=None):
-        self.name.setText(f"{instrument.get('name') or (quote or {}).get('name') or instrument.get('code', '')}  {instrument.get('code', '')}")
+    def set_quote(self, instrument, quote, unit_mode, up, down, volume_ratio=None, details=None):
+        self._name_text = instrument.get('name') or (quote or {}).get('name') or instrument.get('code', '')
+        self.name.setText(self.name.fontMetrics().elidedText(self._name_text, Qt.ElideRight, self.name.width()))
+        self.code.setText(f"{instrument.get('market', '').upper()}{instrument.get('code', '').upper()}")
         if not quote:
             for key, label in self.values.items():
                 label.setText("—")
@@ -52,12 +59,36 @@ class HistoryQuoteHeader(QWidget):
                 text = "—"
             self.values[key].setText(text)
             _set_color(self.values[key], roles[metric] if text not in {"—", "-"} else "", up, down)
-        for key, field in (("最高价", "high_price"), ("最低价", "low_price"), ("开盘价", "opening_price")):
+        for key, field in (("最高价", "high_price"), ("最低价", "low_price"), ("开盘价", "opening_price"), ("昨收", "prev_close")):
             price = quote.get(field, 0)
             self.values[key].setText(f"{price:.{precision}f}" if price else "—")
             role = direction_color_role(price - quote.get("prev_close", 0)) if price and quote.get("prev_close") else ""
             _set_color(self.values[key], role, up, down)
         self.values["量比"].setText(f"{volume_ratio:.2f}" if volume_ratio is not None else "—")
+        _set_color(self.values["量比"], direction_color_role(volume_ratio - 1) if volume_ratio is not None else "", up, down)
+        numbers = quote_detail_values(quote, instrument, details)
+        english = should_use_english_units(unit_mode, market)
+        for caption, field in (("内盘", "inside_volume"), ("外盘", "outside_volume"),
+                               ("换手率", "turnover_rate"), ("振幅", "amplitude"),
+                               ("市盈（TTM）", "pe_ttm"), ("市盈（静）", "pe_static"), ("市盈（动）", "pe_dynamic"), ("市净率", "pb"),
+                               ("总市值", "market_cap"), ("总股本", "total_shares"),
+                               ("流通市值", "float_market_cap"), ("流通股", "float_shares")):
+            value = numbers[field]
+            if value is None:
+                text = "—"
+            elif field in {"inside_volume", "outside_volume", "market_cap", "float_market_cap", "total_shares", "float_shares"}:
+                lot = volume_lot_size(kind, market) if field in {"inside_volume", "outside_volume"} else 1
+                text = format_value(value, lot, not english)
+            else:
+                text = f"{value:.2f}" + ("%" if field in {"turnover_rate", "amplitude"} else "")
+            self.values[caption].setText(text)
+            role = (COLOR_ROLE_DOWN if field == "inside_volume" else COLOR_ROLE_UP if field == "outside_volume" else "") if value is not None else ""
+            _set_color(self.values[caption], role, up, down)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, "_name_text"):
+            self.name.setText(self.name.fontMetrics().elidedText(self._name_text, Qt.ElideRight, self.name.width()))
 
 
 class OrderBookWidget(QWidget):

@@ -388,12 +388,12 @@ class IntradayTimelineTests(unittest.TestCase):
     def setUp(self):
         self.now = datetime(2026, 9, 30, 2, tzinfo=timezone.utc)
 
-    def test_mini_trend_uses_three_minute_closes_and_keeps_latest_unfinished_bucket(self):
+    def test_mini_trend_uses_five_minute_closes_and_keeps_latest_unfinished_bucket(self):
         start = datetime(2026, 9, 30, 9, 30)
         bars = tuple(Bar((start + timedelta(minutes=i)).isoformat(" "), 100, 110, 100, 101 + i)
                      for i in range(8))
         points = mini_trend_points(bars, A_SHARE, self.now)
-        self.assertEqual([price for _, price in points], [100, 103, 106, 108])
+        self.assertEqual([price for _, price in points], [100, 105, 108])
         self.assertEqual(points[0][0], 0)
         self.assertTrue(all(a[0] < b[0] for a, b in zip(points, points[1:])))
         self.assertLess(points[-1][0], .05)  # Still near opening on a complete day's axis.

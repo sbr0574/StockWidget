@@ -103,16 +103,25 @@ _SETTINGS_ICON_PATHS = (
 
 def settings_navigation_icon(index: int, device_pixel_ratio: float = 1.0, palette=None) -> QIcon:
     """Render the sidebar's line icons with the settings text color."""
+    return _line_icon(_SETTINGS_ICON_PATHS[index], 20, device_pixel_ratio, palette)
+
+
+def navigation_arrow_icon(direction: int, device_pixel_ratio: float = 1.0, palette=None) -> QIcon:
+    path = 'M6 15l6-6 6 6' if direction < 0 else 'M6 9l6 6 6-6'
+    return _line_icon(path, 14, device_pixel_ratio, palette)
+
+
+def _line_icon(path, size, device_pixel_ratio, palette):
     color = (palette or QApplication.palette()).color(QPalette.ColorRole.WindowText).name()
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
-           f'<path d="{_SETTINGS_ICON_PATHS[index]}" fill="none" stroke="{color}" '
+           f'<path d="{path}" fill="none" stroke="{color}" '
            'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>')
     ratio = max(1.0, float(device_pixel_ratio))
-    pixmap = QPixmap(round(20 * ratio), round(20 * ratio))
+    pixmap = QPixmap(round(size * ratio), round(size * ratio))
     pixmap.setDevicePixelRatio(ratio)
     pixmap.fill(Qt.GlobalColor.transparent)
     painter = QPainter(pixmap)
-    QSvgRenderer(QByteArray(svg.encode())).render(painter, QRectF(0, 0, 20, 20))
+    QSvgRenderer(QByteArray(svg.encode())).render(painter, QRectF(0, 0, size, size))
     painter.end()
     return QIcon(pixmap)
 

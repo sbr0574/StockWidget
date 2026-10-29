@@ -92,6 +92,7 @@ class SettingsTestCase(QtTestCase):
             self.enterContext(patch(module + ".config_paths", return_value=os.path.join(root, "StockWidget")))
         self._windows = []
         self.enterContext(patch.object(QuotePresenter, "refresh"))
+        self.enterContext(patch("stockwidget.ui.floating.presenter.request_quote_details", return_value=({}, {})))
         self.enterContext(patch("stockwidget.ui.floating.widget.GlobalHotkeyManager"))
         self.enterContext(patch("stockwidget.ui.floating.widget.apply_click_through"))
         self.enterContext(patch("stockwidget.ui.floating.widget.ensure_topmost"))

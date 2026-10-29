@@ -64,16 +64,31 @@ class MiniChartPaintTests(QtTestCase):
                                   for y in range(image.height() - 4, image.height())]
                 self.assertTrue(any(0 < c.red() == c.green() == c.blue() < 200 for c in gray_reference))
 
-    def test_trend_changes_color_at_the_zero_crossing(self):
-        image = self.render(MiniChartCell("trend", (100, 102, 102, 98, 100),
-                                         ((0, 98), (1, 102))))
-        down = self.pixels(image, self.delegate.down_color)
-        up = self.pixels(image, self.delegate.up_color)
-        self.assertTrue(down)
-        self.assertTrue(up)
-        center = (image.width() - 1) / 2
-        self.assertLess(max(x for x, _ in down), center + 1)
-        self.assertGreater(min(x for x, _ in up), center - 1)
+    def test_whole_trend_uses_current_quote_direction_even_when_last_sample_differs(self):
+        strokes = []
+
+        class Recorder(QPainter):
+            def drawLine(self, *args):
+                if self.pen().style() == Qt.SolidLine:
+                    strokes.append(self.pen().color())
+                return super().drawLine(*args)
+
+        for current, expected in ((102, self.delegate.up_color), (98, self.delegate.down_color),
+                                  (100, self.delegate.neutral_color)):
+            for unicolor in (False, True):
+                with self.subTest(current=current, unicolor=unicolor):
+                    self.delegate.unicolor = unicolor
+                    strokes.clear()
+                    image = QImage(100, 30, QImage.Format_ARGB32_Premultiplied)
+                    image.fill(Qt.black)
+                    painter = Recorder(image)
+                    self.delegate.paint_cell(painter, QRect(0, 0, 100, 30),
+                                             MiniChartCell("trend", (100, current, 102, 98, 100),
+                                                           ((0, 98), (.5, 102), (1, 99))))
+                    painter.end()
+                    color = self.delegate.text_color if unicolor else expected
+                    self.assertTrue(self.pixels(image, color))
+                    self.assertEqual(strokes, [color, color])
 
     def test_trend_without_previous_close_draws_neutral_prices_without_a_false_axis(self):
         calls = []

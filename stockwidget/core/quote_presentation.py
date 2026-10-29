@@ -40,6 +40,50 @@ DEFAULT_VISIBLE_METRICS = tuple(
 )
 
 
+def quote_detail_values(quote, instrument, details=None):
+    """Numeric chart-header metrics; unavailable ratios remain None.
+
+    Domestic earnings multiples use current market cap and the matching profit,
+    never weighted historical EPS. US TTM EPS comes from its basic quote.
+    """
+    data = {**(quote or {}), **(details or {})}
+
+    def number(key):
+        value = data.get(key)
+        return value if isinstance(value, (int, float)) and math.isfinite(value) else None
+
+    def ratio(numerator, denominator):
+        return numerator / denominator if numerator is not None and denominator is not None and denominator > 0 else None
+
+    price = number("current_price") or number("prev_close")
+    total, floating = number("total_shares"), number("float_shares")
+    total = total if total and total > 0 else None
+    floating = floating if floating and floating > 0 else None
+    volume = number("deals_vol")
+    result = {key: number(key) for key in ("inside_volume", "outside_volume", "total_shares", "float_shares")}
+    result["total_shares"], result["float_shares"] = total, floating
+    capitalization = price * total if price and total else (number("market_cap") or None)
+    result.update({
+        "pe_ttm": (ratio(price, number("eps_ttm")) if instrument.get("market") == "us"
+                   else ratio(capitalization, number("ttm_profit"))),
+        "pe_static": ratio(capitalization, number("annual_profit")),
+        "pe_dynamic": ratio(capitalization, number("annualized_profit")),
+        "pb": ratio(price, number("book_value_per_share")),
+        "market_cap": capitalization,
+        "float_market_cap": price * floating if price and floating and floating > 0 else None,
+        "turnover_rate": ratio(volume * 100 if volume is not None else None, floating),
+        "amplitude": ratio(((number("high_price") or 0) - (number("low_price") or 0)) * 100,
+                           number("prev_close")) if number("opening_price") else None,
+    })
+    if volume and not (result["inside_volume"] or result["outside_volume"]):
+        result["inside_volume"] = result["outside_volume"] = None
+    if instrument.get("type") in {"指", "基", "期"}:
+        for key in ("pe_ttm", "pe_static", "pe_dynamic", "pb", "market_cap", "total_shares",
+                    "float_market_cap", "float_shares", "turnover_rate", "inside_volume", "outside_volume"):
+            result[key] = None
+    return result
+
+
 def normalize_visible_metrics(value: Sequence[str] | None) -> list[str]:
     """过滤未知项和重复项，同时保留合法指标的输入顺序。"""
     if not isinstance(value, (list, tuple)):
@@ -345,7 +389,7 @@ def format_quote(
         "成交量": COLOR_ROLE_TEXT,
         "成交额": COLOR_ROLE_TEXT,
         "均值": direction_color_role(avg - data["prev_close"]) if avg is not None else COLOR_ROLE_NEUTRAL,
-        "量比": COLOR_ROLE_TEXT,
+        "量比": direction_color_role(volume_ratio - 1) if volume_ratio is not None else COLOR_ROLE_NEUTRAL,
         "迷你图": COLOR_ROLE_TEXT,
     }
     sort_values = {
