@@ -27,7 +27,6 @@ from PySide6.QtWidgets import (
 from stockwidget.core.config_store import config_paths
 from stockwidget.constants import APP_VERSION
 from stockwidget.core.window_rules import MAX_HIDE_TIMES
-from stockwidget.data.bars import MA_PERIODS
 from stockwidget.data.update_check import get_update_info, github_available, project_links
 from stockwidget.platform.capabilities import (
     hotkeys_supported,
@@ -170,6 +169,7 @@ class SettingsDialog(QDialog):
                              extra_stylesheet=self._designer_stylesheet)
         for component in (self.metric_pool, self.taskbar_settings.metric_pool, self.watchlist_editor):
             component.set_theme(dark)
+        self._sync_mini_chart()
         self._refresh_color_buttons()
         navigation = self.ui.settings_navigation
         for index in range(navigation.count()):
@@ -189,11 +189,6 @@ class SettingsDialog(QDialog):
 
     def _connect_controls(self):
         """连接设置控件与浮窗状态，静态控件统一从 self.ui 访问。"""
-        self._source_buttons = {
-            "sina": self.ui.rb_sina,
-            "eastmoney": self.ui.rb_em,
-        }
-
         self._color_buttons = (
             (self.ui.btn_bg_color, "bg", "背景颜色"),
             (self.ui.btn_fg_color, "fg", "文字颜色"),
@@ -203,20 +198,17 @@ class SettingsDialog(QDialog):
         )
 
         self.ui.sb_interval.valueChanged.connect(self.win.set_refresh_interval)
-        for source, button in self._source_buttons.items():
-            button.toggled.connect(partial(self._on_source_toggled, source))
 
         self.metric_pool.visible_metrics_changed.connect(
             self.win.set_visible_metrics
         )
-        self.ui.cb_name_visible.toggled.connect(self._set_name_visible)
         self.ui.cmb_name_length.currentIndexChanged.connect(
             lambda _: self.win.set_name_length(self.ui.cmb_name_length.currentData()))
         self.ui.cb_code_visible.toggled.connect(self.win.set_code_visible)
         self.ui.cb_type_visible.toggled.connect(self.win.set_type_visible)
         self.ui.cmb_unit_mode.currentIndexChanged.connect(
             lambda _: self.win.set_unit_mode(self.ui.cmb_unit_mode.currentData()))
-        for index, value in enumerate((-1, 1, 2, 3, 4)):
+        for index, value in enumerate((0, -1, 1, 2, 3, 4)):
             self.ui.cmb_name_length.setItemData(index, value)
         for index, value in enumerate(("auto", "cn", "en")):
             self.ui.cmb_unit_mode.setItemData(index, value)
@@ -228,16 +220,19 @@ class SettingsDialog(QDialog):
             lambda hidden: self.win.set_view_options(hide_tray_icon=hidden))
         self.ui.cb_chart_enabled.toggled.connect(
             lambda enabled: self.win.set_view_options(chart_enabled=enabled))
-        for index, value in enumerate(("window", "large", "medium", "small")):
-            self.ui.cmb_chart_display_mode.setItemData(index, value)
-        self.ui.cmb_chart_display_mode.currentIndexChanged.connect(
-            lambda _: self.win.set_view_options(chart_display_mode=self.ui.cmb_chart_display_mode.currentData()))
-        self.ui.cb_chart_average.toggled.connect(
-            lambda enabled: self.win.set_view_options(chart_average_enabled=enabled))
-        self.ui.cb_chart_volume.toggled.connect(
-            lambda enabled: self.win.set_view_options(chart_volume_enabled=enabled))
-        for period in MA_PERIODS:
-            getattr(self.ui, f"cb_chart_ma{period}").toggled.connect(self._chart_periods_changed)
+        self._mini_chart_buttons = {kind: getattr(self.ui, f"btn_mini_{kind}")
+                                    for kind in ("kline", "trend", "amplitude")}
+        self._mini_chart_group = QButtonGroup(self)
+        for kind, button in self._mini_chart_buttons.items():
+            button.set_kind(kind)
+            self._mini_chart_group.addButton(button)
+            button.toggled.connect(lambda checked, kind=kind: checked and
+                                   self.win.set_view_options(mini_chart_type=kind))
+        self.win.configuration_changed.connect(self._sync_mini_chart)
+        for index, value in enumerate((0, 5, 10, 20, 30, 60)):
+            self.ui.cmb_average_period.setItemData(index, value)
+        self.ui.cmb_average_period.currentIndexChanged.connect(
+            lambda _: self.win.set_view_options(average_period=self.ui.cmb_average_period.currentData()))
         self.win.view_options_changed.connect(self._sync_common_options)
 
         self.ui.btn_check_update.clicked.connect(self._check_update_manually)
@@ -349,7 +344,6 @@ class SettingsDialog(QDialog):
             self._apply_platform_limits()
             self._sync_view_settings()
             self._refresh_hotkey_status()
-            self._setup_source_buttons()
             self._setup_about()
             self.refresh_data_state()
 
@@ -551,10 +545,6 @@ class SettingsDialog(QDialog):
             self.app.clear_custom_icon()
             self.app.save_now()
 
-    def _setup_source_buttons(self):
-        """按当前配置选中行情数据源单选按钮。"""
-        source = self.win.data_source
-        self._select_button(self._source_buttons, source)
 
     def refresh_data_state(self):
         """更新市场代码状态；qrc 与本地文件都属于缓存。"""
@@ -661,9 +651,6 @@ class SettingsDialog(QDialog):
             if obj is self:
                 self.setFocus()
 
-    def _on_source_toggled(self, source: str, checked: bool):
-        if checked:
-            self.win.set_data_source(source)
 
     def _update_direction_color_controls(self):
         enabled = not self.win.unicolor
@@ -679,19 +666,13 @@ class SettingsDialog(QDialog):
         self._update_direction_color_controls()
         self._refresh_color_buttons()
 
-    def _set_name_visible(self, checked):
-        self.win.set_name_length(self.ui.cmb_name_length.currentData() if checked else 0)
-
     def _sync_metric_options(self):
-        controls = (self.ui.cb_name_visible, self.ui.cmb_name_length, self.ui.cb_code_visible,
+        controls = (self.ui.cmb_name_length, self.ui.cb_code_visible,
                     self.ui.cb_type_visible, self.ui.cmb_unit_mode)
         with ExitStack() as stack:
             for control in controls:
                 stack.enter_context(QSignalBlocker(control))
-            self.ui.cb_name_visible.setChecked(self.win.name_length != 0)
-            if self.win.name_length != 0:
-                self.ui.cmb_name_length.setCurrentIndex(max(0, self.ui.cmb_name_length.findData(self.win.name_length)))
-            self.ui.cmb_name_length.setEnabled(self.win.name_length != 0)
+            self.ui.cmb_name_length.setCurrentIndex(max(0, self.ui.cmb_name_length.findData(self.win.name_length)))
             self.ui.cb_code_visible.setChecked(self.win.code_visible)
             self.ui.cb_type_visible.setChecked(self.win.type_visible)
             self.ui.cmb_unit_mode.setCurrentIndex(self.ui.cmb_unit_mode.findData(self.win.unit_mode))
@@ -699,28 +680,19 @@ class SettingsDialog(QDialog):
     def _sync_common_options(self):
         with QSignalBlocker(self.ui.cb_chart_enabled):
             self.ui.cb_chart_enabled.setChecked(self.win.view_options.chart_enabled)
-        with QSignalBlocker(self.ui.cmb_chart_display_mode):
-            self.ui.cmb_chart_display_mode.setCurrentIndex(
-                self.ui.cmb_chart_display_mode.findData(self.win.view_options.chart_display_mode))
-        self.ui.chart_display_mode_row.setEnabled(self.win.view_options.chart_enabled)
-        self.ui.chart_indicators.setEnabled(self.win.view_options.chart_enabled)
-        for control, checked in (
-            (self.ui.cb_chart_average, self.win.view_options.chart_average_enabled),
-            (self.ui.cb_chart_volume, self.win.view_options.chart_volume_enabled),
-            *((getattr(self.ui, f"cb_chart_ma{period}"), period in self.win.view_options.chart_ma_periods)
-              for period in MA_PERIODS),
-        ):
-            with QSignalBlocker(control):
-                control.setChecked(checked)
+        with QSignalBlocker(self.ui.cmb_average_period):
+            self.ui.cmb_average_period.setCurrentIndex(
+                self.ui.cmb_average_period.findData(self.win.view_options.average_period))
         with QSignalBlocker(self.ui.cmb_color_mode), QSignalBlocker(self.ui.cb_hide_tray_icon):
             self.ui.cmb_color_mode.setCurrentIndex(self.ui.cmb_color_mode.findData(self.win.view_options.color_mode))
             self.ui.cb_hide_tray_icon.setChecked(self.win.view_options.hide_tray_icon)
         if self.win.view_options.color_mode != getattr(self, "_applied_color_mode", None):
             self._apply_theme_stylesheet()
 
-    def _chart_periods_changed(self):
-        self.win.set_view_options(chart_ma_periods=[period for period in MA_PERIODS
-                                                  if getattr(self.ui, f"cb_chart_ma{period}").isChecked()])
+    def _sync_mini_chart(self):
+        self._select_button(self._mini_chart_buttons, self.win.view_options.mini_chart_type)
+        for button in self._mini_chart_buttons.values():
+            button.sync(self.win)
 
     def _on_icon_button_toggled(self, key: str, checked: bool):
         if not checked:

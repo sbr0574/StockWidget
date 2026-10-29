@@ -76,11 +76,14 @@ class SettingsDialogTests(SettingsTestCase):
     def test_inline_metric_options_preserve_configuration_and_apply_to_both_surfaces(self):
         dialog, window = self._make_dialog(name_length=3, unit_mode="cn")
         self.assertEqual(dialog.ui.cmb_name_length.currentData(), 3)
-        dialog.ui.cb_name_visible.click()
+        dialog.ui.cmb_name_length.setCurrentIndex(dialog.ui.cmb_name_length.findData(0))
         self.assertEqual(window.name_length, 0)
-        self.assertFalse(dialog.ui.cmb_name_length.isEnabled())
-        dialog.ui.cb_name_visible.click()
+        self.assertTrue(dialog.ui.cmb_name_length.isEnabled())
+        dialog.ui.cmb_name_length.setCurrentIndex(dialog.ui.cmb_name_length.findData(3))
         self.assertEqual(window.name_length, 3)
+        for value in (0, -1, 1, 2, 3, 4):
+            dialog.ui.cmb_name_length.setCurrentIndex(dialog.ui.cmb_name_length.findData(value))
+            self.assertEqual(window.current_config()["name_length"], value)
         dialog.ui.cb_code_visible.click()
         dialog.ui.cb_type_visible.click()
         dialog.ui.cmb_unit_mode.setCurrentIndex(dialog.ui.cmb_unit_mode.findData("en"))
@@ -92,8 +95,7 @@ class SettingsDialogTests(SettingsTestCase):
     def test_wheel_scrolls_page_without_changing_slider_or_combo_values(self):
         dialog, _ = self._make_dialog(chart_enabled=True)
         dialog.show()
-        for page, controls in ((dialog.ui.data, (dialog.ui.cmb_chart_display_mode,
-                                               dialog.ui.cmb_name_length, dialog.ui.cmb_unit_mode)),
+        for page, controls in ((dialog.ui.data, (dialog.ui.cmb_name_length, dialog.ui.cmb_unit_mode)),
                                (dialog.ui.floating, (dialog.ui.cmb_font, dialog.ui.slider_font_size))):
             dialog.ui.settings_pages.setCurrentWidget(page)
             scroll = page.findChild(QScrollArea)
@@ -167,8 +169,8 @@ class SettingsDialogTests(SettingsTestCase):
                 self.qt_app.processEvents()
                 editor = self._start_code_editor(dialog)
                 controls = (
-                    dialog.ui.btn_add, dialog.ui.cb_auto_start, dialog.ui.rb_sina,
-                    dialog.ui.label_source, dialog.ui.sb_interval,
+                    dialog.ui.btn_add, dialog.ui.cb_auto_start, dialog.ui.sb_interval,
+                    dialog.ui.label_interval, dialog.ui.sb_interval,
                     dialog.ui.cmb_font, dialog.ui.keyseq_hide,
                     dialog.ui.list_codes, dialog.ui.list_codes.horizontalHeader(),
                     dialog.metric_pool.displayed_pool, editor,
@@ -257,7 +259,7 @@ class SettingsDialogTests(SettingsTestCase):
             up_color="#123456", down_color="#abcdef", neutral_color="#654321",
             opacity_pct=45, font_family="Arial", font_size=14, line_extra_px=9,
             unicolor=False, header_visible=True, grid_visible=True,
-            refresh_seconds=10, data_source="eastmoney", visible_metrics=["price"],
+            refresh_seconds=10, visible_metrics=["price"],
             hotkey="Ctrl+Alt+G",
             taskbar_sync_appearance=False, taskbar_font_family="Arial", taskbar_font_size=17,
             taskbar_color="#aabbcc", color_mode="dark",
@@ -284,7 +286,7 @@ class SettingsDialogTests(SettingsTestCase):
         dialog, window = self._make_dialog(
             {"sh600519": {"checked": False, "cost": 100}}, app=app,
             fg="#123456", opacity_pct=45, font_size=14, header_visible=True,
-            refresh_seconds=10, data_source="eastmoney", visible_metrics=["volume", "price"],
+            refresh_seconds=10, visible_metrics=["volume", "price"],
             code_visible=True, type_visible=True, name_length=3, unit_mode="en",
             start_on_boot=True, hotkey="Ctrl+Alt+G", hotkey_click_through="Ctrl+Alt+D",
             taskbar_rows=3, taskbar_page_mode="auto", taskbar_metrics=["price"],
@@ -302,7 +304,7 @@ class SettingsDialogTests(SettingsTestCase):
         ):
             dialog.ui.btn_reset_settings.click()
         settings_keys = (
-            "refresh_seconds", "data_source", "visible_metrics", "code_visible", "type_visible",
+            "refresh_seconds", "visible_metrics", "code_visible", "type_visible",
             "name_length", "unit_mode", "start_on_boot", "force_top", "click_through",
             "hotkey", "hotkey_click_through", "hotkey_enabled", "hotkey_click_through_enabled",
         )
@@ -316,7 +318,7 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertFalse(window._keep_top_timer.isActive())
         self.assertFalse(dialog.ui.keyseq_hide.isEnabled())
         self.assertFalse(dialog.ui.cb_auto_start.isChecked())
-        self.assertTrue(dialog.ui.rb_sina.isChecked())
+        self.assertNotIn("data_source", window.current_config())
         self.assertEqual(dialog.metric_pool.visible_metrics, list(defaults.visible_metrics))
         self.assertEqual(app._icon_choice, "dark")
         unregister.assert_called_once()
@@ -342,9 +344,9 @@ class SettingsDialogTests(SettingsTestCase):
             self.assertTrue(dialog.ui.cb_force_top.isChecked())
             self.assertTrue(dialog.ui.cb_force_top.isEnabled())
             dialog.show()
-            dialog.ui.settings_pages.setCurrentWidget(dialog.ui.floating)
+            dialog.ui.settings_pages.setCurrentWidget(dialog.ui.general)
             self.qt_app.processEvents()
-            dialog.ui.floating_scroll.ensureWidgetVisible(dialog.ui.gb_fcn)
+            dialog.ui.general_scroll.ensureWidgetVisible(dialog.ui.gb_fcn)
             QTest.mouseClick(dialog.ui.cb_float_on_top, Qt.LeftButton)
             self.assertFalse(window.float_on_top)
             self.assertFalse(window.force_top)
@@ -501,17 +503,17 @@ class SettingsDialogTests(SettingsTestCase):
 
     def test_nested_paging_switch_controls_first_manual_auto_and_synced_taskbar(self):
         dialog, window = self._make_dialog(float_paging_enabled=True, float_page_mode="first")
-        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.floating)
+        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.general)
         dialog.show()
         self.qt_app.processEvents()
         rows = dialog.float_row_settings
         paging = rows.paging
-        dialog.ui.floating_scroll.ensureWidgetVisible(paging)
+        dialog.ui.general_scroll.ensureWidgetVisible(paging)
         self.assertTrue(rows.rows.isEnabled())
         self.assertFalse(rows.auto.isEnabled())
 
         def click_paging():
-            dialog.ui.floating_scroll.ensureWidgetVisible(paging)
+            dialog.ui.general_scroll.ensureWidgetVisible(paging)
             QTest.mouseClick(paging, Qt.LeftButton)
             self.qt_app.processEvents()
 
@@ -644,7 +646,7 @@ class SettingsDialogTests(SettingsTestCase):
         taskbar.enabled.setChecked(True)
         self.assertTrue(taskbar.separator.isEnabled())
         dialog.show()
-        for page, group in ((dialog.ui.floating, floating), (dialog.ui.taskbar, taskbar)):
+        for page, group in ((dialog.ui.general, floating), (dialog.ui.taskbar, taskbar)):
             dialog.ui.settings_pages.setCurrentWidget(page)
             self.qt_app.processEvents()
             scroll = page.findChild(QScrollArea)
@@ -673,7 +675,7 @@ class SettingsDialogTests(SettingsTestCase):
             self.assertFalse(item.icon().isNull())
             self.assertEqual(dialog.ui.settings_pages.currentIndex(), index)
         navigation.setCurrentRow(1)
-        dialog.ui.rb_em.click()
+        dialog.ui.sb_interval.setValue(7)
         dialog.ui.cb_head.setChecked(True)
         navigation.setCurrentRow(4)
         self.qt_app.processEvents()
@@ -691,7 +693,7 @@ class SettingsDialogTests(SettingsTestCase):
         navigation.setFocus()
         QTest.keyClick(navigation, Qt.Key_Down)
         self.assertTrue(dialog.ui.data.isVisible())
-        self.assertEqual(window.data_source, "eastmoney")
+        self.assertEqual(window.refresh_seconds, 7)
         self.assertTrue(window.header_visible)
         navigation.setCurrentRow(4)
         self.assertEqual(scroll.verticalScrollBar().value(), offset)

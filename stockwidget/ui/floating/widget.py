@@ -33,11 +33,11 @@ from stockwidget.ui.controls.quote_view import (
     DEFAULT_DOWN_COLOR,
     DEFAULT_NEUTRAL_COLOR,
     DEFAULT_UP_COLOR,
-    KLineDelegate,
     QuoteItemDelegate,
     SimpleTableModel,
     SortIndicatorStyle,
 )
+from stockwidget.ui.controls.mini_chart import MiniChartDelegate
 from stockwidget.ui.controls.style import is_dark_theme
 from stockwidget.ui.floating.interaction import (
     DragBehaviorMixin,
@@ -160,9 +160,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.table.setModel(self.model)
         self.right_table.setModel(self.right_model)
 
-        self.k_delegate = KLineDelegate(self.table, base_pt=12)
-        self.right_k_delegate = KLineDelegate(self.right_table, base_pt=12)
-        self.taskbar_k_delegate = KLineDelegate(self, base_pt=12)
+        self.k_delegate = MiniChartDelegate(self.table, base_pt=12)
+        self.right_k_delegate = MiniChartDelegate(self.right_table, base_pt=12)
+        self.taskbar_k_delegate = MiniChartDelegate(self, base_pt=12)
         self._default_item_delegate = QuoteItemDelegate(self.table)
         self._right_default_delegate = QuoteItemDelegate(self.right_table)
         self.table.setItemDelegate(self._default_item_delegate)
@@ -245,9 +245,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.visible_metrics = visible_metrics_from_config(cfg)
         # 加载其他配置
         self.refresh_seconds = int(cfg.get("refresh_seconds", 2))
-        self.data_source = str(cfg.get("data_source", "sina"))
-        if self.data_source not in ("sina", "eastmoney"):
-            self.data_source = "sina"
         self.scheduled_hide_enabled = bool(cfg.get("scheduled_hide_enabled", False))
         self.scheduled_hide_times = normalize_hide_times(cfg.get("scheduled_hide_times", []))
         self.auto_hide_enabled = bool(cfg.get("auto_hide_enabled", False))
@@ -268,7 +265,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         mode = cfg.get("display_mode", "float")
         self.display_mode = mode if sys.platform == "win32" and mode in ("float", "taskbar", "both") else "float"
         try:
-            self.taskbar_offset = max(0, min(2000, int(cfg.get("taskbar_offset", 0))))
+            self.taskbar_offset = max(-2000, min(2000, int(cfg.get("taskbar_offset", 0))))
         except (TypeError, ValueError):
             self.taskbar_offset = 0
         self.view_options = ViewOptions.from_config(cfg, self.font.family(), self.visible_metrics)
@@ -353,7 +350,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             "scheduled_hide_times": list(self.scheduled_hide_times),
             **{key: getattr(self, key) for key in (
                 "name_length", "unit_mode", "header_visible", "grid_visible", "opacity_pct", "unicolor",
-                "refresh_seconds", "data_source", "hide_enabled", "scheduled_hide_enabled", "auto_hide_enabled",
+                "refresh_seconds", "hide_enabled", "scheduled_hide_enabled", "auto_hide_enabled",
                 "boundary_check_enabled", "edge_hide_enabled", "float_on_top", "force_top", "click_through",
                 "hotkey_enabled", "hotkey", "hotkey_click_through_enabled", "hotkey_click_through",
                 "start_on_boot", "display_mode", "taskbar_offset", "taskbar_screen",
@@ -613,16 +610,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self.timer.setInterval(seconds * 1000)
         self._notify_change()
 
-    def set_data_source(self, source: str):
-        """切换行情数据源：'sina'（新浪）或 'eastmoney'（东方财富）。"""
-        source = str(source or "").strip().lower()
-        if source not in ("sina", "eastmoney") or source == self.data_source:
-            return
-        self.data_source = source
-        self.quotes.invalidate()
-        self.history.reload()
-        self._notify_change()
-        self.quotes.refresh()
 
     def set_hide_options(self, *, hide_enabled=None, scheduled_hide_enabled=None, scheduled_hide_times=None,
                          auto_hide_enabled=None):
@@ -744,7 +731,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._notify_change()
 
     def set_taskbar_offset(self, value):
-        self.taskbar_offset = max(0, min(2000, int(value)))
+        self.taskbar_offset = max(-2000, min(2000, int(value)))
         self.taskbar_options_changed.emit()
         self._notify_change()
 
@@ -910,6 +897,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self.widget_visibility_changed.emit()
         self.quotes.sync_page_timers()
         self.sync_refresh_timer()
+        self.history.schedule_history_refresh()
         if self.force_top and self._keep_top_timer and not self._keep_top_timer.isActive():
             self._keep_top_timer.start()
         apply_click_through(self, self.click_through)

@@ -1,0 +1,5 @@
+openpyxl
+pandas
+pypinyin
+requests
+opencc-python-reimplemented==0.1.7

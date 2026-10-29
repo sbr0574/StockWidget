@@ -93,4 +93,3 @@ class Ui_MetricPool(object):
         self.metric_displayed_pool.setProperty(u"emptyText", QCoreApplication.translate("MetricPool", u"\u62d6\u5165\u8981\u663e\u793a\u7684\u6307\u6807", None))
         pass
     # retranslateUi
-

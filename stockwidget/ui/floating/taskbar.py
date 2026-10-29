@@ -4,12 +4,13 @@ import logging
 
 from PySide6.QtCore import QObject, QPoint, QRect, QRectF, Qt, QTimer
 from PySide6.QtGui import QColor, QCursor, QFont, QFontMetrics, QImage, QPainter
-from PySide6.QtWidgets import QApplication, QStyleOptionViewItem
+from PySide6.QtWidgets import QApplication
 
-from stockwidget.core.quote_presentation import BidAskCell
+from stockwidget.core.quote_presentation import BidAskCell, MiniChartCell
 from stockwidget.core.view_options import column_ranges, taskbar_content_height, taskbar_font_pixels
 from stockwidget.platform.taskbar import NativeTaskbarWindow, cursor_over_taskbar, find_taskbar
 from stockwidget.ui.controls.quote_view import bid_ask_width, paint_bid_ask, paint_pager, paint_quote_grid, pager_hit, pager_size
+from stockwidget.ui.controls.mini_chart import mini_chart_width, paint_amplitude_axis
 
 
 def taskbar_message(source):
@@ -69,8 +70,9 @@ def render_taskbar(source, height, dpi=96, max_width=480, hit_regions=None):
     content_width = max(1, max_width - pager_rect.width() - gap)
     widths = []
     for c in range(cols):
-        if model.headerData(c, Qt.Horizontal) == "K线":
-            widths.append(round(30 * scale))
+        if model.headerData(c, Qt.Horizontal) == "迷你图":
+            widths.append(round(30 * scale) if options.mini_chart_type == "kline"
+                          else mini_chart_width(font, options.mini_chart_type))
         else:
             # Integer font metrics can round down; elidedText uses fractional
             # advances internally, so allow two pixels for the final glyph.
@@ -84,7 +86,13 @@ def render_taskbar(source, height, dpi=96, max_width=480, hit_regions=None):
             widths.append(min(round(maximum * scale), max(sizes)))
     total = sum(widths) * len(ranges)
     if total > content_width:
-        widths = [max(1, int(width * content_width / total)) for width in widths]
+        fixed = {c for c in range(cols) if model.headerData(c, Qt.Horizontal) == "迷你图"
+                 and options.mini_chart_type != "kline"}
+        fixed_width = sum(widths[c] for c in fixed)
+        variable_width = sum(width for c, width in enumerate(widths) if c not in fixed)
+        available = max(0, content_width / len(ranges) - fixed_width)
+        widths = [width if c in fixed else max(1, int(width * available / max(1, variable_width)))
+                  for c, width in enumerate(widths)]
     image = QImage(max(1, sum(widths) * len(ranges) + gap + pager_rect.width()), height, QImage.Format_ARGB32_Premultiplied)
     # Alpha 1 is visually transparent but retains clicks between text glyphs.
     image.fill(QColor(0, 0, 0, 1))
@@ -105,6 +113,10 @@ def render_taskbar(source, height, dpi=96, max_width=480, hit_regions=None):
                 x += gap
             block_left = x
             for c, width in enumerate(widths):
+                if start < stop:
+                    cell = model.index(start, c).data(Qt.UserRole)
+                    if isinstance(cell, MiniChartCell) and cell.kind == "amplitude":
+                        paint_amplitude_axis(painter, QRect(x, 2, width, (stop - start) * row_height), cell.limits)
                 for r in range(start, stop):
                     row = r - start
                     top = 2 + row * row_height
@@ -118,10 +130,8 @@ def render_taskbar(source, height, dpi=96, max_width=480, hit_regions=None):
                     painter.setClipRect(rect)
                     if isinstance(cell, BidAskCell):
                         paint_bid_ask(painter, rect, font, cell, model, padding)
-                    elif model.headerData(c, Qt.Horizontal) == "K线":
-                        option = QStyleOptionViewItem()
-                        option.rect, option.font = rect, font
-                        source.taskbar_k_delegate.paint(painter, option, index)
+                    elif isinstance(cell, MiniChartCell):
+                        source.taskbar_k_delegate.paint_cell(painter, rect, cell, draw_axis=False)
                     else:
                         painter.setPen(model.data(index, Qt.ForegroundRole))
                         text = fm.elidedText(str(model.data(index, Qt.DisplayRole)), Qt.ElideRight,

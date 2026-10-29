@@ -30,7 +30,7 @@ class StorageSettingsTests(SettingsTestCase):
         history = window.history.cache
         history.clock = lambda: datetime(2026, 9, 30, 2, tzinfo=timezone.utc)
         history.fetcher = Mock(return_value=BarResult(sample_bars(), "sina"))
-        history.get(A_SHARE, "daily", "sina")
+        history.get(A_SHARE, "daily")
         before = load_file(CONFIG_FILE)
         dialog.ui.btn_clear_cache.click()
         self.assertFalse((history.directory / "history.sqlite3").exists())

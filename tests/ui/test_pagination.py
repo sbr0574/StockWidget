@@ -466,7 +466,7 @@ class PagingInteractionTests(PagingTestCase):
         all_metrics = [spec.metric_id for spec in METRIC_SPECS]
         self.win.set_view_options(taskbar_metrics=all_metrics)
         self.assertEqual(self.win.view_options.taskbar_metrics, all_metrics)
-        self.assertEqual(self.win.taskbar_model.columnCount(), 11)
+        self.assertEqual(self.win.taskbar_model.columnCount(), len(all_metrics))
         self.assertFalse(render_taskbar(self.win, 44).isNull())
         independent = ["volume", "price", "name", "change"]
         self.win.set_view_options(taskbar_metrics=independent, taskbar_sync_metrics=True)
@@ -497,7 +497,7 @@ class PagingInteractionTests(PagingTestCase):
         self.win.set_view_options(taskbar_metrics=["change", "price", "name", "kline"],
             taskbar_sync_appearance=False, taskbar_color="#55bbdd",
             taskbar_font_family="Arial", taskbar_font_size=6)
-        self.assertEqual(self.win.taskbar_model._headers, ["涨跌", "现价", "名称", "K线"])
+        self.assertEqual(self.win.taskbar_model._headers, ["涨跌", "现价", "名称", "迷你图"])
         self.assertEqual(self.win.model._headers, ["名称", "现价", "涨幅"])
         self.assertEqual(self.win.taskbar_model.index(0, 0).data(Qt.ForegroundRole), QColor("#55bbdd"))
         self.assertNotEqual(before, render_taskbar(self.win, 44))

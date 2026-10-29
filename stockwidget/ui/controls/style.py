@@ -3,7 +3,9 @@
 from PySide6.QtCore import QByteArray, QObject, QRectF, Qt
 from PySide6.QtGui import QColor, QFont, QFontInfo, QFontMetrics, QGuiApplication, QPalette, QIcon, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
-from PySide6.QtWidgets import QApplication, QGroupBox, QWidget
+from PySide6.QtWidgets import QApplication, QCheckBox, QGroupBox, QRadioButton, QWidget
+
+from stockwidget.ui.controls.settings_widgets import FilledCheckBox
 
 
 def accent_color() -> QColor:
@@ -31,6 +33,7 @@ def theme_palette(dark: bool, base: QPalette) -> QPalette:
         palette.setColor(role, QColor(color))
     for role in (QPalette.WindowText, QPalette.Text, QPalette.ButtonText):
         palette.setColor(QPalette.Disabled, role, QColor("#888888"))
+    palette.setColor(QPalette.PlaceholderText, QColor("#aaaaaa" if dark else "#707070"))
     return palette
 
 
@@ -100,16 +103,25 @@ _SETTINGS_ICON_PATHS = (
 
 def settings_navigation_icon(index: int, device_pixel_ratio: float = 1.0, palette=None) -> QIcon:
     """Render the sidebar's line icons with the settings text color."""
+    return _line_icon(_SETTINGS_ICON_PATHS[index], 20, device_pixel_ratio, palette)
+
+
+def navigation_arrow_icon(direction: int, device_pixel_ratio: float = 1.0, palette=None) -> QIcon:
+    path = 'M6 15l6-6 6 6' if direction < 0 else 'M6 9l6 6 6-6'
+    return _line_icon(path, 14, device_pixel_ratio, palette)
+
+
+def _line_icon(path, size, device_pixel_ratio, palette):
     color = (palette or QApplication.palette()).color(QPalette.ColorRole.WindowText).name()
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
-           f'<path d="{_SETTINGS_ICON_PATHS[index]}" fill="none" stroke="{color}" '
+           f'<path d="{path}" fill="none" stroke="{color}" '
            'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>')
     ratio = max(1.0, float(device_pixel_ratio))
-    pixmap = QPixmap(round(20 * ratio), round(20 * ratio))
+    pixmap = QPixmap(round(size * ratio), round(size * ratio))
     pixmap.setDevicePixelRatio(ratio)
     pixmap.fill(Qt.GlobalColor.transparent)
     painter = QPainter(pixmap)
-    QSvgRenderer(QByteArray(svg.encode())).render(painter, QRectF(0, 0, 20, 20))
+    QSvgRenderer(QByteArray(svg.encode())).render(painter, QRectF(0, 0, size, size))
     painter.end()
     return QIcon(pixmap)
 
@@ -220,6 +232,13 @@ QPushButton:checked:hover {{
 QPushButton:checked:pressed {{
     background-color: {selected_pressed_bg};
 }}
+QPushButton[chartTab="true"]:checked, QPushButton[chartTab="true"]:checked:hover {{
+    background-color: {color_hover_bg};
+    border: 1px solid transparent;
+}}
+QPushButton[chartTab="true"]:checked:pressed {{
+    background-color: {color_pressed_bg};
+}}
 QPushButton:disabled {{
     background-color: {color_disabled_bg};
     color: {color_disabled_text};
@@ -251,6 +270,10 @@ QPushButton#btn_icon_custom {{
     font-size: 22px;
     font-weight: 300;
 }}
+QPushButton[miniChartOption="true"] {{
+    font-size: 11px;
+    border-radius: 8px;
+}}
 {icon_states}
 """
 
@@ -261,6 +284,7 @@ QFrame#settings_sidebar {{
     border: none;
 }}
 QLabel#settings_sidebar_title {{
+    background: transparent;
     font-size: 16px;
     font-weight: 600;
     padding-left: 8px;
@@ -291,9 +315,15 @@ QLabel#shortcuts_title, QLabel#floating_title, QLabel#taskbar_title, QLabel#abou
 QLabel[settingTitle="true"] {{
     font-weight: 600;
 }}
+QLabel#label_interval {{
+    font-weight: 700;
+}}
 QLabel[settingDescription="true"] {{
     color: {description};
     font-size: 12px;
+}}
+QLabel[quoteCaption="true"] {{
+    color: {description};
 }}
 QPushButton[destructive="true"] {{
     background-color: rgba(220, 60, 60, 0.16);
@@ -362,10 +392,19 @@ def apply_settings_theme(widget: QWidget, dark: bool, palette: QPalette, *,
                          extra_stylesheet: str = "") -> None:
     """Apply shared dialog styles and palettes to native and styled controls."""
     widgets = (widget, *widget.findChildren(QWidget))
+    # An explicit Button brush makes Qt's Windows 11 style use the same fill
+    # for checked and unchecked choices instead of its native accent. Keep all
+    # theme colors, but leave that role to the style on radio/check controls.
+    choice_palette = QPalette(palette)
+    button_override = QPalette()
+    button_override.setColor(QPalette.Button, palette.color(QPalette.Button))
+    choice_palette.setResolveMask(palette.resolveMask() & ~button_override.resolveMask())
     # CSS palette references need the selected palette before polish. Native
     # controls can be reset by polish, so restore their palettes afterwards.
     for control in widgets:
-        control.setPalette(palette)
+        control.setPalette(choice_palette if isinstance(control, (QRadioButton, QCheckBox)) else palette)
+        if isinstance(control, FilledCheckBox):
+            control.set_theme(dark)
     if macos_groups:
         for group in widget.findChildren(QGroupBox):
             # Cocoa's default layout item trims the native title margin, which
@@ -375,4 +414,4 @@ def apply_settings_theme(widget: QWidget, dark: bool, palette: QPalette, *,
                                                    macos_group_font=widget.font() if macos_groups else None)
                         + "\n" + extra_stylesheet)
     for control in widgets:
-        control.setPalette(palette)
+        control.setPalette(choice_palette if isinstance(control, (QRadioButton, QCheckBox)) else palette)

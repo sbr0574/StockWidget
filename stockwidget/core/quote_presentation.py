@@ -1,6 +1,7 @@
 """指标定义、旧配置迁移、数值格式化及行情展示投影；不依赖 Qt。"""
 
 from dataclasses import dataclass
+import math
 from typing import Mapping, Sequence
 
 
@@ -26,8 +27,10 @@ METRIC_SPECS = (
     MetricSpec("commi", "委比", "委比", "commi_visible"),
     MetricSpec("volume", "成交量", "成交量", "vol_visible"),
     MetricSpec("amount", "成交额", "成交额", "amount_visible"),
-    MetricSpec("average", "均价", "均价", "avg_visible"),
-    MetricSpec("kline", "日K线", "K线", "kline_visible"),
+    MetricSpec("average", "均值", "均值", "avg_visible"),
+    MetricSpec("volume_ratio", "量比", "量比", "volume_ratio_visible"),
+    # Keep the stored ID / legacy visibility flag so existing layouts migrate intact.
+    MetricSpec("kline", "迷你图", "迷你图", "kline_visible"),
 )
 
 METRIC_BY_ID = {spec.metric_id: spec for spec in METRIC_SPECS}
@@ -35,6 +38,50 @@ METRIC_IDS = tuple(METRIC_BY_ID)
 DEFAULT_VISIBLE_METRICS = tuple(
     spec.metric_id for spec in METRIC_SPECS if spec.default_visible
 )
+
+
+def quote_detail_values(quote, instrument, details=None):
+    """Numeric chart-header metrics; unavailable ratios remain None.
+
+    Domestic earnings multiples use current market cap and the matching profit,
+    never weighted historical EPS. US TTM EPS comes from its basic quote.
+    """
+    data = {**(quote or {}), **(details or {})}
+
+    def number(key):
+        value = data.get(key)
+        return value if isinstance(value, (int, float)) and math.isfinite(value) else None
+
+    def ratio(numerator, denominator):
+        return numerator / denominator if numerator is not None and denominator is not None and denominator > 0 else None
+
+    price = number("current_price") or number("prev_close")
+    total, floating = number("total_shares"), number("float_shares")
+    total = total if total and total > 0 else None
+    floating = floating if floating and floating > 0 else None
+    volume = number("deals_vol")
+    result = {key: number(key) for key in ("inside_volume", "outside_volume", "total_shares", "float_shares")}
+    result["total_shares"], result["float_shares"] = total, floating
+    capitalization = price * total if price and total else (number("market_cap") or None)
+    result.update({
+        "pe_ttm": (ratio(price, number("eps_ttm")) if instrument.get("market") == "us"
+                   else ratio(capitalization, number("ttm_profit"))),
+        "pe_static": ratio(capitalization, number("annual_profit")),
+        "pe_dynamic": ratio(capitalization, number("annualized_profit")),
+        "pb": ratio(price, number("book_value_per_share")),
+        "market_cap": capitalization,
+        "float_market_cap": price * floating if price and floating and floating > 0 else None,
+        "turnover_rate": ratio(volume * 100 if volume is not None else None, floating),
+        "amplitude": ratio(((number("high_price") or 0) - (number("low_price") or 0)) * 100,
+                           number("prev_close")) if number("opening_price") else None,
+    })
+    if volume and not (result["inside_volume"] or result["outside_volume"]):
+        result["inside_volume"] = result["outside_volume"] = None
+    if instrument.get("type") in {"指", "基", "期"}:
+        for key in ("pe_ttm", "pe_static", "pe_dynamic", "pb", "market_cap", "total_shares",
+                    "float_market_cap", "float_shares", "turnover_rate", "inside_volume", "outside_volume"):
+            result[key] = None
+    return result
 
 
 def normalize_visible_metrics(value: Sequence[str] | None) -> list[str]:
@@ -152,6 +199,33 @@ class BidAskCell:
         return f"{self.buy} {self.marker or ' '} {self.sell}"
 
 
+@dataclass(frozen=True)
+class MiniChartCell:
+    """Shared chart payload; amplitude limits belong to the visible column."""
+    kind: str = "kline"
+    candle: tuple[float, ...] = ()
+    points: tuple[tuple[float, float], ...] = ()
+    limits: tuple[float, float] | None = None
+
+    @property
+    def reference(self):
+        return self.candle[4] if len(self.candle) == 5 else 0
+
+    @property
+    def amplitude(self):
+        if len(self.candle) != 5 or not all(math.isfinite(v) for v in self.candle):
+            return None
+        _opening, current, high, low, previous = self.candle
+        if min(current, high, low, previous) <= 0:
+            return None
+        return tuple((v / previous - 1) * 100 for v in (min(low, current), current, max(high, current)))
+
+
+def amplitude_limits(cells):
+    ranges = [cell.amplitude for cell in cells if isinstance(cell, MiniChartCell) and cell.amplitude is not None]
+    return (min(v[0] for v in ranges), max(v[2] for v in ranges)) if ranges else None
+
+
 def _format_book_volume(value, lot_size, *, signed=False):
     """盘口数量按市场换算，超过一万时固定使用两位小数的万单位。"""
     volume = int(value / lot_size)
@@ -174,6 +248,7 @@ class QuoteDisplayOptions:
     code_visible: bool = False
     type_visible: bool = False
     unit_mode: str = "auto"
+    average_period: int = 0
 
 
 def price_precision(security_type, market=""):
@@ -189,6 +264,8 @@ def format_quote(
     market: str = "",
     cost: float | None = None,
     options: QuoteDisplayOptions = QuoteDisplayOptions(),
+    average_price: float | None = None,
+    volume_ratio: float | None = None,
 ):
     data = dict(data)
     lot_size = volume_lot_size(security_type, market)
@@ -241,7 +318,12 @@ def format_quote(
     # 指标计算
     change = data["current_price"] - data["prev_close"] if data["prev_close"] else 0.0
     change_pct = (data["current_price"] / data["prev_close"] - 1) * 100 if data["prev_close"] else 0.0
-    avg = (data["deals_amt"] / data["deals_vol"]) if data["deals_vol"] > 0 else data["prev_close"]
+    avg = (average_price if options.average_period else
+           data["deals_amt"] / data["deals_vol"] if data["deals_vol"] > 0 and data["deals_amt"] > 0 else None)
+    if avg is not None and not math.isfinite(avg):
+        avg = None
+    if volume_ratio is not None and (not math.isfinite(volume_ratio) or volume_ratio < 0):
+        volume_ratio = None
     p_sum, s_sum = sum(data["purchaser_vol"]), sum(data["seller_vol"])
     committee = (100 * (p_sum - s_sum) / (p_sum + s_sum)) if (p_sum + s_sum) > 0 else 0.0
     arrow = " "
@@ -292,8 +374,9 @@ def format_quote(
                 unit_cn=not english_units,
             )
         ),
-        "均价": f"{avg:.{precision}f}",
-        "K线": k_payload,
+        "均值": f"{avg:.{precision}f}" if avg is not None else "-",
+        "量比": f"{volume_ratio:.2f}" if volume_ratio is not None else "-",
+        "迷你图": k_payload,
     }
     color_roles = {
         "名称": COLOR_ROLE_TEXT,
@@ -305,8 +388,9 @@ def format_quote(
         "委比": direction_color_role(committee),
         "成交量": COLOR_ROLE_TEXT,
         "成交额": COLOR_ROLE_TEXT,
-        "均价": direction_color_role(avg - data["prev_close"]),
-        "K线": COLOR_ROLE_TEXT,
+        "均值": direction_color_role(avg - data["prev_close"]) if avg is not None else COLOR_ROLE_NEUTRAL,
+        "量比": direction_color_role(volume_ratio - 1) if volume_ratio is not None else COLOR_ROLE_NEUTRAL,
+        "迷你图": COLOR_ROLE_TEXT,
     }
     sort_values = {
         "现价": data["current_price"],
@@ -316,17 +400,19 @@ def format_quote(
         "委比": committee if (p_sum + s_sum) > 0 else None,
         "成交量": data["deals_vol"],
         "成交额": data["deals_amt"],
-        "均价": avg,
+        "均值": avg,
+        "量比": volume_ratio,
     }
 
-    # 指数不显示浮盈/买一卖一/委比/均价（均置为"-"）
+    # 指数的成交额/成交量不是指数点位；日K的 MA 点位仍然有效。
     if is_index:
-        for key in ("浮盈", "委比", "均价"):
+        for key in ("浮盈", "委比", *(("均值",) if not options.average_period else ())):
             format_data[key] = "-"
             color_roles[key] = direction_color_role(0)
         sort_values["浮盈"] = None
         sort_values["委比"] = None
-        sort_values["均价"] = None
+        if not options.average_period:
+            sort_values["均值"] = None
         if not data["deals_vol"]:
             sort_values["成交量"] = None
         if not data["deals_amt"]:
@@ -335,7 +421,7 @@ def format_quote(
     return format_data, color_roles, sort_values
 
 
-SORTABLE_HEADERS = ("现价", "涨跌", "涨幅", "浮盈", "委比", "成交量", "成交额", "均价")
+SORTABLE_HEADERS = ("现价", "涨跌", "涨幅", "浮盈", "委比", "成交量", "成交额", "均值", "量比")
 
 
 def sorted_quote_indices(sort_values, header, *, descending=True):
@@ -353,5 +439,5 @@ def project_quote_columns(rows, color_roles, headers):
     """浮窗和任务栏共用相同的缺省文字、颜色及对齐规则。"""
     values = [[row.get(h, "-") for h in headers] for row in rows]
     roles = [[row.get(h, COLOR_ROLE_TEXT) for h in headers] for row in color_roles]
-    right_columns = [i for i, h in enumerate(headers) if h not in ("名称", "K线", "买一/卖一")]
+    right_columns = [i for i, h in enumerate(headers) if h not in ("名称", "迷你图", "买一/卖一")]
     return values, roles, right_columns

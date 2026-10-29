@@ -14,6 +14,7 @@ from stockwidget.core.quote_presentation import (
 )
 from stockwidget.ui.controls.metrics import MetricListWidget, MetricPoolWidget
 from stockwidget.ui.controls.quote_view import COLOR_ROLE_TEXT
+from stockwidget.ui.controls.style import apply_settings_theme, theme_palette
 from stockwidget.ui.floating.presenter import QuotePresenter
 from stockwidget.ui.floating.widget import FloatLabel
 
@@ -49,6 +50,24 @@ class MetricPoolWidgetTests(QtTestCase):
             item = self.pool.available_pool.item(row)
             self.assertEqual(bool(item.flags() & Qt.ItemIsDragEnabled),
                              item.data(Qt.UserRole) not in self.pool.visible_metrics)
+
+    def test_catalog_text_is_readable_in_the_selected_palette(self):
+        self.pool.resize(480, 220)
+        self.pool.show()
+        for dark in (False, True):
+            palette = theme_palette(dark, self.pool.palette())
+            apply_settings_theme(self.pool, dark, palette)
+            self.pool.set_theme(dark)
+            self.qt_app.processEvents()
+            view = self.pool.available_pool
+            rect = view.visualItemRect(view.item(0))
+            image = view.viewport().grab().toImage()
+            ratio = image.devicePixelRatio()
+            color = palette.color(QPalette.Text)
+            pixels = (image.pixelColor(round(x * ratio), round(y * ratio))
+                      for x in range(rect.left(), rect.right()) for y in range(rect.top(), rect.bottom()))
+            self.assertTrue(any(abs(pixel.red() - color.red()) + abs(pixel.green() - color.green())
+                                + abs(pixel.blue() - color.blue()) < 12 for pixel in pixels))
 
     def test_catalog_keeps_all_entries_in_place_and_disables_already_displayed_entries(self):
         self.pool.resize(480, 300)
@@ -178,7 +197,7 @@ class FloatLabelMetricLayoutTests(QtTestCase):
 
         self.assertEqual(
             window.model._headers,
-            ["名称", "K线", "现价", "买一/卖一"],
+            ["名称", "迷你图", "现价", "买一/卖一"],
         )
         self.assertEqual(
             window.visible_metrics,
@@ -221,7 +240,7 @@ class FloatLabelMetricLayoutTests(QtTestCase):
 
         self.assertEqual(
             window.model._headers,
-            ["K线", "现价", "名称"],
+            ["迷你图", "现价", "名称"],
         )
         self.assertEqual(
             window.model._headers,
@@ -351,7 +370,7 @@ class FloatLabelMetricLayoutTests(QtTestCase):
         window.quotes._last_sort_values = [{"现价": 1.0}]
         window.quotes.project_rows([row], [roles], [{"现价": 1.0}])
 
-        window.quotes.header_clicked(window.model._headers.index("K线"))
+        window.quotes.header_clicked(window.model._headers.index("迷你图"))
         self.assertIsNone(window.quotes.sort_header)
 
         window.quotes.header_clicked(window.model._headers.index("现价"))

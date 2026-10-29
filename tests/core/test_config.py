@@ -56,16 +56,28 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 
 class PageMathTests(unittest.TestCase):
-    def test_chart_display_mode_legacy_default_validation_and_roundtrip(self):
+    def test_chart_sizes_migrate_presets_and_roundtrip_without_display_mode(self):
         legacy = ViewOptions.from_config({"chart_enabled": True})
         self.assertTrue(legacy.chart_enabled)
-        self.assertEqual(legacy.chart_display_mode, "window")
+        self.assertEqual(legacy.chart_popup_size, [480, 340])
         for mode in ("window", "large", "medium", "small", "floating", None, "invalid", True):
             with self.subTest(mode=mode):
                 options = ViewOptions.from_config({"chart_display_mode": mode})
-                expected = "large" if mode == "floating" else mode if mode in ("window", "large", "medium", "small") else "window"
-                self.assertEqual(options.chart_display_mode, expected)
+                expected = {"large": [560, 400], "floating": [560, 400], "medium": [420, 300], "small": [320, 230]}.get(mode, [480, 340])
+                self.assertEqual(options.chart_popup_size, expected)
+                self.assertNotIn("chart_display_mode", options.to_config())
                 self.assertEqual(ViewOptions.from_config(options.to_config()), options)
+
+    def test_saved_chart_sizes_validate_and_override_legacy_preset(self):
+        options = ViewOptions.from_config({"chart_popup_size": [530, 385], "chart_display_mode": "small",
+                                           "chart_window_size": [1030, 650], "chart_order_book_enabled": True})
+        self.assertEqual(options.chart_popup_size, [530, 385])
+        self.assertEqual(options.chart_window_size, [1030, 650])
+        self.assertTrue(options.chart_order_book_enabled)
+        self.assertEqual(ViewOptions.from_config(options.to_config()), options)
+        for invalid in (None, True, "large", [400], {"w": 400}):
+            self.assertEqual(ViewOptions.from_config({"chart_popup_size": invalid}).chart_popup_size, [480, 340])
+        self.assertEqual(ViewOptions.from_config({"chart_popup_size": [None, -10]}).chart_popup_size, [480, 200])
 
     def test_chart_indicator_preferences_normalize_and_survive_disabled_chart(self):
         options = ViewOptions.from_config({"chart_enabled": False, "chart_ma_periods": [60, 5, 5, "10", -1],

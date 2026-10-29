@@ -4,7 +4,6 @@ from PySide6.QtCore import (
     QEvent,
     QModelIndex,
     QPoint,
-    QPointF,
     QRect,
     QRectF,
     QSize,
@@ -17,7 +16,6 @@ from PySide6.QtGui import (
     QColor,
     QKeyEvent,
     QPainter,
-    QPainterPath,
     QPalette,
     QPen,
     QStandardItem,
@@ -32,13 +30,14 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QStyle,
     QStyledItemDelegate,
-    QStyleOptionButton,
+    QStyleOption,
     QStyleOptionViewItem,
     QWidget,
 )
 
 from stockwidget.core.watchlist import query_search_index
-from stockwidget.ui.controls.style import accent_color, accent_rgba, theme_palette
+from stockwidget.ui.controls.settings_widgets import FilledCheckBox
+from stockwidget.ui.controls.style import accent_rgba, theme_palette
 
 
 ENTRY_ROLE = Qt.ItemDataRole.UserRole + 1
@@ -71,142 +70,6 @@ def entry_display_text(entry: dict, *, added: bool = False) -> str:
     )
     label = "/".join(part for part in parts if part)
     return f"（已添加）{label}" if added else label
-
-
-class FilledCheckBox(QCheckBox):
-    """保留 Qt 原生布局和交互，仅覆盖指示器的状态填充。"""
-
-    _INDICATOR_SIZE = 13
-    _INDICATOR_TEXT_GAP = 3
-    _HOVER_HORIZONTAL_PADDING = 4
-    _HOVER_VERTICAL_PADDING = 3
-
-    def __init__(self, text="", parent=None):
-        if isinstance(text, QWidget):
-            parent, text = text, ""
-        super().__init__(text, parent)
-        self.set_theme(False)
-
-    def set_theme(self, dark: bool):
-        if dark:
-            self._indicator_border = QColor(255, 255, 255, 115)
-            self._unchecked_fill = QColor(255, 255, 255, 31)
-        else:
-            self._indicator_border = QColor(0, 0, 0, 97)
-            self._unchecked_fill = QColor(0, 0, 0, 20)
-        self._checked_fill = accent_color()
-        self._partial_fill = QColor(self._checked_fill)
-        self._partial_fill.setAlpha(148)
-        self._hover_fill = QColor(self._checked_fill)
-        self._hover_fill.setAlphaF(0.12 if dark else 0.08)
-        self.update()
-
-    def sizeHint(self):
-        metrics = self.fontMetrics()
-        width = (
-            2 * self._HOVER_HORIZONTAL_PADDING
-            + self._INDICATOR_SIZE
-            + self._INDICATOR_TEXT_GAP
-            + metrics.horizontalAdvance(self.text())
-        )
-        height = (
-            max(self._INDICATOR_SIZE, metrics.height())
-            + 2 * self._HOVER_VERTICAL_PADDING
-        )
-        return QSize(width, height)
-
-    def minimumSizeHint(self):
-        return self.sizeHint()
-
-    def _indicator_rect(self):
-        return QRect(
-            self._HOVER_HORIZONTAL_PADDING,
-            (self.height() - self._INDICATOR_SIZE) // 2,
-            self._INDICATOR_SIZE,
-            self._INDICATOR_SIZE,
-        )
-
-    def _text_rect(self, indicator: QRect):
-        left = indicator.right() + 1 + self._INDICATOR_TEXT_GAP
-        return QRect(
-            left,
-            0,
-            max(0, self.width() - self._HOVER_HORIZONTAL_PADDING - left),
-            self.height(),
-        )
-
-    def paintEvent(self, event):
-        option = QStyleOptionButton()
-        self.initStyleOption(option)
-        style = self.style()
-        indicator = self._indicator_rect()
-        contents = self._text_rect(indicator)
-        state = self.checkState()
-        if state == Qt.CheckState.Checked:
-            fill = QColor(self._checked_fill)
-        elif state == Qt.CheckState.PartiallyChecked:
-            fill = QColor(self._partial_fill)
-        else:
-            fill = QColor(self._unchecked_fill)
-        border = QColor(
-            self._checked_fill
-            if state != Qt.CheckState.Unchecked
-            else self._indicator_border
-        )
-        if not self.isEnabled():
-            fill.setAlpha(round(fill.alpha() * 0.45))
-            border.setAlpha(round(border.alpha() * 0.45))
-
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-        if self.isEnabled() and self.underMouse():
-            painter.setPen(Qt.PenStyle.NoPen)
-            painter.setBrush(self._hover_fill)
-            hover_rect = QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
-            painter.drawRoundedRect(hover_rect, 4, 4)
-
-        # 不调用原生 CE_CheckBox，彻底避免系统 indicator 的阴影边缘残留。
-        painter.setPen(QPen(border, 1))
-        painter.setBrush(fill)
-        indicator_rect = QRectF(indicator).adjusted(0.5, 0.5, -0.5, -0.5)
-        painter.drawRoundedRect(indicator_rect, 3, 3)
-
-        mark_color = QApplication.palette().color(
-            QPalette.ColorGroup.Active, QPalette.ColorRole.HighlightedText
-        )
-        if not self.isEnabled():
-            mark_color.setAlpha(130)
-        mark_pen = QPen(mark_color, max(1.5, indicator_rect.height() * 0.13))
-        mark_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
-        mark_pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
-        painter.setPen(mark_pen)
-        painter.setBrush(Qt.BrushStyle.NoBrush)
-        left, top = indicator_rect.left(), indicator_rect.top()
-        width, height = indicator_rect.width(), indicator_rect.height()
-        if state == Qt.CheckState.Checked:
-            path = QPainterPath(QPointF(left + width * 0.22, top + height * 0.52))
-            path.lineTo(left + width * 0.43, top + height * 0.72)
-            path.lineTo(left + width * 0.80, top + height * 0.30)
-            painter.drawPath(path)
-        elif state == Qt.CheckState.PartiallyChecked:
-            painter.drawLine(
-                QPointF(left + width * 0.25, top + height * 0.50),
-                QPointF(left + width * 0.75, top + height * 0.50),
-            )
-
-        painter.setFont(self.font())
-        style.drawItemText(
-            painter,
-            contents,
-            Qt.AlignmentFlag.AlignLeft
-            | Qt.AlignmentFlag.AlignVCenter
-            | Qt.TextFlag.TextShowMnemonic
-            | Qt.TextFlag.TextSingleLine,
-            option.palette,
-            self.isEnabled(),
-            option.text,
-            QPalette.ColorRole.WindowText,
-        )
 
 
 class SelectAllCheckBox(FilledCheckBox):
@@ -409,7 +272,7 @@ class AddCodePanel(QFrame):
         # 使用可激活的工具窗口，让 Windows 输入法获得搜索框所在窗口的焦点。
         super().__init__(parent, Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint)
         self.setObjectName("add_code_panel")
-        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
@@ -459,20 +322,21 @@ class AddCodePanel(QFrame):
         if dark:
             background = "rgb(44, 44, 46)"
             foreground = "rgb(242, 242, 247)"
-            border = "rgba(255, 255, 255, 0.28)"
+            border = "rgb(103, 103, 104)"
             field = "rgb(58, 58, 60)"
             selected = accent_rgba(0.22)
             hovered = accent_rgba(0.12)
         else:
             background = "rgb(250, 250, 250)"
             foreground = "rgb(28, 28, 30)"
-            border = "rgba(0, 0, 0, 0.28)"
+            border = "rgb(180, 180, 180)"
             field = "rgb(255, 255, 255)"
             selected = accent_rgba(0.16)
             hovered = accent_rgba(0.08)
         self.result_delegate.set_theme(dark)
         for checkbox in self.findChildren(FilledCheckBox):
             checkbox.set_theme(dark)
+        # QSS 将圆角与直边分段绘制；预混合为不透明边框，避免接缝处叠色。
         self.setStyleSheet(f"""
             QFrame#add_code_panel {{
                 background-color: {background};
@@ -491,6 +355,7 @@ class AddCodePanel(QFrame):
                 background-color: {field};
                 border: 1px solid {border};
                 border-radius: 5px;
+                padding: 4px;
                 outline: none;
             }}
             QFrame#add_code_panel QListView::item {{
@@ -509,6 +374,13 @@ class AddCodePanel(QFrame):
         """)
         # 样式刷新后同步原生搜索框，避免 Tool 窗口沿用系统的另一种颜色模式。
         self.search_input.setPalette(theme_palette(dark, QApplication.palette()))
+
+    def paintEvent(self, event):
+        # 透明工具窗口不自动填充矩形底色，只绘制一次带圆角的面板表面。
+        option = QStyleOption()
+        option.initFrom(self)
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, option, painter, self)
 
     def set_context(self, search_index, existing_keys):
         self._search_index = tuple(search_index or ())

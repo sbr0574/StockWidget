@@ -37,11 +37,15 @@ def taskbar_font_size_limit(height, dpi, rows):
 
 @dataclass
 class ViewOptions:
+    mini_chart_type: str = "kline"
     chart_enabled: bool = False
-    chart_display_mode: str = "window"
+    chart_popup_size: list[int] = field(default_factory=lambda: [480, 340])
+    chart_window_size: list[int] = field(default_factory=lambda: [900, 560])
+    chart_order_book_enabled: bool = False
     chart_ma_periods: list[int] = field(default_factory=lambda: [5, 10, 20, 30, 60])
     chart_average_enabled: bool = True
     chart_volume_enabled: bool = True
+    average_period: int = 0
     color_mode: str = "system"
     hide_tray_icon: bool = False
     float_split_enabled: bool = False
@@ -84,13 +88,26 @@ class ViewOptions:
                 setattr(result, key, getattr(defaults, key))
         if result.color_mode not in ("system", "light", "dark"):
             result.color_mode = "system"
-        if result.chart_display_mode == "floating":
-            result.chart_display_mode = "large"
-        if result.chart_display_mode not in ("window", "large", "medium", "small"):
-            result.chart_display_mode = "window"
+        if result.mini_chart_type not in ("kline", "trend", "amplitude"):
+            result.mini_chart_type = "kline"
+        # Old presets seed the initial size once; window mode is now opened
+        # directly from the chart instead of being a saved display preference.
+        legacy_size = {"large": [560, 400], "floating": [560, 400],
+                       "medium": [420, 300], "small": [320, 230]}
+        if "chart_popup_size" not in cfg and isinstance(cfg.get("chart_display_mode"), str):
+            result.chart_popup_size = legacy_size.get(cfg["chart_display_mode"], defaults.chart_popup_size)
+        for key in ("chart_popup_size", "chart_window_size"):
+            size, fallback = getattr(result, key), getattr(defaults, key)
+            if not isinstance(size, (list, tuple)) or len(size) != 2:
+                size = fallback
+            setattr(result, key, [bounded_int(value, default, 200, 16384)
+                                  for value, default in zip(size, fallback)])
         if not isinstance(result.chart_ma_periods, (list, tuple)):
             result.chart_ma_periods = defaults.chart_ma_periods
         result.chart_ma_periods = [period for period in (5, 10, 20, 30, 60) if period in result.chart_ma_periods]
+        result.average_period = bounded_int(result.average_period, 0, 0, 60)
+        if result.average_period not in (0, 5, 10, 20, 30, 60):
+            result.average_period = 0
         if "taskbar_metrics" not in cfg and metrics is not None:
             result.taskbar_metrics = metrics
         result.taskbar_metrics = normalize_visible_metrics(result.taskbar_metrics)
@@ -108,7 +125,7 @@ class ViewOptions:
             result.taskbar_font_family = font_family
         if not isinstance(result.taskbar_color, str):
             result.taskbar_color = defaults.taskbar_color
-        for key in ("chart_enabled", "chart_average_enabled", "chart_volume_enabled", "hide_tray_icon",
+        for key in ("chart_enabled", "chart_average_enabled", "chart_volume_enabled", "chart_order_book_enabled", "hide_tray_icon",
                     "float_paging_enabled", "taskbar_enabled", "taskbar_sync_metrics",
                     "taskbar_sync_appearance", "taskbar_sync_paging", "taskbar_unicolor", "taskbar_auto_color", "taskbar_dual_open",
                     "float_split_enabled", "float_split_separator", "taskbar_sync_split",

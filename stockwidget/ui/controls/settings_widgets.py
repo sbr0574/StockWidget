@@ -1,9 +1,147 @@
-"""Designer 设置控件：开关、快捷键输入与状态、自定义图标选择。"""
+"""Designer 设置控件：开关、共用勾选框、快捷键输入与状态、自定义图标选择。"""
 
 from PySide6.QtCore import QEvent, Qt, QRect, QRectF, QPointF, QSize, Signal
-from PySide6.QtGui import QColor, QPainter, QPalette, QPen, QIcon
-from PySide6.QtWidgets import (QCheckBox, QKeySequenceEdit, QListWidget, QStyle,
+from PySide6.QtGui import QColor, QPainter, QPainterPath, QPalette, QPen, QIcon
+from PySide6.QtWidgets import (QApplication, QCheckBox, QStyleOptionButton, QKeySequenceEdit, QListWidget, QStyle,
                               QStyledItemDelegate, QStyleOptionViewItem, QWidget, QPushButton)
+
+
+class FilledCheckBox(QCheckBox):
+    """保留 Qt 原生布局和交互，仅覆盖指示器的状态填充。"""
+
+    _INDICATOR_SIZE = 13
+    _INDICATOR_TEXT_GAP = 3
+    _HOVER_HORIZONTAL_PADDING = 4
+    _HOVER_VERTICAL_PADDING = 3
+
+    def __init__(self, text="", parent=None):
+        if isinstance(text, QWidget):
+            parent, text = text, ""
+        super().__init__(text, parent)
+        self.set_theme(False)
+
+    def set_theme(self, dark: bool):
+        from stockwidget.ui.controls.style import accent_color
+
+        if dark:
+            self._indicator_border = QColor(255, 255, 255, 115)
+            self._unchecked_fill = QColor(255, 255, 255, 31)
+        else:
+            self._indicator_border = QColor(0, 0, 0, 97)
+            self._unchecked_fill = QColor(0, 0, 0, 20)
+        self._checked_fill = accent_color()
+        self._partial_fill = QColor(self._checked_fill)
+        self._partial_fill.setAlpha(148)
+        self._hover_fill = QColor(self._checked_fill)
+        self._hover_fill.setAlphaF(0.12 if dark else 0.08)
+        self.update()
+
+    def sizeHint(self):
+        metrics = self.fontMetrics()
+        width = (
+            2 * self._HOVER_HORIZONTAL_PADDING
+            + self._INDICATOR_SIZE
+            + self._INDICATOR_TEXT_GAP
+            + metrics.horizontalAdvance(self.text())
+        )
+        height = (
+            max(self._INDICATOR_SIZE, metrics.height())
+            + 2 * self._HOVER_VERTICAL_PADDING
+        )
+        return QSize(width, height)
+
+    def minimumSizeHint(self):
+        return self.sizeHint()
+
+    def _indicator_rect(self):
+        return QRect(
+            self._HOVER_HORIZONTAL_PADDING,
+            (self.height() - self._INDICATOR_SIZE) // 2,
+            self._INDICATOR_SIZE,
+            self._INDICATOR_SIZE,
+        )
+
+    def _text_rect(self, indicator: QRect):
+        left = indicator.right() + 1 + self._INDICATOR_TEXT_GAP
+        return QRect(
+            left,
+            0,
+            max(0, self.width() - self._HOVER_HORIZONTAL_PADDING - left),
+            self.height(),
+        )
+
+    def paintEvent(self, event):
+        option = QStyleOptionButton()
+        self.initStyleOption(option)
+        style = self.style()
+        indicator = self._indicator_rect()
+        contents = self._text_rect(indicator)
+        state = self.checkState()
+        if state == Qt.CheckState.Checked:
+            fill = QColor(self._checked_fill)
+        elif state == Qt.CheckState.PartiallyChecked:
+            fill = QColor(self._partial_fill)
+        else:
+            fill = QColor(self._unchecked_fill)
+        border = QColor(
+            self._checked_fill
+            if state != Qt.CheckState.Unchecked
+            else self._indicator_border
+        )
+        if not self.isEnabled():
+            fill.setAlpha(round(fill.alpha() * 0.45))
+            border.setAlpha(round(border.alpha() * 0.45))
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        if self.isEnabled() and self.underMouse():
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(self._hover_fill)
+            hover_rect = QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
+            painter.drawRoundedRect(hover_rect, 4, 4)
+
+        # 不调用原生 CE_CheckBox，彻底避免系统 indicator 的阴影边缘残留。
+        painter.setPen(QPen(border, 1))
+        painter.setBrush(fill)
+        indicator_rect = QRectF(indicator).adjusted(0.5, 0.5, -0.5, -0.5)
+        painter.drawRoundedRect(indicator_rect, 3, 3)
+
+        mark_color = QApplication.palette().color(
+            QPalette.ColorGroup.Active, QPalette.ColorRole.HighlightedText
+        )
+        if not self.isEnabled():
+            mark_color.setAlpha(130)
+        mark_pen = QPen(mark_color, max(1.5, indicator_rect.height() * 0.13))
+        mark_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        mark_pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+        painter.setPen(mark_pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        left, top = indicator_rect.left(), indicator_rect.top()
+        width, height = indicator_rect.width(), indicator_rect.height()
+        if state == Qt.CheckState.Checked:
+            path = QPainterPath(QPointF(left + width * 0.22, top + height * 0.52))
+            path.lineTo(left + width * 0.43, top + height * 0.72)
+            path.lineTo(left + width * 0.80, top + height * 0.30)
+            painter.drawPath(path)
+        elif state == Qt.CheckState.PartiallyChecked:
+            painter.drawLine(
+                QPointF(left + width * 0.25, top + height * 0.50),
+                QPointF(left + width * 0.75, top + height * 0.50),
+            )
+
+        painter.setFont(self.font())
+        style.drawItemText(
+            painter,
+            contents,
+            Qt.AlignmentFlag.AlignLeft
+            | Qt.AlignmentFlag.AlignVCenter
+            | Qt.TextFlag.TextShowMnemonic
+            | Qt.TextFlag.TextSingleLine,
+            option.palette,
+            self.isEnabled(),
+            option.text,
+            QPalette.ColorRole.WindowText,
+        )
 
 
 class _HideTimeDelegate(QStyledItemDelegate):

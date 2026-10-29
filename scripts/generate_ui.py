@@ -28,7 +28,7 @@ def main():
     stale = []
     for source in forms:
         result = subprocess.run([*compiler, str(source)], check=True, capture_output=True)
-        generated = result.stdout.decode("utf-8").replace("\r\n", "\n")
+        generated = result.stdout.decode("utf-8").replace("\r\n", "\n").rstrip() + "\n"
         target = source.with_name("ui_" + source.stem + ".py")
         if args.check:
             if not target.is_file() or target.read_text(encoding="utf-8") != generated:

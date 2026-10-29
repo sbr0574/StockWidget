@@ -24,8 +24,9 @@ class TaskbarArea:
     monitor_rect: tuple[int, int, int, int] | None = None
 
     def position(self, width, height, offset=0):
-        # Keep clear of the notification area. Offset moves towards the left.
-        return max(0, self.right - width - offset), max(0, (self.height - height) // 2)
+        # Zero aligns before the notification area; signed offsets move left/right.
+        x = max(0, min(max(0, self.width - width), self.right - width - offset))
+        return x, max(0, (self.height - height) // 2)
 
 
 @lru_cache(maxsize=1)

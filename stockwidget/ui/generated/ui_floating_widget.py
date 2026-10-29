@@ -101,4 +101,3 @@ class Ui_FloatingWidget(object):
         self.message_label.setStyleSheet(QCoreApplication.translate("FloatingWidget", u"padding: 2px 4px;", None))
         pass
     # retranslateUi
-

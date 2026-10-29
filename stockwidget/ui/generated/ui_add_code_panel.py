@@ -19,8 +19,8 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QHBoxLay
     QLabel, QPushButton, QSizePolicy, QSpacerItem,
     QVBoxLayout, QWidget)
 
-from stockwidget.ui.watchlist.add_panel import (CodeSearchInput, FilledCheckBox, FilterCheckRow, SearchResultList,
-    SelectAllCheckBox)
+from stockwidget.ui.controls.settings_widgets import FilledCheckBox
+from stockwidget.ui.watchlist.add_panel import (CodeSearchInput, FilterCheckRow, SearchResultList, SelectAllCheckBox)
 
 class Ui_AddCodePanel(object):
     def setupUi(self, add_code_panel):
@@ -156,8 +156,8 @@ class Ui_AddCodePanel(object):
         self.add_code_results.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.add_code_results.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.add_code_results.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.add_code_results.setMinimumSize(QSize(0, 242))
-        self.add_code_results.setMaximumSize(QSize(16777215, 242))
+        self.add_code_results.setMinimumSize(QSize(0, 250))
+        self.add_code_results.setMaximumSize(QSize(16777215, 250))
 
         self.addCodeLayout.addWidget(self.add_code_results)
 
@@ -213,4 +213,3 @@ class Ui_AddCodePanel(object):
         self.add_code_next_page.setText(QCoreApplication.translate("AddCodePanel", u"\u4e0b\u4e00\u9875", None))
         pass
     # retranslateUi
-
