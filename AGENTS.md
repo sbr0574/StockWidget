@@ -11,8 +11,9 @@ StockWidget 是 Windows、macOS 和 Linux 桌面行情工具，只展示行情�
 | `core/quote_presentation.py` | 指标目录、显示值 / 颜色角色 / 原始排序值，统一列投影 |
 | `core/view_options.py`、`window_rules.py` | 显示偏好、同步、分页与分栏，屏幕位置与隐藏的纯规则 |
 | `data/quotes.py`、`network_errors.py` | 行情请求、统一数据结构、共享请求策略与安全错误结果 |
-| `data/bars.py`、`bar_cache.py` | 历史适配、交易日与实时补充规则，同源 SQLite 缓存 |
+| `data/bars.py`、`bar_cache.py` | 历史适配、交易日、实时补充与派生指标计算，同源 SQLite 缓存 |
 | `data/code_lists.py`、`update_check.py` | 市场代码列表同步与应用更新检查 |
+| `scripts/update_codes.py` | 单文件服务端代码列表更新、官方名录与名称补充分页，不依赖桌面应用运行时 |
 | `platform/capabilities.py` | 平台 / 实际 Qt 会话能力及默认值 |
 | `platform/window.py`、`taskbar.py`、`hotkeys.py`、`autostart.py` | 原生窗口、任务栏嵌入与输入、全局快捷键及自启 |
 | `ui/floating/widget.py` | `FloatLabel` 装配、配置、外观与共用窗口操作入口 |
@@ -38,9 +39,13 @@ StockWidget 是 Windows、macOS 和 Linux 桌面行情工具，只展示行情�
 - 用户配置与自选读取 / 保存兼容必须保留；删除旧配置迁移需有明确迁移方案，不能把仍在使用的兼容字段当作死代码。
 - 程序数据路径由 `config_store.py` 统一管理并固定：Windows 为 `%APPDATA%/StockWidget`，Linux 为 `~/StockWidget`，macOS 为 `~/Library/Application Support/StockWidget`；市场代码在 `data/`，历史缓存为 `cache/history.sqlite3`。不提供自定义目录或运行时切换接口。仅保留 macOS 从旧 `~/StockWidget` 到固定目录的一次性迁移，完整迁移或备份成功后才删除旧目录，失败保留，已有新版数据优先；不迁移其他目录或恢复旧目录偏好。
 - 服务器代码列表发布到 `codes-data` 分支，业务代码在 `main`；更新脚本支持 `CODES_OUTPUT_DIR`。
+- 服务端更新直接运行单个 `scripts/update_codes.py`。分类或补充名称表失败须进入状态清单并保留旧文件，不妨碍其他分类保存。
+- 服务端依赖用 `python -m pip install -r scripts/requirements.txt` 安装；转换港股中文名的 OpenCC 不属于桌面运行时依赖。
+- 固定指数直接在 `codes-data` 分支的 `index_cn.json`、`index_global.json` 中手工维护代码和 `last_update`；更新脚本只读取状态，不生成或改写指数文件。新增国内指数须核对官方身份及新浪行情的实际支持。
+- 海外指数的交易所时区随 `index_global.json` 的 `timezone` 元数据手工维护，历史适配不重复维护指数目录；时区沿用证券元数据与自选补全路径，缺少时区时不猜测海外指数的日K实时补充日期。
 - 请求错误使用共用分类及安全文本，不展示原始 URL、代理地址、凭据或长异常栈。沿用代理与证书校验，仅重试已分类的临时错误，不伪造空行情成功。
-- 明确选择东财时保持东财来源，包括同源备用节点及缓存；不得悄悄切换新浪。缓存记录实际来源，不跨源拼接。
-- 历史图表复用现有行情更新，没有独立刷新定时器；分钟 / 日K请求按标的、源和类别共享。关闭或清理缓存时使在途请求失效，迟到结果不得重开窗口或写回已清除缓存。
+- 实时行情、历史图表和美股中文名称仅从新浪获取，不提供来源选择或读写数据源配置项；证券范围继续采用交易所官方名录，港股中文名称发布前转换为简体。服务端依赖维护在 `scripts/requirements.txt`。
+- 历史图表复用现有行情更新，没有独立刷新定时器；分钟 / 日K请求按标的和类别共享。关闭或清理缓存时使在途请求失效，迟到结果不得重开窗口或写回已清除缓存。
 - 缓存按事务保存，只有确认损坏的数据库才允许重建；锁定、只读和未知版本不能触发删除。清理历史缓存不影响自选、配置和市场代码表。
 
 ## 显示与交互
@@ -65,9 +70,9 @@ StockWidget 是 Windows、macOS 和 Linux 桌面行情工具，只展示行情�
 
 ## 设置 UI 与新增条目
 
-设置按“自选列表 / 数据 / 常规 / 快捷键 / 浮窗 / 任务栏 / 关于”分类：数据负责来源、指标与图表，常规负责应用偏好，浮窗和任务栏分别管理显示面。新增参数按用户用途归类，复用已有控件和行样式。
+设置按“自选列表 / 数据 / 常规 / 快捷键 / 外观 / 任务栏 / 关于”分类：数据负责刷新、指标与图表，常规负责应用与窗口行为、分页及分栏，外观负责字体、颜色、透明度、配色模式和图标，任务栏管理其显示面。新增参数按用户用途归类，复用已有控件和行样式。
 
-- 所有设置控件及静态布局维护在 `ui/generated/settings.ui`；指标池、添加面板和浮窗对应各自 `.ui`。绑定代码只做信号、配置同步、能力与编辑状态，不动态创建另一套布局。
+- 设置页控件及静态布局维护在 `ui/generated/settings.ui`；图表窗口维护在 `ui/generated/history.ui`，指标池、添加面板和浮窗对应各自 `.ui`。绑定代码只做信号、配置同步、能力与编辑状态，不动态创建另一套布局。
 - 修改 `.ui` 后运行 `python scripts/generate_ui.py`，用 `--check` 验证同步；禁止手改 `ui_*.py`。保留 `objectName`、提升类及枚举与绑定的对应关系。
 - 设置窗口固定为704×496，分类页单栏纵向滚动，无横向滚动；组框使用原生 non-flat 外观。说明列宽统一310逻辑像素，左 / 顶对齐；数值、下拉框、字体与开关右对齐。
 - 新增设置行沿用现有 Designer 行结构、`ToggleSwitch`、`settingDescription`、颜色按钮和主题样式；不要为单条设置新增独立配色或硬编码浅深背景。

@@ -7,7 +7,7 @@ import sys
 import textwrap
 
 from PySide6.QtCore import QCoreApplication, QEvent, QMimeData, QPointF, QSignalBlocker, Qt, QPoint
-from PySide6.QtGui import QDrag, QDropEvent, QInputMethodEvent, QPalette
+from PySide6.QtGui import QDrag, QDropEvent, QImage, QInputMethodEvent, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QAbstractItemView, QPushButton, QWidget
 from shiboken6 import delete, isValid
@@ -216,6 +216,44 @@ class AddCodePanelInputTests(QtTestCase):
         self.assertTrue(self.panel.isActiveWindow())
         self.assertEqual(self.panel.windowType(), Qt.WindowType.Tool)
         self.assertTrue(self.panel.search_input.testAttribute(Qt.WidgetAttribute.WA_InputMethodEnabled))
+
+    def test_rounded_surfaces_have_transparent_corners_and_continuous_borders(self):
+        for dark in (False, True):
+            self.panel.set_theme(dark)
+            self.app.processEvents()
+            for dpr in (1.0, 1.5, 2.0):
+                with self.subTest(dark=dark, dpr=dpr):
+                    image = QImage(
+                        round(self.panel.width() * dpr),
+                        round(self.panel.height() * dpr),
+                        QImage.Format.Format_ARGB32_Premultiplied,
+                    )
+                    image.setDevicePixelRatio(dpr)
+                    image.fill(Qt.GlobalColor.transparent)
+                    self.panel.render(image)
+                    for x in (0, image.width() - 1):
+                        for y in (0, image.height() - 1):
+                            self.assertEqual(image.pixelColor(x, y).alpha(), 0)
+
+                    # 圆角切线与直边应连续，不出现半透明描边叠加产生的深色接缝。
+                    for surface, radius in ((self.panel, 8), (self.panel.result_list, 5)):
+                        origin = surface.mapTo(self.panel, QPoint())
+
+                        def pixel(x, y):
+                            return image.pixelColor(
+                                round((origin.x() + x) * dpr),
+                                round((origin.y() + y) * dpr),
+                            )
+
+                        straight = pixel(radius + 8, 0)
+                        self.assertEqual(straight.alpha(), 255)
+                        for x in range(radius, radius + 4):
+                            self.assertEqual(pixel(x, 0), straight)
+
+                    # 第一行已选中，其高亮不能覆盖列表圆角或顶部留白。
+                    self.assertEqual(
+                        pixel(4, 4), pixel(self.panel.result_list.width() // 2, 4)
+                    )
 
     def test_arrow_keys_skip_added_rows_without_leaving_search(self):
         search = self.panel.search_input

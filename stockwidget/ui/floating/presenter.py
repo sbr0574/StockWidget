@@ -5,12 +5,15 @@ FloatLabel 持有配置和 Qt 视图，QuotePresenter 独占行情缓存、请�
 """
 
 from functools import partial
+from dataclasses import replace
 import threading
 
 from PySide6.QtCore import QObject, Qt, QTimer, Signal
 
 from stockwidget.core.quote_presentation import (
     NAME_METRIC_ID,
+    MiniChartCell,
+    amplitude_limits,
     SORTABLE_HEADERS,
     QuoteDisplayOptions,
     format_quote,
@@ -19,12 +22,15 @@ from stockwidget.core.quote_presentation import (
     project_quote_columns,
 )
 from stockwidget.core.view_options import column_ranges, page_slice
-from stockwidget.data.quotes import fetch_quote_result
+from stockwidget.core.window_rules import quote_timestamp
+from stockwidget.data.quotes import fetch_quote_result, request_quote_details
 
 
 class QuotePresenter(QObject):
     data_ready = Signal(object)
     quotes_updated = Signal()
+    details_ready = Signal(object)
+    details_updated = Signal()
 
     def __init__(self, window):
         super().__init__(window)
@@ -39,11 +45,16 @@ class QuotePresenter(QObject):
         self._last_sort_values = []
         self._last_keys = []
         self._latest_quotes = {}
-        self._latest_source = None
         self._ordered_keys = []
         self._quote_generation = 0
         self._refresh_thread = None
         self.data_ready.connect(self.accept_result)
+        self.details_ready.connect(self._accept_details)
+        self._detail_instrument = None
+        self._detail_generation = 0
+        self._detail_busy = False
+        self._detail_values = {}
+        self._fundamentals = {}
         self.page_timers = {}
         for surface in ("float", "taskbar"):
             timer = QTimer(self)
@@ -57,14 +68,24 @@ class QuotePresenter(QObject):
             metrics.insert(0, NAME_METRIC_ID)
         return metrics
 
+    def _available_sort_headers(self):
+        """Shared sorting can use either enabled surface's effective metrics."""
+        headers = set(metric_headers(self.window.visible_metrics))
+        options = self.window.view_options
+        if options.taskbar_enabled and not options.taskbar_sync_metrics:
+            headers.update(metric_headers(options.taskbar_metrics))
+        return headers
+
     def invalidate(self, *, reset_pages=False):
-        """自选、数据源或配置更改后丢弃在途结果，停止旧行情倒计时。"""
+        """自选或配置更改后丢弃在途结果，停止旧行情倒计时。"""
         self._quote_generation += 1
         self._latest_quotes = {}
-        self._latest_source = None
+        self.clear_details()
         if reset_pages:
             self.float_page = self.taskbar_page = 0
         self.window.hide_controller.cancel_countdown()
+        if hasattr(self.window, "history"):
+            self.window.history.invalidate_quotes()
 
     def view_options_changed(self, previous):
         """同步设置只改变有效视图；两处的页码仍独立维护。"""
@@ -77,12 +98,13 @@ class QuotePresenter(QObject):
                     or previous.split_settings(surface)[0] != options.split_settings(surface)[0]
                     or (surface == "float" and previous.float_paging_enabled != options.float_paging_enabled)):
                 setattr(self, f"{surface}_page", 0)
-        self.reproject()
+        self.metrics_changed()
 
     def metrics_changed(self):
-        """隐藏当前排序指标时清除排序，不改写自选顺序。"""
-        if self.sort_header not in metric_headers(self.window.visible_metrics):
+        """两处均不再使用当前排序指标时恢复自选顺序。"""
+        if self.sort_header is not None and self.sort_header not in self._available_sort_headers():
             self.sort_header = None
+            self.float_page = self.taskbar_page = 0
             self.window.table.horizontalHeader().setSortIndicatorShown(False)
         self.reproject()
 
@@ -123,13 +145,139 @@ class QuotePresenter(QObject):
         return self.window.checked_codes.get(key)
 
     def quote_for(self, instrument):
-        """Return accepted raw data only from the currently selected source."""
-        if self._latest_source != self.window.data_source:
-            return None
+        """Return the latest accepted quote for this instrument."""
         for key, entry in self.window.watchlist.items():
             if entry.get("checked") and all(entry.get(field) == instrument.get(field) for field in ("market", "code")):
                 return self._latest_quotes.get(key)
         return None
+
+    @staticmethod
+    def _detail_key(instrument):
+        return tuple(instrument.get(field) for field in ("market", "code", "type"))
+
+    def clear_details(self):
+        self.set_detail_instrument(None)
+        self._detail_values.clear()
+        self._fundamentals.clear()
+
+    def set_detail_instrument(self, instrument):
+        """One active detached chart; selection/close invalidates late results."""
+        key = self._detail_key(instrument) if instrument else None
+        old_key = self._detail_key(self._detail_instrument) if self._detail_instrument else None
+        if old_key != key:
+            self._detail_generation += 1
+            self._detail_instrument = dict(instrument) if instrument else None
+            self._refresh_details()
+
+    def details_for(self, instrument):
+        key = self._detail_key(instrument)
+        quote = self.quote_for(instrument) or {}
+        data = self._detail_values.get(key, {})
+        return {**self._fundamentals.get(key, ({}, 0))[0],
+                **(data.get("activity", {}) if data.get("date") == quote.get("date") else {})}
+
+    def _refresh_details(self):
+        instrument = self._detail_instrument
+        if not instrument or self._detail_busy or not self.window.widget_visible:
+            return
+        if not any((entry.get("market"), entry.get("code")) == (instrument.get("market"), instrument.get("code"))
+                   for entry in self.window.checked_codes.values()):
+            return
+        # Fundamentals don't need the global quote cadence. Activity uses the
+        # existing refresh events, with no separate refresh timer.
+        key = self._detail_key(instrument)
+        cache = self.window.history.cache
+        fundamentals, saved = self._fundamentals.get(key, (None, 0))
+        if fundamentals is None or not cache.fundamentals_fresh(instrument, fundamentals, saved):
+            fundamentals = None
+        quote = self.quote_for(instrument) or {}
+        self._detail_busy = True
+        threading.Thread(target=self._detail_worker,
+                         args=(self._detail_generation, dict(instrument), quote.get("date"), fundamentals, saved, cache, cache.generation),
+                         daemon=True).start()
+
+    def _detail_worker(self, generation, instrument, date, fundamentals, saved_at, cache, cache_generation):
+        try:
+            if fundamentals is None:
+                cached = cache.read_fundamentals(instrument)
+                if cached is not None:
+                    fundamentals, saved_at = cached
+            downloaded = fundamentals is None
+            fundamental, activity = request_quote_details(instrument, fundamentals)
+        except Exception:
+            fundamental, activity, downloaded = fundamentals or {}, {}, fundamentals is None
+        if downloaded:
+            saved_at = cache.clock().timestamp()
+        try:
+            self.details_ready.emit((generation, instrument, date, fundamental, activity, saved_at, cache_generation, downloaded))
+        except RuntimeError:
+            pass
+
+    def _accept_details(self, payload):
+        self._detail_busy = False
+        generation, instrument, date, fundamental, activity, saved_at, cache_generation, downloaded = payload
+        cache = self.window.history.cache
+        if (generation != self._detail_generation or not self._detail_instrument
+                or not self.window.widget_visible or cache_generation != cache.generation):
+            self._refresh_details()
+            return
+        key = self._detail_key(instrument)
+        if key != self._detail_key(self._detail_instrument):
+            return
+        self._fundamentals[key] = dict(fundamental), saved_at
+        if downloaded:
+            cache.write_fundamentals(instrument, fundamental, saved_at, generation=cache_generation)
+        self._detail_values[key] = {"activity": dict(activity), "date": date}
+        self.details_updated.emit()
+
+    def history_instruments(self, view="intraday"):
+        """Request only histories needed by visible charts or derived metrics."""
+        result = {}
+        if not self.window.widget_visible:
+            return result
+        for surface in ("float", "taskbar"):
+            if (surface == "float" and (not self.window.isVisible() or self.window.position_controller.collapsed)
+                    or surface == "taskbar" and self.window.display_mode == "float" and not self.window.taskbar_preview_active):
+                continue
+            metrics = self.window.get_surface_metrics(surface)
+            options = self.window.view_options
+            trend = view == "intraday" and options.mini_chart_type == "trend" and "kline" in metrics
+            average = view == "daily" and options.average_period and "average" in metrics
+            ratio = view == "daily" and "volume_ratio" in metrics
+            if not (trend or average or ratio):
+                continue
+            page = self.get_page(surface)
+            keys = (self._ordered_keys if view == "daily" and self.sort_header in {"均值", "量比"}
+                    else self._ordered_keys[page.start:page.stop])
+            for key in keys:
+                instrument = self.window.checked_codes.get(key)
+                if instrument and (trend or average or (instrument.get("market") in {"sh", "sz", "bj"}
+                                                        and instrument.get("type") not in {"指", "期"})):
+                    result[key] = instrument
+        return result
+
+    def _mini_cells(self, rows, headers, keys, split=False):
+        if "迷你图" not in headers:
+            return rows
+        column = headers.index("迷你图")
+        kind = self.window.view_options.mini_chart_type
+        for i, row in enumerate(rows):
+            key = keys[i] if i < len(keys) else None
+            raw = row[column]
+            candle = raw.get("k", ()) if isinstance(raw, dict) else ()
+            instrument = self.window.checked_codes.get(key)
+            points = ()
+            if kind == "trend" and instrument and hasattr(self.window, "history"):
+                points, reference = self.window.history.mini_chart_data(instrument)
+                if len(candle) == 5:
+                    candle = (*candle[:4], reference or 0)
+            row[column] = MiniChartCell(kind, candle, points)
+        if kind == "amplitude":
+            for start, stop in column_ranges(len(rows), split):
+                limits = amplitude_limits(row[column] for row in rows[start:stop])
+                for row in rows[start:stop]:
+                    row[column] = replace(row[column], limits=limits)
+        return rows
 
     def _project_float_page(self):
         page = self.get_page("float")
@@ -142,6 +290,7 @@ class QuotePresenter(QObject):
 
         proj_rows, projected_roles, right_cols = project_quote_columns(full_rows, color_roles, headers)
         split, separator = self.window.view_options.split_settings("float")
+        self._mini_cells(proj_rows, headers, self._ordered_keys[page.start:page.stop], split)
         ranges = column_ranges(len(proj_rows), split)
         for model, (start, stop) in zip((self.window.model, self.window.right_model), ranges):
             model.set_align_right_cols(right_cols)
@@ -154,7 +303,7 @@ class QuotePresenter(QObject):
         self.window._sync_colors_to_views()
 
         old_kline_col = self.window.k_column_visible_index
-        new_kline_col = headers.index("K线") if "K线" in headers else None
+        new_kline_col = headers.index("迷你图") if "迷你图" in headers else None
         for table, delegate, default in ((self.window.table, self.window.k_delegate, self.window._default_item_delegate),
                                          (self.window.right_table, self.window.right_k_delegate, self.window._right_default_delegate)):
             if old_kline_col is not None and old_kline_col != new_kline_col:
@@ -188,6 +337,8 @@ class QuotePresenter(QObject):
         headers = metric_headers(metrics)
         rows, roles, right_cols = project_quote_columns(
             self._ordered_rows[page.start:page.stop], self._ordered_color_roles[page.start:page.stop], headers)
+        self._mini_cells(rows, headers, self._ordered_keys[page.start:page.stop],
+                         self.window.view_options.split_settings("taskbar")[0])
         self.window.taskbar_model.set_align_right_cols(right_cols)
         self.window.taskbar_model.set_rows_headers(rows, headers, roles)
         self.window._sync_colors_to_views()
@@ -220,6 +371,8 @@ class QuotePresenter(QObject):
                 timer.stop()
 
     def reproject(self):
+        if self._latest_quotes and self._last_keys:
+            self._format_rows({key: self._latest_quotes[key] for key in self._last_keys if key in self._latest_quotes})
         self.project_rows(
             self._last_full_rows,
             self._last_color_roles,
@@ -239,19 +392,50 @@ class QuotePresenter(QObject):
             return
         self._refresh_thread = threading.Thread(
             target=self._fetch_worker,
-            args=(checked_codes, self.window.data_source, self._quote_generation),
+            args=(checked_codes, self._quote_generation),
             daemon=True,
         )
         self._refresh_thread.start()
 
-    def _fetch_worker(self, codes: dict, source: str, generation: int):
+    def _fetch_worker(self, codes: dict, generation: int):
         """后台线程：执行网络请求，结果经 data_ready 信号回到主线程。"""
-        payload = fetch_quote_result(codes, source)
+        payload = fetch_quote_result(codes)
         try:
             self.data_ready.emit((*payload, generation))
         except RuntimeError:
             # The owning window may have been destroyed while the request was running.
             pass
+
+    def _format_rows(self, data):
+        full_rows = []
+        full_color_roles = []
+        sort_values = []
+        options = QuoteDisplayOptions(
+            name_length=self.window.name_length,
+            code_visible=self.window.code_visible,
+            type_visible=self.window.type_visible,
+            unit_mode=self.window.unit_mode,
+            average_period=self.window.view_options.average_period,
+        )
+        for c, d in data.items():
+            entry = self.window.watchlist.get(c) or {}
+            code_info = self.window.codes_list.get(c, {})
+            type_ = entry.get("type") or code_info.get("type")
+            market = entry.get("market") or code_info.get("market") or ""
+            display_code = entry.get("code") or code_info.get("code") or c
+            derived = (self.window.history.quote_metrics({**code_info, **entry}, d)
+                       if hasattr(self.window, "history") else {})
+            row, color_roles, row_sort_values = format_quote(
+                d, type_, display_code, market=market,
+                cost=entry.get("cost"), options=options, **derived,
+            )
+            full_rows.append(row)
+            full_color_roles.append(color_roles)
+            sort_values.append(row_sort_values)
+
+        self._last_full_rows = full_rows
+        self._last_color_roles = full_color_roles
+        self._last_sort_values = sort_values
 
     def accept_result(self, payload):
         """主线程：处理请求结果并更新表格。payload = (ok, data, error)"""
@@ -272,49 +456,36 @@ class QuotePresenter(QObject):
             self.window._fit_to_contents()
             return
 
-        full_rows = []
-        full_color_roles = []
-        sort_values = []
-        options = QuoteDisplayOptions(
-            name_length=self.window.name_length,
-            code_visible=self.window.code_visible,
-            type_visible=self.window.type_visible,
-            unit_mode=self.window.unit_mode,
-        )
-        for c, d in data.items():
-            entry = self.window.watchlist.get(c) or {}
-            code_info = self.window.codes_list.get(c, {})
-            type_ = entry.get("type") or code_info.get("type")
-            market = entry.get("market") or code_info.get("market") or ""
-            display_code = entry.get("code") or code_info.get("code") or c
-            row, color_roles, row_sort_values = format_quote(
-                d, type_, display_code, market=market,
-                cost=entry.get("cost"), options=options,
-            )
-            full_rows.append(row)
-            full_color_roles.append(color_roles)
-            sort_values.append(row_sort_values)
+        previous = self._latest_quotes
+        for code, quote in data.items():
+            old = previous.get(code)
+            old_time = quote_timestamp(old) if old is not None else None
+            new_time = quote_timestamp(quote)
+            # Equal-second snapshots can contain newer prices/volumes. A known
+            # accepted timestamp must not be replaced by an older or unknown one.
+            if old_time is not None and (new_time is None or new_time < old_time):
+                data[code] = old
 
-        self._last_full_rows = full_rows
-        self._last_color_roles = full_color_roles
-        self._last_sort_values = sort_values
+        self._format_rows(data)
         self._last_keys = list(data)
-        self._latest_quotes = data
-        self._latest_source = self.window.data_source
+        # Retain the last accepted time through partial/empty responses, so a
+        # later response cannot roll back an instrument that was briefly absent.
+        self._latest_quotes = {code: dict(data.get(code, previous.get(code)))
+                               for code in checked_codes if code in data or code in previous}
 
         if data:
             self.window._clear_message()
         else:
             self.window._show_message("请在设置面板中添加自选股", is_error=True)
-        self.project_rows(full_rows, full_color_roles, sort_values)
+        self.project_rows(self._last_full_rows, self._last_color_roles, self._last_sort_values)
         self.window.hide_controller.quotes_refreshed(data)
         self.quotes_updated.emit()
+        self._refresh_details()
 
     def set_sort(self, header: str, order):
         if header not in SORTABLE_HEADERS:
             return
-        visible_headers = metric_headers(self.window.visible_metrics)
-        if header not in visible_headers:
+        if header not in self._available_sort_headers():
             return
         order = Qt.SortOrder(order)
         if self.sort_header == header and self.sort_order == order:

@@ -268,13 +268,13 @@
      <property name="minimumSize">
       <size>
        <width>0</width>
-       <height>242</height>
+       <height>250</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
        <width>16777215</width>
-       <height>242</height>
+       <height>250</height>
       </size>
      </property>
     </widget>
@@ -355,7 +355,7 @@
   <customwidget>
    <class>FilledCheckBox</class>
    <extends>QCheckBox</extends>
-   <header>stockwidget.ui.watchlist.add_panel</header>
+   <header>stockwidget.ui.controls.settings_widgets</header>
   </customwidget>
   <customwidget>
    <class>SelectAllCheckBox</class>

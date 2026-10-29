@@ -73,18 +73,18 @@ class HidingTests(QtTestCase):
 
     def test_initial_automatic_hide_all_surfaces_restore_mode_and_position(self):
         for mode in ("float", "taskbar", "both"):
-            for source in ("sina", "eastmoney"):
-                with self.subTest(mode=mode, source=source):
+            for absolute_time in (False, True):
+                with self.subTest(mode=mode, absolute_time=absolute_time):
                     self.win.hide_controller._manual_show = False
                     self.win.widget_visible = True
                     self.win.display_mode = mode
-                    self.win.set_data_source(source)
+                    self.win.quotes.invalidate()
                     self.win.move(120, 170)
                     self.win.set_hide_options(auto_hide_enabled=True)
                     notices = []
                     handler = lambda: notices.append(self.win.widget_visible)
                     self.win.widget_visibility_changed.connect(handler)
-                    self.refresh({code: entry(timestamp=source == "eastmoney") for code in CODES})
+                    self.refresh({code: entry(timestamp=absolute_time) for code in CODES})
                     self.assertFalse(self.win.widget_visible)
                     self.assertIn(False, notices)
                     self.assertTrue(self.win.isHidden())
@@ -132,14 +132,14 @@ class HidingTests(QtTestCase):
                 self.assertEqual(self.win.hide_notice.text(), "")
                 self.assertFalse(self.win.hide_controller.countdown_timer.isActive())
 
-    def test_disabling_auto_switching_source_and_watchlist_cancel_pending_hide(self):
+    def test_disabling_auto_and_changing_watchlist_cancel_pending_hide(self):
         self.restore_and_countdown()
         self.win.set_hide_options(auto_hide_enabled=False)
         self.assertEqual(self.win.hide_notice.text(), "")
         self.assertEqual(self.win.scheduled_hide_times, ["15:00", "16:00"])
         self.restore_and_countdown()
         generation = self.win.quotes._quote_generation
-        self.win.set_data_source("eastmoney")
+        self.win.set_watchlist(dict(self.win.watchlist))
         self.assertEqual(self.win.hide_notice.text(), "")
         self.win.quotes.accept_result((True, {code: entry() for code in CODES}, None, generation))
         self.assertIsNone(self.win.hide_controller._deadline)

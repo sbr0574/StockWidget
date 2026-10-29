@@ -1,55 +1,123 @@
-from datetime import datetime
-from typing import Tuple
-import time
+import math
+import re
 
 import requests
 
-from stockwidget.core.window_rules import QUOTE_TIMEZONE, quote_timestamp
-from stockwidget.data.network_errors import request_error_message, retryable_request_error
+from stockwidget.data.network_errors import request_error_message
 
 
-# =====================================================================
-# 统一行情字典 schema（新浪 / 东财 两套数据源返回格式一致）：
-#   data[code] = {
-#       "name": str,  "opening_price": float, "prev_close": float,
-#       "current_price": float, "high_price": float, "low_price": float,
-#       "deals_vol": int, "deals_amt": float,
-#       "purchaser_vol": [买1~买5 量], "purchaser_price": [买1~买5 价],
-#       "seller_vol": [卖1~卖5 量], "seller_price": [卖1~卖5 价],
-#       "date": str, "time": str, "timestamp": float | None（东财 f124）,
-#   }
-#   注：换手率 / 量比 是东财独有字段（新浪没有），已在 _new_entry 中预留（注释），
-#       启用东财数据源后取消注释即可填充。
-# =====================================================================
-
-# 当前启用的实时行情数据源："sina"（默认）/ "eastmoney"
-DATA_SOURCE = "sina"
-
+# 新浪行情统一为价格、成交量额、买卖盘和北京时间字段。
 _SINA_HEADERS = {"Referer": "https://finance.sina.com.cn", "User-Agent": "Mozilla/5.0"}
-_EM_HEADERS = {"Referer": "https://quote.eastmoney.com", "User-Agent": "Mozilla/5.0"}
-_EM_QUOTE_URL = "https://push2delay.eastmoney.com/api/qt/ulist.np/get"
 _Z5 = (0, 0, 0, 0, 0)   # 空五档（港美股/期货只有一档或无盘口）
 
 
-def request_eastmoney_json(url, *, params, timeout, alternate_url):
-    """Up to three fresh requests with backoff, confined to Eastmoney nodes.
+def _optional_number(value):
+    try:
+        result = float(value)
+        return result if math.isfinite(result) else None
+    except (TypeError, ValueError):
+        return None
 
-    Keep Requests' environment/system proxy and certificate verification. A
-    failed connection must not become a successful empty quote/history result.
+
+def _sina_text(url, *, params=None):
+    response = requests.get(url, params=params, headers=_SINA_HEADERS, timeout=3)
+    try:
+        response.raise_for_status()
+        response.encoding = "gb18030"
+        return response.text
+    finally:
+        response.close()
+
+
+def parse_sina_fundamentals(text, instrument):
+    """Optional values retain missingness; share counts are normalized to shares.
+
+    Domestic profit fields are CNY 100-million units; report aggregates use
+    CNY. EPS isn't used as a denominator: its weighted share basis can differ
+    from today's capital. HK listed shares are not treated as free float.
     """
-    for attempt in range(3):
-        try:
-            response = requests.get(alternate_url if attempt == 2 else url,
-                                    params=params, headers=_EM_HEADERS, timeout=timeout)
+    if instrument.get("type") in {"指", "基", "期"}:
+        return {}
+    label = _sina_code(instrument).removeprefix("rt_") + "_i"
+    match = re.search(r'hq_str_' + re.escape(label) + r'="([^"]*)"', text, re.I)
+    if not match or not match[1]:
+        return {}
+    parts = match[1].split(",")
+    market = instrument.get("market")
+    if market in {"sh", "sz", "bj"}:
+        fields = {"annual_profit": 12, "ttm_profit": 13,
+                  "book_value_per_share": 5, "total_shares": 7, "float_shares": 9}
+        # B shares need FX conversion before using company earnings/equity.
+        if len(parts) < 16 or parts[0] != "A":
+            return {}
+        result = {key: _optional_number(parts[index]) for key, index in fields.items()}
+        for key in ("total_shares", "float_shares"):
+            result[key] = result[key] * 10000 if result[key] is not None and result[key] > 0 else None
+        for key in ("annual_profit", "ttm_profit"):
+            result[key] = result[key] * 100000000 if result[key] is not None else None
+        result["annualized_profit"] = None
+        report = parts[39].split("|") if len(parts) > 39 else []
+        if len(report) > 1 and re.fullmatch(r"\d{4}(?:03|06|09|12)\d{2}", report[0]):
+            profit = _optional_number(report[1])
+            result["report_date"] = report[0]
+            if profit is not None:
+                result["annualized_profit"] = profit * 12 / int(report[0][4:6])
+        if result["annualized_profit"] is None and len(parts) > 25:
+            quarter = parts[25].split("|")
+            if len(quarter) == 2 and re.fullmatch(r"\d{4}(?:03|06|09|12)\d{2}", quarter[0]):
+                profit = _optional_number(quarter[1])  # Average of disclosed YTD quarters.
+                result["report_date"] = quarter[0]
+                result["annualized_profit"] = profit * 4 if profit is not None else None
+        if len(parts) > 29:
+            ratio = parts[29].split("/")
+            if len(ratio) == 2:
+                numerator, denominator = map(_optional_number, ratio)
+                if numerator and denominator and result["book_value_per_share"] is not None:
+                    result["book_value_per_share"] *= numerator / denominator
+        return result
+    if market == "hk" and len(parts) > 13:
+        return {"total_shares": _optional_number(parts[7])}
+    return {}
+
+
+def parse_sina_trade_volumes(text):
+    """Sina's own page reads this pair as outside volume, then inside volume."""
+    match = re.search(r"\btrade_INVOL_OUTVOL\s*=\s*\[\s*([\d.]+)\s*,\s*([\d.]+)\s*\]", text)
+    if not match:
+        return {}
+    outside, inside = map(_optional_number, match.groups())
+    if outside is None or inside is None:
+        return {}
+    return {"outside_volume": outside, "inside_volume": inside}
+
+
+def request_quote_details(instrument, fundamentals=None):
+    """Supplement the selected chart, independently of basic quote success.
+
+    Reuse a recently fetched fundamentals dict; activity is a fresh cumulative
+    snapshot. Each optional endpoint fails independently without fake zeros.
+    """
+    market = instrument.get("market")
+    if instrument.get("type") in {"指", "基", "期"} or market not in {"sh", "sz", "bj", "hk", "us"}:
+        return {}, {}
+    if fundamentals is None:
+        fundamentals = {}
+        if market != "us":
             try:
-                response.raise_for_status()
-                return response.json()
-            finally:
-                response.close()
-        except requests.RequestException as error:
-            if attempt == 2 or not retryable_request_error(error):
-                raise
-            time.sleep(.25 * 2 ** attempt)
+                label = _sina_code(instrument).removeprefix("rt_") + "_i"
+                fundamentals = parse_sina_fundamentals(_sina_text("https://hq.sinajs.cn/list=" + label), instrument)
+            except (requests.RequestException, ValueError, IndexError):
+                pass
+    activity = {}
+    if market in {"sh", "sz", "bj"}:
+        try:
+            activity = parse_sina_trade_volumes(_sina_text(
+                "https://vip.stock.finance.sina.com.cn/quotes_service/view/CN_TransListV2.php",
+                params={"num": 11, "symbol": _sina_code(instrument)},
+            ))
+        except (requests.RequestException, ValueError):
+            pass
+    return fundamentals, activity
 
 
 def _as_float(value) -> float:
@@ -85,9 +153,6 @@ def _new_entry(name, opening, prev_close, current, high, low,
         "seller_price": [_as_float(value) for value in sell_price],
         "date": str(date or ""),
         "time": str(time or ""),
-        # 东财独有字段（新浪无），预留
-        # "turnover_rate": None,   # 换手率（%）
-        # "volume_ratio": None,    # 量比
     }
 
 
@@ -97,7 +162,7 @@ def _new_entry(name, opening, prev_close, current, high, low,
 #   港股   hk00700
 #   美股   usaapl（us + 小写代码）
 #   全球指数 gbnky
-#   期货   au2512（具体合约）/ au0（主力连续，对应东财 m:113 的 aum）
+#   期货   au2512（具体合约）/ au0（主力连续）
 
 def _sina_code(instrument: dict) -> str:
     """根据显式 market/code 元数据生成新浪请求代码。"""
@@ -118,38 +183,6 @@ def _sina_code(instrument: dict) -> str:
     if not market:
         return "nf_" + code.upper()
     return ""
-
-
-# 上期能源（INE）品种代码前缀，东财 secid 市场码为 142（上期所为 113）
-_INE_PRODUCTS = {"sc", "nr", "lu", "bc", "ec"}
-
-
-def _em_secid(instrument: dict) -> str:
-    """根据显式 market/code 元数据生成东财 secid。"""
-    m = str(instrument.get("market", "") or "").strip().lower()
-    c = str(instrument.get("code", "") or "").strip().lower()
-    if not c:
-        return ""
-    if instrument.get("type") == "期":
-        m = ""
-    if m == "sh":
-        return "1." + c
-    if m == "sz":
-        return "0." + c
-    if m == "bj":
-        return "0." + c                 # 北交所东财 secid 未验证，暂用深市前缀
-    if m == "hk":
-        return "116." + c
-    if m == "us":
-        return "105." + c.upper()       # 105=纳斯达克（106=纽交所/107=美交所）
-    if m == "gb":
-        return "100." + c              # 全球指数（东财 secid 未验证，暂用 100 前缀）
-    if m:
-        return ""
-    mkt = "142" if c[:2] in _INE_PRODUCTS else "113"  # 上期能源142 / 上期所113
-    if len(c) == 3 and c.endswith("0"):
-        return f"{mkt}.{c[:-1]}m"      # 主力连续 au0 -> aum
-    return f"{mkt}.{c}"                # 具体合约 au2512
 
 
 # ---------------- 新浪解析 ----------------
@@ -226,7 +259,7 @@ def _parse_sina_us(parts: list, is_index: bool = False) -> dict:
             pur_vol=_Z5, pur_price=_Z5, sell_vol=_Z5, sell_price=_Z5,
             date=t[0], time=t[1],
         )
-    return _new_entry(
+    entry = _new_entry(
         name=parts[0],
         opening=parts[5], prev_close=parts[26] if len(parts) > 26 else 0,
         current=parts[1], high=parts[6], low=parts[7],
@@ -235,6 +268,9 @@ def _parse_sina_us(parts: list, is_index: bool = False) -> dict:
         pur_vol=_Z5, pur_price=_Z5, sell_vol=_Z5, sell_price=_Z5,
         date=t[0], time=t[1],
     )
+    entry.update({key: _optional_number(parts[index]) if len(parts) > index else None
+                  for key, index in (("market_cap", 12), ("eps_ttm", 13), ("total_shares", 19))})
+    return entry
 
 
 def _parse_sina_futures(parts: list) -> dict:
@@ -257,7 +293,10 @@ def _parse_sina_futures(parts: list) -> dict:
 
 
 def _parse_sina_global(parts: list) -> dict:
-    """全球指数(b_): 0名称 1最新 2涨跌额 3涨跌幅 5北京时间 6日期 8今开 9昨收 10最高 11最低"""
+    """全球指数 b_；部分市场第5项是旧日期，第7项才是最新北京时间。"""
+    clock = parts[5] if len(parts) > 5 else ""
+    if len(clock) != 8 or clock[2:3] != ":" or clock[5:6] != ":":
+        clock = parts[7] if len(parts) > 7 else ""
     return _new_entry(
         name=parts[0],
         opening=parts[8], prev_close=parts[9], current=parts[1],
@@ -265,15 +304,20 @@ def _parse_sina_global(parts: list) -> dict:
         vol=0, amt=0,
         pur_vol=_Z5, pur_price=_Z5, sell_vol=_Z5, sell_price=_Z5,
         date=parts[6] if len(parts) > 6 else "",
-        time=parts[5] if len(parts) > 5 else "",
+        time=clock,
     )
 
 
-def request_sina(instruments: dict[str, dict]) -> dict:
+def request_quote(instruments: dict[str, dict]) -> dict:
     """新浪财经实时行情。输入和输出均以代码表 key 为索引。"""
     data = {}
     if not instruments:
         return {}
+    if len(instruments) > 120:
+        items = list(instruments.items())
+        for offset in range(0, len(items), 120):
+            data.update(request_quote(dict(items[offset:offset + 120])))
+        return data
     requested = {}
     labels = []
     for key, instrument in instruments.items():
@@ -285,21 +329,29 @@ def request_sina(instruments: dict[str, dict]) -> dict:
         return {}
     url = "https://hq.sinajs.cn/list=" + ",".join(labels)
     response = requests.get(url, headers=_SINA_HEADERS, timeout=3)
-    response.raise_for_status()
-    response.encoding = "gbk"
-    for line in response.text.split("\n"):
+    try:
+        response.raise_for_status()
+        response.encoding = "gbk"
+        text = response.text
+    finally:
+        response.close()
+    matched = False
+    for line in text.split("\n"):
         if not line or '"' not in line:
             continue
         key = line.split('="')[0]
         body = line.split('="')[1]
         if '"' not in body:
             continue
-        parts = body.split(",")
-        if len(parts) < 3 or "hq_str_" not in key:
+        parts = body.split('"', 1)[0].split(",")
+        if "hq_str_" not in key:
             continue
         sname = key.split("hq_str_", 1)[1].strip()
         request_info = requested.get(sname.lower())
         if request_info is None:
+            continue
+        matched = True
+        if len(parts) < 3:
             continue
         canonical_key, instrument = request_info
         market = str(instrument.get("market", "") or "").strip().lower()
@@ -319,91 +371,19 @@ def request_sina(instruments: dict[str, dict]) -> dict:
         else:
             continue
         data[canonical_key] = entry
+    if not matched:
+        raise ValueError("Invalid Sina quote response")
     return data
 
 
-# ---------------- 东财解析 ----------------
-
-def request_eastmoney(instruments: dict[str, dict]) -> Tuple[list, dict]:
-    """东方财富实时行情（A股/港股/美股/上期所期货），字段与新浪统一。
-    东财独有字段（换手率 f8 / 量比 f10）已随请求拉取，字典中预留（注释）。"""
-    data = {}
-    if not instruments:
-        return [], {}
-    requests_meta = []
-    for key, instrument in instruments.items():
-        secid = _em_secid(instrument)
-        if secid:
-            requests_meta.append((str(key).lower(), instrument, secid))
-    if not requests_meta:
-        return [], {}
-    secids = [item[2] for item in requests_meta]
-    params = {
-        "secids": ",".join(secids),
-        "fields": "f12,f13,f14,f2,f3,f4,f5,f6,f15,f16,f17,f18,f8,f10,f124",
-        "fltt": 2,
-        "invt": 2,
-    }
-    payload = request_eastmoney_json(
-        _EM_QUOTE_URL,
-        params=params,
-        timeout=3,
-        alternate_url="https://push2.eastmoney.com/api/qt/ulist.np/get",
-    )
-    diff = ((payload or {}).get("data") or {}).get("diff") or []
-    secid_to_request = {s.lower(): (key, instrument) for key, instrument, s in requests_meta}
-    raw_to_requests = {}
-    for key, instrument, secid in requests_meta:
-        raw_to_requests.setdefault(secid.split(".", 1)[1].lower(), []).append((key, instrument))
-    for d in diff:
-        raw_code = str(d.get("f12", "") or "").strip().lower()
-        response_secid = f"{d.get('f13')}.{raw_code}".lower()
-        request_info = secid_to_request.get(response_secid)
-        if request_info is None:
-            candidates = raw_to_requests.get(raw_code, [])
-            request_info = candidates[0] if len(candidates) == 1 else None
-        if request_info is None:
-            continue
-        key, instrument = request_info
-        vol = _as_float(d.get("f5"))
-        if (instrument.get("type") != "期"
-                and str(instrument.get("market", "") or "").strip().lower() in {"sh", "sz", "bj"}):
-            vol = vol * 100   # 东财 A股 f5 单位是“手”，新浪为“股”，统一为股
-        entry = _new_entry(
-            name=d.get("f14"),
-            opening=d.get("f17"), prev_close=d.get("f18"), current=d.get("f2"),
-            high=d.get("f15"), low=d.get("f16"),
-            vol=vol, amt=d.get("f6"),
-            pur_vol=_Z5, pur_price=_Z5,
-            sell_vol=_Z5, sell_price=_Z5,
-            date="", time="",
-        )
-        entry["timestamp"] = quote_timestamp({"timestamp": d.get("f124")})
-        if entry["timestamp"] is not None:
-            updated = datetime.fromtimestamp(entry["timestamp"], QUOTE_TIMEZONE)
-            entry["date"] = updated.strftime("%Y-%m-%d")
-            entry["time"] = updated.strftime("%H:%M:%S")
-        # 东财独有字段（新浪无），预留，取消注释即可填充：
-        # entry["turnover_rate"] = d.get("f8")   # 换手率（%）
-        # entry["volume_ratio"] = d.get("f10")   # 量比
-        data[key] = entry
-    return [key in data for key in instruments], data
-
-
-def request_quote(instruments: dict[str, dict], source: str = DATA_SOURCE) -> dict:
-    """统一行情入口，使用 watchlist 中的显式 code/market 元数据。"""
-    if source == "eastmoney":
-        _, data = request_eastmoney(instruments)
-        return data
-    return request_sina(instruments)
-
-
-def fetch_quote_result(codes: dict, source: str):
+def fetch_quote_result(codes: dict):
     """Return (ok, quotes, safe_error) for consumers without Qt dependencies."""
-    source_name = {"sina": "新浪", "eastmoney": "东财"}.get(source, "行情")
     try:
-        return True, request_quote(codes, source=source), None
+        data = request_quote(codes)
+        if codes and not data:
+            return False, None, "新浪：未返回有效行情"
+        return True, data, None
     except requests.exceptions.RequestException as exc:
-        return False, None, f"{source_name}：{request_error_message(exc)}"
+        return False, None, f"新浪：{request_error_message(exc)}"
     except Exception as exc:
-        return False, None, f"{source_name}：行情处理失败（{type(exc).__name__}）"
+        return False, None, f"新浪：行情处理失败（{type(exc).__name__}）"

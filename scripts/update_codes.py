@@ -1,8 +1,8 @@
 """拉取全市场代码并写入仓库 resources/data/ 下的 JSON。
 
-脚本可由 Azure Ubuntu 定时任务或 GitHub Actions 调用，保持自包含，
-不依赖 StockWidget 运行时模块。沪深股票和基金、港股股票和基金、美股上市
-证券直接使用交易所官方接口，其余市场沿用东财或新浪接口。
+直接运行本文件即可，不依赖 StockWidget 运行时模块。股票与基金使用交易所
+官方名录，美股中文名称与期货使用新浪。指数 JSON 由维护者直接
+在 codes-data 分支维护，本脚本只读取其状态，不生成或改写指数列表。
 """
 import csv
 import json
@@ -10,7 +10,6 @@ import os
 import re
 import sys
 import time
-import traceback
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date, datetime, timedelta, timezone
@@ -29,24 +28,14 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUT_DIR = os.environ.get("CODES_OUTPUT_DIR", os.path.join(ROOT, "resources", "data"))
 
 STATUS_FILE = "codes_update_status.json"
+MANUAL_FILES = ("index_cn.json", "index_global.json")
 US_CN_ALIAS_CACHE_FILE = "cache_us_cn_aliases.json"
 TASK_ATTEMPTS = 3
 TASK_RETRY_SECONDS = (2, 5)
 
-_EM_CLIST_URL = "https://push2delay.eastmoney.com/api/qt/clist/get"
 _USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-_EM_HEADERS = {
-    "User-Agent": _USER_AGENT,
-    "Referer": "https://quote.eastmoney.com/center/gridlist.html",
-}
-_HKEX_SECURITIES_EN_URL = (
-    "https://www.hkex.com.hk/eng/services/trading/securities/"
-    "securitieslists/ListOfSecurities.xlsx"
-)
-_HKEX_SECURITIES_ZH_URL = (
-    "https://www.hkex.com.hk/chi/services/trading/securities/"
-    "securitieslists/ListOfSecurities_c.xlsx"
-)
+_HKEX_SECURITIES_EN_URL = "https://www.hkex.com.hk/eng/services/trading/securities/securitieslists/ListOfSecurities.xlsx"
+_HKEX_SECURITIES_ZH_URL = "https://www.hkex.com.hk/chi/services/trading/securities/securitieslists/ListOfSecurities_c.xlsx"
 _HKEX_HEADERS = {
     "User-Agent": _USER_AGENT,
     "Referer": "https://www.hkex.com.hk/Services/Trading/Securities/Securities-Lists",
@@ -72,6 +61,150 @@ _DF_COLUMNS = ["code", "name", "name_en", "type", "market"]
 _SZSE_REQUEST_LOCK = Lock()
 
 
+# ----------------- 分页请求与校验 -----------------
+
+_REQUEST_INTERVAL = .5
+_REQUEST_LOCK = Lock()
+_last_request_started = None
+_BSE_URL = "https://www.bse.cn/nqxxController/nqxxCnzq.do"
+_BSE_HEADERS = {
+    "User-Agent": _USER_AGENT,
+    "Referer": "https://www.bse.cn/nq/listedcompany.html",
+}
+
+
+class CodeListError(ValueError):
+    """已在当前页完成有限重试，或列表未通过完整性检查。"""
+
+
+def retryable_error(error: Exception) -> bool:
+    """仅重试临时传输或服务端错误，不重试拒绝、限流或证书错误。"""
+    if isinstance(error, requests.exceptions.SSLError):
+        return False
+    if isinstance(error, requests.HTTPError):
+        return error.response is not None and error.response.status_code in {
+            500, 502, 503, 504,
+        }
+    return isinstance(error, (
+        requests.ConnectionError, requests.Timeout,
+        requests.exceptions.ChunkedEncodingError,
+    ))
+
+
+def safe_error(error: Exception) -> str:
+    """日志与发布状态不包含请求地址、代理凭据或原始异常栈。"""
+    if isinstance(error, CodeListError):
+        return str(error)
+    if isinstance(error, requests.HTTPError):
+        status = error.response.status_code if error.response is not None else None
+        return f"HTTP {status}" if status is not None else "HTTP 请求失败"
+    if isinstance(error, requests.exceptions.ProxyError):
+        return "代理连接失败"
+    if isinstance(error, requests.exceptions.SSLError):
+        return "安全连接或证书验证失败"
+    if isinstance(error, requests.Timeout):
+        return "请求超时"
+    if isinstance(error, requests.ConnectionError):
+        return "连接失败或被远端中断"
+    if isinstance(error, requests.exceptions.JSONDecodeError):
+        return "响应不是有效 JSON"
+    if isinstance(error, requests.exceptions.ChunkedEncodingError):
+        return "响应传输中断"
+    if isinstance(error, requests.RequestException):
+        return "网络请求失败"
+    return f"数据处理失败（{type(error).__name__}）"
+
+
+def _request_page(url, label, *, headers, params=None, data=None, as_text=False):
+    """分页请求共用限速、有限重试和 JSON/JSONP 解析；不重跑已完成页。"""
+    global _last_request_started
+    for attempt in range(3):
+        try:
+            with _REQUEST_LOCK:
+                if _last_request_started is not None:
+                    delay = _REQUEST_INTERVAL - (time.monotonic() - _last_request_started)
+                    if delay > 0:
+                        time.sleep(delay)
+                _last_request_started = time.monotonic()
+                request = requests.get if data is None else requests.post
+                kwargs = {"params": params} if data is None else {"data": data}
+                response = request(url, headers=headers, timeout=(10, 20), **kwargs)
+                try:
+                    response.raise_for_status()
+                    if as_text:
+                        response.encoding = "gbk"
+                    text = response.text.lstrip("\ufeff").strip()
+                finally:
+                    response.close()
+            break
+        except requests.RequestException as error:
+            reason = safe_error(error)
+            if attempt == 2 or not retryable_error(error):
+                raise CodeListError(f"{label}失败：{reason}") from None
+            delay = TASK_RETRY_SECONDS[attempt]
+            print(f"{label}失败，{delay} 秒后重试当前页：{reason}", flush=True)
+            time.sleep(delay)
+    if as_text:
+        return text
+    if not text.startswith(("[", "{")):
+        match = re.fullmatch(r"[\w$]+\s*\((.*)\)\s*;?", text, re.DOTALL)
+        if not match:
+            raise CodeListError(f"{label}不是有效列表响应")
+        text = match.group(1)
+    try:
+        return json.loads(text)
+    except ValueError:
+        raise CodeListError(f"{label}不是有效 JSON") from None
+
+
+
+
+def fetch_bse_list() -> list[dict]:
+    """从北交所官网拉齐上市股票；缺页、重复或范围错误均保留旧列表。"""
+    rows, seen = [], set()
+    expected = None
+    page = 0
+    while True:
+        label = f"北交所官方名录第 {page + 1} 页"
+        payload = _request_page(_BSE_URL, label, headers=_BSE_HEADERS, data={
+            "page": str(page), "typejb": "T", "xxfcbj[]": "2", "xxzqdm": "",
+            "sortfield": "xxzqdm", "sorttype": "asc",
+        })
+        if not isinstance(payload, list) or len(payload) != 1 or not isinstance(payload[0], dict):
+            raise CodeListError(f"{label}格式错误")
+        data = payload[0]
+        fields = ("number", "numberOfElements", "size", "totalElements", "totalPages")
+        if any(type(data.get(field)) is not int for field in fields):
+            raise CodeListError(f"{label}分页信息无效")
+        total, pages, size = data["totalElements"], data["totalPages"], data["size"]
+        if (total <= 0 or size <= 0 or not 0 < pages <= 10000
+                or pages != (total + size - 1) // size or data["number"] != page):
+            raise CodeListError(f"{label}分页范围错误")
+        if expected is None:
+            expected = (total, pages, size)
+        elif expected != (total, pages, size):
+            raise CodeListError(f"{label}分页总数发生变化")
+        content = data.get("content")
+        count = min(size, total - page * size)
+        if (not isinstance(content, list) or len(content) != count
+                or data["numberOfElements"] != count):
+            raise CodeListError(f"{label}数量不完整")
+        for item in content:
+            if not isinstance(item, dict):
+                raise CodeListError(f"{label}证券数据无效")
+            code = str(item.get("xxzqdm") or "").strip()
+            if (not re.fullmatch(r"\d{6}", code) or not str(item.get("xxzqjc") or "").strip()
+                    or item.get("xxfcbj") != "2" or item.get("xxzqjb") != "T"):
+                raise CodeListError(f"{label}缺少证券信息或包含非上市股票")
+            if code in seen:
+                raise CodeListError(f"{label}证券代码重复")
+            seen.add(code)
+            rows.append(item)
+        if page + 1 == pages:
+            return rows
+        page += 1
+
+
 # ----------------- 工具函数 -----------------
 
 def _has_cjk(text: str) -> bool:
@@ -86,23 +219,13 @@ def _concat_dedup(frames: list[pd.DataFrame]) -> pd.DataFrame:
 
 # ----------------- 交易所数据 -----------------
 
-def _exchange_code(value) -> str:
-    """把交易所工作簿中的数字代码规范为六位字符串。"""
+def _exchange_code(value, width: int = 6) -> str:
+    """把交易所工作簿中的数字代码规范为固定宽度字符串。"""
     text = str(value or "").strip()
     if not text or text.lower() == "nan":
         return ""
-    if re.fullmatch(r"\d+(?:\.0+)?", text):
-        return text.split(".", 1)[0].zfill(6)
-    return ""
-
-
-def _hkex_code(value) -> str:
-    """把港交所工作簿中的证券代码规范为五位字符串。"""
-    text = str(value or "").strip()
-    if not text or text.lower() == "nan":
-        return ""
-    if re.fullmatch(r"\d{1,5}(?:\.0+)?", text):
-        return text.split(".", 1)[0].zfill(5)
+    if re.fullmatch(rf"\d{{1,{width}}}(?:\.0+)?", text):
+        return text.split(".", 1)[0].zfill(width)
     return ""
 
 
@@ -123,18 +246,13 @@ def _stock_sh_name_code(symbol: str) -> pd.DataFrame:
         "https://query.sse.com.cn/sseQuery/commonQuery.do",
         params={
             "STOCK_TYPE": stock_type,
-            "REG_PROVINCE": "",
-            "CSRC_CODE": "",
-            "STOCK_CODE": "",
+            "REG_PROVINCE": "", "CSRC_CODE": "", "STOCK_CODE": "",
             "sqlId": "COMMON_SSE_CP_GPJCTPZ_GPLB_GP_L",
             "COMPANY_STATUS": "2,4,5,7,8",
             "type": "inParams",
             "isPagination": "true",
-            "pageHelp.cacheSize": "1",
-            "pageHelp.beginPage": "1",
-            "pageHelp.pageSize": "10000",
-            "pageHelp.pageNo": "1",
-            "pageHelp.endPage": "1",
+            "pageHelp.cacheSize": "1", "pageHelp.beginPage": "1",
+            "pageHelp.pageSize": "10000", "pageHelp.pageNo": "1", "pageHelp.endPage": "1",
         },
         headers={
             "Host": "query.sse.com.cn",
@@ -247,13 +365,22 @@ def _stock_sz_b_name_code() -> pd.DataFrame:
 
 def _stock_sz_all() -> pd.DataFrame:
     """顺序获取深交所 A 股、创业板和 B 股。"""
-    a_frame = _stock_sz_a_name_code()
-    b_frame = _stock_sz_b_name_code()
-    return _concat_dedup([a_frame, b_frame])
+    return _concat_dedup([_stock_sz_a_name_code(), _stock_sz_b_name_code()])
+
+def _stock_bj_name_code() -> pd.DataFrame:
+    """以北交所官网在市股票名录为准，保留正式证券代码和中英文名称。"""
+    rows = [
+        (str(item["xxzqdm"]).strip(), str(item["xxzqjc"]).strip(),
+         str(item.get("xxywjc") or "").strip(), "京", "bj")
+        for item in fetch_bse_list()
+    ]
+    return _rows_frame(rows)
+
 
 def _fund_sse_rows() -> dict[str, list[tuple[str, str, str, str, str]]]:
     """获取上交所上市交易基金全表并按官网 fundType 分类。"""
     result = {"ETF基金": [], "LOF基金": [], "封闭式基金": []}
+    categories = {"00": "ETF基金", "10": "LOF基金", "40": "封闭式基金", "50": "封闭式基金"}
     page = 1
     while True:
         response = requests.get(
@@ -261,10 +388,8 @@ def _fund_sse_rows() -> dict[str, list[tuple[str, str, str, str, str]]]:
             params={
                 "isPagination": "true",
                 "pageHelp.pageSize": "2000",
-                "pageHelp.pageNo": str(page),
-                "pageHelp.beginPage": str(page),
-                "pageHelp.cacheSize": "1",
-                "pageHelp.endPage": str(page),
+                "pageHelp.pageNo": str(page), "pageHelp.beginPage": str(page),
+                "pageHelp.cacheSize": "1", "pageHelp.endPage": str(page),
                 "pagecache": "false",
                 "sqlId": "FUND_LIST",
                 "order": "fundCode|asc",
@@ -278,14 +403,8 @@ def _fund_sse_rows() -> dict[str, list[tuple[str, str, str, str, str]]]:
         response.raise_for_status()
         payload = response.json() or {}
         for item in payload.get("result") or []:
-            fund_type = str(item.get("fundType") or "").strip()
-            if fund_type == "00":
-                category = "ETF基金"
-            elif fund_type == "10":
-                category = "LOF基金"
-            elif fund_type in {"40", "50"}:
-                category = "封闭式基金"
-            else:
+            category = categories.get(str(item.get("fundType") or "").strip())
+            if not category:
                 continue
             code = _exchange_code(item.get("fundCode"))
             name = str(item.get("secNameFull") or item.get("fundAbbr") or "").strip()
@@ -394,92 +513,34 @@ def _stock_hk_name_code() -> pd.DataFrame:
         _HKEX_SECURITIES_ZH_URL,
         ("股份代號", "股份名稱"),
     )
+    from opencc import OpenCC
+
+    to_simplified = OpenCC("hk2s").convert
     chinese_names = {
-        code: str(item.get("股份名稱") or "").strip()
+        code: to_simplified(str(item.get("股份名稱") or "").strip())
         for item in chinese_records
-        if (code := _hkex_code(item.get("股份代號")))
+        if (code := _exchange_code(item.get("股份代號"), 5))
     }
 
     rows = []
-    stock_count = 0
-    fund_count = 0
     for item in english_records:
         category = str(item.get("Category") or "").strip()
         mtype = _HKEX_CATEGORY_TYPES.get(category)
         if not mtype:
             continue
-        code = _hkex_code(item.get("Stock Code"))
+        code = _exchange_code(item.get("Stock Code"), 5)
         name_en = str(item.get("Name of Securities") or "").strip()
         name = chinese_names.get(code, "")
         if not code or not (name or name_en):
             continue
         rows.append((code, name, name_en, mtype, "hk"))
-        if mtype == "基":
-            fund_count += 1
-        else:
-            stock_count += 1
-
-    print(f"港股股票: {stock_count} 条", flush=True)
-    print(f"港股基金: {fund_count} 条", flush=True)
-    return _rows_frame(rows)
+    frame = _rows_frame(rows)
+    print(f"港股股票: {(frame['type'] == '港').sum()} 条", flush=True)
+    print(f"港股基金: {(frame['type'] == '基').sum()} 条", flush=True)
+    return frame
 
 
-# ----------------- 东财数据 -----------------
-
-def _em_clist_all(fs: str, fid: str = "f12", fields: str = "f12,f14") -> list[dict]:
-    """东财 clist 分页拉全市场列表；分页失败由分类任务统一重试。"""
-    _em_page_size = 500
-    rows = []
-    page = 1
-    total = None
-    while True:
-        r = requests.get(
-            _EM_CLIST_URL,
-            params={
-                "pn": page, "pz": _em_page_size, "po": 1, "np": 1, "fltt": 2, "invt": 2,
-                "ut": "bd1d9ddb04089700cf9c27f6f7426281",
-                "fid": fid, "fs": fs, "fields": fields,
-            },
-            headers=_EM_HEADERS,
-            timeout=10,
-        )
-        r.raise_for_status()
-        data = ((r.json() or {}).get("data") or {})
-        diff = data.get("diff") or []
-        if not isinstance(diff, list):
-            raise ValueError("东财代码列表返回格式错误")
-        if data.get("total") is not None:
-            total = int(data.get("total") or 0)
-        if not diff:
-            if total is not None and len(rows) < total:
-                raise ValueError(f"东财代码列表提前结束: {len(rows)}/{total}")
-            break
-        rows.extend(diff)
-        if total is not None and len(rows) >= total:
-            break
-        if total is None and len(diff) < _em_page_size:
-            break
-        page += 1
-    return rows
-
-def _em_stock_df(fs: str, mtype: str, market: str) -> pd.DataFrame:
-    """从东财 clist 拉取一个分类的股票/基金/指数列表 返回df"""
-    rows = []
-    for d in _em_clist_all(fs, fields="f12,f14"):
-        code = str(d.get("f12") or "").strip()
-        name = str(d.get("f14") or "").strip()
-        if not code or name.startswith("退市") or name.endswith("退"):
-            continue
-        rows.append((code, name, "", mtype, market))
-    df = pd.DataFrame(rows, columns=_DF_COLUMNS)
-    return df.drop_duplicates(subset=["market", "code"]).reset_index(drop=True)
-
-def _index_cn_em() -> pd.DataFrame:
-    """东财沪深指数列表。"""
-    return _concat_dedup([
-        _em_stock_df("m:1+t:1", "指", market="sh"),
-        _em_stock_df("m:0+t:5", "指", market="sz"),
-    ])
+# ----------------- 美股目录与中文名称 -----------------
 
 
 def _clean_us_cn_aliases(value) -> dict[str, str]:
@@ -493,23 +554,26 @@ def _clean_us_cn_aliases(value) -> dict[str, str]:
     return aliases
 
 
-def _fetch_us_cn_aliases() -> dict[str, str]:
-    """从东财拉取美股中文展示名；不参与官方证券范围判断。"""
+def _fetch_us_cn_aliases(official_codes: set[str]) -> dict[str, str]:
+    """按官方代码分批向新浪补充中文名，不使用行情列表决定证券范围。"""
     aliases = {}
-    for item in _em_clist_all("m:105,m:106,m:107", fid="f20"):
-        code = str(item.get("f12") or "").strip().lower()
-        name = str(item.get("f14") or "").strip()
-        if code and _has_cjk(name):
-            aliases[code] = name
+    codes = sorted(code for code in official_codes if re.fullmatch(r"[a-z0-9_]+", code))
+    for offset in range(0, len(codes), 150):
+        batch = set(codes[offset:offset + 150])
+        label = f"新浪美股名称第 {offset // 150 + 1} 批"
+        text = _request_page("https://hq.sinajs.cn/list=" + ",".join("gb_" + code for code in sorted(batch)),
+                             label, headers=_SINA_HEADERS, as_text=True)
+        records = re.findall(r'var\s+hq_str_gb_([a-zA-Z0-9_]+)\s*=\s*"([^"\r\n]*)"', text)
+        returned = {code.lower() for code, _ in records if code.lower() in batch}
+        if returned != batch:
+            raise CodeListError(f"{label}返回标的数量不符：{len(returned)}/{len(batch)}")
+        for code, body in records:
+            name = body.split(",", 1)[0].strip()
+            if code.lower() in batch and _has_cjk(name):
+                aliases[code.lower()] = name
     if not aliases:
-        raise ValueError("东财美股列表未返回中文别名")
+        raise CodeListError("新浪美股未返回中文名称")
     return aliases
-
-
-def _load_us_cn_alias_state(cache_path: str) -> tuple[dict, dict[str, str]]:
-    """读取由数据分支管理、但不向客户端下发的中文别名表。"""
-    cache = _load_json(cache_path)
-    return cache, _clean_us_cn_aliases(cache.get("aliases"))
 
 
 def _stock_us_name_code(
@@ -517,13 +581,12 @@ def _stock_us_name_code(
     output_dir: str | None = None,
     cache_path: str | None = None,
 ) -> pd.DataFrame:
-    """每日以 Nasdaq 官方目录为准；跨月后的首次运行从东财更新中文别名。"""
+    """每日以 Nasdaq 官方目录为准；跨月后的首次运行从新浪更新中文别名。"""
     output_dir = output_dir or OUTPUT_DIR
     cache_path = cache_path or os.path.join(output_dir, US_CN_ALIAS_CACHE_FILE)
     today = today or datetime.now(timezone(timedelta(hours=8))).date()
 
     official_rows = []
-    rows = []
     sources = (
         (_NASDAQ_LISTED_URL, "Symbol"),
         # CQS Symbol 最接近现有行情接口使用的代码：类别股用点号、
@@ -549,26 +612,39 @@ def _stock_us_name_code(
             official_rows.append((code, name))
 
     official_codes = {code for code, _ in official_rows}
-    cache, aliases = _load_us_cn_alias_state(cache_path)
+    cache = _load_json(cache_path)
+    aliases = _clean_us_cn_aliases(cache.get("aliases"))
     current_month = today.strftime("%Y-%m")
     cached_month = str(cache.get("last_update") or "")[:7]
+    alias_status = {
+        "last_attempt": str(cache.get("last_update") or ""),
+        "last_checked": str(cache.get("last_update") or ""),
+        "last_update": str(cache.get("last_update") or ""),
+        "updated": False, "error": False,
+    }
     if cached_month != current_month or not aliases:
+        alias_status["last_attempt"] = today.isoformat()
         try:
-            refreshed = _fetch_us_cn_aliases()
-            aliases = {
+            refreshed = _fetch_us_cn_aliases(official_codes)
+            new_aliases = {
                 code: name for code, name in refreshed.items()
                 if code in official_codes
             }
-            if not aliases:
-                raise ValueError("东财中文别名与 Nasdaq 官方代码无匹配")
+            if not new_aliases:
+                raise ValueError("新浪中文别名与 Nasdaq 官方代码无匹配")
             _save_json(
                 cache_path,
-                {"last_update": today.isoformat(), "aliases": aliases},
+                {"last_update": today.isoformat(), "aliases": new_aliases},
             )
-            print(f"美股中文别名: 东财更新 {len(aliases)} 条", flush=True)
+            aliases = new_aliases
+            alias_status.update(
+                last_checked=today.isoformat(), last_update=today.isoformat(), updated=True,
+            )
+            print(f"美股中文别名: 新浪更新 {len(aliases)} 条", flush=True)
         except Exception as exc:
+            alias_status.update(error=True, error_message=safe_error(exc))
             print(
-                f"::warning::美股中文别名更新失败，继续使用缓存: {exc}",
+                f"::warning::美股中文别名更新失败，继续使用缓存: {safe_error(exc)}",
                 flush=True,
             )
     else:
@@ -578,119 +654,30 @@ def _stock_us_name_code(
         }
         print(f"美股中文别名: 使用缓存 {len(aliases)} 条", flush=True)
 
-    for code, official_name in official_rows:
-        rows.append(
-            (code, aliases.get(code, official_name), official_name, "美", "us")
-        )
-    return _rows_frame(rows)
+    frame = _rows_frame([
+        (code, aliases.get(code, name), name, "美", "us") for code, name in official_rows
+    ])
+    frame.attrs["us_cn_aliases"] = alias_status
+    return frame
 
 
-# ----------------- 离线数据 -----------------
+# ----------------- 分类任务 -----------------
 
-def _stock_hk_index_name_code() -> pd.DataFrame:
-    """港股指数列表。"""
-    _HK_INDEXES = (
-        ("ces100", "中华港股通精选100指数"),
-        ("ces120", "中华120指数"),
-        ("ces280", "中华280指数"),
-        ("ces300", "中华沪深港300指数"),
-        ("cesa80", "中华A80指数"),
-        ("cesg10", "中华博彩业指数"),
-        ("ceshkm", "中华香港内地指数"),
-        ("cscmc", "中证内地消费指数"),
-        ("cshk100", "中证香港100指数"),
-        ("cshkdiv", "中证香港红利港币指数"),
-        ("cshklc", "中证香港上市可交易内地消费指数"),
-        ("cshklre", "中证香港上市可交易内地地産指数"),
-        ("cshkmcs", "中证香港中盘精选港币指数"),
-        ("cshkme", "中证香港内地股港元指数"),
-        ("cshkpe", "中证香港内地民营企业指数"),
-        ("cshkse", "中证香港内地国有企业指数"),
-        ("csrhk50", "中证锐联香港基本面50港币指数"),
-        ("gem", "标普香港创业板指数"),
-        ("hkl", "标普香港大型股指数"),
-        ("hscci", "恒生香港中资企业指数"),
-        ("hscei", "恒生中国企业指数"),
-        ("hsi", "恒生指数"),
-        ("hsmbi", "恒生中国内地银行指数"),
-        ("hsmogi", "恒生中国内地石油及天然气指数"),
-        ("hsmpi", "恒生中国内地地产指数"),
-        ("hstech", "恒生科技指数"),
-        ("vhsi", "恒指波幅指数"),
-    )
-    rows = [(code, name, "", "指", "hk") for code, name in _HK_INDEXES]
-    return pd.DataFrame(rows, columns=_DF_COLUMNS)
-
-def _stock_global_index_name_code() -> pd.DataFrame:
-    """全球主要指数列表"""
-    _GLOBAL_INDEXES = (
-        ("aex", "荷兰AEX综合指数"),
-        ("as51", "澳大利亚标准普尔200指数"),
-        ("cac", "法CAC40指数"),
-        ("case", "埃及CASE 30指数"),
-        ("dax", "德国DAX 30种股价指数"),
-        ("ftsemib", "富时意大利MIB指数"),
-        ("gsptse", "加拿大S&P/TSX综合指数"),
-        ("ibex", "西班牙IBEX指数"),
-        ("ibov", "巴西BOVESPA股票指数"),
-        ("indexcf", "俄罗斯MICEX指数"),
-        ("jci", "印度尼西亚雅加达综合指数"),
-        ("kospi", "首尔综合指数"),
-        ("mxx", "墨西哥BOLSA指数"),
-        ("nky", "日经225指数"),
-        ("nz250", "新西兰NZSE 50指数"),
-        ("sensex", "印度孟买SENSEX指数"),
-        ("swi20", "瑞士股票指数"),
-        ("sx5e", "欧洲Stoxx50指数"),
-        ("twjq", "中国台湾加权指数"),
-        ("ukx", "英国富时100指数"),
-    )
-    rows = [(code, name, "", "指", "gb") for code, name in _GLOBAL_INDEXES]
-    return pd.DataFrame(rows, columns=_DF_COLUMNS)
-
-def _stock_us_index_name_code() -> pd.DataFrame:
-    """美股主要指数"""
-    rows = [
-        ("ixic", "纳斯达克综合指数", "", "指", "us"),
-        ("dji", "道琼斯工业平均指数", "", "指", "us"),
-        ("inx", "标普500指数", "", "指", "us"),
-        ("ndx", "纳斯达克100指数", "", "指", "us"),
-    ]
-    return pd.DataFrame(rows, columns=_DF_COLUMNS)
-
-def _offline_index_name_code() -> pd.DataFrame:
-    """合并无需联网更新的港股、美股和全球主要指数。"""
-    frames = []
-    for label, func in (
-        ("港股指数", _stock_hk_index_name_code),
-        ("美股指数", _stock_us_index_name_code),
-        ("全球股指", _stock_global_index_name_code),
-    ):
-        frame = func()
-        print(f"{label}: {len(frame)} 条", flush=True)
-        frames.append(frame)
-    return _concat_dedup(frames)
-
-
-# ----------------- 股指列表 -----------------
-
-def _tasks() -> list[tuple]:
+def _tasks(output_dir: str = OUTPUT_DIR) -> list[tuple]:
     """每个任务负责一个 JSON；耗时较长的任务优先提交到线程池。"""
     return [
-        ("stock_us.json", "美股", _stock_us_name_code, (), {}),
+        ("stock_us.json", "美股", _stock_us_name_code, (), {"output_dir": output_dir}),
         ("stock_hk.json", "港股", _stock_hk_name_code, (), {}),
         ("futures_sh.json", "上期所期货", futures_info_all, (), {}),
         ("stock_sh.json", "沪市股票", _stock_sh_all, (), {}),
         ("stock_sz.json", "深市股票", _stock_sz_all, (), {}),
         ("fund_cn.json", "沪深基金", _fund_exchange_all, (), {}),
-        ("stock_bj.json", "京市", _em_stock_df, ("m:0+t:81+s:2048", "京"), {"market": "bj"}),
-        ("index_cn.json", "国内指数", _index_cn_em, (), {}),
-        ("index_global.json", "全球指数", _offline_index_name_code, (), {}),
+        ("stock_bj.json", "北交所股票", _stock_bj_name_code, (), {}),
     ]
 
 
 def _run_task(task: tuple) -> tuple[pd.DataFrame | None, str | None]:
-    """运行单个分类；首次失败后再重试两次，不影响其他分类。"""
+    """分类间隔离；临时错误重试，已按页重试的任务不再整类重跑。"""
     _, label, func, args, kwargs = task
     last_error = None
     for attempt in range(1, TASK_ATTEMPTS + 1):
@@ -702,16 +689,17 @@ def _run_task(task: tuple) -> tuple[pd.DataFrame | None, str | None]:
             return result, None
         except Exception as exc:
             last_error = exc
-            traceback.print_exc()
-            if attempt < TASK_ATTEMPTS:
+            if attempt < TASK_ATTEMPTS and retryable_error(exc):
                 delay = TASK_RETRY_SECONDS[attempt - 1]
                 print(
-                    f"{label}第 {attempt} 次拉取失败，{delay} 秒后重试: {exc}",
+                    f"{label}第 {attempt} 次拉取失败，{delay} 秒后重试: {safe_error(exc)}",
                     flush=True,
                 )
                 time.sleep(delay)
-    message = str(last_error or "未知错误")
-    print(f"::warning::{label}连续 {TASK_ATTEMPTS} 次拉取失败，保留旧文件: {message}")
+            else:
+                break
+    message = safe_error(last_error)
+    print(f"::warning::{label}拉取失败，保留旧文件: {message}")
     return None, message
 
 
@@ -725,8 +713,7 @@ def _run_tasks(tasks: list[tuple]) -> dict[str, tuple[pd.DataFrame | None, str |
             try:
                 results[filename] = future.result()
             except Exception as exc:
-                traceback.print_exc()
-                results[filename] = (None, str(exc))
+                results[filename] = (None, safe_error(exc))
     return results
 
 
@@ -876,14 +863,14 @@ def _iso_now() -> str:
     return datetime.now(timezone(timedelta(hours=8))).isoformat(timespec="seconds")
 
 
-def _file_status_on_failure(previous: dict, existing: dict) -> dict:
+def _file_status_on_failure(previous: dict, existing: dict, run_date: str, error: str) -> dict:
     return {
         "last_checked": str(previous.get("last_checked") or ""),
-        "last_update": str(
-            existing.get("last_update") or previous.get("last_update") or ""
-        ),
+        "last_update": str(existing.get("last_update") or previous.get("last_update") or ""),
         "updated": False,
         "error": True,
+        "last_attempt": run_date,
+        "error_message": error,
     }
 
 
@@ -892,10 +879,12 @@ def update_code_files(output_dir: str = OUTPUT_DIR) -> dict:
     started_at = _iso_now()
     run_date = started_at[:10]
     status_path = os.path.join(output_dir, STATUS_FILE)
-    previous_status = _load_json(status_path).get("files", {})
-    tasks = _tasks()
+    previous_report = _load_json(status_path)
+    previous_status = previous_report.get("files", {})
+    tasks = _tasks(output_dir=output_dir)
     results = _run_tasks(tasks)
     file_states = {}
+    auxiliary = dict(previous_report.get("auxiliary", {}))
 
     for filename, _, _, _, _ in tasks:
         path = os.path.join(output_dir, filename)
@@ -903,12 +892,14 @@ def update_code_files(output_dir: str = OUTPUT_DIR) -> dict:
         frame, error = results.get(filename, (None, "任务未返回结果"))
         previous = previous_status.get(filename, {})
         if frame is None or error:
-            file_states[filename] = _file_status_on_failure(previous, existing)
+            file_states[filename] = _file_status_on_failure(previous, existing, run_date, error)
             continue
 
+        if filename == "stock_us.json" and "us_cn_aliases" in frame.attrs:
+            auxiliary[US_CN_ALIAS_CACHE_FILE] = frame.attrs["us_cn_aliases"]
         codes = _df_to_dict(frame)
         if not codes:
-            file_states[filename] = _file_status_on_failure(previous, existing)
+            file_states[filename] = _file_status_on_failure(previous, existing, run_date, "返回列表为空")
             continue
 
         changed = existing.get("codes") != codes or not existing.get("last_update")
@@ -920,18 +911,36 @@ def update_code_files(output_dir: str = OUTPUT_DIR) -> dict:
             "last_update": last_update,
             "updated": changed,
             "error": False,
+            "last_attempt": run_date,
         }
         action = "已更新" if changed else "无变化"
         print(f"{filename}: {len(codes)} 条，{action}", flush=True)
+
+    for filename in MANUAL_FILES:
+        existing = _load_json(os.path.join(output_dir, filename))
+        if (isinstance(existing.get("codes"), dict) and existing["codes"]
+                and existing.get("last_update")):
+            file_states[filename] = {
+                "last_checked": run_date, "last_update": existing["last_update"],
+                "updated": False, "error": False,
+            }
+        else:
+            file_states[filename] = _file_status_on_failure(
+                previous_status.get(filename, {}), existing, run_date,
+                "手工维护的指数 JSON 缺失或无效，请检查 codes-data 分支",
+            )
 
     status = {
         "run_date": run_date,
         "started_at": started_at,
         "completed_at": _iso_now(),
         "files": file_states,
+        "auxiliary": auxiliary,
     }
-    _save_json(status_path, status)
     failed = [name for name, state in file_states.items() if state["error"]]
+    failed.extend(name for name, state in auxiliary.items() if state.get("error"))
+    status["has_errors"] = bool(failed)
+    _save_json(status_path, status)
     if failed:
         print(f"本次失败分类: {', '.join(failed)}；其他文件已正常处理", flush=True)
     return status
@@ -942,8 +951,7 @@ def main() -> int:
         update_code_files()
         return 0
     except Exception as exc:
-        traceback.print_exc()
-        print(f"::error::代码列表更新流程失败: {exc}")
+        print(f"::error::代码列表更新流程失败: {safe_error(exc)}")
         return 1
 
 

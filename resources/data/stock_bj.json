@@ -1,66 +1,12 @@
 {
-  "last_update": "2026-09-11",
+  "last_update": "2026-10-27",
   "codes": {
-    "bj810011": {
-      "code": "810011",
-      "market": "bj",
-      "type": "京",
-      "name": "优机定转",
-      "name_en": "",
-      "py": "youjidingzhuan",
-      "abbr": "yjdz"
-    },
-    "bj810013": {
-      "code": "810013",
-      "market": "bj",
-      "type": "京",
-      "name": "万通定转",
-      "name_en": "",
-      "py": "wantongdingzhuan",
-      "abbr": "wtdz"
-    },
-    "bj810014": {
-      "code": "810014",
-      "market": "bj",
-      "type": "京",
-      "name": "莱特定转",
-      "name_en": "",
-      "py": "laitedingzhuan",
-      "abbr": "ltdz"
-    },
-    "bj832317": {
-      "code": "832317",
-      "market": "bj",
-      "type": "京",
-      "name": "观典防务",
-      "name_en": "",
-      "py": "guandianfangwu",
-      "abbr": "gdfw"
-    },
-    "bj833874": {
-      "code": "833874",
-      "market": "bj",
-      "type": "京",
-      "name": "泰祥股份",
-      "name_en": "",
-      "py": "taixianggufen",
-      "abbr": "txgf"
-    },
-    "bj833994": {
-      "code": "833994",
-      "market": "bj",
-      "type": "京",
-      "name": "翰博高新",
-      "name_en": "",
-      "py": "hanbogaoxin",
-      "abbr": "hbgx"
-    },
     "bj920000": {
       "code": "920000",
       "market": "bj",
       "type": "京",
       "name": "安徽凤凰",
-      "name_en": "",
+      "name_en": "ANHUI PHOENIX",
       "py": "anhuifenghuang",
       "abbr": "ahfh"
     },
@@ -69,7 +15,7 @@
       "market": "bj",
       "type": "京",
       "name": "纬达光电",
-      "name_en": "",
+      "name_en": "WINDA",
       "py": "weidaguangdian",
       "abbr": "wdgd"
     },
@@ -78,7 +24,7 @@
       "market": "bj",
       "type": "京",
       "name": "万达轴承",
-      "name_en": "",
+      "name_en": "WANDA BEARING",
       "py": "wandazhoucheng",
       "abbr": "wdzc"
     },
@@ -87,7 +33,7 @@
       "market": "bj",
       "type": "京",
       "name": "中诚咨询",
-      "name_en": "",
+      "name_en": "ZC CONSULTING",
       "py": "zhongchengzixun",
       "abbr": "zczx"
     },
@@ -105,7 +51,7 @@
       "market": "bj",
       "type": "京",
       "name": "晟楠科技",
-      "name_en": "",
+      "name_en": "SHENGNAN TECHNOLOGY",
       "py": "chengnankeji",
       "abbr": "cnkj"
     },
@@ -114,7 +60,7 @@
       "market": "bj",
       "type": "京",
       "name": "酉立智能",
-      "name_en": "",
+      "name_en": "YOULIZHINENG",
       "py": "youlizhineng",
       "abbr": "ylzn"
     },
@@ -123,7 +69,7 @@
       "market": "bj",
       "type": "京",
       "name": "成电光信",
-      "name_en": "",
+      "name_en": "UESTCOC",
       "py": "chengdianguangxin",
       "abbr": "cdgx"
     },
@@ -132,7 +78,7 @@
       "market": "bj",
       "type": "京",
       "name": "丹娜生物",
-      "name_en": "",
+      "name_en": "DYNAMIKER",
       "py": "dannashengwu",
       "abbr": "dnsw"
     },
@@ -141,7 +87,7 @@
       "market": "bj",
       "type": "京",
       "name": "凯添燃气",
-      "name_en": "",
+      "name_en": "KAITIANGAS",
       "py": "kaitianranqi",
       "abbr": "ktrq"
     },
@@ -150,7 +96,7 @@
       "market": "bj",
       "type": "京",
       "name": "晨光电机",
-      "name_en": "",
+      "name_en": "CHENGUANG MOTOR",
       "py": "chenguangdianji",
       "abbr": "cgdj"
     },
@@ -159,7 +105,7 @@
       "market": "bj",
       "type": "京",
       "name": "创达新材",
-      "name_en": "",
+      "name_en": "CDXC",
       "py": "chuangdaxincai",
       "abbr": "cdxc"
     },
@@ -168,7 +114,7 @@
       "market": "bj",
       "type": "京",
       "name": "特瑞斯",
-      "name_en": "",
+      "name_en": "TRS",
       "py": "teruisi",
       "abbr": "trs"
     },
@@ -177,7 +123,7 @@
       "market": "bj",
       "type": "京",
       "name": "锦华新材",
-      "name_en": "",
+      "name_en": "JINHUA NEW MATERIAL",
       "py": "jinhuaxincai",
       "abbr": "jhxc"
     },
@@ -186,7 +132,7 @@
       "market": "bj",
       "type": "京",
       "name": "中草香料",
-      "name_en": "",
+      "name_en": "CHINAHERB",
       "py": "zhongcaoxiangliao",
       "abbr": "zcxl"
     },
@@ -195,7 +141,7 @@
       "market": "bj",
       "type": "京",
       "name": "星昊医药",
-      "name_en": "",
+      "name_en": "XHYY",
       "py": "xinghaoyiyao",
       "abbr": "xhyy"
     },
@@ -204,7 +150,7 @@
       "market": "bj",
       "type": "京",
       "name": "宏远股份",
-      "name_en": "",
+      "name_en": "HONGYUAN MAGNET WIRE",
       "py": "hongyuangufen",
       "abbr": "hygf"
     },
@@ -213,7 +159,7 @@
       "market": "bj",
       "type": "京",
       "name": "铜冠矿建",
-      "name_en": "",
+      "name_en": "TNMG",
       "py": "tongguankuangjian",
       "abbr": "tgkj"
     },
@@ -222,7 +168,7 @@
       "market": "bj",
       "type": "京",
       "name": "泰凯英",
-      "name_en": "",
+      "name_en": "TECHKING",
       "py": "taikaiying",
       "abbr": "tky"
     },
@@ -231,7 +177,7 @@
       "market": "bj",
       "type": "京",
       "name": "流金科技",
-      "name_en": "",
+      "name_en": "LJSY",
       "py": "liujinkeji",
       "abbr": "ljkj"
     },
@@ -240,7 +186,7 @@
       "market": "bj",
       "type": "京",
       "name": "世昌股份",
-      "name_en": "",
+      "name_en": "SHICHANG GROUP",
       "py": "shichanggufen",
       "abbr": "scgf"
     },
@@ -249,7 +195,7 @@
       "market": "bj",
       "type": "京",
       "name": "*ST田野",
-      "name_en": "",
+      "name_en": "TIC",
       "py": "*sttianye",
       "abbr": "*stty"
     },
@@ -258,7 +204,7 @@
       "market": "bj",
       "type": "京",
       "name": "凯达重工",
-      "name_en": "",
+      "name_en": "KDZG",
       "py": "kaidazhonggong",
       "abbr": "kdzg"
     },
@@ -267,7 +213,7 @@
       "market": "bj",
       "type": "京",
       "name": "卓兆点胶",
-      "name_en": "",
+      "name_en": "ZZT",
       "py": "zhuozhaodianjiao",
       "abbr": "zzdj"
     },
@@ -276,7 +222,7 @@
       "market": "bj",
       "type": "京",
       "name": "交大铁发",
-      "name_en": "",
+      "name_en": "CSRD",
       "py": "jiaodatiefa",
       "abbr": "jdtf"
     },
@@ -285,7 +231,7 @@
       "market": "bj",
       "type": "京",
       "name": "新恒泰",
-      "name_en": "",
+      "name_en": "XIN HENG TAI",
       "py": "xinhengtai",
       "abbr": "xht"
     },
@@ -294,7 +240,7 @@
       "market": "bj",
       "type": "京",
       "name": "开发科技",
-      "name_en": "",
+      "name_en": "KAIFA TECHNOLOGY",
       "py": "kaifakeji",
       "abbr": "kfkj"
     },
@@ -303,7 +249,7 @@
       "market": "bj",
       "type": "京",
       "name": "德众汽车",
-      "name_en": "",
+      "name_en": "DE ZHONG",
       "py": "dezhongqiche",
       "abbr": "dzqc"
     },
@@ -312,7 +258,7 @@
       "market": "bj",
       "type": "京",
       "name": "康普化学",
-      "name_en": "",
+      "name_en": "KOPPERCHEM",
       "py": "kangpuhuaxue",
       "abbr": "kphx"
     },
@@ -321,7 +267,7 @@
       "market": "bj",
       "type": "京",
       "name": "精创电气",
-      "name_en": "",
+      "name_en": "JINGCHUANG ELITECH",
       "py": "jingchuangdianqi",
       "abbr": "jcdq"
     },
@@ -330,7 +276,7 @@
       "market": "bj",
       "type": "京",
       "name": "觅睿科技",
-      "name_en": "",
+      "name_en": "MEARI TECHNOLOGY",
       "py": "miruikeji",
       "abbr": "mrkj"
     },
@@ -339,7 +285,7 @@
       "market": "bj",
       "type": "京",
       "name": "广信科技",
-      "name_en": "",
+      "name_en": "GUANGXIN TECHNOLOGY",
       "py": "guangxinkeji",
       "abbr": "gxkj"
     },
@@ -348,7 +294,7 @@
       "market": "bj",
       "type": "京",
       "name": "森合高科",
-      "name_en": "",
+      "name_en": "SENHE HIGH TECH",
       "py": "senhegaoke",
       "abbr": "shgk"
     },
@@ -357,7 +303,7 @@
       "market": "bj",
       "type": "京",
       "name": "国义招标",
-      "name_en": "",
+      "name_en": "GMG",
       "py": "guoyizhaobiao",
       "abbr": "gyzb"
     },
@@ -366,7 +312,7 @@
       "market": "bj",
       "type": "京",
       "name": "蘅东光",
-      "name_en": "",
+      "name_en": "East Point",
       "py": "hengdongguang",
       "abbr": "hdg"
     },
@@ -375,7 +321,7 @@
       "market": "bj",
       "type": "京",
       "name": "亿能电力",
-      "name_en": "",
+      "name_en": "YINOW ELECTRIC",
       "py": "yinengdianli",
       "abbr": "yndl"
     },
@@ -384,7 +330,7 @@
       "market": "bj",
       "type": "京",
       "name": "诺思兰德",
-      "name_en": "",
+      "name_en": "NORTHLAND-BIO",
       "py": "nuosilande",
       "abbr": "nsld"
     },
@@ -393,7 +339,7 @@
       "market": "bj",
       "type": "京",
       "name": "爱伦医疗",
-      "name_en": "",
+      "name_en": "ASL",
       "py": "ailunyiliao",
       "abbr": "alyl"
     },
@@ -402,7 +348,7 @@
       "market": "bj",
       "type": "京",
       "name": "隆源股份",
-      "name_en": "",
+      "name_en": "LONGYUAN",
       "py": "longyuangufen",
       "abbr": "lygf"
     },
@@ -411,7 +357,7 @@
       "market": "bj",
       "type": "京",
       "name": "能之光",
-      "name_en": "",
+      "name_en": "MATERCHEM",
       "py": "nengzhiguang",
       "abbr": "nzg"
     },
@@ -420,7 +366,7 @@
       "market": "bj",
       "type": "京",
       "name": "百甲科技",
-      "name_en": "",
+      "name_en": "ZMBESTA",
       "py": "baijiakeji",
       "abbr": "bjkj"
     },
@@ -429,7 +375,7 @@
       "market": "bj",
       "type": "京",
       "name": "华洋赛车",
-      "name_en": "",
+      "name_en": "KAYO MOTOR",
       "py": "huayangsaiche",
       "abbr": "hysc"
     },
@@ -438,7 +384,7 @@
       "market": "bj",
       "type": "京",
       "name": "双英集团",
-      "name_en": "",
+      "name_en": "SHUANGYING GROUP",
       "py": "shuangyingjituan",
       "abbr": "syjt"
     },
@@ -447,7 +393,7 @@
       "market": "bj",
       "type": "京",
       "name": "万源通",
-      "name_en": "",
+      "name_en": "WANYUANTONG",
       "py": "wanyuantong",
       "abbr": "wyt"
     },
@@ -456,7 +402,7 @@
       "market": "bj",
       "type": "京",
       "name": "西磁科技",
-      "name_en": "",
+      "name_en": "SOUWEST",
       "py": "xicikeji",
       "abbr": "xckj"
     },
@@ -465,7 +411,7 @@
       "market": "bj",
       "type": "京",
       "name": "科润智控",
-      "name_en": "",
+      "name_en": "KERUN IC",
       "py": "kerunzhikong",
       "abbr": "krzk"
     },
@@ -492,7 +438,7 @@
       "market": "bj",
       "type": "京",
       "name": "天工股份",
-      "name_en": "",
+      "name_en": "TGGF",
       "py": "tiangonggufen",
       "abbr": "tggf"
     },
@@ -501,7 +447,7 @@
       "market": "bj",
       "type": "京",
       "name": "普昂医疗",
-      "name_en": "",
+      "name_en": "PROMISEMED",
       "py": "puangyiliao",
       "abbr": "payl"
     },
@@ -510,7 +456,7 @@
       "market": "bj",
       "type": "京",
       "name": "金钛股份",
-      "name_en": "",
+      "name_en": "JINDA TITANIUM",
       "py": "jintaigufen",
       "abbr": "jtgf"
     },
@@ -519,7 +465,7 @@
       "market": "bj",
       "type": "京",
       "name": "科莱瑞迪",
-      "name_en": "",
+      "name_en": "KLARITY",
       "py": "kelairuidi",
       "abbr": "klrd"
     },
@@ -528,7 +474,7 @@
       "market": "bj",
       "type": "京",
       "name": "柏星龙",
-      "name_en": "",
+      "name_en": "BXL",
       "py": "baixinglong",
       "abbr": "bxl"
     },
@@ -537,7 +483,7 @@
       "market": "bj",
       "type": "京",
       "name": "国亮新材",
-      "name_en": "",
+      "name_en": "GUOLIANG",
       "py": "guoliangxincai",
       "abbr": "glxc"
     },
@@ -546,7 +492,7 @@
       "market": "bj",
       "type": "京",
       "name": "吉林碳谷",
-      "name_en": "",
+      "name_en": "JILIN TANGU",
       "py": "jilintangu",
       "abbr": "jltg"
     },
@@ -573,7 +519,7 @@
       "market": "bj",
       "type": "京",
       "name": "奥美森",
-      "name_en": "",
+      "name_en": "OMS",
       "py": "aomeisen",
       "abbr": "ams"
     },
@@ -582,7 +528,7 @@
       "market": "bj",
       "type": "京",
       "name": "欧伦电气",
-      "name_en": "",
+      "name_en": "OULUN ELECTRIC",
       "py": "oulundianqi",
       "abbr": "oldq"
     },
@@ -591,7 +537,7 @@
       "market": "bj",
       "type": "京",
       "name": "方正阀门",
-      "name_en": "",
+      "name_en": "FZFM",
       "py": "fangzhengfamen",
       "abbr": "fzfm"
     },
@@ -600,7 +546,7 @@
       "market": "bj",
       "type": "京",
       "name": "金戈新材",
-      "name_en": "",
+      "name_en": "JINGE MATERIAL",
       "py": "jingexincai",
       "abbr": "jgxc"
     },
@@ -609,7 +555,7 @@
       "market": "bj",
       "type": "京",
       "name": "科马材料",
-      "name_en": "",
+      "name_en": "KEMA MATERIALS",
       "py": "kemacailiao",
       "abbr": "kmcl"
     },
@@ -618,7 +564,7 @@
       "market": "bj",
       "type": "京",
       "name": "秋乐种业",
-      "name_en": "",
+      "name_en": "QIULE SEEDS",
       "py": "qiulezhongye",
       "abbr": "qlzy"
     },
@@ -627,7 +573,7 @@
       "market": "bj",
       "type": "京",
       "name": "科力股份",
-      "name_en": "",
+      "name_en": "KLGF",
       "py": "keligufen",
       "abbr": "klgf"
     },
@@ -636,7 +582,7 @@
       "market": "bj",
       "type": "京",
       "name": "禾昌聚合",
-      "name_en": "",
+      "name_en": "HECHANG POLYMERIC",
       "py": "hechangjuhe",
       "abbr": "hcjh"
     },
@@ -645,7 +591,7 @@
       "market": "bj",
       "type": "京",
       "name": "*ST同辉",
-      "name_en": "",
+      "name_en": "TONGHUIXINXI",
       "py": "*sttonghui",
       "abbr": "*stth"
     },
@@ -663,7 +609,7 @@
       "market": "bj",
       "type": "京",
       "name": "汉鑫科技",
-      "name_en": "",
+      "name_en": "HIACENT",
       "py": "hanxinkeji",
       "abbr": "hxkj"
     },
@@ -672,7 +618,7 @@
       "market": "bj",
       "type": "京",
       "name": "信胜科技",
-      "name_en": "",
+      "name_en": "XINSHENG",
       "py": "xinshengkeji",
       "abbr": "xskj"
     },
@@ -680,10 +626,10 @@
       "code": "920096",
       "market": "bj",
       "type": "京",
-      "name": "XD嘉晨智",
-      "name_en": "",
-      "py": "xdjiachenzhi",
-      "abbr": "xdjcz"
+      "name": "嘉晨智能",
+      "name_en": "JIACHEN",
+      "py": "jiachenzhineng",
+      "abbr": "jczn"
     },
     "bj920098": {
       "code": "920098",
@@ -699,7 +645,7 @@
       "market": "bj",
       "type": "京",
       "name": "瑞华技术",
-      "name_en": "",
+      "name_en": "RUIHUA TECHNOLOGY",
       "py": "ruihuajishu",
       "abbr": "rhjs"
     },
@@ -708,7 +654,7 @@
       "market": "bj",
       "type": "京",
       "name": "三协电机",
-      "name_en": "",
+      "name_en": "3X MOTION",
       "py": "sanxiedianji",
       "abbr": "sxdj"
     },
@@ -726,7 +672,7 @@
       "market": "bj",
       "type": "京",
       "name": "林泰新材",
-      "name_en": "",
+      "name_en": "LINTEX",
       "py": "lintaixincai",
       "abbr": "ltxc"
     },
@@ -735,7 +681,7 @@
       "market": "bj",
       "type": "京",
       "name": "恒兴股份",
-      "name_en": "",
+      "name_en": "HANSON",
       "py": "hengxinggufen",
       "abbr": "hxgf"
     },
@@ -753,7 +699,7 @@
       "market": "bj",
       "type": "京",
       "name": "雷特科技",
-      "name_en": "",
+      "name_en": "LTECH",
       "py": "leitekeji",
       "abbr": "ltkj"
     },
@@ -762,7 +708,7 @@
       "market": "bj",
       "type": "京",
       "name": "聚星科技",
-      "name_en": "",
+      "name_en": "Juxing Technology",
       "py": "juxingkeji",
       "abbr": "jxkj"
     },
@@ -771,7 +717,7 @@
       "market": "bj",
       "type": "京",
       "name": "巴兰仕",
-      "name_en": "",
+      "name_en": "BALANCE",
       "py": "balanshi",
       "abbr": "bls"
     },
@@ -780,7 +726,7 @@
       "market": "bj",
       "type": "京",
       "name": "星图测控",
-      "name_en": "",
+      "name_en": "GEOVIS INSIGHTER",
       "py": "xingtucekong",
       "abbr": "xtck"
     },
@@ -789,7 +735,7 @@
       "market": "bj",
       "type": "京",
       "name": "龙鑫智能",
-      "name_en": "",
+      "name_en": "LONGXIN SMART",
       "py": "longxinzhineng",
       "abbr": "lxzn"
     },
@@ -798,7 +744,7 @@
       "market": "bj",
       "type": "京",
       "name": "太湖远大",
-      "name_en": "",
+      "name_en": "TAIHU YUANDA",
       "py": "taihuyuanda",
       "abbr": "thyd"
     },
@@ -807,7 +753,7 @@
       "market": "bj",
       "type": "京",
       "name": "美德乐",
-      "name_en": "",
+      "name_en": "MODULAR",
       "py": "meidele",
       "abbr": "mdl"
     },
@@ -816,7 +762,7 @@
       "market": "bj",
       "type": "京",
       "name": "江天科技",
-      "name_en": "",
+      "name_en": "JIANGTIAN TECHNOLOGY",
       "py": "jiangtiankeji",
       "abbr": "jtkj"
     },
@@ -825,7 +771,7 @@
       "market": "bj",
       "type": "京",
       "name": "中纺标",
-      "name_en": "",
+      "name_en": "CTTC",
       "py": "zhongfangbiao",
       "abbr": "zfb"
     },
@@ -834,7 +780,7 @@
       "market": "bj",
       "type": "京",
       "name": "芭薇股份",
-      "name_en": "",
+      "name_en": "BAWEI",
       "py": "baweigufen",
       "abbr": "bwgf"
     },
@@ -852,7 +798,7 @@
       "market": "bj",
       "type": "京",
       "name": "鸿仕达",
-      "name_en": "",
+      "name_en": "HOSTAR",
       "py": "hongshida",
       "abbr": "hsd"
     },
@@ -861,7 +807,7 @@
       "market": "bj",
       "type": "京",
       "name": "永大股份",
-      "name_en": "",
+      "name_en": "YONGDA",
       "py": "yongdagufen",
       "abbr": "ydgf"
     },
@@ -870,7 +816,7 @@
       "market": "bj",
       "type": "京",
       "name": "胜业电气",
-      "name_en": "",
+      "name_en": "SHENG YE ELECTRIC",
       "py": "shengyedianqi",
       "abbr": "sydq"
     },
@@ -879,7 +825,7 @@
       "market": "bj",
       "type": "京",
       "name": "立方控股",
-      "name_en": "",
+      "name_en": "REFORMER",
       "py": "lifangkonggu",
       "abbr": "lfkg"
     },
@@ -888,7 +834,7 @@
       "market": "bj",
       "type": "京",
       "name": "泰鹏智能",
-      "name_en": "",
+      "name_en": "TAIPENG INTELLIGENT",
       "py": "taipengzhineng",
       "abbr": "tpzn"
     },
@@ -906,7 +852,7 @@
       "market": "bj",
       "type": "京",
       "name": "杰理科技",
-      "name_en": "",
+      "name_en": "JIELI TECHNOLOGY",
       "py": "jielikeji",
       "abbr": "jlkj"
     },
@@ -915,7 +861,7 @@
       "market": "bj",
       "type": "京",
       "name": "华岭股份",
-      "name_en": "",
+      "name_en": "SINO IC",
       "py": "hualinggufen",
       "abbr": "hlgf"
     },
@@ -924,7 +870,7 @@
       "market": "bj",
       "type": "京",
       "name": "恒合股份",
-      "name_en": "",
+      "name_en": "HENGHE CO.,LTD.",
       "py": "henghegufen",
       "abbr": "hhgf"
     },
@@ -933,7 +879,7 @@
       "market": "bj",
       "type": "京",
       "name": "华阳变速",
-      "name_en": "",
+      "name_en": "HUAYANG",
       "py": "huayangbiansu",
       "abbr": "hybs"
     },
@@ -942,7 +888,7 @@
       "market": "bj",
       "type": "京",
       "name": "旭杰科技",
-      "name_en": "",
+      "name_en": "JCON",
       "py": "xujiekeji",
       "abbr": "xjkj"
     },
@@ -951,7 +897,7 @@
       "market": "bj",
       "type": "京",
       "name": "昆工科技",
-      "name_en": "",
+      "name_en": "HENDERA",
       "py": "kungongkeji",
       "abbr": "kgkj"
     },
@@ -960,16 +906,25 @@
       "market": "bj",
       "type": "京",
       "name": "海昌智能",
-      "name_en": "",
+      "name_en": "HACINT",
       "py": "haichangzhineng",
       "abbr": "hczn"
+    },
+    "bj920157": {
+      "code": "920157",
+      "market": "bj",
+      "type": "京",
+      "name": "宇特光电",
+      "name_en": "UNIKIT",
+      "py": "yuteguangdian",
+      "abbr": "ytgd"
     },
     "bj920158": {
       "code": "920158",
       "market": "bj",
       "type": "京",
       "name": "长江能科",
-      "name_en": "",
+      "name_en": "SANTACC ENERGY",
       "py": "changjiangnengke",
       "abbr": "cjnk"
     },
@@ -978,7 +933,7 @@
       "market": "bj",
       "type": "京",
       "name": "农大科技",
-      "name_en": "",
+      "name_en": "NONGDA SCI&TECH",
       "py": "nongdakeji",
       "abbr": "ndkj"
     },
@@ -987,7 +942,7 @@
       "market": "bj",
       "type": "京",
       "name": "北矿检测",
-      "name_en": "",
+      "name_en": "BGRIMM MTC",
       "py": "beikuangjiance",
       "abbr": "bkjc"
     },
@@ -1000,12 +955,21 @@
       "py": "longchenkeji",
       "abbr": "lckj"
     },
+    "bj920162": {
+      "code": "920162",
+      "market": "bj",
+      "type": "京",
+      "name": "莫森泰克",
+      "name_en": "",
+      "py": "mosentaike",
+      "abbr": "mstk"
+    },
     "bj920163": {
       "code": "920163",
       "market": "bj",
       "type": "京",
       "name": "方大新材",
-      "name_en": "",
+      "name_en": "FANGDAPACKAGING",
       "py": "fangdaxincai",
       "abbr": "fdxc"
     },
@@ -1014,7 +978,7 @@
       "market": "bj",
       "type": "京",
       "name": "珈凯生物",
-      "name_en": "",
+      "name_en": "JAKA",
       "py": "jiakaishengwu",
       "abbr": "jksw"
     },
@@ -1023,7 +987,7 @@
       "market": "bj",
       "type": "京",
       "name": "海圣医疗",
-      "name_en": "",
+      "name_en": "HISERN MEDICAL",
       "py": "haishengyiliao",
       "abbr": "hsyl"
     },
@@ -1032,7 +996,7 @@
       "market": "bj",
       "type": "京",
       "name": "同享科技",
-      "name_en": "",
+      "name_en": "TONYSHARE",
       "py": "tongxiangkeji",
       "abbr": "txkj"
     },
@@ -1041,7 +1005,7 @@
       "market": "bj",
       "type": "京",
       "name": "通宝光电",
-      "name_en": "",
+      "name_en": "TBGD",
       "py": "tongbaoguangdian",
       "abbr": "tbgd"
     },
@@ -1050,7 +1014,7 @@
       "market": "bj",
       "type": "京",
       "name": "七丰精工",
-      "name_en": "",
+      "name_en": "QIFENG",
       "py": "qifengjinggong",
       "abbr": "qfjg"
     },
@@ -1059,7 +1023,7 @@
       "market": "bj",
       "type": "京",
       "name": "志晟信息",
-      "name_en": "",
+      "name_en": "ZCCN INFO",
       "py": "zhichengxinxi",
       "abbr": "zcxx"
     },
@@ -1068,7 +1032,7 @@
       "market": "bj",
       "type": "京",
       "name": "五新智能",
-      "name_en": "",
+      "name_en": "WUXINSUIZHUANG",
       "py": "wuxinzhineng",
       "abbr": "wxzn"
     },
@@ -1077,7 +1041,7 @@
       "market": "bj",
       "type": "京",
       "name": "东方碳素",
-      "name_en": "",
+      "name_en": "ORIENTAL CARBON",
       "py": "dongfangtansu",
       "abbr": "dfts"
     },
@@ -1086,7 +1050,7 @@
       "market": "bj",
       "type": "京",
       "name": "维琪科技",
-      "name_en": "",
+      "name_en": "WINKEY",
       "py": "weiqikeji",
       "abbr": "wqkj"
     },
@@ -1095,7 +1059,7 @@
       "market": "bj",
       "type": "京",
       "name": "恒道科技",
-      "name_en": "",
+      "name_en": "HENGDAO TECHNOLOGY",
       "py": "hengdaokeji",
       "abbr": "hdkj"
     },
@@ -1104,7 +1068,7 @@
       "market": "bj",
       "type": "京",
       "name": "锐翔智能",
-      "name_en": "",
+      "name_en": "RUIXIANG INTELLIGENT",
       "py": "ruixiangzhineng",
       "abbr": "rxzn"
     },
@@ -1113,7 +1077,7 @@
       "market": "bj",
       "type": "京",
       "name": "凯德石英",
-      "name_en": "",
+      "name_en": "KAIDE QUARTZ",
       "py": "kaideshiying",
       "abbr": "kdsy"
     },
@@ -1122,7 +1086,7 @@
       "market": "bj",
       "type": "京",
       "name": "爱得科技",
-      "name_en": "",
+      "name_en": "AND TECH",
       "py": "aidekeji",
       "abbr": "adkj"
     },
@@ -1131,7 +1095,7 @@
       "market": "bj",
       "type": "京",
       "name": "赛英电子",
-      "name_en": "",
+      "name_en": "SYDZ",
       "py": "saiyingdianzi",
       "abbr": "sydz"
     },
@@ -1140,7 +1104,7 @@
       "market": "bj",
       "type": "京",
       "name": "海菲曼",
-      "name_en": "",
+      "name_en": "HIFIMAN",
       "py": "haifeiman",
       "abbr": "hfm"
     },
@@ -1149,7 +1113,7 @@
       "market": "bj",
       "type": "京",
       "name": "国源科技",
-      "name_en": "",
+      "name_en": "GRANDTECH",
       "py": "guoyuankeji",
       "abbr": "gykj"
     },
@@ -1158,7 +1122,7 @@
       "market": "bj",
       "type": "京",
       "name": "贝特瑞",
-      "name_en": "",
+      "name_en": "BTR",
       "py": "beiterui",
       "abbr": "btr"
     },
@@ -1167,7 +1131,7 @@
       "market": "bj",
       "type": "京",
       "name": "中科仪",
-      "name_en": "",
+      "name_en": "SKY",
       "py": "zhongkeyi",
       "abbr": "zky"
     },
@@ -1176,7 +1140,7 @@
       "market": "bj",
       "type": "京",
       "name": "通领科技",
-      "name_en": "",
+      "name_en": "TONGLING",
       "py": "tonglingkeji",
       "abbr": "tlkj"
     },
@@ -1194,7 +1158,7 @@
       "market": "bj",
       "type": "京",
       "name": "康美特",
-      "name_en": "",
+      "name_en": "KMT",
       "py": "kangmeite",
       "abbr": "kmt"
     },
@@ -1203,7 +1167,7 @@
       "market": "bj",
       "type": "京",
       "name": "雷神科技",
-      "name_en": "",
+      "name_en": "THUNDEROBOT",
       "py": "leishenkeji",
       "abbr": "lskj"
     },
@@ -1212,7 +1176,7 @@
       "market": "bj",
       "type": "京",
       "name": "瑞尔竞达",
-      "name_en": "",
+      "name_en": "REALJD",
       "py": "ruierjingda",
       "abbr": "rejd"
     },
@@ -1221,7 +1185,7 @@
       "market": "bj",
       "type": "京",
       "name": "吉和昌",
-      "name_en": "",
+      "name_en": "JADECHEM",
       "py": "jihechang",
       "abbr": "jhc"
     },
@@ -1230,16 +1194,25 @@
       "market": "bj",
       "type": "京",
       "name": "三祥科技",
-      "name_en": "",
+      "name_en": "SUNSONG",
       "py": "sanxiangkeji",
       "abbr": "sxkj"
+    },
+    "bj920196": {
+      "code": "920196",
+      "market": "bj",
+      "type": "京",
+      "name": "南方乳业",
+      "name_en": "",
+      "py": "nanfangruye",
+      "abbr": "nfry"
     },
     "bj920198": {
       "code": "920198",
       "market": "bj",
       "type": "京",
       "name": "微创光电",
-      "name_en": "",
+      "name_en": "WELLTRANS",
       "py": "weichuangguangdian",
       "abbr": "wcgd"
     },
@@ -1248,7 +1221,7 @@
       "market": "bj",
       "type": "京",
       "name": "倍益康",
-      "name_en": "",
+      "name_en": "BEOKA",
       "py": "beiyikang",
       "abbr": "byk"
     },
@@ -1257,7 +1230,7 @@
       "market": "bj",
       "type": "京",
       "name": "振宏股份",
-      "name_en": "",
+      "name_en": "ZENKUNG",
       "py": "zhenhonggufen",
       "abbr": "zhgf"
     },
@@ -1266,16 +1239,25 @@
       "market": "bj",
       "type": "京",
       "name": "百瑞吉",
-      "name_en": "",
+      "name_en": "BIOREGEN",
       "py": "bairuiji",
       "abbr": "brj"
+    },
+    "bj920202": {
+      "code": "920202",
+      "market": "bj",
+      "type": "京",
+      "name": "安达股份",
+      "name_en": "",
+      "py": "andagufen",
+      "abbr": "adgf"
     },
     "bj920204": {
       "code": "920204",
       "market": "bj",
       "type": "京",
       "name": "沪江材料",
-      "name_en": "",
+      "name_en": "HUJIANG MATERIALS",
       "py": "hujiangcailiao",
       "abbr": "hjcl"
     },
@@ -1293,7 +1275,7 @@
       "market": "bj",
       "type": "京",
       "name": "众诚科技",
-      "name_en": "",
+      "name_en": "COCYBER",
       "py": "zhongchengkeji",
       "abbr": "zckj"
     },
@@ -1302,7 +1284,7 @@
       "market": "bj",
       "type": "京",
       "name": "青矩技术",
-      "name_en": "",
+      "name_en": "GREETEC",
       "py": "qingjujishu",
       "abbr": "qjjs"
     },
@@ -1311,7 +1293,7 @@
       "market": "bj",
       "type": "京",
       "name": "新睿电子",
-      "name_en": "",
+      "name_en": "SINROBOT",
       "py": "xinruidianzi",
       "abbr": "xrdz"
     },
@@ -1320,7 +1302,7 @@
       "market": "bj",
       "type": "京",
       "name": "智新电子",
-      "name_en": "",
+      "name_en": "GENIUS",
       "py": "zhixindianzi",
       "abbr": "zxdz"
     },
@@ -1329,7 +1311,7 @@
       "market": "bj",
       "type": "京",
       "name": "新天力",
-      "name_en": "",
+      "name_en": "OTOR",
       "py": "xintianli",
       "abbr": "xtl"
     },
@@ -1338,7 +1320,7 @@
       "market": "bj",
       "type": "京",
       "name": "朗信电气",
-      "name_en": "",
+      "name_en": "LANGXIN ELECTRIC",
       "py": "langxindianqi",
       "abbr": "lxdq"
     },
@@ -1347,7 +1329,7 @@
       "market": "bj",
       "type": "京",
       "name": "易实精密",
-      "name_en": "",
+      "name_en": "EC PERCISION",
       "py": "yishijingmi",
       "abbr": "ysjm"
     },
@@ -1356,7 +1338,7 @@
       "market": "bj",
       "type": "京",
       "name": "益坤电气",
-      "name_en": "",
+      "name_en": "YIKUN ELECTRIC",
       "py": "yikundianqi",
       "abbr": "ykdq"
     },
@@ -1365,7 +1347,7 @@
       "market": "bj",
       "type": "京",
       "name": "荣亿精密",
-      "name_en": "",
+      "name_en": "RONNIE",
       "py": "rongyijingmi",
       "abbr": "ryjm"
     },
@@ -1374,7 +1356,7 @@
       "market": "bj",
       "type": "京",
       "name": "利通科技",
-      "name_en": "",
+      "name_en": "LETONE TECHNOLOGY",
       "py": "litongkeji",
       "abbr": "ltkj"
     },
@@ -1383,7 +1365,7 @@
       "market": "bj",
       "type": "京",
       "name": "美登科技",
-      "name_en": "",
+      "name_en": "MEIDENG TECHNOLOGY",
       "py": "meidengkeji",
       "abbr": "mdkj"
     },
@@ -1401,7 +1383,7 @@
       "market": "bj",
       "type": "京",
       "name": "欧康医药",
-      "name_en": "",
+      "name_en": "OKAY",
       "py": "oukangyiyao",
       "abbr": "okyy"
     },
@@ -1410,7 +1392,7 @@
       "market": "bj",
       "type": "京",
       "name": "力佳科技",
-      "name_en": "",
+      "name_en": "POWER GLORY TECH",
       "py": "lijiakeji",
       "abbr": "ljkj"
     },
@@ -1428,7 +1410,7 @@
       "market": "bj",
       "type": "京",
       "name": "长虹能源",
-      "name_en": "",
+      "name_en": "CHANGHONG ENERGY",
       "py": "changhongnengyuan",
       "abbr": "chny"
     },
@@ -1437,7 +1419,7 @@
       "market": "bj",
       "type": "京",
       "name": "建邦科技",
-      "name_en": "",
+      "name_en": "QI",
       "py": "jianbangkeji",
       "abbr": "jbkj"
     },
@@ -1446,7 +1428,7 @@
       "market": "bj",
       "type": "京",
       "name": "威博液压",
-      "name_en": "",
+      "name_en": "VIBO",
       "py": "weiboyeya",
       "abbr": "wbyy"
     },
@@ -1455,7 +1437,7 @@
       "market": "bj",
       "type": "京",
       "name": "华密新材",
-      "name_en": "",
+      "name_en": "HUAMI NEW MATERIAL",
       "py": "huamixincai",
       "abbr": "hmxc"
     },
@@ -1464,7 +1446,7 @@
       "market": "bj",
       "type": "京",
       "name": "利尔达",
-      "name_en": "",
+      "name_en": "LIERDA",
       "py": "lierda",
       "abbr": "led"
     },
@@ -1473,7 +1455,7 @@
       "market": "bj",
       "type": "京",
       "name": "天宏锂电",
-      "name_en": "",
+      "name_en": "TFL",
       "py": "tianhonglidian",
       "abbr": "thld"
     },
@@ -1482,7 +1464,7 @@
       "market": "bj",
       "type": "京",
       "name": "聚仁新材",
-      "name_en": "",
+      "name_en": "JUREN",
       "py": "jurenxincai",
       "abbr": "jrxc"
     },
@@ -1491,7 +1473,7 @@
       "market": "bj",
       "type": "京",
       "name": "中寰股份",
-      "name_en": "",
+      "name_en": "ZHONGHUAN CO.,LTD.",
       "py": "zhonghuangufen",
       "abbr": "zhgf"
     },
@@ -1500,7 +1482,7 @@
       "market": "bj",
       "type": "京",
       "name": "一诺威",
-      "name_en": "",
+      "name_en": "INOV",
       "py": "yinuowei",
       "abbr": "ynw"
     },
@@ -1509,7 +1491,7 @@
       "market": "bj",
       "type": "京",
       "name": "太湖雪",
-      "name_en": "",
+      "name_en": "TAIHUSNOW CO.,LTD.",
       "py": "taihuxue",
       "abbr": "thx"
     },
@@ -1518,7 +1500,7 @@
       "market": "bj",
       "type": "京",
       "name": "中航泰达",
-      "name_en": "",
+      "name_en": "ZHTD",
       "py": "zhonghangtaida",
       "abbr": "zhtd"
     },
@@ -1527,7 +1509,7 @@
       "market": "bj",
       "type": "京",
       "name": "生物谷",
-      "name_en": "",
+      "name_en": "BIOVALLEY",
       "py": "shengwugu",
       "abbr": "swg"
     },
@@ -1536,7 +1518,7 @@
       "market": "bj",
       "type": "京",
       "name": "鑫汇科",
-      "name_en": "",
+      "name_en": "CHK",
       "py": "xinhuike",
       "abbr": "xhk"
     },
@@ -1554,7 +1536,7 @@
       "market": "bj",
       "type": "京",
       "name": "杰锋动力",
-      "name_en": "",
+      "name_en": "JAPHL POWERTRAIN",
       "py": "jiefengdongli",
       "abbr": "jfdl"
     },
@@ -1563,7 +1545,7 @@
       "market": "bj",
       "type": "京",
       "name": "天铭科技",
-      "name_en": "",
+      "name_en": "T-MAX",
       "py": "tianmingkeji",
       "abbr": "tmkj"
     },
@@ -1572,7 +1554,7 @@
       "market": "bj",
       "type": "京",
       "name": "邦德股份",
-      "name_en": "",
+      "name_en": "BANGDE",
       "py": "bangdegufen",
       "abbr": "bdgf"
     },
@@ -1581,7 +1563,7 @@
       "market": "bj",
       "type": "京",
       "name": "一致魔芋",
-      "name_en": "",
+      "name_en": "ESKONJAC",
       "py": "yizhimoyu",
       "abbr": "yzmy"
     },
@@ -1590,7 +1572,7 @@
       "market": "bj",
       "type": "京",
       "name": "宏裕包材",
-      "name_en": "",
+      "name_en": "HONGYU PACKAGING",
       "py": "hongyubaocai",
       "abbr": "hybc"
     },
@@ -1599,7 +1581,7 @@
       "market": "bj",
       "type": "京",
       "name": "驱动力",
-      "name_en": "",
+      "name_en": "DRIVE",
       "py": "qudongli",
       "abbr": "qdl"
     },
@@ -1608,7 +1590,7 @@
       "market": "bj",
       "type": "京",
       "name": "鹿得医疗",
-      "name_en": "",
+      "name_en": "HONSUN",
       "py": "ludeyiliao",
       "abbr": "ldyl"
     },
@@ -1617,16 +1599,25 @@
       "market": "bj",
       "type": "京",
       "name": "灵鸽科技",
-      "name_en": "",
+      "name_en": "LINGOOD",
       "py": "linggekeji",
       "abbr": "lgkj"
+    },
+    "bj920285": {
+      "code": "920285",
+      "market": "bj",
+      "type": "京",
+      "name": "远大健科",
+      "name_en": "",
+      "py": "yuandajianke",
+      "abbr": "ydjk"
     },
     "bj920288": {
       "code": "920288",
       "market": "bj",
       "type": "京",
       "name": "华大海天",
-      "name_en": "",
+      "name_en": "HYDROTECH",
       "py": "huadahaitian",
       "abbr": "hdht"
     },
@@ -1635,16 +1626,25 @@
       "market": "bj",
       "type": "京",
       "name": "华汇智能",
-      "name_en": "",
+      "name_en": "HUAHUI INTELLIGENT",
       "py": "huahuizhineng",
       "abbr": "hhzn"
+    },
+    "bj920296": {
+      "code": "920296",
+      "market": "bj",
+      "type": "京",
+      "name": "文峰光电",
+      "name_en": "",
+      "py": "wenfengguangdian",
+      "abbr": "wfgd"
     },
     "bj920298": {
       "code": "920298",
       "market": "bj",
       "type": "京",
       "name": "腾信精密",
-      "name_en": "",
+      "name_en": "TURNXON",
       "py": "tengxinjingmi",
       "abbr": "txjm"
     },
@@ -1653,7 +1653,7 @@
       "market": "bj",
       "type": "京",
       "name": "灿能电力",
-      "name_en": "",
+      "name_en": "SHINING ELECTRIC",
       "py": "cannengdianli",
       "abbr": "cndl"
     },
@@ -1662,7 +1662,7 @@
       "market": "bj",
       "type": "京",
       "name": "辰光医疗",
-      "name_en": "",
+      "name_en": "CHENGUANG MEDICAL",
       "py": "chenguangyiliao",
       "abbr": "cgyl"
     },
@@ -1671,7 +1671,7 @@
       "market": "bj",
       "type": "京",
       "name": "迪尔化工",
-      "name_en": "",
+      "name_en": "DIER CHEMICAL",
       "py": "dierhuagong",
       "abbr": "dehg"
     },
@@ -1680,7 +1680,7 @@
       "market": "bj",
       "type": "京",
       "name": "恒太照明",
-      "name_en": "",
+      "name_en": "EVER-TIE LIGHTING",
       "py": "hengtaizhaoming",
       "abbr": "htzm"
     },
@@ -1689,7 +1689,7 @@
       "market": "bj",
       "type": "京",
       "name": "三元基因",
-      "name_en": "",
+      "name_en": "TRI-PRIME GENE",
       "py": "sanyuanjiyin",
       "abbr": "syjy"
     },
@@ -1698,7 +1698,7 @@
       "market": "bj",
       "type": "京",
       "name": "威贸电子",
-      "name_en": "",
+      "name_en": "WEIMAO ELECTRONIC",
       "py": "weimaodianzi",
       "abbr": "wmdz"
     },
@@ -1707,7 +1707,7 @@
       "market": "bj",
       "type": "京",
       "name": "华光源海",
-      "name_en": "",
+      "name_en": "HIGO",
       "py": "huaguangyuanhai",
       "abbr": "hgyh"
     },
@@ -1716,7 +1716,7 @@
       "market": "bj",
       "type": "京",
       "name": "雅葆轩",
-      "name_en": "",
+      "name_en": "YABOSION",
       "py": "yabaoxuan",
       "abbr": "ybx"
     },
@@ -1725,7 +1725,7 @@
       "market": "bj",
       "type": "京",
       "name": "莱赛激光",
-      "name_en": "",
+      "name_en": "LAISAI LASER",
       "py": "laisaijiguang",
       "abbr": "lsjg"
     },
@@ -1734,7 +1734,7 @@
       "market": "bj",
       "type": "京",
       "name": "新赣江",
-      "name_en": "",
+      "name_en": "XINGANJIANG",
       "py": "xinganjiang",
       "abbr": "xgj"
     },
@@ -1743,7 +1743,7 @@
       "market": "bj",
       "type": "京",
       "name": "连城数控",
-      "name_en": "",
+      "name_en": "LINTON",
       "py": "lianchengshukong",
       "abbr": "lcsk"
     },
@@ -1752,7 +1752,7 @@
       "market": "bj",
       "type": "京",
       "name": "新安洁",
-      "name_en": "",
+      "name_en": "NEWANGE",
       "py": "xinanjie",
       "abbr": "xaj"
     },
@@ -1761,7 +1761,7 @@
       "market": "bj",
       "type": "京",
       "name": "欧福蛋业",
-      "name_en": "",
+      "name_en": "OFDY",
       "py": "oufudanye",
       "abbr": "ofdy"
     },
@@ -1770,7 +1770,7 @@
       "market": "bj",
       "type": "京",
       "name": "云里物里",
-      "name_en": "",
+      "name_en": "SMTC",
       "py": "yunliwuli",
       "abbr": "ylwl"
     },
@@ -1779,7 +1779,7 @@
       "market": "bj",
       "type": "京",
       "name": "派诺科技",
-      "name_en": "",
+      "name_en": "PILOT",
       "py": "painuokeji",
       "abbr": "pnkj"
     },
@@ -1788,7 +1788,7 @@
       "market": "bj",
       "type": "京",
       "name": "泰德股份",
-      "name_en": "",
+      "name_en": "TAIDE",
       "py": "taidegufen",
       "abbr": "tdgf"
     },
@@ -1797,7 +1797,7 @@
       "market": "bj",
       "type": "京",
       "name": "佳合科技",
-      "name_en": "",
+      "name_en": "SUPERMIX",
       "py": "jiahekeji",
       "abbr": "jhkj"
     },
@@ -1806,7 +1806,7 @@
       "market": "bj",
       "type": "京",
       "name": "民士达",
-      "name_en": "",
+      "name_en": "METASTAR",
       "py": "minshida",
       "abbr": "msd"
     },
@@ -1815,7 +1815,7 @@
       "market": "bj",
       "type": "京",
       "name": "朗鸿科技",
-      "name_en": "",
+      "name_en": "LANGHONG TECHNOLOGY",
       "py": "langhongkeji",
       "abbr": "lhkj"
     },
@@ -1824,7 +1824,7 @@
       "market": "bj",
       "type": "京",
       "name": "常辅股份",
-      "name_en": "",
+      "name_en": "CHANGFU CO.,LTD",
       "py": "changfugufen",
       "abbr": "cfgf"
     },
@@ -1833,7 +1833,7 @@
       "market": "bj",
       "type": "京",
       "name": "硅烷科技",
-      "name_en": "",
+      "name_en": "GWKJ",
       "py": "guiwankeji",
       "abbr": "gwkj"
     },
@@ -1842,7 +1842,7 @@
       "market": "bj",
       "type": "京",
       "name": "康农种业",
-      "name_en": "",
+      "name_en": "KANGNONG SEED",
       "py": "kangnongzhongye",
       "abbr": "knzy"
     },
@@ -1851,7 +1851,7 @@
       "market": "bj",
       "type": "京",
       "name": "海希通讯",
-      "name_en": "",
+      "name_en": "HYSEA",
       "py": "haixitongxun",
       "abbr": "hxtx"
     },
@@ -1860,7 +1860,7 @@
       "market": "bj",
       "type": "京",
       "name": "驰诚股份",
-      "name_en": "",
+      "name_en": "CHICHENG ELECTRIC",
       "py": "chichenggufen",
       "abbr": "ccgf"
     },
@@ -1869,7 +1869,7 @@
       "market": "bj",
       "type": "京",
       "name": "欧普泰",
-      "name_en": "",
+      "name_en": "OPT",
       "py": "ouputai",
       "abbr": "opt"
     },
@@ -1878,7 +1878,7 @@
       "market": "bj",
       "type": "京",
       "name": "恒拓开源",
-      "name_en": "",
+      "name_en": "FOREVEROPENSOURCE",
       "py": "hengtuokaiyuan",
       "abbr": "htky"
     },
@@ -1887,7 +1887,7 @@
       "market": "bj",
       "type": "京",
       "name": "苏轴股份",
-      "name_en": "",
+      "name_en": "SUZHOUBEARING",
       "py": "suzhougufen",
       "abbr": "szgf"
     },
@@ -1896,7 +1896,7 @@
       "market": "bj",
       "type": "京",
       "name": "路斯股份",
-      "name_en": "",
+      "name_en": "LUSCIOUS",
       "py": "lusigufen",
       "abbr": "lsgf"
     },
@@ -1905,7 +1905,7 @@
       "market": "bj",
       "type": "京",
       "name": "润普食品",
-      "name_en": "",
+      "name_en": "MUPRO IFT.",
       "py": "runpushipin",
       "abbr": "rpsp"
     },
@@ -1914,7 +1914,7 @@
       "market": "bj",
       "type": "京",
       "name": "乐创技术",
-      "name_en": "",
+      "name_en": "LEETRO",
       "py": "lechuangjishu",
       "abbr": "lcjs"
     },
@@ -1923,7 +1923,7 @@
       "market": "bj",
       "type": "京",
       "name": "华维设计",
-      "name_en": "",
+      "name_en": "HUAWEI DESIGN",
       "py": "huaweisheji",
       "abbr": "hwsj"
     },
@@ -1932,7 +1932,7 @@
       "market": "bj",
       "type": "京",
       "name": "康比特",
-      "name_en": "",
+      "name_en": "CPT",
       "py": "kangbite",
       "abbr": "kbt"
     },
@@ -1941,7 +1941,7 @@
       "market": "bj",
       "type": "京",
       "name": "大唐药业",
-      "name_en": "",
+      "name_en": "GRANDPHARMACEUTICAL",
       "py": "datangyaoye",
       "abbr": "dtyy"
     },
@@ -1950,7 +1950,7 @@
       "market": "bj",
       "type": "京",
       "name": "大地电气",
-      "name_en": "",
+      "name_en": "NTGEC",
       "py": "dadidianqi",
       "abbr": "dddq"
     },
@@ -1959,7 +1959,7 @@
       "market": "bj",
       "type": "京",
       "name": "戈碧迦",
-      "name_en": "",
+      "name_en": "GABRIELLE",
       "py": "gebijia",
       "abbr": "gbj"
     },
@@ -1968,7 +1968,7 @@
       "market": "bj",
       "type": "京",
       "name": "龙竹科技",
-      "name_en": "",
+      "name_en": "LONGTAIHOUSEWARE",
       "py": "longzhukeji",
       "abbr": "lzkj"
     },
@@ -1977,7 +1977,7 @@
       "market": "bj",
       "type": "京",
       "name": "同心传动",
-      "name_en": "",
+      "name_en": "TONGXIN TRANSMISSION",
       "py": "tongxinchuandong",
       "abbr": "txcd"
     },
@@ -1986,7 +1986,7 @@
       "market": "bj",
       "type": "京",
       "name": "汇隆活塞",
-      "name_en": "",
+      "name_en": "HLHS",
       "py": "huilonghuosai",
       "abbr": "hlhs"
     },
@@ -1995,7 +1995,7 @@
       "market": "bj",
       "type": "京",
       "name": "富恒新材",
-      "name_en": "",
+      "name_en": "FUHENG NEW MATERIAL",
       "py": "fuhengxincai",
       "abbr": "fhxc"
     },
@@ -2004,7 +2004,7 @@
       "market": "bj",
       "type": "京",
       "name": "美邦科技",
-      "name_en": "",
+      "name_en": "MEIBANG TECHNOLOGY",
       "py": "meibangkeji",
       "abbr": "mbkj"
     },
@@ -2013,7 +2013,7 @@
       "market": "bj",
       "type": "京",
       "name": "三友科技",
-      "name_en": "",
+      "name_en": "SANYOUTECHNOLOGY",
       "py": "sanyoukeji",
       "abbr": "sykj"
     },
@@ -2022,7 +2022,7 @@
       "market": "bj",
       "type": "京",
       "name": "海能技术",
-      "name_en": "",
+      "name_en": "HANON",
       "py": "hainengjishu",
       "abbr": "hnjs"
     },
@@ -2031,7 +2031,7 @@
       "market": "bj",
       "type": "京",
       "name": "峆一药业",
-      "name_en": "",
+      "name_en": "HERYI PHARMA",
       "py": "heyiyaoye",
       "abbr": "hyyy"
     },
@@ -2040,7 +2040,7 @@
       "market": "bj",
       "type": "京",
       "name": "佳先股份",
-      "name_en": "",
+      "name_en": "JIAXIAN",
       "py": "jiaxiangufen",
       "abbr": "jxgf"
     },
@@ -2049,7 +2049,7 @@
       "market": "bj",
       "type": "京",
       "name": "奥迪威",
-      "name_en": "",
+      "name_en": "AUDIOWELL",
       "py": "aodiwei",
       "abbr": "adw"
     },
@@ -2058,7 +2058,7 @@
       "market": "bj",
       "type": "京",
       "name": "并行科技",
-      "name_en": "",
+      "name_en": "PARATERA",
       "py": "bingxingkeji",
       "abbr": "bxkj"
     },
@@ -2067,7 +2067,7 @@
       "market": "bj",
       "type": "京",
       "name": "许昌智能",
-      "name_en": "",
+      "name_en": "XJPMF",
       "py": "xuchangzhineng",
       "abbr": "xczn"
     },
@@ -2076,7 +2076,7 @@
       "market": "bj",
       "type": "京",
       "name": "博迅生物",
-      "name_en": "",
+      "name_en": "BOXUN BIOLOGICAL",
       "py": "boxunshengwu",
       "abbr": "bxsw"
     },
@@ -2085,7 +2085,7 @@
       "market": "bj",
       "type": "京",
       "name": "九菱科技",
-      "name_en": "",
+      "name_en": "JING JU LIN",
       "py": "jiulingkeji",
       "abbr": "jlkj"
     },
@@ -2094,7 +2094,7 @@
       "market": "bj",
       "type": "京",
       "name": "殷图网联",
-      "name_en": "",
+      "name_en": "INTO",
       "py": "yintuwanglian",
       "abbr": "ytwl"
     },
@@ -2103,7 +2103,7 @@
       "market": "bj",
       "type": "京",
       "name": "同惠电子",
-      "name_en": "",
+      "name_en": "THEC",
       "py": "tonghuidianzi",
       "abbr": "thdz"
     },
@@ -2112,7 +2112,7 @@
       "market": "bj",
       "type": "京",
       "name": "丰光精密",
-      "name_en": "",
+      "name_en": "FENGGUANG PRECISION",
       "py": "fengguangjingmi",
       "abbr": "fgjm"
     },
@@ -2121,7 +2121,7 @@
       "market": "bj",
       "type": "京",
       "name": "万德股份",
-      "name_en": "",
+      "name_en": "XI&#39;AN WONDER",
       "py": "wandegufen",
       "abbr": "wdgf"
     },
@@ -2130,7 +2130,7 @@
       "market": "bj",
       "type": "京",
       "name": "纳科诺尔",
-      "name_en": "",
+      "name_en": "NAKNOR",
       "py": "nakenuoer",
       "abbr": "nkne"
     },
@@ -2139,7 +2139,7 @@
       "market": "bj",
       "type": "京",
       "name": "德瑞锂电",
-      "name_en": "",
+      "name_en": "HUIDERUI",
       "py": "deruilidian",
       "abbr": "drld"
     },
@@ -2148,7 +2148,7 @@
       "market": "bj",
       "type": "京",
       "name": "凯华材料",
-      "name_en": "",
+      "name_en": "KAIHUA MATERIAL",
       "py": "kaihuacailiao",
       "abbr": "khcl"
     },
@@ -2157,7 +2157,7 @@
       "market": "bj",
       "type": "京",
       "name": "夜光明",
-      "name_en": "",
+      "name_en": "YGM",
       "py": "yeguangming",
       "abbr": "ygm"
     },
@@ -2166,7 +2166,7 @@
       "market": "bj",
       "type": "京",
       "name": "骏创科技",
-      "name_en": "",
+      "name_en": "JUNCHUANG TECH",
       "py": "junchuangkeji",
       "abbr": "jckj"
     },
@@ -2175,7 +2175,7 @@
       "market": "bj",
       "type": "京",
       "name": "铁大科技",
-      "name_en": "",
+      "name_en": "TIEDA",
       "py": "tiedakeji",
       "abbr": "tdkj"
     },
@@ -2184,7 +2184,7 @@
       "market": "bj",
       "type": "京",
       "name": "无锡晶海",
-      "name_en": "",
+      "name_en": "WUXI JINGHAI",
       "py": "wuxijinghai",
       "abbr": "wxjh"
     },
@@ -2193,7 +2193,7 @@
       "market": "bj",
       "type": "京",
       "name": "凯腾精工",
-      "name_en": "",
+      "name_en": "KTJG",
       "py": "kaitengjinggong",
       "abbr": "ktjg"
     },
@@ -2202,7 +2202,7 @@
       "market": "bj",
       "type": "京",
       "name": "雅达股份",
-      "name_en": "",
+      "name_en": "YADA",
       "py": "yadagufen",
       "abbr": "ydgf"
     },
@@ -2211,7 +2211,7 @@
       "market": "bj",
       "type": "京",
       "name": "天润科技",
-      "name_en": "",
+      "name_en": "TIRAIN",
       "py": "tianrunkeji",
       "abbr": "trkj"
     },
@@ -2220,7 +2220,7 @@
       "market": "bj",
       "type": "京",
       "name": "梓橦宫",
-      "name_en": "",
+      "name_en": "ZTG",
       "py": "zitonggong",
       "abbr": "ztg"
     },
@@ -2229,7 +2229,7 @@
       "market": "bj",
       "type": "京",
       "name": "坤博精工",
-      "name_en": "",
+      "name_en": "KUNBO",
       "py": "kunbojinggong",
       "abbr": "kbjg"
     },
@@ -2238,7 +2238,7 @@
       "market": "bj",
       "type": "京",
       "name": "国航远洋",
-      "name_en": "",
+      "name_en": "GH SHIPPING",
       "py": "guohangyuanyang",
       "abbr": "ghyy"
     },
@@ -2247,7 +2247,7 @@
       "market": "bj",
       "type": "京",
       "name": "*ST康乐",
-      "name_en": "",
+      "name_en": "BHGB",
       "py": "*stkangle",
       "abbr": "*stkl"
     },
@@ -2256,7 +2256,7 @@
       "market": "bj",
       "type": "京",
       "name": "天力复合",
-      "name_en": "",
+      "name_en": "TLC",
       "py": "tianlifuhe",
       "abbr": "tlfh"
     },
@@ -2265,7 +2265,7 @@
       "market": "bj",
       "type": "京",
       "name": "巨能股份",
-      "name_en": "",
+      "name_en": "JNRS",
       "py": "junenggufen",
       "abbr": "jngf"
     },
@@ -2274,7 +2274,7 @@
       "market": "bj",
       "type": "京",
       "name": "机科股份",
-      "name_en": "",
+      "name_en": "MTD",
       "py": "jikegufen",
       "abbr": "jkgf"
     },
@@ -2283,7 +2283,7 @@
       "market": "bj",
       "type": "京",
       "name": "科创新材",
-      "name_en": "",
+      "name_en": "KCXC",
       "py": "kechuangxincai",
       "abbr": "kcxc"
     },
@@ -2292,7 +2292,7 @@
       "market": "bj",
       "type": "京",
       "name": "华信永道",
-      "name_en": "",
+      "name_en": "YONDERVISION",
       "py": "huaxinyongdao",
       "abbr": "hxyd"
     },
@@ -2301,7 +2301,7 @@
       "market": "bj",
       "type": "京",
       "name": "鼎智科技",
-      "name_en": "",
+      "name_en": "DINGS",
       "py": "dingzhikeji",
       "abbr": "dzkj"
     },
@@ -2310,7 +2310,7 @@
       "market": "bj",
       "type": "京",
       "name": "同力股份",
-      "name_en": "",
+      "name_en": "TONLY",
       "py": "tongligufen",
       "abbr": "tlgf"
     },
@@ -2319,7 +2319,7 @@
       "market": "bj",
       "type": "京",
       "name": "丰安股份",
-      "name_en": "",
+      "name_en": "ZJFACLGFYXGS",
       "py": "fengangufen",
       "abbr": "fagf"
     },
@@ -2328,7 +2328,7 @@
       "market": "bj",
       "type": "京",
       "name": "力王股份",
-      "name_en": "",
+      "name_en": "LWGF",
       "py": "liwanggufen",
       "abbr": "lwgf"
     },
@@ -2337,7 +2337,7 @@
       "market": "bj",
       "type": "京",
       "name": "新威凌",
-      "name_en": "",
+      "name_en": "NEW WELLLINK",
       "py": "xinweiling",
       "abbr": "xwl"
     },
@@ -2346,7 +2346,7 @@
       "market": "bj",
       "type": "京",
       "name": "晨光电缆",
-      "name_en": "",
+      "name_en": "CGCABLE",
       "py": "chenguangdianlan",
       "abbr": "cgdl"
     },
@@ -2355,7 +2355,7 @@
       "market": "bj",
       "type": "京",
       "name": "富士达",
-      "name_en": "",
+      "name_en": "FORSTAR",
       "py": "fushida",
       "abbr": "fsd"
     },
@@ -2364,7 +2364,7 @@
       "market": "bj",
       "type": "京",
       "name": "格利尔",
-      "name_en": "",
+      "name_en": "GLORIA",
       "py": "gelier",
       "abbr": "gle"
     },
@@ -2373,7 +2373,7 @@
       "market": "bj",
       "type": "京",
       "name": "通易航天",
-      "name_en": "",
+      "name_en": "TONGYI AEROSPACE",
       "py": "tongyihangtian",
       "abbr": "tyht"
     },
@@ -2382,7 +2382,7 @@
       "market": "bj",
       "type": "京",
       "name": "天罡股份",
-      "name_en": "",
+      "name_en": "WEIHAI PLOUMETER",
       "py": "tianganggufen",
       "abbr": "tggf"
     },
@@ -2391,7 +2391,7 @@
       "market": "bj",
       "type": "京",
       "name": "海昇药业",
-      "name_en": "",
+      "name_en": "ZCPC",
       "py": "haishengyaoye",
       "abbr": "hsyy"
     },
@@ -2400,7 +2400,7 @@
       "market": "bj",
       "type": "京",
       "name": "方盛股份",
-      "name_en": "",
+      "name_en": "FANGSHENG",
       "py": "fangshenggufen",
       "abbr": "fsgf"
     },
@@ -2409,7 +2409,7 @@
       "market": "bj",
       "type": "京",
       "name": "明阳科技",
-      "name_en": "",
+      "name_en": "MINGYANG TECHNOLOGY",
       "py": "mingyangkeji",
       "abbr": "mykj"
     },
@@ -2418,7 +2418,7 @@
       "market": "bj",
       "type": "京",
       "name": "科强股份",
-      "name_en": "",
+      "name_en": "KEQIANG",
       "py": "keqianggufen",
       "abbr": "kqgf"
     },
@@ -2427,7 +2427,7 @@
       "market": "bj",
       "type": "京",
       "name": "数字人",
-      "name_en": "",
+      "name_en": "DIGIHUMAN",
       "py": "shuziren",
       "abbr": "szr"
     },
@@ -2436,7 +2436,7 @@
       "market": "bj",
       "type": "京",
       "name": "秉扬科技",
-      "name_en": "",
+      "name_en": "BING YANG TECHNOLOGY",
       "py": "bingyangkeji",
       "abbr": "bykj"
     },
@@ -2445,7 +2445,7 @@
       "market": "bj",
       "type": "京",
       "name": "前进科技",
-      "name_en": "",
+      "name_en": "FORWARD TECHNOLOGIES",
       "py": "qianjinkeji",
       "abbr": "qjkj"
     },
@@ -2454,7 +2454,7 @@
       "market": "bj",
       "type": "京",
       "name": "球冠电缆",
-      "name_en": "",
+      "name_en": "QRUNNINGCABLE",
       "py": "qiuguandianlan",
       "abbr": "qgdl"
     },
@@ -2463,7 +2463,7 @@
       "market": "bj",
       "type": "京",
       "name": "新芝生物",
-      "name_en": "",
+      "name_en": "SCIENTZ",
       "py": "xinzhishengwu",
       "abbr": "xzsw"
     },
@@ -2472,7 +2472,7 @@
       "market": "bj",
       "type": "京",
       "name": "克莱特",
-      "name_en": "",
+      "name_en": "KLT",
       "py": "kelaite",
       "abbr": "klt"
     },
@@ -2481,7 +2481,7 @@
       "market": "bj",
       "type": "京",
       "name": "捷众科技",
-      "name_en": "",
+      "name_en": "JZST",
       "py": "jiezhongkeji",
       "abbr": "jzkj"
     },
@@ -2490,7 +2490,7 @@
       "market": "bj",
       "type": "京",
       "name": "阿为特",
-      "name_en": "",
+      "name_en": "AHWIT",
       "py": "aweite",
       "abbr": "awt"
     },
@@ -2499,7 +2499,7 @@
       "market": "bj",
       "type": "京",
       "name": "中裕科技",
-      "name_en": "",
+      "name_en": "ZYFIRE",
       "py": "zhongyukeji",
       "abbr": "zykj"
     },
@@ -2508,7 +2508,7 @@
       "market": "bj",
       "type": "京",
       "name": "海达尔",
-      "name_en": "",
+      "name_en": "HAIDAER",
       "py": "haidaer",
       "abbr": "hde"
     },
@@ -2517,7 +2517,7 @@
       "market": "bj",
       "type": "京",
       "name": "豪声电子",
-      "name_en": "",
+      "name_en": "HAOSHENG ELECTRONIC",
       "py": "haoshengdianzi",
       "abbr": "hsdz"
     },
@@ -2526,7 +2526,7 @@
       "market": "bj",
       "type": "京",
       "name": "广厦环能",
-      "name_en": "",
+      "name_en": "GROUNDSUN",
       "py": "guangshahuanneng",
       "abbr": "gshn"
     },
@@ -2535,7 +2535,7 @@
       "market": "bj",
       "type": "京",
       "name": "铁拓机械",
-      "name_en": "",
+      "name_en": "TIETUO MACHINERY",
       "py": "tietuojixie",
       "abbr": "ttjx"
     },
@@ -2544,7 +2544,7 @@
       "market": "bj",
       "type": "京",
       "name": "瑞星股份",
-      "name_en": "",
+      "name_en": "RUIXING CORP.",
       "py": "ruixinggufen",
       "abbr": "rxgf"
     },
@@ -2553,7 +2553,7 @@
       "market": "bj",
       "type": "京",
       "name": "合肥高科",
-      "name_en": "",
+      "name_en": "HEFEI GAOCO",
       "py": "hefeigaoke",
       "abbr": "hfgk"
     },
@@ -2562,7 +2562,7 @@
       "market": "bj",
       "type": "京",
       "name": "宁新新材",
-      "name_en": "",
+      "name_en": "NINGXINXINCAI",
       "py": "ningxinxincai",
       "abbr": "nxxc"
     },
@@ -2571,7 +2571,7 @@
       "market": "bj",
       "type": "京",
       "name": "吉冈精密",
-      "name_en": "",
+      "name_en": "YOSHIOKA PRECISION",
       "py": "jigangjingmi",
       "abbr": "jgjm"
     },
@@ -2580,7 +2580,7 @@
       "market": "bj",
       "type": "京",
       "name": "惠丰钻石",
-      "name_en": "",
+      "name_en": "HFZS",
       "py": "huifengzuanshi",
       "abbr": "hfzs"
     },
@@ -2589,7 +2589,7 @@
       "market": "bj",
       "type": "京",
       "name": "朱老六",
-      "name_en": "",
+      "name_en": "ZHULAOLIU",
       "py": "zhulaoliu",
       "abbr": "zll"
     },
@@ -2598,7 +2598,7 @@
       "market": "bj",
       "type": "京",
       "name": "永顺生物",
-      "name_en": "",
+      "name_en": "WINSUNBIO",
       "py": "yongshunshengwu",
       "abbr": "yssw"
     },
@@ -2607,7 +2607,7 @@
       "market": "bj",
       "type": "京",
       "name": "德源药业",
-      "name_en": "",
+      "name_en": "PHARMDY",
       "py": "deyuanyaoye",
       "abbr": "dyyy"
     },
@@ -2616,7 +2616,7 @@
       "market": "bj",
       "type": "京",
       "name": "路桥信息",
-      "name_en": "",
+      "name_en": "XMRBI",
       "py": "luqiaoxinxi",
       "abbr": "lqxx"
     },
@@ -2625,7 +2625,7 @@
       "market": "bj",
       "type": "京",
       "name": "惠同新材",
-      "name_en": "",
+      "name_en": "HUITONG",
       "py": "huitongxincai",
       "abbr": "htxc"
     },
@@ -2634,7 +2634,7 @@
       "market": "bj",
       "type": "京",
       "name": "天纺标",
-      "name_en": "",
+      "name_en": "TIANFANGBIAO",
       "py": "tianfangbiao",
       "abbr": "tfb"
     },
@@ -2643,7 +2643,7 @@
       "market": "bj",
       "type": "京",
       "name": "美之高",
-      "name_en": "",
+      "name_en": "MEIZHIGAO",
       "py": "meizhigao",
       "abbr": "mzg"
     },
@@ -2652,7 +2652,7 @@
       "market": "bj",
       "type": "京",
       "name": "拾比佰",
-      "name_en": "",
+      "name_en": "SPEEDBIRD",
       "py": "shibibai",
       "abbr": "sbb"
     },
@@ -2661,7 +2661,7 @@
       "market": "bj",
       "type": "京",
       "name": "艾能聚",
-      "name_en": "",
+      "name_en": "ENERGY",
       "py": "ainengju",
       "abbr": "anj"
     },
@@ -2670,7 +2670,7 @@
       "market": "bj",
       "type": "京",
       "name": "武汉蓝电",
-      "name_en": "",
+      "name_en": "WUHAN LAND",
       "py": "wuhanlandian",
       "abbr": "whld"
     },
@@ -2679,7 +2679,7 @@
       "market": "bj",
       "type": "京",
       "name": "瑞奇智造",
-      "name_en": "",
+      "name_en": "CDRICH",
       "py": "ruiqizhizao",
       "abbr": "rqzz"
     },
@@ -2688,7 +2688,7 @@
       "market": "bj",
       "type": "京",
       "name": "骑士乳业",
-      "name_en": "",
+      "name_en": "CHEVALESE DAIRY",
       "py": "qishiruye",
       "abbr": "qsry"
     },
@@ -2697,7 +2697,7 @@
       "market": "bj",
       "type": "京",
       "name": "联迪信息",
-      "name_en": "",
+      "name_en": "LDNS",
       "py": "liandixinxi",
       "abbr": "ldxx"
     },
@@ -2706,7 +2706,7 @@
       "market": "bj",
       "type": "京",
       "name": "东和新材",
-      "name_en": "",
+      "name_en": "DHNM",
       "py": "donghexincai",
       "abbr": "dhxc"
     },
@@ -2715,7 +2715,7 @@
       "market": "bj",
       "type": "京",
       "name": "艾融软件",
-      "name_en": "",
+      "name_en": "I2SOFT",
       "py": "airongruanjian",
       "abbr": "arrj"
     },
@@ -2724,7 +2724,7 @@
       "market": "bj",
       "type": "京",
       "name": "保丽洁",
-      "name_en": "",
+      "name_en": "POLYGEE",
       "py": "baolijie",
       "abbr": "blj"
     },
@@ -2733,7 +2733,7 @@
       "market": "bj",
       "type": "京",
       "name": "云星宇",
-      "name_en": "",
+      "name_en": "YXY",
       "py": "yunxingyu",
       "abbr": "yxy"
     },
@@ -2742,7 +2742,7 @@
       "market": "bj",
       "type": "京",
       "name": "奔朗新材",
-      "name_en": "",
+      "name_en": "MONTE-BIANCO",
       "py": "benlangxincai",
       "abbr": "blxc"
     },
@@ -2751,7 +2751,7 @@
       "market": "bj",
       "type": "京",
       "name": "曙光数创",
-      "name_en": "",
+      "name_en": "SUGON DATA ENERGY",
       "py": "shuguangshuchuang",
       "abbr": "sgsc"
     },
@@ -2760,7 +2760,7 @@
       "market": "bj",
       "type": "京",
       "name": "安达科技",
-      "name_en": "",
+      "name_en": "ANDA TECH",
       "py": "andakeji",
       "abbr": "adkj"
     },
@@ -2769,7 +2769,7 @@
       "market": "bj",
       "type": "京",
       "name": "春光智能",
-      "name_en": "",
+      "name_en": "CG MED EQUIP.",
       "py": "chunguangzhineng",
       "abbr": "cgzn"
     },
@@ -2778,7 +2778,7 @@
       "market": "bj",
       "type": "京",
       "name": "颖泰生物",
-      "name_en": "",
+      "name_en": "NUTRICHEM",
       "py": "yingtaishengwu",
       "abbr": "ytsw"
     },
@@ -2787,7 +2787,7 @@
       "market": "bj",
       "type": "京",
       "name": "则成电子",
-      "name_en": "",
+      "name_en": "ZECHENG ELECTRONICS",
       "py": "zechengdianzi",
       "abbr": "zcdz"
     },
@@ -2796,7 +2796,7 @@
       "market": "bj",
       "type": "京",
       "name": "盖世食品",
-      "name_en": "",
+      "name_en": "GAISHI FOOD",
       "py": "gaishishipin",
       "abbr": "gssp"
     },
@@ -2805,7 +2805,7 @@
       "market": "bj",
       "type": "京",
       "name": "齐鲁华信",
-      "name_en": "",
+      "name_en": "QHX",
       "py": "qiluhuaxin",
       "abbr": "qlhx"
     },
@@ -2814,7 +2814,7 @@
       "market": "bj",
       "type": "京",
       "name": "美心翼申",
-      "name_en": "",
+      "name_en": "MEIXIN YISHEN",
       "py": "meixinyishen",
       "abbr": "mxys"
     },
@@ -2823,7 +2823,7 @@
       "market": "bj",
       "type": "京",
       "name": "三维装备",
-      "name_en": "",
+      "name_en": "SANWEI CO.,LTD.",
       "py": "sanweizhuangbei",
       "abbr": "swzb"
     },
@@ -2832,7 +2832,7 @@
       "market": "bj",
       "type": "京",
       "name": "华原股份",
-      "name_en": "",
+      "name_en": "WATYUAN",
       "py": "huayuangufen",
       "abbr": "hygf"
     },
@@ -2841,7 +2841,7 @@
       "market": "bj",
       "type": "京",
       "name": "万通液压",
-      "name_en": "",
+      "name_en": "WANTONG HYDRAULIC",
       "py": "wantongyeya",
       "abbr": "wtyy"
     },
@@ -2850,7 +2850,7 @@
       "market": "bj",
       "type": "京",
       "name": "浙江大农",
-      "name_en": "",
+      "name_en": "DANAU",
       "py": "zhejiangdanong",
       "abbr": "zjdn"
     },
@@ -2859,7 +2859,7 @@
       "market": "bj",
       "type": "京",
       "name": "浩淼科技",
-      "name_en": "",
+      "name_en": "HAOMIAO TECHNOLOGY",
       "py": "haomiaokeji",
       "abbr": "hmkj"
     },
@@ -2868,7 +2868,7 @@
       "market": "bj",
       "type": "京",
       "name": "泓禧科技",
-      "name_en": "",
+      "name_en": "HONGXI TECHNOLOGY",
       "py": "hongxikeji",
       "abbr": "hxkj"
     },
@@ -2877,7 +2877,7 @@
       "market": "bj",
       "type": "京",
       "name": "绿亨科技",
-      "name_en": "",
+      "name_en": "LUHENG TECHNOLOGY",
       "py": "lvhengkeji",
       "abbr": "lhkj"
     },
@@ -2886,7 +2886,7 @@
       "market": "bj",
       "type": "京",
       "name": "恒进感应",
-      "name_en": "",
+      "name_en": "HEATKING",
       "py": "hengjinganying",
       "abbr": "hjgy"
     },
@@ -2895,7 +2895,7 @@
       "market": "bj",
       "type": "京",
       "name": "派特尔",
-      "name_en": "",
+      "name_en": "PAINTER",
       "py": "paiteer",
       "abbr": "pte"
     },
@@ -2904,7 +2904,7 @@
       "market": "bj",
       "type": "京",
       "name": "中设咨询",
-      "name_en": "",
+      "name_en": "ZEC",
       "py": "zhongshezixun",
       "abbr": "zszx"
     },
@@ -2913,7 +2913,7 @@
       "market": "bj",
       "type": "京",
       "name": "慧为智能",
-      "name_en": "",
+      "name_en": "TECHVISION",
       "py": "huiweizhineng",
       "abbr": "hwzn"
     },
@@ -2922,7 +2922,7 @@
       "market": "bj",
       "type": "京",
       "name": "基康技术",
-      "name_en": "",
+      "name_en": "CHINA GEOKON",
       "py": "jikangjishu",
       "abbr": "jkjs"
     },
@@ -2931,7 +2931,7 @@
       "market": "bj",
       "type": "京",
       "name": "星辰科技",
-      "name_en": "",
+      "name_en": "STARS",
       "py": "xingchenkeji",
       "abbr": "xckj"
     },
@@ -2940,7 +2940,7 @@
       "market": "bj",
       "type": "京",
       "name": "广咨国际",
-      "name_en": "",
+      "name_en": "GUANGZIINTERNATIONAL",
       "py": "guangziguoji",
       "abbr": "gzgj"
     },
@@ -2949,7 +2949,7 @@
       "market": "bj",
       "type": "京",
       "name": "花溪科技",
-      "name_en": "",
+      "name_en": "HUAXI TECHNOLOGY",
       "py": "huaxikeji",
       "abbr": "hxkj"
     },
@@ -2958,7 +2958,7 @@
       "market": "bj",
       "type": "京",
       "name": "旺成科技",
-      "name_en": "",
+      "name_en": "CWC",
       "py": "wangchengkeji",
       "abbr": "wckj"
     },
@@ -2967,7 +2967,7 @@
       "market": "bj",
       "type": "京",
       "name": "舜宇精工",
-      "name_en": "",
+      "name_en": "SUNNY PERCISION",
       "py": "shunyujinggong",
       "abbr": "syjg"
     },
@@ -2976,7 +2976,7 @@
       "market": "bj",
       "type": "京",
       "name": "远航精密",
-      "name_en": "",
+      "name_en": "SINONIC",
       "py": "yuanhangjingmi",
       "abbr": "yhjm"
     },
@@ -2985,7 +2985,7 @@
       "market": "bj",
       "type": "京",
       "name": "广脉科技",
-      "name_en": "",
+      "name_en": "GCOM",
       "py": "guangmaikeji",
       "abbr": "gmkj"
     },
@@ -2994,7 +2994,7 @@
       "market": "bj",
       "type": "京",
       "name": "锦好医疗",
-      "name_en": "",
+      "name_en": "JINGHAO MEDICAL",
       "py": "jinhaoyiliao",
       "abbr": "jhyl"
     },
@@ -3003,7 +3003,7 @@
       "market": "bj",
       "type": "京",
       "name": "鸿智科技",
-      "name_en": "",
+      "name_en": "HST",
       "py": "hongzhikeji",
       "abbr": "hzkj"
     },
@@ -3012,7 +3012,7 @@
       "market": "bj",
       "type": "京",
       "name": "无锡鼎邦",
-      "name_en": "",
+      "name_en": "DINGBANG H E",
       "py": "wuxidingbang",
       "abbr": "wxdb"
     },
@@ -3021,7 +3021,7 @@
       "market": "bj",
       "type": "京",
       "name": "科达自控",
-      "name_en": "",
+      "name_en": "KE DA ZI KONG",
       "py": "kedazikong",
       "abbr": "kdzk"
     },
@@ -3030,7 +3030,7 @@
       "market": "bj",
       "type": "京",
       "name": "恒立钻具",
-      "name_en": "",
+      "name_en": "HL TOOLS",
       "py": "henglizuanju",
       "abbr": "hlzj"
     },
@@ -3039,7 +3039,7 @@
       "market": "bj",
       "type": "京",
       "name": "优机股份",
-      "name_en": "",
+      "name_en": "Y&J CO.,LTD.",
       "py": "youjigufen",
       "abbr": "yjgf"
     },
@@ -3048,7 +3048,7 @@
       "market": "bj",
       "type": "京",
       "name": "森萱医药",
-      "name_en": "",
+      "name_en": "SENXUAN",
       "py": "senxuanyiyao",
       "abbr": "sxyy"
     },
@@ -3057,7 +3057,7 @@
       "market": "bj",
       "type": "京",
       "name": "迅安科技",
-      "name_en": "",
+      "name_en": "SHINE SCIENCE&TECH.",
       "py": "xunankeji",
       "abbr": "xakj"
     },
@@ -3066,7 +3066,7 @@
       "market": "bj",
       "type": "京",
       "name": "国子软件",
-      "name_en": "",
+      "name_en": "GOOGO SOFT",
       "py": "guoziruanjian",
       "abbr": "gzrj"
     },
@@ -3075,7 +3075,7 @@
       "market": "bj",
       "type": "京",
       "name": "汉维科技",
-      "name_en": "",
+      "name_en": "CHNV CO., LTD.",
       "py": "hanweikeji",
       "abbr": "hwkj"
     },
@@ -3084,7 +3084,7 @@
       "market": "bj",
       "type": "京",
       "name": "创远信科",
-      "name_en": "",
+      "name_en": "TRANSCOM",
       "py": "chuangyuanxinke",
       "abbr": "cyxk"
     },
@@ -3093,7 +3093,7 @@
       "market": "bj",
       "type": "京",
       "name": "润农节水",
-      "name_en": "",
+      "name_en": "RUNNONGWATERSAVING",
       "py": "runnongjieshui",
       "abbr": "rnjs"
     },
@@ -3102,7 +3102,7 @@
       "market": "bj",
       "type": "京",
       "name": "大禹生物",
-      "name_en": "",
+      "name_en": "DAYU BIOLOGICAL",
       "py": "dayushengwu",
       "abbr": "dysw"
     },
@@ -3111,7 +3111,7 @@
       "market": "bj",
       "type": "京",
       "name": "天马新材",
-      "name_en": "",
+      "name_en": "TIANMA NEW MATERIAL.",
       "py": "tianmaxincai",
       "abbr": "tmxc"
     },
@@ -3120,7 +3120,7 @@
       "market": "bj",
       "type": "京",
       "name": "凯大催化",
-      "name_en": "",
+      "name_en": "KAIDA",
       "py": "kaidacuihua",
       "abbr": "kdch"
     },
@@ -3129,7 +3129,7 @@
       "market": "bj",
       "type": "京",
       "name": "视声智能",
-      "name_en": "",
+      "name_en": "GVS",
       "py": "shishengzhineng",
       "abbr": "sszn"
     },
@@ -3138,7 +3138,7 @@
       "market": "bj",
       "type": "京",
       "name": "开特股份",
-      "name_en": "",
+      "name_en": "KAIT",
       "py": "kaitegufen",
       "abbr": "ktgf"
     },
@@ -3147,7 +3147,7 @@
       "market": "bj",
       "type": "京",
       "name": "晶赛科技",
-      "name_en": "",
+      "name_en": "JINGSAI",
       "py": "jingsaikeji",
       "abbr": "jskj"
     },
@@ -3156,7 +3156,7 @@
       "market": "bj",
       "type": "京",
       "name": "锦波生物",
-      "name_en": "",
+      "name_en": "JINBO",
       "py": "jinboshengwu",
       "abbr": "jbsw"
     },
@@ -3165,7 +3165,7 @@
       "market": "bj",
       "type": "京",
       "name": "海泰新能",
-      "name_en": "",
+      "name_en": "HAITAI",
       "py": "haitaixinneng",
       "abbr": "htxn"
     },
@@ -3174,7 +3174,7 @@
       "market": "bj",
       "type": "京",
       "name": "中科美菱",
-      "name_en": "",
+      "name_en": "ZHONGKE MEILING",
       "py": "zhongkemeiling",
       "abbr": "zkml"
     }

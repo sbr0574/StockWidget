@@ -36,7 +36,7 @@ class QuoteTableTests(QtTestCase):
             "visible_metrics": ["name", "price", "kline"],
         }, {})
         self.window._clear_message()
-        self.window.quotes._last_full_rows = [{"名称": "", "现价": "", "K线": {"k": (10, 11, 12, 9, 10)}} for _ in range(3)]
+        self.window.quotes._last_full_rows = [{"名称": "", "现价": "", "迷你图": {"k": (10, 11, 12, 9, 10)}} for _ in range(3)]
         self.window.quotes._last_color_roles = [{} for _ in range(3)]
         self.window.quotes.reproject()
         self.window.show()
