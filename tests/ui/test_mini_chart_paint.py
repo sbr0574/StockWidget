@@ -87,8 +87,15 @@ class MiniChartPaintTests(QtTestCase):
                                                            ((0, 98), (.5, 102), (1, 99))))
                     painter.end()
                     color = self.delegate.text_color if unicolor else expected
-                    self.assertTrue(self.pixels(image, color))
                     self.assertEqual(strokes, [color, color])
+                    # Thin antialiased strokes may contain only blended pixels
+                    # on Linux. Check both visible segments outside the gray
+                    # reference axis without requiring a fully covered pixel.
+                    painted = [(x, y) for y in range(image.height()) for x in range(image.width())
+                               if abs(y - image.height() / 2) > 2
+                               and image.pixelColor(x, y) != QColor(Qt.black)]
+                    self.assertTrue(any(x < image.width() / 4 for x, _ in painted))
+                    self.assertTrue(any(x > image.width() * .75 for x, _ in painted))
 
     def test_trend_without_previous_close_draws_neutral_prices_without_a_false_axis(self):
         calls = []
