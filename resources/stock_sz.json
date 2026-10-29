@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-28",
+  "last_update": "2026-10-29",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -26456,10 +26456,10 @@
       "code": "301718",
       "market": "sz",
       "type": "创",
-      "name": "C通则康威",
+      "name": "通则康威",
       "name_en": "",
-      "py": "ctongzekangwei",
-      "abbr": "ctzkw"
+      "py": "tongzekangwei",
+      "abbr": "tzkw"
     },
     "sz302132": {
       "code": "302132",

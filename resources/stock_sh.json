@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-28",
+  "last_update": "2026-10-29",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -7529,10 +7529,10 @@
       "code": "601298",
       "market": "sh",
       "type": "沪",
-      "name": "XD青岛港",
+      "name": "青岛港",
       "name_en": "",
-      "py": "xdqingdaogang",
-      "abbr": "xdqdg"
+      "py": "qingdaogang",
+      "abbr": "qdg"
     },
     "sh601311": {
       "code": "601311",
@@ -8690,10 +8690,10 @@
       "code": "601991",
       "market": "sh",
       "type": "沪",
-      "name": "XD大唐发",
+      "name": "大唐发电",
       "name_en": "",
-      "py": "xddatangfa",
-      "abbr": "xddtf"
+      "py": "datangfadian",
+      "abbr": "dtfd"
     },
     "sh601992": {
       "code": "601992",
@@ -12236,10 +12236,10 @@
       "code": "603588",
       "market": "sh",
       "type": "沪",
-      "name": "高能环境",
+      "name": "高能时代",
       "name_en": "",
-      "py": "gaonenghuanjing",
-      "abbr": "gnhj"
+      "py": "gaonengshidai",
+      "abbr": "gnsd"
     },
     "sh603589": {
       "code": "603589",
@@ -12785,10 +12785,10 @@
       "code": "603689",
       "market": "sh",
       "type": "沪",
-      "name": "XD皖天然",
+      "name": "皖天然气",
       "name_en": "",
-      "py": "xdwantianran",
-      "abbr": "xdwtr"
+      "py": "wantianranqi",
+      "abbr": "wtrq"
     },
     "sh603690": {
       "code": "603690",
@@ -15980,10 +15980,10 @@
       "code": "688087",
       "market": "sh",
       "type": "科",
-      "name": "XD英科再",
+      "name": "英科再生",
       "name_en": "",
-      "py": "xdyingkezai",
-      "abbr": "xdykz"
+      "py": "yingkezaisheng",
+      "abbr": "ykzs"
     },
     "sh688088": {
       "code": "688088",
@@ -19238,10 +19238,10 @@
       "code": "688563",
       "market": "sh",
       "type": "科",
-      "name": "航材股份",
+      "name": "XD航材股",
       "name_en": "",
-      "py": "hangcaigufen",
-      "abbr": "hcgf"
+      "py": "xdhangcaigu",
+      "abbr": "xdhcg"
     },
     "sh688565": {
       "code": "688565",

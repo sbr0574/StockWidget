@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-28",
+  "last_update": "2026-10-29",
   "codes": {
     "usa": {
       "code": "a",
@@ -30475,15 +30475,6 @@
       "py": "daweitabaojian",
       "abbr": "dwtbj"
     },
-    "usdval": {
-      "code": "dval",
-      "market": "us",
-      "type": "美",
-      "name": "BrandywineGLOBAL-Dynamic US Large Cap Value ETF",
-      "name_en": "BrandywineGLOBAL-Dynamic US Large Cap Value ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usdvdn": {
       "code": "dvdn",
       "market": "us",
@@ -32913,15 +32904,6 @@
       "name_en": "EMCOR Group, Inc. Common Stock",
       "py": "aimuke",
       "abbr": "amk"
-    },
-    "usemem": {
-      "code": "emem",
-      "market": "us",
-      "type": "美",
-      "name": "Sophus Capital Emerging Market ETF",
-      "name_en": "Sophus Capital Emerging Market ETF",
-      "py": "",
-      "abbr": ""
     },
     "usemeq": {
       "code": "emeq",
@@ -37960,6 +37942,15 @@
       "type": "美",
       "name": "Fidelity Fundamental Small-Mid Cap ETF",
       "name_en": "Fidelity Fundamental Small-Mid Cap ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usfftt": {
+      "code": "fftt",
+      "market": "us",
+      "type": "美",
+      "name": "Masonglory Limited - Class A Ordinary Shares",
+      "name_en": "Masonglory Limited - Class A Ordinary Shares",
       "py": "",
       "abbr": ""
     },
@@ -69526,15 +69517,6 @@
       "py": "",
       "abbr": ""
     },
-    "usmsgy": {
-      "code": "msgy",
-      "market": "us",
-      "type": "美",
-      "name": "Masonglory Limited - Class A Ordinary Shares",
-      "name_en": "Masonglory Limited - Class A Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
     "usmsi": {
       "code": "msi",
       "market": "us",
@@ -70308,15 +70290,6 @@
       "name_en": "GraniteShares 2x Long MU Daily ETF",
       "py": "erbeizuoduomeiguangkejietf-graniteshar",
       "abbr": "ebzdmgkjetf-graniteshar"
-    },
-    "usmult": {
-      "code": "mult",
-      "market": "us",
-      "type": "美",
-      "name": "Franklin Multisector Income ETF",
-      "name_en": "Franklin Multisector Income ETF",
-      "py": "",
-      "abbr": ""
     },
     "usmuna": {
       "code": "muna",
@@ -109069,15 +109042,6 @@
       "type": "美",
       "name": "First Eagle US Equity ETF",
       "name_en": "First Eagle US Equity ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "ususfi": {
-      "code": "usfi",
-      "market": "us",
-      "type": "美",
-      "name": "BrandywineGLOBAL - U.S. Fixed Income ETF",
-      "name_en": "BrandywineGLOBAL - U.S. Fixed Income ETF",
       "py": "",
       "abbr": ""
     },

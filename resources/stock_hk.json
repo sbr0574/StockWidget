@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-28",
+  "last_update": "2026-10-29",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -10410,7 +10410,7 @@
       "market": "hk",
       "type": "港",
       "name": "星星集團",
-      "name_en": "STAR GROUP ASIA",
+      "name_en": "STAR GROUP-NEW",
       "py": "xingxingjituan",
       "abbr": "xxjt"
     },
@@ -15126,7 +15126,7 @@
       "market": "hk",
       "type": "港",
       "name": "百宏實業",
-      "name_en": "BILLION IND",
+      "name_en": "BILLION IND-NEW",
       "py": "baihongshiye",
       "abbr": "bhsy"
     },
@@ -18411,7 +18411,7 @@
       "market": "hk",
       "type": "港",
       "name": "星星集團",
-      "name_en": "STAR GROUP ASIA",
+      "name_en": "STAR GROUP-OLD",
       "py": "xingxingjituan",
       "abbr": "xxjt"
     },
@@ -18420,7 +18420,7 @@
       "market": "hk",
       "type": "港",
       "name": "百宏實業",
-      "name_en": "BILLION IND",
+      "name_en": "BILLION IND-OLD",
       "py": "baihongshiye",
       "abbr": "bhsy"
     },
@@ -24612,7 +24612,7 @@
       "market": "hk",
       "type": "港",
       "name": "金威醫療",
-      "name_en": "GF HEALTH-NEW",
+      "name_en": "GF HEALTHCARE",
       "py": "jinweiyiliao",
       "abbr": "jwyl"
     },
@@ -26469,15 +26469,6 @@
       "name_en": "S ROBOT EDU-OLD",
       "py": "shentongjiqirenjiaoyu",
       "abbr": "stjqrjy"
-    },
-    "hk08567": {
-      "code": "08567",
-      "market": "hk",
-      "type": "港",
-      "name": "金威醫療",
-      "name_en": "GF HEALTH-OLD",
-      "py": "jinweiyiliao",
-      "abbr": "jwyl"
     },
     "hk08572": {
       "code": "08572",
