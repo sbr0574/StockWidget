@@ -1,61 +1,79 @@
 {
-  "run_date": "2026-10-29",
-  "started_at": "2026-10-29T08:55:22+08:00",
-  "completed_at": "2026-10-29T08:55:40+08:00",
+  "run_date": "2026-10-30",
+  "started_at": "2026-10-30T08:55:23+08:00",
+  "completed_at": "2026-10-30T08:56:23+08:00",
   "files": {
     "stock_us.json": {
-      "last_checked": "2026-10-29",
-      "last_update": "2026-10-29",
+      "last_checked": "2026-10-30",
+      "last_update": "2026-10-30",
       "updated": true,
-      "error": false
+      "error": false,
+      "last_attempt": "2026-10-30"
     },
     "stock_hk.json": {
       "last_checked": "2026-10-29",
       "last_update": "2026-10-29",
-      "updated": true,
-      "error": false
+      "updated": false,
+      "error": true,
+      "last_attempt": "2026-10-30",
+      "error_message": "数据处理失败（ModuleNotFoundError）"
     },
     "futures_sh.json": {
-      "last_checked": "2026-10-29",
-      "last_update": "2026-10-29",
+      "last_checked": "2026-10-30",
+      "last_update": "2026-10-30",
       "updated": true,
-      "error": false
+      "error": false,
+      "last_attempt": "2026-10-30"
     },
     "stock_sh.json": {
-      "last_checked": "2026-10-29",
-      "last_update": "2026-10-29",
+      "last_checked": "2026-10-30",
+      "last_update": "2026-10-30",
       "updated": true,
-      "error": false
+      "error": false,
+      "last_attempt": "2026-10-30"
     },
     "stock_sz.json": {
-      "last_checked": "2026-10-29",
+      "last_checked": "2026-10-30",
       "last_update": "2026-10-29",
-      "updated": true,
-      "error": false
+      "updated": false,
+      "error": false,
+      "last_attempt": "2026-10-30"
     },
     "fund_cn.json": {
-      "last_checked": "2026-10-29",
-      "last_update": "2026-10-29",
+      "last_checked": "2026-10-30",
+      "last_update": "2026-10-30",
       "updated": true,
-      "error": false
+      "error": false,
+      "last_attempt": "2026-10-30"
     },
     "stock_bj.json": {
-      "last_checked": "2026-10-22",
-      "last_update": "2026-10-22",
-      "updated": false,
-      "error": true
+      "last_checked": "2026-10-30",
+      "last_update": "2026-10-30",
+      "updated": true,
+      "error": false,
+      "last_attempt": "2026-10-30"
     },
     "index_cn.json": {
-      "last_checked": "2026-09-21",
+      "last_checked": "2026-10-30",
       "last_update": "2026-09-21",
       "updated": false,
-      "error": true
+      "error": false
     },
     "index_global.json": {
-      "last_checked": "2026-10-29",
+      "last_checked": "2026-10-30",
       "last_update": "2026-08-27",
       "updated": false,
       "error": false
     }
-  }
+  },
+  "auxiliary": {
+    "cache_us_cn_aliases.json": {
+      "last_attempt": "2026-10-30",
+      "last_checked": "2026-10-30",
+      "last_update": "2026-10-30",
+      "updated": true,
+      "error": false
+    }
+  },
+  "has_errors": true
 }

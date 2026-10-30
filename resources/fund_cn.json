@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-29",
+  "last_update": "2026-10-30",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -1629,6 +1629,15 @@
       "name_en": "",
       "py": "zhongjinweipinhuishangyereit",
       "abbr": "zjwphsyreit"
+    },
+    "sh508609": {
+      "code": "508609",
+      "market": "sh",
+      "type": "基",
+      "name": "华安锦江商业REIT",
+      "name_en": "",
+      "py": "huaanjinjiangshangyereit",
+      "abbr": "hajjsyreit"
     },
     "sh510010": {
       "code": "510010",
@@ -19737,6 +19746,15 @@
       "name_en": "",
       "py": "huaxiaanbocangchureit",
       "abbr": "hxabccreit"
+    },
+    "sz180307": {
+      "code": "180307",
+      "market": "sz",
+      "type": "基",
+      "name": "中金菜鸟REIT",
+      "name_en": "",
+      "py": "zhongjincainiaoreit",
+      "abbr": "zjcnreit"
     },
     "sz180401": {
       "code": "180401",
