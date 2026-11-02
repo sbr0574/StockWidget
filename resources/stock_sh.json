@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-30",
+  "last_update": "2026-11-02",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -8393,10 +8393,10 @@
       "code": "601878",
       "market": "sh",
       "type": "沪",
-      "name": "XD浙商证",
+      "name": "浙商证券",
       "name_en": "",
-      "py": "xdzheshangzheng",
-      "abbr": "xdzsz"
+      "py": "zheshangzhengquan",
+      "abbr": "zszq"
     },
     "sh601880": {
       "code": "601880",
@@ -12479,10 +12479,10 @@
       "code": "603630",
       "market": "sh",
       "type": "沪",
-      "name": "XD拉芳家",
+      "name": "拉芳家化",
       "name_en": "",
-      "py": "xdlafangjia",
-      "abbr": "xdlfj"
+      "py": "lafangjiahua",
+      "abbr": "lfjh"
     },
     "sh603633": {
       "code": "603633",
@@ -18455,10 +18455,10 @@
       "code": "688409",
       "market": "sh",
       "type": "科",
-      "name": "XD富创精",
+      "name": "富创精密",
       "name_en": "",
-      "py": "xdfuchuangjing",
-      "abbr": "xdfcj"
+      "py": "fuchuangjingmi",
+      "abbr": "fcjm"
     },
     "sh688410": {
       "code": "688410",
@@ -19121,10 +19121,10 @@
       "code": "688548",
       "market": "sh",
       "type": "科",
-      "name": "广钢气体",
+      "name": "XD广钢气",
       "name_en": "",
-      "py": "guanggangqiti",
-      "abbr": "ggqt"
+      "py": "xdguanggangqi",
+      "abbr": "xdggq"
     },
     "sh688549": {
       "code": "688549",

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-30",
+  "last_update": "2026-11-02",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -17682,7 +17682,7 @@
       "market": "hk",
       "type": "港",
       "name": "深演智能",
-      "name_en": "DEEPZERO",
+      "name_en": "DEEPZERO-NEW",
       "py": "shenyanzhineng",
       "abbr": "syzn"
     },
@@ -18429,7 +18429,7 @@
       "market": "hk",
       "type": "港",
       "name": "深演智能",
-      "name_en": "DEEPZERO",
+      "name_en": "DEEPZERO-OLD",
       "py": "shenyanzhineng",
       "abbr": "syzn"
     },
@@ -18468,6 +18468,15 @@
       "name_en": "JINXUN RES-200",
       "py": "jinxunziyuan(erbai)",
       "abbr": "jxzy(eb)"
+    },
+    "hk02956": {
+      "code": "02956",
+      "market": "hk",
+      "type": "港",
+      "name": "辉煌明天",
+      "name_en": "BRIGHT FUTURE",
+      "py": "huihuangmingtian",
+      "abbr": "hhmt"
     },
     "hk03001": {
       "code": "03001",

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-30",
+  "last_update": "2026-11-02",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -10567,6 +10567,15 @@
       "py": "chuangyebansuanlietfnanfang",
       "abbr": "cybsletfnf"
     },
+    "sz158065": {
+      "code": "158065",
+      "market": "sz",
+      "type": "基",
+      "name": "粮食ETF招商",
+      "name_en": "",
+      "py": "liangshietfzhaoshang",
+      "abbr": "lsetfzs"
+    },
     "sz158066": {
       "code": "158066",
       "market": "sz",
@@ -10602,6 +10611,15 @@
       "name_en": "",
       "py": "chuangyebandianchietfhuabao",
       "abbr": "cybdcetfhb"
+    },
+    "sz158079": {
+      "code": "158079",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板电池ETF华安",
+      "name_en": "",
+      "py": "chuangyebandianchietfhuaan",
+      "abbr": "cybdcetfha"
     },
     "sz158082": {
       "code": "158082",

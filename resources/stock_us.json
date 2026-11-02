@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-30",
+  "last_update": "2026-11-02",
   "codes": {
     "usa": {
       "code": "a",
@@ -7849,6 +7849,15 @@
       "py": "",
       "abbr": ""
     },
+    "usaspe": {
+      "code": "aspe",
+      "market": "us",
+      "type": "美",
+      "name": "Aspen Neuroscience, Inc. - Common Stock",
+      "name_en": "Aspen Neuroscience, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
     "usaspi": {
       "code": "aspi",
       "market": "us",
@@ -10854,6 +10863,15 @@
       "name_en": "Beacon Financial Corporation Common stock",
       "py": "bb&tyinhang",
       "abbr": "bb&tyh"
+    },
+    "usbbtx": {
+      "code": "bbtx",
+      "market": "us",
+      "type": "美",
+      "name": "Bambusa Therapeutics, Inc. - Common stock",
+      "name_en": "Bambusa Therapeutics, Inc. - Common stock",
+      "py": "",
+      "abbr": ""
     },
     "usbbuc": {
       "code": "bbuc",
@@ -21947,8 +21965,8 @@
       "code": "cmdt",
       "market": "us",
       "type": "美",
-      "name": "PIMCO Commodity Strategy Active Exchange-Traded Fund",
-      "name_en": "PIMCO Commodity Strategy Active Exchange-Traded Fund",
+      "name": "PIMCO Commodity and Bond Strategy Active Exchange-Traded Fund",
+      "name_en": "PIMCO Commodity and Bond Strategy Active Exchange-Traded Fund",
       "py": "",
       "abbr": ""
     },
@@ -23199,7 +23217,7 @@
       "market": "us",
       "type": "美",
       "name": "PIMCO 投资级公司债券 ETF",
-      "name_en": "PIMCO Investment Grade Corporate Bond Index Exchange-Traded Fund",
+      "name_en": "PIMCO Investment Grade Corporate Bond Exchange-Traded Fund",
       "py": "pimcotouzijigongsizhaiquanetf",
       "abbr": "pimcotzjgszqetf"
     },
@@ -30898,33 +30916,6 @@
       "py": "",
       "abbr": ""
     },
-    "usdync": {
-      "code": "dync",
-      "market": "us",
-      "type": "美",
-      "name": "Dynamix Corporation - Class A Ordinary Share",
-      "name_en": "Dynamix Corporation - Class A Ordinary Share",
-      "py": "",
-      "abbr": ""
-    },
-    "usdyncu": {
-      "code": "dyncu",
-      "market": "us",
-      "type": "美",
-      "name": "Dynamix Corporation - Unit",
-      "name_en": "Dynamix Corporation - Unit",
-      "py": "",
-      "abbr": ""
-    },
-    "usdyncw": {
-      "code": "dyncw",
-      "market": "us",
-      "type": "美",
-      "name": "Dynamix Corporation - Warrant",
-      "name_en": "Dynamix Corporation - Warrant",
-      "py": "",
-      "abbr": ""
-    },
     "usdynf": {
       "code": "dynf",
       "market": "us",
@@ -32329,15 +32320,6 @@
       "py": "",
       "abbr": ""
     },
-    "useica": {
-      "code": "eica",
-      "market": "us",
-      "type": "美",
-      "name": "Eagle Point Income Company 5.00% Series A Term Preferred Shares due 2026",
-      "name_en": "Eagle Point Income Company 5.00% Series A Term Preferred Shares due 2026",
-      "py": "",
-      "abbr": ""
-    },
     "useido": {
       "code": "eido",
       "market": "us",
@@ -33116,8 +33098,8 @@
       "code": "emnt",
       "market": "us",
       "type": "美",
-      "name": "PIMCO Enhanced Short Maturity Active ESG Exchange-Traded Fund",
-      "name_en": "PIMCO Enhanced Short Maturity Active ESG Exchange-Traded Fund",
+      "name": "PIMCO Enhanced Short Maturity Active ESG and Bond Exchange-Traded Fund",
+      "name_en": "PIMCO Enhanced Short Maturity Active ESG and Bond Exchange-Traded Fund",
       "py": "",
       "abbr": ""
     },
@@ -43057,15 +43039,6 @@
       "py": "dajianyuncang",
       "abbr": "djyc"
     },
-    "usgctk": {
-      "code": "gctk",
-      "market": "us",
-      "type": "美",
-      "name": "GlucoTrack, Inc. - Common Stock",
-      "name_en": "GlucoTrack, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "usgcts": {
       "code": "gcts",
       "market": "us",
@@ -45036,15 +45009,6 @@
       "name_en": "GameStop Corporation Common Stock",
       "py": "youxiyizhan",
       "abbr": "yxyz"
-    },
-    "usgme_ws": {
-      "code": "gme_ws",
-      "market": "us",
-      "type": "美",
-      "name": "GameStop Corporation Warrants to Purchase Common Stock",
-      "name_en": "GameStop Corporation Warrants to Purchase Common Stock",
-      "py": "",
-      "abbr": ""
     },
     "usgmec": {
       "code": "gmec",
@@ -51008,8 +50972,8 @@
       "code": "hys",
       "market": "us",
       "type": "美",
-      "name": "PIMCO 0-5 Year High Yield Corporat Bond Index Exchange-Traded Fund",
-      "name_en": "PIMCO 0-5 Year High Yield Corporat Bond Index Exchange-Traded Fund",
+      "name": "PIMCO 0-5 Year High Yield Corporate Bond Exchange-Traded Fund",
+      "name_en": "PIMCO 0-5 Year High Yield Corporate Bond Exchange-Traded Fund",
       "py": "",
       "abbr": ""
     },
@@ -63172,15 +63136,6 @@
       "py": "",
       "abbr": ""
     },
-    "uslnai": {
-      "code": "lnai",
-      "market": "us",
-      "type": "美",
-      "name": "Lunai Bioworks Inc. - Common Stock",
-      "name_en": "Lunai Bioworks Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "uslnc": {
       "code": "lnc",
       "market": "us",
@@ -63464,8 +63419,8 @@
       "code": "lonz",
       "market": "us",
       "type": "美",
-      "name": "PIMCO Senior Loan Active Exchange-Traded Fund",
-      "name_en": "PIMCO Senior Loan Active Exchange-Traded Fund",
+      "name": "PIMCO Senior Loan and Short-Term Active ETF",
+      "name_en": "PIMCO Senior Loan and Short-Term Active ETF",
       "py": "",
       "abbr": ""
     },
@@ -64251,15 +64206,6 @@
       "name_en": "Lantronix, Inc. - Common Stock",
       "py": "chuangli",
       "abbr": "cl"
-    },
-    "usltryw": {
-      "code": "ltryw",
-      "market": "us",
-      "type": "美",
-      "name": "Sports Entertainment Gaming Global Corporation  - Warrant",
-      "name_en": "Sports Entertainment Gaming Global Corporation  - Warrant",
-      "py": "",
-      "abbr": ""
     },
     "usltti": {
       "code": "ltti",
@@ -66463,6 +66409,15 @@
       "type": "美",
       "name": "Meta Platforms, Inc. - Class A Common Stock",
       "name_en": "Meta Platforms, Inc. - Class A Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usmetam": {
+      "code": "metam",
+      "market": "us",
+      "type": "美",
+      "name": "Meta Platforms, Inc. - Depositary Shares representing a 1/20th Interest in a Share of Series A Mandatory Convertible Preferred Stock",
+      "name_en": "Meta Platforms, Inc. - Depositary Shares representing a 1/20th Interest in a Share of Series A Mandatory Convertible Preferred Stock",
       "py": "",
       "abbr": ""
     },
@@ -73762,6 +73717,15 @@
       "type": "美",
       "name": "Nomad Foods Limited Ordinary Shares",
       "name_en": "Nomad Foods Limited Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "usnord": {
+      "code": "nord",
+      "market": "us",
+      "type": "美",
+      "name": "Nordicus Partners Corporation - Common Stock",
+      "name_en": "Nordicus Partners Corporation - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -118069,33 +118033,6 @@
       "type": "美",
       "name": "Yunhong Green CTI Ltd. - Common Stock",
       "name_en": "Yunhong Green CTI Ltd. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usyhna": {
-      "code": "yhna",
-      "market": "us",
-      "type": "美",
-      "name": "YHN Acquisition I Limited - Ordinary Shares",
-      "name_en": "YHN Acquisition I Limited - Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usyhnar": {
-      "code": "yhnar",
-      "market": "us",
-      "type": "美",
-      "name": "YHN Acquisition I Limited - Right",
-      "name_en": "YHN Acquisition I Limited - Right",
-      "py": "",
-      "abbr": ""
-    },
-    "usyhnau": {
-      "code": "yhnau",
-      "market": "us",
-      "type": "美",
-      "name": "YHN Acquisition I Limited - Unit",
-      "name_en": "YHN Acquisition I Limited - Unit",
       "py": "",
       "abbr": ""
     },
