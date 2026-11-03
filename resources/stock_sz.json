@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-29",
+  "last_update": "2026-11-03",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -4635,6 +4635,15 @@
       "name_en": "",
       "py": "huaweikeji",
       "abbr": "hwkj"
+    },
+    "sz001381": {
+      "code": "001381",
+      "market": "sz",
+      "type": "深",
+      "name": "N皇冠新材",
+      "name_en": "",
+      "py": "nhuangguanxincai",
+      "abbr": "nhgxc"
     },
     "sz001382": {
       "code": "001382",

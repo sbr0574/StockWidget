@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-02",
+  "last_update": "2026-11-03",
   "codes": {
     "usa": {
       "code": "a",
@@ -1197,6 +1197,15 @@
       "name_en": "ACI Worldwide, Inc. - Common Stock",
       "py": "acihuanqiu",
       "abbr": "acihq"
+    },
+    "usacjl": {
+      "code": "acjl",
+      "market": "us",
+      "type": "美",
+      "name": "Buffered Bulldog ETF by C.J. Lawrence, a division of Apollon",
+      "name_en": "Buffered Bulldog ETF by C.J. Lawrence, a division of Apollon",
+      "py": "",
+      "abbr": ""
     },
     "usacky": {
       "code": "acky",
@@ -3382,6 +3391,15 @@
       "type": "美",
       "name": "Direxion Daily AI and Big Data Bear 2X ETF",
       "name_en": "Direxion Daily AI and Big Data Bear 2X ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usaibe": {
+      "code": "aibe",
+      "market": "us",
+      "type": "美",
+      "name": "FINQ CORE U.S. Large Cap AI-Managed Equity ETF",
+      "name_en": "FINQ CORE U.S. Large Cap AI-Managed Equity ETF",
       "py": "",
       "abbr": ""
     },
@@ -12232,15 +12250,6 @@
       "py": "",
       "abbr": ""
     },
-    "usbfriw": {
-      "code": "bfriw",
-      "market": "us",
-      "type": "美",
-      "name": "Biofrontera Inc. - Warrants",
-      "name_en": "Biofrontera Inc. - Warrants",
-      "py": "",
-      "abbr": ""
-    },
     "usbfrz": {
       "code": "bfrz",
       "market": "us",
@@ -18199,6 +18208,15 @@
       "py": "mitajinrong",
       "abbr": "mtjr"
     },
+    "uscask": {
+      "code": "cask",
+      "market": "us",
+      "type": "美",
+      "name": "Sempreon, Inc. - Common Stock",
+      "name_en": "Sempreon, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
     "uscass": {
       "code": "cass",
       "market": "us",
@@ -18727,15 +18745,6 @@
       "type": "美",
       "name": "Calamos Bitcoin 90 Series Structured Alt Protection ETF - July",
       "name_en": "Calamos Bitcoin 90 Series Structured Alt Protection ETF - July",
-      "py": "",
-      "abbr": ""
-    },
-    "uscbz": {
-      "code": "cbz",
-      "market": "us",
-      "type": "美",
-      "name": "CBIZ, Inc. Common Stock",
-      "name_en": "CBIZ, Inc. Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -22442,8 +22451,8 @@
       "code": "cnrg",
       "market": "us",
       "type": "美",
-      "name": "State Street SPDR S&P Kensho Clean Power ETF",
-      "name_en": "State Street SPDR S&P Kensho Clean Power ETF",
+      "name": "State Street SPDR S&P Kensho Grid Innovation ETF",
+      "name_en": "State Street SPDR S&P Kensho Grid Innovation ETF",
       "py": "",
       "abbr": ""
     },
@@ -28387,15 +28396,6 @@
       "py": "",
       "abbr": ""
     },
-    "usdine": {
-      "code": "dine",
-      "market": "us",
-      "type": "美",
-      "name": "Simplify Tax Aware Diversified Income Strategy ETF",
-      "name_en": "Simplify Tax Aware Diversified Income Strategy ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usdino": {
       "code": "dino",
       "market": "us",
@@ -31937,8 +31937,8 @@
       "code": "efiv",
       "market": "us",
       "type": "美",
-      "name": "State Street SPDR S&P 500 ESG ETF",
-      "name_en": "State Street SPDR S&P 500 ESG ETF",
+      "name": "State Street SPDR S&P 500 Scored and Screened ETF",
+      "name_en": "State Street SPDR S&P 500 Scored and Screened ETF",
       "py": "",
       "abbr": ""
     },
@@ -41316,7 +41316,7 @@
       "market": "us",
       "type": "美",
       "name": "富达 MSCI信息技术指数 ETF",
-      "name_en": "Fidelity MSCI Information Technology Index ETF",
+      "name_en": "ETF",
       "py": "fudamscixinxijishuzhishuetf",
       "abbr": "fdmscixxjszsetf"
     },
@@ -56328,7 +56328,7 @@
       "market": "us",
       "type": "美",
       "name": "罗素1000价值指数ETF-iShares",
-      "name_en": "iShares Russell 1000 Value ETF",
+      "name_en": "iShares Russell 1000 Value Index Fund",
       "py": "luosu1000jiazhizhishuetf-ishares",
       "abbr": "ls1000jzzsetf-ishares"
     },
@@ -56661,7 +56661,7 @@
       "market": "us",
       "type": "美",
       "name": "美国科技股ETF",
-      "name_en": "iShares U.S. Technology ETF",
+      "name_en": "iShares Dow Jones U.S. Technology Sector Index Fund",
       "py": "meiguokejiguetf",
       "abbr": "mgkjgetf"
     },
@@ -56993,8 +56993,8 @@
       "code": "jbdi",
       "market": "us",
       "type": "美",
-      "name": "JBDI Holdings Limited - Ordinary Shares",
-      "name_en": "JBDI Holdings Limited - Ordinary Shares",
+      "name": "JBDI Holdings Limited - Class A Ordinary Shares",
+      "name_en": "JBDI Holdings Limited - Class A Ordinary Shares",
       "py": "",
       "abbr": ""
     },
@@ -61048,15 +61048,6 @@
       "py": "",
       "abbr": ""
     },
-    "uskvue": {
-      "code": "kvue",
-      "market": "us",
-      "type": "美",
-      "name": "Kenvue Inc. Common Stock",
-      "name_en": "Kenvue Inc. Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "uskvyo": {
       "code": "kvyo",
       "market": "us",
@@ -62416,15 +62407,6 @@
       "py": "",
       "abbr": ""
     },
-    "uslght": {
-      "code": "lght",
-      "market": "us",
-      "type": "美",
-      "name": "Langar Global HealthTech ETF",
-      "name_en": "Langar Global HealthTech ETF",
-      "py": "",
-      "abbr": ""
-    },
     "uslgi": {
       "code": "lgi",
       "market": "us",
@@ -63685,15 +63667,6 @@
       "py": "luyisiannataipingyang",
       "abbr": "lysantpy"
     },
-    "uslq": {
-      "code": "lq",
-      "market": "us",
-      "type": "美",
-      "name": "Simplify Tax Aware Alternatives ETF",
-      "name_en": "Simplify Tax Aware Alternatives ETF",
-      "py": "",
-      "abbr": ""
-    },
     "uslqai": {
       "code": "lqai",
       "market": "us",
@@ -64546,24 +64519,6 @@
       "type": "美",
       "name": "Luxfer Holdings PLC Ordinary Shares",
       "name_en": "Luxfer Holdings PLC Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "uslxp": {
-      "code": "lxp",
-      "market": "us",
-      "type": "美",
-      "name": "莱星顿置业信托",
-      "name_en": "LXP Industrial Trust Common Stock (Maryland REIT)",
-      "py": "laixingdunzhiyexintuo",
-      "abbr": "lxdzyxt"
-    },
-    "uslxp_c": {
-      "code": "lxp_c",
-      "market": "us",
-      "type": "美",
-      "name": "LXP Industrial Trust 6.5% Series C Cumulative Convertible Preferred Stock",
-      "name_en": "LXP Industrial Trust 6.5% Series C Cumulative Convertible Preferred Stock",
       "py": "",
       "abbr": ""
     },
@@ -66985,15 +66940,6 @@
       "type": "美",
       "name": "First Trust Intermediate Government Opportunities ETF",
       "name_en": "First Trust Intermediate Government Opportunities ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usmgpi": {
-      "code": "mgpi",
-      "market": "us",
-      "type": "美",
-      "name": "MGP Ingredients, Inc. - Common Stock",
-      "name_en": "MGP Ingredients, Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -71344,6 +71290,15 @@
       "py": "",
       "abbr": ""
     },
+    "usnara": {
+      "code": "nara",
+      "market": "us",
+      "type": "美",
+      "name": "Narragansett Bancorp, Inc. - Common Stock",
+      "name_en": "Narragansett Bancorp, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
     "usnasa": {
       "code": "nasa",
       "market": "us",
@@ -73474,6 +73429,15 @@
       "type": "美",
       "name": "Nuveen Municipal High Income Opportunity Fund Common Stock, $0.01 par value, per share",
       "name_en": "Nuveen Municipal High Income Opportunity Fund Common Stock, $0.01 par value, per share",
+      "py": "",
+      "abbr": ""
+    },
+    "usnmzrw": {
+      "code": "nmzrw",
+      "market": "us",
+      "type": "美",
+      "name": "Nuveen Municipal High Income Opportunity Fund Rights (expiring December 2, 2026) Rights when issued",
+      "name_en": "Nuveen Municipal High Income Opportunity Fund Rights (expiring December 2, 2026) Rights when issued",
       "py": "",
       "abbr": ""
     },
@@ -75727,15 +75691,6 @@
       "py": "",
       "abbr": ""
     },
-    "usnxti": {
-      "code": "nxti",
-      "market": "us",
-      "type": "美",
-      "name": "Simplify Next Intangible Core Index ETF",
-      "name_en": "Simplify Next Intangible Core Index ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usnxts": {
       "code": "nxts",
       "market": "us",
@@ -77578,6 +77533,15 @@
       "type": "美",
       "name": "OPAL Fuels Inc. - Class A Common Stock",
       "name_en": "OPAL Fuels Inc. - Class A Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usopay": {
+      "code": "opay",
+      "market": "us",
+      "type": "美",
+      "name": "OPay Limited American Depositary Shares, each representing ten Ordinary Shares",
+      "name_en": "OPay Limited American Depositary Shares, each representing ten Ordinary Shares",
       "py": "",
       "abbr": ""
     },
@@ -80253,15 +80217,6 @@
       "name_en": "PIMCO California Municipal Income Fund Common Stock",
       "py": "taipingyangtouziguanlijialifuniyadifangshourujijin",
       "abbr": "tpytzgljlfnydfsrjj"
-    },
-    "uspcr": {
-      "code": "pcr",
-      "market": "us",
-      "type": "美",
-      "name": "Simplify VettaFi Private Credit Strategy ETF",
-      "name_en": "Simplify VettaFi Private Credit Strategy ETF",
-      "py": "",
-      "abbr": ""
     },
     "uspcrx": {
       "code": "pcrx",
@@ -86972,8 +86927,8 @@
       "code": "qtec",
       "market": "us",
       "type": "美",
-      "name": "First Trust NASDAQ-100-Technology Sector Index Fund",
-      "name_en": "First Trust NASDAQ-100-Technology Sector Index Fund",
+      "name": "First Trust NASDAQ-100- Technology Index Fund",
+      "name_en": "First Trust NASDAQ-100- Technology Index Fund",
       "py": "",
       "abbr": ""
     },
@@ -87559,15 +87514,6 @@
       "type": "美",
       "name": "Leverage Shares 2X Long Memory Daily ETF",
       "name_en": "Leverage Shares 2X Long Memory Daily ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usramp": {
-      "code": "ramp",
-      "market": "us",
-      "type": "美",
-      "name": "LiveRamp Holdings, Inc. Common Stock",
-      "name_en": "LiveRamp Holdings, Inc. Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -97844,8 +97790,8 @@
       "code": "spab",
       "market": "us",
       "type": "美",
-      "name": "State Street SPDR Portfolio Aggregate Bond ETF",
-      "name_en": "State Street SPDR Portfolio Aggregate Bond ETF",
+      "name": "State Street SPDR Portfolio Aggregate Bond Index ETF",
+      "name_en": "State Street SPDR Portfolio Aggregate Bond Index ETF",
       "py": "",
       "abbr": ""
     },
@@ -97916,8 +97862,8 @@
       "code": "spbo",
       "market": "us",
       "type": "美",
-      "name": "State Street SPDR Portfolio Corporate Bond ETF",
-      "name_en": "State Street SPDR Portfolio Corporate Bond ETF",
+      "name": "State Street SPDR Portfolio Corporate Bond Index ETF",
+      "name_en": "State Street SPDR Portfolio Corporate Bond Index ETF",
       "py": "",
       "abbr": ""
     },
@@ -98303,8 +98249,8 @@
       "code": "sphy",
       "market": "us",
       "type": "美",
-      "name": "State Street SPDR Portfolio High Yield Bond ETF",
-      "name_en": "State Street SPDR Portfolio High Yield Bond ETF",
+      "name": "State Street SPDR Portfolio High Yield Bond Index ETF",
+      "name_en": "State Street SPDR Portfolio High Yield Bond Index ETF",
       "py": "",
       "abbr": ""
     },
@@ -98312,8 +98258,8 @@
       "code": "spib",
       "market": "us",
       "type": "美",
-      "name": "State Street SPDR Portfolio Intermediate Term Corporate Bond ETF",
-      "name_en": "State Street SPDR Portfolio Intermediate Term Corporate Bond ETF",
+      "name": "State Street SPDR Portfolio Intermediate Term Corporate Bond Index ETF",
+      "name_en": "State Street SPDR Portfolio Intermediate Term Corporate Bond Index ETF",
       "py": "",
       "abbr": ""
     },
@@ -98330,8 +98276,8 @@
       "code": "spip",
       "market": "us",
       "type": "美",
-      "name": "State Street SPDR Portfolio TIPS ETF",
-      "name_en": "State Street SPDR Portfolio TIPS ETF",
+      "name": "State Street SPDR Portfolio TIPS Index ETF",
+      "name_en": "State Street SPDR Portfolio TIPS Index ETF",
       "py": "",
       "abbr": ""
     },
@@ -98357,8 +98303,8 @@
       "code": "splb",
       "market": "us",
       "type": "美",
-      "name": "State Street SPDR Portfolio Long Term Corporate Bond ETF",
-      "name_en": "State Street SPDR Portfolio Long Term Corporate Bond ETF",
+      "name": "State Street SPDR Portfolio Long Term Corporate Bond Index ETF",
+      "name_en": "State Street SPDR Portfolio Long Term Corporate Bond Index ETF",
       "py": "",
       "abbr": ""
     },
@@ -98393,8 +98339,8 @@
       "code": "spmb",
       "market": "us",
       "type": "美",
-      "name": "State Street SPDR Portfolio Mortgage Backed Bond ETF",
-      "name_en": "State Street SPDR Portfolio Mortgage Backed Bond ETF",
+      "name": "State Street SPDR Portfolio Mortgage Backed Bond Index ETF",
+      "name_en": "State Street SPDR Portfolio Mortgage Backed Bond Index ETF",
       "py": "",
       "abbr": ""
     },
@@ -98555,8 +98501,8 @@
       "code": "spsb",
       "market": "us",
       "type": "美",
-      "name": "State Street SPDR Portfolio Short Term Corporate Bond ETF",
-      "name_en": "State Street SPDR Portfolio Short Term Corporate Bond ETF",
+      "name": "State Street SPDR Portfolio Short Term Corporate Bond Index ETF",
+      "name_en": "State Street SPDR Portfolio Short Term Corporate Bond Index ETF",
       "py": "",
       "abbr": ""
     },
@@ -98600,8 +98546,8 @@
       "code": "sptb",
       "market": "us",
       "type": "美",
-      "name": "State Street SPDR Portfolio Treasury ETF",
-      "name_en": "State Street SPDR Portfolio Treasury ETF",
+      "name": "State Street SPDR Portfolio Treasury Index ETF",
+      "name_en": "State Street SPDR Portfolio Treasury Index ETF",
       "py": "",
       "abbr": ""
     },
@@ -98618,8 +98564,8 @@
       "code": "spti",
       "market": "us",
       "type": "美",
-      "name": "State Street SPDR Portfolio Intermediate Term Treasury ETF",
-      "name_en": "State Street SPDR Portfolio Intermediate Term Treasury ETF",
+      "name": "State Street SPDR Portfolio Intermediate Term Treasury Index ETF",
+      "name_en": "State Street SPDR Portfolio Intermediate Term Treasury Index ETF",
       "py": "",
       "abbr": ""
     },
@@ -98627,8 +98573,8 @@
       "code": "sptl",
       "market": "us",
       "type": "美",
-      "name": "State Street SPDR Portfolio Long Term Treasury ETF",
-      "name_en": "State Street SPDR Portfolio Long Term Treasury ETF",
+      "name": "State Street SPDR Portfolio Long Term Treasury Index ETF",
+      "name_en": "State Street SPDR Portfolio Long Term Treasury Index ETF",
       "py": "",
       "abbr": ""
     },
@@ -98645,8 +98591,8 @@
       "code": "spts",
       "market": "us",
       "type": "美",
-      "name": "State Street SPDR Portfolio Short Term Treasury ETF",
-      "name_en": "State Street SPDR Portfolio Short Term Treasury ETF",
+      "name": "State Street SPDR Portfolio Short Term Treasury Index ETF",
+      "name_en": "State Street SPDR Portfolio Short Term Treasury Index ETF",
       "py": "",
       "abbr": ""
     },
@@ -98654,8 +98600,8 @@
       "code": "sptu",
       "market": "us",
       "type": "美",
-      "name": "State Street SPDR Portfolio Ultra Short T-Bill ETF",
-      "name_en": "State Street SPDR Portfolio Ultra Short T-Bill ETF",
+      "name": "State Street SPDR Portfolio Ultra Short T-Bill Index ETF",
+      "name_en": "State Street SPDR Portfolio Ultra Short T-Bill Index ETF",
       "py": "",
       "abbr": ""
     },
@@ -102769,15 +102715,6 @@
       "type": "美",
       "name": "Corgi TSLA 2x Daily ETF",
       "name_en": "Corgi TSLA 2x Daily ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "ustesl": {
-      "code": "tesl",
-      "market": "us",
-      "type": "美",
-      "name": "Simplify Volt TSLA Revolution ETF",
-      "name_en": "Simplify Volt TSLA Revolution ETF",
       "py": "",
       "abbr": ""
     },
@@ -113117,8 +113054,8 @@
       "code": "wbif",
       "market": "us",
       "type": "美",
-      "name": "WBI BullBear Value 3000 ETF",
-      "name_en": "WBI BullBear Value 3000 ETF",
+      "name": "WBI Fundamental Factors Hedged ETF",
+      "name_en": "WBI Fundamental Factors Hedged ETF",
       "py": "",
       "abbr": ""
     },
@@ -113126,8 +113063,8 @@
       "code": "wbig",
       "market": "us",
       "type": "美",
-      "name": "WBI BullBear Yield 3000 ETF",
-      "name_en": "WBI BullBear Yield 3000 ETF",
+      "name": "WBI Income Generators Hedged ETF",
+      "name_en": "WBI Income Generators Hedged ETF",
       "py": "",
       "abbr": ""
     },
@@ -113135,8 +113072,8 @@
       "code": "wbil",
       "market": "us",
       "type": "美",
-      "name": "WBI BullBear Quality 3000 ETF",
-      "name_en": "WBI BullBear Quality 3000 ETF",
+      "name": "WBI Trend Leaders Hedged ETF",
+      "name_en": "WBI Trend Leaders Hedged ETF",
       "py": "",
       "abbr": ""
     },

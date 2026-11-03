@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-02",
+  "last_update": "2026-11-03",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -1332,15 +1332,6 @@
       "name_en": "GEELY AUTO",
       "py": "jiliqiche",
       "abbr": "jlqc"
-    },
-    "hk00176": {
-      "code": "00176",
-      "market": "hk",
-      "type": "港",
-      "name": "先机企业集团",
-      "name_en": "SUPERACTIVE GP",
-      "py": "xianjiqiyejituan",
-      "abbr": "xjqyjt"
     },
     "hk00177": {
       "code": "00177",
@@ -5833,15 +5824,6 @@
       "py": "guangtaiguojikonggu",
       "abbr": "gtgjkg"
     },
-    "hk00845": {
-      "code": "00845",
-      "market": "hk",
-      "type": "港",
-      "name": "恒盛地产",
-      "name_en": "GLORIOUS PPT H",
-      "py": "hengshengdichan",
-      "abbr": "hsdc"
-    },
     "hk00846": {
       "code": "00846",
       "market": "hk",
@@ -7488,15 +7470,6 @@
       "name_en": "MAINLAND HOLD",
       "py": "feidakonggu",
       "abbr": "fdkg"
-    },
-    "hk01101": {
-      "code": "01101",
-      "market": "hk",
-      "type": "港",
-      "name": "华荣能源",
-      "name_en": "HUARONG ENERGY",
-      "py": "huarongnengyuan",
-      "abbr": "hrny"
     },
     "hk01102": {
       "code": "01102",
@@ -13797,15 +13770,6 @@
       "name_en": "LEADWAY TECH",
       "py": "gaoweikeji",
       "abbr": "gwkj"
-    },
-    "hk02088": {
-      "code": "02088",
-      "market": "hk",
-      "type": "港",
-      "name": "西王置业",
-      "name_en": "XIWANG PROPERTY",
-      "py": "xiwangzhiye",
-      "abbr": "xwzy"
     },
     "hk02096": {
       "code": "02096",

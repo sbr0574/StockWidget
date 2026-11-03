@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-02",
+  "last_update": "2026-11-03",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -14756,10 +14756,10 @@
       "code": "605179",
       "market": "sh",
       "type": "沪",
-      "name": "一鸣食品",
+      "name": "XD一鸣食",
       "name_en": "",
-      "py": "yimingshipin",
-      "abbr": "ymsp"
+      "py": "xdyimingshi",
+      "abbr": "xdyms"
     },
     "sh605180": {
       "code": "605180",
@@ -14990,10 +14990,10 @@
       "code": "605300",
       "market": "sh",
       "type": "沪",
-      "name": "佳禾食品",
+      "name": "XD佳禾食",
       "name_en": "",
-      "py": "jiaheshipin",
-      "abbr": "jhsp"
+      "py": "xdjiaheshi",
+      "abbr": "xdjhs"
     },
     "sh605303": {
       "code": "605303",
@@ -19121,10 +19121,10 @@
       "code": "688548",
       "market": "sh",
       "type": "科",
-      "name": "XD广钢气",
+      "name": "广钢气体",
       "name_en": "",
-      "py": "xdguanggangqi",
-      "abbr": "xdggq"
+      "py": "guanggangqiti",
+      "abbr": "ggqt"
     },
     "sh688549": {
       "code": "688549",
