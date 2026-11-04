@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-02",
+  "last_update": "2026-11-04",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -1629,6 +1629,15 @@
       "name_en": "",
       "py": "zhongjinweipinhuishangyereit",
       "abbr": "zjwphsyreit"
+    },
+    "sh508607": {
+      "code": "508607",
+      "market": "sh",
+      "type": "基",
+      "name": "华安陆家嘴商业REIT",
+      "name_en": "",
+      "py": "huaanlujiazuishangyereit",
+      "abbr": "haljzsyreit"
     },
     "sh508609": {
       "code": "508609",

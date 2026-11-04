@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-03",
+  "last_update": "2026-11-04",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -1256,10 +1256,10 @@
       "code": "600186",
       "market": "sh",
       "type": "沪",
-      "name": "莲花控股",
+      "name": "XD莲花控",
       "name_en": "",
-      "py": "lianhuakonggu",
-      "abbr": "lhkg"
+      "py": "xdlianhuakong",
+      "abbr": "xdlhk"
     },
     "sh600187": {
       "code": "600187",
@@ -14756,10 +14756,10 @@
       "code": "605179",
       "market": "sh",
       "type": "沪",
-      "name": "XD一鸣食",
+      "name": "一鸣食品",
       "name_en": "",
-      "py": "xdyimingshi",
-      "abbr": "xdyms"
+      "py": "yimingshipin",
+      "abbr": "ymsp"
     },
     "sh605180": {
       "code": "605180",
@@ -14990,10 +14990,10 @@
       "code": "605300",
       "market": "sh",
       "type": "沪",
-      "name": "XD佳禾食",
+      "name": "佳禾食品",
       "name_en": "",
-      "py": "xdjiaheshi",
-      "abbr": "xdjhs"
+      "py": "jiaheshipin",
+      "abbr": "jhsp"
     },
     "sh605303": {
       "code": "605303",
@@ -16475,10 +16475,10 @@
       "code": "688151",
       "market": "sh",
       "type": "科",
-      "name": "华强科技",
+      "name": "XD华强科",
       "name_en": "",
-      "py": "huaqiangkeji",
-      "abbr": "hqkj"
+      "py": "xdhuaqiangke",
+      "abbr": "xdhqk"
     },
     "sh688152": {
       "code": "688152",

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-03",
+  "last_update": "2026-11-04",
   "codes": {
     "usa": {
       "code": "a",
@@ -8737,15 +8737,6 @@
       "type": "美",
       "name": "Aurelion Inc.  - Class A Ordinary Shares",
       "name_en": "Aurelion Inc.  - Class A Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usaurow": {
-      "code": "aurow",
-      "market": "us",
-      "type": "美",
-      "name": "Aurora Innovation, Inc.  - Warrant",
-      "name_en": "Aurora Innovation, Inc.  - Warrant",
       "py": "",
       "abbr": ""
     },
@@ -32986,6 +32977,15 @@
       "py": "xinshijijianguetf",
       "abbr": "xsjjgetf"
     },
+    "usemil": {
+      "code": "emil",
+      "market": "us",
+      "type": "美",
+      "name": "VanEck EM Focus Inflation Bond ETF",
+      "name_en": "VanEck EM Focus Inflation Bond ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usemis": {
       "code": "emis",
       "market": "us",
@@ -49375,15 +49375,6 @@
       "py": "",
       "abbr": ""
     },
-    "ushodo": {
-      "code": "hodo",
-      "market": "us",
-      "type": "美",
-      "name": "House of Doge Inc. - Common Stock",
-      "name_en": "House of Doge Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "ushodu": {
       "code": "hodu",
       "market": "us",
@@ -54043,15 +54034,6 @@
       "type": "美",
       "name": "Pacer Industrial Real Estate ETF",
       "name_en": "Pacer Industrial Real Estate ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usindv": {
-      "code": "indv",
-      "market": "us",
-      "type": "美",
-      "name": "Indivior Pharmaceuticals, Inc.  - Common Stock",
-      "name_en": "Indivior Pharmaceuticals, Inc.  - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -67732,24 +67714,6 @@
       "type": "美",
       "name": "Global X Intermediate-Term Treasury Ladder ETF",
       "name_en": "Global X Intermediate-Term Treasury Ladder ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usmlec": {
-      "code": "mlec",
-      "market": "us",
-      "type": "美",
-      "name": "Moolec Science SA - Ordinary Shares",
-      "name_en": "Moolec Science SA - Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usmlecw": {
-      "code": "mlecw",
-      "market": "us",
-      "type": "美",
-      "name": "Moolec Science SA - Warrant",
-      "name_en": "Moolec Science SA - Warrant",
       "py": "",
       "abbr": ""
     },
@@ -100427,8 +100391,8 @@
       "code": "supn",
       "market": "us",
       "type": "美",
-      "name": "Supernus Pharmaceuticals, Inc. - Common Stock",
-      "name_en": "Supernus Pharmaceuticals, Inc. - Common Stock",
+      "name": "Supernus, Inc. - Common Stock",
+      "name_en": "Supernus, Inc. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -100818,15 +100782,6 @@
       "name_en": "Stanley Black & Decker, Inc. Common Stock",
       "py": "meiguoshidanligongsi",
       "abbr": "mgsdlgs"
-    },
-    "usswkhl": {
-      "code": "swkhl",
-      "market": "us",
-      "type": "美",
-      "name": "SWK Holdings Corporation - 9.00% Senior Notes due 2027",
-      "name_en": "SWK Holdings Corporation - 9.00% Senior Notes due 2027",
-      "py": "",
-      "abbr": ""
     },
     "usswks": {
       "code": "swks",
@@ -103122,6 +103077,15 @@
       "name_en": "TH International Limited - Ordinary shares",
       "py": "timszhongguo",
       "abbr": "timszg"
+    },
+    "usthcr": {
+      "code": "thcr",
+      "market": "us",
+      "type": "美",
+      "name": "THOR Conservative Risk Dynamic ETF",
+      "name_en": "THOR Conservative Risk Dynamic ETF",
+      "py": "",
+      "abbr": ""
     },
     "usthd": {
       "code": "thd",
@@ -112534,6 +112498,15 @@
       "type": "美",
       "name": "vTv Therapeutics Inc. - Class A Common Stock",
       "name_en": "vTv Therapeutics Inc. - Class A Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usvtvx": {
+      "code": "vtvx",
+      "market": "us",
+      "type": "美",
+      "name": "XFUNDS Value Income ETF",
+      "name_en": "XFUNDS Value Income ETF",
       "py": "",
       "abbr": ""
     },

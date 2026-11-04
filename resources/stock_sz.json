@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-03",
+  "last_update": "2026-11-04",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -3542,10 +3542,10 @@
       "code": "000972",
       "market": "sz",
       "type": "深",
-      "name": "中基健康",
+      "name": "*ST中基",
       "name_en": "",
-      "py": "zhongjijiankang",
-      "abbr": "zjjk"
+      "py": "*stzhongji",
+      "abbr": "*stzj"
     },
     "sz000973": {
       "code": "000973",
@@ -4640,10 +4640,10 @@
       "code": "001381",
       "market": "sz",
       "type": "深",
-      "name": "N皇冠新材",
+      "name": "C皇冠新材",
       "name_en": "",
-      "py": "nhuangguanxincai",
-      "abbr": "nhgxc"
+      "py": "chuangguanxincai",
+      "abbr": "chgxc"
     },
     "sz001382": {
       "code": "001382",

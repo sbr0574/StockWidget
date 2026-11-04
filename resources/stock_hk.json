@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-03",
+  "last_update": "2026-11-04",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -6449,10 +6449,10 @@
       "code": "00936",
       "market": "hk",
       "type": "港",
-      "name": "佳兆业资本",
-      "name_en": "KAISA CAPITAL",
-      "py": "jiazhaoyeziben",
-      "abbr": "jzyzb"
+      "name": "佳芯科技",
+      "name_en": "KAISACORE",
+      "py": "jiaxinkeji",
+      "abbr": "jxkj"
     },
     "hk00938": {
       "code": "00938",
@@ -10445,10 +10445,10 @@
       "code": "01570",
       "market": "hk",
       "type": "港",
-      "name": "伟业控股",
-      "name_en": "WEIYE HOLDINGS",
-      "py": "weiyekonggu",
-      "abbr": "wykg"
+      "name": "鼎吉盛国际",
+      "name_en": "DJSH INT'L",
+      "py": "dingjishengguoji",
+      "abbr": "djsgj"
     },
     "hk01571": {
       "code": "01571",
@@ -18406,15 +18406,6 @@
       "py": "tianruiqicheneishi",
       "abbr": "trqcns"
     },
-    "hk02950": {
-      "code": "02950",
-      "market": "hk",
-      "type": "港",
-      "name": "阿尔法企业股权",
-      "name_en": "ALPHA PRO H RTS",
-      "py": "aerfaqiyeguquan",
-      "abbr": "aefqygq"
-    },
     "hk02952": {
       "code": "02952",
       "market": "hk",
@@ -24495,7 +24486,7 @@
       "market": "hk",
       "type": "港",
       "name": "中华节能",
-      "name_en": "SINO ENGY C-NEW",
+      "name_en": "SINO ENGY CONS",
       "py": "zhonghuajieneng",
       "abbr": "zhjn"
     },
@@ -26451,15 +26442,6 @@
       "name_en": "GLORY FLAME-OLD",
       "py": "chaoweikonggu",
       "abbr": "cwkg"
-    },
-    "hk08573": {
-      "code": "08573",
-      "market": "hk",
-      "type": "港",
-      "name": "中华节能",
-      "name_en": "SINO ENGY C-OLD",
-      "py": "zhonghuajieneng",
-      "abbr": "zhjn"
     },
     "hk08583": {
       "code": "08583",
