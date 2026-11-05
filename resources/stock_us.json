@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-04",
+  "last_update": "2026-11-05",
   "codes": {
     "usa": {
       "code": "a",
@@ -2653,15 +2653,6 @@
       "type": "美",
       "name": "Affirm Holdings, Inc. - Class A Common Stock",
       "name_en": "Affirm Holdings, Inc. - Class A Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usafru": {
-      "code": "afru",
-      "market": "us",
-      "type": "美",
-      "name": "T-REX 2X Long AFRM Daily Target ETF",
-      "name_en": "T-REX 2X Long AFRM Daily Target ETF",
       "py": "",
       "abbr": ""
     },
@@ -8062,15 +8053,6 @@
       "type": "美",
       "name": "Defiance Daily Target 2X Long ASTS ETF",
       "name_en": "Defiance Daily Target 2X Long ASTS ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usasup": {
-      "code": "asup",
-      "market": "us",
-      "type": "美",
-      "name": "T-REX 2X Long ASTS Daily Target ETF",
-      "name_en": "T-REX 2X Long ASTS Daily Target ETF",
       "py": "",
       "abbr": ""
     },
@@ -42904,15 +42886,6 @@
       "py": "",
       "abbr": ""
     },
-    "usgcdt": {
-      "code": "gcdt",
-      "market": "us",
-      "type": "美",
-      "name": "Green Circle Decarbonize Technology Limited Class A Ordinary Shares",
-      "name_en": "Green Circle Decarbonize Technology Limited Class A Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
     "usgcgr": {
       "code": "gcgr",
       "market": "us",
@@ -45367,15 +45340,6 @@
       "type": "美",
       "name": "GAMCO Natural Resources, Gold & Income Tust  5.20% Series A Cumulative Preferred Shares (Liquidation Preference $25.00 per share)",
       "name_en": "GAMCO Natural Resources, Gold & Income Tust  5.20% Series A Cumulative Preferred Shares (Liquidation Preference $25.00 per share)",
-      "py": "",
-      "abbr": ""
-    },
-    "usgnta": {
-      "code": "gnta",
-      "market": "us",
-      "type": "美",
-      "name": "Genenta Science S.p.A. - American Depositary Shares",
-      "name_en": "Genenta Science S.p.A. - American Depositary Shares",
       "py": "",
       "abbr": ""
     },
@@ -54190,6 +54154,15 @@
       "py": "",
       "abbr": ""
     },
+    "usink": {
+      "code": "ink",
+      "market": "us",
+      "type": "美",
+      "name": "AB Equity Premium Income ETF",
+      "name_en": "AB Equity Premium Income ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usinkm": {
       "code": "inkm",
       "market": "us",
@@ -61421,8 +61394,8 @@
       "code": "lase",
       "market": "us",
       "type": "美",
-      "name": "Laser Photonics Corporation - Common Stock",
-      "name_en": "Laser Photonics Corporation - Common Stock",
+      "name": "LASE Corp. - Common Stock",
+      "name_en": "LASE Corp. - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -73396,12 +73369,12 @@
       "py": "",
       "abbr": ""
     },
-    "usnmzrw": {
-      "code": "nmzrw",
+    "usnmzr": {
+      "code": "nmzr",
       "market": "us",
       "type": "美",
-      "name": "Nuveen Municipal High Income Opportunity Fund Rights (expiring December 2, 2026) Rights when issued",
-      "name_en": "Nuveen Municipal High Income Opportunity Fund Rights (expiring December 2, 2026) Rights when issued",
+      "name": "Nuveen Municipal High Income Opportunity Fund Rights (expiring December 2, 2026) Rights",
+      "name_en": "Nuveen Municipal High Income Opportunity Fund Rights (expiring December 2, 2026) Rights",
       "py": "",
       "abbr": ""
     },
@@ -83678,8 +83651,8 @@
       "code": "prm",
       "market": "us",
       "type": "美",
-      "name": "Perimeter Solutions, SA Common Stock",
-      "name_en": "Perimeter Solutions, SA Common Stock",
+      "name": "Perimeter Group Inc. Common Stock",
+      "name_en": "Perimeter Group Inc. Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -88282,12 +88255,30 @@
       "py": "",
       "abbr": ""
     },
+    "usrecd": {
+      "code": "recd",
+      "market": "us",
+      "type": "美",
+      "name": "Columbia RECS Laddered Deep Buffer ETF",
+      "name_en": "Columbia RECS Laddered Deep Buffer ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usreci": {
       "code": "reci",
       "market": "us",
       "type": "美",
       "name": "Columbia Research Enhanced Core Premium Income ETF",
       "name_en": "Columbia Research Enhanced Core Premium Income ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usrecm": {
+      "code": "recm",
+      "market": "us",
+      "type": "美",
+      "name": "Columbia RECS Laddered Moderate Buffer ETF",
+      "name_en": "Columbia RECS Laddered Moderate Buffer ETF",
       "py": "",
       "abbr": ""
     },
@@ -91900,6 +91891,15 @@
       "py": "",
       "abbr": ""
     },
+    "ussaen": {
+      "code": "saen",
+      "market": "us",
+      "type": "美",
+      "name": "Genenta Science S.p.A. - American Depositary Shares",
+      "name_en": "Genenta Science S.p.A. - American Depositary Shares",
+      "py": "",
+      "abbr": ""
+    },
     "ussafe": {
       "code": "safe",
       "market": "us",
@@ -92563,15 +92563,6 @@
       "type": "美",
       "name": "D/B/A Sibanye-Stillwater Limited ADS",
       "name_en": "D/B/A Sibanye-Stillwater Limited ADS",
-      "py": "",
-      "abbr": ""
-    },
-    "ussbtu": {
-      "code": "sbtu",
-      "market": "us",
-      "type": "美",
-      "name": "T-REX 2X Long SBET Daily Target ETF",
-      "name_en": "T-REX 2X Long SBET Daily Target ETF",
       "py": "",
       "abbr": ""
     },
@@ -95344,6 +95335,15 @@
       "type": "美",
       "name": "abrdn Physical Silver Shares ETF",
       "name_en": "abrdn Physical Silver Shares ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "ussix": {
+      "code": "six",
+      "market": "us",
+      "type": "美",
+      "name": "Global X Magnificent Six ETF",
+      "name_en": "Global X Magnificent Six ETF",
       "py": "",
       "abbr": ""
     },
@@ -102688,15 +102688,6 @@
       "type": "美",
       "name": "21Shares Ethereum ETF",
       "name_en": "21Shares Ethereum ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usteup": {
-      "code": "teup",
-      "market": "us",
-      "type": "美",
-      "name": "T-REX 2X Long TE Daily Target ETF",
-      "name_en": "T-REX 2X Long TE Daily Target ETF",
       "py": "",
       "abbr": ""
     },

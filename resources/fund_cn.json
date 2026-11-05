@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-04",
+  "last_update": "2026-11-05",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -10629,6 +10629,15 @@
       "name_en": "",
       "py": "chuangyebandianchietfhuaan",
       "abbr": "cybdcetfha"
+    },
+    "sz158081": {
+      "code": "158081",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板电池ETF永赢",
+      "name_en": "",
+      "py": "chuangyebandianchietfyongying",
+      "abbr": "cybdcetfyy"
     },
     "sz158082": {
       "code": "158082",

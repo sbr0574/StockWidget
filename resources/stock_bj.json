@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-04",
+  "last_update": "2026-11-05",
   "codes": {
     "bj920000": {
       "code": "920000",
@@ -2597,10 +2597,10 @@
       "code": "920726",
       "market": "bj",
       "type": "京",
-      "name": "XD朱老六",
+      "name": "朱老六",
       "name_en": "ZHULAOLIU",
-      "py": "xdzhulaoliu",
-      "abbr": "xdzll"
+      "py": "zhulaoliu",
+      "abbr": "zll"
     },
     "bj920729": {
       "code": "920729",

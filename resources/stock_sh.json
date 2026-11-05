@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-04",
+  "last_update": "2026-11-05",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -1256,10 +1256,10 @@
       "code": "600186",
       "market": "sh",
       "type": "沪",
-      "name": "XD莲花控",
+      "name": "莲花控股",
       "name_en": "",
-      "py": "xdlianhuakong",
-      "abbr": "xdlhk"
+      "py": "lianhuakonggu",
+      "abbr": "lhkg"
     },
     "sh600187": {
       "code": "600187",
@@ -11939,10 +11939,10 @@
       "code": "603511",
       "market": "sh",
       "type": "沪",
-      "name": "爱慕股份",
+      "name": "XD爱慕股",
       "name_en": "",
-      "py": "aimugufen",
-      "abbr": "amgf"
+      "py": "xdaimugu",
+      "abbr": "xdamg"
     },
     "sh603515": {
       "code": "603515",
@@ -13514,10 +13514,10 @@
       "code": "603858",
       "market": "sh",
       "type": "沪",
-      "name": "步长制药",
+      "name": "XD步长制",
       "name_en": "",
-      "py": "buzhangzhiyao",
-      "abbr": "bzzy"
+      "py": "xdbuzhangzhi",
+      "abbr": "xdbzz"
     },
     "sh603859": {
       "code": "603859",
@@ -16475,10 +16475,10 @@
       "code": "688151",
       "market": "sh",
       "type": "科",
-      "name": "XD华强科",
+      "name": "华强科技",
       "name_en": "",
-      "py": "xdhuaqiangke",
-      "abbr": "xdhqk"
+      "py": "huaqiangkeji",
+      "abbr": "hqkj"
     },
     "sh688152": {
       "code": "688152",

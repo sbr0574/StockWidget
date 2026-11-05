@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-04",
+  "last_update": "2026-11-05",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -10302,7 +10302,7 @@
       "market": "hk",
       "type": "港",
       "name": "金斯瑞生物科技",
-      "name_en": "GENSCRIPT B-1K",
+      "name_en": "GENSCRIPT BIO",
       "py": "jinsiruishengwukeji",
       "abbr": "jsrswkj"
     },
@@ -18379,15 +18379,6 @@
       "py": "baihongshiye",
       "abbr": "bhsy"
     },
-    "hk02945": {
-      "code": "02945",
-      "market": "hk",
-      "type": "港",
-      "name": "金斯瑞生物-二千",
-      "name_en": "GENSCRIPT B-2K",
-      "py": "jinsiruishengwu-erqian",
-      "abbr": "jsrsw-eq"
-    },
     "hk02947": {
       "code": "02947",
       "market": "hk",
@@ -21834,15 +21825,6 @@
       "name_en": "MICROSOFT-T",
       "py": "weiruan-t",
       "abbr": "wr-t"
-    },
-    "hk04621": {
-      "code": "04621",
-      "market": "hk",
-      "type": "港",
-      "name": "CINDA 21USDPREF",
-      "name_en": "CINDA 21USDPREF",
-      "py": "",
-      "abbr": ""
     },
     "hk06030": {
       "code": "06030",
