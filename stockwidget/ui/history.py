@@ -4,12 +4,14 @@ import threading
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QTimer, QSignalBlocker, Signal
 from PySide6.QtGui import QColor, QCursor, QFontInfo, QFontMetrics, QPalette
-from PySide6.QtWidgets import QApplication, QButtonGroup, QDialog, QToolTip
+from PySide6.QtWidgets import QApplication, QButtonGroup, QDialog, QToolTip, QWidget, QWidgetItem
 
 from stockwidget.core.window_rules import adjacent_popup_position, best_screen
 from stockwidget.core.config_store import history_cache_dir
 from stockwidget.data.bar_cache import BarCache
 from stockwidget.data.bars import MA_PERIODS, BarResult, HistorySeries, history_day, merge_quote, mini_trend_points, quote_moving_average, quote_volume_ratio, select_bars
+from stockwidget.platform.capabilities import is_wayland
+from stockwidget.platform.window import sync_macos_dock_icon
 from stockwidget.ui.controls.history_chart import MA_COLORS
 from stockwidget.ui.generated.ui_history import Ui_HistoryDialog
 from stockwidget.ui.controls.style import apply_settings_theme, is_dark_theme, navigation_arrow_icon, theme_palette
@@ -31,7 +33,9 @@ class HistoryDialog(QDialog):
         self.display_mode = display_mode
         self._restoring = False
         self._saved_size = None
+        self._preferred_size = None
         self._gesture = None
+        self._drag_started = False
         self._book_enabled = False
         self._theme_palette = None
         self.setMouseTracking(True)
@@ -75,8 +79,11 @@ class HistoryDialog(QDialog):
         self._save_timer.setSingleShot(True)
         self._save_timer.setInterval(200)
         self._save_timer.timeout.connect(self.save_size)
+        for child in self.findChildren(QWidget):
+            child.installEventFilter(self)
 
     def set_chart_options(self, options, unit_mode):
+        restoring, self._restoring = self._restoring, True
         self.chart.set_options(options.chart_ma_periods, options.chart_average_enabled,
                                options.chart_volume_enabled, unit_mode)
         for control, checked in ((self.ui.cb_order_book, options.chart_order_book_enabled),
@@ -94,20 +101,24 @@ class HistoryDialog(QDialog):
         self.ui.ma_row.setVisible(self.view == "daily" and options.chart_average_enabled)
         self.ui.cb_order_book.setEnabled(self.view == "intraday")
         self.set_order_book(options.chart_order_book_enabled)
+        self.update_size_limits()
+        self.layout().activate()
+        self._restoring = restoring
 
     def _ma_changed(self):
         self.options_changed.emit({"chart_ma_periods": [period for period in MA_PERIODS
                                                        if getattr(self.ui, f"cb_ma{period}").isChecked()]})
 
     def set_order_book(self, enabled):
-        visible = bool(enabled and self.view == "intraday")
-        if self._book_enabled != visible:
-            self._book_enabled = visible
-            self._restoring = True
-            self.order_book.setVisible(visible)
-            self.update_size_limits()
-            self.layout().activate()
-            self._restoring = False
+        restoring, self._restoring = self._restoring, True
+        changed = self._book_enabled != bool(enabled)
+        self._book_enabled = bool(enabled)
+        self.order_book.setVisible(self._book_enabled and self.view == "intraday")
+        self.update_size_limits()
+        if changed and self._preferred_size is not None:
+            self.resize(QSize(*self._preferred_size).expandedTo(self.minimumSize()).boundedTo(self.maximumSize()))
+        self.layout().activate()
+        self._restoring = restoring
 
     def update_size_limits(self, bounds=None):
         screen = QApplication.screenAt(self.frameGeometry().center()) or QApplication.primaryScreen()
@@ -119,14 +130,35 @@ class HistoryDialog(QDialog):
         if self._book_enabled:
             minimum = minimum.expandedTo(QSize(460, 300))
         if self.layout():
-            self.layout().invalidate()
-            minimum = minimum.expandedTo(self.layout().minimumSize())
+            layout = self.layout()
+            self.ui.content_layout.invalidate()
+            self.ui.ma_layout.invalidate()
+            layout.invalidate()
+            content = layout.minimumSize()
+            margins = layout.contentsMargins()
+            horizontal = margins.left() + margins.right()
+            # Use the same worst-case layout for every view, including hidden
+            # MA controls/status and the saved depth preference on five-day/K.
+            for row in (self.ui.ma_row, self.status):
+                hint = QWidgetItem(row).minimumSize()
+                if row.isHidden():
+                    hint = row.layout().minimumSize() if row.layout() else QSize(0, row.fontMetrics().height())
+                content.setWidth(max(content.width(), hint.width() + horizontal))
+                if row.isHidden():
+                    content.setHeight(content.height() + hint.height() + layout.spacing())
+            if self._book_enabled and self.order_book.isHidden():
+                chart = self.ui.content_layout.minimumSize()
+                content.setWidth(max(content.width(), chart.width() + self.order_book.minimumWidth()
+                                     + self.ui.content_layout.spacing() + horizontal))
+                content.setHeight(content.height() + max(0, self.order_book.minimumHeight() - chart.height()))
+            minimum = minimum.expandedTo(content)
         maximum = maximum.expandedTo(QSize(200, 200))
         self.setMinimumSize(minimum.boundedTo(maximum))
         self.setMaximumSize(maximum)
 
     def restore_size(self, size, bounds):
         self._restoring = True
+        self._preferred_size = list(size)
         self.update_size_limits(bounds)
         # Settle the footer's fitted font before saving the restored geometry.
         for _ in range(3):
@@ -145,16 +177,22 @@ class HistoryDialog(QDialog):
 
     def hideEvent(self, event):
         self._gesture = None
+        self._drag_started = False
+        self.unsetCursor()
         self.save_size()
         super().hideEvent(event)
         QToolTip.hideText()
         if not (self.display_mode == "window" and event.spontaneous() and self.isMinimized()):
             self.dismissed.emit()
+        if self.display_mode == "window":
+            sync_macos_dock_icon()
 
     def showEvent(self, event):
         super().showEvent(event)
         self.layout().activate()
         self._elide_labels()
+        if self.display_mode == "window":
+            sync_macos_dock_icon()
 
     @property
     def view(self):
@@ -196,7 +234,9 @@ class HistoryDialog(QDialog):
             if (x, y) != (frame.x(), frame.y()):
                 self.move(self.pos() + QPoint(x - frame.x(), y - frame.y()))
             self._saved_size = [self.width(), self.height()]
-            self._save_timer.start()
+            self._preferred_size = list(self._saved_size)
+            if not self._gesture:
+                self._save_timer.start()
 
     def _sync_readout_height(self):
         if not hasattr(self, "chart") or not hasattr(self.ui, "chart_readout"):
@@ -211,7 +251,7 @@ class HistoryDialog(QDialog):
         style = f"font-size: {pixels}px;"
         if label.styleSheet() != style:
             label.setStyleSheet(style)
-        height = label.fontMetrics().height() * len(lines) + 2
+        height = metrics.height() * 2 + 2
         if label.minimumHeight() != height or label.maximumHeight() != height:
             label.setFixedHeight(height)
             self.update_size_limits()
@@ -243,9 +283,14 @@ class HistoryDialog(QDialog):
         return edges
 
     def mousePressEvent(self, event):
-        edges = self._edges(event.position().toPoint())
-        if event.button() == Qt.LeftButton and edges:
+        point = self.mapFromGlobal(event.globalPosition().toPoint())
+        edges = self._edges(point)
+        movable = (self.display_mode == "popup" and self.rect().contains(point)
+                   and self.childAt(point) in (None, self.title_row, self.title))
+        if event.button() == Qt.LeftButton and (edges or movable):
+            self.save_size()
             self._gesture = edges, event.globalPosition().toPoint(), self.geometry()
+            self._drag_started = False
             event.accept()
         else:
             super().mousePressEvent(event)
@@ -254,6 +299,19 @@ class HistoryDialog(QDialog):
         if self._gesture:
             edges, start, original = self._gesture
             delta = event.globalPosition().toPoint() - start
+            if not edges:
+                if not self._drag_started:
+                    if delta.manhattanLength() < QApplication.startDragDistance():
+                        event.accept()
+                        return
+                    self._drag_started = True
+                    if is_wayland() and self.windowHandle().startSystemMove():
+                        self._gesture = None
+                        event.accept()
+                        return
+                self.move(original.topLeft() + delta)
+                event.accept()
+                return
             width = original.width() + (delta.x() if edges & Qt.RightEdge else -delta.x() if edges & Qt.LeftEdge else 0)
             height = original.height() + (delta.y() if edges & Qt.BottomEdge else -delta.y() if edges & Qt.TopEdge else 0)
             width = max(self.minimumWidth(), min(self.maximumWidth(), width))
@@ -277,7 +335,17 @@ class HistoryDialog(QDialog):
 
     def mouseReleaseEvent(self, event):
         if self._gesture and event.button() == Qt.LeftButton:
+            moved = not self._gesture[0] and self._drag_started
             self._gesture = None
+            self._drag_started = False
+            self.unsetCursor()
+            if moved:
+                bounds = best_screen(*self.geometry().getRect(),
+                                     [screen.availableGeometry().getRect() for screen in QApplication.screens()])
+                if bounds:
+                    area = QRect(*bounds)
+                    self.move(max(area.left(), min(area.right() - self.width() + 1, self.x())),
+                              max(area.top(), min(area.bottom() - self.height() + 1, self.y())))
             self.save_size()
             event.accept()
         else:
@@ -287,11 +355,32 @@ class HistoryDialog(QDialog):
         if self._gesture and event.key() == Qt.Key_Escape:
             original = self._gesture[2]
             self._gesture = None
+            self._drag_started = False
+            self.unsetCursor()
             self.setGeometry(original)
             self.save_size()
             event.accept()
         else:
             super().keyPressEvent(event)
+
+    def eventFilter(self, obj, event):
+        # Popup delivery can retarget a border press to a child on the next
+        # move. Keep the whole gesture here, before chart/buttons consume it.
+        if self._gesture:
+            if event.type() == QEvent.MouseMove:
+                self.mouseMoveEvent(event)
+                return True
+            if event.type() == QEvent.MouseButtonRelease and event.button() == Qt.LeftButton:
+                self.mouseReleaseEvent(event)
+                return True
+            if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Escape:
+                self.keyPressEvent(event)
+                return True
+        elif (self.display_mode == "popup" and obj in (self.title_row, self.title)
+              and event.type() == QEvent.MouseButtonPress and event.button() == Qt.LeftButton):
+            self.mousePressEvent(event)
+            return event.isAccepted()
+        return super().eventFilter(obj, event)
 
 
 class HistoryController(QObject):
@@ -453,7 +542,7 @@ class HistoryController(QObject):
             if restore:
                 size = getattr(self.window.view_options, f"chart_{self.dialog.display_mode}_size")
                 self.dialog.restore_size(size, QRect(*bounds))
-            if self.dialog.display_mode == "popup":
+            if self.dialog.display_mode == "popup" and restore:
                 self.dialog.move(*adjacent_popup_position(anchor.getRect(), bounds,
                                                          self.dialog.width(), self.dialog.height(),
                                                          prefer_above=self._surface == "taskbar"))

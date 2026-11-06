@@ -80,7 +80,7 @@ class WatchlistEditorTests(QtTestCase):
             app = QApplication([])
             with patch.object(QuotePresenter, "refresh"), patch.object(SettingsDialog, "_start_github_check"):
                 window = FloatLabel({}, {})
-                dialog = SettingsDialog(window, window)
+                dialog = SettingsDialog(window)
                 dialog.show()
                 dialog.watchlist_editor._start_quick_add()
                 app.processEvents()

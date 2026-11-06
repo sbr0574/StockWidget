@@ -1,11 +1,69 @@
 """设置按操作顺序展示常用内容，滚动后仍能完整访问次要选项。"""
 
-from PySide6.QtCore import QPoint
+from unittest.mock import patch
+
+from PySide6.QtCore import QPoint, Qt
+from shiboken6 import delete
+
+from stockwidget.ui.history import HistoryDialog
 
 from tests.support import SettingsTestCase
 
 
 class SettingsLayoutTests(SettingsTestCase):
+    def test_reset_and_data_actions_live_below_their_page_groups(self):
+        dialog, window = self._make_dialog()
+        dialog.show()
+        for page, scroll, content, group, buttons in (
+            (dialog.ui.floating, dialog.ui.floating_scroll, dialog.ui.floating_content, dialog.ui.gb_icon,
+             (dialog.ui.btn_reset_appearance,)),
+            (dialog.ui.about, dialog.ui.about_scroll, dialog.ui.about_content, dialog.ui.gb_about,
+             (dialog.ui.btn_reset_settings, dialog.ui.btn_open_cache_dir, dialog.ui.btn_clear_cache)),
+        ):
+            dialog.ui.settings_pages.setCurrentWidget(page)
+            scroll.ensureWidgetVisible(buttons[0])
+            self.qt_app.processEvents()
+            for button in buttons:
+                self.assertIs(button.parentWidget(), content)
+                self.assertFalse(group.isAncestorOf(button))
+                self.assertGreater(button.geometry().top(), group.geometry().bottom())
+                self.assertTrue(scroll.viewport().rect().contains(button.mapTo(scroll.viewport(), button.rect().bottomRight())))
+            self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
+
+    def test_settings_remains_an_independent_window_when_quotes_are_hidden_or_minimized(self):
+        dialog, window = self._make_dialog(float_on_top=True)
+        window.show()
+        dialog.show()
+        self.qt_app.processEvents()
+        self.assertIsNone(dialog.windowHandle().transientParent())
+        self.assertFalse(dialog.windowFlags() & Qt.WindowStaysOnTopHint)
+        window.hide_widget()
+        self.qt_app.processEvents()
+        self.assertTrue(dialog.isVisible())
+        dialog.showMinimized()
+        self.qt_app.processEvents()
+        self.assertFalse(window.isVisible())
+        dialog.showNormal()
+        dialog.close()
+        self.assertFalse(window.isVisible())
+
+    def test_dock_policy_follows_all_visible_normal_windows(self):
+        dialog, window = self._make_dialog()
+        detached = HistoryDialog(None, "window")
+        self.addCleanup(delete, detached)
+        with patch("stockwidget.platform.window.is_cocoa", return_value=True), \
+                patch("stockwidget.platform.window._set_macos_activation_policy") as policy:
+            dialog.show()
+            self.qt_app.processEvents()
+            policy.assert_called_with(0)
+            detached.show()
+            dialog.hide()
+            self.qt_app.processEvents()
+            policy.assert_called_with(0)
+            detached.hide()
+            self.qt_app.processEvents()
+            policy.assert_called_with(1)
+
     def test_data_general_and_appearance_keep_controls_in_their_responsible_group(self):
         dialog, window = self._make_dialog(chart_enabled=True, name_length=2)
         dialog.show()

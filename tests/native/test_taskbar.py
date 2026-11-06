@@ -16,7 +16,40 @@ from stockwidget.ui.floating.presenter import QuotePresenter
 from stockwidget.ui.floating.taskbar import TaskbarController
 from stockwidget.ui.floating.widget import FloatLabel
 from stockwidget.ui.settings.dialog import SettingsDialog
-from tests.support import QtTestCase
+from tests.support import QtTestCase, SettingsTestCase
+
+
+@unittest.skipUnless(sys.platform == "win32" and os.environ.get("STOCKWIDGET_TEST_WINDOWS") == "1",
+                     "Requires an opt-in Windows desktop session")
+class NativeSettingsWindowTests(SettingsTestCase):
+    def test_settings_has_an_unowned_non_topmost_taskbar_window_with_application_icon(self):
+        from ctypes import wintypes
+        from PySide6.QtCore import Qt
+        from PySide6.QtGui import QIcon, QPixmap
+        from stockwidget.platform.window import get_user32
+
+        original = self.qt_app.windowIcon()
+        self.addCleanup(self.qt_app.setWindowIcon, original)
+        pixmap = QPixmap(20, 20)
+        pixmap.fill(Qt.blue)
+        self.qt_app.setWindowIcon(QIcon(pixmap))
+        dialog, window = self._make_dialog(float_on_top=True)
+        window.show()
+        dialog.show()
+        self.qt_app.processEvents()
+        user = get_user32()
+        user.GetWindow.argtypes = [wintypes.HWND, wintypes.UINT]
+        user.GetWindow.restype = wintypes.HWND
+        hwnd = int(dialog.winId())
+        self.assertFalse(user.GetWindow(hwnd, 4))  # GW_OWNER
+        extended_style = user.GetWindowLongW(hwnd, -20)
+        self.assertFalse(extended_style & 0x00000080)  # WS_EX_TOOLWINDOW
+        self.assertFalse(extended_style & 0x00000008)  # WS_EX_TOPMOST
+        self.assertFalse(dialog.windowIcon().isNull())
+        dialog.showMinimized()
+        self.qt_app.processEvents()
+        self.assertTrue(dialog.isMinimized())
+        self.assertTrue(window.isVisible())
 
 
 class TaskbarMonitorTests(unittest.TestCase):
@@ -160,7 +193,7 @@ class NativeMultiscreenTaskbarTests(QtTestCase):
 
             owner = SimpleNamespace(win=source, taskbar=controller, settings_dlg=None)
             with patch.object(SettingsDialog, "_start_github_check"), \
-                    patch("stockwidget.app.SettingsDialog", side_effect=lambda win, parent, app: SettingsDialog(win, parent)):
+                    patch("stockwidget.app.SettingsDialog", side_effect=lambda win, app: SettingsDialog(win)):
                 App.open_settings(owner)
             dialog = owner.settings_dlg
             self.app.processEvents()

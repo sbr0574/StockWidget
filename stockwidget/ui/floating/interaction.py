@@ -195,7 +195,7 @@ class PositionController(QObject):
         return QRect(self._full if self.collapsed else self.source.geometry())
 
     def _bounded(self, rect):
-        if not (self.source.boundary_check_enabled or self.source.edge_hide_enabled):
+        if self._drag_origin is not None or not (self.source.boundary_check_enabled or self.source.edge_hide_enabled):
             return rect, None
         # 使用整个屏幕，允许双开浮窗经过任务栏；任务栏停靠仍由共用拖动处理。
         screens = [s.geometry() for s in QApplication.screens()]
@@ -299,7 +299,8 @@ class PositionController(QObject):
             self.source._notify_change()
 
     def recheck(self, *_):
-        if not self._restored or self._applying or self.source._updating_topmost:
+        if (self._drag_origin is not None or not self._restored or self._applying
+                or self.source._updating_topmost):
             return
         rect, bounds = self._bounded(self.full_geometry())
         edge = self._edge_at(rect, bounds)
@@ -353,7 +354,9 @@ class PositionController(QObject):
 
     def prepare_drag(self):
         self._drag_origin = (self.full_geometry(), self.collapsed, self.edge)
+        self.hover_timer.stop()
         self.expand()
+        self.edge = None
 
     def finish_drag(self, accepted):
         origin = self._drag_origin

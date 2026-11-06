@@ -810,26 +810,26 @@ class SettingsDialogTests(SettingsTestCase):
             dialog._on_update_check_finished((False, None))
             warn.assert_called_once()
 
-    def test_general_footer_actions_share_a_row_and_remain_visible_when_scrolled(self):
+    def test_about_footer_actions_share_a_row_and_remain_visible_when_scrolled(self):
         dialog, window = self._make_dialog()
         dialog.show()
-        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.general)
+        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.about)
         for mode in ("light", "dark"):
             window.set_view_options(color_mode=mode)
             self.qt_app.processEvents()
-            buttons = (dialog.ui.btn_reset_appearance, dialog.ui.btn_reset_settings,
+            buttons = (dialog.ui.btn_reset_settings,
                        dialog.ui.btn_open_cache_dir, dialog.ui.btn_clear_cache)
-            positions = [button.mapTo(dialog.ui.general_content, QPoint()) for button in buttons]
+            positions = [button.mapTo(dialog.ui.about_content, QPoint()) for button in buttons]
             self.assertEqual(len({position.y() for position in positions}), 1)
-            self.assertGreater(positions[0].y(), dialog.ui.gb_scheduled_hide.geometry().bottom())
+            self.assertGreater(positions[0].y(), dialog.ui.gb_about.geometry().bottom())
             for index, button in enumerate(buttons):
-                self.assertTrue(dialog.ui.general_content.rect().contains(
-                    button.mapTo(dialog.ui.general_content, button.rect().bottomRight())))
+                self.assertTrue(dialog.ui.about_content.rect().contains(
+                    button.mapTo(dialog.ui.about_content, button.rect().bottomRight())))
                 self.assertEqual(button.size(), buttons[0].size())
                 if index:
                     self.assertGreaterEqual(positions[index].x() - positions[index - 1].x()
                                             - buttons[index - 1].width(), 5)
-            scroll = dialog.ui.general_scroll
+            scroll = dialog.ui.about_scroll
             scroll.ensureWidgetVisible(dialog.ui.btn_clear_cache)
             self.qt_app.processEvents()
             self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)

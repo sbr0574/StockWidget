@@ -333,8 +333,9 @@ class HistoryUITests(HistoryTestCase):
                         # Sample inside the painted bar, clear of axes and the zero baseline.
                         x = (rect.left() + rect.width() * (chart._positions[i] + .5) / len(chart._time_axis)) * scale
                         y = (rect.bottom() - rect.height() / 2) * scale
-                        expected = (chart.palette().color(QPalette.Text), chart.up_color,
-                                    chart.down_color, chart.down_color)[i % 4]
+                        expected = (chart.down_color if view == "five_day" else
+                                    (chart.palette().color(QPalette.Text), chart.up_color,
+                                     chart.down_color, chart.down_color)[i % 4])
                         if expected.alpha() < 255:
                             background = chart.palette().color(QPalette.Base)
                             alpha = expected.alphaF()
@@ -398,9 +399,15 @@ class HistoryUITests(HistoryTestCase):
         self.assertNotEqual(with_average, chart.grab().toImage())
         window.history.dialog.ui.cb_average.setChecked(True)
         self.assertIn("均 10.50", chart.readout_text(observed_minute))
+        minute_count = len(chart.bars)
         history.dialog.set_view("five_day")
         self.wait_ready(window)
-        self.assertIn("均 10.50", chart.readout_text(observed_minute))
+        observed_interval = next(i for i, bar in enumerate(chart.bars) if bar.time.endswith("09:45:00"))
+        self.assertIn("均 10.70", chart.readout_text(observed_interval))
+        self.assertEqual(len(chart.bars), 6)
+        history.dialog.set_view("intraday")
+        self.wait_ready(window)
+        self.assertEqual(len(chart.bars), minute_count)
         self.assertEqual(history.cache.get.call_count, 1)
 
     def test_compact_chart_time_labels_keep_endpoints_without_overlap(self):

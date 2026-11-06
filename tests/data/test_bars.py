@@ -16,7 +16,7 @@ from stockwidget.data.bar_cache import BarCache, cache_state
 from stockwidget.data.bars import (
     Bar, BarResult, DAILY_HISTORY, HistorySeries, fetch_bars, history_day, intraday_average,
     intraday_timeline, market_now, merge_quote, mini_trend_points, minute_gaps, moving_average,
-    _parse_us_minutes, parse_sina, request_sina_bars, select_bars, volume_directions,
+    _parse_us_minutes, five_minute_bars, parse_sina, request_sina_bars, select_bars, volume_directions,
 )
 
 
@@ -385,6 +385,30 @@ class CacheTests(unittest.TestCase):
 
 
 class IntradayTimelineTests(unittest.TestCase):
+    def test_five_minute_display_aggregates_ohlc_quantities_and_preserves_cumulative_average(self):
+        start = datetime(2026, 9, 30, 9, 31)
+        bars = tuple(Bar((start + timedelta(minutes=i)).isoformat(" "), 10 + i, 11 + i, 9 + i,
+                         10 + i, 100, (10 + i) * 100) for i in range(12))
+        result = five_minute_bars(bars, A_SHARE)
+        self.assertEqual([bar.time[11:16] for bar in result], ["09:35", "09:40", "09:45"])
+        self.assertEqual(result[0], Bar("2026-09-30 09:35:00", 10, 15, 9, 14, 500, 6000, 12))
+        self.assertEqual([bar.volume for bar in result], [500, 500, 200])
+        self.assertEqual(result[-1].average, 15.5)
+        self.assertEqual(len(bars), 12)
+        index = {**A_SHARE, "type": "指"}
+        self.assertEqual(five_minute_bars(bars, index)[-1].average, 15.5)
+        self.assertIsNone(five_minute_bars((replace(bars[0], amount=None), bars[1]), A_SHARE)[0].amount)
+
+    def test_five_minute_buckets_keep_breaks_days_and_overnight_closing_minutes(self):
+        stamps = ("2026-09-29 11:29:00", "2026-09-29 11:30:00", "2026-09-29 13:00:00",
+                  "2026-09-29 13:01:00", "2026-09-30 09:31:00")
+        bars = tuple(Bar(stamp, 10, 11, 9, 10, 100) for stamp in stamps)
+        result = five_minute_bars(bars, A_SHARE)
+        self.assertEqual([bar.time for bar in result], ["2026-09-29 11:30:00", "2026-09-29 13:05:00", "2026-09-30 09:35:00"])
+        self.assertEqual([bar.volume for bar in result], [200, 200, 100])
+        night = tuple(Bar(stamp, 10, 11, 9, 10, 100) for stamp in ("2026-09-25 23:59:00", "2026-09-26 00:00:00"))
+        self.assertEqual(len(five_minute_bars(night, {"code": "au0", "type": "期"})), 1)
+
     def setUp(self):
         self.now = datetime(2026, 9, 30, 2, tzinfo=timezone.utc)
 

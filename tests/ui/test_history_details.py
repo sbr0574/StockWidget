@@ -19,6 +19,130 @@ from tests.ui.test_history import HistoryTestCase
 
 
 class HistoryDetailsTests(HistoryTestCase):
+    def test_window_routed_shrinking_keeps_all_eight_gestures_over_child_controls(self):
+        _, window = self.make_window(chart_enabled=True)
+        window.history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = window.history.dialog
+        for x_side, y_side in ((0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (1, -1), (-1, 1), (1, 1)):
+            with self.subTest(x=x_side, y=y_side):
+                popup.resize(600, 450)
+                popup.move(self.app.primaryScreen().availableGeometry().topLeft() + QPoint(40, 40))
+                self.app.processEvents()
+                original = popup.geometry()
+                start = QPoint(2 if x_side < 0 else popup.width() - 3 if x_side > 0 else popup.width() // 2,
+                               2 if y_side < 0 else popup.height() - 3 if y_side > 0 else popup.height() // 2)
+                finish = start + QPoint(-40 * x_side, -40 * y_side)
+                global_finish = popup.mapToGlobal(finish)
+                QTest.mousePress(popup.windowHandle(), Qt.LeftButton, pos=start)
+                QTest.mouseMove(popup.windowHandle(), finish)
+                self.app.processEvents()
+                QTest.mouseRelease(popup.windowHandle(), Qt.LeftButton, pos=popup.mapFromGlobal(global_finish))
+                self.app.processEvents()
+                expected = [original.width() - 40 * bool(x_side), original.height() - 40 * bool(y_side)]
+                self.assertEqual([popup.width(), popup.height()], expected)
+                self.assertEqual(window.current_config()["chart_popup_size"], expected)
+                self.assertIsNone(popup._gesture)
+
+    def test_dragging_title_keeps_size_and_position_across_view_and_quote_refresh(self):
+        _, window = self.make_window(chart_enabled=True)
+        history = window.history
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = history.dialog
+        popup.move(self.app.primaryScreen().availableGeometry().topLeft() + QPoint(20, 20))
+        original = popup.geometry()
+        start = popup.title.mapTo(popup, popup.title.rect().center())
+        finish_global = popup.mapToGlobal(start + QPoint(55, 35))
+        QTest.mousePress(popup.windowHandle(), Qt.LeftButton, pos=start)
+        QTest.mouseMove(popup.windowHandle(), start + QPoint(55, 35))
+        QTest.mouseRelease(popup.windowHandle(), Qt.LeftButton, pos=popup.mapFromGlobal(finish_global))
+        self.app.processEvents()
+        self.assertEqual(popup.pos(), original.topLeft() + QPoint(55, 35))
+        self.assertEqual(popup.size(), original.size())
+        geometry = popup.geometry()
+        popup.set_view("daily")
+        self.wait_ready(window)
+        history._quotes_updated()
+        self.assertEqual(popup.geometry(), geometry)
+        start = popup.title.mapTo(popup, popup.title.rect().center())
+        QTest.mousePress(popup.windowHandle(), Qt.LeftButton, pos=start)
+        QTest.mouseMove(popup.windowHandle(), start + QPoint(30, 10))
+        QTest.keyClick(popup, Qt.Key_Escape)
+        QTest.mouseRelease(popup.windowHandle(), Qt.LeftButton, pos=popup.mapFromGlobal(geometry.center()))
+        self.assertEqual(popup.geometry(), geometry)
+        self.assertTrue(popup.isVisible())
+
+    def test_three_views_share_minimum_and_one_saved_popup_size_for_each_depth_preference(self):
+        _, window = self.make_window(chart_enabled=True)
+        history = window.history
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = history.dialog
+        minima = []
+        for book in (False, True):
+            window.set_view_options(chart_order_book_enabled=book)
+            self.app.processEvents()
+            popup.resize(1, 1)
+            self.app.processEvents()
+            popup.save_size()
+            minimum, geometry = popup.minimumSize(), popup.geometry()
+            saved = window.current_config()["chart_popup_size"]
+            for view in ("daily", "five_day", "intraday", "five_day", "daily"):
+                popup.set_view(view)
+                self.wait_ready(window)
+                self.assertEqual(popup.minimumSize(), minimum)
+                self.assertEqual(popup.geometry(), geometry)
+                self.assertEqual(window.current_config()["chart_popup_size"], saved)
+            minima.append(minimum)
+        self.assertGreater(minima[1].width(), minima[0].width())
+        self.assertGreater(minima[1].height(), minima[0].height())
+
+    def test_title_drag_is_unbounded_until_the_mouse_is_released(self):
+        _, window = self.make_window(chart_enabled=True)
+        window.history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = window.history.dialog
+        bounds = self.app.primaryScreen().availableGeometry()
+        popup.move(bounds.topLeft() + QPoint(20, 20))
+        start = popup.title.mapTo(popup, popup.title.rect().center())
+        # Stay on this screen's horizontal span: Windows can expose logical
+        # gaps between scaled monitors that QTest can't target as real points.
+        wanted = QPoint(bounds.left() + 20, bounds.top() - 50)
+        finish = start + wanted - popup.pos()
+        finish_global = popup.mapToGlobal(finish)
+        QTest.mousePress(popup.windowHandle(), Qt.LeftButton, pos=start)
+        QTest.mouseMove(popup.windowHandle(), finish)
+        self.app.processEvents()
+        self.assertEqual(popup.pos(), wanted)
+        QTest.mouseRelease(popup.windowHandle(), Qt.LeftButton, pos=popup.mapFromGlobal(finish_global))
+        self.app.processEvents()
+        self.assertTrue(bounds.contains(popup.geometry()))
+
+    def test_depth_layout_expansion_does_not_replace_the_user_size(self):
+        _, window = self.make_window(chart_enabled=True)
+        history = window.history
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = history.dialog
+        popup.resize(1, 1)
+        self.app.processEvents()
+        popup.save_size()
+        preferred = list(window.current_config()["chart_popup_size"])
+        window.set_view_options(chart_order_book_enabled=True)
+        self.app.processEvents()
+        self.assertGreater(popup.height(), preferred[1])
+        self.assertEqual(window.current_config()["chart_popup_size"], preferred)
+        popup.set_view("daily")
+        self.wait_ready(window)
+        popup.close()
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        window.set_view_options(chart_order_book_enabled=False)
+        self.app.processEvents()
+        self.assertEqual([popup.width(), popup.height()], preferred)
+        self.assertEqual(window.current_config()["chart_popup_size"], preferred)
+
     def test_navigation_cycles_checked_canonical_order_and_keeps_window_view_and_size(self):
         _, window = self.make_window(chart_enabled=True, float_paging_enabled=True, float_max_rows=1)
         for entry in window.watchlist.values():
@@ -251,8 +375,8 @@ class HistoryDetailsTests(HistoryTestCase):
 
             with patch("stockwidget.ui.controls.history_chart.QPainter", Recorder):
                 chart.grab()
-            self.assertIn("10-22 09:31", texts)
-            self.assertEqual(chart.readout_text(), "均 11.00  价格 11.00 (+10.00%)  量 1")
+            self.assertIn("10-22 09:35", texts)
+            self.assertEqual(chart.readout_text(), "均 11.00  价格 11.00 (+10.00%)  量 2")
         finally:
             delete(chart)
 
@@ -306,7 +430,7 @@ class HistoryDetailsTests(HistoryTestCase):
         popup = window.history.dialog
         popup.resize(300, 210)
         self.app.processEvents()
-        self.assertLessEqual(popup.width(), 320)
+        self.assertEqual(popup.size(), popup.minimumSize())
         self.assertLess(popup.height(), 260)
         for button in popup.view_buttons.values():
             self.assertLessEqual(button.width(), button.fontMetrics().horizontalAdvance(button.text()) + 24)

@@ -1256,52 +1256,6 @@ class Ui_SettingDialog(object):
 
         self.generalContentLayout.addWidget(self.gb_scheduled_hide)
 
-        self.generalResetLayout = QHBoxLayout()
-        self.generalResetLayout.setSpacing(10)
-        self.generalResetLayout.setObjectName(u"generalResetLayout")
-        self.btn_reset_appearance = QPushButton(self.general_content)
-        self.btn_reset_appearance.setObjectName(u"btn_reset_appearance")
-        self.btn_reset_appearance.setAutoDefault(False)
-        self.btn_reset_appearance.setFlat(True)
-        self.btn_reset_appearance.setMinimumSize(QSize(110, 28))
-        self.btn_reset_appearance.setMaximumSize(QSize(110, 28))
-
-        self.generalResetLayout.addWidget(self.btn_reset_appearance)
-
-        self.btn_reset_settings = QPushButton(self.general_content)
-        self.btn_reset_settings.setObjectName(u"btn_reset_settings")
-        self.btn_reset_settings.setAutoDefault(False)
-        self.btn_reset_settings.setFlat(True)
-        self.btn_reset_settings.setMinimumSize(QSize(110, 28))
-        self.btn_reset_settings.setMaximumSize(QSize(110, 28))
-
-        self.generalResetLayout.addWidget(self.btn_reset_settings)
-
-        self.btn_open_cache_dir = QPushButton(self.general_content)
-        self.btn_open_cache_dir.setObjectName(u"btn_open_cache_dir")
-        self.btn_open_cache_dir.setAutoDefault(False)
-        self.btn_open_cache_dir.setFlat(True)
-        self.btn_open_cache_dir.setMinimumSize(QSize(110, 28))
-        self.btn_open_cache_dir.setMaximumSize(QSize(110, 28))
-
-        self.generalResetLayout.addWidget(self.btn_open_cache_dir)
-
-        self.btn_clear_cache = QPushButton(self.general_content)
-        self.btn_clear_cache.setObjectName(u"btn_clear_cache")
-        self.btn_clear_cache.setAutoDefault(False)
-        self.btn_clear_cache.setFlat(True)
-        self.btn_clear_cache.setMinimumSize(QSize(110, 28))
-        self.btn_clear_cache.setMaximumSize(QSize(110, 28))
-
-        self.generalResetLayout.addWidget(self.btn_clear_cache)
-
-        self.generalResetSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.generalResetLayout.addItem(self.generalResetSpacer)
-
-
-        self.generalContentLayout.addLayout(self.generalResetLayout)
-
         self.generalBottomSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.generalContentLayout.addItem(self.generalBottomSpacer)
@@ -1948,6 +1902,25 @@ class Ui_SettingDialog(object):
 
 
         self.floatingContentLayout.addWidget(self.gb_icon)
+
+        self.appearanceResetLayout = QHBoxLayout()
+        self.appearanceResetLayout.setSpacing(10)
+        self.appearanceResetLayout.setObjectName(u"appearanceResetLayout")
+        self.btn_reset_appearance = QPushButton(self.floating_content)
+        self.btn_reset_appearance.setObjectName(u"btn_reset_appearance")
+        self.btn_reset_appearance.setAutoDefault(False)
+        self.btn_reset_appearance.setFlat(True)
+        self.btn_reset_appearance.setMinimumSize(QSize(110, 28))
+        self.btn_reset_appearance.setMaximumSize(QSize(110, 28))
+
+        self.appearanceResetLayout.addWidget(self.btn_reset_appearance)
+
+        self.appearanceResetLayoutSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.appearanceResetLayout.addItem(self.appearanceResetLayoutSpacer)
+
+
+        self.floatingContentLayout.addLayout(self.appearanceResetLayout)
 
         self.floatingBottomSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
@@ -2824,6 +2797,43 @@ class Ui_SettingDialog(object):
 
         self.aboutContentLayout.addWidget(self.gb_about)
 
+        self.aboutActionsLayout = QHBoxLayout()
+        self.aboutActionsLayout.setSpacing(10)
+        self.aboutActionsLayout.setObjectName(u"aboutActionsLayout")
+        self.btn_reset_settings = QPushButton(self.about_content)
+        self.btn_reset_settings.setObjectName(u"btn_reset_settings")
+        self.btn_reset_settings.setAutoDefault(False)
+        self.btn_reset_settings.setFlat(True)
+        self.btn_reset_settings.setMinimumSize(QSize(110, 28))
+        self.btn_reset_settings.setMaximumSize(QSize(110, 28))
+
+        self.aboutActionsLayout.addWidget(self.btn_reset_settings)
+
+        self.btn_open_cache_dir = QPushButton(self.about_content)
+        self.btn_open_cache_dir.setObjectName(u"btn_open_cache_dir")
+        self.btn_open_cache_dir.setAutoDefault(False)
+        self.btn_open_cache_dir.setFlat(True)
+        self.btn_open_cache_dir.setMinimumSize(QSize(110, 28))
+        self.btn_open_cache_dir.setMaximumSize(QSize(110, 28))
+
+        self.aboutActionsLayout.addWidget(self.btn_open_cache_dir)
+
+        self.btn_clear_cache = QPushButton(self.about_content)
+        self.btn_clear_cache.setObjectName(u"btn_clear_cache")
+        self.btn_clear_cache.setAutoDefault(False)
+        self.btn_clear_cache.setFlat(True)
+        self.btn_clear_cache.setMinimumSize(QSize(110, 28))
+        self.btn_clear_cache.setMaximumSize(QSize(110, 28))
+
+        self.aboutActionsLayout.addWidget(self.btn_clear_cache)
+
+        self.aboutActionsLayoutSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.aboutActionsLayout.addItem(self.aboutActionsLayoutSpacer)
+
+
+        self.aboutContentLayout.addLayout(self.aboutActionsLayout)
+
         self.aboutBottomSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.aboutContentLayout.addItem(self.aboutBottomSpacer)
@@ -3032,17 +3042,17 @@ class Ui_SettingDialog(object):
 #if QT_CONFIG(accessibility)
         self.cb_click_through.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u9f20\u6807\u64cd\u4f5c\u7a7f\u8fc7\u6d6e\u7a97\uff0c\u53ef\u4f7f\u7528\u6258\u76d8\u6216\u5feb\u6377\u952e\u6062\u590d\u3002", None))
 #endif // QT_CONFIG(accessibility)
-        self.cb_boundary_check_title.setText(QCoreApplication.translate("SettingDialog", u"\u8fb9\u754c\u68c0\u6d4b", None))
-        self.cb_boundary_check_description.setText(QCoreApplication.translate("SettingDialog", u"\u5c06\u6d6e\u7a97\u9650\u5236\u5728\u5c4f\u5e55\u8303\u56f4\u5185\uff0c\u907f\u514d\u79fb\u51fa\u5c4f\u5e55\u3002", None))
-        self.cb_boundary_check.setText(QCoreApplication.translate("SettingDialog", u"\u8fb9\u754c\u68c0\u6d4b", None))
+        self.cb_boundary_check_title.setText(QCoreApplication.translate("SettingDialog", u"\u4fdd\u6301\u5728\u5c4f\u5e55\u5185", None))
+        self.cb_boundary_check_description.setText(QCoreApplication.translate("SettingDialog", u"\u62d6\u52a8\u65f6\u53ef\u79fb\u51fa\u5c4f\u5e55\uff0c\u677e\u5f00\u540e\u5c06\u6d6e\u7a97\u8c03\u6574\u56de\u5c4f\u5e55\u5185\u3002", None))
+        self.cb_boundary_check.setText(QCoreApplication.translate("SettingDialog", u"\u4fdd\u6301\u5728\u5c4f\u5e55\u5185", None))
 #if QT_CONFIG(tooltip)
-        self.cb_boundary_check.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5728\u5c4f\u5e55\u5185\u4fdd\u6301\u6d6e\u7a97\u5b8c\u6574\u663e\u793a\u3002\u542f\u7528\u540e\uff0c\u7a0b\u5e8f\u52a0\u8f7d\u3001\u62d6\u52a8\u53ca\u5185\u5bb9\u5c3a\u5bf8\u53d8\u5316\u65f6\u81ea\u52a8\u8c03\u6574\u8d8a\u754c\u4f4d\u7f6e\uff1b\u5173\u95ed\u540e\u5141\u8bb8\u6d6e\u7a97\u90e8\u5206\u4f4d\u4e8e\u5c4f\u5e55\u5916\u3002", None))
+        self.cb_boundary_check.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5728\u5c4f\u5e55\u5185\u4fdd\u6301\u6d6e\u7a97\u5b8c\u6574\u663e\u793a\u3002\u542f\u7528\u540e\uff0c\u7a0b\u5e8f\u52a0\u8f7d\u3001\u677e\u5f00\u62d6\u52a8\u540e\u53ca\u5185\u5bb9\u5c3a\u5bf8\u53d8\u5316\u65f6\u81ea\u52a8\u8c03\u6574\u8d8a\u754c\u4f4d\u7f6e\uff1b\u5173\u95ed\u540e\u5141\u8bb8\u6d6e\u7a97\u90e8\u5206\u4f4d\u4e8e\u5c4f\u5e55\u5916\u3002", None))
 #endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(accessibility)
-        self.cb_boundary_check.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u8fb9\u754c\u68c0\u6d4b", None))
+        self.cb_boundary_check.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u4fdd\u6301\u5728\u5c4f\u5e55\u5185", None))
 #endif // QT_CONFIG(accessibility)
 #if QT_CONFIG(accessibility)
-        self.cb_boundary_check.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u5c06\u6d6e\u7a97\u9650\u5236\u5728\u5c4f\u5e55\u8303\u56f4\u5185\uff0c\u907f\u514d\u79fb\u51fa\u5c4f\u5e55\u3002", None))
+        self.cb_boundary_check.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u62d6\u52a8\u65f6\u53ef\u79fb\u51fa\u5c4f\u5e55\uff0c\u677e\u5f00\u540e\u5c06\u6d6e\u7a97\u8c03\u6574\u56de\u5c4f\u5e55\u5185\u3002", None))
 #endif // QT_CONFIG(accessibility)
         self.cb_edge_hide_title.setText(QCoreApplication.translate("SettingDialog", u"\u8d34\u8fb9\u6536\u8d77", None))
         self.cb_edge_hide_description.setText(QCoreApplication.translate("SettingDialog", u"\u8d34\u4f4f\u5c4f\u5e55\u5de6\u3001\u4e0a\u3001\u53f3\u4fa7\u65f6\u6536\u8d77\u4e3a\u7a84\u6761\uff0c\u79fb\u5165\u65f6\u5c55\u5f00\u3002", None))
@@ -3120,19 +3130,6 @@ class Ui_SettingDialog(object):
 #if QT_CONFIG(tooltip)
         self.list_hide_times.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5355\u51fb\u9009\u4e2d\u65f6\u95f4\u540e\u53ef\u5220\u9664\uff0c\u6700\u591a3\u4e2a\u65f6\u95f4\uff0c\u6bcf\u65e5\u91cd\u590d\u3002", None))
 #endif // QT_CONFIG(tooltip)
-        self.btn_reset_appearance.setText(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u9ed8\u8ba4\u5916\u89c2", None))
-#if QT_CONFIG(tooltip)
-        self.btn_reset_appearance.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u989c\u8272\u3001\u900f\u660e\u5ea6\u3001\u5b57\u4f53\u3001\u884c\u8ddd\u3001\u8868\u5934\u3001\u7f51\u683c\u548c\u56fe\u6807", None))
-#endif // QT_CONFIG(tooltip)
-        self.btn_reset_settings.setText(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u9ed8\u8ba4\u8bbe\u7f6e", None))
-#if QT_CONFIG(tooltip)
-        self.btn_reset_settings.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u5237\u65b0\u95f4\u9694\u3001\u6307\u6807\u3001\u529f\u80fd\u5f00\u5173\u548c\u5feb\u6377\u952e", None))
-#endif // QT_CONFIG(tooltip)
-        self.btn_open_cache_dir.setText(QCoreApplication.translate("SettingDialog", u"\u6253\u5f00\u6570\u636e\u76ee\u5f55", None))
-        self.btn_clear_cache.setText(QCoreApplication.translate("SettingDialog", u"\u6e05\u7406\u56fe\u8868\u7f13\u5b58", None))
-#if QT_CONFIG(tooltip)
-        self.btn_clear_cache.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6e05\u9664\u5206\u65f6\u4e0eK\u7ebf\u56fe\u7684\u672c\u5730\u7f13\u5b58\uff0c\u4e0b\u6b21\u67e5\u770b\u65f6\u91cd\u65b0\u52a0\u8f7d\u3002", None))
-#endif // QT_CONFIG(tooltip)
         self.shortcuts_title.setText(QCoreApplication.translate("SettingDialog", u"\u5feb\u6377\u952e", None))
 #if QT_CONFIG(accessibility)
         self.shortcuts_title.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u5feb\u6377\u952e\u8bbe\u7f6e", None))
@@ -3207,6 +3204,10 @@ class Ui_SettingDialog(object):
         self.btn_icon_custom.setToolTip(QCoreApplication.translate("SettingDialog", u"\u9009\u62e9\u81ea\u5b9a\u4e49\u56fe\u6807", None))
 #endif // QT_CONFIG(tooltip)
         self.btn_icon_custom.setText(QCoreApplication.translate("SettingDialog", u"+", None))
+        self.btn_reset_appearance.setText(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u9ed8\u8ba4\u5916\u89c2", None))
+#if QT_CONFIG(tooltip)
+        self.btn_reset_appearance.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u989c\u8272\u3001\u900f\u660e\u5ea6\u3001\u5b57\u4f53\u3001\u884c\u8ddd\u3001\u8868\u5934\u3001\u7f51\u683c\u548c\u56fe\u6807", None))
+#endif // QT_CONFIG(tooltip)
         self.taskbar_title.setText(QCoreApplication.translate("SettingDialog", u"\u4efb\u52a1\u680f", None))
 #if QT_CONFIG(accessibility)
         self.taskbar_title.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u4efb\u52a1\u680f\u8bbe\u7f6e", None))
@@ -3356,4 +3357,13 @@ class Ui_SettingDialog(object):
         self.btn_check_update.setText(QCoreApplication.translate("SettingDialog", u"\u68c0\u67e5\u7a0b\u5e8f\u66f4\u65b0", None))
         self.label_data_state.setText(QCoreApplication.translate("SettingDialog", u"\u5e02\u573a\u4ee3\u7801\u6570\u636e", None))
         self.label_about_info.setText("")
+        self.btn_reset_settings.setText(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u9ed8\u8ba4\u8bbe\u7f6e", None))
+#if QT_CONFIG(tooltip)
+        self.btn_reset_settings.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u5237\u65b0\u95f4\u9694\u3001\u6307\u6807\u3001\u529f\u80fd\u5f00\u5173\u548c\u5feb\u6377\u952e", None))
+#endif // QT_CONFIG(tooltip)
+        self.btn_open_cache_dir.setText(QCoreApplication.translate("SettingDialog", u"\u6253\u5f00\u6570\u636e\u76ee\u5f55", None))
+        self.btn_clear_cache.setText(QCoreApplication.translate("SettingDialog", u"\u6e05\u7406\u7f13\u5b58", None))
+#if QT_CONFIG(tooltip)
+        self.btn_clear_cache.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6e05\u9664\u5206\u65f6\u3001K\u7ebf\u56fe\u4e0e\u8d22\u52a1\u8d44\u6599\u7684\u672c\u5730\u7f13\u5b58\uff0c\u4e0b\u6b21\u67e5\u770b\u65f6\u91cd\u65b0\u52a0\u8f7d\u3002", None))
+#endif // QT_CONFIG(tooltip)
     # retranslateUi

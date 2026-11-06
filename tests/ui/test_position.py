@@ -169,17 +169,42 @@ class WidgetPositionTests(unittest.TestCase):
         self.assertEqual(window.width(), 5)
         self.assertEqual(window.geometry().right(), self.screen.right())
 
-    def test_boundary_drag_clamps_and_escape_restores_position(self):
+    def test_boundary_drag_stays_unrestricted_and_escape_restores_position(self):
         window = self.window(boundary_check_enabled=True)
         origin = QPoint(100, 100)
         window.move(origin)
         start = origin + QPoint(10, 10)
         window.begin_drag(start)
         window.move_drag(QPoint(self.screen.right() + 100, self.screen.bottom() + 100))
-        self.assertTrue(self.screen.contains(window.geometry()))
+        self.app.processEvents()
+        window.position_controller.recheck()
+        self.assertFalse(self.screen.contains(window.geometry()))
         QApplication.sendEvent(window, QKeyEvent(QEvent.KeyPress, Qt.Key_Escape, Qt.NoModifier))
         self.assertEqual(window.pos(), origin)
         self.assertIsNone(window._drag_pos)
+
+    def test_boundary_checks_only_after_release_across_each_screen_edge(self):
+        window = self.window(boundary_check_enabled=True)
+        for position in (QPoint(self.screen.left() - 80, self.screen.top() + 50),
+                         QPoint(self.screen.right() + 80, self.screen.top() + 50),
+                         QPoint(self.screen.left() + 50, self.screen.top() - 80),
+                         QPoint(self.screen.left() + 50, self.screen.bottom() + 80)):
+            with self.subTest(position=position):
+                window.move(self.screen.topLeft() + QPoint(100, 100))
+                start = window.pos() + QPoint(10, 10)
+                window.begin_drag(start)
+                pointer = position + QPoint(10, 10)
+                window.move_drag(pointer)
+                self.app.processEvents()
+                window.position_controller.recheck()
+                window.position_controller.fit(window.size())
+                self.app.processEvents()
+                self.assertEqual(window.pos(), position)
+                self.assertFalse(self.screen.contains(window.geometry()))
+                window.finish_drag()
+                self.app.processEvents()
+                self.assertTrue(self.screen.contains(window.geometry()))
+                self.assertEqual(window.current_config()["pos"], {"x": window.x(), "y": window.y()})
 
     def test_three_edges_shrink_pause_hover_restore_and_save_full_position(self):
         for edge in ("left", "top", "right"):
@@ -375,7 +400,7 @@ class WidgetPositionTests(unittest.TestCase):
         self.enterContext(patch("stockwidget.ui.settings.groups.find_taskbar", return_value=None))
         window = self.window()
         with patch.object(SettingsDialog, "_start_github_check"):
-            dialog = SettingsDialog(window, window)
+            dialog = SettingsDialog(window)
         self.windows.append(dialog)
         dialog.show()
         dialog.ui.settings_pages.setCurrentWidget(dialog.ui.general)

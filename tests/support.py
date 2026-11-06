@@ -121,7 +121,7 @@ class SettingsTestCase(QtTestCase):
         cfg = {"watchlist": watchlist or {}, **settings}
         window = FloatLabel(cfg, CODES if codes is None else codes)
         with patch.object(SettingsDialog, "_start_github_check"):
-            dialog = SettingsDialog(window, window, app=app)
+            dialog = SettingsDialog(window, app=app)
         self._windows.append((dialog, window))
         return dialog, window
 

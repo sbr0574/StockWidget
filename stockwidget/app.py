@@ -20,6 +20,7 @@ from stockwidget.core.window_rules import best_screen
 from stockwidget.data.code_lists import CODES_RETRY_SECONDS, CodeListManager
 from stockwidget.data.update_check import get_update_info
 from stockwidget.platform.autostart import set_start_on_boot
+from stockwidget.platform.window import sync_macos_dock_icon
 from stockwidget.ui.settings.dialog import SettingsDialog
 from stockwidget.ui.controls.style import ApplicationTheme
 from stockwidget.ui.menus import TrayIcon
@@ -40,41 +41,6 @@ def _load_custom_icon(path) -> tuple[str, QIcon]:
     return normalized, icon
 
 
-def _hide_macos_dock_icon():
-    """macOS：把激活策略设为 Accessory，应用不在程序坞显示图标。
-
-    通过 ctypes 直调 AppKit（setActivationPolicy:），打包后的 .app
-    同时通过 Info.plist 的 LSUIElement 保证同样行为。
-    """
-    if sys.platform != "darwin":
-        return
-    try:
-        import ctypes
-        import ctypes.util
-
-        objc = ctypes.cdll.LoadLibrary(ctypes.util.find_library("objc"))
-        objc.objc_getClass.restype = ctypes.c_void_p
-        objc.objc_getClass.argtypes = [ctypes.c_char_p]
-        objc.sel_registerName.restype = ctypes.c_void_p
-        objc.sel_registerName.argtypes = [ctypes.c_char_p]
-        objc.objc_msgSend.restype = ctypes.c_void_p
-        objc.objc_msgSend.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
-        ns_app = objc.objc_msgSend(
-            objc.objc_getClass(b"NSApplication"),
-            objc.sel_registerName(b"sharedApplication"),
-        )
-        # NSApplicationActivationPolicyAccessory = 1
-        objc.objc_msgSend.restype = None
-        objc.objc_msgSend.argtypes = [
-            ctypes.c_void_p, ctypes.c_void_p, ctypes.c_long,
-        ]
-        objc.objc_msgSend(
-            ns_app, objc.sel_registerName(b"setActivationPolicy:"), 1
-        )
-    except Exception:
-        pass
-
-
 class App(QApplication):
     network_finished = Signal(object)
     codes_loaded = Signal(object)
@@ -82,8 +48,7 @@ class App(QApplication):
 
     def __init__(self, argv):
         super().__init__(argv)
-        # macOS 不在程序坞显示图标；Linux 由窗口的 Qt.Tool 标志避开任务栏
-        _hide_macos_dock_icon()
+        sync_macos_dock_icon()
         self.app_version = APP_VERSION
         try:
             cfg = initialize_data_directory()
@@ -174,7 +139,7 @@ class App(QApplication):
     def open_settings(self):
         if not self.settings_dlg or not self.settings_dlg.isVisible():
             try:
-                self.settings_dlg = SettingsDialog(self.win, self.win, app=self)
+                self.settings_dlg = SettingsDialog(self.win, app=self)
             except Exception as exc:
                 QMessageBox.critical(None, "设置窗口错误", f"无法打开设置窗口：\n{exc}")
                 return

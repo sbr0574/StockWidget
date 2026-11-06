@@ -16,8 +16,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QDialog, QGridLayout, QHBoxLayout,
-    QLabel, QPushButton, QSizePolicy, QSpacerItem,
-    QVBoxLayout, QWidget)
+    QLabel, QLayout, QPushButton, QSizePolicy,
+    QSpacerItem, QVBoxLayout, QWidget)
 
 from stockwidget.ui.controls.history_chart import HistoryChart
 from stockwidget.ui.controls.history_details import (HistoryQuoteHeader, OrderBookWidget)
@@ -31,6 +31,7 @@ class Ui_HistoryDialog(object):
         self.chart_layout = QVBoxLayout(HistoryDialog)
         self.chart_layout.setSpacing(4)
         self.chart_layout.setObjectName(u"chart_layout")
+        self.chart_layout.setSizeConstraint(QLayout.SizeConstraint.SetNoConstraint)
         self.chart_layout.setContentsMargins(8, 8, 8, 8)
         self.title_row = QWidget(HistoryDialog)
         self.title_row.setObjectName(u"title_row")
@@ -40,6 +41,7 @@ class Ui_HistoryDialog(object):
         self.title_layout.setContentsMargins(0, 0, 0, 0)
         self.title = QLabel(self.title_row)
         self.title.setObjectName(u"title")
+        self.title.setCursor(QCursor(Qt.CursorShape.OpenHandCursor))
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)

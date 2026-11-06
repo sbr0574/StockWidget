@@ -11,6 +11,32 @@ from PySide6.QtCore import Qt
 from stockwidget.platform.capabilities import is_cocoa, is_x11
 
 
+def sync_macos_dock_icon():
+    """Normal visible windows have a Dock entry; the tray-only app does not."""
+    if not is_cocoa():
+        return
+    from PySide6.QtWidgets import QApplication
+    visible = any(window.isVisible() and window.windowType() == Qt.Window
+                  for window in QApplication.topLevelWidgets())
+    _set_macos_activation_policy(0 if visible else 1)
+
+
+def _set_macos_activation_policy(policy):
+    try:
+        import ctypes.util
+        objc = ctypes.CDLL(ctypes.util.find_library("objc"))
+        objc.objc_getClass.argtypes = [ctypes.c_char_p]
+        objc.objc_getClass.restype = ctypes.c_void_p
+        objc.sel_registerName.argtypes = [ctypes.c_char_p]
+        objc.sel_registerName.restype = ctypes.c_void_p
+        pointer = ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p)(("objc_msgSend", objc))
+        ns_app = pointer(objc.objc_getClass(b"NSApplication"), objc.sel_registerName(b"sharedApplication"))
+        setter = ctypes.CFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_long)(("objc_msgSend", objc))
+        setter(ns_app, objc.sel_registerName(b"setActivationPolicy:"), policy)
+    except Exception:
+        logging.getLogger(__name__).debug("程序坞图标更新失败", exc_info=True)
+
+
 @lru_cache(maxsize=1)
 def get_user32():
     # 延迟加载，其他平台导入此模块时不访问 Windows DLL。

@@ -8,7 +8,7 @@ from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QWidget
 
 from stockwidget.core.quote_presentation import format_value, price_precision, should_use_english_units, volume_lot_size
-from stockwidget.data.bars import MA_PERIODS, intraday_average, intraday_timeline, market_now, moving_average, trading_date, volume_directions
+from stockwidget.data.bars import MA_PERIODS, five_minute_bars, five_minute_time, intraday_average, intraday_timeline, market_now, moving_average, trading_date, volume_directions
 
 
 MA_COLORS = ("#e3ac28", "#ba6ee0", "#2a9fd6", "#d97839", "#6fa84c")
@@ -49,13 +49,20 @@ class HistoryChart(QWidget):
         if self.view != view or any(self.instrument.get(key) != instrument.get(key) for key in ("market", "code", "type")):
             self._cursor_pos = None
         self.view, self.instrument = view, instrument
-        self.bars = tuple(bars[-30:] if view == "daily" else bars)
+        minutes = tuple(bars)
+        self.bars = (five_minute_bars(minutes, instrument) if view == "five_day" else
+                     tuple(bars[-30:] if view == "daily" else bars))
         self.averages = {period: moving_average(bars, period)[-30:] for period in MA_PERIODS} if view == "daily" else {}
-        self.minute_averages = intraday_average(self.bars, instrument) if view != "daily" else []
+        self.minute_averages = ([bar.average for bar in self.bars] if view == "five_day" else
+                                intraday_average(self.bars, instrument) if view != "daily" else [])
         self.opening_prices = {}
         if view != "daily":
-            for i, bar in enumerate(self.bars):
-                first = not i or trading_date(bar, instrument) != trading_date(self.bars[i - 1], instrument)
+            first_minutes = {}
+            for bar in minutes:
+                first_minutes.setdefault(trading_date(bar, instrument), bar)
+            for i, item in enumerate(self.bars):
+                first = not i or trading_date(item, instrument) != trading_date(self.bars[i - 1], instrument)
+                bar = first_minutes[trading_date(item, instrument)]
                 if first and bar.time[11:16] in {"09:30", "09:31", "09:00", "09:01", "21:00", "21:01"}:
                     self.opening_prices[i] = bar.open
         self.volume_directions = volume_directions(self.bars, view, instrument)
@@ -65,10 +72,11 @@ class HistoryChart(QWidget):
         if view == "five_day":
             times = []
             for day in dict.fromkeys(trading_date(bar, instrument) for bar in self.bars):
-                group = tuple(bar for bar in self.bars if trading_date(bar, instrument) == day)
+                group = tuple(bar for bar in minutes if trading_date(bar, instrument) == day)
                 local = market_now(instrument, now)
                 clock = datetime.fromisoformat(day).replace(hour=12, tzinfo=local.tzinfo)
                 slots = intraday_timeline(group, instrument, clock) or tuple(bar.time for bar in group)
+                slots = tuple(dict.fromkeys(five_minute_time(stamp, instrument) for stamp in slots))
                 self._day_ranges.append((len(times), len(times) + len(slots), day))
                 times.extend(slots)
             timeline = tuple(times)

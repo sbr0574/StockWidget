@@ -255,7 +255,7 @@ class TaskbarTests(QtTestCase):
 
         self.window.set_view_options(taskbar_enabled=False)
         with patch.object(SettingsDialog, "_start_github_check"), patch("sys.platform", "win32"):
-            dialog = SettingsDialog(self.window, self.window)
+            dialog = SettingsDialog(self.window)
             tray = TrayIcon(QIcon(), "Test", on_toggle=Mock(), on_open_settings=Mock(),
                             on_quit=Mock(), source=self.window)
             try:

@@ -39,6 +39,7 @@ from stockwidget.platform.capabilities import (
     unsupported_tooltip,
 )
 from stockwidget.platform.hotkeys import HotkeyResult
+from stockwidget.platform.window import sync_macos_dock_icon
 from stockwidget.ui.controls.style import (
     LINUX_FONT_RULES,
     apply_settings_theme,
@@ -82,8 +83,8 @@ class SettingsDialog(QDialog):
     github_check_finished = Signal(bool)
     update_check_finished = Signal(object)
 
-    def __init__(self, win: FloatLabel, parent: QWidget, app=None):
-        super().__init__(parent)
+    def __init__(self, win: FloatLabel, app=None):
+        super().__init__(None, Qt.Window)
         self.win = win
         self.app = app
         self._use_gitee_links = False
@@ -91,12 +92,7 @@ class SettingsDialog(QDialog):
         self.ui.setupUi(self)
         self._designer_stylesheet = self.styleSheet()
         self._init_view_settings()
-        # Linux 下用 Tool 窗口避开任务栏/程序坞条目；
-        # macOS 的 Dock 图标由应用级 Accessory 激活策略隐藏
-        # （见 app._hide_macos_dock_icon），窗口保持普通标题栏，
-        # 避免 Tool 窗口的小号红黄绿按钮与小标题。
         if sys.platform == "linux":
-            self.setWindowFlags(self.windowFlags() | Qt.WindowType.Tool)
             # 在指标池按文字宽度计算尺寸前应用字号，最终主题仍保留这些规则。
             self.setStyleSheet(LINUX_FONT_RULES)
         self._init_hotkey_status()
@@ -356,12 +352,12 @@ class SettingsDialog(QDialog):
         self.ui.cb_edge_hide.setEnabled(supported and (not needs_boundary or self.win.boundary_check_enabled))
         description = "贴住屏幕左、上、右侧时收起为窄条，移入时展开。"
         if needs_boundary:
-            description += "需先开启边界检测。"
+            description += "需先开启“保持在屏幕内”。"
         self.ui.cb_edge_hide_description.setText(description)
         self.ui.cb_edge_hide.setAccessibleDescription(description)
         self.ui.cb_edge_hide.setToolTip(
             unsupported_tooltip("贴边收起") if not supported else
-            "请先开启边界检测" if needs_boundary and not self.win.boundary_check_enabled else
+            "请先开启“保持在屏幕内”" if needs_boundary and not self.win.boundary_check_enabled else
             "贴住屏幕左、上、右边时收起为窄条，鼠标移入展开；底边不收起。"
         )
 
@@ -898,6 +894,14 @@ class SettingsDialog(QDialog):
         message = "已清理图表缓存。" if cleared else "部分图表缓存未能清理，请稍后重试。"
         button = self.ui.btn_clear_cache
         self._cache_tooltip(button, message)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        sync_macos_dock_icon()
+
+    def hideEvent(self, event):
+        super().hideEvent(event)
+        sync_macos_dock_icon()
 
     def closeEvent(self, event):
         self.watchlist_editor.close()
