@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-05",
+  "last_update": "2026-11-06",
   "codes": {
     "bj920000": {
       "code": "920000",
@@ -549,6 +549,15 @@
       "name_en": "JINGE MATERIAL",
       "py": "jingexincai",
       "abbr": "jgxc"
+    },
+    "bj920085": {
+      "code": "920085",
+      "market": "bj",
+      "type": "京",
+      "name": "N森峰",
+      "name_en": "",
+      "py": "nsenfeng",
+      "abbr": "nsf"
     },
     "bj920086": {
       "code": "920086",
@@ -2678,10 +2687,10 @@
       "code": "920779",
       "market": "bj",
       "type": "京",
-      "name": "武汉蓝电",
+      "name": "XD武汉蓝",
       "name_en": "WUHAN LAND",
-      "py": "wuhanlandian",
-      "abbr": "whld"
+      "py": "xdwuhanlan",
+      "abbr": "xdwhl"
     },
     "bj920781": {
       "code": "920781",

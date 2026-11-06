@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-05",
+  "last_update": "2026-11-06",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -1449,6 +1449,15 @@
       "name_en": "",
       "py": "zhongjinyizhuangchanyeyuanreit",
       "abbr": "zjyzcyyreit"
+    },
+    "sh508081": {
+      "code": "508081",
+      "market": "sh",
+      "type": "基",
+      "name": "长城华能燃煤发电REIT",
+      "name_en": "",
+      "py": "changchenghuanengranmeifadianreit",
+      "abbr": "cchnrmfdreit"
     },
     "sh508082": {
       "code": "508082",
@@ -8690,10 +8699,10 @@
       "code": "563780",
       "market": "sh",
       "type": "基",
-      "name": "现金流全指ETF方正富邦",
+      "name": "现金流ETF方正富邦",
       "name_en": "",
-      "py": "xianjinliuquanzhietffangzhengfubang",
-      "abbr": "xjlqzetffzfb"
+      "py": "xianjinliuetffangzhengfubang",
+      "abbr": "xjletffzfb"
     },
     "sh563790": {
       "code": "563790",
@@ -10611,6 +10620,15 @@
       "name_en": "",
       "py": "chuangyebanruanjianetfnanfang",
       "abbr": "cybrjetfnf"
+    },
+    "sz158076": {
+      "code": "158076",
+      "market": "sz",
+      "type": "基",
+      "name": "红利低波ETF广发",
+      "name_en": "",
+      "py": "honglidiboetfguangfa",
+      "abbr": "hldbetfgf"
     },
     "sz158078": {
       "code": "158078",

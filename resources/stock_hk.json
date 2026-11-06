@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-05",
+  "last_update": "2026-11-06",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -6396,7 +6396,7 @@
       "market": "hk",
       "type": "港",
       "name": "帝王国际投资",
-      "name_en": "KING INTL-NEW",
+      "name_en": "KING INTL INV",
       "py": "diwangguojitouzi",
       "abbr": "dwgjtz"
     },
@@ -12381,7 +12381,7 @@
       "market": "hk",
       "type": "港",
       "name": "中国万天控股",
-      "name_en": "CHINA WANTIAN",
+      "name_en": "CHINA ONETECH",
       "py": "zhongguowantiankonggu",
       "abbr": "zgwtkg"
     },
@@ -18352,15 +18352,6 @@
       "py": "huaxinkonggu",
       "abbr": "hxkg"
     },
-    "hk02938": {
-      "code": "02938",
-      "market": "hk",
-      "type": "港",
-      "name": "帝王国际投资",
-      "name_en": "KING INTL-OLD",
-      "py": "diwangguojitouzi",
-      "abbr": "dwgjtz"
-    },
     "hk02942": {
       "code": "02942",
       "market": "hk",
@@ -18393,9 +18384,18 @@
       "market": "hk",
       "type": "港",
       "name": "天瑞汽车内饰",
-      "name_en": "TR INTERIORS",
+      "name_en": "TR INTERIOR-OLD",
       "py": "tianruiqicheneishi",
       "abbr": "trqcns"
+    },
+    "hk02949": {
+      "code": "02949",
+      "market": "hk",
+      "type": "港",
+      "name": "绿色电能集团股权",
+      "name_en": "GREEN POWER RTS",
+      "py": "lvsediannengjituanguquan",
+      "abbr": "lsdnjtgq"
     },
     "hk02952": {
       "code": "02952",
@@ -20665,6 +20665,15 @@
       "py": "agxhengxizeng",
       "abbr": "agxhxz"
     },
+    "hk03559": {
+      "code": "03559",
+      "market": "hk",
+      "type": "基",
+      "name": "嘉实科创芯片",
+      "name_en": "HGI STAR CHIP",
+      "py": "jiashikechuangxinpian",
+      "abbr": "jskcxp"
+    },
     "hk03566": {
       "code": "03566",
       "market": "hk",
@@ -22209,7 +22218,7 @@
       "market": "hk",
       "type": "港",
       "name": "天瑞汽车内饰",
-      "name_en": "TR INTERIORS",
+      "name_en": "TR INTERIOR-NEW",
       "py": "tianruiqicheneishi",
       "abbr": "trqcns"
     },
@@ -25692,7 +25701,7 @@
       "market": "hk",
       "type": "港",
       "name": "中显智能齐家控股",
-      "name_en": "ZXZN QI-HSE-5K",
+      "name_en": "ZXZN QI-HOUSE",
       "py": "zhongxianzhinengqijiakonggu",
       "abbr": "zxznqjkg"
     },
@@ -26380,15 +26389,6 @@
       "py": "jinyeguojijituan",
       "abbr": "jygjjt"
     },
-    "hk08551": {
-      "code": "08551",
-      "market": "hk",
-      "type": "港",
-      "name": "中显智能(二万)",
-      "name_en": "ZXZN QI-HSE-20K",
-      "py": "zhongxianzhineng(erwan)",
-      "abbr": "zxzn(ew)"
-    },
     "hk08552": {
       "code": "08552",
       "market": "hk",
@@ -26415,6 +26415,15 @@
       "name_en": "S ROBOT EDU-OLD",
       "py": "shentongjiqirenjiaoyu",
       "abbr": "stjqrjy"
+    },
+    "hk08557": {
+      "code": "08557",
+      "market": "hk",
+      "type": "港",
+      "name": "浙江联合投资",
+      "name_en": "ZJ UNITED INV",
+      "py": "zhejianglianhetouzi",
+      "abbr": "zjlhtz"
     },
     "hk08572": {
       "code": "08572",
@@ -28530,6 +28539,15 @@
       "name_en": "AGX HSDIV ENH-U",
       "py": "agxhengxizeng-u",
       "abbr": "agxhxz-u"
+    },
+    "hk41559": {
+      "code": "41559",
+      "market": "hk",
+      "type": "基",
+      "name": "嘉实科创芯片-U",
+      "name_en": "HGI STAR CHIP-U",
+      "py": "jiashikechuangxinpian-u",
+      "abbr": "jskcxp-u"
     },
     "hk41566": {
       "code": "41566",

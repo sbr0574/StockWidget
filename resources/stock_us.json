@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-05",
+  "last_update": "2026-11-06",
   "codes": {
     "usa": {
       "code": "a",
@@ -952,6 +952,15 @@
       "type": "美",
       "name": "Accel Entertainment, Inc.",
       "name_en": "Accel Entertainment, Inc.",
+      "py": "",
+      "abbr": ""
+    },
+    "usacem": {
+      "code": "acem",
+      "market": "us",
+      "type": "美",
+      "name": "American Century Emerging Markets Insights ETF",
+      "name_en": "American Century Emerging Markets Insights ETF",
       "py": "",
       "abbr": ""
     },
@@ -2860,6 +2869,24 @@
       "type": "美",
       "name": "agilon health, inc. Common Stock",
       "name_en": "agilon health, inc. Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usaglt": {
+      "code": "aglt",
+      "market": "us",
+      "type": "美",
+      "name": "Agility Robotics, Inc. - Ordinary Shares",
+      "name_en": "Agility Robotics, Inc. - Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "usagltw": {
+      "code": "agltw",
+      "market": "us",
+      "type": "美",
+      "name": "Agility Robotics, Inc. - Warrants",
+      "name_en": "Agility Robotics, Inc. - Warrants",
       "py": "",
       "abbr": ""
     },
@@ -10765,6 +10792,15 @@
       "py": "",
       "abbr": ""
     },
+    "usbblx": {
+      "code": "bblx",
+      "market": "us",
+      "type": "美",
+      "name": "BondBloxx Core Plus ETF",
+      "name_en": "BondBloxx Core Plus ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usbbmc": {
       "code": "bbmc",
       "market": "us",
@@ -12121,6 +12157,15 @@
       "type": "美",
       "name": "Bread Financial Holdings, Inc. Depositary Shares, each representing a 1/40th interest in a share of 8.875% Fixed Rate Reset Non-Cumulative Perpetual Preferred Stock, Series B",
       "name_en": "Bread Financial Holdings, Inc. Depositary Shares, each representing a 1/40th interest in a share of 8.875% Fixed Rate Reset Non-Cumulative Perpetual Preferred Stock, Series B",
+      "py": "",
+      "abbr": ""
+    },
+    "usbfh_c": {
+      "code": "bfh_c",
+      "market": "us",
+      "type": "美",
+      "name": "Bread Financial Holdings, Inc. Depositary Shares, each representing a 1/40th interest in a share of its 9.375% Fixed Rate Reset Non-Cumulative Perpetual Preferred Stock, Series C",
+      "name_en": "Bread Financial Holdings, Inc. Depositary Shares, each representing a 1/40th interest in a share of its 9.375% Fixed Rate Reset Non-Cumulative Perpetual Preferred Stock, Series C",
       "py": "",
       "abbr": ""
     },
@@ -19153,33 +19198,6 @@
       "py": "",
       "abbr": ""
     },
-    "usccxi": {
-      "code": "ccxi",
-      "market": "us",
-      "type": "美",
-      "name": "Churchill Capital Corp XI - Class A Ordinary Shares",
-      "name_en": "Churchill Capital Corp XI - Class A Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usccxiu": {
-      "code": "ccxiu",
-      "market": "us",
-      "type": "美",
-      "name": "Churchill Capital Corp XI - Units",
-      "name_en": "Churchill Capital Corp XI - Units",
-      "py": "",
-      "abbr": ""
-    },
-    "usccxiw": {
-      "code": "ccxiw",
-      "market": "us",
-      "type": "美",
-      "name": "Churchill Capital Corp XI - Warrants",
-      "name_en": "Churchill Capital Corp XI - Warrants",
-      "py": "",
-      "abbr": ""
-    },
     "usccz": {
       "code": "ccz",
       "market": "us",
@@ -19256,8 +19274,8 @@
       "code": "cdlr",
       "market": "us",
       "type": "美",
-      "name": "Cadeler A/S American Depositary Share (each representing four (4) Ordinary Shares)",
-      "name_en": "Cadeler A/S American Depositary Share (each representing four (4) Ordinary Shares)",
+      "name": "Cadeler plc Ordinary Shares",
+      "name_en": "Cadeler plc Ordinary Shares",
       "py": "",
       "abbr": ""
     },
@@ -27712,6 +27730,15 @@
       "py": "",
       "abbr": ""
     },
+    "usdfit": {
+      "code": "dfit",
+      "market": "us",
+      "type": "美",
+      "name": "Davidson Intermediate Taxable ETF",
+      "name_en": "Davidson Intermediate Taxable ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usdfiv": {
       "code": "dfiv",
       "market": "us",
@@ -28717,6 +28744,15 @@
       "type": "美",
       "name": "FT Vest U.S. Equity Dual Directional Buffer ETF - August",
       "name_en": "FT Vest U.S. Equity Dual Directional Buffer ETF - August",
+      "py": "",
+      "abbr": ""
+    },
+    "usdlay": {
+      "code": "dlay",
+      "market": "us",
+      "type": "美",
+      "name": "Tuttle Capital AI Bottleneck ETF",
+      "name_en": "Tuttle Capital AI Bottleneck ETF",
       "py": "",
       "abbr": ""
     },
@@ -34907,8 +34943,8 @@
       "code": "euda",
       "market": "us",
       "type": "美",
-      "name": "Euda Health Holdings Limited - Ordinary Shares",
-      "name_en": "Euda Health Holdings Limited - Ordinary Shares",
+      "name": "Euda Health Holdings Limited - Class A Ordinary Shares",
+      "name_en": "Euda Health Holdings Limited - Class A Ordinary Shares",
       "py": "",
       "abbr": ""
     },
@@ -39778,6 +39814,15 @@
       "type": "美",
       "name": "First Trust Municipal High Income ETF",
       "name_en": "First Trust Municipal High Income ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usfmig": {
+      "code": "fmig",
+      "market": "us",
+      "type": "美",
+      "name": "FMI Global Equity ETF",
+      "name_en": "FMI Global Equity ETF",
       "py": "",
       "abbr": ""
     },
@@ -49173,7 +49218,7 @@
       "market": "us",
       "type": "美",
       "name": "希尔顿酒店",
-      "name_en": "Hilton Worldwide Holdings Inc. Common Stock",
+      "name_en": "Hilton Worldwide Holdings Inc. - Common Stock",
       "py": "xierdunjiudian",
       "abbr": "xedjd"
     },
@@ -54151,6 +54196,15 @@
       "type": "美",
       "name": "INNIO N.V. - Ordinary Shares",
       "name_en": "INNIO N.V. - Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "usinjc": {
+      "code": "injc",
+      "market": "us",
+      "type": "美",
+      "name": "Canary Staked INJ ETF",
+      "name_en": "Canary Staked INJ ETF",
       "py": "",
       "abbr": ""
     },
@@ -117194,8 +117248,8 @@
       "code": "xter",
       "market": "us",
       "type": "美",
-      "name": "Karman Line Acquisition Corp. - Class A Ordinary Shares",
-      "name_en": "Karman Line Acquisition Corp. - Class A Ordinary Shares",
+      "name": "Xterax Corporation II - Class A Ordinary Shares",
+      "name_en": "Xterax Corporation II - Class A Ordinary Shares",
       "py": "",
       "abbr": ""
     },
@@ -117203,8 +117257,8 @@
       "code": "xteru",
       "market": "us",
       "type": "美",
-      "name": "Karman Line Acquisition Corp. - Units",
-      "name_en": "Karman Line Acquisition Corp. - Units",
+      "name": "Xterax Corporation II - Units",
+      "name_en": "Xterax Corporation II - Units",
       "py": "",
       "abbr": ""
     },
@@ -117212,8 +117266,8 @@
       "code": "xterw",
       "market": "us",
       "type": "美",
-      "name": "Karman Line Acquisition Corp. - Warrants",
-      "name_en": "Karman Line Acquisition Corp. - Warrants",
+      "name": "Xterax Corporation II - Warrants",
+      "name_en": "Xterax Corporation II - Warrants",
       "py": "",
       "abbr": ""
     },

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-05",
+  "last_update": "2026-11-06",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -2975,10 +2975,10 @@
       "code": "600459",
       "market": "sh",
       "type": "沪",
-      "name": "贵研铂业",
+      "name": "XD贵研铂",
       "name_en": "",
-      "py": "guiyanboye",
-      "abbr": "gyby"
+      "py": "xdguiyanbo",
+      "abbr": "xdgyb"
     },
     "sh600460": {
       "code": "600460",
@@ -3362,10 +3362,10 @@
       "code": "600516",
       "market": "sh",
       "type": "沪",
-      "name": "方大炭素",
+      "name": "XD方大炭",
       "name_en": "",
-      "py": "fangdatansu",
-      "abbr": "fdts"
+      "py": "xdfangdatan",
+      "abbr": "xdfdt"
     },
     "sh600517": {
       "code": "600517",
@@ -3623,10 +3623,10 @@
       "code": "600551",
       "market": "sh",
       "type": "沪",
-      "name": "时代出版",
+      "name": "XD时代出",
       "name_en": "",
-      "py": "shidaichuban",
-      "abbr": "sdcb"
+      "py": "xdshidaichu",
+      "abbr": "xdsdc"
     },
     "sh600552": {
       "code": "600552",
@@ -7556,10 +7556,10 @@
       "code": "601319",
       "market": "sh",
       "type": "沪",
-      "name": "中国人保",
+      "name": "XD中国人",
       "name_en": "",
-      "py": "zhongguorenbao",
-      "abbr": "zgrb"
+      "py": "xdzhongguoren",
+      "abbr": "xdzgr"
     },
     "sh601326": {
       "code": "601326",
@@ -8078,10 +8078,10 @@
       "code": "601696",
       "market": "sh",
       "type": "沪",
-      "name": "中银证券",
+      "name": "XD中银证",
       "name_en": "",
-      "py": "zhongyinzhengquan",
-      "abbr": "zyzq"
+      "py": "xdzhongyinzheng",
+      "abbr": "xdzyz"
     },
     "sh601698": {
       "code": "601698",
@@ -11939,10 +11939,10 @@
       "code": "603511",
       "market": "sh",
       "type": "沪",
-      "name": "XD爱慕股",
+      "name": "爱慕股份",
       "name_en": "",
-      "py": "xdaimugu",
-      "abbr": "xdamg"
+      "py": "aimugufen",
+      "abbr": "amgf"
     },
     "sh603515": {
       "code": "603515",
@@ -13514,10 +13514,10 @@
       "code": "603858",
       "market": "sh",
       "type": "沪",
-      "name": "XD步长制",
+      "name": "步长制药",
       "name_en": "",
-      "py": "xdbuzhangzhi",
-      "abbr": "xdbzz"
+      "py": "buzhangzhiyao",
+      "abbr": "bzzy"
     },
     "sh603859": {
       "code": "603859",
@@ -13649,10 +13649,10 @@
       "code": "603881",
       "market": "sh",
       "type": "沪",
-      "name": "数据港",
+      "name": "XD数据港",
       "name_en": "",
-      "py": "shujugang",
-      "abbr": "sjg"
+      "py": "xdshujugang",
+      "abbr": "xdsjg"
     },
     "sh603882": {
       "code": "603882",
@@ -17942,10 +17942,10 @@
       "code": "688336",
       "market": "sh",
       "type": "科",
-      "name": "三生国健",
+      "name": "XD三生国",
       "name_en": "",
-      "py": "sanshengguojian",
-      "abbr": "ssgj"
+      "py": "xdsanshengguo",
+      "abbr": "xdssg"
     },
     "sh688337": {
       "code": "688337",
