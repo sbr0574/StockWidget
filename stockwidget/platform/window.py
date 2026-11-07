@@ -1,4 +1,4 @@
-"""浮窗原生能力：Windows 无激活置顶与 Windows / Cocoa / X11 鼠标穿透。"""
+"""浮窗原生能力：Windows 无激活置顶、Windows / Cocoa / X11 鼠标穿透与 macOS 浮窗光标。"""
 
 from ctypes import wintypes
 from functools import lru_cache
@@ -69,6 +69,93 @@ def ensure_topmost(widget) -> bool:
             raise ctypes.WinError(ctypes.get_last_error())
     except OSError:
         logging.getLogger(__name__).debug("原生置顶失败", exc_info=True)
+        return False
+    return True
+
+
+# macOS 的 Qt::Popup 是不接受 key window 的 QNSPanel。Qt 的
+# QCocoaWindow::setWindowCursor() 只在 key / utility 窗口上同步系统光标，
+# 所以这类浮窗调用 QWidget.setCursor() 后原生光标仍保持箭头。这里沿用
+# Qt 自身的 NSCursor 映射，在 Cocoa 下直接设置系统光标。
+_MACOS_CURSOR_NAMES = {
+    Qt.ArrowCursor: (b"arrowCursor",),
+    Qt.SizeHorCursor: (b"_windowResizeEastWestCursor", b"resizeLeftRightCursor"),
+    Qt.SizeVerCursor: (b"_windowResizeNorthSouthCursor", b"resizeUpDownCursor"),
+    Qt.SizeFDiagCursor: (b"_windowResizeNorthWestSouthEastCursor",),
+    Qt.SizeBDiagCursor: (b"_windowResizeNorthEastSouthWestCursor",),
+}
+# macOS 15 起可使用公开的 frameResizeCursorFromPosition:inDirections:；
+# 位置值与 NSCursorFrameResizeDirectionsAll 来自 AppKit。
+_MACOS_FRAME_RESIZE_POSITIONS = {
+    Qt.SizeVerCursor: 1,   # NSCursorFrameResizePositionTop
+    Qt.SizeHorCursor: 2,   # NSCursorFrameResizePositionLeft
+    Qt.SizeFDiagCursor: 3, # NSCursorFrameResizePositionTopLeft
+    Qt.SizeBDiagCursor: 9, # NSCursorFrameResizePositionTopRight
+}
+
+
+@lru_cache(maxsize=1)
+def _macos_cursor_bridge():
+    """解析 NSCursor 单例；保留 AppKit 引用避免框架被卸载。"""
+    try:
+        import ctypes.util
+        objc = ctypes.CDLL(ctypes.util.find_library("objc"))
+        appkit = ctypes.CDLL(ctypes.util.find_library("AppKit"))
+        objc.objc_getClass.argtypes = [ctypes.c_char_p]
+        objc.objc_getClass.restype = ctypes.c_void_p
+        objc.sel_registerName.argtypes = [ctypes.c_char_p]
+        objc.sel_registerName.restype = ctypes.c_void_p
+        send_pointer = ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p)(
+            ("objc_msgSend", objc))
+        send_bool = ctypes.CFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p)(
+            ("objc_msgSend", objc))
+        send_void = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_void_p)(
+            ("objc_msgSend", objc))
+        send_frame_cursor = ctypes.CFUNCTYPE(
+            ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_long, ctypes.c_long,
+        )(("objc_msgSend", objc))
+        ns_cursor = objc.objc_getClass(b"NSCursor")
+        if not ns_cursor:
+            return None
+        responds = objc.sel_registerName(b"respondsToSelector:")
+        frame_selector = objc.sel_registerName(b"frameResizeCursorFromPosition:inDirections:")
+        has_frame_cursor = send_bool(ns_cursor, responds, frame_selector)
+        set_cursor = objc.sel_registerName(b"set")
+        cursors = {}
+        for shape, names in _MACOS_CURSOR_NAMES.items():
+            for name in names:
+                selector = objc.sel_registerName(name)
+                if not send_bool(ns_cursor, responds, selector):
+                    continue
+                cursor = send_pointer(ns_cursor, selector)
+                if cursor:
+                    cursors[shape] = cursor
+                break
+            if shape not in cursors and has_frame_cursor and shape in _MACOS_FRAME_RESIZE_POSITIONS:
+                cursor = send_frame_cursor(ns_cursor, frame_selector,
+                                           _MACOS_FRAME_RESIZE_POSITIONS[shape], 3)
+                if cursor:
+                    cursors[shape] = cursor
+        return cursors, lambda cursor: send_void(cursor, set_cursor), appkit
+    except Exception:
+        logging.getLogger(__name__).debug("macOS 原生光标初始化失败", exc_info=True)
+        return None
+
+
+def set_macos_cursor(shape) -> bool:
+    """Cocoa 浮窗直接应用原生光标，返回是否成功。其他平台不处理。"""
+    if not is_cocoa():
+        return False
+    bridge = _macos_cursor_bridge()
+    if not bridge:
+        return False
+    cursor = bridge[0].get(shape)
+    if not cursor:
+        return False
+    try:
+        bridge[1](cursor)
+    except Exception:
+        logging.getLogger(__name__).debug("macOS 原生光标设置失败", exc_info=True)
         return False
     return True
 

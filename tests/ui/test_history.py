@@ -562,6 +562,39 @@ class HistoryUITests(HistoryTestCase):
         QTest.mouseClick(popup.close_button, Qt.LeftButton)
         self.assertFalse(popup.isVisible())
 
+    def test_popup_edges_apply_native_cursor_and_clear_it_off_edges(self):
+        _, window = self.make_window(chart_enabled=True)
+        window.history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = window.history.dialog
+
+        def move(widget, x, y):
+            point = QPointF(x, y)
+            event = QMouseEvent(QEvent.MouseMove, point, QPointF(widget.mapToGlobal(point.toPoint())),
+                                Qt.NoButton, Qt.NoButton, Qt.NoModifier)
+            QApplication.sendEvent(widget, event)
+
+        with patch("stockwidget.ui.history.set_macos_cursor", return_value=True) as native:
+            move(popup, 2, popup.height() // 2)
+            self.assertEqual(popup.cursor().shape(), Qt.SizeHorCursor)
+            self.assertEqual(native.call_args.args[0], Qt.SizeHorCursor)
+            move(popup, popup.width() // 2, 2)
+            self.assertEqual(native.call_args.args[0], Qt.SizeVerCursor)
+            move(popup, 2, 2)
+            self.assertEqual(native.call_args.args[0], Qt.SizeFDiagCursor)
+            move(popup, popup.width() // 2, popup.height() // 2)
+            self.assertEqual(popup.cursor().shape(), Qt.ArrowCursor)
+            self.assertEqual(native.call_args.args[0], Qt.ArrowCursor)
+            # A fast move can enter a child without a dialog move; clear the
+            # forced resize cursor before the child handles the event.
+            move(popup, 2, popup.height() // 2)
+            move(popup.chart, popup.chart.width() // 2, popup.chart.height() // 2)
+            self.assertEqual(native.call_args.args[0], Qt.ArrowCursor)
+            move(popup, 2, popup.height() // 2)
+            QApplication.sendEvent(popup, QEvent(QEvent.Leave))
+            self.assertEqual(native.call_args.args[0], Qt.ArrowCursor)
+            self.assertEqual(popup.cursor().shape(), Qt.ArrowCursor)
+
     def test_popup_hide_discards_inflight_and_pending_results(self):
         _, window = self.make_window(chart_enabled=True, chart_display_mode="large")
         history = window.history

@@ -11,7 +11,7 @@ from stockwidget.core.config_store import history_cache_dir
 from stockwidget.data.bar_cache import BarCache
 from stockwidget.data.bars import MA_PERIODS, BarResult, HistorySeries, history_day, merge_quote, mini_trend_points, quote_moving_average, quote_volume_ratio, select_bars
 from stockwidget.platform.capabilities import is_wayland
-from stockwidget.platform.window import sync_macos_dock_icon
+from stockwidget.platform.window import set_macos_cursor, sync_macos_dock_icon
 from stockwidget.ui.controls.history_chart import MA_COLORS
 from stockwidget.ui.generated.ui_history import Ui_HistoryDialog
 from stockwidget.ui.controls.style import apply_settings_theme, is_dark_theme, navigation_arrow_icon, theme_palette
@@ -36,6 +36,7 @@ class HistoryDialog(QDialog):
         self._preferred_size = None
         self._gesture = None
         self._drag_started = False
+        self._native_resize_cursor = False
         self._book_enabled = False
         self._theme_palette = None
         self.setMouseTracking(True)
@@ -178,7 +179,7 @@ class HistoryDialog(QDialog):
     def hideEvent(self, event):
         self._gesture = None
         self._drag_started = False
-        self.unsetCursor()
+        self._apply_cursor(Qt.ArrowCursor)
         self.save_size()
         super().hideEvent(event)
         QToolTip.hideText()
@@ -282,12 +283,33 @@ class HistoryDialog(QDialog):
                 edges |= edge
         return edges
 
+    @staticmethod
+    def _edge_cursor(edges):
+        horizontal = bool(edges & (Qt.LeftEdge | Qt.RightEdge))
+        vertical = bool(edges & (Qt.TopEdge | Qt.BottomEdge))
+        if horizontal and vertical:
+            return (Qt.SizeFDiagCursor if bool(edges & Qt.LeftEdge) == bool(edges & Qt.TopEdge)
+                    else Qt.SizeBDiagCursor)
+        return Qt.SizeHorCursor if horizontal else Qt.SizeVerCursor if vertical else Qt.ArrowCursor
+
+    def _apply_cursor(self, cursor):
+        self.setCursor(cursor)
+        if self.display_mode != "popup" or (cursor == Qt.ArrowCursor and not self._native_resize_cursor):
+            return
+        if set_macos_cursor(cursor):
+            self._native_resize_cursor = cursor != Qt.ArrowCursor
+
+    def _sync_cursor(self):
+        self._apply_cursor(self._edge_cursor(self._edges(self.mapFromGlobal(QCursor.pos()))))
+
     def mousePressEvent(self, event):
         point = self.mapFromGlobal(event.globalPosition().toPoint())
         edges = self._edges(point)
         movable = (self.display_mode == "popup" and self.rect().contains(point)
                    and self.childAt(point) in (None, self.title_row, self.title))
         if event.button() == Qt.LeftButton and (edges or movable):
+            if edges:
+                self._apply_cursor(self._edge_cursor(edges))
             self.save_size()
             self._gesture = edges, event.globalPosition().toPoint(), self.geometry()
             self._drag_started = False
@@ -324,21 +346,19 @@ class HistoryDialog(QDialog):
                              max(bounds.top(), min(bounds.bottom() - height + 1, y)), width, height)
             event.accept()
             return
-        edges = self._edges(event.position().toPoint())
-        horizontal, vertical = bool(edges & (Qt.LeftEdge | Qt.RightEdge)), bool(edges & (Qt.TopEdge | Qt.BottomEdge))
-        if horizontal and vertical:
-            cursor = Qt.SizeFDiagCursor if bool(edges & Qt.LeftEdge) == bool(edges & Qt.TopEdge) else Qt.SizeBDiagCursor
-        else:
-            cursor = Qt.SizeHorCursor if horizontal else Qt.SizeVerCursor if vertical else Qt.ArrowCursor
-        self.setCursor(cursor)
+        self._apply_cursor(self._edge_cursor(self._edges(event.position().toPoint())))
         super().mouseMoveEvent(event)
+
+    def leaveEvent(self, event):
+        if self.display_mode == "popup":
+            self._apply_cursor(Qt.ArrowCursor)
+        super().leaveEvent(event)
 
     def mouseReleaseEvent(self, event):
         if self._gesture and event.button() == Qt.LeftButton:
             moved = not self._gesture[0] and self._drag_started
             self._gesture = None
             self._drag_started = False
-            self.unsetCursor()
             if moved:
                 bounds = best_screen(*self.geometry().getRect(),
                                      [screen.availableGeometry().getRect() for screen in QApplication.screens()])
@@ -346,6 +366,7 @@ class HistoryDialog(QDialog):
                     area = QRect(*bounds)
                     self.move(max(area.left(), min(area.right() - self.width() + 1, self.x())),
                               max(area.top(), min(area.bottom() - self.height() + 1, self.y())))
+            self._sync_cursor()
             self.save_size()
             event.accept()
         else:
@@ -356,8 +377,8 @@ class HistoryDialog(QDialog):
             original = self._gesture[2]
             self._gesture = None
             self._drag_started = False
-            self.unsetCursor()
             self.setGeometry(original)
+            self._sync_cursor()
             self.save_size()
             event.accept()
         else:
@@ -376,6 +397,11 @@ class HistoryDialog(QDialog):
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Escape:
                 self.keyPressEvent(event)
                 return True
+        elif (event.type() in (QEvent.Enter, QEvent.MouseMove)
+              and (self._native_resize_cursor or self.cursor().shape() != Qt.ArrowCursor)):
+            # A quick move can jump from the border into a child before the
+            # dialog's own margin receives a move; clear the resize cursor.
+            self._apply_cursor(Qt.ArrowCursor)
         elif (self.display_mode == "popup" and obj in (self.title_row, self.title)
               and event.type() == QEvent.MouseButtonPress and event.button() == Qt.LeftButton):
             self.mousePressEvent(event)
