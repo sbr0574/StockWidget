@@ -111,6 +111,10 @@ def navigation_arrow_icon(direction: int, device_pixel_ratio: float = 1.0, palet
     return _line_icon(path, 14, device_pixel_ratio, palette)
 
 
+def pin_icon(device_pixel_ratio: float = 1.0, palette=None) -> QIcon:
+    return _line_icon('M8 3h8M9 3v6l-3 3v2h12v-2l-3-3V3M12 14v7', 14, device_pixel_ratio, palette)
+
+
 def _line_icon(path, size, device_pixel_ratio, palette):
     color = (palette or QApplication.palette()).color(QPalette.ColorRole.WindowText).name()
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
@@ -415,3 +419,21 @@ def apply_settings_theme(widget: QWidget, dark: bool, palette: QPalette, *,
                         + "\n" + extra_stylesheet)
     for control in widgets:
         control.setPalette(choice_palette if isinstance(control, (QRadioButton, QCheckBox)) else palette)
+
+
+def apply_history_theme(widget, dark, palette, foreground=None, background=None):
+    floating = foreground is not None
+    palette = QPalette(palette)
+    ma_colors = [(control, control.palette().windowText().color())
+                 for control in widget.ui.ma_row.findChildren(QCheckBox)]
+    if floating:
+        for role in (QPalette.WindowText, QPalette.Text, QPalette.ButtonText, QPalette.HighlightedText, QPalette.Mid):
+            palette.setColor(role, foreground)
+        for role in (QPalette.Window, QPalette.Base):
+            palette.setColor(role, background)
+    extra = "QPushButton:disabled { color: palette(button-text); }" if floating else ""
+    apply_settings_theme(widget, dark, palette, extra_stylesheet=extra)
+    for control, color in ma_colors:
+        control_palette = QPalette(control.palette())
+        control_palette.setColor(QPalette.WindowText, color)
+        control.setPalette(control_palette)

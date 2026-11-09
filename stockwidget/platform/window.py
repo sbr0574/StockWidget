@@ -1,4 +1,4 @@
-"""浮窗原生能力：Windows 无激活置顶、Windows / Cocoa / X11 鼠标穿透与 macOS 浮窗光标。"""
+"""浮窗原生能力：无激活置顶、鼠标穿透与光标。"""
 
 from ctypes import wintypes
 from functools import lru_cache
@@ -50,7 +50,17 @@ def get_user32():
         ctypes.c_int, ctypes.c_int, wintypes.UINT,
     ]
     user32.SetWindowPos.restype = wintypes.BOOL
+    user32.LoadCursorW.argtypes = [wintypes.HINSTANCE, ctypes.c_void_p]
+    user32.LoadCursorW.restype = wintypes.HANDLE
+    user32.SetCursor.argtypes = [wintypes.HANDLE]
+    user32.SetCursor.restype = wintypes.HANDLE
     return user32
+
+
+def set_windows_arrow_cursor():
+    """Popup 捕获期间，直接恢复不会收到 WM_SETCURSOR 的窗口光标。"""
+    user32 = get_user32()
+    user32.SetCursor(user32.LoadCursorW(None, ctypes.c_void_p(32512)))
 
 
 def ensure_topmost(widget) -> bool:
@@ -73,10 +83,7 @@ def ensure_topmost(widget) -> bool:
     return True
 
 
-# macOS 的 Qt::Popup 是不接受 key window 的 QNSPanel。Qt 的
-# QCocoaWindow::setWindowCursor() 只在 key / utility 窗口上同步系统光标，
-# 所以这类浮窗调用 QWidget.setCursor() 后原生光标仍保持箭头。这里沿用
-# Qt 自身的 NSCursor 映射，在 Cocoa 下直接设置系统光标。
+# Cocoa 的非 key、非 utility 窗口需直接同步 NSCursor。
 _MACOS_CURSOR_NAMES = {
     Qt.ArrowCursor: (b"arrowCursor",),
     Qt.SizeHorCursor: (b"_windowResizeEastWestCursor", b"resizeLeftRightCursor"),
@@ -84,19 +91,18 @@ _MACOS_CURSOR_NAMES = {
     Qt.SizeFDiagCursor: (b"_windowResizeNorthWestSouthEastCursor",),
     Qt.SizeBDiagCursor: (b"_windowResizeNorthEastSouthWestCursor",),
 }
-# macOS 15 起可使用公开的 frameResizeCursorFromPosition:inDirections:；
-# 位置值与 NSCursorFrameResizeDirectionsAll 来自 AppKit。
+# AppKit 的 NSCursorFrameResizePosition 值，供 macOS 15 起的公开接口使用。
 _MACOS_FRAME_RESIZE_POSITIONS = {
-    Qt.SizeVerCursor: 1,   # NSCursorFrameResizePositionTop
-    Qt.SizeHorCursor: 2,   # NSCursorFrameResizePositionLeft
-    Qt.SizeFDiagCursor: 3, # NSCursorFrameResizePositionTopLeft
-    Qt.SizeBDiagCursor: 9, # NSCursorFrameResizePositionTopRight
+    Qt.SizeVerCursor: 1,  # Top
+    Qt.SizeHorCursor: 2,  # Left
+    Qt.SizeFDiagCursor: 3,  # TopLeft
+    Qt.SizeBDiagCursor: 9,  # TopRight
 }
 
 
 @lru_cache(maxsize=1)
 def _macos_cursor_bridge():
-    """解析 NSCursor 单例；保留 AppKit 引用避免框架被卸载。"""
+    """缓存系统光标与调用入口，保留 AppKit 引用。"""
     try:
         import ctypes.util
         objc = ctypes.CDLL(ctypes.util.find_library("objc"))
@@ -143,13 +149,11 @@ def _macos_cursor_bridge():
 
 
 def set_macos_cursor(shape) -> bool:
-    """Cocoa 浮窗直接应用原生光标，返回是否成功。其他平台不处理。"""
+    """设置 Cocoa 浮窗的系统光标。"""
     if not is_cocoa():
         return False
     bridge = _macos_cursor_bridge()
-    if not bridge:
-        return False
-    cursor = bridge[0].get(shape)
+    cursor = bridge[0].get(shape) if bridge else None
     if not cursor:
         return False
     try:

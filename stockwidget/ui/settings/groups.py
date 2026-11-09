@@ -3,13 +3,12 @@
 from contextlib import ExitStack
 import sys
 
-from PySide6.QtCore import QObject, QSignalBlocker, QTimer
+from PySide6.QtCore import QObject, QSignalBlocker
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QCheckBox,
     QColorDialog,
     QComboBox,
-    QFontComboBox,
     QGroupBox,
     QLabel,
     QPushButton,
@@ -18,8 +17,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from stockwidget.core.view_options import PAGE_MODES, taskbar_content_height, taskbar_font_size_limit
-from stockwidget.platform.taskbar import find_taskbar
+from stockwidget.core.view_options import PAGE_MODES
 from stockwidget.ui.controls.metrics import MetricPoolWidget
 from stockwidget.ui.controls.style import set_color_button
 
@@ -74,7 +72,7 @@ class _SettingsGroup(QObject):
 class _SyncedGroup(_SettingsGroup):
     def _connect_sync(self):
         # TaskbarSettings owns source subscriptions and refreshes all children.
-        # Child groups only own their controls (and the style geometry timer).
+        # Child groups only own their controls.
         self.sync()
 
     def bind(self, source, key):
@@ -137,42 +135,17 @@ class TaskbarMetricSettings(_SyncedGroup):
         self.metric_pool.set_visible_metrics(self.source.get_surface_metrics("taskbar"))
 
 
-class TaskbarStyleSettings(_SyncedGroup):
+class TaskbarStyleSettings(_SettingsGroup):
     def bind(self, source):
-        super().bind(source, "taskbar_sync_appearance")
-        self._publish(font_family=self._control(QFontComboBox, "taskbar_font_family"))
-        self.font_family.currentFontChanged.connect(
-            lambda font: source.set_view_options(taskbar_font_family=font.family()))
-        self._publish(font_size=self._value_control("taskbar_font_size", QSlider),
-                      font_size_label=self._control(QLabel, "taskbar_font_size_label"),
-                      color=self._control(QPushButton, "btn_taskbar_color"))
+        super().bind(source)
+        self._publish(color=self._control(QPushButton, "btn_taskbar_color"))
         self.color.clicked.connect(self._pick_color)
-        self._publish(unicolor=self._control(QCheckBox, "taskbar_unicolor"),
-                      auto_color=self._control(QCheckBox, "taskbar_auto_color"))
-        self.unicolor.toggled.connect(lambda value: source.set_view_options(taskbar_unicolor=value))
+        self._publish(auto_color=self._control(QCheckBox, "taskbar_auto_color"))
         self.auto_color.toggled.connect(lambda value: source.set_view_options(taskbar_auto_color=value))
         self._publish(opacity=self._value_control("taskbar_opacity_pct", QSlider),
                       opacity_label=self._control(QLabel, "taskbar_opacity_pct_label"))
-        self._taskbar_geometry = None
-        self._geometry_timer = QTimer(self)
-        self._geometry_timer.setInterval(1000)
-        self._geometry_timer.timeout.connect(lambda: self.sync() if self.group.isVisible() else None)
-        self._geometry_timer.start()
-        self._connect_sync()
-
-    def _font_size_limit(self):
-        try:
-            area = (find_taskbar(window=int(self.source.winId()), device_name=self.source.taskbar_screen)
-                    if sys.platform == "win32" else None)
-        except OSError:
-            area = None
-        if area:
-            self._taskbar_geometry = (taskbar_content_height(area.height, area.dpi), area.dpi)
-        if self._taskbar_geometry is None:
-            dpi = max(96, round(96 * self.group.devicePixelRatioF()))
-            self._taskbar_geometry = (round(44 * dpi / 96), dpi)
-        height, dpi = self._taskbar_geometry
-        return taskbar_font_size_limit(height, dpi, self.source.view_options.taskbar_rows)
+        self.opacity.sliderMoved.connect(lambda value: self.opacity_label.setText(f"{value}%"))
+        self.sync()
 
     def _pick_color(self):
         color = QColorDialog.getColor(QColor(self.source.view_options.taskbar_color), self.group, "任务栏文字颜色")
@@ -180,22 +153,13 @@ class TaskbarStyleSettings(_SyncedGroup):
             self.source.set_view_options(taskbar_color=color.name())
 
     def _sync(self):
-        self._sync_switch()
-        font, color, opacity, unicolor = self.source.get_taskbar_appearance()
-        self.font_family.setCurrentFont(font)
-        limit = self._font_size_limit()
-        self.font_size.setMaximum(limit)
-        self.font_size.setValue(min(font.pointSize(), limit))
-        self.font_size_label.setText(f"{self.font_size.value()} pt")
-        self.font_size.setToolTip(f"当前行数与任务栏高度下，最大字号为 {limit} pt；缩放变化后自动更新。")
+        _font, color, opacity, _unicolor = self.source.get_taskbar_appearance()
         set_color_button(self.color, color, "任务栏文字颜色")
         self.opacity.setValue(opacity)
         self.opacity_label.setText(f"{opacity}%")
-        self.unicolor.setChecked(unicolor)
         automatic = self.source.view_options.taskbar_auto_color
         self.auto_color.setChecked(automatic)
         self.color.setEnabled(not automatic)
-        self.unicolor.setEnabled(not automatic)
 
 
 class TaskbarPagingSettings(_SyncedGroup):

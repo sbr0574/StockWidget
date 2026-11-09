@@ -3,7 +3,7 @@
 from unittest.mock import Mock, patch
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QColor, QIcon
 from shiboken6 import delete
 
 from stockwidget.ui.menus import TrayIcon
@@ -91,13 +91,11 @@ class MenuBehaviorTests(PagingTestCase):
                 self.assertIsNone(self.win.quotes.sort_header)
                 self.assertEqual(self.win.view_options.taskbar_metrics, ["price"])
 
-    def test_taskbar_actions_respect_sync_and_preserve_independent_preferences(self):
+    def test_taskbar_metrics_and_split_respect_sync_while_color_mode_is_always_shared(self):
         self.win.set_visible_metrics(["name"])
         self.win.set_unicolor(False)
         self.win.set_view_options(taskbar_sync_metrics=True, taskbar_metrics=["volume"],
-                                  taskbar_sync_split=True, float_split_enabled=False,
-                                  taskbar_split_enabled=False, taskbar_sync_appearance=True,
-                                  taskbar_unicolor=False)
+                                  taskbar_sync_split=True, float_split_enabled=False, taskbar_split_enabled=False)
         menu = actions(self.menu("taskbar"))
         actions(menu["显示指标"].menu())["现价"].trigger()
         menu["分栏"].trigger()
@@ -107,36 +105,35 @@ class MenuBehaviorTests(PagingTestCase):
         self.assertTrue(self.win.unicolor)
         self.assertEqual(self.win.view_options.taskbar_metrics, ["volume"])
         self.assertFalse(self.win.view_options.taskbar_split_enabled)
-        self.assertFalse(self.win.view_options.taskbar_unicolor)
-
-        self.win.set_view_options(taskbar_sync_metrics=False, taskbar_sync_split=False,
-                                  taskbar_sync_appearance=False)
+        self.win.set_view_options(taskbar_sync_metrics=False, taskbar_sync_split=False)
         menu = actions(self.menu("taskbar"))
         actions(menu["显示指标"].menu())["现价"].trigger()
         menu["分栏"].trigger()
         menu["统一颜色"].trigger()
         self.assertEqual(self.win.view_options.taskbar_metrics, ["volume", "price"])
         self.assertTrue(self.win.view_options.taskbar_split_enabled)
-        self.assertTrue(self.win.view_options.taskbar_unicolor)
+        self.assertFalse(self.win.unicolor)
+        self.assertFalse(self.win.get_taskbar_appearance()[3])
         self.assertEqual(self.win.visible_metrics, ["name", "price"])
         self.assertTrue(self.win.view_options.float_split_enabled)
-        self.assertTrue(self.win.unicolor)
 
-    def test_taskbar_auto_color_updates_saved_preference_and_respects_appearance_sync(self):
-        self.win.set_view_options(taskbar_sync_appearance=False, taskbar_auto_color=False)
+    def test_taskbar_auto_color_updates_saved_preference_without_changing_shared_color_mode(self):
+        self.win.set_view_options(taskbar_auto_color=False)
+        self.win.set_unicolor(False)
         self.assertNotIn("自动配色", actions(self.menu("float")))
         action = actions(self.menu("taskbar"))["自动配色"]
         self.assertTrue(action.isEnabled())
         self.assertFalse(action.isChecked())
         action.trigger()
         self.assertTrue(self.win.current_config()["taskbar_auto_color"])
-        self.win.set_view_options(taskbar_sync_appearance=True)
+        self.assertFalse(self.win.unicolor)
+        self.win.set_fg_color(QColor("orange"))
         action = actions(self.menu("taskbar"))["自动配色"]
-        self.assertFalse(action.isEnabled())
+        self.assertTrue(action.isEnabled())
         self.assertTrue(action.isChecked())
-        self.win.set_view_options(taskbar_sync_appearance=False)
-        actions(self.menu("taskbar"))["自动配色"].trigger()
+        action.trigger()
         self.assertFalse(self.win.current_config()["taskbar_auto_color"])
+        self.assertFalse(self.win.get_taskbar_appearance()[3])
 
     def test_tray_visibility_label_and_split_follow_current_surface_each_time_it_opens(self):
         self.win.set_view_options(taskbar_sync_split=False, float_split_enabled=False,

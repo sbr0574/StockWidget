@@ -409,7 +409,7 @@ class PagingInteractionTests(PagingTestCase):
 
     def test_taskbar_opacity_applies_to_data_pager_and_message(self):
         w = self.win
-        w.set_view_options(taskbar_sync_appearance=False, taskbar_page_mode="manual",
+        w.set_view_options(taskbar_page_mode="manual",
                            taskbar_opacity_pct=100)
         for message in (False, True):
             if message:
@@ -425,22 +425,21 @@ class PagingInteractionTests(PagingTestCase):
             self.assertLessEqual(half, 129)
             self.assertEqual(transparent, 1)
 
-    def test_appearance_sync_restores_all_independent_preferences(self):
+    def test_taskbar_shares_font_and_color_mode_and_preserves_independent_color_and_opacity(self):
         w = self.win
-        w.set_view_options(taskbar_sync_appearance=False, taskbar_font_family="Arial",
-                           taskbar_font_size=7, taskbar_color="#55bbdd",
-                           taskbar_opacity_pct=42, taskbar_unicolor=False)
-        independent = w.get_taskbar_appearance()
-        self.assertEqual((independent[0].family(), independent[0].pointSize()), ("Arial", 7))
-        self.assertEqual((independent[1].name(), *independent[2:]), ("#55bbdd", 42, False))
+        w.set_unicolor(False)
+        w.set_view_options(taskbar_color="#55bbdd", taskbar_opacity_pct=42)
+        font, color, opacity, unicolor = w.get_taskbar_appearance()
+        self.assertEqual(font, w.font)
+        self.assertEqual((color.name(), opacity, unicolor), ("#55bbdd", 42, False))
         self.assertEqual(w.taskbar_model.index(0, 1).data(Qt.ForegroundRole), w.up_color)
-        w.set_view_options(taskbar_sync_appearance=True)
         w.set_fg_color(QColor("#ffaa11"))
         w.set_font_size(12)
         w.set_window_opacity_percent(65)
-        self.assertEqual(w.get_taskbar_appearance(), (w.font, w.fg, 65, w.unicolor))
-        w.set_view_options(taskbar_sync_appearance=False)
-        self.assertEqual(w.get_taskbar_appearance(), independent)
+        self.assertEqual(w.get_taskbar_appearance(), (w.font, color, 42, False))
+        w.set_unicolor(True)
+        self.assertEqual(w.get_taskbar_appearance(), (w.font, color, 42, True))
+        self.assertEqual(w.taskbar_model.index(0, 1).data(Qt.ForegroundRole), color)
 
     def test_disabling_float_paging_displays_all_rows_stops_timer_and_remembers_preferences(self):
         self.win.show()
@@ -492,19 +491,17 @@ class PagingInteractionTests(PagingTestCase):
         self.win.set_watchlist({"sh600000": {"checked": True}})
         self.assertEqual((self.win.quotes.float_page, self.win.quotes.taskbar_page), (0, 0))
 
-    def test_independent_metrics_colors_and_font_render(self):
+    def test_independent_metrics_and_color_render_with_shared_font(self):
         before = render_taskbar(self.win, 44)
-        self.win.set_view_options(taskbar_metrics=["change", "price", "name", "kline"],
-            taskbar_sync_appearance=False, taskbar_color="#55bbdd",
-            taskbar_font_family="Arial", taskbar_font_size=6)
+        self.win.set_view_options(taskbar_metrics=["change", "price", "name", "kline"], taskbar_color="#55bbdd")
+        self.win.set_font_size(6)
         self.assertEqual(self.win.taskbar_model._headers, ["涨跌", "现价", "名称", "迷你图"])
         self.assertEqual(self.win.model._headers, ["名称", "现价", "涨幅"])
         self.assertEqual(self.win.taskbar_model.index(0, 0).data(Qt.ForegroundRole), QColor("#55bbdd"))
         self.assertNotEqual(before, render_taskbar(self.win, 44))
         self.win.set_fg_color(QColor("#ffaa11"))
         self.assertEqual(self.win.taskbar_model.index(0, 0).data(Qt.ForegroundRole), QColor("#55bbdd"))
-        self.win.set_view_options(taskbar_sync_appearance=True)
-        self.assertEqual(self.win.taskbar_model.index(0, 0).data(Qt.ForegroundRole), QColor("#ffaa11"))
+        self.assertEqual(self.win.get_taskbar_appearance()[0], self.win.font)
         self.win.set_visible_metrics([])
         self.assertEqual(self.win.taskbar_model.columnCount(), 4)
         self.assertFalse(render_taskbar(self.win, 44).isNull())

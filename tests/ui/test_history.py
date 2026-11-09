@@ -71,6 +71,44 @@ class HistoryTestCase(SettingsTestCase):
 
 
 class HistoryUITests(HistoryTestCase):
+    def test_pinning_preserves_pending_result_and_geometry_and_escape_still_closes(self):
+        _, window = self.make_window(chart_enabled=True)
+        history = window.history
+        with patch.object(history, "_start") as start:
+            history.open_row("float", 0)
+            request = start.call_args.args[0]
+            history._busy = True
+            popup = history.dialog
+            geometry = popup.geometry()
+            popup.pin_button.click()
+            self.app.processEvents()
+            self.assertTrue(popup.isVisible())
+            self.assertEqual(popup.geometry(), geometry)
+            self.assertEqual(history._generation, request[0])
+            self.assertEqual(start.call_count, 1)
+            history._accept((*request, BarResult(sample_bars(), "sina")))
+            self.assertTrue(popup.chart.bars)
+            history.request_row("float", 1)
+            self.assertTrue(history.click_timer.isActive())
+            QTest.keyClick(popup, Qt.Key_Escape)
+            self.assertFalse(popup.isVisible())
+            self.assertFalse(history.click_timer.isActive())
+
+    def test_pinning_does_not_bypass_shared_hide_and_discards_late_results(self):
+        for hide in ("hide_widget", "toggle_win"):
+            _, window = self.make_window(chart_enabled=True)
+            history = window.history
+            with patch.object(history, "_start") as start:
+                history.open_row("float", 0)
+                request = start.call_args.args[0]
+                history._busy = True
+                popup = history.dialog
+                popup.pin_button.click()
+                getattr(window, hide)()
+                self.assertFalse(popup.isVisible())
+                history._accept((*request, BarResult(sample_bars(), "sina")))
+                self.assertFalse(popup.isVisible())
+
     def test_chart_settings_use_common_description_colors_and_group_geometry(self):
         dialog, window = self.make_window(chart_enabled=True)
         dialog.show()
@@ -220,8 +258,8 @@ class HistoryUITests(HistoryTestCase):
             for market, type_, expected, unit_mode, volume in (
                     ("sh", "沪", "11.12", "cn", "2.00万"),
                     ("sz", "基", "11.123", "en", "20.00k"),
-                    ("us", "美", "11.123", "auto", "2.00M股"),
-                    ("hk", "港", "11.12", "cn", "200.00万股"),
+                    ("us", "美", "11.123", "auto", "2.00M"),
+                    ("hk", "港", "11.12", "cn", "200.00万"),
                     ("", "期", "11.12", "en", "2.00M合约")):
                 chart.set_options([5, 10, 20, 30, 60], True, True, unit_mode)
                 chart.set_data(bars, "daily", {"market": market, "type": type_})
@@ -532,7 +570,7 @@ class HistoryUITests(HistoryTestCase):
         window.history.open_row("float", 0)
         self.assertTrue(window.history.dialog.ui.cb_order_book.isChecked())
         window.reset_settings()
-        self.assertFalse(dialog.ui.cb_chart_enabled.isChecked())
+        self.assertTrue(dialog.ui.cb_chart_enabled.isChecked())
         self.assertFalse(window.current_config()["chart_order_book_enabled"])
 
     def test_floating_view_buttons_outside_click_and_escape(self):
@@ -585,8 +623,7 @@ class HistoryUITests(HistoryTestCase):
             move(popup, popup.width() // 2, popup.height() // 2)
             self.assertEqual(popup.cursor().shape(), Qt.ArrowCursor)
             self.assertEqual(native.call_args.args[0], Qt.ArrowCursor)
-            # A fast move can enter a child without a dialog move; clear the
-            # forced resize cursor before the child handles the event.
+            # Entering a child must also restore the cursor.
             move(popup, 2, popup.height() // 2)
             move(popup.chart, popup.chart.width() // 2, popup.chart.height() // 2)
             self.assertEqual(native.call_args.args[0], Qt.ArrowCursor)
@@ -634,7 +671,7 @@ class HistoryUITests(HistoryTestCase):
         self.assertGreater(popup.geometry().right(), bounds.center().x())
 
     def test_setting_persists_and_disable_closes_and_blocks_chart(self):
-        dialog, window = self.make_window()
+        dialog, window = self.make_window(chart_enabled=False)
         self.assertFalse(dialog.ui.cb_chart_enabled.isChecked())
         window.history.open_row("float", 0)
         self.assertIsNone(window.history.dialog)
@@ -771,6 +808,56 @@ class HistoryUITests(HistoryTestCase):
 @unittest.skipUnless(sys.platform == "win32" and os.environ.get("STOCKWIDGET_TEST_WINDOWS") == "1",
                      "Requires an opt-in Windows desktop session")
 class WindowsHistoryPopupTests(HistoryTestCase):
+    def test_resize_cursor_restores_over_float_and_native_taskbar_without_closing_popup(self):
+        import ctypes
+        from ctypes import wintypes as w
+
+        _, window = self.make_window(chart_enabled=True, taskbar_enabled=True, display_mode="both")
+        window.move(self.app.primaryScreen().availableGeometry().topLeft() + QPoint(20, 20))
+        controller = TaskbarController(window, Mock())
+        try:
+            controller.apply_mode()
+            self.app.processEvents()
+            self.assertTrue(controller._active, window.taskbar_status)
+            window.history.open_row("float", 0)
+            self.wait_ready(window)
+            popup = window.history.dialog
+            user = controller.native.user
+
+            class CursorInfo(ctypes.Structure):
+                _fields_ = [("size", w.DWORD), ("flags", w.DWORD), ("cursor", w.HANDLE), ("point", w.POINT)]
+
+            user.GetCursorInfo.argtypes, user.GetCursorInfo.restype = [ctypes.POINTER(CursorInfo)], w.BOOL
+            arrow = user.LoadCursorW(None, ctypes.c_void_p(32512))
+            resize = user.LoadCursorW(None, ctypes.c_void_p(32644))
+
+            def current_cursor():
+                info = CursorInfo()
+                info.size = ctypes.sizeof(info)
+                self.assertTrue(user.GetCursorInfo(ctypes.byref(info)))
+                return info.cursor
+
+            def move_to(x, y, expected):
+                for _ in range(10):
+                    user.SetCursorPos(x, y)
+                    QTest.qWait(20)
+                    if current_cursor() == expected:
+                        return
+                self.assertEqual(current_cursor(), expected)
+
+            for target in (int(window.winId()), controller.native.hwnd):
+                border = w.RECT()
+                self.assertTrue(user.GetWindowRect(int(popup.winId()), ctypes.byref(border)))
+                move_to(border.left + 6, (border.top + border.bottom) // 2, resize)
+                destination = w.RECT()
+                self.assertTrue(user.GetWindowRect(target, ctypes.byref(destination)))
+                move_to((destination.left + destination.right) // 2,
+                        (destination.top + destination.bottom) // 2, arrow)
+                self.assertTrue(popup.isVisible())
+                self.assertIsNone(self.app.overrideCursor())
+        finally:
+            controller.close()
+
     def test_detached_window_has_taskbar_identity_and_minimizing_keeps_request_alive(self):
         import ctypes
         from ctypes import wintypes as w
@@ -833,13 +920,26 @@ class WindowsHistoryPopupTests(HistoryTestCase):
         user = get_user32()
         user.SendInput.argtypes = [w.UINT, ctypes.POINTER(Input), ctypes.c_int]
         user.SendInput.restype = w.UINT
+        inputs = (Input * 2)(Input(0, MouseInput(0, 0, 0, 0x0002, 0, 0)),
+                             Input(0, MouseInput(0, 0, 0, 0x0004, 0, 0)))
+        popup.pin_button.click()
+        QCursor.setPos(window.geometry().center())
+        self.app.processEvents()
+        self.assertEqual(user.SendInput(2, inputs, ctypes.sizeof(Input)), 2)
+        QTest.qWait(30)
+        self.assertTrue(popup.isVisible())
+        QTest.keyClick(popup, Qt.Key_Escape)
+        QTest.qWait(self.app.doubleClickInterval() + 30)
+        self.assertFalse(popup.isVisible())
+        window.history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = window.history.dialog
+        self.assertFalse(popup.pin_button.isChecked())
         # Actual OS input exercises popup capture outside its native client area.
         position = popup.mapFromGlobal(window.geometry().center())
         self.assertFalse(popup.rect().contains(position))
         QCursor.setPos(window.geometry().center())
         self.app.processEvents()
-        inputs = (Input * 2)(Input(0, MouseInput(0, 0, 0, 0x0002, 0, 0)),
-                             Input(0, MouseInput(0, 0, 0, 0x0004, 0, 0)))
         self.assertEqual(user.SendInput(2, inputs, ctypes.sizeof(Input)), 2)
         self.wait_until(lambda: not popup.isVisible())
         QTest.qWait(self.app.doubleClickInterval() + 30)
@@ -875,7 +975,14 @@ class WindowsHistoryPopupTests(HistoryTestCase):
             self.assertIn(window.quotes.instrument_at("taskbar", row, block)["name"], popup.title.text())
             self.assertLess(popup.geometry().bottom(), position.y())
             self.assertTrue(self.app.primaryScreen().availableGeometry().contains(popup.geometry()))
-            popup.close()
+            popup.pin_button.click()
+            self.app.processEvents()
+            self.assertTrue(popup.isVisible())
+            user.IsWindowVisible.argtypes, user.IsWindowVisible.restype = [w.HWND], w.BOOL
+            self.assertTrue(user.IsWindowVisible(int(popup.winId())))
+            window.hide_widget()
+            self.assertFalse(popup.isVisible())
+            window.toggle_win()
             self.assertTrue(window.widget_visible)
             self.assertFalse(window.isVisible())
             self.assertEqual(window.display_mode, "taskbar")

@@ -50,6 +50,15 @@ class Ui_HistoryDialog(object):
 
         self.title_layout.addWidget(self.title)
 
+        self.pin_button = QPushButton(self.title_row)
+        self.pin_button.setObjectName(u"pin_button")
+        self.pin_button.setAutoDefault(False)
+        self.pin_button.setMinimumSize(QSize(26, 26))
+        self.pin_button.setMaximumSize(QSize(26, 26))
+        self.pin_button.setCheckable(True)
+
+        self.title_layout.addWidget(self.pin_button)
+
         self.pop_out_button = QPushButton(self.title_row)
         self.pop_out_button.setObjectName(u"pop_out_button")
         self.pop_out_button.setAutoDefault(False)
@@ -692,6 +701,10 @@ class Ui_HistoryDialog(object):
     # setupUi
 
     def retranslateUi(self, HistoryDialog):
+        self.pin_button.setText("")
+#if QT_CONFIG(accessibility)
+        self.pin_button.setAccessibleName(QCoreApplication.translate("HistoryDialog", u"\u56fa\u5b9a\u56fe\u8868", None))
+#endif // QT_CONFIG(accessibility)
         self.pop_out_button.setText(QCoreApplication.translate("HistoryDialog", u"\u2197", None))
 #if QT_CONFIG(accessibility)
         self.pop_out_button.setAccessibleName(QCoreApplication.translate("HistoryDialog", u"\u6253\u5f00\u72ec\u7acb\u7a97\u53e3", None))

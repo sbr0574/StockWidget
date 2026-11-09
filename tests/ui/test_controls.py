@@ -15,7 +15,6 @@ from shiboken6 import delete
 from stockwidget.ui.controls.settings_widgets import HotkeySequenceEdit
 from stockwidget.ui.floating.presenter import QuotePresenter
 from stockwidget.ui.floating.widget import FloatLabel
-from stockwidget.platform.taskbar import TaskbarArea
 from stockwidget.ui.settings.groups import TaskbarSettings
 
 from tests.support import QtTestCase
@@ -100,21 +99,19 @@ class DesignerFormTests(QtTestCase):
     def test_designer_spacing_and_label_width_survive_binding_and_sync(self):
         tree = ET.parse(DIRECTORY / "settings.ui")
         tree.find(".//layout[@name='taskbar_settings_layout']/property[@name='spacing']/number").text = "9"
-        tree.find(".//widget[@name='taskbar_font_size_label']/property[@name='minimumSize']/size/width").text = "47"
+        tree.find(".//widget[@name='taskbar_opacity_pct_label']/property[@name='minimumSize']/size/width").text = "47"
         root = load_form(ET.tostring(tree.getroot()))
         with patch.object(QuotePresenter, "refresh"), patch("stockwidget.ui.floating.widget.GlobalHotkeyManager"):
             source = FloatLabel({}, {})
         try:
             taskbar = root.findChild(QWidget, "taskbar_settings")
-            with patch("stockwidget.ui.settings.groups.find_taskbar", return_value=TaskbarArea(1, 1920, 96, 1700)):
-                binding = TaskbarSettings(taskbar)
-                binding.bind(source)
-                source.set_view_options(taskbar_enabled=True, taskbar_sync_appearance=False, taskbar_font_size=14,
-                                        taskbar_rows=1)
+            binding = TaskbarSettings(taskbar)
+            binding.bind(source)
+            source.set_view_options(taskbar_enabled=True, taskbar_rows=1, taskbar_opacity_pct=43)
             self.assertEqual(taskbar.body.layout().spacing(), 9)
-            self.assertEqual(taskbar.style.font_size_label.minimumWidth(), 47)
-            self.assertEqual(taskbar.style.font_size_label.text(), "14 pt")
-            self.assertIs(taskbar.style.font_size, root.findChild(QWidget, "taskbar_font_size"))
+            self.assertEqual(taskbar.style.opacity_label.minimumWidth(), 47)
+            self.assertEqual(taskbar.style.opacity_label.text(), "43%")
+            self.assertIs(taskbar.style.opacity, root.findChild(QWidget, "taskbar_opacity_pct"))
         finally:
             delete(root)
             delete(source)

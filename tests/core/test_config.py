@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from stockwidget.constants import APP_NAME
 from stockwidget.core.config_store import config_paths, history_cache_dir, load_file, save_file
-from stockwidget.core.view_options import ViewOptions, column_ranges, page_slice, taskbar_font_size_limit, taskbar_font_pixels
+from stockwidget.core.view_options import ViewOptions, column_ranges, page_slice, taskbar_font_pixels
 
 
 class ConfigStoreTests(unittest.TestCase):
@@ -56,8 +56,19 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 
 class PageMathTests(unittest.TestCase):
+    def test_chart_opacity_preferences_roundtrip_without_overwriting_independent_values(self):
+        defaults = ViewOptions.from_config({})
+        self.assertTrue(defaults.chart_enabled)
+        self.assertTrue(defaults.chart_sync_opacity)
+        options = ViewOptions.from_config({"chart_enabled": False, "chart_sync_opacity": False,
+                                           "chart_bg_alpha_pct": 35, "chart_opacity_pct": 45})
+        synced = ViewOptions.from_config({**options.to_config(), "chart_sync_opacity": True})
+        self.assertEqual((synced.chart_bg_alpha_pct, synced.chart_opacity_pct), (35, 45))
+        self.assertFalse(ViewOptions.from_config(synced.to_config()).chart_enabled)
+        self.assertEqual(ViewOptions.from_config(options.to_config()), options)
+
     def test_chart_sizes_migrate_presets_and_roundtrip_without_display_mode(self):
-        legacy = ViewOptions.from_config({"chart_enabled": True})
+        legacy = ViewOptions.from_config({})
         self.assertTrue(legacy.chart_enabled)
         self.assertEqual(legacy.chart_popup_size, [480, 340])
         for mode in ("window", "large", "medium", "small", "floating", None, "invalid", True):
@@ -93,7 +104,6 @@ class PageMathTests(unittest.TestCase):
         for height, dpi, rows, expected in ((88, 192, 4, 7), (88, 192, 3, 10),
                                             (44, 96, 4, 6), (44, 96, 3, 8), (88, 192, 1, 30)):
             with self.subTest(height=height, dpi=dpi, rows=rows):
-                self.assertEqual(taskbar_font_size_limit(height, dpi, rows), expected)
                 self.assertEqual(taskbar_font_pixels(height, dpi, rows, 100), (height - 4) // rows - 2)
 
     def test_color_mode_and_tray_preference_defaults_validation_and_roundtrip(self):
@@ -113,7 +123,7 @@ class PageMathTests(unittest.TestCase):
         configured = ViewOptions.from_config({**legacy.to_config(), "taskbar_auto_color": True})
         self.assertEqual(ViewOptions.from_config(configured.to_config()), configured)
         self.assertEqual(configured.taskbar_color, "#123456")
-        self.assertFalse(configured.taskbar_unicolor)
+        self.assertNotIn("taskbar_unicolor", configured.to_config())
 
     def test_float_row_and_interval_ranges_normalize_saved_configuration(self):
         for rows, seconds, expected in ((0, 0, (1, 1)), (1000, 3600, (20, 60)),
@@ -139,17 +149,21 @@ class PageMathTests(unittest.TestCase):
 
     def test_unified_sync_preferences_migrate_legacy_appearance_and_paging(self):
         defaults = ViewOptions.from_config({})
-        self.assertTrue(defaults.taskbar_sync_appearance)
+        self.assertEqual(defaults.taskbar_opacity_pct, 100)
         self.assertTrue(defaults.taskbar_sync_paging)
         legacy = ViewOptions.from_config({"taskbar_sync_font": True, "taskbar_sync_color": False,
                                           "taskbar_page_mode": "auto"})
-        self.assertFalse(legacy.taskbar_sync_appearance)
         self.assertFalse(legacy.taskbar_sync_paging)
         explicit = ViewOptions.from_config({**legacy.to_config(), "taskbar_sync_appearance": True,
-                                            "taskbar_sync_paging": True, "taskbar_opacity_pct": 150})
-        self.assertTrue(explicit.taskbar_sync_appearance)
+                                            "taskbar_sync_paging": True, "taskbar_auto_color": True,
+                                            "fg": "#123456", "opacity_pct": 42})
         self.assertTrue(explicit.taskbar_sync_paging)
-        self.assertEqual(explicit.taskbar_opacity_pct, 100)
+        self.assertEqual(explicit.taskbar_opacity_pct, 42)
+        self.assertEqual(explicit.taskbar_color, "#123456")
+        self.assertFalse(explicit.taskbar_auto_color)
+        self.assertNotIn("taskbar_sync_appearance", explicit.to_config())
+        self.assertEqual(ViewOptions.from_config(explicit.to_config()), explicit)
+        self.assertEqual(ViewOptions.from_config({"taskbar_opacity_pct": 150}).taskbar_opacity_pct, 100)
         self.assertEqual(ViewOptions.from_config({"taskbar_opacity_pct": -10}).taskbar_opacity_pct, 0)
 
     def test_legacy_enabled_modes_and_paging_migrate_without_overriding_explicit_switches(self):

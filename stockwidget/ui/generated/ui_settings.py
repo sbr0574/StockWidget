@@ -1370,12 +1370,31 @@ class Ui_SettingDialog(object):
         self.floatingContentLayout.setSpacing(14)
         self.floatingContentLayout.setObjectName(u"floatingContentLayout")
         self.floatingContentLayout.setContentsMargins(20, 20, 20, 20)
+        self.appearanceHeaderLayout = QHBoxLayout()
+        self.appearanceHeaderLayout.setObjectName(u"appearanceHeaderLayout")
         self.floating_title = QLabel(self.floating_content)
         self.floating_title.setObjectName(u"floating_title")
         self.floating_title.setMinimumSize(QSize(0, 30))
         self.floating_title.setMaximumSize(QSize(16777215, 30))
 
-        self.floatingContentLayout.addWidget(self.floating_title)
+        self.appearanceHeaderLayout.addWidget(self.floating_title)
+
+        self.appearanceHeaderSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.appearanceHeaderLayout.addItem(self.appearanceHeaderSpacer)
+
+        self.btn_reset_appearance = QPushButton(self.floating_content)
+        self.btn_reset_appearance.setObjectName(u"btn_reset_appearance")
+        self.btn_reset_appearance.setAutoDefault(False)
+        self.btn_reset_appearance.setFlat(True)
+        self.btn_reset_appearance.setMinimumSize(QSize(110, 28))
+        self.btn_reset_appearance.setMaximumSize(QSize(110, 28))
+        self.btn_reset_appearance.setProperty(u"destructive", True)
+
+        self.appearanceHeaderLayout.addWidget(self.btn_reset_appearance)
+
+
+        self.floatingContentLayout.addLayout(self.appearanceHeaderLayout)
 
         self.cmb_color_mode_row = QWidget(self.floating_content)
         self.cmb_color_mode_row.setObjectName(u"cmb_color_mode_row")
@@ -1456,6 +1475,7 @@ class Ui_SettingDialog(object):
         self.slider_font_size.setOrientation(Qt.Orientation.Horizontal)
         self.slider_font_size.setMinimumSize(QSize(0, 28))
         self.slider_font_size.setMaximumSize(QSize(16777215, 28))
+        self.slider_font_size.setTracking(False)
 
         self.gb_textLayout.addWidget(self.slider_font_size, 1, 1, 1, 1)
 
@@ -1480,6 +1500,7 @@ class Ui_SettingDialog(object):
         self.slider_line_interval.setOrientation(Qt.Orientation.Horizontal)
         self.slider_line_interval.setMinimumSize(QSize(0, 28))
         self.slider_line_interval.setMaximumSize(QSize(16777215, 28))
+        self.slider_line_interval.setTracking(False)
 
         self.gb_textLayout.addWidget(self.slider_line_interval, 2, 1, 1, 1)
 
@@ -1769,6 +1790,7 @@ class Ui_SettingDialog(object):
         self.slider_bg_alpha.setOrientation(Qt.Orientation.Horizontal)
         self.slider_bg_alpha.setMinimumSize(QSize(0, 28))
         self.slider_bg_alpha.setMaximumSize(QSize(16777215, 28))
+        self.slider_bg_alpha.setTracking(False)
 
         self.gb_opacityLayout.addWidget(self.slider_bg_alpha, 0, 1, 1, 1)
 
@@ -1794,6 +1816,7 @@ class Ui_SettingDialog(object):
         self.slider_all_alpha.setOrientation(Qt.Orientation.Horizontal)
         self.slider_all_alpha.setMinimumSize(QSize(0, 28))
         self.slider_all_alpha.setMaximumSize(QSize(16777215, 28))
+        self.slider_all_alpha.setTracking(False)
 
         self.gb_opacityLayout.addWidget(self.slider_all_alpha, 1, 1, 1, 1)
 
@@ -1803,6 +1826,89 @@ class Ui_SettingDialog(object):
         self.label_all_alpha.setMaximumSize(QSize(60, 28))
 
         self.gb_opacityLayout.addWidget(self.label_all_alpha, 1, 2, 1, 1)
+
+        self.chart_sync_opacity_row = QWidget(self.gb_opacity)
+        self.chart_sync_opacity_row.setObjectName(u"chart_sync_opacity_row")
+        self.chart_sync_opacity_layout = QGridLayout(self.chart_sync_opacity_row)
+        self.chart_sync_opacity_layout.setObjectName(u"chart_sync_opacity_layout")
+        self.chart_sync_opacity_layout.setHorizontalSpacing(10)
+        self.chart_sync_opacity_layout.setVerticalSpacing(5)
+        self.chart_sync_opacity_layout.setContentsMargins(0, 0, 0, 0)
+        self.chart_sync_opacity_title = QLabel(self.chart_sync_opacity_row)
+        self.chart_sync_opacity_title.setObjectName(u"chart_sync_opacity_title")
+        self.chart_sync_opacity_title.setProperty(u"settingTitle", True)
+
+        self.chart_sync_opacity_layout.addWidget(self.chart_sync_opacity_title, 0, 0, 1, 1)
+
+        self.chart_sync_opacity_description = QLabel(self.chart_sync_opacity_row)
+        self.chart_sync_opacity_description.setObjectName(u"chart_sync_opacity_description")
+        self.chart_sync_opacity_description.setMinimumSize(QSize(310, 0))
+        self.chart_sync_opacity_description.setMaximumSize(QSize(310, 16777215))
+        self.chart_sync_opacity_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
+        self.chart_sync_opacity_description.setProperty(u"settingDescription", True)
+        self.chart_sync_opacity_description.setWordWrap(True)
+
+        self.chart_sync_opacity_layout.addWidget(self.chart_sync_opacity_description, 1, 0, 1, 1)
+
+        self.cb_chart_sync_opacity = ToggleSwitch(self.chart_sync_opacity_row)
+        self.cb_chart_sync_opacity.setObjectName(u"cb_chart_sync_opacity")
+
+        self.chart_sync_opacity_layout.addWidget(self.cb_chart_sync_opacity, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+
+        self.gb_opacityLayout.addWidget(self.chart_sync_opacity_row, 2, 0, 1, 3)
+
+        self.label_chart_bg = QLabel(self.gb_opacity)
+        self.label_chart_bg.setObjectName(u"label_chart_bg")
+        self.label_chart_bg.setMinimumSize(QSize(140, 28))
+        self.label_chart_bg.setMaximumSize(QSize(140, 28))
+
+        self.gb_opacityLayout.addWidget(self.label_chart_bg, 3, 0, 1, 1)
+
+        self.slider_chart_bg_alpha = QSlider(self.gb_opacity)
+        self.slider_chart_bg_alpha.setObjectName(u"slider_chart_bg_alpha")
+        self.slider_chart_bg_alpha.setMinimum(1)
+        self.slider_chart_bg_alpha.setMaximum(100)
+        self.slider_chart_bg_alpha.setValue(60)
+        self.slider_chart_bg_alpha.setOrientation(Qt.Orientation.Horizontal)
+        self.slider_chart_bg_alpha.setMinimumSize(QSize(0, 28))
+        self.slider_chart_bg_alpha.setMaximumSize(QSize(16777215, 28))
+        self.slider_chart_bg_alpha.setTracking(False)
+
+        self.gb_opacityLayout.addWidget(self.slider_chart_bg_alpha, 3, 1, 1, 1)
+
+        self.label_chart_bg_alpha = QLabel(self.gb_opacity)
+        self.label_chart_bg_alpha.setObjectName(u"label_chart_bg_alpha")
+        self.label_chart_bg_alpha.setMinimumSize(QSize(60, 28))
+        self.label_chart_bg_alpha.setMaximumSize(QSize(60, 28))
+
+        self.gb_opacityLayout.addWidget(self.label_chart_bg_alpha, 3, 2, 1, 1)
+
+        self.label_chart_all = QLabel(self.gb_opacity)
+        self.label_chart_all.setObjectName(u"label_chart_all")
+        self.label_chart_all.setMinimumSize(QSize(140, 28))
+        self.label_chart_all.setMaximumSize(QSize(140, 28))
+
+        self.gb_opacityLayout.addWidget(self.label_chart_all, 4, 0, 1, 1)
+
+        self.slider_chart_all_alpha = QSlider(self.gb_opacity)
+        self.slider_chart_all_alpha.setObjectName(u"slider_chart_all_alpha")
+        self.slider_chart_all_alpha.setMinimum(10)
+        self.slider_chart_all_alpha.setMaximum(100)
+        self.slider_chart_all_alpha.setValue(80)
+        self.slider_chart_all_alpha.setOrientation(Qt.Orientation.Horizontal)
+        self.slider_chart_all_alpha.setMinimumSize(QSize(0, 28))
+        self.slider_chart_all_alpha.setMaximumSize(QSize(16777215, 28))
+        self.slider_chart_all_alpha.setTracking(False)
+
+        self.gb_opacityLayout.addWidget(self.slider_chart_all_alpha, 4, 1, 1, 1)
+
+        self.label_chart_all_alpha = QLabel(self.gb_opacity)
+        self.label_chart_all_alpha.setObjectName(u"label_chart_all_alpha")
+        self.label_chart_all_alpha.setMinimumSize(QSize(60, 28))
+        self.label_chart_all_alpha.setMaximumSize(QSize(60, 28))
+
+        self.gb_opacityLayout.addWidget(self.label_chart_all_alpha, 4, 2, 1, 1)
 
 
         self.floatingContentLayout.addWidget(self.gb_opacity)
@@ -1902,25 +2008,6 @@ class Ui_SettingDialog(object):
 
 
         self.floatingContentLayout.addWidget(self.gb_icon)
-
-        self.appearanceResetLayout = QHBoxLayout()
-        self.appearanceResetLayout.setSpacing(10)
-        self.appearanceResetLayout.setObjectName(u"appearanceResetLayout")
-        self.btn_reset_appearance = QPushButton(self.floating_content)
-        self.btn_reset_appearance.setObjectName(u"btn_reset_appearance")
-        self.btn_reset_appearance.setAutoDefault(False)
-        self.btn_reset_appearance.setFlat(True)
-        self.btn_reset_appearance.setMinimumSize(QSize(110, 28))
-        self.btn_reset_appearance.setMaximumSize(QSize(110, 28))
-
-        self.appearanceResetLayout.addWidget(self.btn_reset_appearance)
-
-        self.appearanceResetLayoutSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.appearanceResetLayout.addItem(self.appearanceResetLayoutSpacer)
-
-
-        self.floatingContentLayout.addLayout(self.appearanceResetLayout)
 
         self.floatingBottomSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
@@ -2053,43 +2140,6 @@ class Ui_SettingDialog(object):
         self.taskbar_style_settings_outer.setSpacing(12)
         self.taskbar_style_settings_outer.setObjectName(u"taskbar_style_settings_outer")
         self.taskbar_style_settings_outer.setContentsMargins(10, 15, 10, 10)
-        self.taskbar_sync_appearance_row = QWidget(self.taskbar_style_settings)
-        self.taskbar_sync_appearance_row.setObjectName(u"taskbar_sync_appearance_row")
-        sizePolicy3.setHeightForWidth(self.taskbar_sync_appearance_row.sizePolicy().hasHeightForWidth())
-        self.taskbar_sync_appearance_row.setSizePolicy(sizePolicy3)
-        self.taskbar_sync_appearance_row_layout = QGridLayout(self.taskbar_sync_appearance_row)
-        self.taskbar_sync_appearance_row_layout.setSpacing(5)
-        self.taskbar_sync_appearance_row_layout.setObjectName(u"taskbar_sync_appearance_row_layout")
-        self.taskbar_sync_appearance_row_layout.setHorizontalSpacing(12)
-        self.taskbar_sync_appearance_row_layout.setContentsMargins(0, 0, 0, 0)
-        self.taskbar_sync_appearance_title = QLabel(self.taskbar_sync_appearance_row)
-        self.taskbar_sync_appearance_title.setObjectName(u"taskbar_sync_appearance_title")
-        self.taskbar_sync_appearance_title.setMinimumSize(QSize(0, 26))
-        self.taskbar_sync_appearance_title.setMaximumSize(QSize(16777215, 26))
-        self.taskbar_sync_appearance_title.setProperty(u"settingTitle", True)
-
-        self.taskbar_sync_appearance_row_layout.addWidget(self.taskbar_sync_appearance_title, 0, 0, 1, 1)
-
-        self.taskbar_sync_appearance_description = QLabel(self.taskbar_sync_appearance_row)
-        self.taskbar_sync_appearance_description.setObjectName(u"taskbar_sync_appearance_description")
-        self.taskbar_sync_appearance_description.setWordWrap(True)
-        self.taskbar_sync_appearance_description.setProperty(u"settingDescription", True)
-        self.taskbar_sync_appearance_description.setMaximumSize(QSize(310, 16777215))
-        self.taskbar_sync_appearance_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.taskbar_sync_appearance_description.setMinimumSize(QSize(310, 0))
-
-        self.taskbar_sync_appearance_row_layout.addWidget(self.taskbar_sync_appearance_description, 1, 0, 1, 1)
-
-        self.taskbar_sync_appearance = ToggleSwitch(self.taskbar_sync_appearance_row)
-        self.taskbar_sync_appearance.setObjectName(u"taskbar_sync_appearance")
-        self.taskbar_sync_appearance.setMinimumSize(QSize(44, 26))
-        self.taskbar_sync_appearance.setMaximumSize(QSize(44, 26))
-
-        self.taskbar_sync_appearance_row_layout.addWidget(self.taskbar_sync_appearance, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
-
-
-        self.taskbar_style_settings_outer.addWidget(self.taskbar_sync_appearance_row)
-
         self.taskbar_style_settings_body = QWidget(self.taskbar_style_settings)
         self.taskbar_style_settings_body.setObjectName(u"taskbar_style_settings_body")
         self.taskbar_style_settings_layout = QVBoxLayout(self.taskbar_style_settings_body)
@@ -2139,51 +2189,12 @@ class Ui_SettingDialog(object):
         self.taskbarStyleValuesLayout = QGridLayout()
         self.taskbarStyleValuesLayout.setSpacing(10)
         self.taskbarStyleValuesLayout.setObjectName(u"taskbarStyleValuesLayout")
-        self.taskbar_style_settings_layout_label_0 = QLabel(self.taskbar_style_settings_body)
-        self.taskbar_style_settings_layout_label_0.setObjectName(u"taskbar_style_settings_layout_label_0")
-        self.taskbar_style_settings_layout_label_0.setMinimumSize(QSize(100, 28))
-        self.taskbar_style_settings_layout_label_0.setMaximumSize(QSize(100, 28))
-
-        self.taskbarStyleValuesLayout.addWidget(self.taskbar_style_settings_layout_label_0, 0, 0, 1, 1)
-
-        self.taskbar_font_family = QFontComboBox(self.taskbar_style_settings_body)
-        self.taskbar_font_family.setObjectName(u"taskbar_font_family")
-        self.taskbar_font_family.setMinimumSize(QSize(0, 28))
-        self.taskbar_font_family.setMaximumSize(QSize(16777215, 28))
-
-        self.taskbarStyleValuesLayout.addWidget(self.taskbar_font_family, 0, 1, 1, 2, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
-
-        self.taskbar_font_size_caption = QLabel(self.taskbar_style_settings_body)
-        self.taskbar_font_size_caption.setObjectName(u"taskbar_font_size_caption")
-        self.taskbar_font_size_caption.setMinimumSize(QSize(0, 28))
-        self.taskbar_font_size_caption.setMaximumSize(QSize(16777215, 28))
-
-        self.taskbarStyleValuesLayout.addWidget(self.taskbar_font_size_caption, 1, 0, 1, 1)
-
-        self.taskbar_font_size = QSlider(self.taskbar_style_settings_body)
-        self.taskbar_font_size.setObjectName(u"taskbar_font_size")
-        self.taskbar_font_size.setMinimum(5)
-        self.taskbar_font_size.setMaximum(30)
-        self.taskbar_font_size.setOrientation(Qt.Orientation.Horizontal)
-        self.taskbar_font_size.setValue(10)
-        self.taskbar_font_size.setMinimumSize(QSize(0, 28))
-        self.taskbar_font_size.setMaximumSize(QSize(16777215, 28))
-
-        self.taskbarStyleValuesLayout.addWidget(self.taskbar_font_size, 1, 1, 1, 1)
-
-        self.taskbar_font_size_label = QLabel(self.taskbar_style_settings_body)
-        self.taskbar_font_size_label.setObjectName(u"taskbar_font_size_label")
-        self.taskbar_font_size_label.setMinimumSize(QSize(60, 28))
-        self.taskbar_font_size_label.setMaximumSize(QSize(60, 28))
-
-        self.taskbarStyleValuesLayout.addWidget(self.taskbar_font_size_label, 1, 2, 1, 1)
-
         self.taskbar_style_settings_layout_label_3 = QLabel(self.taskbar_style_settings_body)
         self.taskbar_style_settings_layout_label_3.setObjectName(u"taskbar_style_settings_layout_label_3")
         self.taskbar_style_settings_layout_label_3.setMinimumSize(QSize(100, 28))
         self.taskbar_style_settings_layout_label_3.setMaximumSize(QSize(100, 28))
 
-        self.taskbarStyleValuesLayout.addWidget(self.taskbar_style_settings_layout_label_3, 2, 0, 1, 1)
+        self.taskbarStyleValuesLayout.addWidget(self.taskbar_style_settings_layout_label_3, 0, 0, 1, 1)
 
         self.taskbar_opacity_pct = QSlider(self.taskbar_style_settings_body)
         self.taskbar_opacity_pct.setObjectName(u"taskbar_opacity_pct")
@@ -2193,15 +2204,16 @@ class Ui_SettingDialog(object):
         self.taskbar_opacity_pct.setValue(100)
         self.taskbar_opacity_pct.setMinimumSize(QSize(0, 28))
         self.taskbar_opacity_pct.setMaximumSize(QSize(16777215, 28))
+        self.taskbar_opacity_pct.setTracking(False)
 
-        self.taskbarStyleValuesLayout.addWidget(self.taskbar_opacity_pct, 2, 1, 1, 1)
+        self.taskbarStyleValuesLayout.addWidget(self.taskbar_opacity_pct, 0, 1, 1, 1)
 
         self.taskbar_opacity_pct_label = QLabel(self.taskbar_style_settings_body)
         self.taskbar_opacity_pct_label.setObjectName(u"taskbar_opacity_pct_label")
         self.taskbar_opacity_pct_label.setMinimumSize(QSize(60, 28))
         self.taskbar_opacity_pct_label.setMaximumSize(QSize(60, 28))
 
-        self.taskbarStyleValuesLayout.addWidget(self.taskbar_opacity_pct_label, 2, 2, 1, 1)
+        self.taskbarStyleValuesLayout.addWidget(self.taskbar_opacity_pct_label, 0, 2, 1, 1)
 
 
         self.taskbar_style_settings_layout.addLayout(self.taskbarStyleValuesLayout)
@@ -2282,43 +2294,6 @@ class Ui_SettingDialog(object):
 
 
         self.taskbar_style_settings_layout.addWidget(self.btn_taskbar_color_row)
-
-        self.taskbar_unicolor_row = QWidget(self.taskbar_style_settings_body)
-        self.taskbar_unicolor_row.setObjectName(u"taskbar_unicolor_row")
-        sizePolicy2.setHeightForWidth(self.taskbar_unicolor_row.sizePolicy().hasHeightForWidth())
-        self.taskbar_unicolor_row.setSizePolicy(sizePolicy2)
-        self.taskbar_unicolor_row_layout = QGridLayout(self.taskbar_unicolor_row)
-        self.taskbar_unicolor_row_layout.setSpacing(5)
-        self.taskbar_unicolor_row_layout.setObjectName(u"taskbar_unicolor_row_layout")
-        self.taskbar_unicolor_row_layout.setHorizontalSpacing(12)
-        self.taskbar_unicolor_row_layout.setContentsMargins(0, 0, 0, 0)
-        self.taskbar_unicolor_title = QLabel(self.taskbar_unicolor_row)
-        self.taskbar_unicolor_title.setObjectName(u"taskbar_unicolor_title")
-        self.taskbar_unicolor_title.setMinimumSize(QSize(0, 26))
-        self.taskbar_unicolor_title.setMaximumSize(QSize(16777215, 26))
-        self.taskbar_unicolor_title.setProperty(u"settingTitle", True)
-
-        self.taskbar_unicolor_row_layout.addWidget(self.taskbar_unicolor_title, 0, 0, 1, 1)
-
-        self.taskbar_unicolor_description = QLabel(self.taskbar_unicolor_row)
-        self.taskbar_unicolor_description.setObjectName(u"taskbar_unicolor_description")
-        self.taskbar_unicolor_description.setWordWrap(True)
-        self.taskbar_unicolor_description.setProperty(u"settingDescription", True)
-        self.taskbar_unicolor_description.setMaximumSize(QSize(310, 16777215))
-        self.taskbar_unicolor_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.taskbar_unicolor_description.setMinimumSize(QSize(310, 0))
-
-        self.taskbar_unicolor_row_layout.addWidget(self.taskbar_unicolor_description, 1, 0, 1, 1)
-
-        self.taskbar_unicolor = ToggleSwitch(self.taskbar_unicolor_row)
-        self.taskbar_unicolor.setObjectName(u"taskbar_unicolor")
-        self.taskbar_unicolor.setMinimumSize(QSize(44, 26))
-        self.taskbar_unicolor.setMaximumSize(QSize(44, 26))
-
-        self.taskbar_unicolor_row_layout.addWidget(self.taskbar_unicolor, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
-
-
-        self.taskbar_style_settings_layout.addWidget(self.taskbar_unicolor_row)
 
 
         self.taskbar_style_settings_outer.addWidget(self.taskbar_style_settings_body)
@@ -3043,7 +3018,7 @@ class Ui_SettingDialog(object):
         self.cb_click_through.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u9f20\u6807\u64cd\u4f5c\u7a7f\u8fc7\u6d6e\u7a97\uff0c\u53ef\u4f7f\u7528\u6258\u76d8\u6216\u5feb\u6377\u952e\u6062\u590d\u3002", None))
 #endif // QT_CONFIG(accessibility)
         self.cb_boundary_check_title.setText(QCoreApplication.translate("SettingDialog", u"\u4fdd\u6301\u5728\u5c4f\u5e55\u5185", None))
-        self.cb_boundary_check_description.setText(QCoreApplication.translate("SettingDialog", u"\u62d6\u52a8\u65f6\u53ef\u79fb\u51fa\u5c4f\u5e55\uff0c\u677e\u5f00\u540e\u5c06\u6d6e\u7a97\u8c03\u6574\u56de\u5c4f\u5e55\u5185\u3002", None))
+        self.cb_boundary_check_description.setText(QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8\u8c03\u6574\u6d6e\u7a97\u4f4d\u7f6e\uff0c\u4fdd\u6301\u5728\u5c4f\u5e55\u5185\u5b8c\u6574\u663e\u793a", None))
         self.cb_boundary_check.setText(QCoreApplication.translate("SettingDialog", u"\u4fdd\u6301\u5728\u5c4f\u5e55\u5185", None))
 #if QT_CONFIG(tooltip)
         self.cb_boundary_check.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5728\u5c4f\u5e55\u5185\u4fdd\u6301\u6d6e\u7a97\u5b8c\u6574\u663e\u793a\u3002\u542f\u7528\u540e\uff0c\u7a0b\u5e8f\u52a0\u8f7d\u3001\u677e\u5f00\u62d6\u52a8\u540e\u53ca\u5185\u5bb9\u5c3a\u5bf8\u53d8\u5316\u65f6\u81ea\u52a8\u8c03\u6574\u8d8a\u754c\u4f4d\u7f6e\uff1b\u5173\u95ed\u540e\u5141\u8bb8\u6d6e\u7a97\u90e8\u5206\u4f4d\u4e8e\u5c4f\u5e55\u5916\u3002", None))
@@ -3055,7 +3030,7 @@ class Ui_SettingDialog(object):
         self.cb_boundary_check.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u62d6\u52a8\u65f6\u53ef\u79fb\u51fa\u5c4f\u5e55\uff0c\u677e\u5f00\u540e\u5c06\u6d6e\u7a97\u8c03\u6574\u56de\u5c4f\u5e55\u5185\u3002", None))
 #endif // QT_CONFIG(accessibility)
         self.cb_edge_hide_title.setText(QCoreApplication.translate("SettingDialog", u"\u8d34\u8fb9\u6536\u8d77", None))
-        self.cb_edge_hide_description.setText(QCoreApplication.translate("SettingDialog", u"\u8d34\u4f4f\u5c4f\u5e55\u5de6\u3001\u4e0a\u3001\u53f3\u4fa7\u65f6\u6536\u8d77\u4e3a\u7a84\u6761\uff0c\u79fb\u5165\u65f6\u5c55\u5f00\u3002", None))
+        self.cb_edge_hide_description.setText(QCoreApplication.translate("SettingDialog", u"\u8d34\u4f4f\u5c4f\u5e55\u8fb9\u7f18\u6536\u8d77\u4e3a\u7a84\u6761\uff0c\u79fb\u5165\u65f6\u5c55\u5f00\u3002\u9700\u5f00\u542f\u201c\u4fdd\u6301\u5728\u5c4f\u5e55\u5185\u201d\u3002", None))
         self.cb_edge_hide.setText(QCoreApplication.translate("SettingDialog", u"\u8d34\u8fb9\u6536\u8d77", None))
 #if QT_CONFIG(tooltip)
         self.cb_edge_hide.setToolTip(QCoreApplication.translate("SettingDialog", u"\u8d34\u4f4f\u5c4f\u5e55\u5de6\u3001\u4e0a\u3001\u53f3\u8fb9\u65f6\u6536\u8d77\u4e3a\u7a84\u6761\uff0c\u9f20\u6807\u79fb\u5165\u5c55\u5f00\uff1b\u5e95\u8fb9\u4e0d\u6536\u8d77\u3002", None))
@@ -3141,6 +3116,10 @@ class Ui_SettingDialog(object):
 #if QT_CONFIG(accessibility)
         self.floating_title.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u6d6e\u7a97\u8bbe\u7f6e", None))
 #endif // QT_CONFIG(accessibility)
+        self.btn_reset_appearance.setText(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u9ed8\u8ba4\u5916\u89c2", None))
+#if QT_CONFIG(tooltip)
+        self.btn_reset_appearance.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u989c\u8272\u3001\u900f\u660e\u5ea6\u3001\u5b57\u4f53\u3001\u884c\u8ddd\u3001\u8868\u5934\u3001\u7f51\u683c\u548c\u56fe\u6807", None))
+#endif // QT_CONFIG(tooltip)
         self.cmb_color_mode_title.setText(QCoreApplication.translate("SettingDialog", u"\u989c\u8272\u6a21\u5f0f", None))
         self.cmb_color_mode_description.setText(QCoreApplication.translate("SettingDialog", u"\u8bbe\u7f6e\u754c\u9762\u4e0e\u83dc\u5355\u4f7f\u7528\u7684\u989c\u8272\u6a21\u5f0f\u3002", None))
         self.cmb_color_mode.setItemText(0, QCoreApplication.translate("SettingDialog", u"\u8ddf\u968f\u7cfb\u7edf", None))
@@ -3179,10 +3158,23 @@ class Ui_SettingDialog(object):
         self.btn_neutral_color_description.setText(QCoreApplication.translate("SettingDialog", u"\u6309\u6da8\u8dcc\u7740\u8272\u65f6\uff0c\u7528\u4e8e\u6301\u5e73\u53ca\u4e2d\u6027\u7684\u6307\u6807\u3002", None))
         self.btn_neutral_color.setText(QCoreApplication.translate("SettingDialog", u"FFFFFF", None))
         self.gb_opacity.setTitle(QCoreApplication.translate("SettingDialog", u"\u4e0d\u900f\u660e\u5ea6", None))
-        self.label_bg.setText(QCoreApplication.translate("SettingDialog", u"\u80cc\u666f\uff1a", None))
+        self.label_bg.setText(QCoreApplication.translate("SettingDialog", u"\u4e3b\u6d6e\u7a97\u80cc\u666f", None))
         self.label_bg_alpha.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
-        self.label_all.setText(QCoreApplication.translate("SettingDialog", u"\u6574\u4f53\u7a97\u53e3\uff1a", None))
+        self.label_all.setText(QCoreApplication.translate("SettingDialog", u"\u4e3b\u6d6e\u7a97\u6574\u4f53", None))
         self.label_all_alpha.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
+        self.chart_sync_opacity_title.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u540c\u6b65\u4e3b\u6d6e\u7a97\u4e0d\u900f\u660e\u5ea6", None))
+        self.chart_sync_opacity_description.setText(QCoreApplication.translate("SettingDialog", u"\u5173\u95ed\u540e\u53ef\u5355\u72ec\u8bbe\u7f6e\u56fe\u8868\u6d6e\u7a97\u7684\u4e0d\u900f\u660e\u5ea6\u3002", None))
+#if QT_CONFIG(tooltip)
+        self.cb_chart_sync_opacity.setToolTip("")
+#endif // QT_CONFIG(tooltip)
+        self.cb_chart_sync_opacity.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u540c\u6b65\u4e3b\u6d6e\u7a97\u4e0d\u900f\u660e\u5ea6", None))
+#if QT_CONFIG(accessibility)
+        self.cb_chart_sync_opacity.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u540c\u6b65\u4e3b\u6d6e\u7a97\u4e0d\u900f\u660e\u5ea6", None))
+#endif // QT_CONFIG(accessibility)
+        self.label_chart_bg.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u80cc\u666f", None))
+        self.label_chart_bg_alpha.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
+        self.label_chart_all.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u6574\u4f53", None))
+        self.label_chart_all_alpha.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
         self.gb_icon.setTitle(QCoreApplication.translate("SettingDialog", u"\u56fe\u6807", None))
 #if QT_CONFIG(tooltip)
         self.btn_icon_default.setToolTip(QCoreApplication.translate("SettingDialog", u"\u9ed8\u8ba4\u56fe\u6807", None))
@@ -3204,10 +3196,6 @@ class Ui_SettingDialog(object):
         self.btn_icon_custom.setToolTip(QCoreApplication.translate("SettingDialog", u"\u9009\u62e9\u81ea\u5b9a\u4e49\u56fe\u6807", None))
 #endif // QT_CONFIG(tooltip)
         self.btn_icon_custom.setText(QCoreApplication.translate("SettingDialog", u"+", None))
-        self.btn_reset_appearance.setText(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u9ed8\u8ba4\u5916\u89c2", None))
-#if QT_CONFIG(tooltip)
-        self.btn_reset_appearance.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u989c\u8272\u3001\u900f\u660e\u5ea6\u3001\u5b57\u4f53\u3001\u884c\u8ddd\u3001\u8868\u5934\u3001\u7f51\u683c\u548c\u56fe\u6807", None))
-#endif // QT_CONFIG(tooltip)
         self.taskbar_title.setText(QCoreApplication.translate("SettingDialog", u"\u4efb\u52a1\u680f", None))
 #if QT_CONFIG(accessibility)
         self.taskbar_title.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u4efb\u52a1\u680f\u8bbe\u7f6e", None))
@@ -3234,27 +3222,12 @@ class Ui_SettingDialog(object):
         self.taskbar_dual_open.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u540c\u65f6\u663e\u793a\u6d6e\u7a97\u548c\u4efb\u52a1\u680f\u884c\u60c5\uff0c\u4e24\u5904\u540c\u6b65\u9690\u85cf\u548c\u6062\u590d\u3002", None))
 #endif // QT_CONFIG(accessibility)
         self.taskbar_style_settings.setTitle(QCoreApplication.translate("SettingDialog", u"\u5916\u89c2", None))
-        self.taskbar_sync_appearance_title.setText(QCoreApplication.translate("SettingDialog", u"\u540c\u6b65\u6d6e\u7a97\u5916\u89c2", None))
-        self.taskbar_sync_appearance_description.setText(QCoreApplication.translate("SettingDialog", u"\u8ddf\u968f\u6d6e\u7a97\u7684\u5b57\u4f53\u3001\u5b57\u53f7\u3001\u6587\u5b57\u989c\u8272\u548c\u4e0d\u900f\u660e\u5ea6\u3002", None))
-        self.taskbar_sync_appearance.setText(QCoreApplication.translate("SettingDialog", u"\u540c\u6b65\u6d6e\u7a97\u5916\u89c2", None))
-#if QT_CONFIG(accessibility)
-        self.taskbar_sync_appearance.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u540c\u6b65\u6d6e\u7a97\u5916\u89c2", None))
-#endif // QT_CONFIG(accessibility)
-#if QT_CONFIG(accessibility)
-        self.taskbar_sync_appearance.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u8ddf\u968f\u6d6e\u7a97\u7684\u5b57\u4f53\u3001\u5b57\u53f7\u3001\u6587\u5b57\u989c\u8272\u548c\u4e0d\u900f\u660e\u5ea6\u3002", None))
-#endif // QT_CONFIG(accessibility)
         self.taskbarLimitsLayout_label_0.setText(QCoreApplication.translate("SettingDialog", u"\u884c\u6570\u9650\u5236", None))
         self.taskbar_rows_description.setText(QCoreApplication.translate("SettingDialog", u"\u6bcf\u680f\u6700\u591a\u663e\u793a 1\u20134 \u884c\uff1b\u5206\u680f\u540e\u6bcf\u9875\u5bb9\u91cf\u52a0\u500d\u3002", None))
         self.taskbar_rows.setSuffix(QCoreApplication.translate("SettingDialog", u" \u884c", None))
 #if QT_CONFIG(tooltip)
         self.taskbar_rows.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6bcf\u680f\u6700\u591a\u663e\u793a\u7684\u884c\u6570\uff1b\u5206\u680f\u65f6\u6bcf\u9875\u6700\u591a\u663e\u793a\u4e24\u500d\u6570\u91cf\u7684\u6807\u7684\u3002", None))
 #endif // QT_CONFIG(tooltip)
-        self.taskbar_style_settings_layout_label_0.setText(QCoreApplication.translate("SettingDialog", u"\u5b57\u4f53", None))
-        self.taskbar_font_size_caption.setText(QCoreApplication.translate("SettingDialog", u"\u5b57\u53f7", None))
-#if QT_CONFIG(tooltip)
-        self.taskbar_font_size.setToolTip(QCoreApplication.translate("SettingDialog", u"\u4efb\u52a1\u680f\u5b57\u53f7", None))
-#endif // QT_CONFIG(tooltip)
-        self.taskbar_font_size_label.setText(QCoreApplication.translate("SettingDialog", u"10 pt", None))
         self.taskbar_style_settings_layout_label_3.setText(QCoreApplication.translate("SettingDialog", u"\u4e0d\u900f\u660e\u5ea6", None))
 #if QT_CONFIG(tooltip)
         self.taskbar_opacity_pct.setToolTip(QCoreApplication.translate("SettingDialog", u"\u4efb\u52a1\u680f\u6587\u5b57\u4e0d\u900f\u660e\u5ea6", None))
@@ -3272,15 +3245,6 @@ class Ui_SettingDialog(object):
         self.taskbar_color_caption.setText(QCoreApplication.translate("SettingDialog", u"\u6587\u5b57\u989c\u8272", None))
         self.btn_taskbar_color_description.setText(QCoreApplication.translate("SettingDialog", u"\u5173\u95ed\u81ea\u52a8\u6587\u5b57\u989c\u8272\u540e\uff0c\u53ef\u9009\u62e9\u4efb\u52a1\u680f\u6587\u5b57\u7684\u989c\u8272\u3002", None))
         self.btn_taskbar_color.setText(QCoreApplication.translate("SettingDialog", u"FFFFFF", None))
-        self.taskbar_unicolor_title.setText(QCoreApplication.translate("SettingDialog", u"\u7edf\u4e00\u989c\u8272", None))
-        self.taskbar_unicolor_description.setText(QCoreApplication.translate("SettingDialog", u"\u6240\u6709\u4efb\u52a1\u680f\u6307\u6807\u4f7f\u7528\u540c\u4e00\u6587\u5b57\u989c\u8272\uff1b\u5173\u95ed\u540e\uff0c\u6309\u6da8\u8dcc\u5206\u522b\u7740\u8272\u3002", None))
-        self.taskbar_unicolor.setText(QCoreApplication.translate("SettingDialog", u"\u7edf\u4e00\u989c\u8272", None))
-#if QT_CONFIG(accessibility)
-        self.taskbar_unicolor.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u7edf\u4e00\u989c\u8272", None))
-#endif // QT_CONFIG(accessibility)
-#if QT_CONFIG(accessibility)
-        self.taskbar_unicolor.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u6240\u6709\u4efb\u52a1\u680f\u6307\u6807\u4f7f\u7528\u540c\u4e00\u6587\u5b57\u989c\u8272\uff1b\u5173\u95ed\u540e\uff0c\u6309\u6da8\u8dcc\u5206\u522b\u7740\u8272\u3002", None))
-#endif // QT_CONFIG(accessibility)
         self.taskbarLimitsLayout_label_1.setText(QCoreApplication.translate("SettingDialog", u"\u504f\u79fb\u91cf", None))
         self.taskbar_offset_description.setText(QCoreApplication.translate("SettingDialog", u"\u6b63\u503c\u5411\u5de6\u3001\u8d1f\u503c\u5411\u53f3\uff1b\u5411\u53f3\u53ef\u80fd\u8986\u76d6\u6258\u76d8\u533a\u57df\u3002", None))
         self.taskbar_offset.setSuffix(QCoreApplication.translate("SettingDialog", u" px", None))

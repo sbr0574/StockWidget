@@ -11,24 +11,26 @@ from tests.support import SettingsTestCase
 
 
 class SettingsLayoutTests(SettingsTestCase):
-    def test_reset_and_data_actions_live_below_their_page_groups(self):
+    def test_appearance_reset_lives_in_header_and_data_actions_live_below_about_group(self):
         dialog, window = self._make_dialog()
         dialog.show()
-        for page, scroll, content, group, buttons in (
-            (dialog.ui.floating, dialog.ui.floating_scroll, dialog.ui.floating_content, dialog.ui.gb_icon,
-             (dialog.ui.btn_reset_appearance,)),
-            (dialog.ui.about, dialog.ui.about_scroll, dialog.ui.about_content, dialog.ui.gb_about,
-             (dialog.ui.btn_reset_settings, dialog.ui.btn_open_cache_dir, dialog.ui.btn_clear_cache)),
-        ):
-            dialog.ui.settings_pages.setCurrentWidget(page)
-            scroll.ensureWidgetVisible(buttons[0])
-            self.qt_app.processEvents()
-            for button in buttons:
-                self.assertIs(button.parentWidget(), content)
-                self.assertFalse(group.isAncestorOf(button))
-                self.assertGreater(button.geometry().top(), group.geometry().bottom())
-                self.assertTrue(scroll.viewport().rect().contains(button.mapTo(scroll.viewport(), button.rect().bottomRight())))
-            self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
+        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.floating)
+        self.qt_app.processEvents()
+        button, title = dialog.ui.btn_reset_appearance, dialog.ui.floating_title
+        self.assertLessEqual(abs(button.geometry().center().y() - title.geometry().center().y()), 2)
+        self.assertGreater(button.geometry().left(), title.geometry().right())
+        self.assertTrue(dialog.ui.floating_scroll.viewport().rect().contains(
+            button.mapTo(dialog.ui.floating_scroll.viewport(), button.rect().bottomRight())))
+        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.about)
+        dialog.ui.about_scroll.ensureWidgetVisible(dialog.ui.btn_reset_settings)
+        self.qt_app.processEvents()
+        for button in (dialog.ui.btn_reset_settings, dialog.ui.btn_open_cache_dir, dialog.ui.btn_clear_cache):
+            self.assertIs(button.parentWidget(), dialog.ui.about_content)
+            self.assertFalse(dialog.ui.gb_about.isAncestorOf(button))
+            self.assertGreater(button.geometry().top(), dialog.ui.gb_about.geometry().bottom())
+            self.assertTrue(dialog.ui.about_scroll.viewport().rect().contains(
+                button.mapTo(dialog.ui.about_scroll.viewport(), button.rect().bottomRight())))
+        self.assertEqual(dialog.ui.about_scroll.horizontalScrollBar().maximum(), 0)
 
     def test_settings_remains_an_independent_window_when_quotes_are_hidden_or_minimized(self):
         dialog, window = self._make_dialog(float_on_top=True)

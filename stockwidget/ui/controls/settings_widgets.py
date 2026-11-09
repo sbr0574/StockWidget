@@ -106,7 +106,7 @@ class FilledCheckBox(QCheckBox):
         indicator_rect = QRectF(indicator).adjusted(0.5, 0.5, -0.5, -0.5)
         painter.drawRoundedRect(indicator_rect, 3, 3)
 
-        mark_color = QApplication.palette().color(
+        mark_color = self.palette().color(
             QPalette.ColorGroup.Active, QPalette.ColorRole.HighlightedText
         )
         if not self.isEnabled():

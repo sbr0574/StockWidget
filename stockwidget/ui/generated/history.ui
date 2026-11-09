@@ -61,6 +61,34 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="pin_button">
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>26</width>
+          <height>26</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>26</width>
+          <height>26</height>
+         </size>
+        </property>
+        <property name="text">
+         <string />
+        </property>
+        <property name="accessibleName">
+         <string>固定图表</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="pop_out_button">
         <property name="text">
          <string>↗</string>

@@ -250,10 +250,25 @@ class SettingsDialog(QDialog):
             button.clicked.connect(partial(self._pick_color, attr, title, color_setters[attr]))
         self.ui.slider_bg_alpha.valueChanged.connect(self.apply_bg_alpha)
         self.ui.slider_all_alpha.valueChanged.connect(self.apply_win_opacity)
+        self.ui.cb_chart_sync_opacity.toggled.connect(
+            lambda enabled: self.win.set_view_options(chart_sync_opacity=enabled))
+        self.ui.slider_chart_bg_alpha.valueChanged.connect(
+            lambda value: self.win.set_view_options(chart_bg_alpha_pct=value))
+        self.ui.slider_chart_all_alpha.valueChanged.connect(
+            lambda value: self.win.set_view_options(chart_opacity_pct=value))
+        for slider, label in ((self.ui.slider_bg_alpha, self.ui.label_bg_alpha),
+                              (self.ui.slider_all_alpha, self.ui.label_all_alpha),
+                              (self.ui.slider_chart_bg_alpha, self.ui.label_chart_bg_alpha),
+                              (self.ui.slider_chart_all_alpha, self.ui.label_chart_all_alpha)):
+            slider.sliderMoved.connect(lambda value, label=label: label.setText(f"{value}%"))
+        self.win.configuration_changed.connect(self._sync_opacity_settings)
 
         self.ui.cmb_font.currentTextChanged.connect(self.win.set_font_family)
         self.ui.slider_font_size.valueChanged.connect(self.apply_font_size)
+        self.ui.slider_font_size.sliderMoved.connect(lambda value: self.ui.label_current_font_size.setText(f"{value} pt"))
         self.ui.slider_line_interval.valueChanged.connect(self._on_line_changed)
+        self.ui.slider_line_interval.sliderMoved.connect(
+            lambda value: self.ui.label_current_line_interval.setText(f"+{value} px"))
         self.ui.keyseq_hide.editingFinished.connect(self._on_hotkey_changed)
         self.ui.keyseq_click_through.editingFinished.connect(self._on_click_through_hotkey_changed)
         self.ui.cb_auto_start.toggled.connect(self._on_start_on_boot_toggled)
@@ -312,10 +327,7 @@ class SettingsDialog(QDialog):
             self._set_checked_blocked(self.ui.cb_unicolor, self.win.unicolor)
             self._update_direction_color_controls()
             self._refresh_color_buttons()
-            self.ui.slider_bg_alpha.setValue(int(round(self.win.bg.alpha() / 2.55)))
-            self.ui.label_bg_alpha.setText(f"{self.ui.slider_bg_alpha.value()}%")
-            self.ui.slider_all_alpha.setValue(self.win.opacity_pct)
-            self.ui.label_all_alpha.setText(f"{self.ui.slider_all_alpha.value()}%")
+            self._sync_opacity_settings()
 
             self.ui.cmb_font.setCurrentText(self.win.font.family())
             self.ui.slider_font_size.setValue(self.win.font.pointSize())
@@ -350,15 +362,15 @@ class SettingsDialog(QDialog):
         supported = edge_hide_supported()
         needs_boundary = boundary_check_supported()
         self.ui.cb_edge_hide.setEnabled(supported and (not needs_boundary or self.win.boundary_check_enabled))
-        description = "贴住屏幕左、上、右侧时收起为窄条，移入时展开。"
+        description = "贴住屏幕边缘收起为窄条，移入时展开。"
         if needs_boundary:
-            description += "需先开启“保持在屏幕内”。"
+            description += "需开启“保持在屏幕内”。"
         self.ui.cb_edge_hide_description.setText(description)
         self.ui.cb_edge_hide.setAccessibleDescription(description)
         self.ui.cb_edge_hide.setToolTip(
             unsupported_tooltip("贴边收起") if not supported else
             "请先开启“保持在屏幕内”" if needs_boundary and not self.win.boundary_check_enabled else
-            "贴住屏幕左、上、右边时收起为窄条，鼠标移入展开；底边不收起。"
+            "贴住屏幕边缘时收起为窄条，鼠标移入展开。"
         )
 
     def _sync_hide_settings(self):
@@ -440,9 +452,11 @@ class SettingsDialog(QDialog):
                 w.setToolTip(unsupported_tooltip("鼠标穿透"))
         if not opacity_supported():
             # 整体不透明度滑块:Wayland 平台插件不支持设置窗口透明度
-            for w in (self.ui.slider_all_alpha, self.ui.label_all, self.ui.label_all_alpha):
+            for w in (self.ui.slider_all_alpha, self.ui.label_all, self.ui.label_all_alpha,
+                      self.ui.slider_chart_all_alpha, self.ui.label_chart_all, self.ui.label_chart_all_alpha):
                 w.setEnabled(False)
             self.ui.slider_all_alpha.setToolTip(unsupported_tooltip("整体不透明度"))
+            self.ui.slider_chart_all_alpha.setToolTip(unsupported_tooltip("整体不透明度"))
         self._sync_topmost_from_win()
         if not start_on_boot_supported():
             self.ui.cb_auto_start.setEnabled(False)
@@ -731,6 +745,21 @@ class SettingsDialog(QDialog):
         if color.isValid():
             setter(color)
             self._refresh_color_buttons()
+
+    def _sync_opacity_settings(self):
+        options = self.win.view_options
+        self._set_checked_blocked(self.ui.cb_chart_sync_opacity, options.chart_sync_opacity)
+        for slider, label, value in ((self.ui.slider_bg_alpha, self.ui.label_bg_alpha, round(self.win.bg.alpha() / 2.55)),
+                                     (self.ui.slider_all_alpha, self.ui.label_all_alpha, self.win.opacity_pct),
+                                     (self.ui.slider_chart_bg_alpha, self.ui.label_chart_bg_alpha, options.chart_bg_alpha_pct),
+                                     (self.ui.slider_chart_all_alpha, self.ui.label_chart_all_alpha, options.chart_opacity_pct)):
+            if not slider.isSliderDown():
+                with QSignalBlocker(slider):
+                    slider.setValue(value)
+                label.setText(f"{slider.value()}%")
+        for control in (self.ui.label_chart_bg, self.ui.slider_chart_bg_alpha, self.ui.label_chart_bg_alpha,
+                        self.ui.label_chart_all, self.ui.slider_chart_all_alpha, self.ui.label_chart_all_alpha):
+            control.setVisible(not options.chart_sync_opacity)
 
     def apply_bg_alpha(self, v: int):
         self.ui.label_bg_alpha.setText(f"{v}%")

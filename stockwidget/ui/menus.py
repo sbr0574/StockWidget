@@ -184,24 +184,15 @@ def build_quote_menu(source, surface="float"):
     menu.addAction(act_grid)
 
     act_color = QAction("统一颜色", menu, checkable=True)
-    independent_color = surface == "taskbar" and not source.view_options.taskbar_sync_appearance
     if surface == "taskbar":
         auto_color = QAction("自动配色", menu, checkable=True)
         auto_color.setChecked(source.view_options.taskbar_auto_color)
-        auto_color.setEnabled(independent_color)
-        auto_color.setToolTip("跟随系统任务栏深浅色自动选择文字颜色。" if independent_color else
-                             "任务栏正同步浮窗外观；在设置中关闭外观同步后可启用自动配色。")
+        auto_color.setToolTip("跟随系统任务栏深浅色自动选择文字颜色。")
         auto_color.toggled.connect(lambda enabled: source.set_view_options(taskbar_auto_color=enabled))
         menu.addAction(auto_color)
     act_color.setChecked(source.get_taskbar_appearance()[3] if surface == "taskbar" else source.unicolor)
-    act_color.setToolTip(_surface_scope(source, surface, "taskbar_sync_appearance"))
-    if independent_color:
-        act_color.setEnabled(not source.view_options.taskbar_auto_color)
-        if source.view_options.taskbar_auto_color:
-            act_color.setToolTip("任务栏已开启自动配色；关闭自动配色后可修改统一颜色。")
-        act_color.toggled.connect(lambda enabled: source.set_view_options(taskbar_unicolor=enabled))
-    else:
-        act_color.toggled.connect(source.set_unicolor)
+    act_color.setToolTip("同时应用于浮窗和任务栏。")
+    act_color.toggled.connect(source.set_unicolor)
     menu.addAction(act_color)
 
     _view_toggles(menu, source, surface)
