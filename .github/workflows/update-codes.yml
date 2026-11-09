@@ -1,8 +1,8 @@
 name: Update Stock Codes
 
 on:
-  # schedule:
-  #   - cron: "1 0 * * 1-5"
+  schedule:
+    - cron: "30 23 * * 0-4"
   workflow_dispatch:
 
 concurrency:
