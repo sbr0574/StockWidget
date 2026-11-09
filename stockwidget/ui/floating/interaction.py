@@ -198,11 +198,19 @@ class PositionController(QObject):
         if self._drag_origin is not None or not (self.source.boundary_check_enabled or self.source.edge_hide_enabled):
             return rect, None
         # 使用整个屏幕，允许双开浮窗经过任务栏；任务栏停靠仍由共用拖动处理。
-        screens = [s.geometry() for s in QApplication.screens()]
+        screen_objects = QApplication.screens()
+        screens = [s.geometry() for s in screen_objects]
         bounds = best_screen(rect.x(), rect.y(), rect.width(), rect.height(),
                              [(g.x(), g.y(), g.width(), g.height()) for g in screens])
         if bounds is None:
             return rect, None
+        if self.source.edge_hide_enabled:
+            screen = next(s for s in screen_objects if s.geometry().getRect() == bounds)
+            available = screen.availableGeometry()
+            if rect.bottom() >= available.bottom():
+                area = QRect(*bounds)
+                area.setBottom(available.bottom())
+                bounds = area.getRect()
         rect.moveTopLeft(QPoint(*clamp_point(rect.x(), rect.y(), bounds,
                                             rect.width(), rect.height())))
         return rect, QRect(*bounds)
@@ -216,6 +224,8 @@ class PositionController(QObject):
             return "right"
         if rect.top() == bounds.top():
             return "top"
+        if rect.bottom() == bounds.bottom():
+            return "bottom"
         return None
 
     def _apply(self, rect):
@@ -233,7 +243,7 @@ class PositionController(QObject):
                 if handle and isinstance(screen, QScreen) and handle.screen() != screen:
                     handle.setScreen(screen)
                     self.source.setGeometry(rect)
-            # 收起方向决定露出的内容边缘：左侧露右边，顶部露下边。
+            # 收起时保留朝向屏幕内侧的内容边缘。
             # 只平移完整面板，保留 Designer 布局与圆角；展开恢复原始偏移。
             panel_pos = QPoint(self._panel_origin)
             if self.collapsed:
@@ -247,8 +257,10 @@ class PositionController(QObject):
 
     def _strip_geometry(self):
         strip = QRect(self._full)
-        if self.edge == "top":
+        if self.edge in ("top", "bottom"):
             strip.setHeight(min(self.STRIP_SIZE, strip.height()))
+            if self.edge == "bottom":
+                strip.moveBottom(self._full.bottom())
         else:
             strip.setWidth(min(self.STRIP_SIZE, strip.width()))
             if self.edge == "right":
@@ -283,6 +295,8 @@ class PositionController(QObject):
         rect.setSize(size)
         if self.edge == "right":
             rect.moveRight(before.right())
+        elif self.edge == "bottom":
+            rect.moveBottom(before.bottom())
         rect, bounds = self._bounded(rect) if self._restored else (rect, None)
         if self.collapsed:
             self._full = rect
