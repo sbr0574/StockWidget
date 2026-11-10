@@ -96,7 +96,6 @@ class SettingsTestCase(QtTestCase):
         self.enterContext(patch("stockwidget.ui.floating.widget.GlobalHotkeyManager"))
         self.enterContext(patch("stockwidget.ui.floating.widget.apply_click_through"))
         self.enterContext(patch("stockwidget.ui.floating.widget.ensure_topmost"))
-        self.enterContext(patch("stockwidget.ui.settings.groups.find_taskbar", return_value=None))
 
     def enable_windows_taskbar(self):
         """Exercise Windows settings without using the host's native taskbar."""
@@ -121,7 +120,7 @@ class SettingsTestCase(QtTestCase):
         cfg = {"watchlist": watchlist or {}, **settings}
         window = FloatLabel(cfg, CODES if codes is None else codes)
         with patch.object(SettingsDialog, "_start_github_check"):
-            dialog = SettingsDialog(window, window, app=app)
+            dialog = SettingsDialog(window, app=app)
         self._windows.append((dialog, window))
         return dialog, window
 

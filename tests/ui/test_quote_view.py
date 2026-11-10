@@ -161,8 +161,8 @@ class QuoteTableTests(QtTestCase):
         w.quotes._last_full_rows = [{"买一/卖一": BidAskCell("23", "45", "up", "down", "▶")}]
         w.quotes._last_color_roles = [{"买一/卖一": "text"}]
         w.set_visible_metrics(["b1s1"])
-        w.set_unicolor(True)
-        w.set_view_options(taskbar_sync_appearance=False, taskbar_unicolor=False, taskbar_color="#112233")
+        w.set_unicolor(False)
+        w.set_view_options(taskbar_color="#112233")
         calls = []
 
         class Recorder(QPainter):
@@ -173,7 +173,7 @@ class QuoteTableTests(QtTestCase):
         with patch("stockwidget.ui.floating.taskbar.QPainter", Recorder):
             render_taskbar(w, 60)
         self.assertEqual(calls, [("23", w.up_color), ("45", w.down_color), ("▶", QColor("#112233"))])
-        self.assertEqual(w.model.color_for_role("down"), w.fg)
+        self.assertEqual(w.model.color_for_role("down"), w.down_color)
 
 
 class ColorSystemTests(QtTestCase):

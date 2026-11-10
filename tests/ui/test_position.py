@@ -1,6 +1,6 @@
 """浮窗尺寸、屏幕边界、贴边恢复与拖动取消。"""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 import os
 import unittest
 
@@ -169,27 +169,57 @@ class WidgetPositionTests(unittest.TestCase):
         self.assertEqual(window.width(), 5)
         self.assertEqual(window.geometry().right(), self.screen.right())
 
-    def test_boundary_drag_clamps_and_escape_restores_position(self):
+    def test_boundary_drag_stays_unrestricted_and_escape_restores_position(self):
         window = self.window(boundary_check_enabled=True)
         origin = QPoint(100, 100)
         window.move(origin)
         start = origin + QPoint(10, 10)
         window.begin_drag(start)
         window.move_drag(QPoint(self.screen.right() + 100, self.screen.bottom() + 100))
-        self.assertTrue(self.screen.contains(window.geometry()))
+        self.app.processEvents()
+        window.position_controller.recheck()
+        self.assertFalse(self.screen.contains(window.geometry()))
         QApplication.sendEvent(window, QKeyEvent(QEvent.KeyPress, Qt.Key_Escape, Qt.NoModifier))
         self.assertEqual(window.pos(), origin)
         self.assertIsNone(window._drag_pos)
 
-    def test_three_edges_shrink_pause_hover_restore_and_save_full_position(self):
-        for edge in ("left", "top", "right"):
+    def test_boundary_checks_only_after_release_across_each_screen_edge(self):
+        window = self.window(boundary_check_enabled=True)
+        screens = [screen.geometry() for screen in self.app.screens()]
+        left = min(screens, key=lambda rect: rect.left())
+        right = max(screens, key=lambda rect: rect.right())
+        top = min(screens, key=lambda rect: rect.top())
+        bottom = max(screens, key=lambda rect: rect.bottom())
+        for position in (QPoint(left.left() - 10, left.top() + 50),
+                         QPoint(right.right() - 10, right.top() + 50),
+                         QPoint(top.left() + 50, top.top() - 10),
+                         QPoint(bottom.left() + 50, bottom.bottom() - 10)):
+            with self.subTest(position=position):
+                window.move(self.screen.topLeft() + QPoint(100, 100))
+                start = window.pos() + QPoint(10, 10)
+                window.begin_drag(start)
+                pointer = position + QPoint(10, 10)
+                window.move_drag(pointer)
+                self.app.processEvents()
+                window.position_controller.recheck()
+                window.position_controller.fit(window.size())
+                self.app.processEvents()
+                self.assertEqual(window.pos(), position)
+                self.assertFalse(any(screen.contains(window.geometry()) for screen in screens))
+                window.finish_drag()
+                self.app.processEvents()
+                self.assertTrue(any(screen.contains(window.geometry()) for screen in screens))
+                self.assertEqual(window.current_config()["pos"], {"x": window.x(), "y": window.y()})
+
+    def test_four_edges_shrink_pause_hover_restore_and_save_full_position(self):
+        for edge in ("left", "top", "right", "bottom"):
             with self.subTest(edge=edge):
                 window = self.window(boundary_check_enabled=True, edge_hide_enabled=True)
                 window.move(self.edge_position(window, edge))
                 controller = window.position_controller
                 full = controller.full_geometry()
                 self.assertTrue(controller.collapsed)
-                self.assertEqual(window.height() if edge == "top" else window.width(), 5)
+                self.assertEqual(window.height() if edge in ("top", "bottom") else window.width(), 5)
                 self.assertTrue(window.widget_visible)
                 self.assertTrue(self.screen.contains(window.geometry()))
                 self.assertFalse(window.timer.isActive())
@@ -204,11 +234,24 @@ class WidgetPositionTests(unittest.TestCase):
                 self.assertTrue(controller.collapsed)
                 self.assertFalse(window.timer.isActive())
 
-    def test_bottom_does_not_hide_and_disabling_boundary_expands_and_disables_edge(self):
+    def test_bottom_strip_stays_above_reserved_taskbar_or_dock_space(self):
+        window = self.window(boundary_check_enabled=True, edge_hide_enabled=True)
+        available = self.screen.adjusted(0, 0, 0, -40)
+        screen = Mock()
+        screen.geometry.return_value = self.screen
+        screen.availableGeometry.return_value = available
+        with patch("stockwidget.ui.floating.interaction.QApplication.screens", return_value=[screen]):
+            window.move(self.edge_position(window, "bottom"))
+            self.app.processEvents()
+            controller = window.position_controller
+            self.assertTrue(controller.collapsed)
+            self.assertEqual(window.geometry().bottom(), available.bottom())
+            self.assertEqual(controller.full_geometry().bottom(), available.bottom())
+
+    def test_bottom_hides_and_disabling_boundary_expands_and_disables_edge(self):
         window = self.window(boundary_check_enabled=True, edge_hide_enabled=True)
         window.move(self.edge_position(window, "bottom"))
-        self.assertFalse(window.position_controller.collapsed)
-        window.move(self.edge_position(window, "right"))
+        self.assertTrue(window.position_controller.collapsed)
         full = window.position_controller.full_geometry()
         window.set_position_options(boundary_check_enabled=False)
         self.assertFalse(window.edge_hide_enabled)
@@ -221,7 +264,7 @@ class WidgetPositionTests(unittest.TestCase):
         self.assertFalse(window.edge_hide_enabled)
 
     def test_collapsed_image_exposes_opposite_edge_and_expansion_restores_content(self):
-        for edge in ("left", "top", "right"):
+        for edge in ("left", "top", "right", "bottom"):
             with self.subTest(edge=edge):
                 window = self.window(boundary_check_enabled=True, edge_hide_enabled=True)
                 window.panel.setStyleSheet(
@@ -236,7 +279,7 @@ class WidgetPositionTests(unittest.TestCase):
                 # At fractional DPI the translated panel has a different
                 # antialiasing phase. Check the exposed edge's colour directly.
                 strip = window.grab().toImage()
-                color = {"left": "#0000ff", "top": "#00ff00", "right": "#ff0000"}[edge]
+                color = {"left": "#0000ff", "top": "#00ff00", "right": "#ff0000", "bottom": "#ffff00"}[edge]
                 self.assertEqual(strip.pixelColor(strip.width() // 2, strip.height() // 2), QColor(color))
                 self.pointer.return_value = window.geometry().center()
                 window.position_controller.check_pointer()
@@ -371,11 +414,9 @@ class WidgetPositionTests(unittest.TestCase):
         self.assertTrue(window.timer.isActive())
 
     def test_function_controls_defaults_dependency_reset_and_theme(self):
-        # The simulated Windows settings page must not probe the host taskbar.
-        self.enterContext(patch("stockwidget.ui.settings.groups.find_taskbar", return_value=None))
         window = self.window()
         with patch.object(SettingsDialog, "_start_github_check"):
-            dialog = SettingsDialog(window, window)
+            dialog = SettingsDialog(window)
         self.windows.append(dialog)
         dialog.show()
         dialog.ui.settings_pages.setCurrentWidget(dialog.ui.general)

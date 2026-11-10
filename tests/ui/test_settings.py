@@ -12,7 +12,6 @@ from PySide6.QtWidgets import QApplication, QScrollArea, QGroupBox, QSlider
 
 from stockwidget.core.view_options import APPEARANCE_OPTION_KEYS
 from stockwidget.platform.hotkeys import HotkeyResult
-from stockwidget.platform.taskbar import TaskbarArea
 from stockwidget.ui.controls.style import COLOR_SWATCH_SIZE, color_swatch_icon
 from stockwidget.ui.floating.presenter import QuotePresenter
 from stockwidget.ui.settings.dialog import SettingsDialog
@@ -21,9 +20,32 @@ from tests.support import SettingsTestCase, SignalRecorder
 
 
 class SettingsDialogTests(SettingsTestCase):
+    def test_opacity_sliders_commit_on_release_and_preserve_chart_preferences_while_synced(self):
+        dialog, window = self._make_dialog()
+        self.assertTrue(window.view_options.chart_sync_opacity)
+        self.assertTrue(dialog.ui.slider_chart_bg_alpha.isHidden())
+        dialog.ui.cb_chart_sync_opacity.click()
+        self.assertFalse(dialog.ui.slider_chart_bg_alpha.isHidden())
+        controls = ((dialog.ui.slider_bg_alpha, 25, lambda: round(window.bg.alpha() / 2.55)),
+                    (dialog.ui.slider_all_alpha, 65, lambda: window.opacity_pct),
+                    (dialog.ui.slider_chart_bg_alpha, 35, lambda: window.view_options.chart_bg_alpha_pct),
+                    (dialog.ui.slider_chart_all_alpha, 45, lambda: window.view_options.chart_opacity_pct))
+        for slider, value, read_value in controls:
+            before = window.current_config()
+            slider.setSliderDown(True)
+            slider.setSliderPosition(value)
+            self.assertEqual(window.current_config(), before)
+            slider.setSliderDown(False)
+            self.assertEqual(read_value(), value)
+        dialog.ui.cb_chart_sync_opacity.click()
+        self.assertTrue(dialog.ui.slider_chart_bg_alpha.isHidden())
+        window.set_bg_alpha_percent(80)
+        dialog.ui.cb_chart_sync_opacity.click()
+        self.assertEqual((dialog.ui.slider_chart_bg_alpha.value(), dialog.ui.slider_chart_all_alpha.value()), (35, 45))
+
     def test_taskbar_adjustments_do_not_restyle_pages_without_a_theme_change(self):
         self.enable_windows_taskbar()
-        dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_appearance=False)
+        dialog, window = self._make_dialog(taskbar_enabled=True)
         with patch.object(dialog, "_apply_theme_stylesheet", wraps=dialog._apply_theme_stylesheet) as restyle:
             for opacity in (90, 80, 70):
                 dialog.taskbar_settings.style.opacity.setValue(opacity)
@@ -36,24 +58,21 @@ class SettingsDialogTests(SettingsTestCase):
             self.assertEqual(restyle.call_count, 1)
             self.assertLess(dialog.palette().color(QPalette.Window).lightness(), 128)
 
-    def test_taskbar_font_limit_tracks_rows_height_and_dpi_without_erasing_independent_preferences(self):
+    def test_taskbar_font_and_color_mode_follow_main_while_color_and_opacity_stay_independent(self):
         self.enable_windows_taskbar()
-        with patch("stockwidget.ui.settings.groups.find_taskbar", return_value=TaskbarArea(1, 2560, 104, 2200, 192)) as find:
-            dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_appearance=False,
-                                              taskbar_rows=4, taskbar_font_size=20)
-            style = dialog.taskbar_settings.style
-            self.assertEqual((style.font_size.maximum(), style.font_size.value()), (7, 7))
-            window.set_view_options(taskbar_rows=3)
-            self.assertEqual((style.font_size.maximum(), style.font_size.value()), (10, 10))
-            self.assertEqual(window.view_options.taskbar_font_size, 20)
-            style.font_size.setValue(8)
-            self.assertEqual(window.view_options.taskbar_font_size, 8)
-            find.return_value = TaskbarArea(1, 1920, 48, 1700, 96)
-            dialog._sync_view_settings()
-            self.assertEqual(style.font_size.maximum(), 8)
-            find.return_value = None
-            dialog._sync_view_settings()
-            self.assertEqual(style.font_size.maximum(), 8)
+        dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_color="#123456", taskbar_opacity_pct=42)
+        for size in (7, 14):
+            dialog.ui.slider_font_size.setValue(size)
+            window.set_font_family("Arial")
+            for unicolor in (False, True):
+                window.set_unicolor(unicolor)
+                font, color, opacity, unified = window.get_taskbar_appearance()
+                self.assertEqual((font.family(), font.pointSize()), (window.font.family(), size))
+                self.assertEqual((color.name(), opacity, unified), ("#123456", 42, unicolor))
+        window.set_fg_color(QColor("orange"))
+        window.set_window_opacity_percent(65)
+        self.assertEqual(window.get_taskbar_appearance()[1].name(), "#123456")
+        self.assertEqual(window.get_taskbar_appearance()[2], 42)
 
     def test_platform_settings_show_only_available_features(self):
         for platform, session, edge_enabled in (("win32", None, False), ("linux", "x11", True),
@@ -261,7 +280,7 @@ class SettingsDialogTests(SettingsTestCase):
             unicolor=False, header_visible=True, grid_visible=True,
             refresh_seconds=10, visible_metrics=["price"],
             hotkey="Ctrl+Alt+G",
-            taskbar_sync_appearance=False, taskbar_font_family="Arial", taskbar_font_size=17,
+
             taskbar_color="#aabbcc", color_mode="dark",
         )
         _, defaults = self._make_dialog()
@@ -458,18 +477,13 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertFalse(taskbar.interval.isEnabled())
         self.assertEqual(dialog.taskbar_settings.rows.maximum(), 4)
         self.assertEqual(dialog.taskbar_settings.rows.minimum(), 1)
-        self.assertFalse(style.font_size.isEnabled())
-        style.sync_toggle.setChecked(False)
-        style.font_size.setValue(14)
-        self.assertEqual(window.view_options.taskbar_font_size, 14)
-        self.assertEqual(window.font.pointSize(), 10)
-        style.sync_toggle.setChecked(False)
+        dialog.ui.slider_font_size.setValue(14)
+        self.assertEqual(window.get_taskbar_appearance()[0].pointSize(), 14)
+        self.assertEqual(window.font.pointSize(), 14)
         self.assertTrue(style.color.isEnabled())
         window.set_view_options(taskbar_color="#aabbcc", taskbar_metrics=["price", "volume"])
         self.assertEqual(style.color.text().strip(), "#AABBCC")
         self.assertIn("#AABBCC", style.color.toolTip())
-        self.assertIsInstance(style.font_size, QSlider)
-        self.assertEqual(style.font_size_label.text(), "14 pt")
         self.assertEqual(dialog.taskbar_settings.metric_pool.visible_metrics, ["price", "volume"])
         row_limit.setChecked(False)
         self.assertFalse(row_limit.rows.isEnabled())
@@ -541,13 +555,12 @@ class SettingsDialogTests(SettingsTestCase):
     def test_taskbar_switches_hide_independent_settings_and_preserve_them_when_reopened(self):
         self.enable_windows_taskbar()
         dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_metrics=False,
-                                           taskbar_sync_appearance=False, taskbar_sync_paging=False,
+                                            taskbar_sync_paging=False,
                                            taskbar_sync_split=False)
         dialog.ui.settings_pages.setCurrentWidget(dialog.ui.taskbar)
         dialog.show()
         self.qt_app.processEvents()
-        groups = (dialog.taskbar_settings.metrics, dialog.taskbar_settings.style,
-                  dialog.taskbar_settings.paging, dialog.taskbar_settings.split)
+        groups = (dialog.taskbar_settings.metrics, dialog.taskbar_settings.paging, dialog.taskbar_settings.split)
         for group in groups:
             with self.subTest(group=group.title()):
                 self.assertTrue(group.body.isVisible())
@@ -565,11 +578,11 @@ class SettingsDialogTests(SettingsTestCase):
         style.opacity.setValue(43)
         self.assertIsInstance(style.opacity, QSlider)
         self.assertEqual(style.opacity_label.text(), "43%")
-        style.unicolor.setChecked(False)
+        window.set_unicolor(False)
         dialog.taskbar_settings.rows.setValue(4)
         dialog.taskbar_settings.offset.setValue(35)
         self.assertEqual(window.view_options.taskbar_opacity_pct, 43)
-        self.assertFalse(window.view_options.taskbar_unicolor)
+        self.assertFalse(window.get_taskbar_appearance()[3])
         self.assertEqual(window.view_options.taskbar_rows, 4)
         dialog.taskbar_settings.enabled.setChecked(False)
         self.assertTrue(dialog.taskbar_settings.body.isHidden())
@@ -578,34 +591,26 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertTrue(all(group.body.isVisible() for group in groups))
         self.assertEqual((style.opacity.value(), dialog.taskbar_settings.rows.value(),
                           dialog.taskbar_settings.offset.value()), (43, 4, 35))
-        self.assertFalse(style.unicolor.isChecked())
+        self.assertFalse(window.get_taskbar_appearance()[3])
 
-    def test_taskbar_automatic_color_locks_manual_controls_and_restores_saved_preferences(self):
+    def test_taskbar_automatic_color_locks_manual_color_and_preserves_shared_color_mode(self):
         self.enable_windows_taskbar()
-        dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_sync_appearance=False,
-                                           taskbar_color="#123456", taskbar_unicolor=False)
+        dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_color="#123456", unicolor=False)
         style = dialog.taskbar_settings.style
         style.auto_color.click()
         self.assertTrue(window.view_options.taskbar_auto_color)
         self.assertFalse(style.color.isEnabled())
-        self.assertFalse(style.unicolor.isEnabled())
         self.assertEqual(window.view_options.taskbar_color, "#123456")
-        self.assertFalse(window.view_options.taskbar_unicolor)
         for dark, color in ((True, "#FFFFFF"), (False, "#000000")):
             with patch("stockwidget.ui.floating.widget.is_dark_theme", return_value=dark):
                 dialog._apply_theme_stylesheet()
                 self.assertEqual(style.color.text().strip(), color)
                 self.assertEqual(window.view_options.taskbar_color, "#123456")
-        style.sync_toggle.click()
-        dialog._apply_theme_stylesheet()
-        self.assertTrue(style.body.isHidden())
-        self.assertTrue(window.view_options.taskbar_auto_color)
-        style.sync_toggle.click()
+                self.assertFalse(window.get_taskbar_appearance()[3])
         style.auto_color.click()
         self.assertTrue(style.color.isEnabled())
-        self.assertTrue(style.unicolor.isEnabled())
         self.assertEqual(style.color.text().strip(), "#123456")
-        self.assertFalse(style.unicolor.isChecked())
+        self.assertFalse(window.unicolor)
 
     def test_split_controls_use_native_groups_and_preserve_independent_taskbar_settings(self):
         self.enable_windows_taskbar()
@@ -810,26 +815,26 @@ class SettingsDialogTests(SettingsTestCase):
             dialog._on_update_check_finished((False, None))
             warn.assert_called_once()
 
-    def test_general_footer_actions_share_a_row_and_remain_visible_when_scrolled(self):
+    def test_about_footer_actions_share_a_row_and_remain_visible_when_scrolled(self):
         dialog, window = self._make_dialog()
         dialog.show()
-        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.general)
+        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.about)
         for mode in ("light", "dark"):
             window.set_view_options(color_mode=mode)
             self.qt_app.processEvents()
-            buttons = (dialog.ui.btn_reset_appearance, dialog.ui.btn_reset_settings,
+            buttons = (dialog.ui.btn_reset_settings,
                        dialog.ui.btn_open_cache_dir, dialog.ui.btn_clear_cache)
-            positions = [button.mapTo(dialog.ui.general_content, QPoint()) for button in buttons]
+            positions = [button.mapTo(dialog.ui.about_content, QPoint()) for button in buttons]
             self.assertEqual(len({position.y() for position in positions}), 1)
-            self.assertGreater(positions[0].y(), dialog.ui.gb_scheduled_hide.geometry().bottom())
+            self.assertGreater(positions[0].y(), dialog.ui.gb_about.geometry().bottom())
             for index, button in enumerate(buttons):
-                self.assertTrue(dialog.ui.general_content.rect().contains(
-                    button.mapTo(dialog.ui.general_content, button.rect().bottomRight())))
+                self.assertTrue(dialog.ui.about_content.rect().contains(
+                    button.mapTo(dialog.ui.about_content, button.rect().bottomRight())))
                 self.assertEqual(button.size(), buttons[0].size())
                 if index:
                     self.assertGreaterEqual(positions[index].x() - positions[index - 1].x()
                                             - buttons[index - 1].width(), 5)
-            scroll = dialog.ui.general_scroll
+            scroll = dialog.ui.about_scroll
             scroll.ensureWidgetVisible(dialog.ui.btn_clear_cache)
             self.qt_app.processEvents()
             self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)

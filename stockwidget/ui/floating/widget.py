@@ -268,7 +268,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self.taskbar_offset = max(-2000, min(2000, int(cfg.get("taskbar_offset", 0))))
         except (TypeError, ValueError):
             self.taskbar_offset = 0
-        self.view_options = ViewOptions.from_config(cfg, self.font.family(), self.visible_metrics)
+        self.view_options = ViewOptions.from_config(cfg, metrics=self.visible_metrics)
         if not self.view_options.taskbar_enabled:
             self.display_mode = "float"
         elif self.display_mode != "float":
@@ -276,7 +276,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     def reset_appearance(self):
         self._load_appearance_config({})
-        defaults = ViewOptions.from_config({}, self.font.family())
+        defaults = ViewOptions.from_config({})
         for key in APPEARANCE_OPTION_KEYS:
             setattr(self.view_options, key, getattr(defaults, key))
         self.view_options_changed.emit()
@@ -484,15 +484,12 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     def get_taskbar_appearance(self):
         options = self.view_options
-        if options.taskbar_sync_appearance:
-            return self.font, self.fg, self.opacity_pct, self.unicolor
         color = (QColor("#FFFFFF" if is_dark_theme() else "#000000")
                  if options.taskbar_auto_color else _config_color(options.taskbar_color, self.fg))
-        return (QFont(options.taskbar_font_family, options.taskbar_font_size),
-                color, options.taskbar_opacity_pct, options.taskbar_unicolor or options.taskbar_auto_color)
+        return self.font, color, options.taskbar_opacity_pct, self.unicolor
 
     def _sync_taskbar_theme(self, *_args):
-        if self.view_options.taskbar_auto_color and not self.view_options.taskbar_sync_appearance:
+        if self.view_options.taskbar_auto_color:
             self._sync_colors_to_views()
             self.taskbar_options_changed.emit()
             self.presentation_changed.emit()
@@ -500,7 +497,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def set_view_options(self, **changes):
         previous = self.view_options
         old = previous.to_config()
-        options = ViewOptions.from_config({**old, **changes}, self.font.family())
+        options = ViewOptions.from_config({**old, **{key: value for key, value in changes.items() if key in old}})
         if options.to_config() == old:
             return
         if old["taskbar_enabled"] and not options.taskbar_enabled:

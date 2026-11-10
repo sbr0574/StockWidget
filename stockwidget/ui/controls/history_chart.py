@@ -8,7 +8,7 @@ from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QWidget
 
 from stockwidget.core.quote_presentation import format_value, price_precision, should_use_english_units, volume_lot_size
-from stockwidget.data.bars import MA_PERIODS, intraday_average, intraday_timeline, market_now, moving_average, trading_date, volume_directions
+from stockwidget.data.bars import MA_PERIODS, five_minute_bars, five_minute_time, intraday_average, intraday_timeline, market_now, moving_average, trading_date, volume_directions
 
 
 MA_COLORS = ("#e3ac28", "#ba6ee0", "#2a9fd6", "#d97839", "#6fa84c")
@@ -33,6 +33,9 @@ class HistoryChart(QWidget):
         self.instrument = {}
         self.unit_mode = "auto"
         self.reference_price = None
+        self.session_range = ()
+        self.flat = False
+        self.neutral_color = None
         self.up_color, self.down_color = QColor("#ff4444"), QColor("#00b060")
         self._hover = None
         self._cursor_pos = None
@@ -45,30 +48,39 @@ class HistoryChart(QWidget):
         self._indices = {}
         self._day_ranges = ()
 
-    def set_data(self, bars, view, instrument, *, reference_price=None, now=None):
+    def set_data(self, bars, view, instrument, *, reference_price=None, session_range=(), now=None):
         if self.view != view or any(self.instrument.get(key) != instrument.get(key) for key in ("market", "code", "type")):
             self._cursor_pos = None
         self.view, self.instrument = view, instrument
-        self.bars = tuple(bars[-30:] if view == "daily" else bars)
+        minutes = tuple(bars)
+        self.bars = (five_minute_bars(minutes, instrument) if view == "five_day" else
+                     tuple(bars[-30:] if view == "daily" else bars))
         self.averages = {period: moving_average(bars, period)[-30:] for period in MA_PERIODS} if view == "daily" else {}
-        self.minute_averages = intraday_average(self.bars, instrument) if view != "daily" else []
+        self.minute_averages = ([bar.average for bar in self.bars] if view == "five_day" else
+                                intraday_average(self.bars, instrument) if view != "daily" else [])
         self.opening_prices = {}
         if view != "daily":
-            for i, bar in enumerate(self.bars):
-                first = not i or trading_date(bar, instrument) != trading_date(self.bars[i - 1], instrument)
+            first_minutes = {}
+            for bar in minutes:
+                first_minutes.setdefault(trading_date(bar, instrument), bar)
+            for i, item in enumerate(self.bars):
+                first = not i or trading_date(item, instrument) != trading_date(self.bars[i - 1], instrument)
+                bar = first_minutes[trading_date(item, instrument)]
                 if first and bar.time[11:16] in {"09:30", "09:31", "09:00", "09:01", "21:00", "21:01"}:
                     self.opening_prices[i] = bar.open
         self.volume_directions = volume_directions(self.bars, view, instrument)
         self.reference_price = reference_price if reference_price and math.isfinite(reference_price) and reference_price > 0 else None
+        self.session_range = tuple(price for price in session_range if price and math.isfinite(price) and price > 0)
         timeline = intraday_timeline(self.bars, instrument, now) if view == "intraday" else ()
         self._day_ranges = []
         if view == "five_day":
             times = []
             for day in dict.fromkeys(trading_date(bar, instrument) for bar in self.bars):
-                group = tuple(bar for bar in self.bars if trading_date(bar, instrument) == day)
+                group = tuple(bar for bar in minutes if trading_date(bar, instrument) == day)
                 local = market_now(instrument, now)
                 clock = datetime.fromisoformat(day).replace(hour=12, tzinfo=local.tzinfo)
                 slots = intraday_timeline(group, instrument, clock) or tuple(bar.time for bar in group)
+                slots = tuple(dict.fromkeys(five_minute_time(stamp, instrument) for stamp in slots))
                 self._day_ranges.append((len(times), len(times) + len(slots), day))
                 times.extend(slots)
             timeline = tuple(times)
@@ -103,7 +115,7 @@ class HistoryChart(QWidget):
     def _volume(self, value):
         market, security_type = self.instrument.get("market", ""), self.instrument.get("type")
         lot = volume_lot_size(security_type, market)
-        unit = "" if lot == 100 else "合约" if security_type == "期" else "股"
+        unit = "合约" if security_type == "期" and lot != 100 else ""
         return format_value(value, lot, not should_use_english_units(self.unit_mode, market)) + unit
 
     def _percent(self, price):
@@ -111,6 +123,14 @@ class HistoryChart(QWidget):
         return "0%" if abs(change) < .005 else f"{change:+.2f}%"
 
     def price_range(self):
+        if self.view == "intraday" and self.reference_price:
+            prices = [price for bar in self.bars for price in (bar.low, bar.high)]
+            prices.extend(self.opening_prices.values())
+            prices.extend(self.session_range)
+            radius = max(abs(price - self.reference_price) for price in prices)
+            if not radius:
+                radius = 10 ** -price_precision(self.instrument.get("type"), self.instrument.get("market", ""))
+            return self.reference_price - radius, self.reference_price + radius
         values = [price for bar in self.bars for price in ((bar.low, bar.high) if self.view == "daily" else (bar.close,))]
         if self.view == "daily":
             values += [value for period in self.periods for value in self.averages[period] if value is not None]
@@ -131,7 +151,8 @@ class HistoryChart(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         palette = self.palette()
-        painter.fillRect(self.rect(), palette.base())
+        if not self.flat:
+            painter.fillRect(self.rect(), palette.base())
         self._reference_y = None
         if not self.bars:
             painter.setPen(palette.text().color())
@@ -207,7 +228,8 @@ class HistoryChart(QWidget):
                 start = next((start for start, stop, day in self._day_ranges if start <= self._positions[i] < stop), 0)
                 x = x_at(i) - step * (1.5 if self.bars[i].time[14:16] in {"01", "31"} else .5)
                 openings[i] = QPointF(max(plot.left() + start * step, x), y_at(price))
-            self._line(painter, [bar.close for bar in self.bars], x_at, y_at, palette.highlight().color(), dates,
+            self._line(painter, [bar.close for bar in self.bars], x_at, y_at,
+                       text_color if self.flat else palette.highlight().color(), dates,
                        openings=openings)
             if self.show_average:
                 self._line(painter, self.minute_averages, x_at, y_at, QColor(MA_COLORS[0]), dates,
@@ -222,14 +244,26 @@ class HistoryChart(QWidget):
             painter.drawLine(QPointF(0, separator_y), QPointF(self.width(), separator_y))
             painter.drawLine(volume_rect.bottomLeft(), volume_rect.bottomRight())
             scale_volume = max(1, max_volume)
+            ratio = self.devicePixelRatioF()
+            bottom = round(volume_rect.bottom() * ratio)
+            gap = 1 if step * ratio >= 3 else 0
             for i, bar in enumerate(self.bars):
                 direction = self.volume_directions[i]
-                color = self.up_color if direction > 0 else self.down_color if direction < 0 else text_color
+                color = self._direction_color(direction)
                 if bar.volume > 0:
-                    width = max(1, round(step * .6))
-                    height = max(1, round(bar.volume / scale_volume * volume_rect.height()))
-                    painter.fillRect(QRectF(round(x_at(i)) - width // 2, round(volume_rect.bottom()) - height,
-                                           width, height), color)
+                    if self.view == "daily":
+                        width = max(1, round(step * .6))
+                        height = max(1, round(bar.volume / scale_volume * volume_rect.height()))
+                        rect = QRectF(round(x_at(i)) - width // 2, round(volume_rect.bottom()) - height, width, height)
+                    else:
+                        left_px = round((plot.left() + step * self._positions[i]) * ratio)
+                        right_px = round((plot.left() + step * (self._positions[i] + 1)) * ratio)
+                        if right_px - left_px <= gap:
+                            continue
+                        height = max(1, round(bar.volume / scale_volume * volume_rect.height() * ratio))
+                        rect = QRectF((left_px + gap) / ratio, (bottom - height) / ratio,
+                                      (right_px - left_px - gap) / ratio, height / ratio)
+                    painter.fillRect(rect, color)
             painter.setPen(text_color)
             painter.drawText(QRectF(0, volume_rect.top(), left - 8, label_height), Qt.AlignRight, self._volume(max_volume))
             if volume_rect.height() >= label_height * 2 + 4:
@@ -323,7 +357,11 @@ class HistoryChart(QWidget):
         self.setAccessibleDescription(text)
         self.readout_changed.emit(text)
 
-    def readout_text(self, i=None):
+    def _direction_color(self, direction):
+        return (self.up_color if direction > 0 else self.down_color if direction < 0 else
+                self.neutral_color if self.neutral_color is not None else self.palette().text().color())
+
+    def readout_text(self, i=None, *, rich=False):
         if not self.bars:
             return ("开 —  高 —  低 —  收 —  量 —" if self.view == "daily" else "均 —  价格 — (—)  量 —")
         if i is None:
@@ -334,6 +372,13 @@ class HistoryChart(QWidget):
         if self.view != "daily":
             average = self.minute_averages[i]
             change = f"{(bar.close / self.reference_price - 1) * 100:+.2f}%" if self.reference_price else "—"
+            if rich:
+                def colored(text, value):
+                    color = self._direction_color(value - self.reference_price if self.reference_price else 0)
+                    return f'<span style="color:{color.name()}">{text}</span>'
+                return ("均 " + colored(self._price(average), average) + "&nbsp; 价格 " +
+                        colored(f"{self._price(bar.close)} ({change})", bar.close) +
+                        f"&nbsp; 量 {self._volume(bar.volume)}")
             return f"均 {self._price(average)}  价格 {self._price(bar.close)} ({change})  量 {self._volume(bar.volume)}"
         text = (f"开 {self._price(bar.open)}  高 {self._price(bar.high)}  "
                 f"低 {self._price(bar.low)}  收 {self._price(bar.close)}  量 {self._volume(bar.volume)}")
@@ -368,14 +413,14 @@ class HistoryChart(QWidget):
         point = self._cursor_pos
         if not (plot.contains(point) or self.show_volume and volume.contains(point)):
             return
-        color = self.palette().highlight().color()
+        color = self.palette().text().color() if self.flat else self.palette().highlight().color()
         painter.setPen(QPen(color, 1, Qt.DashLine))
         painter.drawLine(QPointF(point.x(), plot.top()), QPointF(point.x(), volume.bottom() if self.show_volume else plot.bottom()))
         painter.drawLine(QPointF(plot.left(), point.y()), QPointF(plot.right(), point.y()))
 
         def badge(rect, text):
-            painter.fillRect(rect, color)
-            painter.setPen(self.palette().highlightedText().color())
+            painter.fillRect(rect, self.palette().base() if self.flat else color)
+            painter.setPen(color if self.flat else self.palette().highlightedText().color())
             painter.drawText(rect, Qt.AlignCenter, text)
 
         if plot.contains(point):

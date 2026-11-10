@@ -6,11 +6,8 @@ from stockwidget.core.quote_presentation import DEFAULT_VISIBLE_METRICS, normali
 
 
 PAGE_MODES = (("first", "只显示前 N 行"), ("manual", "手动翻页"), ("auto", "自动翻页"))
-TASKBAR_STYLE_KEYS = (
-    "taskbar_sync_appearance", "taskbar_font_family", "taskbar_font_size",
-    "taskbar_color", "taskbar_auto_color", "taskbar_opacity_pct", "taskbar_unicolor",
-)
-APPEARANCE_OPTION_KEYS = ("color_mode", *TASKBAR_STYLE_KEYS)
+TASKBAR_STYLE_KEYS = ("taskbar_color", "taskbar_auto_color", "taskbar_opacity_pct")
+APPEARANCE_OPTION_KEYS = ("color_mode", "chart_sync_opacity", "chart_bg_alpha_pct", "chart_opacity_pct", *TASKBAR_STYLE_KEYS)
 
 
 def bounded_int(value, default, low, high):
@@ -29,16 +26,13 @@ def taskbar_font_pixels(height, dpi, rows, point_size):
     return max(7, min(round(point_size * dpi / 72), row_height - 2))
 
 
-def taskbar_font_size_limit(height, dpi, rows):
-    """Expose the renderer's row/DPI limit in whole point sizes."""
-    pixels = max(7, (height - 4) // rows - 2)
-    return max(5, min(30, round(pixels * 72 / dpi)))
-
-
 @dataclass
 class ViewOptions:
     mini_chart_type: str = "kline"
-    chart_enabled: bool = False
+    chart_enabled: bool = True
+    chart_sync_opacity: bool = True
+    chart_bg_alpha_pct: int = 75
+    chart_opacity_pct: int = 90
     chart_popup_size: list[int] = field(default_factory=lambda: [480, 340])
     chart_window_size: list[int] = field(default_factory=lambda: [900, 560])
     chart_order_book_enabled: bool = False
@@ -64,23 +58,19 @@ class ViewOptions:
     taskbar_metrics: list[str] = field(default_factory=lambda: list(DEFAULT_VISIBLE_METRICS))
     taskbar_sync_metrics: bool = True
     taskbar_enabled: bool = False
-    taskbar_sync_appearance: bool = True
-    taskbar_font_family: str = "Microsoft YaHei"
-    taskbar_font_size: int = 10
     taskbar_color: str = "#FFFFFF"
     taskbar_auto_color: bool = False
     taskbar_opacity_pct: int = 100
-    taskbar_unicolor: bool = True
     taskbar_dual_open: bool = False
 
     @classmethod
-    def from_config(cls, cfg, font_family="Microsoft YaHei", metrics=None):
-        defaults = cls(taskbar_font_family=font_family)
+    def from_config(cls, cfg, metrics=None):
+        defaults = cls()
         result = cls(**{key: cfg.get(key, value) for key, value in asdict(defaults).items()})
         for key, low, high in (
             ("float_max_rows", 1, 20), ("float_page_interval", 1, 60),
             ("taskbar_rows", 1, 4), ("taskbar_page_interval", 1, 3600),
-            ("taskbar_font_size", 5, 30), ("taskbar_opacity_pct", 0, 100),
+            ("taskbar_opacity_pct", 0, 100), ("chart_bg_alpha_pct", 1, 100), ("chart_opacity_pct", 20, 100),
         ):
             setattr(result, key, bounded_int(getattr(result, key), getattr(defaults, key), low, high))
         for key in ("float_page_mode", "taskbar_page_mode"):
@@ -117,17 +107,20 @@ class ViewOptions:
             result.taskbar_enabled = cfg.get("display_mode", "float") in ("taskbar", "both")
         if "taskbar_sync_metrics" not in cfg:
             result.taskbar_sync_metrics = "taskbar_metrics" not in cfg
-        if "taskbar_sync_appearance" not in cfg:
-            result.taskbar_sync_appearance = cfg.get("taskbar_sync_font", True) and cfg.get("taskbar_sync_color", True)
+        legacy_appearance = "taskbar_sync_font" in cfg or "taskbar_sync_color" in cfg
+        legacy_sync = cfg.get("taskbar_sync_appearance", legacy_appearance
+                              and cfg.get("taskbar_sync_font", True) and cfg.get("taskbar_sync_color", True))
+        if legacy_sync:
+            result.taskbar_color = cfg.get("fg", defaults.taskbar_color)
+            result.taskbar_opacity_pct = bounded_int(cfg.get("opacity_pct", 90), 90, 0, 100)
+            result.taskbar_auto_color = False
         if "taskbar_sync_paging" not in cfg:
             result.taskbar_sync_paging = "taskbar_page_mode" not in cfg
-        if not isinstance(result.taskbar_font_family, str) or not result.taskbar_font_family.strip():
-            result.taskbar_font_family = font_family
         if not isinstance(result.taskbar_color, str):
             result.taskbar_color = defaults.taskbar_color
-        for key in ("chart_enabled", "chart_average_enabled", "chart_volume_enabled", "chart_order_book_enabled", "hide_tray_icon",
+        for key in ("chart_enabled", "chart_sync_opacity", "chart_average_enabled", "chart_volume_enabled", "chart_order_book_enabled", "hide_tray_icon",
                     "float_paging_enabled", "taskbar_enabled", "taskbar_sync_metrics",
-                    "taskbar_sync_appearance", "taskbar_sync_paging", "taskbar_unicolor", "taskbar_auto_color", "taskbar_dual_open",
+                    "taskbar_sync_paging", "taskbar_auto_color", "taskbar_dual_open",
                     "float_split_enabled", "float_split_separator", "taskbar_sync_split",
                     "taskbar_split_enabled", "taskbar_split_separator"):
             setattr(result, key, bool(getattr(result, key)))

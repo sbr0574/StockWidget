@@ -8,3 +8,4 @@ __pycache__/
 /CHANGELOG.md
 .DS_Store
 resources/resources_rc.py
+.archify

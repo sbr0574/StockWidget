@@ -25,7 +25,6 @@ class TaskbarTests(QtTestCase):
         self.refresh = self.enterContext(patch.object(QuotePresenter, "refresh"))
         self.enterContext(patch("stockwidget.ui.floating.widget.GlobalHotkeyManager"))
         self.enterContext(patch("stockwidget.ui.floating.widget.apply_click_through"))
-        self.enterContext(patch("stockwidget.ui.settings.groups.find_taskbar", return_value=None))
         self.window = FloatLabel({"taskbar_enabled": True, "taskbar_sync_metrics": False, "taskbar_sync_paging": False}, {})
         self.window.visible_metrics = ["name", "price"]
         self.window.set_view_options(taskbar_metrics=["name", "price"])
@@ -73,8 +72,8 @@ class TaskbarTests(QtTestCase):
 
     def test_automatic_taskbar_color_tracks_theme_without_overwriting_manual_color(self):
         original = self.app.palette()
-        self.window.set_view_options(taskbar_sync_appearance=False, taskbar_auto_color=True,
-                                     taskbar_color="#123456", taskbar_unicolor=False)
+        self.window.set_view_options(taskbar_auto_color=True,
+                                     taskbar_color="#123456")
         self.set_rows([["黄金", "123.45"]])
         with patch("stockwidget.ui.controls.style.QGuiApplication.styleHints") as hints:
             hints.return_value.colorScheme.return_value = Qt.ColorScheme.Unknown
@@ -92,12 +91,10 @@ class TaskbarTests(QtTestCase):
                     images.append(render_taskbar(self.window, 44))
                 self.assertNotEqual(*images)
                 self.assertEqual(self.window.current_config()["taskbar_color"], "#123456")
-                self.assertFalse(self.window.current_config()["taskbar_unicolor"])
-                self.window.set_view_options(taskbar_sync_appearance=True)
-                self.assertEqual(self.window.get_taskbar_appearance()[1], self.window.fg)
-                self.window.set_view_options(taskbar_sync_appearance=False, taskbar_auto_color=False)
+                self.assertNotIn("taskbar_unicolor", self.window.current_config())
+                self.window.set_view_options(taskbar_auto_color=False)
                 self.assertEqual(self.window.get_taskbar_appearance()[1].name(), "#123456")
-                self.assertFalse(self.window.get_taskbar_appearance()[3])
+                self.assertEqual(self.window.get_taskbar_appearance()[3], self.window.unicolor)
             finally:
                 self.app.setPalette(original)
 
@@ -139,22 +136,19 @@ class TaskbarTests(QtTestCase):
                 self.window.set_grid_visible(False)
                 self.assertEqual(original, render_taskbar(self.window, height, dpi))
 
-    def test_taskbar_color_menu_respects_independent_and_synced_appearance(self):
-        self.window.set_unicolor(False)
-        for synced, automatic in ((False, False), (True, False), (False, True)):
-            with self.subTest(synced=synced, automatic=automatic):
+    def test_taskbar_color_menu_always_changes_the_shared_color_mode(self):
+        for automatic in (False, True):
+            with self.subTest(automatic=automatic):
                 self.window.set_unicolor(False)
-                self.window.set_view_options(taskbar_sync_appearance=synced,
-                                             taskbar_auto_color=automatic, taskbar_unicolor=True)
+                self.window.set_view_options(taskbar_auto_color=automatic)
                 menu = build_quote_menu(self.window, "taskbar")
                 try:
                     action = next(action for action in menu.actions() if action.text() == "统一颜色")
-                    self.assertEqual(action.isChecked(), not synced)
-                    self.assertEqual(action.isEnabled(), not automatic)
-                    if action.isEnabled():
-                        action.trigger()
-                        self.assertEqual(self.window.unicolor, synced)
-                        self.assertEqual(self.window.view_options.taskbar_unicolor, synced)
+                    self.assertFalse(action.isChecked())
+                    self.assertTrue(action.isEnabled())
+                    action.trigger()
+                    self.assertTrue(self.window.unicolor)
+                    self.assertTrue(self.window.get_taskbar_appearance()[3])
                 finally:
                     delete(menu)
 
@@ -255,7 +249,7 @@ class TaskbarTests(QtTestCase):
 
         self.window.set_view_options(taskbar_enabled=False)
         with patch.object(SettingsDialog, "_start_github_check"), patch("sys.platform", "win32"):
-            dialog = SettingsDialog(self.window, self.window)
+            dialog = SettingsDialog(self.window)
             tray = TrayIcon(QIcon(), "Test", on_toggle=Mock(), on_open_settings=Mock(),
                             on_quit=Mock(), source=self.window)
             try:

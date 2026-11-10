@@ -538,7 +538,7 @@ class WindowsTopmostIntegrationTests(QtTestCase):
         ):
             window = FloatLabel({}, {})
         with patch.object(SettingsDialog, "_start_github_check"):
-            dialog = SettingsDialog(window, window)
+            dialog = SettingsDialog(window)
         try:
             window.show()
             self.app.processEvents()

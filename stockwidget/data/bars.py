@@ -467,6 +467,34 @@ def mini_trend_points(bars, instrument, now=None):
     return points
 
 
+def five_minute_time(stamp, instrument):
+    """Right edge of a five-minute interval; breaks never share a bucket."""
+    clock = datetime.fromisoformat(stamp)
+    minute = clock.hour * 60 + clock.minute
+    opening = minute != 0 and any(minute == start for start, _ in _minute_sessions(instrument))
+    extra = 5 - minute % 5 if minute % 5 or opening else 0
+    return (clock.replace(second=0, microsecond=0) + timedelta(minutes=extra)).isoformat(" ")
+
+
+def five_minute_bars(bars, instrument):
+    """Aggregate display bars while retaining the original cumulative mean.
+
+    The shared minute cache stays intact for the intraday view and live merges.
+    The last interval may be unfinished; its volume/amount aren't extrapolated.
+    """
+    groups = {}
+    averages = intraday_average(bars, instrument)
+    for bar, average in zip(bars, averages):
+        stamp = five_minute_time(bar.time, instrument)
+        key = trading_date(bar, instrument), stamp
+        previous = groups.get(key)
+        groups[key] = (Bar(stamp, previous.open, max(previous.high, bar.high),
+                           min(previous.low, bar.low), bar.close, previous.volume + bar.volume,
+                           previous.amount + bar.amount if previous.amount is not None and bar.amount is not None else None,
+                           average) if previous else replace(bar, time=stamp, average=average))
+    return tuple(groups.values())
+
+
 def moving_average(bars, period):
     """Compute on full history, with None until a complete window exists."""
     if period <= 0:

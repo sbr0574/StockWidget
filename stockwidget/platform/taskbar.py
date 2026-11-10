@@ -41,6 +41,8 @@ def _api():
         "FindWindowExW": ([w.HWND, w.HWND, w.LPCWSTR, w.LPCWSTR], w.HWND),
         "GetWindowRect": ([w.HWND, ctypes.POINTER(w.RECT)], w.BOOL),
         "GetCursorPos": ([ctypes.POINTER(w.POINT)], w.BOOL),
+        "LoadCursorW": ([w.HINSTANCE, ctypes.c_void_p], w.HANDLE),
+        "SetCursor": ([w.HANDLE], w.HANDLE),
         "MonitorFromWindow": ([w.HWND, w.DWORD], w.HANDLE),
         "GetMonitorInfoW": ([w.HANDLE, w.LPVOID], w.BOOL),
         "ScreenToClient": ([w.HWND, ctypes.POINTER(w.POINT)], w.BOOL),
@@ -207,11 +209,15 @@ class NativeTaskbarWindow:
         wc = WindowClass()
         wc.style = 0x0008  # CS_DBLCLKS: receive WM_LBUTTONDBLCLK
         wc.proc, wc.instance, wc.name = self._callback, self._instance, self._class_name
+        self._arrow_cursor = wc.cursor = self.user.LoadCursorW(None, ctypes.c_void_p(32512))
         if not self.user.RegisterClassW(ctypes.byref(wc)):
             raise ctypes.WinError(ctypes.get_last_error())
 
     def _wndproc(self, hwnd, message, wp, lp):
         try:
+            if message == 0x20 and lp & 0xFFFF == 1:  # WM_SETCURSOR, HTCLIENT
+                self.user.SetCursor(self._arrow_cursor)
+                return 1
             x, y = ctypes.c_short(lp & 0xFFFF).value, ctypes.c_short((lp >> 16) & 0xFFFF).value
             if message == 0x21:  # WM_MOUSEACTIVATE
                 return 3  # MA_NOACTIVATE

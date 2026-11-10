@@ -97,7 +97,9 @@ class OrderBookWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedWidth(164)
-        self.setMinimumHeight(230)
+        self.setMinimumHeight(200)
+        self.flat = False
+        self.neutral_color = None
         self.rows = ()
         self.buy_fraction = None
         self.up_color, self.down_color = QColor(DEFAULT_UP_COLOR), QColor(DEFAULT_DOWN_COLOR)
@@ -109,6 +111,8 @@ class OrderBookWidget(QWidget):
         lot = volume_lot_size(kind, market)
         precision = price_precision(kind, market)
         previous = quote.get("prev_close", 0)
+        purchase, sale = quote.get("purchaser_price", ()), quote.get("seller_price", ())
+        auction = bool(purchase and sale and purchase[0] == sale[0] > 0)
         self.up_color, self.down_color = QColor(up), QColor(down)
         self.rows = []
         totals = []
@@ -117,12 +121,13 @@ class OrderBookWidget(QWidget):
             volumes = (list(quote.get(f"{side}_vol", ())) + [0] * 5)[:5]
             if kind == "指":
                 prices, volumes = [0] * 5, [0] * 5
-            totals.append(sum(max(0, volume) for price, volume in zip(prices, volumes) if price > 0))
+            totals.append(sum(max(0, volume) for index, (price, volume) in enumerate(zip(prices, volumes))
+                              if price > 0 or (auction and index == 1)))
             for index in indices:
                 price, volume = prices[index], volumes[index]
                 role = direction_color_role(price - previous) if price > 0 and previous else ""
                 quantity = (format_value(volume, lot, not should_use_english_units(unit_mode, market))
-                            if price > 0 and volume > 0 else "—")
+                            if (price > 0 or (auction and index == 1)) and volume > 0 else "—")
                 self.rows.append((f"{title}{index + 1}", f"{price:.{precision}f}" if price > 0 else "—", quantity, role))
         sell, buy = totals
         self.buy_fraction = buy / (buy + sell) if buy + sell else None
@@ -130,7 +135,8 @@ class OrderBookWidget(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        painter.fillRect(self.rect(), self.palette().base())
+        if not self.flat:
+            painter.fillRect(self.rect(), self.palette().base())
         neutral = self.palette().text().color()
         painter.setPen(self.palette().mid().color())
         painter.drawLine(0, 0, 0, self.height())
@@ -140,7 +146,8 @@ class OrderBookWidget(QWidget):
             y = 6 + (index + (index >= 5)) * line
             painter.setPen(neutral)
             painter.drawText(QRectF(margin, y, 28, line), Qt.AlignVCenter, title)
-            color = self.up_color if role == COLOR_ROLE_UP else self.down_color if role == COLOR_ROLE_DOWN else neutral
+            color = (self.up_color if role == COLOR_ROLE_UP else self.down_color if role == COLOR_ROLE_DOWN else
+                     self.neutral_color if self.neutral_color is not None else neutral)
             painter.setPen(color)
             painter.drawText(QRectF(margin + 26, y, 57, line), Qt.AlignVCenter | Qt.AlignRight, price)
             painter.setPen(neutral)
