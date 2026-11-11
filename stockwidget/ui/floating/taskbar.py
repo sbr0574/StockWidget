@@ -190,7 +190,7 @@ class TaskbarController(QObject):
     @property
     def enabled(self):
         return self.source.view_options.taskbar_enabled and self.source.widget_visible and (
-            (self._drag_over or self._drag_origin_mode == "both") if self._dragging
+            self._drag_over if self._dragging
             else self.source.display_mode != "float")
 
     def _status(self, text):
@@ -299,29 +299,38 @@ class TaskbarController(QObject):
     def _native_pointer(self, kind, x, y):
         # Snapshot before queuing: the pointer can move again before Qt runs.
         position = QCursor.pos()
-        over = cursor_over_taskbar() or False
+        over = False if self.source.view_options.taskbar_dual_open else cursor_over_taskbar() or False
         QTimer.singleShot(0, self, lambda: self._dispatch_pointer(kind, x, y, position, over))
 
     def _dispatch_pointer(self, kind, x, y, position, over):
         if self._closed:
             return
+        fixed = self.source.view_options.taskbar_dual_open
         self._pointer_over = over
         try:
             if kind == "press":
                 self.input_timer.start()
-                self._native_press = pager_hit(self._pager_rect, x, y)
+                self._native_press = (pager_hit(self._pager_rect, x, y), QPoint(position))
                 full = self.source.position_controller.full_geometry()
                 offset = QPoint(max(0, min(round(x * 96 / self._dpi), full.width() - 1)),
                                 max(0, min(round(y * 96 / self._dpi), full.height() - 1)))
                 self.source.begin_drag(position, surface="taskbar", offset=offset)
             elif kind == "move" and self._native_press is not None:
-                self.source.move_drag(position)
+                if fixed:
+                    if (position - self._native_press[1]).manhattanLength() >= QApplication.startDragDistance():
+                        self._native_press = None
+                else:
+                    self.source.move_drag(position)
             elif kind in ("release", "cancel"):
                 self.input_timer.stop()
                 clicked = (kind == "release" and self._native_press is not None
-                           and self.source._drag_pos is not None and not self.source._is_drag_position(position)
-                           and self._native_press == pager_hit(self._pager_rect, x, y))
-                self.source.finish_drag(kind == "release")
+                           and (position - self._native_press[1]).manhattanLength() < QApplication.startDragDistance()
+                           and (fixed or (self.source._drag_pos is not None and not self.source._is_drag_position(position)))
+                           and self._native_press[0] == pager_hit(self._pager_rect, x, y))
+                if fixed and self.native:
+                    self.native.release_pointer()
+                elif not fixed:
+                    self.source.finish_drag(kind == "release")
                 if clicked:
                     self._click(x, y, position)
                 self._native_press = None
@@ -335,9 +344,8 @@ class TaskbarController(QObject):
             self._pointer_over = None
 
     def drag_started(self):
-        # 双开时拖动浮窗保持自由移动，原生任务栏仍可跨屏停靠。
         if (not self.source.view_options.taskbar_enabled
-                or (self.source.display_mode == "both" and self.source._drag_surface == "float")
+                or self.source.view_options.taskbar_dual_open
                 or QApplication.platformName() != "windows"):
             return
         self._dragging = True
@@ -360,17 +368,16 @@ class TaskbarController(QObject):
         if over == self._drag_over:
             return
         self._drag_over = over
-        dual = self._drag_origin_mode == "both"
-        self.source.taskbar_preview_active = bool(over) and not dual
+        self.source.taskbar_preview_active = bool(over)
         self.apply_mode()
-        if dual:
-            return
         if over and self._active:
+            if self.native:
+                self.native.release_pointer()
             self.source.hide()
-            if self.source._drag_surface == "float" and self.native:
-                # Hiding Qt releases its implicit mouse grab. The native input
-                # adapter continues the same gesture until release or Escape.
-                self._native_press = 0
+            if self.native:
+                # Qt hiding releases capture; reacquire it after the handoff.
+                if self.source._drag_surface == "float":
+                    self._native_press = (0, QCursor.pos())
                 self.native.capture_pointer()
                 self.input_timer.start()
         elif self.source.widget_visible:
@@ -385,14 +392,14 @@ class TaskbarController(QObject):
         self.source.sync_refresh_timer()
 
     def drag_finished(self, accepted):
+        if self._dragging and accepted:
+            self.drag_moved()
         self.input_timer.stop()
         self._native_press = None
         if self.native:
             self.native.release_pointer()
         if not self._dragging:
             return
-        if accepted:
-            self.drag_moved()
         docked = accepted and self._drag_over and self._active
         self._dragging = self._drag_over = False
         self.source.taskbar_preview_active = False
@@ -400,12 +407,8 @@ class TaskbarController(QObject):
             mode = self._drag_origin_mode
             self.source.taskbar_screen = self._drag_origin_screen
             self.source.move(self._drag_origin_position)
-        elif self._drag_origin_mode == "both":
-            mode = "both"
-            if not docked:
-                self.source.taskbar_screen = self._drag_origin_screen
         elif docked:
-            mode = "both" if self.source.view_options.taskbar_dual_open else "taskbar"
+            mode = "taskbar"
             # Remember a usable position for a later drag out of the bar.
             self.source.move(self._drag_origin_position)
         else:

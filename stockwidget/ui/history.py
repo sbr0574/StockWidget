@@ -821,8 +821,7 @@ class HistoryController(QObject):
             series = self._series_for(instrument, view)
             if series.needs_download(now):
                 self._start((self._generation, dict(instrument), view,
-                             history_day(instrument, now), series.loaded_day == history_day(instrument, now)
-                             and series.repair_needed))
+                             history_day(instrument, now), series.loaded_day == history_day(instrument, now)))
                 return
 
     def reload(self):
@@ -834,7 +833,7 @@ class HistoryController(QObject):
         now = self.cache.clock()
         day = history_day(self.instrument, now)
         request = (self._generation, dict(self.instrument), view, day,
-                   series.loaded_day == day and series.repair_needed)
+                   series.loaded_day == day)
         key = (self._key(self.instrument, view), view)
         if key != self._displayed_key:
             self.dialog.chart.set_data((), self.dialog.view, self.instrument)

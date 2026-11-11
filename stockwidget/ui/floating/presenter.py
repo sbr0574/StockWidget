@@ -174,7 +174,7 @@ class QuotePresenter(QObject):
         quote = self.quote_for(instrument) or {}
         data = self._detail_values.get(key, {})
         return {**self._fundamentals.get(key, ({}, 0))[0],
-                **(data.get("activity", {}) if data.get("date") == quote.get("date") else {})}
+                **(data.get("activity", {}) if data.get("date") == str(quote.get("date") or "").replace("/", "-") else {})}
 
     def _refresh_details(self):
         instrument = self._detail_instrument
@@ -190,6 +190,8 @@ class QuotePresenter(QObject):
         fundamentals, saved = self._fundamentals.get(key, (None, 0))
         if fundamentals is None or not cache.fundamentals_fresh(instrument, fundamentals, saved):
             fundamentals = None
+        if fundamentals is not None and cache.clock().timestamp() < self._detail_values.get(key, {}).get("next_update", 0):
+            return
         quote = self.quote_for(instrument) or {}
         self._detail_busy = True
         threading.Thread(target=self._detail_worker,
@@ -227,7 +229,12 @@ class QuotePresenter(QObject):
         self._fundamentals[key] = dict(fundamental), saved_at
         if downloaded:
             cache.write_fundamentals(instrument, fundamental, saved_at, generation=cache_generation)
-        self._detail_values[key] = {"activity": dict(activity), "date": date}
+        previous = self._detail_values.get(key, {}).get("activity", {})
+        if (activity.get("activity_timestamp") is not None and previous.get("activity_timestamp") is not None
+                and activity["activity_timestamp"] < previous["activity_timestamp"]):
+            activity = previous
+        self._detail_values[key] = {"activity": dict(activity), "date": activity.get("activity_date", date),
+                                   "next_update": cache.clock().timestamp() + (5 if activity else 30)}
         self.details_updated.emit()
 
     def history_instruments(self, view="intraday"):
@@ -358,8 +365,8 @@ class QuotePresenter(QObject):
 
     def sync_page_timers(self):
         for surface, timer in self.page_timers.items():
-            active = (self.window.isVisible() and not self.window.position_controller.collapsed) if surface == "float" else (
-                self.window.widget_visible and (self.window.display_mode != "float" or self.window.taskbar_preview_active))
+            active = (self.window.isVisible() and not self.window.position_controller.collapsed
+                      if surface == "float" else self.window.taskbar_visible)
             mode, seconds = self.window.view_options.page_settings(surface)
             interval = seconds * 1000
             if timer.interval() != interval:
@@ -382,7 +389,7 @@ class QuotePresenter(QObject):
     def refresh(self):
         """定时入口：将网络请求丢到后台线程执行，避免阻塞 UI。
         若上一轮请求尚未完成则跳过本次刷新，防止请求重叠。"""
-        if self.window.position_controller.collapsed:
+        if self.window.position_controller.collapsed and not self.window.taskbar_visible:
             return
         checked_codes = self.window.checked_codes
         if not checked_codes:
@@ -439,7 +446,7 @@ class QuotePresenter(QObject):
 
     def accept_result(self, payload):
         """主线程：处理请求结果并更新表格。payload = (ok, data, error)"""
-        if self.window.position_controller.collapsed:
+        if self.window.position_controller.collapsed and not self.window.taskbar_visible:
             return
         ok, data, error = payload[:3]
         if len(payload) > 3 and payload[3] != self._quote_generation:

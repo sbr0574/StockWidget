@@ -277,6 +277,8 @@ class HistoryDetailsTests(HistoryTestCase):
 
     def test_twenty_header_values_share_live_quotes_and_optional_detail_result(self):
         _, window = self.make_window(chart_enabled=True)
+        clock = [window.history.cache.clock()]
+        window.history.cache.clock = lambda: clock[0]
         details = {"annual_profit": 2_000_000, "ttm_profit": 4_000_000, "annualized_profit": 5_000_000, "book_value_per_share": 8,
                    "total_shares": 1000000, "float_shares": 500000}
         with patch("stockwidget.ui.floating.presenter.request_quote_details", return_value=(details, {"inside_volume": 50, "outside_volume": 50})) as request:
@@ -309,6 +311,9 @@ class HistoryDetailsTests(HistoryTestCase):
                         self.assertTrue(block.rect().contains(value.geometry()))
                         self.assertLess(caption.geometry().right(), value.geometry().left())
             quote = window.quotes._latest_quotes["sh600000"]
+            window.quotes._refresh_details()
+            self.assertEqual(request.call_count, 1)
+            clock[0] += timedelta(seconds=5)
             data = {**window.quotes._latest_quotes, "sh600000": {**quote, "current_price": 12, "time": "10:00:01"}}
             window.quotes.accept_result((True, data, None))
             self.assertEqual(header.values["市盈（TTM）"].text(), "3.00")
@@ -352,6 +357,28 @@ class HistoryDetailsTests(HistoryTestCase):
             presenter._accept_details((generation, second, "2026-09-30", {"annual_profit": 3}, {"inside_volume": 3}, saved_at, cache_generation, True))
             self.assertNotIn(presenter._detail_key(second), presenter._fundamentals)
 
+    def test_activity_rejects_other_dates_and_older_provider_snapshots(self):
+        _, window = self.make_window(chart_enabled=True)
+        presenter, cache = window.quotes, window.history.cache
+        instrument = next(iter(window.checked_codes.values()))
+        with patch.object(presenter, "_detail_worker"):
+            presenter.set_detail_instrument(instrument)
+            stamp = cache.clock().timestamp()
+
+            def accept(activity):
+                presenter._accept_details((presenter._detail_generation, instrument, "2026-09-30",
+                                           {}, activity, stamp, cache.generation, False))
+
+            accept({"activity_date": "2026-09-29", "activity_timestamp": stamp - 86400, "inside_volume": 1000})
+            self.assertNotIn("inside_volume", presenter.details_for(instrument))
+            current = {"activity_date": "2026-09-30", "activity_timestamp": stamp,
+                       "inside_volume": 1000, "outside_volume": 2000, "activity_volume": 3100}
+            accept(current)
+            self.assertEqual(presenter.details_for(instrument), current)
+            accept({**current, "activity_timestamp": stamp - 1, "inside_volume": 9999})
+            self.assertEqual(presenter.details_for(instrument), current)
+            self.assertEqual(presenter.quote_for(instrument)["deals_vol"], 100)
+
     def test_reopening_reuses_daily_disk_financials_and_clearing_rejects_inflight_writes(self):
         _, window = self.make_window(chart_enabled=True)
         presenter, cache = window.quotes, window.history.cache
@@ -369,6 +396,9 @@ class HistoryDetailsTests(HistoryTestCase):
             self.assertEqual(request.call_args.args[1], details)
             self.assertEqual(request.call_count, 2)
         with patch.object(presenter, "_detail_worker") as worker:
+            presenter._refresh_details()
+            self.assertFalse(worker.called)
+            restarted.clock = lambda: cache.clock() + timedelta(seconds=30)
             presenter._refresh_details()
             self.wait_until(lambda: worker.called)
             generation, cache_generation = presenter._detail_generation, restarted.generation

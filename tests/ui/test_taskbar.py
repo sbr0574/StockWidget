@@ -591,7 +591,7 @@ class NativeInputTests(unittest.TestCase):
 
 
 class DockingInteractionTests(PagingTestCase):
-    def test_native_taskbar_drag_uses_full_size_when_float_is_a_strip(self):
+    def test_fixed_taskbar_press_preserves_the_collapsed_float(self):
         w = self.win
         controller = self.make_controller()
         w.move(80, 80)
@@ -606,8 +606,9 @@ class DockingInteractionTests(PagingTestCase):
             controller._dpi = 192
             start = QPoint(400, screen.bottom())
             controller._dispatch_pointer("press", 80, 10, start, True)
-            self.assertEqual(w._drag_pos.x(), 40)
-            self.assertEqual(w.geometry(), full)
+            self.assertIsNone(w._drag_pos)
+            self.assertEqual(w.width(), 5)
+            self.assertEqual(w.position_controller.full_geometry(), full)
             controller._dispatch_pointer("move", 80, 10, start - QPoint(50, 50), False)
             controller._dispatch_pointer("cancel", 80, 10, start, False)
             self.assertEqual(w.position_controller.full_geometry(), full)
@@ -757,18 +758,27 @@ class DockingInteractionTests(PagingTestCase):
         self.assertEqual(self.win.display_mode, "float")
         self.assertTrue(self.win.isVisible())
 
-    def test_native_dual_drag_preserves_taskbar_and_cancel_cleans_capture(self):
+    def test_fixed_taskbar_keeps_clicks_but_suppresses_dragged_clicks(self):
         controller = self.make_controller()
+        self.win.set_view_options(taskbar_page_mode="manual")
         self.win.set_display_mode("both")
         origin = self.win.pos()
         press = QPoint(700, 760)
+        rect = controller._pager_rect
         self.native.hide.reset_mock()
-        controller._dispatch_pointer("press", 100, 20, press, True)
+        for kind in ("press", "release"):
+            controller._dispatch_pointer(kind, rect.center().x(), rect.bottom() - 2, press, True)
+        self.assertEqual(self.win.quotes.taskbar_page, 1)
+        controller._dispatch_pointer("press", rect.center().x(), rect.bottom() - 2, press, True)
         controller._dispatch_pointer("move", 110, -130, press - QPoint(0, 150), False)
+        controller._dispatch_pointer("move", rect.center().x(), rect.bottom() - 2, press, True)
+        controller._dispatch_pointer("release", rect.center().x(), rect.bottom() - 2, press, True)
+        self.assertEqual(self.win.quotes.taskbar_page, 1)
+        self.assertEqual(self.win.pos(), origin)
+        self.assertIsNone(self.win._drag_pos)
+        self.assertFalse(controller._dragging)
         self.assertTrue(controller._active)
         self.assertEqual(self.win.display_mode, "both")
-        QApplication.sendEvent(self.win, QKeyEvent(QEvent.KeyPress, Qt.Key_Escape, Qt.NoModifier))
-        self.assertEqual(self.win.pos(), origin)
         self.assertFalse(controller.input_timer.isActive())
         self.assertIsNone(controller._native_press)
         self.native.release_pointer.assert_called()
@@ -891,20 +901,18 @@ class DockingInteractionTests(PagingTestCase):
         self.assertFalse(self.win.isVisible())
         self.assertEqual(self.win.pos(), original)
 
-    def test_drag_cancel_and_dual_commit(self):
+    def test_enabling_dual_mode_cancels_docking_and_keeps_both_surfaces(self):
         controller = self.make_controller()
-        self.win.set_view_options(taskbar_dual_open=True)
         origin = self.win.pos()
-        self.win._drag_start_window_pos = origin
-        controller.drag_started()
+        self.win.begin_drag(origin + QPoint(5, 5))
         self.over.return_value = True
-        controller.drag_moved()
-        self.win.move(0, 700)
-        controller.drag_finished(False)
-        self.assertEqual(self.win.display_mode, "float")
+        self.win.move_drag(origin + QPoint(5, 500))
+        self.assertTrue(self.win.taskbar_preview_active)
+        self.win.set_view_options(taskbar_dual_open=True)
         self.assertEqual(self.win.pos(), origin)
-        controller.drag_started()
-        controller.drag_finished(True)
+        self.assertIsNone(self.win._drag_pos)
+        self.assertFalse(controller._dragging)
+        self.assertFalse(self.win.taskbar_preview_active)
         self.assertEqual(self.win.display_mode, "both")
         self.assertTrue(self.win.isVisible())
         self.assertTrue(controller._active)

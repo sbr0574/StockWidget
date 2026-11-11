@@ -10,9 +10,12 @@ from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 from shiboken6 import delete
 
+from stockwidget.data.quotes import _new_entry
 from stockwidget.ui.floating.presenter import QuotePresenter
+from stockwidget.ui.floating.taskbar import render_taskbar
 from stockwidget.ui.floating.widget import FloatLabel
 from stockwidget.ui.settings.dialog import SettingsDialog
+from tests.support import PagingTestCase
 
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -373,7 +376,7 @@ class WidgetPositionTests(unittest.TestCase):
                 self.app.processEvents()
                 self.assertEqual(window.width(), 5)
                 self.assertEqual(window.display_mode, mode)
-                self.assertFalse(window.timer.isActive())
+                self.assertEqual(window.timer.isActive(), mode == "both")
 
     def test_dragging_strip_expands_without_jumping_and_cancel_restores_strip(self):
         window = self.window(boundary_check_enabled=True, edge_hide_enabled=True)
@@ -395,6 +398,64 @@ class WidgetPositionTests(unittest.TestCase):
         window.finish_drag()
         self.assertFalse(controller.collapsed)
         self.assertEqual(window.pos(), full.topLeft() - QPoint(60, 0))
+
+    def test_collapsed_float_keeps_taskbar_polling_and_accepting_quotes(self):
+        codes = {f"sh60000{i}": {"market": "sh", "code": f"60000{i}", "checked": True} for i in range(2)}
+        for edge in ("left", "top", "right", "bottom"):
+            with self.subTest(edge=edge):
+                window = self.window(boundary_check_enabled=True, edge_hide_enabled=True,
+                                     pos={"x": 80, "y": 100},
+                                     taskbar_enabled=True, display_mode="both", watchlist=codes,
+                                     visible_metrics=["price"], taskbar_sync_metrics=True,
+                                     float_paging_enabled=True, float_max_rows=1, float_page_mode="auto",
+                                     taskbar_sync_paging=False, taskbar_rows=1, taskbar_page_mode="auto")
+
+                def accept(price):
+                    quote = _new_entry("测试", 10, 10, price, 12, 9, 100, 1000,
+                                       [0] * 5, [0] * 5, [0] * 5, [0] * 5, "2026-11-11", "10:00:00")
+                    window.quotes.accept_result((True, {key: dict(quote) for key in codes}, None))
+
+                accept(10)
+                window.move(self.edge_position(window, edge))
+                window.quotes.change_page("taskbar", 1)
+                before = render_taskbar(window, 44)
+                self.assertTrue(window.position_controller.collapsed)
+                self.assertEqual(window.position_controller.edge, edge)
+                self.assertTrue(window.timer.isActive())
+                self.assertFalse(window.quotes.page_timers["float"].isActive())
+                self.assertTrue(window.quotes.page_timers["taskbar"].isActive())
+                self.refresh.reset_mock()
+                window.timer.setInterval(20)
+                QTest.qWait(60)
+                self.refresh.assert_called()
+                accept(111)
+                self.app.processEvents()
+                self.assertNotEqual(before, render_taskbar(window, 44))
+                self.assertEqual(window.quotes.quote_for(codes["sh600000"])["current_price"], 111)
+                self.assertEqual(window.quotes.taskbar_page, 1)
+                self.assertTrue(window.position_controller.collapsed)
+                self.assertEqual(window.height() if edge in ("top", "bottom") else window.width(), 5)
+                window.hide_widget()
+                self.assertFalse(window.timer.isActive())
+                self.assertFalse(window.quotes.page_timers["taskbar"].isActive())
+                accept(112)
+                self.assertEqual(window.quotes.quote_for(codes["sh600000"])["current_price"], 111)
+                window.toggle_win()
+                self.assertTrue(window.timer.isActive())
+                window.set_display_mode("float")
+                self.assertFalse(window.timer.isActive())
+
+    def test_collapsed_taskbar_allows_direct_fetch_only_while_visible(self):
+        window = self.window(boundary_check_enabled=True, edge_hide_enabled=True,
+                             taskbar_enabled=True, display_mode="both",
+                             watchlist={"sh600519": {"checked": True}})
+        window.move(self.edge_position(window, "left"))
+        for visible in (True, False):
+            with self.subTest(visible=visible), patch("stockwidget.ui.floating.presenter.threading.Thread") as thread:
+                window.set_widget_visible(visible)
+                window.quotes._refresh_thread = None
+                ORIGINAL_REFRESH(window.quotes)
+                self.assertEqual(thread.return_value.start.called, visible)
 
     def test_collapsed_blocks_direct_fetch_and_late_data_and_resumes_on_enter(self):
         window = self.window(boundary_check_enabled=True, edge_hide_enabled=True)
@@ -443,6 +504,79 @@ class WidgetPositionTests(unittest.TestCase):
         for control in (dialog.ui.cb_boundary_check, dialog.ui.cb_edge_hide):
             self.assertTrue(dialog.ui.general.isAncestorOf(control))
             self.assertTrue(dialog.ui.gb_fcn.rect().contains(control.geometry()))
+
+
+class TaskbarDragTests(PagingTestCase):
+    def test_dropping_over_taskbar_without_a_final_move_cleans_the_input_handoff(self):
+        controller = self.make_controller()
+        start = self.win.pos() + QPoint(5, 5)
+        self.win.begin_drag(start)
+        self.win.move_drag(start + QPoint(100, 50))
+        self.over.return_value = True
+        self.win.finish_drag()
+        self.assertEqual(self.win.display_mode, "taskbar")
+        self.assertTrue(controller._active)
+        self.assertFalse(controller.input_timer.isActive())
+        self.assertIsNone(controller._native_press)
+
+    def test_dual_preference_keeps_float_drag_free_in_both_and_float_locations(self):
+        controller = self.make_controller()
+        self.win.set_view_options(taskbar_dual_open=True)
+        for mode in ("both", "float"):
+            with self.subTest(mode=mode):
+                self.win.set_display_mode(mode)
+                self.win.move(100, 100)
+                origin = self.win.pos()
+                start = origin + QPoint(5, 5)
+                self.over.reset_mock()
+                self.over.return_value = True
+                self.win.begin_drag(start)
+                for delta in (QPoint(70, 30), QPoint(90, 650), QPoint(170, 50)):
+                    self.win.move_drag(start + delta)
+                    self.assertEqual(self.win.pos(), origin + delta)
+                    self.assertTrue(self.win.isVisible())
+                    self.assertTrue(self.win.widget_visible)
+                    self.assertFalse(controller._dragging)
+                    self.assertFalse(self.win.taskbar_preview_active)
+                self.win.finish_drag()
+                self.assertEqual(self.win.display_mode, mode)
+                self.over.assert_not_called()
+
+    def test_redocking_in_one_gesture_does_not_treat_capture_handoff_as_cancellation(self):
+        controller = self.make_controller()
+        self.win.move(100, 100)
+        start = self.win.pos() + QPoint(5, 5)
+        captured = [False]
+        self.native.capture_pointer.side_effect = lambda: captured.__setitem__(0, True)
+        self.native.release_pointer.side_effect = lambda: captured.__setitem__(0, False)
+        hide = self.win.hide
+
+        def hide_with_capture_change():
+            if captured[0]:
+                controller._native_pointer("cancel", 0, 0)
+            hide()
+
+        with patch.object(self.win, "hide", side_effect=hide_with_capture_change):
+            self.win.begin_drag(start)
+            self.over.return_value = True
+            self.win.move_drag(start + QPoint(30, 600))
+            self.assertTrue(captured[0])
+            for _ in range(3):
+                for over, point in ((False, start + QPoint(100, 50)), (True, start + QPoint(100, 600))):
+                    controller._dispatch_pointer("move", 100, 20, point, over)
+                    self.app.processEvents()
+                    self.assertTrue(self.win._dragging)
+                    self.assertTrue(self.win.widget_visible)
+                    self.assertEqual(self.win.isVisible(), not over)
+                    self.assertTrue(captured[0])
+            point = start + QPoint(180, 50)
+            controller._dispatch_pointer("move", 100, 20, point, False)
+            controller._dispatch_pointer("release", 100, 20, point, False)
+        self.assertEqual(self.win.pos(), point - QPoint(5, 5))
+        self.assertEqual(self.win.display_mode, "float")
+        self.assertIsNone(self.win._drag_pos)
+        self.assertFalse(controller.input_timer.isActive())
+        self.assertFalse(captured[0])
 
 
 ORIGINAL_REFRESH = QuotePresenter.refresh

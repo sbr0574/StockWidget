@@ -500,7 +500,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         options = ViewOptions.from_config({**old, **{key: value for key, value in changes.items() if key in old}})
         if options.to_config() == old:
             return
-        if old["taskbar_enabled"] and not options.taskbar_enabled:
+        if old["taskbar_enabled"] and (not options.taskbar_enabled
+                                       or old["taskbar_dual_open"] != options.taskbar_dual_open):
             self.finish_drag(False)
         self.view_options = options
         if not old["taskbar_enabled"] and options.taskbar_enabled:
@@ -508,7 +509,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if not options.taskbar_enabled:
             self.display_mode = "float"
             self.taskbar_preview_active = False
-        elif self.display_mode != "float" or (not old["taskbar_enabled"] and sys.platform == "win32"):
+        elif self.display_mode != "float" or (sys.platform == "win32" and (
+                not old["taskbar_enabled"] or not old["taskbar_dual_open"] and options.taskbar_dual_open)):
             self.display_mode = "both" if options.taskbar_dual_open else "taskbar"
             if not old["taskbar_enabled"] and not self.widget_visible:
                 self.widget_visible = True
@@ -732,9 +734,12 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.taskbar_options_changed.emit()
         self._notify_change()
 
+    @property
+    def taskbar_visible(self):
+        return self.widget_visible and (self.display_mode != "float" or self.taskbar_preview_active)
+
     def sync_refresh_timer(self):
-        if not self.position_controller.collapsed and (
-                self.isVisible() or (self.widget_visible and (self.display_mode != "float" or self.taskbar_preview_active))):
+        if (self.isVisible() and not self.position_controller.collapsed) or self.taskbar_visible:
             if not self.timer.isActive():
                 self.timer.start()
                 self.quotes.refresh()
