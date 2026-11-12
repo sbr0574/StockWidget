@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-27",
+  "last_update": "2026-11-12",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -3542,10 +3542,10 @@
       "code": "000972",
       "market": "sz",
       "type": "深",
-      "name": "中基健康",
+      "name": "*ST中基",
       "name_en": "",
-      "py": "zhongjijiankang",
-      "abbr": "zjjk"
+      "py": "*stzhongji",
+      "abbr": "*stzj"
     },
     "sz000973": {
       "code": "000973",
@@ -4635,6 +4635,15 @@
       "name_en": "",
       "py": "huaweikeji",
       "abbr": "hwkj"
+    },
+    "sz001381": {
+      "code": "001381",
+      "market": "sz",
+      "type": "深",
+      "name": "皇冠新材",
+      "name_en": "",
+      "py": "huangguanxincai",
+      "abbr": "hgxc"
     },
     "sz001382": {
       "code": "001382",
@@ -15728,10 +15737,10 @@
       "code": "300237",
       "market": "sz",
       "type": "创",
-      "name": "ST美晨",
+      "name": "美晨科技",
       "name_en": "",
-      "py": "stmeichen",
-      "abbr": "stmc"
+      "py": "meichenkeji",
+      "abbr": "mckj"
     },
     "sz300238": {
       "code": "300238",
@@ -21362,10 +21371,10 @@
       "code": "300901",
       "market": "sz",
       "type": "创",
-      "name": "中胤时尚",
+      "name": "中胤科技",
       "name_en": "",
-      "py": "zhongyinshishang",
-      "abbr": "zyss"
+      "py": "zhongyinkeji",
+      "abbr": "zykj"
     },
     "sz300902": {
       "code": "300902",
@@ -22325,10 +22334,10 @@
       "code": "301015",
       "market": "sz",
       "type": "创",
-      "name": "百洋医药",
+      "name": "百洋制药",
       "name_en": "",
-      "py": "baiyangyiyao",
-      "abbr": "byyy"
+      "py": "baiyangzhiyao",
+      "abbr": "byzy"
     },
     "sz301016": {
       "code": "301016",
@@ -23337,15 +23346,6 @@
       "name_en": "",
       "py": "huayanjingji",
       "abbr": "hyjj"
-    },
-    "sz301139": {
-      "code": "301139",
-      "market": "sz",
-      "type": "创",
-      "name": "元道退",
-      "name_en": "",
-      "py": "yuandaotui",
-      "abbr": "ydt"
     },
     "sz301141": {
       "code": "301141",
@@ -26465,10 +26465,10 @@
       "code": "301718",
       "market": "sz",
       "type": "创",
-      "name": "C通则康威",
+      "name": "通则康威",
       "name_en": "",
-      "py": "ctongzekangwei",
-      "abbr": "ctzkw"
+      "py": "tongzekangwei",
+      "abbr": "tzkw"
     },
     "sz302132": {
       "code": "302132",

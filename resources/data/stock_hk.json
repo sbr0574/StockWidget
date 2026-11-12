@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-27",
+  "last_update": "2026-11-12",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -469,21 +469,12 @@
       "py": "zhongyaxigujituan",
       "abbr": "zyxgjt"
     },
-    "hk00064": {
-      "code": "00064",
-      "market": "hk",
-      "type": "港",
-      "name": "结好控股",
-      "name_en": "GET NICE",
-      "py": "jiehaokonggu",
-      "abbr": "jhkg"
-    },
     "hk00065": {
       "code": "00065",
       "market": "hk",
       "type": "港",
       "name": "弘海高新资源",
-      "name_en": "GRAND OCEAN AR",
+      "name_en": "GRAND OCEAN-5K",
       "py": "honghaigaoxinziyuan",
       "abbr": "hhgxzy"
     },
@@ -1333,15 +1324,6 @@
       "py": "jiliqiche",
       "abbr": "jlqc"
     },
-    "hk00176": {
-      "code": "00176",
-      "market": "hk",
-      "type": "港",
-      "name": "先机企业集团",
-      "name_en": "SUPERACTIVE GP",
-      "py": "xianjiqiyejituan",
-      "abbr": "xjqyjt"
-    },
     "hk00177": {
       "code": "00177",
       "market": "hk",
@@ -2187,15 +2169,6 @@
       "name_en": "CHUANG'S CHINA",
       "py": "zhuangshizhongguo",
       "abbr": "zszg"
-    },
-    "hk00299": {
-      "code": "00299",
-      "market": "hk",
-      "type": "港",
-      "name": "宝新置地",
-      "name_en": "GLORY SUN LAND",
-      "py": "baoxinzhidi",
-      "abbr": "bxzd"
     },
     "hk00300": {
       "code": "00300",
@@ -3083,10 +3056,10 @@
       "code": "00419",
       "market": "hk",
       "type": "港",
-      "name": "弘毅文化集团",
-      "name_en": "HONY MEDIA",
-      "py": "hongyiwenhuajituan",
-      "abbr": "hywhjt"
+      "name": "AIROBO平台",
+      "name_en": "AIROBO PLATFORM",
+      "py": "airobopingtai",
+      "abbr": "airobopt"
     },
     "hk00420": {
       "code": "00420",
@@ -3555,15 +3528,6 @@
       "name_en": "DINGYI GP INV",
       "py": "dingyijituantouzi",
       "abbr": "dyjttz"
-    },
-    "hk00509": {
-      "code": "00509",
-      "market": "hk",
-      "type": "港",
-      "name": "世纪阳光",
-      "name_en": "SUNSHINE",
-      "py": "shijiyangguang",
-      "abbr": "sjyg"
     },
     "hk00510": {
       "code": "00510",
@@ -5833,15 +5797,6 @@
       "py": "guangtaiguojikonggu",
       "abbr": "gtgjkg"
     },
-    "hk00845": {
-      "code": "00845",
-      "market": "hk",
-      "type": "港",
-      "name": "恒盛地产",
-      "name_en": "GLORIOUS PPT H",
-      "py": "hengshengdichan",
-      "abbr": "hsdc"
-    },
     "hk00846": {
       "code": "00846",
       "market": "hk",
@@ -6279,7 +6234,7 @@
       "market": "hk",
       "type": "港",
       "name": "中国三迪",
-      "name_en": "CHINA SANDI-NEW",
+      "name_en": "CHINA SANDI",
       "py": "zhongguosandi",
       "abbr": "zgsd"
     },
@@ -6414,7 +6369,7 @@
       "market": "hk",
       "type": "港",
       "name": "帝王国际投资",
-      "name_en": "KING INTL-NEW",
+      "name_en": "KING INTL INV",
       "py": "diwangguojitouzi",
       "abbr": "dwgjtz"
     },
@@ -6467,10 +6422,10 @@
       "code": "00936",
       "market": "hk",
       "type": "港",
-      "name": "佳兆业资本",
-      "name_en": "KAISA CAPITAL",
-      "py": "jiazhaoyeziben",
-      "abbr": "jzyzb"
+      "name": "佳芯科技",
+      "name_en": "KAISACORE",
+      "py": "jiaxinkeji",
+      "abbr": "jxkj"
     },
     "hk00938": {
       "code": "00938",
@@ -7488,15 +7443,6 @@
       "name_en": "MAINLAND HOLD",
       "py": "feidakonggu",
       "abbr": "fdkg"
-    },
-    "hk01101": {
-      "code": "01101",
-      "market": "hk",
-      "type": "港",
-      "name": "华荣能源",
-      "name_en": "HUARONG ENERGY",
-      "py": "huarongnengyuan",
-      "abbr": "hrny"
     },
     "hk01102": {
       "code": "01102",
@@ -8820,15 +8766,6 @@
       "name_en": "CM LOGISTICS",
       "py": "changanminshengwuliu",
       "abbr": "camswl"
-    },
-    "hk01293": {
-      "code": "01293",
-      "market": "hk",
-      "type": "港",
-      "name": "广汇宝信",
-      "name_en": "GRAND BAOXIN",
-      "py": "guanghuibaoxin",
-      "abbr": "ghbx"
     },
     "hk01298": {
       "code": "01298",
@@ -10329,7 +10266,7 @@
       "market": "hk",
       "type": "港",
       "name": "金斯瑞生物科技",
-      "name_en": "GENSCRIPT B-1K",
+      "name_en": "GENSCRIPT BIO",
       "py": "jinsiruishengwukeji",
       "abbr": "jsrswkj"
     },
@@ -10410,7 +10347,7 @@
       "market": "hk",
       "type": "港",
       "name": "星星集团",
-      "name_en": "STAR GROUP ASIA",
+      "name_en": "STAR GROUP-NEW",
       "py": "xingxingjituan",
       "abbr": "xxjt"
     },
@@ -10472,10 +10409,10 @@
       "code": "01570",
       "market": "hk",
       "type": "港",
-      "name": "伟业控股",
-      "name_en": "WEIYE HOLDINGS",
-      "py": "weiyekonggu",
-      "abbr": "wykg"
+      "name": "鼎吉盛国际",
+      "name_en": "DJSH INT'L",
+      "py": "dingjishengguoji",
+      "abbr": "djsgj"
     },
     "hk01571": {
       "code": "01571",
@@ -11031,7 +10968,7 @@
       "market": "hk",
       "type": "港",
       "name": "桦欣控股",
-      "name_en": "SG GROUP H-NEW",
+      "name_en": "SG GROUP HLDGS",
       "py": "huaxinkonggu",
       "abbr": "hxkg"
     },
@@ -12327,7 +12264,7 @@
       "market": "hk",
       "type": "港",
       "name": "植华集团",
-      "name_en": "GROWN UP GROUP",
+      "name_en": "GROWN UP GP-NEW",
       "py": "zhihuajituan",
       "abbr": "zhjt"
     },
@@ -12408,7 +12345,7 @@
       "market": "hk",
       "type": "港",
       "name": "中国万天控股",
-      "name_en": "CHINA WANTIAN",
+      "name_en": "CHINA ONETECH",
       "py": "zhongguowantiankonggu",
       "abbr": "zgwtkg"
     },
@@ -13753,6 +13690,15 @@
       "py": "zhongtongkuaidi-w",
       "abbr": "ztkd-w"
     },
+    "hk02065": {
+      "code": "02065",
+      "market": "hk",
+      "type": "港",
+      "name": "一微科技",
+      "name_en": "AMICRO",
+      "py": "yiweikeji",
+      "abbr": "ywkj"
+    },
     "hk02068": {
       "code": "02068",
       "market": "hk",
@@ -13797,15 +13743,6 @@
       "name_en": "LEADWAY TECH",
       "py": "gaoweikeji",
       "abbr": "gwkj"
-    },
-    "hk02088": {
-      "code": "02088",
-      "market": "hk",
-      "type": "港",
-      "name": "西王置业",
-      "name_en": "XIWANG PROPERTY",
-      "py": "xiwangzhiye",
-      "abbr": "xwzy"
     },
     "hk02096": {
       "code": "02096",
@@ -14324,10 +14261,10 @@
       "code": "02175",
       "market": "hk",
       "type": "港",
-      "name": "中国通才教育",
-      "name_en": "CH GENERAL EDU",
-      "py": "zhongguotongcaijiaoyu",
-      "abbr": "zgtcjy"
+      "name": "万艺控股集团",
+      "name_en": "TRILLION HLDG",
+      "py": "wanyikonggujituan",
+      "abbr": "wykgjt"
     },
     "hk02176": {
       "code": "02176",
@@ -14544,6 +14481,15 @@
       "name_en": "KANGQIAO SER",
       "py": "kangqiaoyueshenghuo",
       "abbr": "kqysh"
+    },
+    "hk02206": {
+      "code": "02206",
+      "market": "hk",
+      "type": "港",
+      "name": "新荷花",
+      "name_en": "NEAUTUS",
+      "py": "xinhehua",
+      "abbr": "xhh"
     },
     "hk02208": {
       "code": "02208",
@@ -15126,7 +15072,7 @@
       "market": "hk",
       "type": "港",
       "name": "百宏实业",
-      "name_en": "BILLION IND",
+      "name_en": "BILLION IND-NEW",
       "py": "baihongshiye",
       "abbr": "bhsy"
     },
@@ -15670,6 +15616,15 @@
       "py": "tomjituan",
       "abbr": "tomjt"
     },
+    "hk02384": {
+      "code": "02384",
+      "market": "hk",
+      "type": "港",
+      "name": "东山精密",
+      "name_en": "DSBJ",
+      "py": "dongshanjingmi",
+      "abbr": "dsjm"
+    },
     "hk02385": {
       "code": "02385",
       "market": "hk",
@@ -15999,7 +15954,7 @@
       "market": "hk",
       "type": "港",
       "name": "怡俊集团控股",
-      "name_en": "EASY SMART-100",
+      "name_en": "EASY SMART GP",
       "py": "yijunjituankonggu",
       "abbr": "yjjtkg"
     },
@@ -17403,7 +17358,7 @@
       "market": "hk",
       "type": "港",
       "name": "云迹",
-      "name_en": "YUNJI-NEW",
+      "name_en": "YUNJI",
       "py": "yunji",
       "abbr": "yj"
     },
@@ -17469,6 +17424,15 @@
       "name_en": "AUSTRAX HLDGS",
       "py": "nanqiangkonggu",
       "abbr": "nqkg"
+    },
+    "hk02681": {
+      "code": "02681",
+      "market": "hk",
+      "type": "港",
+      "name": "宏芯宇",
+      "name_en": "HOSIN ELEC",
+      "py": "hongxinyu",
+      "abbr": "hxy"
     },
     "hk02682": {
       "code": "02682",
@@ -17673,7 +17637,7 @@
       "market": "hk",
       "type": "港",
       "name": "深演智能",
-      "name_en": "DEEPZERO",
+      "name_en": "DEEPZERO-NEW",
       "py": "shenyanzhineng",
       "abbr": "syzn"
     },
@@ -18361,57 +18325,12 @@
       "py": "zijinkuangye",
       "abbr": "zjky"
     },
-    "hk02915": {
-      "code": "02915",
-      "market": "hk",
-      "type": "港",
-      "name": "云迹",
-      "name_en": "YUNJI-OLD",
-      "py": "yunji",
-      "abbr": "yj"
-    },
-    "hk02934": {
-      "code": "02934",
-      "market": "hk",
-      "type": "港",
-      "name": "中国三迪",
-      "name_en": "CHINA SANDI-OLD",
-      "py": "zhongguosandi",
-      "abbr": "zgsd"
-    },
-    "hk02936": {
-      "code": "02936",
-      "market": "hk",
-      "type": "港",
-      "name": "桦欣控股",
-      "name_en": "SG GROUP H-OLD",
-      "py": "huaxinkonggu",
-      "abbr": "hxkg"
-    },
-    "hk02938": {
-      "code": "02938",
-      "market": "hk",
-      "type": "港",
-      "name": "帝王国际投资",
-      "name_en": "KING INTL-OLD",
-      "py": "diwangguojitouzi",
-      "abbr": "dwgjtz"
-    },
-    "hk02939": {
-      "code": "02939",
-      "market": "hk",
-      "type": "港",
-      "name": "怡俊集团(二千)",
-      "name_en": "EASY SMART-2K",
-      "py": "yijunjituan(erqian)",
-      "abbr": "yjjt(eq)"
-    },
     "hk02942": {
       "code": "02942",
       "market": "hk",
       "type": "港",
       "name": "星星集团",
-      "name_en": "STAR GROUP ASIA",
+      "name_en": "STAR GROUP-OLD",
       "py": "xingxingjituan",
       "abbr": "xxjt"
     },
@@ -18420,25 +18339,16 @@
       "market": "hk",
       "type": "港",
       "name": "百宏实业",
-      "name_en": "BILLION IND",
+      "name_en": "BILLION IND-OLD",
       "py": "baihongshiye",
       "abbr": "bhsy"
-    },
-    "hk02945": {
-      "code": "02945",
-      "market": "hk",
-      "type": "港",
-      "name": "金斯瑞生物-二千",
-      "name_en": "GENSCRIPT B-2K",
-      "py": "jinsiruishengwu-erqian",
-      "abbr": "jsrsw-eq"
     },
     "hk02947": {
       "code": "02947",
       "market": "hk",
       "type": "港",
       "name": "深演智能",
-      "name_en": "DEEPZERO",
+      "name_en": "DEEPZERO-OLD",
       "py": "shenyanzhineng",
       "abbr": "syzn"
     },
@@ -18447,18 +18357,90 @@
       "market": "hk",
       "type": "港",
       "name": "天瑞汽车内饰",
-      "name_en": "TR INTERIORS",
+      "name_en": "TR INTERIOR-OLD",
       "py": "tianruiqicheneishi",
       "abbr": "trqcns"
     },
-    "hk02950": {
-      "code": "02950",
+    "hk02949": {
+      "code": "02949",
       "market": "hk",
       "type": "港",
-      "name": "阿尔法企业股权",
-      "name_en": "ALPHA PRO H RTS",
-      "py": "aerfaqiyeguquan",
-      "abbr": "aefqygq"
+      "name": "绿色电能集团股权",
+      "name_en": "GREEN POWER RTS",
+      "py": "lvsediannengjituanguquan",
+      "abbr": "lsdnjtgq"
+    },
+    "hk02952": {
+      "code": "02952",
+      "market": "hk",
+      "type": "港",
+      "name": "植华集团",
+      "name_en": "GROWN UP GP-OLD",
+      "py": "zhihuajituan",
+      "abbr": "zhjt"
+    },
+    "hk02955": {
+      "code": "02955",
+      "market": "hk",
+      "type": "港",
+      "name": "金浔资源(二百)",
+      "name_en": "JINXUN RES-200",
+      "py": "jinxunziyuan(erbai)",
+      "abbr": "jxzy(eb)"
+    },
+    "hk02956": {
+      "code": "02956",
+      "market": "hk",
+      "type": "港",
+      "name": "辉煌明天",
+      "name_en": "BRIGHT FUTURE",
+      "py": "huihuangmingtian",
+      "abbr": "hhmt"
+    },
+    "hk02981": {
+      "code": "02981",
+      "market": "hk",
+      "type": "港",
+      "name": "弘海高新资源股权",
+      "name_en": "GRAND OCEAN RTS",
+      "py": "honghaigaoxinziyuanguquan",
+      "abbr": "hhgxzygq"
+    },
+    "hk02982": {
+      "code": "02982",
+      "market": "hk",
+      "type": "港",
+      "name": "弘海高新(四千)",
+      "name_en": "GRAND OCEAN-4K",
+      "py": "honghaigaoxin(siqian)",
+      "abbr": "hhgx(sq)"
+    },
+    "hk02984": {
+      "code": "02984",
+      "market": "hk",
+      "type": "港",
+      "name": "新锐医药(八千)",
+      "name_en": "NEW RAY MED-8K",
+      "py": "xinruiyiyao(baqian)",
+      "abbr": "xryy(bq)"
+    },
+    "hk02996": {
+      "code": "02996",
+      "market": "hk",
+      "type": "港",
+      "name": "金力集团股权",
+      "name_en": "GOLDENPOWER RTS",
+      "py": "jinlijituanguquan",
+      "abbr": "jljtgq"
+    },
+    "hk02998": {
+      "code": "02998",
+      "market": "hk",
+      "type": "港",
+      "name": "金力集团(四千)",
+      "name_en": "GOLDENPOWER-4K",
+      "py": "jinlijituan(siqian)",
+      "abbr": "jljt(sq)"
     },
     "hk03001": {
       "code": "03001",
@@ -20084,19 +20066,19 @@
       "code": "03412",
       "market": "hk",
       "type": "基",
-      "name": "A都会电子支付",
-      "name_en": "A DOO PAYMENTS",
-      "py": "aduhuidianzizhifu",
-      "abbr": "adhdzzf"
+      "name": "A汇升电子支付",
+      "name_en": "A VGROWTH DP",
+      "py": "ahuishengdianzizhifu",
+      "abbr": "ahsdzzf"
     },
     "hk03413": {
       "code": "03413",
       "market": "hk",
       "type": "基",
-      "name": "A都会人工智能",
-      "name_en": "A DOO AI",
-      "py": "aduhuirengongzhineng",
-      "abbr": "adhrgzn"
+      "name": "A汇升人工智能",
+      "name_en": "A VGROWTH AI",
+      "py": "ahuishengrengongzhineng",
+      "abbr": "ahsrgzn"
     },
     "hk03415": {
       "code": "03415",
@@ -20192,10 +20174,10 @@
       "code": "03426",
       "market": "hk",
       "type": "基",
-      "name": "A都会WEB3",
-      "name_en": "A DOO WEB3",
-      "py": "aduhuiweb3",
-      "abbr": "adhweb3"
+      "name": "A汇升WEB3",
+      "name_en": "A VGROWTH WEB3",
+      "py": "ahuishengweb3",
+      "abbr": "ahsweb3"
     },
     "hk03428": {
       "code": "03428",
@@ -20701,6 +20683,15 @@
       "py": "agxhengxizeng",
       "abbr": "agxhxz"
     },
+    "hk03559": {
+      "code": "03559",
+      "market": "hk",
+      "type": "基",
+      "name": "嘉实科创芯片",
+      "name_en": "HGI STAR CHIP",
+      "py": "jiashikechuangxinpian",
+      "abbr": "jskcxp"
+    },
     "hk03566": {
       "code": "03566",
       "market": "hk",
@@ -20895,7 +20886,7 @@
       "market": "hk",
       "type": "港",
       "name": "金浔资源",
-      "name_en": "JINXUN RESOURCE",
+      "name_en": "JINXUN RES-500",
       "py": "jinxunziyuan",
       "abbr": "jxzy"
     },
@@ -21606,7 +21597,7 @@
       "market": "hk",
       "type": "港",
       "name": "金力集团",
-      "name_en": "GOLDENPOWER",
+      "name_en": "GOLDENPOWER-2K",
       "py": "jinlijituan",
       "abbr": "jljt"
     },
@@ -21862,15 +21853,6 @@
       "py": "weiruan-t",
       "abbr": "wr-t"
     },
-    "hk04621": {
-      "code": "04621",
-      "market": "hk",
-      "type": "港",
-      "name": "CINDA 21USDPREF",
-      "name_en": "CINDA 21USDPREF",
-      "py": "",
-      "abbr": ""
-    },
     "hk06030": {
       "code": "06030",
       "market": "hk",
@@ -22119,7 +22101,7 @@
       "market": "hk",
       "type": "港",
       "name": "新锐医药",
-      "name_en": "NEW RAY MEDIC",
+      "name_en": "NEW RAY MED-10K",
       "py": "xinruiyiyao",
       "abbr": "xryy"
     },
@@ -22254,7 +22236,7 @@
       "market": "hk",
       "type": "港",
       "name": "天瑞汽车内饰",
-      "name_en": "TR INTERIORS",
+      "name_en": "TR INTERIOR-NEW",
       "py": "tianruiqicheneishi",
       "abbr": "trqcns"
     },
@@ -23806,6 +23788,15 @@
       "py": "jitaikeji-p",
       "abbr": "jtkj-p"
     },
+    "hk07672": {
+      "code": "07672",
+      "market": "hk",
+      "type": "港",
+      "name": "芯德半导体",
+      "name_en": "XINDE SEMI",
+      "py": "xindebandaoti",
+      "abbr": "xdbdt"
+    },
     "hk07687": {
       "code": "07687",
       "market": "hk",
@@ -23859,6 +23850,15 @@
       "name_en": "XL2CSOPTSLA",
       "py": "xlernantesi",
       "abbr": "xlents"
+    },
+    "hk07772": {
+      "code": "07772",
+      "market": "hk",
+      "type": "基",
+      "name": "XLQ南铠侠",
+      "name_en": "XLQCSOPKIOXIA",
+      "py": "xlqnankaixia",
+      "abbr": "xlqnkx"
     },
     "hk07777": {
       "code": "07777",
@@ -23991,7 +23991,7 @@
       "market": "hk",
       "type": "港",
       "name": "朗华国际集团",
-      "name_en": "CB GLOBAL-NEW",
+      "name_en": "CB GLOBAL",
       "py": "langhuaguojijituan",
       "abbr": "lhgjjt"
     },
@@ -24171,7 +24171,7 @@
       "market": "hk",
       "type": "港",
       "name": "朝威控股",
-      "name_en": "GLORY FLAME-NEW",
+      "name_en": "GLORY FLAME",
       "py": "chaoweikonggu",
       "abbr": "cwkg"
     },
@@ -24513,7 +24513,7 @@
       "market": "hk",
       "type": "港",
       "name": "中华节能",
-      "name_en": "SINO ENGY C-NEW",
+      "name_en": "SINO ENGY CONS",
       "py": "zhonghuajieneng",
       "abbr": "zhjn"
     },
@@ -24594,7 +24594,7 @@
       "market": "hk",
       "type": "港",
       "name": "金威医疗",
-      "name_en": "GF HEALTH-NEW",
+      "name_en": "GF HEALTHCARE",
       "py": "jinweiyiliao",
       "abbr": "jwyl"
     },
@@ -24675,7 +24675,7 @@
       "market": "hk",
       "type": "港",
       "name": "新华联合投资",
-      "name_en": "CU VENTURE INV",
+      "name_en": "CU VENTURE-NEW",
       "py": "xinhualianhetouzi",
       "abbr": "xhlhtz"
     },
@@ -24909,7 +24909,7 @@
       "market": "hk",
       "type": "港",
       "name": "神通机器人教育",
-      "name_en": "S ROBOT EDU",
+      "name_en": "S ROBOT EDU-NEW",
       "py": "shentongjiqirenjiaoyu",
       "abbr": "stjqrjy"
     },
@@ -25071,7 +25071,7 @@
       "market": "hk",
       "type": "港",
       "name": "首都金融控股",
-      "name_en": "CAPITAL FIN-NEW",
+      "name_en": "CAPITAL FIN",
       "py": "shoudujinrongkonggu",
       "abbr": "sdjrkg"
     },
@@ -25737,7 +25737,7 @@
       "market": "hk",
       "type": "港",
       "name": "中显智能齐家控股",
-      "name_en": "ZXZN QI-HSE-5K",
+      "name_en": "ZXZN QI-HOUSE",
       "py": "zhongxianzhinengqijiakonggu",
       "abbr": "zxznqjkg"
     },
@@ -25799,10 +25799,10 @@
       "code": "08412",
       "market": "hk",
       "type": "港",
-      "name": "新爱德集团",
-      "name_en": "NEW AMANTE",
-      "py": "xinaidejituan",
-      "abbr": "xadjt"
+      "name": "品质生活集团",
+      "name_en": "QI GROUP",
+      "py": "pinzhishenghuojituan",
+      "abbr": "pzshjt"
     },
     "hk08413": {
       "code": "08413",
@@ -26006,10 +26006,10 @@
       "code": "08448",
       "market": "hk",
       "type": "港",
-      "name": "环球印馆",
-      "name_en": "UNI PRINTSHOP",
-      "py": "huanqiuyinguan",
-      "abbr": "hqyg"
+      "name": "数智名品",
+      "name_en": "PREMIER INTEL",
+      "py": "shuzhimingpin",
+      "abbr": "szmp"
     },
     "hk08450": {
       "code": "08450",
@@ -26425,21 +26425,12 @@
       "py": "jinyeguojijituan",
       "abbr": "jygjjt"
     },
-    "hk08551": {
-      "code": "08551",
-      "market": "hk",
-      "type": "港",
-      "name": "中显智能(二万)",
-      "name_en": "ZXZN QI-HSE-20K",
-      "py": "zhongxianzhineng(erwan)",
-      "abbr": "zxzn(ew)"
-    },
     "hk08552": {
       "code": "08552",
       "market": "hk",
       "type": "港",
       "name": "新华联合投资",
-      "name_en": "CU VENTURE INV",
+      "name_en": "CU VENTURE-OLD",
       "py": "xinhualianhetouzi",
       "abbr": "xhlhtz"
     },
@@ -26448,54 +26439,18 @@
       "market": "hk",
       "type": "港",
       "name": "神通机器人教育",
-      "name_en": "S ROBOT EDU",
+      "name_en": "S ROBOT EDU-OLD",
       "py": "shentongjiqirenjiaoyu",
       "abbr": "stjqrjy"
     },
-    "hk08567": {
-      "code": "08567",
+    "hk08557": {
+      "code": "08557",
       "market": "hk",
       "type": "港",
-      "name": "金威医疗",
-      "name_en": "GF HEALTH-OLD",
-      "py": "jinweiyiliao",
-      "abbr": "jwyl"
-    },
-    "hk08572": {
-      "code": "08572",
-      "market": "hk",
-      "type": "港",
-      "name": "朝威控股",
-      "name_en": "GLORY FLAME-OLD",
-      "py": "chaoweikonggu",
-      "abbr": "cwkg"
-    },
-    "hk08573": {
-      "code": "08573",
-      "market": "hk",
-      "type": "港",
-      "name": "中华节能",
-      "name_en": "SINO ENGY C-OLD",
-      "py": "zhonghuajieneng",
-      "abbr": "zhjn"
-    },
-    "hk08583": {
-      "code": "08583",
-      "market": "hk",
-      "type": "港",
-      "name": "朗华国际集团",
-      "name_en": "CB GLOBAL-OLD",
-      "py": "langhuaguojijituan",
-      "abbr": "lhgjjt"
-    },
-    "hk08585": {
-      "code": "08585",
-      "market": "hk",
-      "type": "港",
-      "name": "首都金融控股",
-      "name_en": "CAPITAL FIN-OLD",
-      "py": "shoudujinrongkonggu",
-      "abbr": "sdjrkg"
+      "name": "浙江联合投资",
+      "name_en": "ZJ UNITED INV",
+      "py": "zhejianglianhetouzi",
+      "abbr": "zjlhtz"
     },
     "hk08601": {
       "code": "08601",
@@ -27433,6 +27388,15 @@
       "py": "jingdongjituan-sw",
       "abbr": "jdjt-sw"
     },
+    "hk09621": {
+      "code": "09621",
+      "market": "hk",
+      "type": "港",
+      "name": "远信储能",
+      "name_en": "RELYEZ ENERGY",
+      "py": "yuanxinchuneng",
+      "abbr": "yxcn"
+    },
     "hk09626": {
       "code": "09626",
       "market": "hk",
@@ -28135,6 +28099,15 @@
       "py": "xingyewulian",
       "abbr": "xywl"
     },
+    "hk09917": {
+      "code": "09917",
+      "market": "hk",
+      "type": "港",
+      "name": "登临科技-P",
+      "name_en": "DENGLIN TECH-P",
+      "py": "denglinkeji-p",
+      "abbr": "dlkj-p"
+    },
     "hk09918": {
       "code": "09918",
       "market": "hk",
@@ -28584,6 +28557,15 @@
       "name_en": "AGX HSDIV ENH-U",
       "py": "agxhengxizeng-u",
       "abbr": "agxhxz-u"
+    },
+    "hk41559": {
+      "code": "41559",
+      "market": "hk",
+      "type": "基",
+      "name": "嘉实科创芯片-U",
+      "name_en": "HGI STAR CHIP-U",
+      "py": "jiashikechuangxinpian-u",
+      "abbr": "jskcxp-u"
     },
     "hk41566": {
       "code": "41566",

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-27",
+  "last_update": "2026-11-12",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -1450,6 +1450,15 @@
       "py": "zhongjinyizhuangchanyeyuanreit",
       "abbr": "zjyzcyyreit"
     },
+    "sh508081": {
+      "code": "508081",
+      "market": "sh",
+      "type": "基",
+      "name": "长城华能燃煤发电REIT",
+      "name_en": "",
+      "py": "changchenghuanengranmeifadianreit",
+      "abbr": "cchnrmfdreit"
+    },
     "sh508082": {
       "code": "508082",
       "market": "sh",
@@ -1549,6 +1558,15 @@
       "py": "yifangdaguangxibeitougaosureit",
       "abbr": "yfdgxbtgsreit"
     },
+    "sh508095": {
+      "code": "508095",
+      "market": "sh",
+      "type": "基",
+      "name": "国泰海通中建租赁住房REIT",
+      "name_en": "",
+      "py": "guotaihaitongzhongjianzulinzhufangreit",
+      "abbr": "gthtzjzlzfreit"
+    },
     "sh508096": {
       "code": "508096",
       "market": "sh",
@@ -1620,6 +1638,33 @@
       "name_en": "",
       "py": "zhongjinweipinhuishangyereit",
       "abbr": "zjwphsyreit"
+    },
+    "sh508605": {
+      "code": "508605",
+      "market": "sh",
+      "type": "基",
+      "name": "华夏保利商业REIT",
+      "name_en": "",
+      "py": "huaxiabaolishangyereit",
+      "abbr": "hxblsyreit"
+    },
+    "sh508607": {
+      "code": "508607",
+      "market": "sh",
+      "type": "基",
+      "name": "华安陆家嘴商业REIT",
+      "name_en": "",
+      "py": "huaanlujiazuishangyereit",
+      "abbr": "haljzsyreit"
+    },
+    "sh508609": {
+      "code": "508609",
+      "market": "sh",
+      "type": "基",
+      "name": "华安锦江商业REIT",
+      "name_en": "",
+      "py": "huaanjinjiangshangyereit",
+      "abbr": "hajjsyreit"
     },
     "sh510010": {
       "code": "510010",
@@ -7786,6 +7831,15 @@
       "py": "yangqihuibaoetfzhaoshang",
       "abbr": "yqhbetfzs"
     },
+    "sh561970": {
+      "code": "561970",
+      "market": "sh",
+      "type": "基",
+      "name": "稀有金属ETF博时",
+      "name_en": "",
+      "py": "xiyoujinshuetfboshi",
+      "abbr": "xyjsetfbs"
+    },
     "sh561980": {
       "code": "561980",
       "market": "sh",
@@ -8654,19 +8708,19 @@
       "code": "563770",
       "market": "sh",
       "type": "基",
-      "name": "全指现金流ETF招商",
+      "name": "现金流ETF招商",
       "name_en": "",
-      "py": "quanzhixianjinliuetfzhaoshang",
-      "abbr": "qzxjletfzs"
+      "py": "xianjinliuetfzhaoshang",
+      "abbr": "xjletfzs"
     },
     "sh563780": {
       "code": "563780",
       "market": "sh",
       "type": "基",
-      "name": "现金流全指ETF方正富邦",
+      "name": "现金流ETF方正富邦",
       "name_en": "",
-      "py": "xianjinliuquanzhietffangzhengfubang",
-      "abbr": "xjlqzetffzfb"
+      "py": "xianjinliuetffangzhengfubang",
+      "abbr": "xjletffzfb"
     },
     "sh563790": {
       "code": "563790",
@@ -8690,10 +8744,10 @@
       "code": "563830",
       "market": "sh",
       "type": "基",
-      "name": "全指现金流ETF博时",
+      "name": "自由现金流ETF博时",
       "name_en": "",
-      "py": "quanzhixianjinliuetfboshi",
-      "abbr": "qzxjletfbs"
+      "py": "ziyouxianjinliuetfboshi",
+      "abbr": "zyxjletfbs"
     },
     "sh563850": {
       "code": "563850",
@@ -10549,6 +10603,15 @@
       "py": "chuangyebansuanlietfnanfang",
       "abbr": "cybsletfnf"
     },
+    "sz158065": {
+      "code": "158065",
+      "market": "sz",
+      "type": "基",
+      "name": "粮食ETF招商",
+      "name_en": "",
+      "py": "liangshietfzhaoshang",
+      "abbr": "lsetfzs"
+    },
     "sz158066": {
       "code": "158066",
       "market": "sz",
@@ -10575,6 +10638,51 @@
       "name_en": "",
       "py": "chuangyebanruanjianetfnanfang",
       "abbr": "cybrjetfnf"
+    },
+    "sz158076": {
+      "code": "158076",
+      "market": "sz",
+      "type": "基",
+      "name": "红利低波ETF广发",
+      "name_en": "",
+      "py": "honglidiboetfguangfa",
+      "abbr": "hldbetfgf"
+    },
+    "sz158078": {
+      "code": "158078",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板电池ETF华宝",
+      "name_en": "",
+      "py": "chuangyebandianchietfhuabao",
+      "abbr": "cybdcetfhb"
+    },
+    "sz158079": {
+      "code": "158079",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板电池ETF华安",
+      "name_en": "",
+      "py": "chuangyebandianchietfhuaan",
+      "abbr": "cybdcetfha"
+    },
+    "sz158081": {
+      "code": "158081",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板电池ETF永赢",
+      "name_en": "",
+      "py": "chuangyebandianchietfyongying",
+      "abbr": "cybdcetfyy"
+    },
+    "sz158082": {
+      "code": "158082",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板电池ETF银华",
+      "name_en": "",
+      "py": "chuangyebandianchietfyinhua",
+      "abbr": "cybdcetfyh"
     },
     "sz159001": {
       "code": "159001",
@@ -19180,15 +19288,6 @@
       "py": "zhongxinbaocheng500lof",
       "abbr": "zxbc500lof"
     },
-    "sz165512": {
-      "code": "165512",
-      "market": "sz",
-      "type": "基",
-      "name": "中信保诚机遇LOF",
-      "name_en": "",
-      "py": "zhongxinbaochengjiyulof",
-      "abbr": "zxbcjylof"
-    },
     "sz165513": {
       "code": "165513",
       "market": "sz",
@@ -19648,6 +19747,15 @@
       "py": "guangfachengdugaotouchanyeyuanreit",
       "abbr": "gfcdgtcyyreit"
     },
+    "sz180107": {
+      "code": "180107",
+      "market": "sz",
+      "type": "基",
+      "name": "平安西安高科产业园REIT",
+      "name_en": "",
+      "py": "pinganxiangaokechanyeyuanreit",
+      "abbr": "paxagkcyyreit"
+    },
     "sz180201": {
       "code": "180201",
       "market": "sz",
@@ -19719,6 +19827,15 @@
       "name_en": "",
       "py": "huaxiaanbocangchureit",
       "abbr": "hxabccreit"
+    },
+    "sz180307": {
+      "code": "180307",
+      "market": "sz",
+      "type": "基",
+      "name": "中金菜鸟REIT",
+      "name_en": "",
+      "py": "zhongjincainiaoreit",
+      "abbr": "zjcnreit"
     },
     "sz180401": {
       "code": "180401",
@@ -19836,6 +19953,15 @@
       "name_en": "",
       "py": "yinhuashaoxingyuanshuishuilireit",
       "abbr": "yhsxysslreit"
+    },
+    "sz180702": {
+      "code": "180702",
+      "market": "sz",
+      "type": "基",
+      "name": "银华粤海水务水利REIT",
+      "name_en": "",
+      "py": "yinhuayuehaishuiwushuilireit",
+      "abbr": "yhyhswslreit"
     },
     "sz180801": {
       "code": "180801",
