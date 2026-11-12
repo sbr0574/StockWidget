@@ -255,6 +255,7 @@ class TaskbarController(QObject):
             max_width = min(round(480 * area.dpi / 96), area.right)
             if max_width < 80 or height < 24:
                 raise OSError("任务栏空间不足，请使用标准高度的横向任务栏")
+            self.source.set_taskbar_geometry(height, area.dpi)
             image = render_taskbar(self.source, height, area.dpi, max_width, self._hit_regions)
             self._pager_rect = taskbar_pager_rect(self.source, height, area.dpi)
             self._dpi = area.dpi

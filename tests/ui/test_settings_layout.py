@@ -11,7 +11,7 @@ from tests.support import SettingsTestCase
 
 
 class SettingsLayoutTests(SettingsTestCase):
-    def test_appearance_reset_lives_in_header_and_data_actions_live_below_about_group(self):
+    def test_appearance_reset_lives_in_header_and_update_actions_live_below_about_group(self):
         dialog, window = self._make_dialog()
         dialog.show()
         dialog.ui.settings_pages.setCurrentWidget(dialog.ui.floating)
@@ -24,7 +24,7 @@ class SettingsLayoutTests(SettingsTestCase):
         dialog.ui.settings_pages.setCurrentWidget(dialog.ui.about)
         dialog.ui.about_scroll.ensureWidgetVisible(dialog.ui.btn_reset_settings)
         self.qt_app.processEvents()
-        for button in (dialog.ui.btn_reset_settings, dialog.ui.btn_open_cache_dir, dialog.ui.btn_clear_cache):
+        for button in (dialog.ui.btn_check_update, dialog.ui.btn_reset_settings):
             self.assertIs(button.parentWidget(), dialog.ui.about_content)
             self.assertFalse(dialog.ui.gb_about.isAncestorOf(button))
             self.assertGreater(button.geometry().top(), dialog.ui.gb_about.geometry().bottom())

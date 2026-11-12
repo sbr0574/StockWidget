@@ -99,6 +99,7 @@ class TaskbarTests(QtTestCase):
                 self.app.setPalette(original)
 
     def test_render_uses_only_first_two_rows(self):
+        self.window.set_view_options(taskbar_rows=2)
         self.set_rows([["黄金", "123.45"], ["白银", "67.89"], ["不会出现", "100"]])
         before = render_taskbar(self.window, 44)
         self.set_rows([["黄金", "123.45"], ["白银", "67.89"], ["第三行非常长" * 20, "9999999"]])

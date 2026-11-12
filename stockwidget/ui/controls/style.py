@@ -329,6 +329,9 @@ QLabel[settingDescription="true"] {{
 QLabel[quoteCaption="true"] {{
     color: {description};
 }}
+QDialog#SettingDialog QPushButton[destructive="true"] {{
+    color: #e5484d;
+}}
 QPushButton[destructive="true"] {{
     background-color: rgba(220, 60, 60, 0.16);
 }}

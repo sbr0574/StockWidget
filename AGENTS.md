@@ -37,7 +37,7 @@ StockWidget 是 Windows、macOS 和 Linux 桌面行情工具，只展示行情�
 ## 配置、数据与请求
 
 - 用户配置与自选读取 / 保存兼容必须保留；删除旧配置迁移需有明确迁移方案，不能把仍在使用的兼容字段当作死代码。
-- 程序数据路径由 `config_store.py` 统一管理并固定：Windows 为 `%APPDATA%/StockWidget`，Linux 为 `~/StockWidget`，macOS 为 `~/Library/Application Support/StockWidget`；市场代码在 `data/`，历史缓存为 `cache/history.sqlite3`。不提供自定义目录或运行时切换接口。仅保留 macOS 从旧 `~/StockWidget` 到固定目录的一次性迁移，完整迁移或备份成功后才删除旧目录，失败保留，已有新版数据优先；不迁移其他目录或恢复旧目录偏好。
+- 程序数据路径由 `config_store.py` 统一管理：默认 Windows 为 `%APPDATA%/StockWidget`，Linux 为 `~/StockWidget`，macOS 为 `~/Library/Application Support/StockWidget`；市场代码在 `data/`，历史缓存为 `cache/history.sqlite3`。Windows 默认目录不可写时才回退程序所在目录，使用独立临时文件检查写入，不能覆盖现有文件。常规页可选择统一数据目录，复制配置、自选、代码及缓存，保留原件、备份目标已有数据，重启后切换；会话内不改变在途请求与缓存路径。保存错误不得阻断设置页或退出，并合并提示未保存状态。保留 macOS 从旧 `~/StockWidget` 的一次性迁移，完整迁移或备份成功后才删除旧目录，失败保留，已有新版数据优先。
 - 服务器代码列表发布到 `codes-data` 分支，业务代码在 `main`；更新脚本支持 `CODES_OUTPUT_DIR`。
 - 服务端更新直接运行单个 `scripts/update_codes.py`。分类或补充名称表失败须进入状态清单并保留旧文件，不妨碍其他分类保存。
 - 服务端依赖用 `python -m pip install -r scripts/requirements.txt` 安装；转换港股中文名的 OpenCC 不属于桌面运行时依赖。

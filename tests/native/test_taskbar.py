@@ -13,6 +13,7 @@ from PySide6.QtTest import QTest
 from shiboken6 import delete
 
 from stockwidget.data.quotes import _new_entry
+from stockwidget.core.view_options import taskbar_content_height, taskbar_font_point_limit
 from stockwidget.platform.taskbar import NativeTaskbarWindow, TaskbarArea, _api, _taskbar_windows, cursor_over_taskbar, find_taskbar
 from stockwidget.app import App
 from stockwidget.ui.floating.presenter import QuotePresenter
@@ -25,6 +26,31 @@ from tests.support import QtTestCase, SettingsTestCase
 @unittest.skipUnless(sys.platform == "win32" and os.environ.get("STOCKWIDGET_TEST_WINDOWS") == "1",
                      "Requires an opt-in Windows desktop session")
 class NativeSettingsWindowTests(SettingsTestCase):
+    def test_taskbar_size_control_uses_real_geometry_and_preserves_font_family(self):
+        dialog, window = self._make_dialog(taskbar_enabled=True, display_mode="taskbar", taskbar_rows=1)
+        controller = TaskbarController(window, Mock())
+        try:
+            controller.apply_mode()
+            self.app.processEvents()
+            self.assertTrue(controller._active, window.taskbar_status)
+            area = controller._area
+            height = taskbar_content_height(area.height, area.dpi)
+            dialog.ui.taskbar_font_size.setValue(12)
+            for rows in (4, 3, 2):
+                dialog.ui.taskbar_rows.setValue(rows)
+                self.app.processEvents()
+                maximum = taskbar_font_point_limit(height, area.dpi, rows)
+                self.assertEqual(dialog.ui.taskbar_font_size.maximum(), maximum)
+                self.assertEqual(dialog.ui.taskbar_font_size.value(), min(12, maximum))
+                self.assertEqual(window.current_config()["taskbar_font_size"], 12)
+            window.set_font_family("Arial")
+            self.app.processEvents()
+            self.assertEqual(window.get_taskbar_appearance()[0].family(), window.font.family())
+            self.assertEqual(window.get_taskbar_appearance()[0].pointSize(), 12)
+        finally:
+            controller.close()
+            delete(controller)
+
     def test_settings_has_an_unowned_non_topmost_taskbar_window_with_application_icon(self):
         from ctypes import wintypes
         from PySide6.QtCore import Qt

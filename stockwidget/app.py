@@ -15,8 +15,11 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 import resources.resources_rc  # noqa: F401  加载 Qt 内嵌资源（图标、内置代码列表）
 
 from stockwidget.constants import APP_NAME, APP_VERSION, CONFIG_FILE
-from stockwidget.core.config_store import initialize_data_directory, save_file
+from stockwidget.core.config_store import (
+    activate_data_directory, config_paths, initialize_data_directory, prepare_data_directory, save_file,
+)
 from stockwidget.core.window_rules import best_screen
+from stockwidget.data.bar_cache import BarCache
 from stockwidget.data.code_lists import CODES_RETRY_SECONDS, CodeListManager
 from stockwidget.data.update_check import get_update_info
 from stockwidget.platform.autostart import set_start_on_boot
@@ -45,13 +48,19 @@ class App(QApplication):
     network_finished = Signal(object)
     codes_loaded = Signal(object)
     codes_refresh_finished = Signal(object)
+    save_state_changed = Signal()
 
     def __init__(self, argv):
         super().__init__(argv)
         sync_macos_dock_icon()
         self.app_version = APP_VERSION
+        self.pending_data_directory = None
+        self.save_error = ""
+        self._save_error_reported = False
         try:
-            cfg = initialize_data_directory()
+            cfg = activate_data_directory()
+            if cfg is None:
+                cfg = initialize_data_directory()
         except OSError:
             QMessageBox.critical(None, "程序数据目录错误", "无法完成程序数据迁移或旧目录清理，请检查目录权限与可用性。迁移失败时不会删除旧目录。")
             raise SystemExit(1)
@@ -61,7 +70,9 @@ class App(QApplication):
         self.theme = ApplicationTheme(self)
 
         # 加载图标
-        self._icon_choice = cfg.get('app_icon')
+        self._icon_choice = cfg.get('app_icon', 'default')
+        if self._icon_choice not in ('default', 'dark', 'lightG', 'darkG', 'custom'):
+            self._icon_choice = 'default'
         self._custom_icon_path, custom_icon = _load_custom_icon(
             cfg.get("custom_icon_path")
         )
@@ -259,17 +270,54 @@ class App(QApplication):
         return self.code_manager.last_error()
 
     def quit_app(self):
-        self.tray.hide()
-        self.save_now()
-        self.quit()
+        try:
+            self.save_now()
+        finally:
+            self.tray.hide()
+            self.quit()
 
-    def save_now(self):
+    def current_config(self):
         cfg = self.win.current_config()
         cfg['app_icon'] = self._icon_choice
         if self._custom_icon_path:
             cfg['custom_icon_path'] = self._custom_icon_path
         cfg['start_on_boot'] = self._start_on_boot
-        save_file(cfg, CONFIG_FILE)
+        return cfg
+
+    def save_now(self) -> bool:
+        try:
+            save_file(self.current_config(), CONFIG_FILE, directory=self.pending_data_directory)
+        except OSError:
+            message = "无法保存设置，请检查数据目录的写入权限或可用空间。当前更改尚未保存。"
+            if self.save_error != message:
+                self.save_error = message
+                self.save_state_changed.emit()
+            if not self._save_error_reported and hasattr(self, "tray"):
+                self._save_error_reported = True
+                self.tray.showMessage(APP_NAME, message)
+            return False
+        if self.save_error:
+            self.save_error = ""
+            self.save_state_changed.emit()
+        self._save_error_reported = False
+        return True
+
+    def change_data_directory(self, directory: str):
+        directory = os.path.realpath(os.path.expanduser(directory))
+        cfg = prepare_data_directory(directory, self.current_config())
+        self.pending_data_directory = directory if os.path.normcase(os.path.realpath(directory)) != os.path.normcase(
+            os.path.realpath(config_paths())) else None
+        self._custom_icon_path = cfg.get("custom_icon_path", "")
+        self.save_error = ""
+        self._save_error_reported = False
+        self.save_state_changed.emit()
+
+    def clear_history_cache(self) -> bool:
+        cleared = self.win.history.clear_cache()
+        if self.pending_data_directory:
+            pending = BarCache(os.path.join(self.pending_data_directory, "cache"))
+            cleared = pending.clear() and cleared
+        return cleared
 
     def set_app_icon(self, choice):
         """Set application and tray icon."""

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""固定程序数据路径、旧版本启动迁移与原子配置保存（纯 Python，无 Qt 依赖）。"""
+"""程序数据目录、迁移与原子配置保存（纯 Python，无 Qt 依赖）。"""
 
 from contextlib import closing
 import json
@@ -13,13 +13,23 @@ import time
 
 from stockwidget.constants import APP_NAME, CONFIG_FILE, CODE_LIST_FILES, CODES_STATUS_FILE
 
+_active_directory = None
+_LOCATION_FILE = "stockwidget_data_location.json"
 
-def config_paths() -> str:
-    """全部程序数据使用平台固定目录，不读取用户目录偏好。"""
+
+def default_data_directory() -> str:
     if sys.platform == "darwin":
         return os.path.join(os.path.expanduser("~"), "Library", "Application Support", APP_NAME)
     base = os.getenv("APPDATA") if sys.platform == "win32" else None
     return os.path.join(base or os.path.expanduser("~"), APP_NAME)
+
+
+def program_directory() -> Path:
+    return Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parents[2]
+
+
+def config_paths() -> str:
+    return _active_directory or default_data_directory()
 
 
 def data_cache_dir() -> str:
@@ -54,6 +64,127 @@ def save_file(data: dict, file_name: str, *, directory: str | None = None) -> No
     finally:
         if temporary and os.path.exists(temporary):
             os.remove(temporary)
+
+
+def _probe_directory(directory: Path):
+    directory.mkdir(parents=True, exist_ok=True)
+    paths = []
+    try:
+        for _ in range(2):
+            descriptor, path = tempfile.mkstemp(prefix=".stockwidget-probe-", dir=directory)
+            os.close(descriptor)
+            paths.append(Path(path))
+        os.replace(*paths)
+    finally:
+        for path in paths:
+            path.unlink(missing_ok=True)
+
+
+def _location_directories():
+    return tuple(dict.fromkeys((Path(default_data_directory()), program_directory())))
+
+
+def _save_location(directory: Path):
+    data = {"version": 1, "directory": str(directory), "portable": directory == program_directory()}
+    for root in _location_directories():
+        try:
+            save_file(data, _LOCATION_FILE, directory=str(root))
+            return
+        except OSError:
+            continue
+    raise OSError("无法保存数据目录选择，请检查默认目录或程序目录的写入权限")
+
+
+def activate_data_directory() -> dict | None:
+    """启动时确定本次会话的目录；运行过程中不随权限变化切换。"""
+    global _active_directory
+    default = Path(default_data_directory())
+    locations = []
+    for root in _location_directories():
+        path = root / _LOCATION_FILE
+        data = load_file(_LOCATION_FILE, directory=str(root))
+        if data.get("version") != 1 or not isinstance(data.get("directory"), str) or not data["directory"].strip():
+            continue
+        try:
+            target = program_directory() if data.get("portable") else Path(data["directory"]).expanduser()
+            if not target.is_absolute():
+                continue
+            target = target.resolve()
+            locations.append((path.stat().st_mtime_ns, target))
+        except (OSError, ValueError):
+            continue
+    selected = max(locations, key=lambda item: item[0])[1] if locations else default
+    if sys.platform == "win32" and selected == default:
+        try:
+            _probe_directory(default)
+        except OSError:
+            fallback = program_directory()
+            try:
+                _probe_directory(fallback)
+            except OSError:
+                pass
+            else:
+                _active_directory = str(fallback)
+                config = None
+                try:
+                    if not (fallback / CONFIG_FILE).exists():
+                        config = load_file(CONFIG_FILE, directory=str(default))
+                        save_file(config, CONFIG_FILE, directory=str(fallback))
+                    _save_location(fallback)
+                except OSError:
+                    pass
+                return config
+    _active_directory = str(selected)
+    return None
+
+
+def _copy_managed_data(source: Path, stage: Path):
+    for name in ("data", "cache", "assets"):
+        path = source / name
+        if not path.exists():
+            continue
+        if not path.is_dir() or any(item.is_symlink() or item.is_junction() for item in (path, *path.rglob("*"))):
+            raise OSError("数据目录包含链接或无效文件夹，请先检查目录内容")
+        if name == "cache":
+            _stage_history(path, stage / name)
+        else:
+            shutil.copytree(path, stage / name, dirs_exist_ok=True)
+
+
+def prepare_data_directory(directory: str, config: dict) -> dict:
+    """复制当前数据并保存下次启动位置；不删除原目录或切换在途请求。"""
+    source, target = Path(config_paths()).resolve(), Path(directory).expanduser().resolve()
+    if target == source:
+        save_file(config, CONFIG_FILE, directory=str(target))
+        _save_location(target)
+        return config
+    if source.is_relative_to(target) or any(target.is_relative_to(source / name) for name in ("data", "cache", "assets")):
+        raise OSError("所选目录与现有数据互相包含，请选择独立文件夹")
+    _probe_directory(target)
+    existing = [target / name for name in (CONFIG_FILE, "data", "cache", "assets") if os.path.lexists(target / name)]
+    if existing and not (target / CONFIG_FILE).is_file():
+        raise OSError("目标目录已有同名数据文件夹，请选择其他文件夹")
+    snapshot = dict(config)
+    with tempfile.TemporaryDirectory(prefix=".stockwidget-relocate-", dir=target) as temporary:
+        stage = Path(temporary) / "files"
+        stage.mkdir()
+        _copy_managed_data(source, stage)
+        icon = snapshot.get("custom_icon_path")
+        if isinstance(icon, str) and Path(icon).is_file():
+            destination = stage / "assets" / ("custom-icon" + Path(icon).suffix)
+            destination.parent.mkdir(exist_ok=True)
+            shutil.copy2(icon, destination)
+            snapshot["custom_icon_path"] = str(target / destination.relative_to(stage))
+        for path in stage.rglob("*"):
+            path.chmod(path.stat().st_mode | (0o700 if path.is_dir() else 0o200))
+        save_file(snapshot, CONFIG_FILE, directory=str(stage))
+        if existing:
+            backup = target / ("previous-data-" + str(time.time_ns()))
+            backup.mkdir()
+            shutil.copy2(target / CONFIG_FILE, backup / CONFIG_FILE)
+            _copy_managed_data(target, backup)
+        _install_migration(stage, target, Path(temporary) / "rollback", finalize=lambda: _save_location(target))
+    return snapshot
 
 
 def _read_configuration(directory):
@@ -141,7 +272,7 @@ def _rewrite_legacy_links(source, stage):
             path.symlink_to(replacement)
 
 
-def _install_migration(stage, root, backups):
+def _install_migration(stage, root, backups, *, finalize=None):
     """完成所有文件准备后安装；落盘失败时恢复原目标文件。"""
     changed = []
     try:
@@ -164,8 +295,10 @@ def _install_migration(stage, root, backups):
                     raise OSError("目标目录有同名文件夹")
                 backup.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(destination, backup, follow_symlinks=False)
-            changed.append((destination, backup if existed else None))
             os.replace(path, destination)
+            changed.append((destination, backup if existed else None))
+        if finalize is not None:
+            finalize()
     except OSError:
         for destination, backup in reversed(changed):
             if backup is not None:

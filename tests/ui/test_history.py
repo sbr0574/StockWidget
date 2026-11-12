@@ -528,7 +528,7 @@ class HistoryUITests(HistoryTestCase):
             history._busy = True
             history.open_row("float", 2)
             self.assertIsNotNone(history._pending)
-            with patch("stockwidget.ui.settings.dialog.QToolTip.showText") as tooltip:
+            with patch("stockwidget.ui.settings.groups.QToolTip.showText") as tooltip:
                 dialog.ui.btn_clear_cache.click()
             self.assertIn("已清理", tooltip.call_args.args[1])
             self.assertFalse(history.dialog.isVisible())
