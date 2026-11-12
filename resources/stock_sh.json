@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-06",
+  "last_update": "2026-11-12",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -1688,10 +1688,10 @@
       "code": "600251",
       "market": "sh",
       "type": "沪",
-      "name": "冠农股份",
+      "name": "新疆冠农",
       "name_en": "",
-      "py": "guannonggufen",
-      "abbr": "gngf"
+      "py": "xinjiangguannong",
+      "abbr": "xjgn"
     },
     "sh600252": {
       "code": "600252",
@@ -2975,10 +2975,10 @@
       "code": "600459",
       "market": "sh",
       "type": "沪",
-      "name": "XD贵研铂",
+      "name": "贵研铂业",
       "name_en": "",
-      "py": "xdguiyanbo",
-      "abbr": "xdgyb"
+      "py": "guiyanboye",
+      "abbr": "gyby"
     },
     "sh600460": {
       "code": "600460",
@@ -3362,10 +3362,10 @@
       "code": "600516",
       "market": "sh",
       "type": "沪",
-      "name": "XD方大炭",
+      "name": "方大炭素",
       "name_en": "",
-      "py": "xdfangdatan",
-      "abbr": "xdfdt"
+      "py": "fangdatansu",
+      "abbr": "fdts"
     },
     "sh600517": {
       "code": "600517",
@@ -3623,10 +3623,10 @@
       "code": "600551",
       "market": "sh",
       "type": "沪",
-      "name": "XD时代出",
+      "name": "时代出版",
       "name_en": "",
-      "py": "xdshidaichu",
-      "abbr": "xdsdc"
+      "py": "shidaichuban",
+      "abbr": "sdcb"
     },
     "sh600552": {
       "code": "600552",
@@ -7556,10 +7556,10 @@
       "code": "601319",
       "market": "sh",
       "type": "沪",
-      "name": "XD中国人",
+      "name": "中国人保",
       "name_en": "",
-      "py": "xdzhongguoren",
-      "abbr": "xdzgr"
+      "py": "zhongguorenbao",
+      "abbr": "zgrb"
     },
     "sh601326": {
       "code": "601326",
@@ -8078,10 +8078,10 @@
       "code": "601696",
       "market": "sh",
       "type": "沪",
-      "name": "XD中银证",
+      "name": "中银证券",
       "name_en": "",
-      "py": "xdzhongyinzheng",
-      "abbr": "xdzyz"
+      "py": "zhongyinzhengquan",
+      "abbr": "zyzq"
     },
     "sh601698": {
       "code": "601698",
@@ -13649,10 +13649,10 @@
       "code": "603881",
       "market": "sh",
       "type": "沪",
-      "name": "XD数据港",
+      "name": "数据港",
       "name_en": "",
-      "py": "xdshujugang",
-      "abbr": "xdsjg"
+      "py": "shujugang",
+      "abbr": "sjg"
     },
     "sh603882": {
       "code": "603882",
@@ -14279,10 +14279,10 @@
       "code": "603998",
       "market": "sh",
       "type": "沪",
-      "name": "方盛制药",
+      "name": "XD方盛制",
       "name_en": "",
-      "py": "fangshengzhiyao",
-      "abbr": "fszy"
+      "py": "xdfangshengzhi",
+      "abbr": "xdfsz"
     },
     "sh603999": {
       "code": "603999",
@@ -15710,10 +15710,10 @@
       "code": "688053",
       "market": "sh",
       "type": "科",
-      "name": "ST思科瑞",
+      "name": "思科瑞",
       "name_en": "",
-      "py": "stsikerui",
-      "abbr": "stskr"
+      "py": "sikerui",
+      "abbr": "skr"
     },
     "sh688055": {
       "code": "688055",
@@ -17078,10 +17078,10 @@
       "code": "688225",
       "market": "sh",
       "type": "科",
-      "name": "亚信安全",
+      "name": "亚信集团",
       "name_en": "",
-      "py": "yaxinanquan",
-      "abbr": "yxaq"
+      "py": "yaxinjituan",
+      "abbr": "yxjt"
     },
     "sh688226": {
       "code": "688226",
@@ -17942,10 +17942,10 @@
       "code": "688336",
       "market": "sh",
       "type": "科",
-      "name": "XD三生国",
+      "name": "三生国健",
       "name_en": "",
-      "py": "xdsanshengguo",
-      "abbr": "xdssg"
+      "py": "sanshengguojian",
+      "abbr": "ssgj"
     },
     "sh688337": {
       "code": "688337",
@@ -20516,10 +20516,10 @@
       "code": "688777",
       "market": "sh",
       "type": "科",
-      "name": "中控技术",
+      "name": "XD中控技",
       "name_en": "",
-      "py": "zhongkongjishu",
-      "abbr": "zkjs"
+      "py": "xdzhongkongji",
+      "abbr": "xdzkj"
     },
     "sh688778": {
       "code": "688778",
@@ -20808,6 +20808,15 @@
       "name_en": "",
       "py": "pinzhunjiguang",
       "abbr": "pzjg"
+    },
+    "sh688827": {
+      "code": "688827",
+      "market": "sh",
+      "type": "科",
+      "name": "C钶锐",
+      "name_en": "",
+      "py": "ckerui",
+      "abbr": "ckr"
     },
     "sh688828": {
       "code": "688828",

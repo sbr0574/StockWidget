@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-08-27",
+  "last_update": "2026-10-27",
   "codes": {
     "hkces100": {
       "code": "ces100",
@@ -287,7 +287,8 @@
       "name": "荷兰AEX综合指数",
       "name_en": "",
       "py": "helanaexzonghezhishu",
-      "abbr": "hlaexzhzs"
+      "abbr": "hlaexzhzs",
+      "timezone": "Europe/Amsterdam"
     },
     "gbas51": {
       "code": "as51",
@@ -296,7 +297,8 @@
       "name": "澳大利亚标准普尔200指数",
       "name_en": "",
       "py": "aodaliyabiaozhunpuer200zhishu",
-      "abbr": "adlybzpe200zs"
+      "abbr": "adlybzpe200zs",
+      "timezone": "Australia/Sydney"
     },
     "gbcac": {
       "code": "cac",
@@ -305,7 +307,8 @@
       "name": "法CAC40指数",
       "name_en": "",
       "py": "facac40zhishu",
-      "abbr": "fcac40zs"
+      "abbr": "fcac40zs",
+      "timezone": "Europe/Paris"
     },
     "gbcase": {
       "code": "case",
@@ -314,7 +317,8 @@
       "name": "埃及CASE 30指数",
       "name_en": "",
       "py": "aijicase30zhishu",
-      "abbr": "ajcase30zs"
+      "abbr": "ajcase30zs",
+      "timezone": "Africa/Cairo"
     },
     "gbdax": {
       "code": "dax",
@@ -323,7 +327,8 @@
       "name": "德国DAX 30种股价指数",
       "name_en": "",
       "py": "deguodax30zhonggujiazhishu",
-      "abbr": "dgdax30zgjzs"
+      "abbr": "dgdax30zgjzs",
+      "timezone": "Europe/Berlin"
     },
     "gbftsemib": {
       "code": "ftsemib",
@@ -332,7 +337,8 @@
       "name": "富时意大利MIB指数",
       "name_en": "",
       "py": "fushiyidalimibzhishu",
-      "abbr": "fsydlmibzs"
+      "abbr": "fsydlmibzs",
+      "timezone": "Europe/Rome"
     },
     "gbgsptse": {
       "code": "gsptse",
@@ -341,7 +347,8 @@
       "name": "加拿大S&P/TSX综合指数",
       "name_en": "",
       "py": "jianadas&p/tsxzonghezhishu",
-      "abbr": "jnds&p/tsxzhzs"
+      "abbr": "jnds&p/tsxzhzs",
+      "timezone": "America/Toronto"
     },
     "gbibex": {
       "code": "ibex",
@@ -350,7 +357,8 @@
       "name": "西班牙IBEX指数",
       "name_en": "",
       "py": "xibanyaibexzhishu",
-      "abbr": "xbyibexzs"
+      "abbr": "xbyibexzs",
+      "timezone": "Europe/Madrid"
     },
     "gbibov": {
       "code": "ibov",
@@ -359,7 +367,8 @@
       "name": "巴西BOVESPA股票指数",
       "name_en": "",
       "py": "baxibovespagupiaozhishu",
-      "abbr": "bxbovespagpzs"
+      "abbr": "bxbovespagpzs",
+      "timezone": "America/Sao_Paulo"
     },
     "gbindexcf": {
       "code": "indexcf",
@@ -368,7 +377,8 @@
       "name": "俄罗斯MICEX指数",
       "name_en": "",
       "py": "eluosimicexzhishu",
-      "abbr": "elsmicexzs"
+      "abbr": "elsmicexzs",
+      "timezone": "Europe/Moscow"
     },
     "gbjci": {
       "code": "jci",
@@ -377,7 +387,8 @@
       "name": "印度尼西亚雅加达综合指数",
       "name_en": "",
       "py": "yindunixiyayajiadazonghezhishu",
-      "abbr": "ydnxyyjdzhzs"
+      "abbr": "ydnxyyjdzhzs",
+      "timezone": "Asia/Jakarta"
     },
     "gbkospi": {
       "code": "kospi",
@@ -386,7 +397,8 @@
       "name": "首尔综合指数",
       "name_en": "",
       "py": "shouerzonghezhishu",
-      "abbr": "sezhzs"
+      "abbr": "sezhzs",
+      "timezone": "Asia/Seoul"
     },
     "gbmxx": {
       "code": "mxx",
@@ -395,7 +407,8 @@
       "name": "墨西哥BOLSA指数",
       "name_en": "",
       "py": "moxigebolsazhishu",
-      "abbr": "mxgbolsazs"
+      "abbr": "mxgbolsazs",
+      "timezone": "America/Mexico_City"
     },
     "gbnky": {
       "code": "nky",
@@ -404,7 +417,8 @@
       "name": "日经225指数",
       "name_en": "",
       "py": "rijing225zhishu",
-      "abbr": "rj225zs"
+      "abbr": "rj225zs",
+      "timezone": "Asia/Tokyo"
     },
     "gbnz250": {
       "code": "nz250",
@@ -413,7 +427,8 @@
       "name": "新西兰NZSE 50指数",
       "name_en": "",
       "py": "xinxilannzse50zhishu",
-      "abbr": "xxlnzse50zs"
+      "abbr": "xxlnzse50zs",
+      "timezone": "Pacific/Auckland"
     },
     "gbsensex": {
       "code": "sensex",
@@ -422,7 +437,8 @@
       "name": "印度孟买SENSEX指数",
       "name_en": "",
       "py": "yindumengmaisensexzhishu",
-      "abbr": "ydmmsensexzs"
+      "abbr": "ydmmsensexzs",
+      "timezone": "Asia/Kolkata"
     },
     "gbswi20": {
       "code": "swi20",
@@ -431,7 +447,8 @@
       "name": "瑞士股票指数",
       "name_en": "",
       "py": "ruishigupiaozhishu",
-      "abbr": "rsgpzs"
+      "abbr": "rsgpzs",
+      "timezone": "Europe/Zurich"
     },
     "gbsx5e": {
       "code": "sx5e",
@@ -440,7 +457,8 @@
       "name": "欧洲Stoxx50指数",
       "name_en": "",
       "py": "ouzhoustoxx50zhishu",
-      "abbr": "ozstoxx50zs"
+      "abbr": "ozstoxx50zs",
+      "timezone": "Europe/Brussels"
     },
     "gbtwjq": {
       "code": "twjq",
@@ -449,7 +467,8 @@
       "name": "中国台湾加权指数",
       "name_en": "",
       "py": "zhongguotaiwanjiaquanzhishu",
-      "abbr": "zgtwjqzs"
+      "abbr": "zgtwjqzs",
+      "timezone": "Asia/Taipei"
     },
     "gbukx": {
       "code": "ukx",
@@ -458,7 +477,8 @@
       "name": "英国富时100指数",
       "name_en": "",
       "py": "yingguofushi100zhishu",
-      "abbr": "ygfs100zs"
+      "abbr": "ygfs100zs",
+      "timezone": "Europe/London"
     }
   }
 }

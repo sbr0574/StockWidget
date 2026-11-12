@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-06",
+  "last_update": "2026-11-12",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -1638,6 +1638,15 @@
       "name_en": "",
       "py": "zhongjinweipinhuishangyereit",
       "abbr": "zjwphsyreit"
+    },
+    "sh508605": {
+      "code": "508605",
+      "market": "sh",
+      "type": "基",
+      "name": "华夏保利商业REIT",
+      "name_en": "",
+      "py": "huaxiabaolishangyereit",
+      "abbr": "hxblsyreit"
     },
     "sh508607": {
       "code": "508607",
@@ -7822,6 +7831,15 @@
       "py": "yangqihuibaoetfzhaoshang",
       "abbr": "yqhbetfzs"
     },
+    "sh561970": {
+      "code": "561970",
+      "market": "sh",
+      "type": "基",
+      "name": "稀有金属ETF博时",
+      "name_en": "",
+      "py": "xiyoujinshuetfboshi",
+      "abbr": "xyjsetfbs"
+    },
     "sh561980": {
       "code": "561980",
       "market": "sh",
@@ -8690,10 +8708,10 @@
       "code": "563770",
       "market": "sh",
       "type": "基",
-      "name": "全指现金流ETF招商",
+      "name": "现金流ETF招商",
       "name_en": "",
-      "py": "quanzhixianjinliuetfzhaoshang",
-      "abbr": "qzxjletfzs"
+      "py": "xianjinliuetfzhaoshang",
+      "abbr": "xjletfzs"
     },
     "sh563780": {
       "code": "563780",
@@ -8726,10 +8744,10 @@
       "code": "563830",
       "market": "sh",
       "type": "基",
-      "name": "全指现金流ETF博时",
+      "name": "自由现金流ETF博时",
       "name_en": "",
-      "py": "quanzhixianjinliuetfboshi",
-      "abbr": "qzxjletfbs"
+      "py": "ziyouxianjinliuetfboshi",
+      "abbr": "zyxjletfbs"
     },
     "sh563850": {
       "code": "563850",
@@ -19728,6 +19746,15 @@
       "name_en": "",
       "py": "guangfachengdugaotouchanyeyuanreit",
       "abbr": "gfcdgtcyyreit"
+    },
+    "sz180107": {
+      "code": "180107",
+      "market": "sz",
+      "type": "基",
+      "name": "平安西安高科产业园REIT",
+      "name_en": "",
+      "py": "pinganxiangaokechanyeyuanreit",
+      "abbr": "paxagkcyyreit"
     },
     "sz180201": {
       "code": "180201",
