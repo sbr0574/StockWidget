@@ -1,10 +1,28 @@
-# StockWidget
+<p align="center">
+  <img src="resources/icons/StockWidget.png" width="100" alt="MyProject Logo">
+</p>
 
-简洁的桌面行情显示工具，用透明浮窗查看自选行情，也可在 Windows 任务栏中显示。支持股票、基金、全球主要指数和上期所期货，兼容 **Windows、macOS 和 Linux**。
+<h1 align="center">StockWidget</h1>
+
+<div align="center">
+
+简洁的桌面行情显示工具，用置顶浮窗查看自选行情
+
+支持**A股、港股、美股**的股票、基金、指数和上期所期货
+
+兼容 **Windows、macOS 和 Linux**
+
+<img width="303" height="140" alt="image" src="https://github.com/user-attachments/assets/e6fa4447-68a5-4dd6-a124-9e14bc8c8f4b" />
+
+</div><br>
+
+<div align="center">
 
 [![Release](https://img.shields.io/badge/下载-Releases-blue?style=flat-square&logo=github)](https://github.com/sbr0574/StockWidget/releases) [![Downloads](https://img.shields.io/github/downloads/sbr0574/StockWidget/total?label=下载量&style=flat-square)](https://github.com/sbr0574/StockWidget/releases) [![Version](https://img.shields.io/github/v/tag/sbr0574/StockWidget?sort=semver&label=版本&style=flat-square)](https://github.com/sbr0574/StockWidget/tags) [![Stars](https://img.shields.io/github/stars/sbr0574/StockWidget?style=flat-square&label=Star)](https://github.com/sbr0574/StockWidget) ![License](https://img.shields.io/badge/License-Apache--2.0-lightgrey?style=flat-square)
 
 [![Windows](https://img.shields.io/badge/Windows-supported-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/sbr0574/StockWidget/releases) [![macOS](https://img.shields.io/badge/macOS-supported-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/sbr0574/StockWidget/releases) [![Linux](https://img.shields.io/badge/Linux-supported-FCC624?style=flat-square&logo=linux&logoColor=black)](https://github.com/sbr0574/StockWidget/releases)
+
+</div>
 
 作者：[sbr0574](https://github.com/sbr0574)。官方仓库：[GitHub](https://github.com/sbr0574/StockWidget) · [Gitee 镜像](https://gitee.com/sbr0574/StockWidget)。如果这个工具对你有帮助，欢迎在 GitHub 仓库右上角点一个 **Star ⭐**，支持后续维护。
 
@@ -16,7 +34,11 @@
 
 - 自选列表支持**双击空白快速添加**，**双击已有条目编辑**，**拖动调整顺序**；可选择在浮窗中显示的条目。
 
+    <img width="469" height="349" alt="image" src="https://github.com/user-attachments/assets/54c3a42a-8496-475d-8ccf-3762e254f6cf" />
+
 - 浮窗可选显示指标：**名称、现价、涨跌、涨幅、浮盈、一档数量、委比、成交量、成交额、均值、量比、迷你图**。在“数据 → 指标显示”添加、移除或排序。
+
+    <img width="330" height="141" alt="image" src="https://github.com/user-attachments/assets/41207091-8124-4f2f-8794-9c17ce1b0102" />
 
 - 现价触及当日最高或最低时显示 `↑` / `↓`。
 
@@ -30,28 +52,7 @@
 
 - **迷你图**为日 K 线、走势或幅值图。走势图为五分钟粒度当日分时；幅值图用横线表示当日最低至最高涨幅，小圆点表示当前涨幅，多股同列。
 
-### 浮窗外观与操作
-
-浮窗用于展示自选股行情指标，支持全区域**拖动**、**双击隐藏**、**鼠标穿透**。
-
-- 支持**自定义颜色、不透明度、字体、字号、行距**，支持自定义涨跌色；
-
-- 默认**置顶**显示；
-
-- 右键打开**快捷菜单**；
-
-- 支持**双栏**显示，支持**浮窗高度限制**和**翻页**；
-
-- Windows 支持单击任务栏托盘图标显示 / 隐藏浮窗，也可在设置中隐藏托盘图标；
-
-- Windows 支持将浮窗固定在任务栏，可单独设置外观和显示指标等。
-
-**全局快捷键**默认关闭，可在“快捷键”中启用，支持组合键或功能键。
-
-| 默认快捷键 | 操作 |
-| --- | --- |
-| `Ctrl+Alt+F` | 显示 / 隐藏行情组件 |
-| `Ctrl+Alt+C` | 开启 / 关闭鼠标穿透 |
+    <img width="327" height="117" alt="image" src="https://github.com/user-attachments/assets/71a17194-8008-4245-a15a-1c0d8a71b994" />
 
 ### 行情图表
 
@@ -59,9 +60,43 @@
 
 - 图表颜色与主浮窗一致，不透明度可随主浮窗调整，也可独立设置；
 
+    <img width="300" height="300" alt="image" src="https://github.com/user-attachments/assets/b3ad942d-d682-4b08-9ded-7ee17a59456c" />
+
 - 图表默认临时显示，可拖动改变位置和大小，点击外部或按 ESC 可关闭；也可点击右上角**固定按钮**将图表**固定在屏幕上显示**；
 
 - 点击图表右上角第二个按钮可**在独立窗口打开图表**，并展示包含个股换手率、量比、市盈率、市值、股本等主要指标，可通过上下按钮循环切换自选股；
+
+    <img width="520" height="345" alt="image" src="https://github.com/user-attachments/assets/5b96e8d5-16df-400f-8901-ef5d17c5bf91" />
+
+
+### 浮窗外观与操作
+
+浮窗用于展示自选股行情指标，支持全区域**拖动**、**双击隐藏**、**鼠标穿透**。
+
+- 支持**自定义颜色、不透明度、字体、字号、行距**，支持自定义涨跌色；
+
+    <img width="336" height="264" alt="image" src="https://github.com/user-attachments/assets/941f157d-d9a7-4696-b4ed-f423ae9c9a2c" />
+
+- 默认**置顶**显示；
+
+- 右键打开**快捷菜单**；
+
+- 支持**双栏**显示，支持**浮窗高度限制**和**翻页**；
+
+    <img width="341" height="123" alt="image" src="https://github.com/user-attachments/assets/e3e3adc0-6ee3-4ded-aa69-2cce16e42b4b" />
+
+- Windows 支持单击任务栏托盘图标显示 / 隐藏浮窗，也可在设置中隐藏托盘图标；
+
+- Windows 支持将浮窗固定在任务栏，可单独设置外观和显示指标等。
+
+    <img width="172" height="74" alt="image" src="https://github.com/user-attachments/assets/7cdc5c21-0f44-4035-a712-2df3aadb97fb" />
+
+**全局快捷键**默认关闭，可在“快捷键”中启用，支持组合键或功能键。
+
+| 默认快捷键 | 操作 |
+| --- | --- |
+| `Ctrl+Alt+F` | 显示 / 隐藏行情组件 |
+| `Ctrl+Alt+C` | 开启 / 关闭鼠标穿透 |
 
 ### 数据目录与缓存
 
