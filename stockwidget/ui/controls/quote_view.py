@@ -330,6 +330,12 @@ class SortIndicatorStyle(QProxyStyle):
         if element != QStyle.PE_IndicatorHeaderArrow:
             return super().drawPrimitive(element, option, painter, widget)
 
+    def subElementRect(self, element, option, widget=None):
+        # 自绘箭头不占用原生箭头区域，避免排序时压缩表头文字。
+        if element == QStyle.SE_HeaderArrow:
+            return QRect()
+        return super().subElementRect(element, option, widget)
+
     def drawItemText(self, painter, rect, flags, palette, enabled, text, text_role=QPalette.NoRole):
         super().drawItemText(painter, rect, flags, palette, enabled, text, text_role)
         header = self.parent()

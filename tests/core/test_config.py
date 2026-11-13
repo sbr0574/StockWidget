@@ -59,7 +59,7 @@ class ConfigStoreTests(unittest.TestCase):
 
 class DataDirectoryTests(unittest.TestCase):
     def setUp(self):
-        self.root = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        self.root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
         self.default, self.program = self.root / "default", self.root / "program"
         self.target = self.root / "selected"
         self.enterContext(patch.object(store, "_active_directory", None))
