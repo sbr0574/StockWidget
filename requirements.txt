@@ -1,4 +1,5 @@
-PySide6==6.11.1
+PySide6==6.9.3; sys_platform == "darwin"
+PySide6==6.11.1; sys_platform != "darwin"
 pyinstaller==6.21.0
 requests==2.34.2
 tzdata==2026.5
