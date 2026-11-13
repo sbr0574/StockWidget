@@ -110,6 +110,84 @@ class DataDirectoryTests(unittest.TestCase):
                 probe.assert_not_called()
                 self.assertEqual(Path(config_paths()), self.default)
 
+    def test_location_record_write_failure_falls_back_only_on_windows(self):
+        original_save = store.save_file
+
+        def save_writable(data, name, *, directory=None):
+            if directory == str(self.default):
+                raise PermissionError("read-only default directory")
+            original_save(data, name, directory=directory)
+
+        for platform in ("win32", "darwin", "linux"):
+            program = self.root / (platform + "-program")
+            with self.subTest(platform=platform), patch.object(store.sys, "platform", platform), \
+                    patch.object(store, "program_directory", return_value=program), \
+                    patch.object(store, "save_file", side_effect=save_writable):
+                if platform == "win32":
+                    store._save_location(self.target)
+                    record = load_file(store._LOCATION_FILE, directory=str(program))
+                    self.assertEqual(record["directory"], str(self.target))
+                else:
+                    with self.assertRaises(OSError):
+                        store._save_location(self.target)
+                    self.assertFalse(program.exists())
+
+    def test_default_location_records_survive_restart_on_all_platforms(self):
+        configuration = {"watchlist": {"sh600000": {"checked": True}}}
+        save_file(configuration, CONFIG_FILE, directory=str(self.target))
+        for platform in ("win32", "darwin", "linux"):
+            with self.subTest(platform=platform), patch.object(store.sys, "platform", platform), \
+                    patch.object(store, "_active_directory", None):
+                store._save_location(self.target)
+                store.activate_data_directory()
+                self.assertEqual(Path(config_paths()), self.target)
+                self.assertEqual(load_file(CONFIG_FILE), configuration)
+                self.assertFalse(self.program.exists())
+
+    def test_legacy_program_location_records_remain_readable_on_non_windows_hosts(self):
+        configuration = {"watchlist": {"sh600000": {"checked": True}}}
+        for platform in ("darwin", "linux"):
+            for portable in (False, True):
+                selected = self.program if portable else self.target
+                save_file(configuration, CONFIG_FILE, directory=str(selected))
+                save_file({"version": 1, "directory": str(self.target), "portable": portable},
+                          store._LOCATION_FILE, directory=str(self.program))
+                record = self.program / store._LOCATION_FILE
+                original = record.read_bytes()
+                with self.subTest(platform=platform, portable=portable), \
+                        patch.object(store.sys, "platform", platform), \
+                        patch.object(store, "_active_directory", None):
+                    store.activate_data_directory()
+                    self.assertEqual(Path(config_paths()), selected)
+                    self.assertEqual(load_file(CONFIG_FILE), configuration)
+                    self.assertEqual(record.read_bytes(), original)
+                    self.assertFalse(self.default.exists())
+
+    def test_non_windows_location_write_failure_rolls_back_directory_selection(self):
+        original_save = store.save_file
+
+        def save_writable(data, name, *, directory=None):
+            if name == store._LOCATION_FILE and directory == str(self.default):
+                raise PermissionError("read-only default directory")
+            original_save(data, name, directory=directory)
+
+        save_file({"source": True}, CONFIG_FILE, directory=str(self.default))
+        save_file({"destination": True}, CONFIG_FILE, directory=str(self.target))
+        for root, value in ((self.default, "source"), (self.target, "destination")):
+            (root / "data").mkdir()
+            (root / "data" / "stock.json").write_text(value, encoding="utf-8")
+        for platform in ("darwin", "linux"):
+            with self.subTest(platform=platform), patch.object(store.sys, "platform", platform), \
+                    patch.object(store, "save_file", side_effect=save_writable):
+                store.activate_data_directory()
+                with self.assertRaises(OSError):
+                    store.prepare_data_directory(str(self.target), {"replacement": True})
+                self.assertEqual(load_file(CONFIG_FILE, directory=str(self.target)), {"destination": True})
+                self.assertEqual((self.target / "data" / "stock.json").read_text(), "destination")
+                self.assertEqual((self.default / "data" / "stock.json").read_text(), "source")
+                self.assertEqual(Path(config_paths()), self.default)
+                self.assertFalse(self.program.exists())
+
     def test_failed_first_fallback_save_does_not_hide_the_readable_original_on_restart(self):
         config = {"watchlist": {"kept": {}}}
         save_file(config, CONFIG_FILE, directory=str(self.default))

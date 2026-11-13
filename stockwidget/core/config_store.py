@@ -86,13 +86,15 @@ def _location_directories():
 
 def _save_location(directory: Path):
     data = {"version": 1, "directory": str(directory), "portable": directory == program_directory()}
-    for root in _location_directories():
+    locations = _location_directories() if sys.platform == "win32" else (Path(default_data_directory()),)
+    for root in locations:
         try:
             save_file(data, _LOCATION_FILE, directory=str(root))
             return
         except OSError:
             continue
-    raise OSError("无法保存数据目录选择，请检查默认目录或程序目录的写入权限")
+    locations_label = "默认目录或程序目录" if sys.platform == "win32" else "默认数据目录"
+    raise OSError(f"无法保存数据目录选择，请检查{locations_label}的写入权限")
 
 
 def activate_data_directory() -> dict | None:
@@ -100,6 +102,7 @@ def activate_data_directory() -> dict | None:
     global _active_directory
     default = Path(default_data_directory())
     locations = []
+    # 兼容旧版写入程序目录的位置记录，保留既有目录选择。
     for root in _location_directories():
         path = root / _LOCATION_FILE
         data = load_file(_LOCATION_FILE, directory=str(root))
