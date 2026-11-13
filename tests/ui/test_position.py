@@ -6,7 +6,7 @@ import unittest
 
 from PySide6.QtCore import QEvent, QPoint, QPointF, QRect, Qt
 from PySide6.QtGui import QColor, QEnterEvent, QKeyEvent, QMouseEvent
-from PySide6.QtTest import QTest
+from PySide6.QtTest import QSignalSpy, QTest
 from PySide6.QtWidgets import QApplication
 from shiboken6 import delete
 
@@ -428,8 +428,9 @@ class WidgetPositionTests(unittest.TestCase):
                 self.assertFalse(window.quotes.page_timers["float"].isActive())
                 self.assertTrue(window.quotes.page_timers["taskbar"].isActive())
                 self.refresh.reset_mock()
+                timeout = QSignalSpy(window.timer.timeout)
                 window.timer.setInterval(20)
-                QTest.qWait(60)
+                self.assertTrue(timeout.wait(1000))
                 self.refresh.assert_called()
                 accept(111)
                 self.app.processEvents()

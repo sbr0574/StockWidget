@@ -4,6 +4,15 @@ on:
   push:
     tags:
       - 'v*'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/build-macos.yml'
+      - '.github/pyinstaller-hooks/**'
+      - '.github/scripts/verify-build.py'
+      - 'StockWidget.spec'
+      - 'requirements.txt'
   workflow_dispatch:
 
 jobs:
@@ -47,6 +56,14 @@ jobs:
 
       - name: Verify native build and deployment target
         run: python .github/scripts/verify-build.py --arch ${{ matrix.arch }} --macos-minimum "$MACOSX_DEPLOYMENT_TARGET"
+
+      - name: Run macOS compatibility tests
+        if: github.event_name == 'pull_request'
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          python -m pip install -r scripts/requirements.txt
+          python -m unittest discover -s tests -t .
 
       - name: Ad-hoc codesign
         run: |

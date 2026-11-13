@@ -279,10 +279,11 @@ class AppSavingTests(unittest.TestCase):
 
     def test_directory_change_keeps_active_cache_and_saves_subsequent_preferences_to_new_root(self):
         with tempfile.TemporaryDirectory() as temporary:
-            source, target = Path(temporary) / "active", Path(temporary) / "chosen"
+            root = Path(temporary).resolve()
+            source, target = root / "active", root / "chosen"
             with patch.object(config_store, "_active_directory", str(source)), \
                     patch.object(config_store, "default_data_directory", return_value=str(source)), \
-                    patch.object(config_store, "program_directory", return_value=Path(temporary) / "program"):
+                    patch.object(config_store, "program_directory", return_value=root / "program"):
                 owner = self.make_owner()
                 self.assertTrue(owner.save_now())
                 original = (source / CONFIG_FILE).read_bytes()
