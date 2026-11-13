@@ -174,6 +174,13 @@ class StorageSettingsTests(SettingsTestCase):
         self.assertEqual(owner.win.history.cache.directory, original)
 
     def test_storage_actions_and_destructive_buttons_render_in_both_themes(self):
+        def red_text_pixels(button):
+            image = button.grab().toImage()
+            # Account for translucent backgrounds and antialiased glyph edges.
+            return sum(1 for y in range(image.height()) for x in range(image.width())
+                       if ((color := image.pixelColor(x, y)).red()
+                           - max(color.green(), color.blue())) * color.alphaF() > 60)
+
         self.enable_windows_taskbar()
         dialog, window = self._make_dialog(taskbar_enabled=True)
         dialog.show()
@@ -201,13 +208,16 @@ class StorageSettingsTests(SettingsTestCase):
             for page, button in ((dialog.ui.about, dialog.ui.btn_reset_settings),
                                  (dialog.ui.floating, dialog.ui.btn_reset_appearance),
                                  (dialog.ui.watchlist, dialog.ui.btn_clear_watchlist)):
-                dialog.ui.settings_pages.setCurrentWidget(page)
-                self.qt_app.processEvents()
-                image = button.grab().toImage()
-                red_pixels = sum(1 for y in range(image.height()) for x in range(image.width())
-                                 if (color := image.pixelColor(x, y)).red() > 200
-                                 and color.green() < 110 and color.blue() < 110)
-                self.assertGreater(red_pixels, 4, (mode, button.objectName()))
+                with self.subTest(mode=mode, button=button.objectName()):
+                    dialog.ui.settings_pages.setCurrentWidget(page)
+                    self.qt_app.processEvents()
+                    self.assertGreater(red_text_pixels(button), 4)
+                    original = button.styleSheet()
+                    try:
+                        button.setStyleSheet("color: #808080;")
+                        self.assertEqual(red_text_pixels(button), 0)
+                    finally:
+                        button.setStyleSheet(original)
 
     def test_update_prompt_renders_an_accessible_download_link(self):
         dialog, _ = self._make_dialog()
