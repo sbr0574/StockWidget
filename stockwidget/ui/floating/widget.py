@@ -81,6 +81,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._on_change = (lambda: None)
         self._open_settings_cb = None
         self._quit_cb = None
+        self._taskbar_visibility_provider = lambda: False
         self.taskbar_status = "任务栏显示已关闭"
         self._taskbar_geometry = None
         self.widget_visible = True
@@ -327,6 +328,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     def set_quit_callback(self, fn):
         self._quit_cb = fn
+
+    def set_taskbar_visibility_provider(self, fn):
+        self._taskbar_visibility_provider = fn
 
     def set_on_change(self, fn):
         self._on_change = fn or (lambda: None)
@@ -753,7 +757,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     @property
     def taskbar_visible(self):
-        return self.widget_visible and (self.display_mode != "float" or self.taskbar_preview_active)
+        return self.widget_visible and self._taskbar_visibility_provider() and (
+            self.display_mode != "float" or self.taskbar_preview_active)
 
     def sync_refresh_timer(self):
         if (self.isVisible() and not self.position_controller.collapsed) or self.taskbar_visible:

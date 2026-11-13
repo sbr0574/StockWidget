@@ -11,8 +11,9 @@ from PySide6.QtWidgets import QApplication
 from shiboken6 import delete
 
 from stockwidget.data.quotes import _new_entry
+from stockwidget.platform.taskbar import TaskbarArea
 from stockwidget.ui.floating.presenter import QuotePresenter
-from stockwidget.ui.floating.taskbar import render_taskbar
+from stockwidget.ui.floating.taskbar import TaskbarController, render_taskbar
 from stockwidget.ui.floating.widget import FloatLabel
 from stockwidget.ui.settings.dialog import SettingsDialog
 from tests.support import PagingTestCase
@@ -361,6 +362,7 @@ class WidgetPositionTests(unittest.TestCase):
             with self.subTest(mode=mode):
                 window = self.window(boundary_check_enabled=True, edge_hide_enabled=True,
                                      taskbar_enabled=True, display_mode=mode)
+                window.set_taskbar_visibility_provider(lambda: True)
                 window.move(self.edge_position(window, "right"))
                 full = window.position_controller.full_geometry()
                 window._defer_fit()
@@ -409,6 +411,7 @@ class WidgetPositionTests(unittest.TestCase):
                                      visible_metrics=["price"], taskbar_sync_metrics=True,
                                      float_paging_enabled=True, float_max_rows=1, float_page_mode="auto",
                                      taskbar_sync_paging=False, taskbar_rows=1, taskbar_page_mode="auto")
+                window.set_taskbar_visibility_provider(lambda: True)
 
                 def accept(price):
                     quote = _new_entry("测试", 10, 10, price, 12, 9, 100, 1000,
@@ -449,6 +452,7 @@ class WidgetPositionTests(unittest.TestCase):
         window = self.window(boundary_check_enabled=True, edge_hide_enabled=True,
                              taskbar_enabled=True, display_mode="both",
                              watchlist={"sh600519": {"checked": True}})
+        window.set_taskbar_visibility_provider(lambda: True)
         window.move(self.edge_position(window, "left"))
         for visible in (True, False):
             with self.subTest(visible=visible), patch("stockwidget.ui.floating.presenter.threading.Thread") as thread:
@@ -456,6 +460,36 @@ class WidgetPositionTests(unittest.TestCase):
                 window.quotes._refresh_thread = None
                 ORIGINAL_REFRESH(window.quotes)
                 self.assertEqual(thread.return_value.start.called, visible)
+
+    def test_collapsed_fallback_pauses_quotes_and_resumes_after_taskbar_recovery(self):
+        for mode in ("taskbar", "both"):
+            with self.subTest(mode=mode):
+                window = self.window(boundary_check_enabled=True, edge_hide_enabled=True,
+                                     taskbar_enabled=True, display_mode=mode,
+                                     watchlist={"sh600519": {"checked": True}})
+                native = Mock()
+                native.present.side_effect = OSError("taskbar unavailable")
+                with patch("stockwidget.ui.floating.taskbar.QApplication.platformName", return_value="windows"), \
+                        patch("stockwidget.ui.floating.taskbar.find_taskbar", return_value=TaskbarArea(1, 1280, 48, 900)), \
+                        patch("stockwidget.ui.floating.taskbar.NativeTaskbarWindow", return_value=native):
+                    controller = TaskbarController(window, Mock(), window)
+                    try:
+                        controller.apply_mode()
+                        for available in (False, True, False, True):
+                            native.present.side_effect = None if available else OSError("taskbar unavailable")
+                            controller.refresh()
+                            if not available:
+                                window.move(self.edge_position(window, "left"))
+                            self.assertTrue(window.position_controller.collapsed)
+                            self.assertEqual(window.taskbar_visible, available)
+                            self.assertEqual(window.timer.isActive(), available)
+                            self.assertTrue(controller.timer.isActive())
+                            with patch("stockwidget.ui.floating.presenter.threading.Thread") as thread:
+                                window.quotes._refresh_thread = None
+                                ORIGINAL_REFRESH(window.quotes)
+                                self.assertEqual(thread.return_value.start.called, available)
+                    finally:
+                        controller.close()
 
     def test_collapsed_blocks_direct_fetch_and_late_data_and_resumes_on_enter(self):
         window = self.window(boundary_check_enabled=True, edge_hide_enabled=True)

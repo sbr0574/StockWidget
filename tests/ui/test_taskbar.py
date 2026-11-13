@@ -178,10 +178,11 @@ class TaskbarTests(QtTestCase):
         self.window._clear_message()
         self.assertEqual(before, render_taskbar(self.window, 66, 144, 220))
 
-    def test_hiding_float_keeps_refresh_only_when_taskbar_enabled(self):
+    def test_hiding_float_keeps_refresh_only_while_taskbar_is_presented(self):
         self.window.show()
         self.window.hide()
         self.assertFalse(self.window.timer.isActive())
+        self.window.set_taskbar_visibility_provider(lambda: True)
         with patch("stockwidget.ui.floating.widget.sys.platform", "win32"):
             self.window.set_display_mode("taskbar")
         self.assertTrue(self.window.timer.isActive())
@@ -189,6 +190,10 @@ class TaskbarTests(QtTestCase):
         self.window.hide()
         self.assertTrue(self.window.timer.isActive())
         self.window.set_display_mode("float")
+        self.assertFalse(self.window.timer.isActive())
+        self.window.set_taskbar_visibility_provider(lambda: False)
+        with patch("stockwidget.ui.floating.widget.sys.platform", "win32"):
+            self.window.set_display_mode("taskbar")
         self.assertFalse(self.window.timer.isActive())
 
     def test_invalid_and_non_windows_modes_fall_back_to_float(self):

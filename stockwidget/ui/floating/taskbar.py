@@ -186,6 +186,7 @@ class TaskbarController(QObject):
         source.drag_moved.connect(self.drag_moved)
         source.drag_finished.connect(self.drag_finished)
         self._refresh_pending = False
+        source.set_taskbar_visibility_provider(lambda: self._active and not self._closed)
 
     @property
     def enabled(self):
@@ -283,6 +284,8 @@ class TaskbarController(QObject):
             self._status(status)
             if self.source.display_mode == "taskbar" or self._dragging:
                 self.source.show()
+        if was_active != self._active:
+            self.source.sync_refresh_timer()
 
     def _click(self, x, y, global_pos=None):
         delta = pager_hit(self._pager_rect, x, y)

@@ -383,6 +383,7 @@ class PagingInteractionTests(PagingTestCase):
 
     def test_synced_paging_uses_float_mode_and_interval_with_own_row_limit(self):
         w = self.win
+        w.set_taskbar_visibility_provider(lambda: True)
         w.show()
         with patch("sys.platform", "win32"):
             w.set_display_mode("both")
@@ -509,6 +510,7 @@ class PagingInteractionTests(PagingTestCase):
         self.assertFalse(render_taskbar(self.win, 44).isNull())
 
     def test_auto_timers_do_not_restart_on_quotes_and_stop_when_hidden(self):
+        self.win.set_taskbar_visibility_provider(lambda: True)
         self.win.set_view_options(float_max_rows=2, float_page_mode="auto", float_page_interval=1,
                                   taskbar_page_mode="auto", taskbar_page_interval=2)
         self.win.show()
