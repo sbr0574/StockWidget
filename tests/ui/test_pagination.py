@@ -383,6 +383,7 @@ class PagingInteractionTests(PagingTestCase):
 
     def test_synced_paging_uses_float_mode_and_interval_with_own_row_limit(self):
         w = self.win
+        w.set_taskbar_visibility_provider(lambda: True)
         w.show()
         with patch("sys.platform", "win32"):
             w.set_display_mode("both")
@@ -419,26 +420,27 @@ class PagingInteractionTests(PagingTestCase):
                 frame = render_taskbar(w, 64)
                 return max(frame.pixelColor(x, y).alpha()
                            for y in range(frame.height()) for x in range(frame.width()))
-            opaque, half, transparent = alpha(100), alpha(50), alpha(0)
+            opaque, half, faint = alpha(100), alpha(50), alpha(10)
             self.assertGreater(opaque, 150)
             self.assertGreater(half, 60)
             self.assertLessEqual(half, 129)
-            self.assertEqual(transparent, 1)
+            self.assertGreater(faint, 15)
+            self.assertLessEqual(faint, 26)
 
-    def test_taskbar_shares_font_and_color_mode_and_preserves_independent_color_and_opacity(self):
+    def test_taskbar_preserves_independent_font_color_and_opacity(self):
         w = self.win
         w.set_unicolor(False)
-        w.set_view_options(taskbar_color="#55bbdd", taskbar_opacity_pct=42)
+        w.set_view_options(taskbar_color="#55bbdd", taskbar_opacity_pct=42, taskbar_font_size=9)
         font, color, opacity, unicolor = w.get_taskbar_appearance()
-        self.assertEqual(font, w.font)
+        self.assertEqual(font.pointSize(), 9)
         self.assertEqual((color.name(), opacity, unicolor), ("#55bbdd", 42, False))
         self.assertEqual(w.taskbar_model.index(0, 1).data(Qt.ForegroundRole), w.up_color)
         w.set_fg_color(QColor("#ffaa11"))
         w.set_font_size(12)
         w.set_window_opacity_percent(65)
-        self.assertEqual(w.get_taskbar_appearance(), (w.font, color, 42, False))
+        self.assertEqual(w.get_taskbar_appearance(), (font, color, 42, False))
         w.set_unicolor(True)
-        self.assertEqual(w.get_taskbar_appearance(), (w.font, color, 42, True))
+        self.assertEqual(w.get_taskbar_appearance(), (font, color, 42, True))
         self.assertEqual(w.taskbar_model.index(0, 1).data(Qt.ForegroundRole), color)
 
     def test_disabling_float_paging_displays_all_rows_stops_timer_and_remembers_preferences(self):
@@ -491,9 +493,10 @@ class PagingInteractionTests(PagingTestCase):
         self.win.set_watchlist({"sh600000": {"checked": True}})
         self.assertEqual((self.win.quotes.float_page, self.win.quotes.taskbar_page), (0, 0))
 
-    def test_independent_metrics_and_color_render_with_shared_font(self):
+    def test_independent_metrics_color_and_font_render(self):
         before = render_taskbar(self.win, 44)
-        self.win.set_view_options(taskbar_metrics=["change", "price", "name", "kline"], taskbar_color="#55bbdd")
+        self.win.set_view_options(taskbar_metrics=["change", "price", "name", "kline"], taskbar_color="#55bbdd",
+                                  taskbar_font_size=9)
         self.win.set_font_size(6)
         self.assertEqual(self.win.taskbar_model._headers, ["涨跌", "现价", "名称", "迷你图"])
         self.assertEqual(self.win.model._headers, ["名称", "现价", "涨幅"])
@@ -501,12 +504,13 @@ class PagingInteractionTests(PagingTestCase):
         self.assertNotEqual(before, render_taskbar(self.win, 44))
         self.win.set_fg_color(QColor("#ffaa11"))
         self.assertEqual(self.win.taskbar_model.index(0, 0).data(Qt.ForegroundRole), QColor("#55bbdd"))
-        self.assertEqual(self.win.get_taskbar_appearance()[0], self.win.font)
+        self.assertEqual(self.win.get_taskbar_appearance()[0].pointSize(), 9)
         self.win.set_visible_metrics([])
         self.assertEqual(self.win.taskbar_model.columnCount(), 4)
         self.assertFalse(render_taskbar(self.win, 44).isNull())
 
     def test_auto_timers_do_not_restart_on_quotes_and_stop_when_hidden(self):
+        self.win.set_taskbar_visibility_provider(lambda: True)
         self.win.set_view_options(float_max_rows=2, float_page_mode="auto", float_page_interval=1,
                                   taskbar_page_mode="auto", taskbar_page_interval=2)
         self.win.show()

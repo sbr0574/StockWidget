@@ -18,9 +18,16 @@ fi
 RPM_VER="${VER//-/~}"
 ARCH="$(uname -m)"
 case "$ARCH" in
-  x86_64|aarch64) ;;
+  x86_64) PACKAGE_ARCH="amd64" ;;
+  aarch64) PACKAGE_ARCH="arm64" ;;
   *) echo "Unsupported RPM architecture: $ARCH" >&2; exit 1 ;;
 esac
+GLIBC_VERSION="$(getconf GNU_LIBC_VERSION)"
+GLIBC_VERSION="${GLIBC_VERSION#glibc }"
+if [[ ! "$GLIBC_VERSION" =~ ^[0-9]+(\.[0-9]+)+$ ]]; then
+  echo "Cannot determine build glibc version" >&2
+  exit 1
+fi
 test -x dist/StockWidget/StockWidget
 
 topdir="$(mktemp -d)"
@@ -44,9 +51,8 @@ URL: https://github.com/sbr0574/StockWidget
 # Python, Qt and their private libraries are bundled under /opt. Do not expose
 # them as system providers or require a system Python/Qt installation.
 AutoReqProv: no
-# The workflow builds on Ubuntu 22.04 (glibc 2.35). Runtime system libraries
-# are expressed as SONAMEs so RPM-based distributions can resolve providers.
-Requires: glibc >= 2.35
+# Match the build baseline for each architecture; keep system library SONAMEs.
+Requires: glibc >= %{build_glibc}
 Requires: libEGL.so.1()(64bit), libGL.so.1()(64bit)
 Requires: libxkbcommon.so.0()(64bit), libxkbcommon-x11.so.0()(64bit)
 Requires: libdbus-1.so.3()(64bit), libfontconfig.so.1()(64bit)
@@ -90,10 +96,10 @@ DESKTOP
 %doc /usr/share/doc/stockwidget/NOTICE
 EOF
 
-rpmbuild -bb --define "_topdir $topdir" --define "app_version $RPM_VER" \
+rpmbuild -bb --define "_topdir $topdir" --define "app_version $RPM_VER" --define "build_glibc $GLIBC_VERSION" \
   --target "$ARCH" "$topdir/SPECS/stockwidget.spec"
 
-package="StockWidget-linux_${VER}_${ARCH}.rpm"
+package="StockWidget-Linux-${PACKAGE_ARCH}.rpm"
 cp "$topdir/RPMS/$ARCH/stockwidget-$RPM_VER-1.$ARCH.rpm" "$package"
 rpm -qpi "$package"
 rpm -qp --requires "$package"

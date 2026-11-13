@@ -12,7 +12,10 @@ from stockwidget.core.quote_presentation import (
     normalize_visible_metrics,
     visible_metrics_from_config,
 )
-from stockwidget.core.view_options import APPEARANCE_OPTION_KEYS, ViewOptions
+from stockwidget.core.view_options import (
+    APPEARANCE_OPTION_KEYS, MAX_FONT_PT, MIN_BG_ALPHA_PCT, MIN_FONT_PT, MIN_OPACITY_PCT,
+    ViewOptions, bounded_int, taskbar_font_point_limit,
+)
 from stockwidget.core.watchlist import normalize_watchlist
 from stockwidget.core.window_rules import normalize_hide_times
 from stockwidget.platform.capabilities import (
@@ -69,6 +72,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     click_through_changed = Signal(bool)
     topmost_changed = Signal()
     display_flags_changed = Signal()  # 显示指标/表头/网格/统一颜色等显示相关设置变化
+    taskbar_geometry_changed = Signal()
     hide_options_changed = Signal()
     position_options_changed = Signal()
 
@@ -77,7 +81,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._on_change = (lambda: None)
         self._open_settings_cb = None
         self._quit_cb = None
+        self._taskbar_visibility_provider = lambda: False
         self.taskbar_status = "任务栏显示已关闭"
+        self._taskbar_geometry = None
         self.widget_visible = True
         self.taskbar_preview_active = False
         self._updating_topmost = False
@@ -223,12 +229,12 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.grid_visible = bool(cfg.get("grid_visible", False))
         font_family = cfg.get("font_family", default_font_family())
         font_size = int(cfg.get("font_size", 10))
-        self.font = QFont(font_family, max(5, min(15, font_size)))
+        self.font = QFont(font_family, max(MIN_FONT_PT, min(MAX_FONT_PT, font_size)))
         self.line_extra_px = int(cfg.get("line_extra_px", 1))
         self.fg = QColor(cfg.get("fg", "#FFFFFF"))
         bg = cfg.get("bg", {"r":0,"g":0,"b":0,"a":191})
-        self.bg = QColor(bg["r"],bg["g"],bg["b"],bg["a"])
-        self.opacity_pct = int(cfg.get("opacity_pct", 90))
+        self.bg = QColor(bg["r"], bg["g"], bg["b"], bounded_int(bg["a"], 191, round(MIN_BG_ALPHA_PCT * 2.55), 255))
+        self.opacity_pct = bounded_int(cfg.get("opacity_pct", 90), 90, MIN_OPACITY_PCT, 100)
         self.unicolor = bool(cfg.get("unicolor", True))
         self.up_color = _config_color(cfg.get("up_color"), DEFAULT_UP_COLOR)
         self.down_color = _config_color(cfg.get("down_color"), DEFAULT_DOWN_COLOR)
@@ -322,6 +328,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     def set_quit_callback(self, fn):
         self._quit_cb = fn
+
+    def set_taskbar_visibility_provider(self, fn):
+        self._taskbar_visibility_provider = fn
 
     def set_on_change(self, fn):
         self._on_change = fn or (lambda: None)
@@ -486,7 +495,19 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         options = self.view_options
         color = (QColor("#FFFFFF" if is_dark_theme() else "#000000")
                  if options.taskbar_auto_color else _config_color(options.taskbar_color, self.fg))
-        return self.font, color, options.taskbar_opacity_pct, self.unicolor
+        font = QFont(self.font)
+        font.setPointSize(options.taskbar_font_size)
+        return font, color, options.taskbar_opacity_pct, self.unicolor
+
+    def set_taskbar_geometry(self, height, dpi):
+        if self._taskbar_geometry != (height, dpi):
+            self._taskbar_geometry = (height, dpi)
+            self.taskbar_geometry_changed.emit()
+
+    def taskbar_font_size_limit(self):
+        scale = self.devicePixelRatioF()
+        height, dpi = self._taskbar_geometry or (round(44 * scale), round(96 * scale))
+        return taskbar_font_point_limit(height, dpi, self.view_options.taskbar_rows)
 
     def _sync_taskbar_theme(self, *_args):
         if self.view_options.taskbar_auto_color:
@@ -500,7 +521,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         options = ViewOptions.from_config({**old, **{key: value for key, value in changes.items() if key in old}})
         if options.to_config() == old:
             return
-        if old["taskbar_enabled"] and not options.taskbar_enabled:
+        if old["taskbar_enabled"] and (not options.taskbar_enabled
+                                       or old["taskbar_dual_open"] != options.taskbar_dual_open):
             self.finish_drag(False)
         self.view_options = options
         if not old["taskbar_enabled"] and options.taskbar_enabled:
@@ -508,7 +530,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if not options.taskbar_enabled:
             self.display_mode = "float"
             self.taskbar_preview_active = False
-        elif self.display_mode != "float" or (not old["taskbar_enabled"] and sys.platform == "win32"):
+        elif self.display_mode != "float" or (sys.platform == "win32" and (
+                not old["taskbar_enabled"] or not old["taskbar_dual_open"] and options.taskbar_dual_open)):
             self.display_mode = "both" if options.taskbar_dual_open else "taskbar"
             if not old["taskbar_enabled"] and not self.widget_visible:
                 self.widget_visible = True
@@ -640,14 +663,14 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self.apply_style()
             self._notify_change()
 
-    def set_bg_alpha_percent(self, percent_0_100: int):
-        p = max(0, min(100, int(percent_0_100)))
+    def set_bg_alpha_percent(self, percent: int):
+        p = max(MIN_BG_ALPHA_PCT, min(100, int(percent)))
         self.bg.setAlpha(int(round(p*2.55)))
         self.apply_style()
         self._notify_change()
 
-    def set_window_opacity_percent(self, percent_20_100: int):
-        p = max(20, min(100, int(percent_20_100)))
+    def set_window_opacity_percent(self, percent: int):
+        p = max(MIN_OPACITY_PCT, min(100, int(percent)))
         self.opacity_pct = p
         if opacity_supported():
             # Wayland 平台插件不支持设置窗口透明度,跳过以避免终端告警
@@ -656,7 +679,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._notify_change()
 
     def set_font_size(self, pt: int):
-        pt = max(5, min(15, int(pt)))
+        pt = max(MIN_FONT_PT, min(MAX_FONT_PT, int(pt)))
         self.font.setPointSize(pt)
         self.k_delegate.set_point_size(pt)
         self.apply_style()
@@ -732,9 +755,13 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.taskbar_options_changed.emit()
         self._notify_change()
 
+    @property
+    def taskbar_visible(self):
+        return self.widget_visible and self._taskbar_visibility_provider() and (
+            self.display_mode != "float" or self.taskbar_preview_active)
+
     def sync_refresh_timer(self):
-        if not self.position_controller.collapsed and (
-                self.isVisible() or (self.widget_visible and (self.display_mode != "float" or self.taskbar_preview_active))):
+        if (self.isVisible() and not self.position_controller.collapsed) or self.taskbar_visible:
             if not self.timer.isActive():
                 self.timer.start()
                 self.quotes.refresh()

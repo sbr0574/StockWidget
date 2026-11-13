@@ -58,16 +58,19 @@ class SettingsDialogTests(SettingsTestCase):
             self.assertEqual(restyle.call_count, 1)
             self.assertLess(dialog.palette().color(QPalette.Window).lightness(), 128)
 
-    def test_taskbar_font_and_color_mode_follow_main_while_color_and_opacity_stay_independent(self):
+    def test_taskbar_font_family_follows_main_with_independent_size(self):
         self.enable_windows_taskbar()
-        dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_color="#123456", taskbar_opacity_pct=42)
-        for size in (7, 14):
-            dialog.ui.slider_font_size.setValue(size)
-            window.set_font_family("Arial")
+        dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_color="#123456",
+                                           taskbar_opacity_pct=42, taskbar_auto_color=False)
+        window.set_taskbar_geometry(88, 192)
+        for size, family in ((7, "Arial"), (10, "Courier New")):
+            dialog.ui.taskbar_font_size.setValue(size)
+            dialog.ui.slider_font_size.setValue(10)
+            window.set_font_family(family)
             for unicolor in (False, True):
                 window.set_unicolor(unicolor)
                 font, color, opacity, unified = window.get_taskbar_appearance()
-                self.assertEqual((font.family(), font.pointSize()), (window.font.family(), size))
+                self.assertEqual((font.family(), font.pointSize()), (family, size))
                 self.assertEqual((color.name(), opacity, unified), ("#123456", 42, unicolor))
         window.set_fg_color(QColor("orange"))
         window.set_window_opacity_percent(65)
@@ -405,6 +408,8 @@ class SettingsDialogTests(SettingsTestCase):
         app.app_version = "1.0.0"
         app._has_update = False
         app._latest_version = None
+        app.pending_data_directory = None
+        app.save_error = ""
         app.code_data_state.return_value = ("cached", "")
         app.code_data_error.return_value = ""
 
@@ -478,8 +483,9 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertEqual(dialog.taskbar_settings.rows.maximum(), 4)
         self.assertEqual(dialog.taskbar_settings.rows.minimum(), 1)
         dialog.ui.slider_font_size.setValue(14)
-        self.assertEqual(window.get_taskbar_appearance()[0].pointSize(), 14)
+        self.assertEqual(window.get_taskbar_appearance()[0].pointSize(), 8)
         self.assertEqual(window.font.pointSize(), 14)
+        style.auto_color.setChecked(False)
         self.assertTrue(style.color.isEnabled())
         window.set_view_options(taskbar_color="#aabbcc", taskbar_metrics=["price", "volume"])
         self.assertEqual(style.color.text().strip(), "#AABBCC")
@@ -802,6 +808,7 @@ class SettingsDialogTests(SettingsTestCase):
         ) as info:
             dialog._on_update_check_finished((True, "9.9.9"))
             info.assert_called_once()
+            self.assertIn('<a href="https://github.com/sbr0574/StockWidget/releases">下载更新</a>', info.call_args.args[2])
 
         with patch(
             "stockwidget.ui.settings.dialog.QMessageBox.information"
@@ -822,8 +829,7 @@ class SettingsDialogTests(SettingsTestCase):
         for mode in ("light", "dark"):
             window.set_view_options(color_mode=mode)
             self.qt_app.processEvents()
-            buttons = (dialog.ui.btn_reset_settings,
-                       dialog.ui.btn_open_cache_dir, dialog.ui.btn_clear_cache)
+            buttons = (dialog.ui.btn_check_update, dialog.ui.btn_reset_settings)
             positions = [button.mapTo(dialog.ui.about_content, QPoint()) for button in buttons]
             self.assertEqual(len({position.y() for position in positions}), 1)
             self.assertGreater(positions[0].y(), dialog.ui.gb_about.geometry().bottom())
@@ -835,7 +841,7 @@ class SettingsDialogTests(SettingsTestCase):
                     self.assertGreaterEqual(positions[index].x() - positions[index - 1].x()
                                             - buttons[index - 1].width(), 5)
             scroll = dialog.ui.about_scroll
-            scroll.ensureWidgetVisible(dialog.ui.btn_clear_cache)
+            scroll.ensureWidgetVisible(dialog.ui.btn_reset_settings)
             self.qt_app.processEvents()
             self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
             for button in buttons:
@@ -864,9 +870,9 @@ class SettingsDialogTests(SettingsTestCase):
         dialog, window = self._make_dialog()
         directory = str(window.history.cache.directory.parent)
         with patch(
-            "stockwidget.ui.settings.dialog.QDesktopServices.openUrl"
+            "stockwidget.ui.settings.groups.QDesktopServices.openUrl"
         ) as open_url:
-            dialog._open_data_dir()
+            dialog.ui.btn_open_cache_dir.click()
             open_url.assert_called_once()
             url = open_url.call_args[0][0]
             self.assertTrue(url.isLocalFile())
@@ -881,7 +887,7 @@ class SettingsDialogTests(SettingsTestCase):
                 window.set_view_options(color_mode=mode)
                 self.qt_app.processEvents()
                 with patch.object(window.history, "clear_cache", return_value=False) as clear_cache, \
-                        patch("stockwidget.ui.settings.dialog.QToolTip.showText") as tooltip:
+                        patch("stockwidget.ui.settings.groups.QToolTip.showText") as tooltip:
                     dialog.ui.btn_clear_cache.click()
                 clear_cache.assert_called_once()
                 self.assertIn("未能清理", tooltip.call_args.args[1])

@@ -149,7 +149,7 @@ class QuoteTableTests(QtTestCase):
             self.assertEqual([text for _, text, _ in separators], ["◀", "▶", ""])
         w.set_unicolor(True)
         self.assertEqual(w.model.color_for_role("up"), w.fg)
-        self.assertEqual(w.taskbar_model.color_for_role("down"), w.fg)
+        self.assertEqual(w.taskbar_model.color_for_role("down"), w.get_taskbar_appearance()[1])
         # Reordering the pair into the old candle column must restore this delegate.
         w.set_visible_metrics(["b1s1", "kline"])
         w.set_visible_metrics(["kline", "b1s1"])
@@ -162,7 +162,7 @@ class QuoteTableTests(QtTestCase):
         w.quotes._last_color_roles = [{"买一/卖一": "text"}]
         w.set_visible_metrics(["b1s1"])
         w.set_unicolor(False)
-        w.set_view_options(taskbar_color="#112233")
+        w.set_view_options(taskbar_color="#112233", taskbar_auto_color=False)
         calls = []
 
         class Recorder(QPainter):

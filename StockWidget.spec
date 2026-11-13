@@ -8,7 +8,6 @@
 import sys
 from pathlib import Path
 from runpy import run_path
-from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 metadata = run_path(str(Path(SPECPATH) / 'stockwidget/constants.py'))
 APP_NAME = metadata['APP_NAME']
@@ -58,7 +57,7 @@ if sys.platform == 'win32':
         ],
     )
 
-datas = collect_data_files('tzdata')
+datas = []
 if sys.platform.startswith('linux'):
     datas.append(('resources/icons/StockWidget.png', 'icons'))
 
@@ -68,14 +67,22 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=datas,
-    hiddenimports=collect_submodules('tzdata'),
-    hookspath=[],
+    hiddenimports=['tzdata'],
+    hookspath=[str(Path(SPECPATH) / '.github/pyinstaller-hooks')],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
     noarchive=False,
     optimize=0,
 )
+a.datas = [
+    item for item in a.datas
+    if not (
+        item[0].replace('\\', '/').startswith('PySide6/')
+        and '/translations/' in item[0].replace('\\', '/')
+        and not item[0].endswith('_zh_CN.qm')
+    )
+]
 pyz = PYZ(a.pure)
 
 exe = EXE(

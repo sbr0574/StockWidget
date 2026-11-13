@@ -88,7 +88,7 @@ class SettingsTestCase(QtTestCase):
 
     def setUp(self):
         root = self.enterContext(tempfile.TemporaryDirectory())
-        for module in ("stockwidget.core.config_store", "stockwidget.ui.settings.dialog"):
+        for module in ("stockwidget.core.config_store", "stockwidget.ui.settings.groups"):
             self.enterContext(patch(module + ".config_paths", return_value=os.path.join(root, "StockWidget")))
         self._windows = []
         self.enterContext(patch.object(QuotePresenter, "refresh"))
@@ -140,7 +140,8 @@ class PagingTestCase(QtTestCase):
         self.enterContext(patch("stockwidget.ui.floating.widget.GlobalHotkeyManager"))
         self.enterContext(patch("stockwidget.ui.floating.widget.apply_click_through"))
         self.win = FloatLabel({"taskbar_enabled": True, "taskbar_sync_metrics": False,
-                               "float_paging_enabled": True, "taskbar_sync_paging": False}, {})
+                               "float_paging_enabled": True, "taskbar_sync_paging": False,
+                               "taskbar_rows": 2, "taskbar_auto_color": False}, {})
         self.win._clear_message()
         self.controller = None
         self.populate()

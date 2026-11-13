@@ -10,7 +10,7 @@ import requests
 
 from stockwidget.data.bars import Bar, quote_moving_average, quote_volume_ratio
 from stockwidget.data.bar_cache import BarCache
-from stockwidget.data.quotes import parse_sina_fundamentals, parse_sina_trade_volumes, request_quote_details, _parse_sina_us
+from stockwidget.data.quotes import parse_sina_fundamentals, parse_tencent_trade_volumes, request_quote_details, _parse_sina_us
 from stockwidget.core.quote_presentation import quote_detail_values
 
 
@@ -25,6 +25,13 @@ class QuoteDetailsDataTests(unittest.TestCase):
                              39: "20260930|3000000", **{int(k): v for k, v in fields.items()}}.items():
             parts[index] = value
         return 'var hq_str_' + label + '="' + ','.join(parts) + '";'
+
+    @staticmethod
+    def trade_payload(symbol="sh600000", total="501", outside="200", inside="300", clock="20260930100000"):
+        parts = [""] * 31
+        for index, value in ((2, symbol[2:]), (6, total), (7, outside), (8, inside), (30, clock)):
+            parts[index] = value
+        return 'v_' + symbol + '="' + '~'.join(parts) + '";'
 
     def test_domestic_share_counts_earnings_and_currency_scope(self):
         for market in ("sh", "sz", "bj"):
@@ -42,11 +49,12 @@ class QuoteDetailsDataTests(unittest.TestCase):
         self.assertEqual(parse_sina_fundamentals(self.payload(), {**self.instrument, "type": "基"}), {})
 
     def test_optional_endpoint_failures_do_not_mask_other_details(self):
-        response = Mock(text="var trade_INVOL_OUTVOL=[200,300];")
+        response = Mock(text=self.trade_payload())
         with patch("stockwidget.data.quotes.requests.get", side_effect=[requests.Timeout(), response]):
             fundamental, activity = request_quote_details(self.instrument)
         self.assertEqual(fundamental, {})
-        self.assertEqual(activity, {"outside_volume": 200, "inside_volume": 300})
+        self.assertEqual((activity["outside_volume"], activity["inside_volume"]), (20000, 30000))
+        self.assertEqual(activity["activity_source"], "tencent")
         for cached in ({"annual_profit": 50017000000, "total_shares": 10000}, {}):
             with self.subTest(cached=cached):
                 with patch("stockwidget.data.quotes.requests.get", side_effect=requests.Timeout()) as request:
@@ -56,10 +64,25 @@ class QuoteDetailsDataTests(unittest.TestCase):
                 self.assertEqual(request.call_count, 1)  # Includes negative-cache backoff.
 
     def test_trade_payload_never_executes_javascript_or_converts_absence_to_zero(self):
-        self.assertEqual(parse_sina_trade_volumes("Access denied"), {})
-        self.assertEqual(parse_sina_trade_volumes("var trade_INVOL_OUTVOL=[NaN,0];"), {})
-        self.assertEqual(parse_sina_trade_volumes("var trade_INVOL_OUTVOL=[0,0];"),
-                         {"outside_volume": 0, "inside_volume": 0})
+        for text in ("Access denied", self.trade_payload(outside="NaN"), self.trade_payload(inside="-1"),
+                     self.trade_payload(total="1"), self.trade_payload(clock="20261330100000"),
+                     self.trade_payload(symbol="sh600001"), 'v_sh600000="";'):
+            with self.subTest(text=text):
+                self.assertEqual(parse_tencent_trade_volumes(text, self.instrument), {})
+        result = parse_tencent_trade_volumes(self.trade_payload(total="0", outside="0", inside="0"), self.instrument)
+        self.assertEqual((result["outside_volume"], result["inside_volume"]), (0, 0))
+
+    def test_trade_classifications_keep_their_clock_and_unclassified_remainder(self):
+        for market in ("sh", "sz", "bj"):
+            with self.subTest(market=market):
+                instrument = {**self.instrument, "market": market}
+                result = parse_tencent_trade_volumes(self.trade_payload(symbol=market + "600000"), instrument)
+                self.assertEqual(result["activity_volume"], 50100)
+                self.assertEqual(result["outside_volume"] + result["inside_volume"], 50000)
+                self.assertEqual(result["activity_date"], "2026-09-30")
+                self.assertEqual(result["activity_timestamp"], datetime(2026, 9, 30, 2, tzinfo=timezone.utc).timestamp())
+        for kind in ("指", "基", "期"):
+            self.assertFalse(parse_tencent_trade_volumes(self.trade_payload(), {**self.instrument, "type": kind}))
 
     def test_live_price_recomputes_valuations_and_turnover_with_explicit_missingness(self):
         quote = {"current_price": 12, "prev_close": 10, "opening_price": 11, "high_price": 13,

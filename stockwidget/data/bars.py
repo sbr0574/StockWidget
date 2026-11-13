@@ -87,6 +87,18 @@ def _minute_sessions(instrument):
     return ((0, 1440),)  # Unknown exchange: retain its observed clock.
 
 
+def _quote_minute(current, instrument):
+    minute = current.replace(second=0, microsecond=0)
+    if instrument.get("market") in {"sh", "sz", "bj"} and instrument.get("type") != "期":
+        # Sina's domestic one-minute candles use the interval's end time.
+        clock = current.hour * 60 + current.minute
+        sessions = _minute_sessions(instrument)
+        if clock not in {end for _, end in sessions} and (
+                current != minute or clock in {start for start, _ in sessions}):
+            minute += timedelta(minutes=1)
+    return minute
+
+
 def quote_volume_ratio(bars, quote, instrument):
     """Domestic regular-session volume pace against five completed daily bars.
 
@@ -174,22 +186,27 @@ def merge_quote(bars, instrument, view, quote, previous=None, *, gaps=False):
     opening = _number(quote.get("opening_price"), 0)
     if current is None or not price or not opening:
         return tuple(bars)
-    stamp = current.replace(second=0, microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
-    day = trading_date(Bar(stamp, 0, 0, 0, 0), instrument)
     daily = view == "daily"
+    minute_clock = current.replace(second=0, microsecond=0) if daily else _quote_minute(current, instrument)
+    stamp = minute_clock.strftime("%Y-%m-%d %H:%M:%S")
+    day = trading_date(Bar(stamp, 0, 0, 0, 0), instrument)
     key = day if daily else stamp
     if bars and key < bars[-1].time:
         return tuple(bars)  # Stale/out-of-order quotes cannot roll back history.
     total_volume = max(0, _number(quote.get("deals_vol"), 0))
     total_amount = max(0, _number(quote.get("deals_amt"), 0))
     old = bars[-1] if bars and bars[-1].time == key else None
+    index = instrument.get("type") == "指"
     if daily:
         high = max(price, opening, _number(quote.get("high_price"), price))
         low = min(price, opening, _number(quote.get("low_price"), price) or price)
         if old:
             high, low = max(high, old.high), min(low, old.low)
             total_volume = max(total_volume, old.volume)
-        bar = Bar(key, opening, high, low, price, total_volume, total_amount or None)
+        volume, amount = total_volume, total_amount or None
+        if index:
+            volume, amount = old.volume if old else 0, old.amount if old else None
+        bar = Bar(key, opening, high, low, price, volume, amount)
     else:
         minute = current.hour * 60 + current.minute
         futures = instrument.get("type") == "期" or not instrument.get("market")
@@ -217,19 +234,23 @@ def merge_quote(bars, instrument, view, quote, previous=None, *, gaps=False):
         prefix = [bar for bar in bars if bar.time < key and trading_date(bar, instrument) == day]
         old_volume, old_amount = (old.volume, old.amount or 0) if old else (0, 0)
         previous_clock = quote_clock(previous, instrument) if previous else None
-        same_minute = previous_clock and previous_clock.replace(second=0, microsecond=0) == current.replace(second=0, microsecond=0)
-        volume = (max(old_volume, total_volume - sum(bar.volume for bar in prefix)) if not gaps or key == opening_stamp
+        same_minute = previous_clock and _quote_minute(previous_clock, instrument) == _quote_minute(current, instrument)
+        first_stamp = (_quote_minute(datetime.fromisoformat(opening_stamp), instrument).strftime("%Y-%m-%d %H:%M:%S")
+                       if opening_stamp else None)
+        first_minute = key == first_stamp
+        volume = (max(old_volume, total_volume - sum(bar.volume for bar in prefix)) if not gaps or first_minute
                   else old_volume + (max(0, total_volume - _number(previous.get("deals_vol"), 0)) if same_minute else 0))
         amount = None
         if total_amount:
-            if (not gaps or key == opening_stamp) and all(bar.amount is not None for bar in prefix):
+            if (not gaps or first_minute) and all(bar.amount is not None for bar in prefix):
                 amount = max(old_amount, total_amount - sum(bar.amount for bar in prefix))
             elif same_minute:
                 amount = old_amount + max(0, total_amount - _number(previous.get("deals_amt"), 0))
-        # Index turnover/volume is the components' price, not index points.
-        index = instrument.get("type") == "指"
+        # Index quote totals can cover a wider market than its K-line history.
+        if index:
+            volume, amount = old_volume, old.amount if old else None
         average = total_amount / total_volume if total_volume and total_amount and instrument.get("type") not in {"期", "指"} else None
-        bar_open = opening if key == opening_stamp else old.open if old else price
+        bar_open = opening if first_minute else old.open if old else price
         bar = Bar(key, bar_open, max(old.high if old else bar_open, price),
                   min(old.low if old else bar_open, price), price, volume, amount,
                   None if index else average or (old.average if old else None))
@@ -247,6 +268,8 @@ class HistorySeries:
         self.repair_needed = False
         self.retry_after = 0
         self._quote = None
+        self._history_quote_clock = None
+        self.refresh_seconds = 60 if self.view != "daily" else 300 if instrument.get("type") == "指" else 0
 
     @property
     def reference_price(self):
@@ -281,8 +304,10 @@ class HistorySeries:
             return True
         if now.timestamp() < self.retry_after:
             return False
+        current = quote_clock(self._quote, self.instrument) if self._quote else None
         return (self.loaded_day != history_day(self.instrument, now)
-                or not self.result.bars or self.repair_needed)
+                or not self.result.bars or self.repair_needed
+                or (self.refresh_seconds > 0 and current is not None and current != self._history_quote_clock))
 
     def set_history(self, result, day, now):
         if not result.bars and self.result.bars:
@@ -294,7 +319,7 @@ class HistorySeries:
             merged = {bar.time: bar for bar in (*first, *second)}
             clock = quote_clock(self._quote, self.instrument) if self._quote else None
             if self.view != "daily" and clock:
-                stamp = clock.replace(second=0, microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
+                stamp = _quote_minute(clock, self.instrument).strftime("%Y-%m-%d %H:%M:%S")
                 live = next((bar for bar in reversed(self.result.bars) if bar.time == stamp), None)
                 if live and stamp in merged:
                     bar = merged[stamp]
@@ -304,10 +329,11 @@ class HistorySeries:
         self.result, self.loaded_day = result, day
         self.repair_needed = result.stale or not result.bars
         latest, self._quote = self._quote, None
+        self._history_quote_clock = quote_clock(latest, self.instrument) if latest else None
         if latest:
             self.update_quote(latest)
         # Empty/short/delayed responses cannot trigger a request on every tick.
-        self.retry_after = now.timestamp() + 300 if self.repair_needed else 0
+        self.retry_after = now.timestamp() + (300 if self.repair_needed else self.refresh_seconds)
 
     def update_quote(self, quote):
         if self._quote == quote:
@@ -318,7 +344,7 @@ class HistorySeries:
                 or not _number(quote.get("opening_price"), 0) or (previous_clock and current < previous_clock)):
             return
         if self.view != "daily" and self.loaded_day is not None and not self.repair_needed:
-            self.repair_needed |= minute_gaps(self.result.bars, self.instrument, current.replace(second=0, microsecond=0))
+            self.repair_needed |= minute_gaps(self.result.bars, self.instrument, _quote_minute(current, self.instrument))
         if self.loaded_day is not None:
             self.result = replace(self.result, bars=merge_quote(self.result.bars, self.instrument, self.view,
                                                               quote, self._quote, gaps=self.repair_needed))

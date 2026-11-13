@@ -159,34 +159,35 @@ class HistoryUITests(HistoryTestCase):
         self.assertNotIn("chart_display_mode", cfg)
         self.assertEqual(cfg["chart_ma_periods"], [5, 10, 20, 30])
 
-    def test_live_quotes_update_chart_at_quote_cadence_and_repair_only_missing_minutes(self):
+    def test_live_quotes_update_chart_between_throttled_minute_reconciliations(self):
         _, window = self.make_window(chart_enabled=True)
         history = window.history
         history.open_row("float", 0)
         self.wait_ready(window)
         data = dict(window.quotes._latest_quotes)
         def tick(time, price):
+            history.cache.clock = lambda: datetime.fromisoformat(f"2026-09-30T{time}+08:00")
             data["sh600000"] = {**data["sh600000"], "time": time, "current_price": price}
             window.quotes.accept_result((True, data, None))
             self.app.processEvents()
         for time, price in (("10:00:01", 11), ("10:00:50", 12), ("10:01:10", 10.5)):
             tick(time, price)
             self.assertEqual(history.dialog.chart.bars[-1].close, price)
-        self.assertEqual(history.cache.get.call_count, 1)
+        self.assertEqual(history.cache.get.call_count, 2)
         history.dialog.set_view("five_day")
         history.dialog.close()
         tick("10:01:30", 11.25)
         history.open_row("float", 0)
         self.wait_ready(window)
         self.assertEqual(history.dialog.chart.bars[-1].close, 11.25)
-        self.assertEqual(history.cache.get.call_count, 1)
+        self.assertEqual(history.cache.get.call_count, 2)
         tick("10:03:10", 12.25)  # 10:02 wasn't observed: repair the history.
         self.wait_ready(window)
-        self.assertEqual(history.cache.get.call_count, 2)
+        self.assertEqual(history.cache.get.call_count, 3)
         self.assertTrue(history.cache.get.call_args.kwargs["repair"])
         self.assertEqual(history.dialog.chart.bars[-1].close, 12.25)
         tick("10:03:20", 12.5)  # An incomplete response is throttled.
-        self.assertEqual(history.cache.get.call_count, 2)
+        self.assertEqual(history.cache.get.call_count, 3)
         self.assertEqual(history.dialog.chart.bars[-1].close, 12.5)
 
     def test_daily_quotes_update_current_candle_and_first_load_next_day_fetches_once(self):
@@ -527,7 +528,7 @@ class HistoryUITests(HistoryTestCase):
             history._busy = True
             history.open_row("float", 2)
             self.assertIsNotNone(history._pending)
-            with patch("stockwidget.ui.settings.dialog.QToolTip.showText") as tooltip:
+            with patch("stockwidget.ui.settings.groups.QToolTip.showText") as tooltip:
                 dialog.ui.btn_clear_cache.click()
             self.assertIn("已清理", tooltip.call_args.args[1])
             self.assertFalse(history.dialog.isVisible())

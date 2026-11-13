@@ -8,7 +8,20 @@ on:
 
 jobs:
   build-macos:
-    runs-on: macos-latest
+    name: macOS ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest
+            python_arch: arm64
+            arch: arm64
+          - runner: macos-15-intel
+            python_arch: x64
+            arch: amd64
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "13.0"
 
     steps:
       - name: Checkout
@@ -18,6 +31,7 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: "3.13"
+          architecture: ${{ matrix.python_arch }}
 
       - name: Install Python dependencies
         run: |
@@ -31,36 +45,30 @@ jobs:
         run: |
           pyinstaller --clean --noconfirm StockWidget.spec
 
-      - name: Ad-hoc codesign (Apple Silicon)
+      - name: Verify native build and deployment target
+        run: python .github/scripts/verify-build.py --arch ${{ matrix.arch }} --macos-minimum "$MACOSX_DEPLOYMENT_TARGET"
+
+      - name: Ad-hoc codesign
         run: |
           codesign --force --deep -s - dist/StockWidget.app
 
-      - name: Read application version
-        id: version
-        run: |
-          version="$(python -c 'from stockwidget.constants import APP_VERSION; print(APP_VERSION)')"
-          if [[ -z "$version" ]]; then
-            echo "APP_VERSION is empty" >&2
-            exit 1
-          fi
-          echo "value=$version" >> "$GITHUB_OUTPUT"
-
       - name: Create release zip
         env:
-          RELEASE_VERSION: ${{ steps.version.outputs.value }}
+          PACKAGE_ARCH: ${{ matrix.arch }}
         run: |
-          staging="$RUNNER_TEMP/StockWidget-macOS-$RELEASE_VERSION"
+          staging="$RUNNER_TEMP/StockWidget-macOS-$PACKAGE_ARCH"
           mkdir "$staging"
 
           cp README.md LICENSE NOTICE "$staging/"
           ditto dist/StockWidget.app "$staging/StockWidget.app"
 
-          archive="$GITHUB_WORKSPACE/StockWidget-macOS-$RELEASE_VERSION.zip"
+          archive="$GITHUB_WORKSPACE/StockWidget-macOS-$PACKAGE_ARCH.zip"
           ditto -c -k --norsrc "$staging" "$archive"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          path: StockWidget-macOS-${{ steps.version.outputs.value }}.zip
+          name: StockWidget-macOS-${{ matrix.arch }}.zip
+          path: StockWidget-macOS-${{ matrix.arch }}.zip
           if-no-files-found: error
           archive: false

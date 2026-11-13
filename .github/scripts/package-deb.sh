@@ -11,6 +11,12 @@ else
 fi
 
 ARCH="$(dpkg --print-architecture)"
+GLIBC_VERSION="$(getconf GNU_LIBC_VERSION)"
+GLIBC_VERSION="${GLIBC_VERSION#glibc }"
+if [[ ! "$GLIBC_VERSION" =~ ^[0-9]+(\.[0-9]+)+$ ]]; then
+  echo "Cannot determine build glibc version" >&2
+  exit 1
+fi
 PKG="stockwidget_${VER}_${ARCH}"
 
 rm -rf "$PKG"
@@ -48,11 +54,11 @@ Version: $VER
 Section: utils
 Priority: optional
 Architecture: $ARCH
-Depends: libxcb-cursor0, libxcb-shape0, libxkbcommon0, libegl1, libgl1, libfontconfig1, libdbus-1-3
+Depends: libc6 (>= $GLIBC_VERSION), libxcb1, libxcb-cursor0, libxcb-shape0, libxcb-icccm4, libxcb-image0, libxcb-keysyms1, libxcb-render-util0, libxcb-xinerama0, libxkbcommon0, libxkbcommon-x11-0, libx11-6, libxext6, libxtst6, libegl1, libgl1, libfontconfig1, libdbus-1-3
 Maintainer: sbr0574 <sbr0574@users.noreply.github.com>
 Description: 极简透明盯盘 Widget 浮窗
 EOF
 
 dpkg-deb --build "$PKG"
-mv "$PKG.deb" "StockWidget-linux_${VER}_${ARCH}.deb"
-echo "Built StockWidget-linux_${VER}_${ARCH}.deb"
+mv "$PKG.deb" "StockWidget-Linux-${ARCH}.deb"
+echo "Built StockWidget-Linux-${ARCH}.deb"

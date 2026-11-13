@@ -1,13 +1,18 @@
 """配置保存与分页 / 同步参数迁移。"""
 
 import os
+from pathlib import Path
+import sqlite3
 import tempfile
 import unittest
 from unittest.mock import patch
 
-from stockwidget.constants import APP_NAME
+from stockwidget.constants import APP_NAME, CONFIG_FILE
+from stockwidget.core import config_store as store
 from stockwidget.core.config_store import config_paths, history_cache_dir, load_file, save_file
-from stockwidget.core.view_options import ViewOptions, column_ranges, page_slice, taskbar_font_pixels
+from stockwidget.core.view_options import (
+    ViewOptions, column_ranges, page_slice, taskbar_font_pixels, taskbar_font_point_limit,
+)
 
 
 class ConfigStoreTests(unittest.TestCase):
@@ -50,6 +55,239 @@ class ConfigStoreTests(unittest.TestCase):
         with open(os.path.join(directory, "bad.json"), "w", encoding="utf-8") as file:
             file.write("{not valid json")
         self.assertEqual(load_file("bad.json"), {})
+
+
+class DataDirectoryTests(unittest.TestCase):
+    def setUp(self):
+        self.root = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        self.default, self.program = self.root / "default", self.root / "program"
+        self.target = self.root / "selected"
+        self.enterContext(patch.object(store, "_active_directory", None))
+        self.enterContext(patch.object(store, "default_data_directory", return_value=str(self.default)))
+        self.enterContext(patch.object(store, "program_directory", return_value=self.program))
+        self.enterContext(patch.object(store.sys, "platform", "win32"))
+
+    def test_windows_prefers_appdata_even_when_program_directory_contains_configuration(self):
+        save_file({"portable": True}, CONFIG_FILE, directory=str(self.program))
+        self.assertIsNone(store.activate_data_directory())
+        self.assertEqual(Path(config_paths()), self.default)
+        self.assertFalse((self.program / store._LOCATION_FILE).exists())
+
+    def test_windows_fallback_preserves_readable_configuration_and_survives_restart(self):
+        config = {"watchlist": {"sh600000": {"checked": True}}}
+        save_file(config, CONFIG_FILE, directory=str(self.default))
+        probe, save = store._probe_directory, store.save_file
+
+        def probe_writable(path):
+            if path == self.default:
+                raise PermissionError("read-only APPDATA")
+            probe(path)
+
+        def save_writable(data, name, *, directory=None):
+            if directory == str(self.default):
+                raise PermissionError("read-only APPDATA")
+            save(data, name, directory=directory)
+
+        with patch.object(store, "_probe_directory", side_effect=probe_writable), \
+                patch.object(store, "save_file", side_effect=save_writable):
+            self.assertEqual(store.activate_data_directory(), config)
+        self.assertEqual(Path(config_paths()), self.program)
+        self.assertEqual(load_file(CONFIG_FILE), config)
+        self.assertEqual(load_file(CONFIG_FILE, directory=str(self.default)), config)
+        self.assertTrue((self.program / store._LOCATION_FILE).is_file())
+        store._active_directory = None
+        store.activate_data_directory()
+        self.assertEqual(Path(config_paths()), self.program)
+
+    def test_both_locations_unwritable_and_non_windows_hosts_do_not_abort_startup(self):
+        with patch.object(store, "_probe_directory", side_effect=PermissionError()):
+            store.activate_data_directory()
+        self.assertEqual(Path(config_paths()), self.default)
+        for platform in ("darwin", "linux"):
+            with self.subTest(platform=platform), patch.object(store.sys, "platform", platform), \
+                    patch.object(store, "_probe_directory") as probe:
+                store.activate_data_directory()
+                probe.assert_not_called()
+                self.assertEqual(Path(config_paths()), self.default)
+
+    def test_location_record_write_failure_falls_back_only_on_windows(self):
+        original_save = store.save_file
+
+        def save_writable(data, name, *, directory=None):
+            if directory == str(self.default):
+                raise PermissionError("read-only default directory")
+            original_save(data, name, directory=directory)
+
+        for platform in ("win32", "darwin", "linux"):
+            program = self.root / (platform + "-program")
+            with self.subTest(platform=platform), patch.object(store.sys, "platform", platform), \
+                    patch.object(store, "program_directory", return_value=program), \
+                    patch.object(store, "save_file", side_effect=save_writable):
+                if platform == "win32":
+                    store._save_location(self.target)
+                    record = load_file(store._LOCATION_FILE, directory=str(program))
+                    self.assertEqual(record["directory"], str(self.target))
+                else:
+                    with self.assertRaises(OSError):
+                        store._save_location(self.target)
+                    self.assertFalse(program.exists())
+
+    def test_default_location_records_survive_restart_on_all_platforms(self):
+        configuration = {"watchlist": {"sh600000": {"checked": True}}}
+        save_file(configuration, CONFIG_FILE, directory=str(self.target))
+        for platform in ("win32", "darwin", "linux"):
+            with self.subTest(platform=platform), patch.object(store.sys, "platform", platform), \
+                    patch.object(store, "_active_directory", None):
+                store._save_location(self.target)
+                store.activate_data_directory()
+                self.assertEqual(Path(config_paths()), self.target)
+                self.assertEqual(load_file(CONFIG_FILE), configuration)
+                self.assertFalse(self.program.exists())
+
+    def test_legacy_program_location_records_remain_readable_on_non_windows_hosts(self):
+        configuration = {"watchlist": {"sh600000": {"checked": True}}}
+        for platform in ("darwin", "linux"):
+            for portable in (False, True):
+                selected = self.program if portable else self.target
+                save_file(configuration, CONFIG_FILE, directory=str(selected))
+                save_file({"version": 1, "directory": str(self.target), "portable": portable},
+                          store._LOCATION_FILE, directory=str(self.program))
+                record = self.program / store._LOCATION_FILE
+                original = record.read_bytes()
+                with self.subTest(platform=platform, portable=portable), \
+                        patch.object(store.sys, "platform", platform), \
+                        patch.object(store, "_active_directory", None):
+                    store.activate_data_directory()
+                    self.assertEqual(Path(config_paths()), selected)
+                    self.assertEqual(load_file(CONFIG_FILE), configuration)
+                    self.assertEqual(record.read_bytes(), original)
+                    self.assertFalse(self.default.exists())
+
+    def test_non_windows_location_write_failure_rolls_back_directory_selection(self):
+        original_save = store.save_file
+
+        def save_writable(data, name, *, directory=None):
+            if name == store._LOCATION_FILE and directory == str(self.default):
+                raise PermissionError("read-only default directory")
+            original_save(data, name, directory=directory)
+
+        save_file({"source": True}, CONFIG_FILE, directory=str(self.default))
+        save_file({"destination": True}, CONFIG_FILE, directory=str(self.target))
+        for root, value in ((self.default, "source"), (self.target, "destination")):
+            (root / "data").mkdir()
+            (root / "data" / "stock.json").write_text(value, encoding="utf-8")
+        for platform in ("darwin", "linux"):
+            with self.subTest(platform=platform), patch.object(store.sys, "platform", platform), \
+                    patch.object(store, "save_file", side_effect=save_writable):
+                store.activate_data_directory()
+                with self.assertRaises(OSError):
+                    store.prepare_data_directory(str(self.target), {"replacement": True})
+                self.assertEqual(load_file(CONFIG_FILE, directory=str(self.target)), {"destination": True})
+                self.assertEqual((self.target / "data" / "stock.json").read_text(), "destination")
+                self.assertEqual((self.default / "data" / "stock.json").read_text(), "source")
+                self.assertEqual(Path(config_paths()), self.default)
+                self.assertFalse(self.program.exists())
+
+    def test_failed_first_fallback_save_does_not_hide_the_readable_original_on_restart(self):
+        config = {"watchlist": {"kept": {}}}
+        save_file(config, CONFIG_FILE, directory=str(self.default))
+        probe = store._probe_directory
+
+        def probe_writable(path):
+            if path == self.default:
+                raise PermissionError()
+            probe(path)
+
+        with patch.object(store, "_probe_directory", side_effect=probe_writable), \
+                patch.object(store, "save_file", side_effect=PermissionError()):
+            for _ in range(2):
+                self.assertEqual(store.activate_data_directory(), config)
+                self.assertEqual(Path(config_paths()), self.program)
+                self.assertFalse((self.program / store._LOCATION_FILE).exists())
+
+    def test_invalid_location_records_do_not_change_the_default(self):
+        for value in ("", "relative", "\0", None):
+            with self.subTest(value=value):
+                save_file({"version": 1, "directory": value}, store._LOCATION_FILE, directory=str(self.default))
+                store.activate_data_directory()
+                self.assertEqual(Path(config_paths()), self.default)
+
+    def test_directory_probe_preserves_existing_files_and_cleans_failed_temporaries(self):
+        self.default.mkdir()
+        sentinel = self.default / ".stockwidget-write-test"
+        sentinel.write_bytes(b"user file")
+        store._probe_directory(self.default)
+        with patch.object(store.os, "replace", side_effect=PermissionError()):
+            with self.assertRaises(OSError):
+                store._probe_directory(self.default)
+        self.assertEqual(list(self.default.iterdir()), [sentinel])
+        self.assertEqual(sentinel.read_bytes(), b"user file")
+
+    def test_selection_copies_managed_data_and_wal_snapshot_without_deleting_source(self):
+        store.activate_data_directory()
+        (self.default / "data").mkdir()
+        (self.default / "data" / "stock.json").write_text('{"codes":{}}', encoding="utf-8")
+        (self.default / "unrelated.exe").write_bytes(b"program")
+        (self.default / "cache").mkdir()
+        database = sqlite3.connect(self.default / "cache" / "history.sqlite3")
+        self.addCleanup(database.close)
+        database.execute("PRAGMA journal_mode=WAL")
+        database.execute("CREATE TABLE saved (value TEXT)")
+        database.execute("INSERT INTO saved VALUES ('committed in WAL')")
+        database.commit()
+        config = {"watchlist": {"sh600000": {"cost": 15}}, "taskbar_font_size": 11}
+        icon = self.root / "mine.png"
+        icon.write_bytes(b"image")
+        config["custom_icon_path"] = str(icon)
+        copied = store.prepare_data_directory(str(self.target), config)
+        self.assertEqual(Path(config_paths()), self.default)
+        self.assertTrue((self.default / "cache" / "history.sqlite3").exists())
+        self.assertEqual((self.target / "data" / "stock.json").read_bytes(), (self.default / "data" / "stock.json").read_bytes())
+        self.assertFalse((self.target / "unrelated.exe").exists())
+        self.assertEqual(Path(copied["custom_icon_path"]).read_bytes(), b"image")
+        copy = sqlite3.connect(self.target / "cache" / "history.sqlite3")
+        try:
+            self.assertEqual(copy.execute("SELECT value FROM saved").fetchone(), ("committed in WAL",))
+        finally:
+            copy.close()
+        self.assertFalse((self.target / "cache" / "history.sqlite3-wal").exists())
+        store.activate_data_directory()
+        self.assertEqual(Path(config_paths()), self.target)
+        self.assertEqual(load_file(CONFIG_FILE), copied)
+        self.assertEqual(Path(store.data_cache_dir()), self.target / "data")
+        self.assertEqual(Path(history_cache_dir()), self.target / "cache")
+
+    def test_existing_destination_is_backed_up_before_replacement(self):
+        store.activate_data_directory()
+        save_file({"old": True}, CONFIG_FILE, directory=str(self.target))
+        (self.target / "data").mkdir()
+        (self.target / "data" / "stock.json").write_text("old", encoding="utf-8")
+        store.prepare_data_directory(str(self.target), {"watchlist": {"new": {}}})
+        backup, = self.target.glob("previous-data-*")
+        self.assertEqual(load_file(CONFIG_FILE, directory=str(backup)), {"old": True})
+        self.assertEqual((backup / "data" / "stock.json").read_text(encoding="utf-8"), "old")
+
+    def test_location_write_failure_rolls_back_installed_files(self):
+        store.activate_data_directory()
+        save_file({"old": True}, CONFIG_FILE, directory=str(self.target))
+        for root, value in ((self.default, "source"), (self.target, "destination")):
+            (root / "data").mkdir()
+            (root / "data" / "stock.json").write_text(value, encoding="utf-8")
+        with patch.object(store, "_save_location", side_effect=PermissionError()):
+            with self.assertRaises(OSError):
+                store.prepare_data_directory(str(self.target), {"new": True})
+        self.assertEqual(load_file(CONFIG_FILE, directory=str(self.target)), {"old": True})
+        self.assertEqual((self.target / "data" / "stock.json").read_text(encoding="utf-8"), "destination")
+        self.assertEqual((self.default / "data" / "stock.json").read_text(encoding="utf-8"), "source")
+        self.assertEqual(Path(config_paths()), self.default)
+
+    def test_selection_rejects_unknown_destination_and_recursive_paths(self):
+        store.activate_data_directory()
+        (self.target / "data").mkdir(parents=True)
+        for path in (self.target, self.default / "data" / "nested", self.default.parent):
+            with self.subTest(path=path), self.assertRaises(OSError):
+                store.prepare_data_directory(str(path), {})
+        self.assertEqual(Path(config_paths()), self.default)
 
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -102,9 +340,24 @@ class PageMathTests(unittest.TestCase):
 
     def test_taskbar_font_limit_matches_rows_and_physical_scale(self):
         for height, dpi, rows, expected in ((88, 192, 4, 7), (88, 192, 3, 10),
-                                            (44, 96, 4, 6), (44, 96, 3, 8), (88, 192, 1, 30)):
+                                            (44, 96, 4, 6), (44, 96, 3, 8), (88, 192, 1, 15)):
             with self.subTest(height=height, dpi=dpi, rows=rows):
-                self.assertEqual(taskbar_font_pixels(height, dpi, rows, 100), (height - 4) // rows - 2)
+                self.assertEqual(taskbar_font_point_limit(height, dpi, rows), expected)
+                self.assertLessEqual(taskbar_font_pixels(height, dpi, rows, 100), (height - 4) // rows - 2)
+
+    def test_taskbar_font_range_clamps_saved_preferences_and_rendering(self):
+        for stored, expected in ((0, 5), (5, 5), (8, 8), (15, 15), (30, 15), ("invalid", 8)):
+            with self.subTest(stored=stored):
+                options = ViewOptions.from_config({"taskbar_font_size": stored})
+                self.assertEqual(options.taskbar_font_size, expected)
+                self.assertEqual(ViewOptions.from_config(options.to_config()), options)
+        self.assertEqual(taskbar_font_pixels(88, 192, 1, 0), 13)
+        self.assertEqual(taskbar_font_pixels(88, 192, 1, 30), 40)
+
+    def test_taskbar_size_roundtrip_does_not_reintroduce_independent_font_family(self):
+        options = ViewOptions.from_config({"taskbar_font_family": "Arial", "taskbar_font_size": 12})
+        self.assertEqual(ViewOptions.from_config(options.to_config()).taskbar_font_size, 12)
+        self.assertNotIn("taskbar_font_family", options.to_config())
 
     def test_color_mode_and_tray_preference_defaults_validation_and_roundtrip(self):
         defaults = ViewOptions.from_config({})
@@ -149,7 +402,7 @@ class PageMathTests(unittest.TestCase):
 
     def test_unified_sync_preferences_migrate_legacy_appearance_and_paging(self):
         defaults = ViewOptions.from_config({})
-        self.assertEqual(defaults.taskbar_opacity_pct, 100)
+        self.assertEqual(defaults.taskbar_opacity_pct, 50)
         self.assertTrue(defaults.taskbar_sync_paging)
         legacy = ViewOptions.from_config({"taskbar_sync_font": True, "taskbar_sync_color": False,
                                           "taskbar_page_mode": "auto"})
@@ -164,7 +417,7 @@ class PageMathTests(unittest.TestCase):
         self.assertNotIn("taskbar_sync_appearance", explicit.to_config())
         self.assertEqual(ViewOptions.from_config(explicit.to_config()), explicit)
         self.assertEqual(ViewOptions.from_config({"taskbar_opacity_pct": 150}).taskbar_opacity_pct, 100)
-        self.assertEqual(ViewOptions.from_config({"taskbar_opacity_pct": -10}).taskbar_opacity_pct, 0)
+        self.assertEqual(ViewOptions.from_config({"taskbar_opacity_pct": -10}).taskbar_opacity_pct, 10)
 
     def test_legacy_enabled_modes_and_paging_migrate_without_overriding_explicit_switches(self):
         self.assertFalse(ViewOptions.from_config({}).taskbar_enabled)

@@ -3,12 +3,11 @@
 from contextlib import ExitStack
 from functools import partial
 from html import escape
-import os
 import sys
 import threading
 
-from PySide6.QtCore import Qt, QEvent, QUrl, QSignalBlocker, Signal
-from PySide6.QtGui import QColor, QDesktopServices, QGuiApplication, QIcon, QKeySequence, QWheelEvent
+from PySide6.QtCore import Qt, QEvent, QSignalBlocker, Signal
+from PySide6.QtGui import QColor, QGuiApplication, QIcon, QKeySequence, QWheelEvent
 from PySide6.QtWidgets import (
     QApplication,
     QWidget,
@@ -21,10 +20,8 @@ from PySide6.QtWidgets import (
     QScrollBar,
     QScrollArea,
     QSlider,
-    QToolTip,
 )
 
-from stockwidget.core.config_store import config_paths
 from stockwidget.constants import APP_VERSION
 from stockwidget.core.window_rules import MAX_HIDE_TIMES
 from stockwidget.data.update_check import get_update_info, github_available, project_links
@@ -51,6 +48,7 @@ from stockwidget.ui.controls.style import (
 from stockwidget.ui.floating.widget import FloatLabel
 from stockwidget.ui.generated.ui_settings import Ui_SettingDialog
 from stockwidget.ui.settings.groups import (
+    DataDirectorySettings,
     FloatRowSettings,
     FloatSplitSettings,
     TaskbarSettings,
@@ -232,8 +230,6 @@ class SettingsDialog(QDialog):
         self.win.view_options_changed.connect(self._sync_common_options)
 
         self.ui.btn_check_update.clicked.connect(self._check_update_manually)
-        self.ui.btn_open_cache_dir.clicked.connect(self._open_data_dir)
-        self.ui.btn_clear_cache.clicked.connect(self._clear_cache)
         self.ui.btn_clear_watchlist.clicked.connect(self.watchlist_editor.clear_watchlist)
         self.ui.btn_reset_appearance.clicked.connect(self._reset_appearance)
         self.ui.btn_reset_settings.clicked.connect(self._reset_settings)
@@ -311,6 +307,9 @@ class SettingsDialog(QDialog):
             binding = kind(group)
             binding.bind(self.win)
             self._view_bindings.append(binding)
+        self.data_directory_settings = DataDirectorySettings(self.ui.data_directory_settings)
+        self.data_directory_settings.bind(self.win, self.app)
+
     def _sync_view_settings(self):
         for binding in self._view_bindings:
             binding.sync()
@@ -500,9 +499,6 @@ class SettingsDialog(QDialog):
             cur_choice = "default"
         if cur_choice not in self.icon_buttons:
             cur_choice = "default"
-            if self.app is not None:
-                self.app.set_app_icon(cur_choice)
-                self.app.save_now()
         self._set_checked_icon(cur_choice)
         self._active_icon_choice = cur_choice
 
@@ -889,11 +885,12 @@ class SettingsDialog(QDialog):
             self.app.app_version if self.app is not None else APP_VERSION
         )
         if has_update and latest_version:
+            download_url = escape(project_links(self._use_gitee_links)["releases"], quote=True)
             QMessageBox.information(
                 self,
                 "检查更新",
-                f"发现新版本 v{latest_version}（当前 v{current_version}）。\n"
-                "请前往 Releases 页面下载更新。",
+                f"发现新版本 v{escape(str(latest_version))}（当前 v{escape(str(current_version))}）。<br>"
+                f'<a href="{download_url}">下载更新</a>',
             )
         elif latest_version:
             QMessageBox.information(
@@ -903,26 +900,6 @@ class SettingsDialog(QDialog):
             QMessageBox.warning(
                 self, "检查更新", "检查更新失败。\n" + (error or "未获取到版本信息，请稍后重试。")
             )
-
-    def _open_data_dir(self):
-        path = config_paths()
-        try:
-            os.makedirs(path, exist_ok=True)
-            opened = QDesktopServices.openUrl(QUrl.fromLocalFile(path))
-        except OSError:
-            opened = False
-        if not opened:
-            self._cache_tooltip(self.ui.btn_open_cache_dir, "无法打开程序数据目录，请检查目录权限。")
-
-    @staticmethod
-    def _cache_tooltip(button, message):
-        QToolTip.showText(button.mapToGlobal(button.rect().center()), message, button)
-
-    def _clear_cache(self):
-        cleared = self.win.history.clear_cache()
-        message = "已清理图表缓存。" if cleared else "部分图表缓存未能清理，请稍后重试。"
-        button = self.ui.btn_clear_cache
-        self._cache_tooltip(button, message)
 
     def showEvent(self, event):
         super().showEvent(event)

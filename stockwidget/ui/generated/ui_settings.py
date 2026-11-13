@@ -18,10 +18,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComboBox,
     QDialog, QFontComboBox, QFrame, QGridLayout,
     QGroupBox, QHBoxLayout, QHeaderView, QLabel,
-    QListView, QListWidget, QListWidgetItem, QPushButton,
-    QScrollArea, QSizePolicy, QSlider, QSpacerItem,
-    QSpinBox, QStackedWidget, QTableWidgetItem, QTimeEdit,
-    QVBoxLayout, QWidget)
+    QLineEdit, QListView, QListWidget, QListWidgetItem,
+    QPushButton, QScrollArea, QSizePolicy, QSlider,
+    QSpacerItem, QSpinBox, QStackedWidget, QTableWidgetItem,
+    QTimeEdit, QVBoxLayout, QWidget)
 
 from stockwidget.ui.controls.metrics import MetricPoolWidget
 from stockwidget.ui.controls.mini_chart_preview import MiniChartOption
@@ -1256,6 +1256,106 @@ class Ui_SettingDialog(object):
 
         self.generalContentLayout.addWidget(self.gb_scheduled_hide)
 
+        self.data_directory_settings = QGroupBox(self.general_content)
+        self.data_directory_settings.setObjectName(u"data_directory_settings")
+        self.data_directory_settings.setFlat(False)
+        self.data_directory_settings_outer = QVBoxLayout(self.data_directory_settings)
+        self.data_directory_settings_outer.setSpacing(10)
+        self.data_directory_settings_outer.setObjectName(u"data_directory_settings_outer")
+        self.data_directory_settings_outer.setContentsMargins(10, 15, 10, 10)
+        self.data_directory_settings_body = QWidget(self.data_directory_settings)
+        self.data_directory_settings_body.setObjectName(u"data_directory_settings_body")
+        self.data_directory_settings_layout = QVBoxLayout(self.data_directory_settings_body)
+        self.data_directory_settings_layout.setSpacing(10)
+        self.data_directory_settings_layout.setObjectName(u"data_directory_settings_layout")
+        self.data_directory_settings_layout.setContentsMargins(0, 0, 0, 0)
+        self.data_directory_choice_row = QWidget(self.data_directory_settings_body)
+        self.data_directory_choice_row.setObjectName(u"data_directory_choice_row")
+        sizePolicy3.setHeightForWidth(self.data_directory_choice_row.sizePolicy().hasHeightForWidth())
+        self.data_directory_choice_row.setSizePolicy(sizePolicy3)
+        self.data_directory_choice_row_layout = QGridLayout(self.data_directory_choice_row)
+        self.data_directory_choice_row_layout.setSpacing(5)
+        self.data_directory_choice_row_layout.setObjectName(u"data_directory_choice_row_layout")
+        self.data_directory_choice_row_layout.setHorizontalSpacing(12)
+        self.data_directory_choice_row_layout.setContentsMargins(0, 0, 0, 0)
+        self.data_directory_choice_title = QLabel(self.data_directory_choice_row)
+        self.data_directory_choice_title.setObjectName(u"data_directory_choice_title")
+        self.data_directory_choice_title.setMinimumSize(QSize(0, 28))
+        self.data_directory_choice_title.setMaximumSize(QSize(16777215, 28))
+        self.data_directory_choice_title.setProperty(u"settingTitle", True)
+
+        self.data_directory_choice_row_layout.addWidget(self.data_directory_choice_title, 0, 0, 1, 1)
+
+        self.data_directory_choice_description = QLabel(self.data_directory_choice_row)
+        self.data_directory_choice_description.setObjectName(u"data_directory_choice_description")
+        self.data_directory_choice_description.setWordWrap(True)
+        self.data_directory_choice_description.setProperty(u"settingDescription", True)
+        self.data_directory_choice_description.setMaximumSize(QSize(310, 16777215))
+        self.data_directory_choice_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
+        self.data_directory_choice_description.setMinimumSize(QSize(310, 0))
+
+        self.data_directory_choice_row_layout.addWidget(self.data_directory_choice_description, 1, 0, 1, 1)
+
+        self.btn_data_directory = QPushButton(self.data_directory_choice_row)
+        self.btn_data_directory.setObjectName(u"btn_data_directory")
+        self.btn_data_directory.setAutoDefault(False)
+        self.btn_data_directory.setFlat(True)
+        self.btn_data_directory.setMinimumSize(QSize(110, 28))
+        self.btn_data_directory.setMaximumSize(QSize(110, 28))
+
+        self.data_directory_choice_row_layout.addWidget(self.btn_data_directory, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+
+        self.data_directory_settings_layout.addWidget(self.data_directory_choice_row)
+
+        self.data_directory = QLineEdit(self.data_directory_settings_body)
+        self.data_directory.setObjectName(u"data_directory")
+        self.data_directory.setReadOnly(True)
+
+        self.data_directory_settings_layout.addWidget(self.data_directory)
+
+        self.data_directory_status = QLabel(self.data_directory_settings_body)
+        self.data_directory_status.setObjectName(u"data_directory_status")
+        self.data_directory_status.setWordWrap(True)
+        self.data_directory_status.setProperty(u"settingDescription", True)
+
+        self.data_directory_settings_layout.addWidget(self.data_directory_status)
+
+        self.dataDirectoryActionsLayout = QHBoxLayout()
+        self.dataDirectoryActionsLayout.setSpacing(10)
+        self.dataDirectoryActionsLayout.setObjectName(u"dataDirectoryActionsLayout")
+        self.dataDirectoryActionsLayout.setContentsMargins(0, 0, 0, 0)
+        self.btn_open_cache_dir = QPushButton(self.data_directory_settings_body)
+        self.btn_open_cache_dir.setObjectName(u"btn_open_cache_dir")
+        self.btn_open_cache_dir.setAutoDefault(False)
+        self.btn_open_cache_dir.setFlat(True)
+        self.btn_open_cache_dir.setMinimumSize(QSize(110, 28))
+        self.btn_open_cache_dir.setMaximumSize(QSize(110, 28))
+
+        self.dataDirectoryActionsLayout.addWidget(self.btn_open_cache_dir)
+
+        self.btn_clear_cache = QPushButton(self.data_directory_settings_body)
+        self.btn_clear_cache.setObjectName(u"btn_clear_cache")
+        self.btn_clear_cache.setAutoDefault(False)
+        self.btn_clear_cache.setFlat(True)
+        self.btn_clear_cache.setMinimumSize(QSize(110, 28))
+        self.btn_clear_cache.setMaximumSize(QSize(110, 28))
+
+        self.dataDirectoryActionsLayout.addWidget(self.btn_clear_cache)
+
+        self.dataDirectoryActionsSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.dataDirectoryActionsLayout.addItem(self.dataDirectoryActionsSpacer)
+
+
+        self.data_directory_settings_layout.addLayout(self.dataDirectoryActionsLayout)
+
+
+        self.data_directory_settings_outer.addWidget(self.data_directory_settings_body)
+
+
+        self.generalContentLayout.addWidget(self.data_directory_settings)
+
         self.generalBottomSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.generalContentLayout.addItem(self.generalBottomSpacer)
@@ -2177,7 +2277,7 @@ class Ui_SettingDialog(object):
         self.taskbar_rows.setObjectName(u"taskbar_rows")
         self.taskbar_rows.setMinimum(1)
         self.taskbar_rows.setMaximum(4)
-        self.taskbar_rows.setValue(2)
+        self.taskbar_rows.setValue(3)
         self.taskbar_rows.setMinimumSize(QSize(100, 28))
         self.taskbar_rows.setMaximumSize(QSize(100, 28))
 
@@ -2194,26 +2294,52 @@ class Ui_SettingDialog(object):
         self.taskbar_style_settings_layout_label_3.setMinimumSize(QSize(100, 28))
         self.taskbar_style_settings_layout_label_3.setMaximumSize(QSize(100, 28))
 
-        self.taskbarStyleValuesLayout.addWidget(self.taskbar_style_settings_layout_label_3, 0, 0, 1, 1)
+        self.taskbarStyleValuesLayout.addWidget(self.taskbar_style_settings_layout_label_3, 1, 0, 1, 1)
 
         self.taskbar_opacity_pct = QSlider(self.taskbar_style_settings_body)
         self.taskbar_opacity_pct.setObjectName(u"taskbar_opacity_pct")
-        self.taskbar_opacity_pct.setMinimum(0)
+        self.taskbar_opacity_pct.setMinimum(10)
         self.taskbar_opacity_pct.setMaximum(100)
         self.taskbar_opacity_pct.setOrientation(Qt.Orientation.Horizontal)
-        self.taskbar_opacity_pct.setValue(100)
+        self.taskbar_opacity_pct.setValue(50)
         self.taskbar_opacity_pct.setMinimumSize(QSize(0, 28))
         self.taskbar_opacity_pct.setMaximumSize(QSize(16777215, 28))
         self.taskbar_opacity_pct.setTracking(False)
 
-        self.taskbarStyleValuesLayout.addWidget(self.taskbar_opacity_pct, 0, 1, 1, 1)
+        self.taskbarStyleValuesLayout.addWidget(self.taskbar_opacity_pct, 1, 1, 1, 1)
 
         self.taskbar_opacity_pct_label = QLabel(self.taskbar_style_settings_body)
         self.taskbar_opacity_pct_label.setObjectName(u"taskbar_opacity_pct_label")
         self.taskbar_opacity_pct_label.setMinimumSize(QSize(60, 28))
         self.taskbar_opacity_pct_label.setMaximumSize(QSize(60, 28))
 
-        self.taskbarStyleValuesLayout.addWidget(self.taskbar_opacity_pct_label, 0, 2, 1, 1)
+        self.taskbarStyleValuesLayout.addWidget(self.taskbar_opacity_pct_label, 1, 2, 1, 1)
+
+        self.taskbar_size_title = QLabel(self.taskbar_style_settings_body)
+        self.taskbar_size_title.setObjectName(u"taskbar_size_title")
+        self.taskbar_size_title.setMinimumSize(QSize(140, 28))
+        self.taskbar_size_title.setMaximumSize(QSize(140, 28))
+
+        self.taskbarStyleValuesLayout.addWidget(self.taskbar_size_title, 0, 0, 1, 1)
+
+        self.taskbar_font_size = QSlider(self.taskbar_style_settings_body)
+        self.taskbar_font_size.setObjectName(u"taskbar_font_size")
+        self.taskbar_font_size.setMinimum(5)
+        self.taskbar_font_size.setMaximum(15)
+        self.taskbar_font_size.setValue(8)
+        self.taskbar_font_size.setOrientation(Qt.Orientation.Horizontal)
+        self.taskbar_font_size.setMinimumSize(QSize(0, 28))
+        self.taskbar_font_size.setMaximumSize(QSize(16777215, 28))
+        self.taskbar_font_size.setTracking(False)
+
+        self.taskbarStyleValuesLayout.addWidget(self.taskbar_font_size, 0, 1, 1, 1)
+
+        self.taskbar_font_size_label = QLabel(self.taskbar_style_settings_body)
+        self.taskbar_font_size_label.setObjectName(u"taskbar_font_size_label")
+        self.taskbar_font_size_label.setMinimumSize(QSize(60, 28))
+        self.taskbar_font_size_label.setMaximumSize(QSize(60, 28))
+
+        self.taskbarStyleValuesLayout.addWidget(self.taskbar_font_size_label, 0, 2, 1, 1)
 
 
         self.taskbar_style_settings_layout.addLayout(self.taskbarStyleValuesLayout)
@@ -2249,6 +2375,7 @@ class Ui_SettingDialog(object):
         self.taskbar_auto_color.setObjectName(u"taskbar_auto_color")
         self.taskbar_auto_color.setMinimumSize(QSize(44, 26))
         self.taskbar_auto_color.setMaximumSize(QSize(44, 26))
+        self.taskbar_auto_color.setChecked(True)
 
         self.taskbar_auto_color_row_layout.addWidget(self.taskbar_auto_color, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
@@ -2736,15 +2863,6 @@ class Ui_SettingDialog(object):
 
         self.aboutVersionLayout.addWidget(self.label_version_state)
 
-        self.btn_check_update = QPushButton(self.gb_about)
-        self.btn_check_update.setObjectName(u"btn_check_update")
-        self.btn_check_update.setAutoDefault(False)
-        self.btn_check_update.setFlat(True)
-        self.btn_check_update.setMinimumSize(QSize(140, 28))
-        self.btn_check_update.setMaximumSize(QSize(140, 28))
-
-        self.aboutVersionLayout.addWidget(self.btn_check_update)
-
         self.aboutVersionSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.aboutVersionLayout.addItem(self.aboutVersionSpacer)
@@ -2775,32 +2893,24 @@ class Ui_SettingDialog(object):
         self.aboutActionsLayout = QHBoxLayout()
         self.aboutActionsLayout.setSpacing(10)
         self.aboutActionsLayout.setObjectName(u"aboutActionsLayout")
+        self.btn_check_update = QPushButton(self.about_content)
+        self.btn_check_update.setObjectName(u"btn_check_update")
+        self.btn_check_update.setAutoDefault(False)
+        self.btn_check_update.setFlat(True)
+        self.btn_check_update.setMinimumSize(QSize(140, 28))
+        self.btn_check_update.setMaximumSize(QSize(140, 28))
+
+        self.aboutActionsLayout.addWidget(self.btn_check_update)
+
         self.btn_reset_settings = QPushButton(self.about_content)
         self.btn_reset_settings.setObjectName(u"btn_reset_settings")
         self.btn_reset_settings.setAutoDefault(False)
         self.btn_reset_settings.setFlat(True)
-        self.btn_reset_settings.setMinimumSize(QSize(110, 28))
-        self.btn_reset_settings.setMaximumSize(QSize(110, 28))
+        self.btn_reset_settings.setMinimumSize(QSize(140, 28))
+        self.btn_reset_settings.setMaximumSize(QSize(140, 28))
+        self.btn_reset_settings.setProperty(u"destructive", True)
 
         self.aboutActionsLayout.addWidget(self.btn_reset_settings)
-
-        self.btn_open_cache_dir = QPushButton(self.about_content)
-        self.btn_open_cache_dir.setObjectName(u"btn_open_cache_dir")
-        self.btn_open_cache_dir.setAutoDefault(False)
-        self.btn_open_cache_dir.setFlat(True)
-        self.btn_open_cache_dir.setMinimumSize(QSize(110, 28))
-        self.btn_open_cache_dir.setMaximumSize(QSize(110, 28))
-
-        self.aboutActionsLayout.addWidget(self.btn_open_cache_dir)
-
-        self.btn_clear_cache = QPushButton(self.about_content)
-        self.btn_clear_cache.setObjectName(u"btn_clear_cache")
-        self.btn_clear_cache.setAutoDefault(False)
-        self.btn_clear_cache.setFlat(True)
-        self.btn_clear_cache.setMinimumSize(QSize(110, 28))
-        self.btn_clear_cache.setMaximumSize(QSize(110, 28))
-
-        self.aboutActionsLayout.addWidget(self.btn_clear_cache)
 
         self.aboutActionsLayoutSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -3105,6 +3215,16 @@ class Ui_SettingDialog(object):
 #if QT_CONFIG(tooltip)
         self.list_hide_times.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5355\u51fb\u9009\u4e2d\u65f6\u95f4\u540e\u53ef\u5220\u9664\uff0c\u6700\u591a3\u4e2a\u65f6\u95f4\uff0c\u6bcf\u65e5\u91cd\u590d\u3002", None))
 #endif // QT_CONFIG(tooltip)
+        self.data_directory_settings.setTitle(QCoreApplication.translate("SettingDialog", u"\u6570\u636e\u4e0e\u7f13\u5b58\u76ee\u5f55", None))
+        self.data_directory_choice_title.setText(QCoreApplication.translate("SettingDialog", u"\u4fdd\u5b58\u4f4d\u7f6e", None))
+        self.data_directory_choice_description.setText(QCoreApplication.translate("SettingDialog", u"\u914d\u7f6e\u3001\u81ea\u9009\u3001\u80a1\u7968\u4ee3\u7801\u5217\u8868\u548c\u56fe\u8868\u7f13\u5b58\u7edf\u4e00\u4fdd\u5b58\u3002\u4fee\u6539\u76ee\u5f55\u4f1a\u590d\u5236\u73b0\u6709\u6570\u636e\uff0c\u91cd\u542f\u540e\u751f\u6548\u3002", None))
+        self.btn_data_directory.setText(QCoreApplication.translate("SettingDialog", u"\u66f4\u6539\u76ee\u5f55\u2026", None))
+        self.data_directory_status.setText("")
+        self.btn_open_cache_dir.setText(QCoreApplication.translate("SettingDialog", u"\u6253\u5f00\u6570\u636e\u76ee\u5f55", None))
+        self.btn_clear_cache.setText(QCoreApplication.translate("SettingDialog", u"\u6e05\u7406\u7f13\u5b58", None))
+#if QT_CONFIG(tooltip)
+        self.btn_clear_cache.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6e05\u9664\u5206\u65f6\u3001K\u7ebf\u56fe\u4e0e\u8d22\u52a1\u8d44\u6599\u7684\u672c\u5730\u7f13\u5b58\uff0c\u4e0b\u6b21\u67e5\u770b\u65f6\u91cd\u65b0\u52a0\u8f7d\u3002", None))
+#endif // QT_CONFIG(tooltip)
         self.shortcuts_title.setText(QCoreApplication.translate("SettingDialog", u"\u5feb\u6377\u952e", None))
 #if QT_CONFIG(accessibility)
         self.shortcuts_title.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u5feb\u6377\u952e\u8bbe\u7f6e", None))
@@ -3232,7 +3352,9 @@ class Ui_SettingDialog(object):
 #if QT_CONFIG(tooltip)
         self.taskbar_opacity_pct.setToolTip(QCoreApplication.translate("SettingDialog", u"\u4efb\u52a1\u680f\u6587\u5b57\u4e0d\u900f\u660e\u5ea6", None))
 #endif // QT_CONFIG(tooltip)
-        self.taskbar_opacity_pct_label.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
+        self.taskbar_opacity_pct_label.setText(QCoreApplication.translate("SettingDialog", u"50%", None))
+        self.taskbar_size_title.setText(QCoreApplication.translate("SettingDialog", u"\u6587\u5b57\u5927\u5c0f", None))
+        self.taskbar_font_size_label.setText(QCoreApplication.translate("SettingDialog", u"8 pt", None))
         self.taskbar_auto_color_title.setText(QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8\u6587\u5b57\u989c\u8272", None))
         self.taskbar_auto_color_description.setText(QCoreApplication.translate("SettingDialog", u"\u8ddf\u968f\u7cfb\u7edf\u4e3b\u9898\uff1a\u6df1\u8272\u6a21\u5f0f\u4f7f\u7528\u767d\u8272\uff0c\u6d45\u8272\u6a21\u5f0f\u4f7f\u7528\u9ed1\u8272\u3002", None))
         self.taskbar_auto_color.setText(QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8\u6587\u5b57\u989c\u8272", None))
@@ -3318,16 +3440,11 @@ class Ui_SettingDialog(object):
 #endif // QT_CONFIG(accessibility)
         self.gb_about.setTitle(QCoreApplication.translate("SettingDialog", u"StockWidget - \u6781\u7b80\u684c\u9762\u76ef\u76d8", None))
         self.label_version_state.setText(QCoreApplication.translate("SettingDialog", u"\U0001f4e6 \U00005f53\U0000524d\U00007a0b\U00005e8f\U00007248\U0000672c", None))
-        self.btn_check_update.setText(QCoreApplication.translate("SettingDialog", u"\u68c0\u67e5\u7a0b\u5e8f\u66f4\u65b0", None))
         self.label_data_state.setText(QCoreApplication.translate("SettingDialog", u"\u5e02\u573a\u4ee3\u7801\u6570\u636e", None))
         self.label_about_info.setText("")
+        self.btn_check_update.setText(QCoreApplication.translate("SettingDialog", u"\u68c0\u67e5\u7a0b\u5e8f\u66f4\u65b0", None))
         self.btn_reset_settings.setText(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u9ed8\u8ba4\u8bbe\u7f6e", None))
 #if QT_CONFIG(tooltip)
         self.btn_reset_settings.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u5237\u65b0\u95f4\u9694\u3001\u6307\u6807\u3001\u529f\u80fd\u5f00\u5173\u548c\u5feb\u6377\u952e", None))
-#endif // QT_CONFIG(tooltip)
-        self.btn_open_cache_dir.setText(QCoreApplication.translate("SettingDialog", u"\u6253\u5f00\u6570\u636e\u76ee\u5f55", None))
-        self.btn_clear_cache.setText(QCoreApplication.translate("SettingDialog", u"\u6e05\u7406\u7f13\u5b58", None))
-#if QT_CONFIG(tooltip)
-        self.btn_clear_cache.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6e05\u9664\u5206\u65f6\u3001K\u7ebf\u56fe\u4e0e\u8d22\u52a1\u8d44\u6599\u7684\u672c\u5730\u7f13\u5b58\uff0c\u4e0b\u6b21\u67e5\u770b\u65f6\u91cd\u65b0\u52a0\u8f7d\u3002", None))
 #endif // QT_CONFIG(tooltip)
     # retranslateUi

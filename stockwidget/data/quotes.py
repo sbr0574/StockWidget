@@ -3,6 +3,7 @@ import re
 
 import requests
 
+from stockwidget.core.window_rules import quote_timestamp
 from stockwidget.data.network_errors import request_error_message
 
 
@@ -19,8 +20,8 @@ def _optional_number(value):
         return None
 
 
-def _sina_text(url, *, params=None):
-    response = requests.get(url, params=params, headers=_SINA_HEADERS, timeout=3)
+def _quote_text(url, *, params=None, headers=_SINA_HEADERS):
+    response = requests.get(url, params=params, headers=headers, timeout=3)
     try:
         response.raise_for_status()
         response.encoding = "gb18030"
@@ -80,19 +81,35 @@ def parse_sina_fundamentals(text, instrument):
     return {}
 
 
-def parse_sina_trade_volumes(text):
-    """Sina's own page reads this pair as outside volume, then inside volume."""
-    match = re.search(r"\btrade_INVOL_OUTVOL\s*=\s*\[\s*([\d.]+)\s*,\s*([\d.]+)\s*\]", text)
+def parse_tencent_trade_volumes(text, instrument):
+    """Domestic trade classifications, in shares, with their own snapshot clock.
+
+    Unclassified trades and rounding can leave a remainder; do not allocate it.
+    """
+    market, code = instrument.get("market"), str(instrument.get("code", ""))
+    if market not in {"sh", "sz", "bj"} or instrument.get("type") in {"指", "基", "期"}:
+        return {}
+    match = re.search(r'\bv_' + re.escape(market + code) + r'="([^"]*)"', text)
     if not match:
         return {}
-    outside, inside = map(_optional_number, match.groups())
-    if outside is None or inside is None:
+    fields = match[1].split("~")
+    if len(fields) <= 30 or fields[2] != code or not re.fullmatch(r"\d{14}", fields[30]):
         return {}
-    return {"outside_volume": outside, "inside_volume": inside}
+    total, outside, inside = (_optional_number(fields[index]) for index in (6, 7, 8))
+    if any(value is None or value < 0 for value in (total, outside, inside)) or outside + inside > total + 2:
+        return {}
+    clock = fields[30]
+    date, time = f"{clock[:4]}-{clock[4:6]}-{clock[6:8]}", f"{clock[8:10]}:{clock[10:12]}:{clock[12:14]}"
+    stamp = quote_timestamp({"date": date, "time": time})
+    if stamp is None:
+        return {}
+    return {"outside_volume": outside * 100, "inside_volume": inside * 100,
+            "activity_volume": total * 100, "activity_timestamp": stamp,
+            "activity_date": date, "activity_source": "tencent"}
 
 
 def request_quote_details(instrument, fundamentals=None):
-    """Supplement the selected chart, independently of basic quote success.
+    """Sina fundamentals and Tencent activity for the selected chart.
 
     Reuse a recently fetched fundamentals dict; activity is a fresh cumulative
     snapshot. Each optional endpoint fails independently without fake zeros.
@@ -105,16 +122,16 @@ def request_quote_details(instrument, fundamentals=None):
         if market != "us":
             try:
                 label = _sina_code(instrument).removeprefix("rt_") + "_i"
-                fundamentals = parse_sina_fundamentals(_sina_text("https://hq.sinajs.cn/list=" + label), instrument)
+                fundamentals = parse_sina_fundamentals(_quote_text("https://hq.sinajs.cn/list=" + label), instrument)
             except (requests.RequestException, ValueError, IndexError):
                 pass
     activity = {}
     if market in {"sh", "sz", "bj"}:
         try:
-            activity = parse_sina_trade_volumes(_sina_text(
-                "https://vip.stock.finance.sina.com.cn/quotes_service/view/CN_TransListV2.php",
-                params={"num": 11, "symbol": _sina_code(instrument)},
-            ))
+            activity = parse_tencent_trade_volumes(_quote_text(
+                "https://qt.gtimg.cn/q=" + _sina_code(instrument),
+                headers={"Referer": "https://gu.qq.com", "User-Agent": "Mozilla/5.0"},
+            ), instrument)
         except (requests.RequestException, ValueError):
             pass
     return fundamentals, activity

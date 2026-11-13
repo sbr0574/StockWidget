@@ -6,7 +6,11 @@ from stockwidget.core.quote_presentation import DEFAULT_VISIBLE_METRICS, normali
 
 
 PAGE_MODES = (("first", "只显示前 N 行"), ("manual", "手动翻页"), ("auto", "自动翻页"))
-TASKBAR_STYLE_KEYS = ("taskbar_color", "taskbar_auto_color", "taskbar_opacity_pct")
+MIN_BG_ALPHA_PCT = 1
+MIN_OPACITY_PCT = 10
+MIN_FONT_PT = 5
+MAX_FONT_PT = 15
+TASKBAR_STYLE_KEYS = ("taskbar_color", "taskbar_auto_color", "taskbar_opacity_pct", "taskbar_font_size")
 APPEARANCE_OPTION_KEYS = ("color_mode", "chart_sync_opacity", "chart_bg_alpha_pct", "chart_opacity_pct", *TASKBAR_STYLE_KEYS)
 
 
@@ -22,8 +26,14 @@ def taskbar_content_height(height, dpi):
 
 
 def taskbar_font_pixels(height, dpi, rows, point_size):
+    point_size = max(MIN_FONT_PT, min(MAX_FONT_PT, point_size))
     row_height = max(1, (height - 4) // rows)
     return max(7, min(round(point_size * dpi / 72), row_height - 2))
+
+
+def taskbar_font_point_limit(height, dpi, rows):
+    pixels = taskbar_font_pixels(height, dpi, rows, MAX_FONT_PT)
+    return max(MIN_FONT_PT, min(MAX_FONT_PT, int(pixels * 72 / dpi + .5)))
 
 
 @dataclass
@@ -48,7 +58,7 @@ class ViewOptions:
     float_max_rows: int = 3
     float_page_mode: str = "manual"
     float_page_interval: int = 5
-    taskbar_rows: int = 2
+    taskbar_rows: int = 3
     taskbar_page_mode: str = "first"
     taskbar_page_interval: int = 5
     taskbar_sync_paging: bool = True
@@ -59,8 +69,9 @@ class ViewOptions:
     taskbar_sync_metrics: bool = True
     taskbar_enabled: bool = False
     taskbar_color: str = "#FFFFFF"
-    taskbar_auto_color: bool = False
-    taskbar_opacity_pct: int = 100
+    taskbar_auto_color: bool = True
+    taskbar_opacity_pct: int = 50
+    taskbar_font_size: int = 8
     taskbar_dual_open: bool = False
 
     @classmethod
@@ -70,7 +81,9 @@ class ViewOptions:
         for key, low, high in (
             ("float_max_rows", 1, 20), ("float_page_interval", 1, 60),
             ("taskbar_rows", 1, 4), ("taskbar_page_interval", 1, 3600),
-            ("taskbar_opacity_pct", 0, 100), ("chart_bg_alpha_pct", 1, 100), ("chart_opacity_pct", 20, 100),
+            ("taskbar_font_size", MIN_FONT_PT, MAX_FONT_PT),
+            ("taskbar_opacity_pct", MIN_OPACITY_PCT, 100), ("chart_bg_alpha_pct", MIN_BG_ALPHA_PCT, 100),
+            ("chart_opacity_pct", MIN_OPACITY_PCT, 100),
         ):
             setattr(result, key, bounded_int(getattr(result, key), getattr(defaults, key), low, high))
         for key in ("float_page_mode", "taskbar_page_mode"):
@@ -110,9 +123,11 @@ class ViewOptions:
         legacy_appearance = "taskbar_sync_font" in cfg or "taskbar_sync_color" in cfg
         legacy_sync = cfg.get("taskbar_sync_appearance", legacy_appearance
                               and cfg.get("taskbar_sync_font", True) and cfg.get("taskbar_sync_color", True))
+        if "taskbar_auto_color" not in cfg and "taskbar_color" in cfg:
+            result.taskbar_auto_color = False
         if legacy_sync:
             result.taskbar_color = cfg.get("fg", defaults.taskbar_color)
-            result.taskbar_opacity_pct = bounded_int(cfg.get("opacity_pct", 90), 90, 0, 100)
+            result.taskbar_opacity_pct = bounded_int(cfg.get("opacity_pct", 90), 90, MIN_OPACITY_PCT, 100)
             result.taskbar_auto_color = False
         if "taskbar_sync_paging" not in cfg:
             result.taskbar_sync_paging = "taskbar_page_mode" not in cfg

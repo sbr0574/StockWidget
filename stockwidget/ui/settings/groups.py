@@ -1,22 +1,28 @@
 """Designer 原生组框的参数绑定、同步及编辑状态；不创建静态布局。"""
 
 from contextlib import ExitStack
+import os
 import sys
 
-from PySide6.QtCore import QObject, QSignalBlocker
-from PySide6.QtGui import QColor
+from PySide6.QtCore import QObject, QSignalBlocker, QUrl
+from PySide6.QtGui import QColor, QDesktopServices
 from PySide6.QtWidgets import (
     QCheckBox,
     QColorDialog,
     QComboBox,
+    QFileDialog,
     QGroupBox,
     QLabel,
+    QLineEdit,
+    QMessageBox,
     QPushButton,
     QSlider,
     QSpinBox,
+    QToolTip,
     QWidget,
 )
 
+from stockwidget.core.config_store import config_paths
 from stockwidget.core.view_options import PAGE_MODES
 from stockwidget.ui.controls.metrics import MetricPoolWidget
 from stockwidget.ui.controls.style import set_color_button
@@ -138,6 +144,9 @@ class TaskbarMetricSettings(_SyncedGroup):
 class TaskbarStyleSettings(_SettingsGroup):
     def bind(self, source):
         super().bind(source)
+        self._publish(font_size=self._value_control("taskbar_font_size", QSlider),
+                      font_size_label=self._control(QLabel, "taskbar_font_size_label"))
+        self.font_size.sliderMoved.connect(lambda value: self.font_size_label.setText(f"{value} pt"))
         self._publish(color=self._control(QPushButton, "btn_taskbar_color"))
         self.color.clicked.connect(self._pick_color)
         self._publish(auto_color=self._control(QCheckBox, "taskbar_auto_color"))
@@ -154,12 +163,68 @@ class TaskbarStyleSettings(_SettingsGroup):
 
     def _sync(self):
         _font, color, opacity, _unicolor = self.source.get_taskbar_appearance()
+        self.font_size.setMaximum(self.source.taskbar_font_size_limit())
+        self.font_size.setValue(self.source.view_options.taskbar_font_size)
+        self.font_size_label.setText(f"{self.font_size.value()} pt")
         set_color_button(self.color, color, "任务栏文字颜色")
         self.opacity.setValue(opacity)
         self.opacity_label.setText(f"{opacity}%")
         automatic = self.source.view_options.taskbar_auto_color
         self.auto_color.setChecked(automatic)
         self.color.setEnabled(not automatic)
+
+
+class DataDirectorySettings(_SettingsGroup):
+    def bind(self, source, app):
+        super().bind(source)
+        self.app = app
+        self._publish(path=self._control(QLineEdit, "data_directory"),
+                      status=self._control(QLabel, "data_directory_status"),
+                      choose=self._control(QPushButton, "btn_data_directory"),
+                      open=self._control(QPushButton, "btn_open_cache_dir"),
+                      clear=self._control(QPushButton, "btn_clear_cache"))
+        self.choose.setEnabled(app is not None)
+        self.choose.clicked.connect(self._choose_directory)
+        self.open.clicked.connect(self._open_directory)
+        self.clear.clicked.connect(self._clear_cache)
+        if app is not None:
+            app.save_state_changed.connect(self.sync)
+        self.sync()
+
+    def _sync(self):
+        pending = self.app.pending_data_directory if self.app is not None else None
+        self.path.setText(pending or config_paths())
+        error = self.app.save_error if self.app is not None else ""
+        self.status.setText(error or ("目录已复制，重启后使用新位置。重启前的缓存仍保存在原目录。" if pending else ""))
+        self.status.setVisible(bool(self.status.text()))
+
+    def _choose_directory(self):
+        path = QFileDialog.getExistingDirectory(self.group, "选择数据目录", self.path.text())
+        if not path:
+            return
+        try:
+            self.app.change_data_directory(path)
+        except OSError:
+            QMessageBox.warning(self.group, "目录切换失败", "无法复制数据或保存目录选择。请检查权限、可用空间及目录是否正在使用，或选择其他文件夹。原目录保持不变。")
+
+    @staticmethod
+    def _tooltip(button, message):
+        QToolTip.showText(button.mapToGlobal(button.rect().center()), message, button)
+
+    def _open_directory(self):
+        path = config_paths()
+        try:
+            os.makedirs(path, exist_ok=True)
+            opened = QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+        except OSError:
+            opened = False
+        if not opened:
+            self._tooltip(self.open, "无法打开程序数据目录，请检查目录权限。")
+
+    def _clear_cache(self):
+        cleared = self.app.clear_history_cache() if self.app is not None else self.source.history.clear_cache()
+        message = "已清理图表缓存。" if cleared else "部分图表缓存未能清理，请稍后重试。"
+        self._tooltip(self.clear, message)
 
 
 class TaskbarPagingSettings(_SyncedGroup):
@@ -229,6 +294,7 @@ class TaskbarSettings(_SettingsGroup):
         self._publish(metric_pool=self.metrics.metric_pool)
         self.enabled.toggled.connect(lambda value: source.set_view_options(taskbar_enabled=value))
         source.taskbar_status_changed.connect(self.enabled.setToolTip)
+        source.taskbar_geometry_changed.connect(self.sync)
         self._connect_sync()
 
     def _sync(self):

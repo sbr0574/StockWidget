@@ -91,19 +91,31 @@ class MultiscreenDockingTests(PagingTestCase):
         self.assertEqual(self.win.display_mode, "taskbar")
         self.assertFalse(self.win.isVisible())
 
-    def test_native_dual_drag_changes_display_without_moving_the_float(self):
+    def test_dual_mode_keeps_taskbar_on_its_screen_while_float_moves_freely(self):
         controller = self.multiscreen_controller()
         self.win.set_display_mode("both")
         self.win.move(100, 100)
         origin = self.win.pos()
-        self.gesture(controller)
-        self.assertEqual(self.win.pos(), origin)
+        press = QPoint(700, 760)
+        for end in ("release", "cancel"):
+            controller._dispatch_pointer("press", 100, 20, press, 1)
+            controller._dispatch_pointer("move", 150, 20, press + QPoint(200, 0), 2)
+            controller._dispatch_pointer(end, 150, 20, press + QPoint(200, 0), 2)
+            self.assertEqual(self.win.pos(), origin)
+            self.assertEqual(self.win.taskbar_screen, PRIMARY)
+            self.assertEqual(controller._dpi, 96)
+            self.assertFalse(controller._dragging)
+            self.assertFalse(controller.input_timer.isActive())
+        self.over.return_value = 2
+        start = origin + QPoint(5, 5)
+        self.win.begin_drag(start)
+        self.win.move_drag(start + QPoint(2000, 50))
+        self.win.finish_drag()
+        self.assertEqual(self.win.pos(), origin + QPoint(2000, 50))
         self.assertTrue(self.win.isVisible())
         self.assertEqual(self.win.display_mode, "both")
-        self.assertEqual(self.win.taskbar_screen, SECONDARY)
-        self.gesture(controller, "cancel")
-        self.assertEqual(self.win.pos(), origin)
-        self.assertEqual(self.win.taskbar_screen, SECONDARY)
+        self.assertEqual(self.win.taskbar_screen, PRIMARY)
+        self.assertTrue(controller._active)
 
     def test_enable_from_float_selects_its_native_monitor_and_retains_saved_target_on_refresh(self):
         controller = self.multiscreen_controller()

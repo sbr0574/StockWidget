@@ -39,6 +39,8 @@ class DragBehaviorMixin:
     # ----- 拖拽实现 -----
     def begin_drag(self, global_pos, *, surface="float", offset=None):
         """Shared pointer entry point for Qt and native taskbar adapters."""
+        if surface == "taskbar" and self.view_options.taskbar_dual_open:
+            return
         self.position_controller.prepare_drag()
         self._reset_drag()
         self._drag_surface = surface
@@ -72,8 +74,7 @@ class DragBehaviorMixin:
             if win is not None and hasattr(win, "startSystemMove"):
                 win.startSystemMove()
             return
-        if self._drag_surface != "taskbar" or self.display_mode != "both":
-            self.move(global_pos - self._drag_pos)
+        self.move(global_pos - self._drag_pos)
         self._ensure_on_top()
         self.drag_moved.emit()
 

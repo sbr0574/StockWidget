@@ -14,6 +14,7 @@ from shiboken6 import delete
 import requests
 
 from stockwidget.app import App, _load_custom_icon
+from stockwidget.core import config_store
 from stockwidget.constants import CONFIG_FILE, CODE_LIST_FILES
 from stockwidget.data import update_check
 from stockwidget.ui.controls.style import ApplicationTheme, is_dark_theme, theme_palette
@@ -112,7 +113,11 @@ class AppIconTests(QtTestCase):
             _icon_choice="custom",
             _custom_icon_path=r"C:\icons\mine.png",
             _start_on_boot=False,
+            pending_data_directory=None,
+            save_error="",
+            _save_error_reported=False,
         )
+        app.current_config = lambda: App.current_config(app)
         app.win.current_config.return_value = {"watchlist": {}}
 
         with patch("stockwidget.app.save_file") as save:
@@ -229,6 +234,76 @@ class AppCodeRefreshTests(unittest.TestCase):
         settings.refresh_data_state.assert_called_once_with()
         settings.refresh_code_search.assert_called_once_with()
         app._schedule_codes_refresh.assert_called_once_with(1800)
+
+
+class AppSavingTests(unittest.TestCase):
+    def make_owner(self):
+        owner = SimpleNamespace(win=Mock(), _icon_choice="default", _custom_icon_path="",
+                                _start_on_boot=False, pending_data_directory=None,
+                                save_error="", _save_error_reported=False,
+                                tray=Mock(), quit=Mock(), save_state_changed=Mock())
+        owner.win.current_config.return_value = {"watchlist": {"sh600000": {"checked": True}}}
+        owner.current_config = lambda: App.current_config(owner)
+        owner.save_now = lambda: App.save_now(owner)
+        return owner
+
+    def test_save_errors_are_coalesced_and_success_clears_the_unsaved_state(self):
+        owner = self.make_owner()
+        with patch("stockwidget.app.save_file", side_effect=PermissionError()):
+            for _ in range(3):
+                self.assertFalse(owner.save_now())
+        self.assertIn("尚未保存", owner.save_error)
+        owner.tray.showMessage.assert_called_once()
+        owner.save_state_changed.emit.assert_called_once()
+        with patch("stockwidget.app.save_file"):
+            self.assertTrue(owner.save_now())
+        self.assertEqual(owner.save_error, "")
+        self.assertEqual(owner.save_state_changed.emit.call_count, 2)
+        with patch("stockwidget.app.save_file", side_effect=OSError("disk full")):
+            self.assertFalse(owner.save_now())
+        self.assertEqual(owner.tray.showMessage.call_count, 2)
+
+    def test_save_failure_does_not_interrupt_quitting(self):
+        owner = self.make_owner()
+        with patch("stockwidget.app.save_file", side_effect=PermissionError()):
+            App.quit_app(owner)
+        owner.tray.hide.assert_called_once()
+        owner.quit.assert_called_once()
+
+    def test_unexpected_save_error_still_shuts_down_the_qt_event_loop(self):
+        owner = self.make_owner()
+        with patch("stockwidget.app.save_file", side_effect=RuntimeError("unexpected")):
+            with self.assertRaises(RuntimeError):
+                App.quit_app(owner)
+        owner.quit.assert_called_once()
+
+    def test_directory_change_keeps_active_cache_and_saves_subsequent_preferences_to_new_root(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source, target = Path(temporary) / "active", Path(temporary) / "chosen"
+            with patch.object(config_store, "_active_directory", str(source)), \
+                    patch.object(config_store, "default_data_directory", return_value=str(source)), \
+                    patch.object(config_store, "program_directory", return_value=Path(temporary) / "program"):
+                owner = self.make_owner()
+                self.assertTrue(owner.save_now())
+                original = (source / CONFIG_FILE).read_bytes()
+                App.change_data_directory(owner, str(target))
+                self.assertEqual(config_store.config_paths(), str(source))
+                self.assertEqual(owner.pending_data_directory, str(target))
+                owner.win.current_config.return_value["taskbar_font_size"] = 12
+                self.assertTrue(owner.save_now())
+                self.assertEqual(config_store.load_file(CONFIG_FILE, directory=str(target))["taskbar_font_size"], 12)
+                self.assertEqual((source / CONFIG_FILE).read_bytes(), original)
+
+    def test_failed_directory_selection_keeps_pending_location_and_icon(self):
+        owner = self.make_owner()
+        owner.pending_data_directory = "previous selection"
+        owner._custom_icon_path = "custom.png"
+        with patch("stockwidget.app.prepare_data_directory", side_effect=PermissionError()):
+            with self.assertRaises(OSError):
+                App.change_data_directory(owner, "new location")
+        self.assertEqual(owner.pending_data_directory, "previous selection")
+        self.assertEqual(owner._custom_icon_path, "custom.png")
+        owner.save_state_changed.emit.assert_not_called()
 
 
 ROOT = Path(__file__).parents[1]

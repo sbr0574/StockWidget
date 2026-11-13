@@ -197,7 +197,7 @@ class MiniChartTests(SettingsTestCase):
         from stockwidget.core.view_options import taskbar_font_pixels
         for dpi in (96, 144, 192):
             height = round(44 * dpi / 96)
-            font.setPixelSize(taskbar_font_pixels(height, dpi, 2, window.font.pointSizeF()))
+            font.setPixelSize(taskbar_font_pixels(height, dpi, 2, window.view_options.taskbar_font_size))
             image = render_taskbar(window, height, dpi=dpi, max_width=80)
             expected = QFontMetrics(font).horizontalAdvance("0" * 10) * 2 + round(9 * dpi / 96)
             self.assertEqual(image.width(), expected)
