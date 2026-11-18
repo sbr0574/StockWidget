@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-12",
+  "last_update": "2026-11-18",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -10917,15 +10917,6 @@
       "name_en": "",
       "py": "dianguangkeji",
       "abbr": "dgkj"
-    },
-    "sz002731": {
-      "code": "002731",
-      "market": "sz",
-      "type": "深",
-      "name": "萃华退",
-      "name_en": "",
-      "py": "cuihuatui",
-      "abbr": "cht"
     },
     "sz002732": {
       "code": "002732",

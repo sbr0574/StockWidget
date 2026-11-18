@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-12",
+  "last_update": "2026-11-18",
   "codes": {
     "bj920000": {
       "code": "920000",
@@ -1692,6 +1692,15 @@
       "name_en": "",
       "py": "tianyuanzhonggong",
       "abbr": "tyzg"
+    },
+    "bj920309": {
+      "code": "920309",
+      "market": "bj",
+      "type": "京",
+      "name": "菊乐股份",
+      "name_en": "",
+      "py": "julegufen",
+      "abbr": "jlgf"
     },
     "bj920339": {
       "code": "920339",

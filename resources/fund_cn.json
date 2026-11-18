@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-12",
+  "last_update": "2026-11-18",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -7754,10 +7754,10 @@
       "code": "561870",
       "market": "sh",
       "type": "基",
-      "name": "现金流全指ETF华富",
+      "name": "现金流ETF华富",
       "name_en": "",
-      "py": "xianjinliuquanzhietfhuafu",
-      "abbr": "xjlqzetfhf"
+      "py": "xianjinliuetfhuafu",
+      "abbr": "xjletfhf"
     },
     "sh561880": {
       "code": "561880",
@@ -9945,6 +9945,15 @@
       "name_en": "",
       "py": "kechuangxinpianshejietfhuabao",
       "abbr": "kcxpsjetfhb"
+    },
+    "sh589450": {
+      "code": "589450",
+      "market": "sh",
+      "type": "基",
+      "name": "科创人工智能ETF兴业",
+      "name_en": "",
+      "py": "kechuangrengongzhinengetfxingye",
+      "abbr": "kcrgznetfxy"
     },
     "sh589460": {
       "code": "589460",

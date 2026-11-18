@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-12",
+  "last_update": "2026-11-18",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -6989,10 +6989,10 @@
       "code": "601083",
       "market": "sh",
       "type": "沪",
-      "name": "锦江航运",
+      "name": "XD锦江航",
       "name_en": "",
-      "py": "jinjianghangyun",
-      "abbr": "jjhy"
+      "py": "xdjinjianghang",
+      "abbr": "xdjjh"
     },
     "sh601086": {
       "code": "601086",
@@ -7457,10 +7457,10 @@
       "code": "601228",
       "market": "sh",
       "type": "沪",
-      "name": "广州港",
+      "name": "XD广州港",
       "name_en": "",
-      "py": "guangzhougang",
-      "abbr": "gzg"
+      "py": "xdguangzhougang",
+      "abbr": "xdgzg"
     },
     "sh601229": {
       "code": "601229",
@@ -7916,10 +7916,10 @@
       "code": "601611",
       "market": "sh",
       "type": "沪",
-      "name": "中国核建",
+      "name": "XD中国核",
       "name_en": "",
-      "py": "zhongguohejian",
-      "abbr": "zghj"
+      "py": "xdzhongguohe",
+      "abbr": "xdzgh"
     },
     "sh601615": {
       "code": "601615",
@@ -12218,10 +12218,10 @@
       "code": "603586",
       "market": "sh",
       "type": "沪",
-      "name": "金麒麟",
+      "name": "XD金麒麟",
       "name_en": "",
-      "py": "jinqilin",
-      "abbr": "jql"
+      "py": "xdjinqilin",
+      "abbr": "xdjql"
     },
     "sh603587": {
       "code": "603587",
@@ -14279,10 +14279,10 @@
       "code": "603998",
       "market": "sh",
       "type": "沪",
-      "name": "XD方盛制",
+      "name": "方盛制药",
       "name_en": "",
-      "py": "xdfangshengzhi",
-      "abbr": "xdfsz"
+      "py": "fangshengzhiyao",
+      "abbr": "fszy"
     },
     "sh603999": {
       "code": "603999",
@@ -20516,10 +20516,10 @@
       "code": "688777",
       "market": "sh",
       "type": "科",
-      "name": "XD中控技",
+      "name": "中控技术",
       "name_en": "",
-      "py": "xdzhongkongji",
-      "abbr": "xdzkj"
+      "py": "zhongkongjishu",
+      "abbr": "zkjs"
     },
     "sh688778": {
       "code": "688778",
@@ -20813,10 +20813,10 @@
       "code": "688827",
       "market": "sh",
       "type": "科",
-      "name": "C钶锐",
+      "name": "钶锐锶",
       "name_en": "",
-      "py": "ckerui",
-      "abbr": "ckr"
+      "py": "keruisi",
+      "abbr": "krs"
     },
     "sh688828": {
       "code": "688828",

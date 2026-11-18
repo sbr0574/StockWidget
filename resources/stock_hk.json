@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-12",
+  "last_update": "2026-11-18",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -9123,7 +9123,7 @@
       "market": "hk",
       "type": "港",
       "name": "辉煌明天",
-      "name_en": "BRIGHT FUTURE",
+      "name_en": "BRIGHT FUT-NEW",
       "py": "huihuangmingtian",
       "abbr": "hhmt"
     },
@@ -9923,10 +9923,10 @@
       "code": "01489",
       "market": "hk",
       "type": "港",
-      "name": "GC CONSTRUCTION",
-      "name_en": "GC CONSTRUCTION",
-      "py": "",
-      "abbr": ""
+      "name": "智盈科创",
+      "name_en": "WISEWIN INNOTEC",
+      "py": "zhiyingkechuang",
+      "abbr": "zykc"
     },
     "hk01490": {
       "code": "01490",
@@ -10347,7 +10347,7 @@
       "market": "hk",
       "type": "港",
       "name": "星星集团",
-      "name_en": "STAR GROUP-NEW",
+      "name_en": "STAR GROUP ASIA",
       "py": "xingxingjituan",
       "abbr": "xxjt"
     },
@@ -10967,10 +10967,10 @@
       "code": "01657",
       "market": "hk",
       "type": "港",
-      "name": "桦欣控股",
-      "name_en": "SG GROUP HLDGS",
-      "py": "huaxinkonggu",
-      "abbr": "hxkg"
+      "name": "四方伟业控股",
+      "name_en": "SEFON HOLDINGS",
+      "py": "sifangweiyekonggu",
+      "abbr": "sfwykg"
     },
     "hk01658": {
       "code": "01658",
@@ -15072,7 +15072,7 @@
       "market": "hk",
       "type": "港",
       "name": "百宏实业",
-      "name_en": "BILLION IND-NEW",
+      "name_en": "BILLION IND",
       "py": "baihongshiye",
       "abbr": "bhsy"
     },
@@ -15513,7 +15513,7 @@
       "market": "hk",
       "type": "港",
       "name": "酷派集团",
-      "name_en": "COOLPAD GROUP",
+      "name_en": "COOLPAD GP-5K",
       "py": "kupaijituan",
       "abbr": "kpjt"
     },
@@ -18321,27 +18321,9 @@
       "market": "hk",
       "type": "港",
       "name": "紫金矿业",
-      "name_en": "ZIJIN MINING",
+      "name_en": "ZIJIN MIN-500",
       "py": "zijinkuangye",
       "abbr": "zjky"
-    },
-    "hk02942": {
-      "code": "02942",
-      "market": "hk",
-      "type": "港",
-      "name": "星星集团",
-      "name_en": "STAR GROUP-OLD",
-      "py": "xingxingjituan",
-      "abbr": "xxjt"
-    },
-    "hk02943": {
-      "code": "02943",
-      "market": "hk",
-      "type": "港",
-      "name": "百宏实业",
-      "name_en": "BILLION IND-OLD",
-      "py": "baihongshiye",
-      "abbr": "bhsy"
     },
     "hk02947": {
       "code": "02947",
@@ -18361,14 +18343,14 @@
       "py": "tianruiqicheneishi",
       "abbr": "trqcns"
     },
-    "hk02949": {
-      "code": "02949",
+    "hk02951": {
+      "code": "02951",
       "market": "hk",
       "type": "港",
-      "name": "绿色电能集团股权",
-      "name_en": "GREEN POWER RTS",
-      "py": "lvsediannengjituanguquan",
-      "abbr": "lsdnjtgq"
+      "name": "酷派集团(四千)",
+      "name_en": "COOLPAD GP-4K",
+      "py": "kupaijituan(siqian)",
+      "abbr": "kpjt(sq)"
     },
     "hk02952": {
       "code": "02952",
@@ -18379,32 +18361,59 @@
       "py": "zhihuajituan",
       "abbr": "zhjt"
     },
-    "hk02955": {
-      "code": "02955",
+    "hk02953": {
+      "code": "02953",
       "market": "hk",
       "type": "港",
-      "name": "金浔资源(二百)",
-      "name_en": "JINXUN RES-200",
-      "py": "jinxunziyuan(erbai)",
-      "abbr": "jxzy(eb)"
+      "name": "辉煌明天股权",
+      "name_en": "BRIGHT FUT RTS",
+      "py": "huihuangmingtianguquan",
+      "abbr": "hhmtgq"
     },
     "hk02956": {
       "code": "02956",
       "market": "hk",
       "type": "港",
       "name": "辉煌明天",
-      "name_en": "BRIGHT FUTURE",
+      "name_en": "BRIGHT FUT-OLD",
       "py": "huihuangmingtian",
       "abbr": "hhmt"
     },
-    "hk02981": {
-      "code": "02981",
+    "hk02957": {
+      "code": "02957",
       "market": "hk",
       "type": "港",
-      "name": "弘海高新资源股权",
-      "name_en": "GRAND OCEAN RTS",
-      "py": "honghaigaoxinziyuanguquan",
-      "abbr": "hhgxzygq"
+      "name": "洛阳钼业(三千)",
+      "name_en": "CMOC-3000",
+      "py": "luoyangmuye(sanqian)",
+      "abbr": "lymy(sq)"
+    },
+    "hk02958": {
+      "code": "02958",
+      "market": "hk",
+      "type": "港",
+      "name": "紫金矿业(二千)",
+      "name_en": "ZIJIN MIN-2K",
+      "py": "zijinkuangye(erqian)",
+      "abbr": "zjky(eq)"
+    },
+    "hk02959": {
+      "code": "02959",
+      "market": "hk",
+      "type": "港",
+      "name": "权识国际",
+      "name_en": "AOM INT'L",
+      "py": "quanshiguoji",
+      "abbr": "qsgj"
+    },
+    "hk02962": {
+      "code": "02962",
+      "market": "hk",
+      "type": "港",
+      "name": "飞天云动股权",
+      "name_en": "FLOWING CLO RTS",
+      "py": "feitianyundongguquan",
+      "abbr": "ftydgq"
     },
     "hk02982": {
       "code": "02982",
@@ -18423,15 +18432,6 @@
       "name_en": "NEW RAY MED-8K",
       "py": "xinruiyiyao(baqian)",
       "abbr": "xryy(bq)"
-    },
-    "hk02996": {
-      "code": "02996",
-      "market": "hk",
-      "type": "港",
-      "name": "金力集团股权",
-      "name_en": "GOLDENPOWER RTS",
-      "py": "jinlijituanguquan",
-      "abbr": "jljtgq"
     },
     "hk02998": {
       "code": "02998",
@@ -20886,7 +20886,7 @@
       "market": "hk",
       "type": "港",
       "name": "金浔资源",
-      "name_en": "JINXUN RES-500",
+      "name_en": "JINXUN RESOURCE",
       "py": "jinxunziyuan",
       "abbr": "jxzy"
     },
@@ -21759,7 +21759,7 @@
       "market": "hk",
       "type": "港",
       "name": "洛阳钼业",
-      "name_en": "CMOC",
+      "name_en": "CMOC-500",
       "py": "luoyangmuye",
       "abbr": "lymy"
     },
@@ -23347,6 +23347,15 @@
       "py": "xinyukekonggu",
       "abbr": "xykkg"
     },
+    "hk06935": {
+      "code": "06935",
+      "market": "hk",
+      "type": "港",
+      "name": "国星宇航",
+      "name_en": "ADASPACE",
+      "py": "guoxingyuhang",
+      "abbr": "gxyh"
+    },
     "hk06936": {
       "code": "06936",
       "market": "hk",
@@ -24909,7 +24918,7 @@
       "market": "hk",
       "type": "港",
       "name": "神通机器人教育",
-      "name_en": "S ROBOT EDU-NEW",
+      "name_en": "S ROBOT EDU",
       "py": "shentongjiqirenjiaoyu",
       "abbr": "stjqrjy"
     },
@@ -26101,15 +26110,6 @@
       "py": "mimingshenghuobaihuo",
       "abbr": "mmshbh"
     },
-    "hk08475": {
-      "code": "08475",
-      "market": "hk",
-      "type": "港",
-      "name": "易站绿色科技",
-      "name_en": "E-STATION GTECH",
-      "py": "yizhanlvsekeji",
-      "abbr": "yzlskj"
-    },
     "hk08480": {
       "code": "08480",
       "market": "hk",
@@ -26434,15 +26434,6 @@
       "py": "xinhualianhetouzi",
       "abbr": "xhlhtz"
     },
-    "hk08556": {
-      "code": "08556",
-      "market": "hk",
-      "type": "港",
-      "name": "神通机器人教育",
-      "name_en": "S ROBOT EDU-OLD",
-      "py": "shentongjiqirenjiaoyu",
-      "abbr": "stjqrjy"
-    },
     "hk08557": {
       "code": "08557",
       "market": "hk",
@@ -26451,6 +26442,15 @@
       "name_en": "ZJ UNITED INV",
       "py": "zhejianglianhetouzi",
       "abbr": "zjlhtz"
+    },
+    "hk08561": {
+      "code": "08561",
+      "market": "hk",
+      "type": "港",
+      "name": "海纳星空科技",
+      "name_en": "OCEAN STAR TECH",
+      "py": "hainaxingkongkeji",
+      "abbr": "hnxkkj"
     },
     "hk08601": {
       "code": "08601",
