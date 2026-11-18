@@ -6,7 +6,7 @@ StockWidget 是 Windows、macOS 和 Linux 桌面行情工具，只展示行情�
 
 - `main`分支是主分支，主分支不允许直接修改与提交，只允许通过 PR 方式合并，合并方式默认为 Squash merge。
 - `dev` 为开发分支，新任务从 `dev` 创建独立分支，完成开发后合并回 `dev`。
-- `codes-data` 分支专用于发布代码列表，与其他分支互相保持独立。
+- `codes-data` 分支独立维护代码列表、更新器、依赖与测试。服务器只检出该分支即可更新和发布代码列表。
 - 若无说明，分支不允许自动创建、自动合并，若当前开发内容与当前分支用途不符，则询问是否转至其他分支或者创建新分支编辑。
 - 分支名用 `<type>/<description>`，描述用小写英文和连字符，可含数字或 Issue 编号，如 `fix/taskbar-drag`。发布准备用 `release/<version>`，紧急修复用 `hotfix/<description>`。
 - 每次修改完成后自动提交，一次提交只解决一个问题。标题用 `<type>(<scope>): <subject>`，范围可省略。优先用中文写明实际改动，尽量不超过 50 字，末尾不加标点，如 `fix(taskbar): 修复拖离任务栏后无法继续移动的问题`。
@@ -21,14 +21,14 @@ StockWidget 是 Windows、macOS 和 Linux 桌面行情工具，只展示行情�
 ```powershell
 py -3.13 -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt -r scripts/requirements.txt
+python -m pip install -r requirements.txt
 pyside6-rcc resources/resources.qrc -o resources/resources_rc.py
 ```
 
-macOS / Linux 用 `python3.13 -m venv .venv` 和 `source .venv/bin/activate`，再执行相同的安装与资源生成命令。桌面程序使用根目录依赖，代码列表脚本使用 `scripts/requirements.txt`，全量测试需要两份。
+macOS / Linux 用 `python3.13 -m venv .venv` 和 `source .venv/bin/activate`，再执行相同的安装与资源生成命令。
 
 - **运行程序**　在桌面会话中执行 `python main.py`。离屏测试使用单独的终端，以免桌面程序继承 `offscreen`。
-- **生成界面**　编辑 `stockwidget/ui/generated/` 下的 Designer `.ui` 后运行 `python scripts/generate_ui.py`。用 `python scripts/generate_ui.py --check` 检查提交的适配层。该检查逐字比较生成结果，应使用与已提交文件头一致的 Qt UIC 版本。资源清单或其中的文件变化后，重跑上面的 `pyside6-rcc` 命令。两种生成文件均不手改。
+- **生成界面**　编辑 `stockwidget/ui/generated/` 下的 Designer `.ui` 后运行 `python stockwidget/ui/generated/generate_ui.py`。用 `python stockwidget/ui/generated/generate_ui.py --check` 检查提交的适配层。该检查逐字比较生成结果，应使用与已提交文件头一致的 Qt UIC 版本。资源清单或其中的文件变化后，重跑上面的 `pyside6-rcc` 命令。两种生成文件均不手改。
 - **运行测试**　先运行受影响的模块。以下 PowerShell 示例依次给出单模块、全量离屏和差异检查。macOS / Linux 的测试终端用 `export QT_QPA_PLATFORM=offscreen`。
 
 ```powershell
@@ -56,7 +56,8 @@ git diff --check
 - 更改数据目录时保留源文件、备份目标已有数据，重启后切换。macOS 旧目录迁移优先保留新版数据，完整迁移或备份成功后才清理旧目录。写入失败合并提示，设置页与退出仍须可用。
 - **行情与缓存**　基本行情、历史和美股中文名称使用新浪，沪深北个股的内外盘使用腾讯快照。保留统计来源与时间，不用总量补差，不新增数据源配置项。沿用共享错误分类、代理与证书校验，只重试临时错误，错误提示不暴露原始 URL、凭据或异常栈。
 - 图表复用行情刷新，分钟和日 K 请求按标的、类别共享。关闭窗口或清理缓存后，迟到结果不得重开窗口或写回已清数据。历史缓存按事务写入，仅确认数据库损坏才重建，清缓存只影响历史数据。
-- **代码列表**　服务端直接运行 [scripts/update_codes.py](scripts/update_codes.py)，以 `CODES_OUTPUT_DIR` 指定发布目录。采用交易所官方名录，港股名称发布前转简体。分类或补充表失败时保留旧文件、记入状态清单，其余分类继续保存。
+- **代码列表**　在服务器的 `codes-data` 检出目录执行 `python3.13 -m venv .venv` 和 `.venv/bin/python -m pip install -r scripts/requirements.txt`。将本地启动脚本复制到 `scripts/update_codes.sh`，再运行 `sh scripts/update_codes.sh`。启动脚本由 Git 忽略，使用 `flock` 防止同一工作树的更新重叠。发布使用服务器配置的 Git 提交身份和推送权限。
+- `codes-data` 的 `scripts/update_codes.py` 默认读写该分支的 `resources/`，可用 `CODES_OUTPUT_DIR` 指定临时目录。采用交易所官方名录，港股名称发布前转简体。分类或补充表失败时保留旧文件、记入状态清单，其余分类继续保存。更新器测试在数据分支根目录执行 `python -m unittest discover -s tests -v`，手动更新工作流也在发布前执行这些测试。
 - 在 `codes-data` 分支的 `resources/index_cn.json` 和 `resources/index_global.json` 手工维护指数及 `last_update`，更新脚本只读。新增国内指数须核对官方身份及新浪实时报价。海外指数的 `timezone` 随证券元数据传递，缺失时不猜测日 K 交易日期。
 - **拖动与可见性**　浮窗新增可见区域接入 `register_drag_region()`。两种显示面复用拖动与显隐入口，越过拖动阈值后不触发单击，松开后才做边界检查，Esc 恢复拖动前状态。贴边收起时保存完整几何。
 - 双开时任务栏固定，浮窗经过任务栏不停靠。任务栏启用状态与显示位置分开保存，嵌入失败回退浮窗并允许重建。根据两个显示面的实际可见性暂停或恢复行情刷新，各自保留页码。
