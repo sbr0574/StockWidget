@@ -1,125 +1,72 @@
 # StockWidget 开发约定
 
-StockWidget 是 Windows、macOS 和 Linux 桌面行情工具，只展示行情，不接入证券账户或执行交易。版本号统一维护于 `stockwidget/constants.py`。
+StockWidget 是 Windows、macOS 和 Linux 桌面行情工具，只展示行情，不接入证券账户或执行交易。版本号统一维护在 [stockwidget/constants.py](stockwidget/constants.py)。
 
-## 架构与状态所有权
+## 分支、提交与记录
 
-| 层 / 模块 | 职责 |
-| --- | --- |
-| `main.py`、`stockwidget/app.py` | 程序入口、应用装配、托盘、设置、后台任务与配置保存 |
-| `core/config_store.py`、`watchlist.py` | 配置路径与原子保存，自选元数据、校验及搜索 |
-| `core/quote_presentation.py` | 指标目录、显示值 / 颜色角色 / 原始排序值，统一列投影 |
-| `core/view_options.py`、`window_rules.py` | 显示偏好、同步、分页与分栏，屏幕位置与隐藏的纯规则 |
-| `data/quotes.py`、`network_errors.py` | 行情请求、统一数据结构、共享请求策略与安全错误结果 |
-| `data/bars.py`、`bar_cache.py` | 历史适配、交易日、实时补充与派生指标计算，同源 SQLite 缓存 |
-| `data/code_lists.py`、`update_check.py` | 市场代码列表同步与应用更新检查 |
-| `scripts/update_codes.py` | 单文件服务端代码列表更新、官方名录与名称补充分页，不依赖桌面应用运行时 |
-| `platform/capabilities.py` | 平台 / 实际 Qt 会话能力及默认值 |
-| `platform/window.py`、`taskbar.py`、`hotkeys.py`、`autostart.py` | 原生窗口、任务栏嵌入与输入、全局快捷键及自启 |
-| `ui/floating/widget.py` | `FloatLabel` 装配、配置、外观与共用窗口操作入口 |
-| `ui/floating/presenter.py` | `QuotePresenter` 独占请求代数、行情缓存、排序、行身份及两处页码 |
-| `ui/floating/interaction.py` | 共用拖动、完整位置 / 贴边状态与自动隐藏控制器 |
-| `ui/floating/taskbar.py` | 消费共享行情模型的任务栏绘制、原生输入适配与显示模式协调 |
-| `ui/controls/` | 共用行情模型、代理、网格、指标池、设置控件、主题及历史图表绘制 |
-| `ui/settings/dialog.py`、`groups.py` | 设置页装配与信号绑定，参数同步与编辑状态 |
-| `ui/watchlist/`、`ui/history.py`、`ui/menus.py` | 自选编辑、图表请求 / 窗口生命周期与各显示面的菜单 |
-| `ui/generated/` | Designer `.ui` 源文件及自动生成适配层 |
-| `tests/core`、`data`、`ui`、`native` | 纯规则、数据、Qt 行为及真实平台集成；场景共用于 `tests/support.py` |
+- 从 `main` 为新任务创建独立分支，验证后合并回 `main`。`codes-data` 专用于发布代码列表。
+- 分支名用 `<type>/<description>`，描述用小写英文和连字符，可含数字或 Issue 编号，如 `fix/taskbar-drag`。发布准备用 `release/<version>`，紧急修复用 `hotfix/<description>`。
+- 每次修改完成后自动提交，一次提交只解决一个问题。标题用 `<type>(<scope>): <subject>`，范围可省略。优先用中文写明实际改动，尽量不超过 50 字，末尾不加标点，如 `fix(taskbar): 修复拖离任务栏后无法继续移动的问题`。
+- 类型按用途选 `feat`、`fix`、`docs`、`refactor`、`perf`、`test`、`style`、`chore`、`ci` 或 `revert`。复杂改动在正文交代原因与影响，必要时用 `Closes #123` 或 `BREAKING CHANGE: ...` 作尾注。
+- 每次修改 Git 跟踪文件时，更新本地忽略的 `CHANGELOG.md`。按版本归入新增、优化、修复，描述相对上一版的最终结果。本版新增功能的后续调整并回原条目。开发验证放在折叠区，README 不链接此文件。
+- [README.md](README.md) 面向使用者，功能或运行要求变化时再更新。本文件只保留跨任务仍适用的维护约定。
 
-新增纯规则放入 `core`，网络适配放入 `data`，系统调用放入 `platform`，界面和绑定放入 `ui`。同类职责优先归入已有模块；按状态所有权组合较大的类，避免碎片文件、无用转发和全项目重新组织。手写源码与测试尽量不超过每文件1000行，生成文件除外。
+## 环境与常用命令
 
-- 浮窗和任务栏共用 `QuotePresenter`、统一指标定义及行情模型，不各自维护请求、缓存或排序逻辑。
-- `format_quote()` 返回显示值、颜色角色和原始排序值；一个指标对应一个表头。两个显示面共用单元格尺寸、买一 / 卖一、K线和网格描边函数。
-- 设置和菜单通过 `FloatLabel` 的共用入口修改配置；按当前显示面及同步状态选择有效设置，不能覆盖同步期间保留的独立偏好。
-- 设置绑定订阅 `configuration_changed`，与行情绘制变化分开；`TaskbarSettings` 统一同步子组，避免父子重复订阅、重复刷新。
-- 移动内部模块时更新全部调用方、测试补丁目标和 Designer 提升路径；删除无调用的旧接口，不保留空转发层。
-
-## 配置、数据与请求
-
-- 用户配置与自选读取 / 保存兼容必须保留；删除旧配置迁移需有明确迁移方案，不能把仍在使用的兼容字段当作死代码。
-- 程序数据路径由 `config_store.py` 统一管理：默认 Windows 为 `%APPDATA%/StockWidget`，Linux 为 `~/StockWidget`，macOS 为 `~/Library/Application Support/StockWidget`；市场代码在 `data/`，历史缓存为 `cache/history.sqlite3`。Windows 默认目录不可写时才回退程序所在目录，使用独立临时文件检查写入，不能覆盖现有文件。常规页可选择统一数据目录，复制配置、自选、代码及缓存，保留原件、备份目标已有数据，重启后切换；会话内不改变在途请求与缓存路径。保存错误不得阻断设置页或退出，并合并提示未保存状态。保留 macOS 从旧 `~/StockWidget` 的一次性迁移，完整迁移或备份成功后才删除旧目录，失败保留，已有新版数据优先。
-- 服务器代码列表发布到 `codes-data` 分支，业务代码在 `main`；更新脚本支持 `CODES_OUTPUT_DIR`。
-- 服务端更新直接运行单个 `scripts/update_codes.py`。分类或补充名称表失败须进入状态清单并保留旧文件，不妨碍其他分类保存。
-- 服务端依赖用 `python -m pip install -r scripts/requirements.txt` 安装；转换港股中文名的 OpenCC 不属于桌面运行时依赖。
-- 固定指数直接在 `codes-data` 分支的 `index_cn.json`、`index_global.json` 中手工维护代码和 `last_update`；更新脚本只读取状态，不生成或改写指数文件。新增国内指数须核对官方身份及新浪行情的实际支持。
-- 海外指数的交易所时区随 `index_global.json` 的 `timezone` 元数据手工维护，历史适配不重复维护指数目录；时区沿用证券元数据与自选补全路径，缺少时区时不猜测海外指数的日K实时补充日期。
-- 请求错误使用共用分类及安全文本，不展示原始 URL、代理地址、凭据或长异常栈。沿用代理与证书校验，仅重试已分类的临时错误，不伪造空行情成功。
-- 基本行情、历史图表和美股中文名称使用新浪，沪深北个股的内外盘统计使用腾讯快照；补充统计保留来源、日期和时间，不用基本行情的总量补齐分类差额。不提供来源选择或读写数据源配置项；证券范围继续采用交易所官方名录，港股中文名称发布前转换为简体。服务端依赖维护在 `scripts/requirements.txt`。
-- 历史图表复用现有行情更新，没有独立刷新定时器；分钟 / 日K请求按标的和类别共享。关闭或清理缓存时使在途请求失效，迟到结果不得重开窗口或写回已清除缓存。
-- 缓存按事务保存，只有确认损坏的数据库才允许重建；锁定、只读和未知版本不能触发删除。清理历史缓存不影响自选、配置和市场代码表。
-
-## 显示与交互
-
-- 拖动、隐藏、呼出、刷新暂停均走共用入口，Qt 浮窗和原生任务栏复用 `begin_drag / move_drag / finish_drag` 及 `hide_widget / toggle_win`。
-- 屏幕约束在拖动结束后检查；拖动期间的移动、内容适配和边缘检查不能将浮窗拉回或收起，取消拖动恢复完整原状态。
-- 所有可见浮窗区域接入 `register_drag_region()`，包括表头、分页、分隔线、留白、提示和新增组件。未越过系统拖动阈值才执行单击，拖回起点也不能误触单击；双击隐藏，Esc 取消并恢复原状态。
-- 任务栏总开关与当前显示位置分开保存；启动尊重保存位置，嵌入失败回退浮窗，Explorer 重启后允许重建。双开时任务栏固定不可拖动，浮窗经过任意任务栏不触发停靠或改变显示位置。
-- 行情组件完全隐藏时暂停行情刷新和自动翻页；任务栏仍显示时继续刷新。分页各自记录页码，行情更新保留当前页，修改自选或排序后回到第一页。
-- 贴边收起保存完整几何，不能持久化窄条尺寸。拖动、菜单和预览期间避免收起；内容变化立即适配尺寸并保持已贴边位置。
-- Qt 窗口标志变化要保留几何、可见性、模式、计时器和鼠标穿透，不抢焦点；Cocoa / X11 输入透明标志与置顶标志一起维护，避免直接设置原生输入状态后被 Qt 重建覆盖。
-- 图表点击通过排序、分页、分栏后的 canonical key 定位标的，不按名称或显示行号索引自选。任何隐藏路径都要拒收迟到图表请求。
-
-## 平台能力
-
-通过 `capabilities.py` 和实际 Qt 插件判断能力，不仅依赖系统名称或环境变量。
-
-- 任务栏分类、强制置顶和“保持在屏幕内”只在 Windows 显示。对实际平台不存在的专属功能隐藏整行或分类；图标选择与自定义图标在三个平台均保留。
-- Windows 贴边依赖“保持在屏幕内”；macOS / Linux X11 可独立开启贴边收起。Wayland 无可靠手动定位时禁用贴边并说明原因。
-- 会话相关或有解释价值的不可用功能保留禁用提示，例如 Wayland 全局快捷键、鼠标穿透和窗口透明度。macOS 鼠标穿透依赖实际 Cocoa 平台插件。
-- Windows 原生置顶不激活窗口并避让设置 / 弹出菜单；原生任务栏窗口重建后重新应用穿透与外观状态。
-- 平台模拟测试只能验证策略，不能替代真实桌面输入、窗口嵌入或 DPI 证据。
-
-## 设置 UI 与新增条目
-
-设置按“自选列表 / 数据 / 常规 / 快捷键 / 外观 / 任务栏 / 关于”分类：数据负责刷新、指标与图表，常规负责应用与窗口行为、分页及分栏，外观负责字体、颜色、透明度、配色模式和图标，任务栏管理其显示面。新增参数按用户用途归类，复用已有控件和行样式。
-
-- 设置页控件及静态布局维护在 `ui/generated/settings.ui`；图表窗口维护在 `ui/generated/history.ui`，指标池、添加面板和浮窗对应各自 `.ui`。绑定代码只做信号、配置同步、能力与编辑状态，不动态创建另一套布局。
-- 修改 `.ui` 后运行 `python scripts/generate_ui.py`，用 `--check` 验证同步；禁止手改 `ui_*.py`。保留 `objectName`、提升类及枚举与绑定的对应关系。
-- 设置窗口固定为704×496，分类页单栏纵向滚动，无横向滚动；组框使用原生 non-flat 外观。说明列宽统一310逻辑像素，左 / 顶对齐；数值、下拉框、字体与开关右对齐。
-- 新增设置行沿用现有 Designer 行结构、`ToggleSwitch`、`settingDescription`、颜色按钮和主题样式；不要为单条设置新增独立配色或硬编码浅深背景。
-- 组框首行距标题至少25px、距左侧至少10px，组件间隔至少5px；检查实际坐标和页面滚动，不只看布局边距。
-- 同类组件保持尺寸一致；滑块和下拉框不响应滚轮改值，继续滚动设置页。独立配置在同步或暂时禁用期间保留。
-- 主题统一由 `ui/controls/style.py` 管理；所选调色板应用于实际子页与控件，检查文字和背景可读性。只有主题 / 调色板变化才刷新整页样式，普通参数变化只同步值。
-
-## 测试与验证
-
-使用安装依赖的 Python 环境，本地通常为 `.venv/Scripts/python.exe`；CI 与构建使用 Python 3.13。
+源码运行要求 Python 3.12 或更高版本，开发、CI 和打包优先用 3.13。从仓库根目录运行。Windows PowerShell 首次准备环境如下。
 
 ```powershell
-python -m pip install -r requirements.txt
+py -3.13 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt -r scripts/requirements.txt
 pyside6-rcc resources/resources.qrc -o resources/resources_rc.py
-python scripts/generate_ui.py --check
+```
+
+macOS / Linux 用 `python3.13 -m venv .venv` 和 `source .venv/bin/activate`，再执行相同的安装与资源生成命令。桌面程序使用根目录依赖，代码列表脚本使用 `scripts/requirements.txt`，全量测试需要两份。
+
+- **运行程序**　在桌面会话中执行 `python main.py`。离屏测试使用单独的终端，以免桌面程序继承 `offscreen`。
+- **生成界面**　编辑 `stockwidget/ui/generated/` 下的 Designer `.ui` 后运行 `python scripts/generate_ui.py`。用 `python scripts/generate_ui.py --check` 检查提交的适配层。该检查逐字比较生成结果，应使用与已提交文件头一致的 Qt UIC 版本。资源清单或其中的文件变化后，重跑上面的 `pyside6-rcc` 命令。两种生成文件均不手改。
+- **运行测试**　先运行受影响的模块。以下 PowerShell 示例依次给出单模块、全量离屏和差异检查。macOS / Linux 的测试终端用 `export QT_QPA_PLATFORM=offscreen`。
+
+```powershell
+$env:QT_QPA_PLATFORM = "offscreen"
+python -m unittest tests.ui.test_settings_layout -v
 python -m unittest discover -s tests -t .
 git diff --check
 ```
 
-- 优先验证用户行为、配置迁移、错误恢复、请求代数和平台边界；同一规则用参数化场景，初始化 / 清理使用共用夹具。不要重复测试 Qt 固有属性、控件别名、常量字符串或源码样式表内容。
-- 浮窗改动检查左右数据、表头、分页、提示及留白的单击 / 拖动 / 松开 / Esc / 双击 / 恢复；分页与分栏覆盖末页、自动翻页、独占和双开。
-- 绘制和主题检查实际输出、可读性及设备像素比；保留有意义的 UI 行为测试，不靠删除失败用例获得通过。
-- 无头测试使用 `QT_QPA_PLATFORM=offscreen`。Windows 原生验证另设 `STOCKWIDGET_TEST_WINDOWS=1`、`QT_QPA_PLATFORM=windows`；X11 依据 CI 用 Xvfb、`QT_QPA_PLATFORM=xcb`、`STOCKWIDGET_TEST_X11=1`。
-- macOS 原生穿透验证设 `STOCKWIDGET_TEST_MACOS=1`、`QT_QPA_PLATFORM=cocoa`，运行 `tests.native.test_macos_integration`；检查实际 NSWindow 状态，桌面点击效果另需实测。
-- 分别报告离线 / 全量 / 原生 / 高 DPI结果；跳过、基线失败或未验证平台不能描述为通过。真实网络可用性与解析测试分别报告。
+## 按改动找入口
 
-## 文档与版本记录
+程序的纯规则放在 `stockwidget/core/`，网络适配放在 `data/`，平台能力与系统调用放在 `platform/`，界面放在 `ui/`（这四个目录均在 `stockwidget/` 下）。复用已有模块，按状态归属拆分。手写源码与测试以每文件约 1000 行为维护参考，避免只做转发的中间层。
 
-- `README.md` 面向使用者，说明主要功能介绍、下载运行说明等等；不写源码结构、原生 API、接口字段、缓存算法和开发验证细节，不积累单次功能要求、实现过程和每条参数的产品规格，仅在较大功能更新和已有功能描述内容发生变化时小幅修改。
-- 本文件只保留重要且持久的架构、维护及行为约定，不积累单次功能要求、实现过程和每条参数的产品规格。
-- 每次修改更新本地 `CHANGELOG.md`，非 Git 追踪的文件修改不记录；用版本标题分隔，按新增 / 优化 / 修复记录对比前一版本实际最终成果，当前版本新增功能的相关修复和优化不记录在优化和修复中，最多对新增功能描述进行适当修改；该文件保持 Git 忽略，不在 README 中链接。
+| 改动 | 入口与需要一起检查的内容 |
+| --- | --- |
+| 新增行情指标 | 在 [quote_presentation.py](stockwidget/core/quote_presentation.py) 定义指标与表头，`format_quote()` 提供显示值、颜色角色和原始排序值。[指标池](stockwidget/ui/controls/metrics.py) 读取同一目录，浮窗和任务栏共用列投影及绘制。 |
+| 设置、外观与菜单 | 在 [settings.ui](stockwidget/ui/generated/settings.ui) 按现有分类和行样式添加控件，保留 `objectName` 和提升类。默认值与兼容读取归配置所有者，[groups.py](stockwidget/ui/settings/groups.py) 和 [dialog.py](stockwidget/ui/settings/dialog.py) 负责绑定。设置和菜单通过 `FloatLabel` 修改配置，同步期间保留各自独立偏好。 |
+| 浮窗、任务栏与交互 | [widget.py](stockwidget/ui/floating/widget.py) 装配窗口。[presenter.py](stockwidget/ui/floating/presenter.py) 的 `QuotePresenter` 独占行情请求、缓存、排序、证券行身份和两个页码。[interaction.py](stockwidget/ui/floating/interaction.py) 管拖动及贴边，[taskbar.py](stockwidget/ui/floating/taskbar.py) 管嵌入和原生输入。 |
+| 基本行情与图表 | 基本行情适配在 [quotes.py](stockwidget/data/quotes.py)，历史与缓存分别在 [bars.py](stockwidget/data/bars.py)、[bar_cache.py](stockwidget/data/bar_cache.py)。[history.py](stockwidget/ui/history.py) 管图表窗口和在途请求，点击按排序、分页、分栏后的证券键定位。 |
+| 平台功能 | 在 [capabilities.py](stockwidget/platform/capabilities.py) 结合实际 Qt 插件判断能力。原生调用归对应平台模块。设置中隐藏平台专属项，对随会话而不可用的功能保留禁用原因。 |
 
-## 分支与提交
+## 容易引入回归的边界
 
-自动创建新分支，每次修改后自动进行一次提交。
+- **配置与迁移**　[config_store.py](stockwidget/core/config_store.py) 统一管理数据路径与原子保存。保留旧配置、自选和位置记录的读取兼容。仅 Windows 在默认目录不可写时回退程序目录，用独立临时文件探测写入。
+- 更改数据目录时保留源文件、备份目标已有数据，重启后切换。macOS 旧目录迁移优先保留新版数据，完整迁移或备份成功后才清理旧目录。写入失败合并提示，设置页与退出仍须可用。
+- **行情与缓存**　基本行情、历史和美股中文名称使用新浪，沪深北个股的内外盘使用腾讯快照。保留统计来源与时间，不用总量补差，不新增数据源配置项。沿用共享错误分类、代理与证书校验，只重试临时错误，错误提示不暴露原始 URL、凭据或异常栈。
+- 图表复用行情刷新，分钟和日 K 请求按标的、类别共享。关闭窗口或清理缓存后，迟到结果不得重开窗口或写回已清数据。历史缓存按事务写入，仅确认数据库损坏才重建，清缓存只影响历史数据。
+- **代码列表**　服务端直接运行 [scripts/update_codes.py](scripts/update_codes.py)，以 `CODES_OUTPUT_DIR` 指定发布目录。采用交易所官方名录，港股名称发布前转简体。分类或补充表失败时保留旧文件、记入状态清单，其余分类继续保存。
+- 在 `codes-data` 分支的 `resources/index_cn.json` 和 `resources/index_global.json` 手工维护指数及 `last_update`，更新脚本只读。新增国内指数须核对官方身份及新浪实时报价。海外指数的 `timezone` 随证券元数据传递，缺失时不猜测日 K 交易日期。
+- **拖动与可见性**　浮窗新增可见区域接入 `register_drag_region()`。两种显示面复用拖动与显隐入口，越过拖动阈值后不触发单击，松开后才做边界检查，Esc 恢复拖动前状态。贴边收起时保存完整几何。
+- 双开时任务栏固定，浮窗经过任务栏不停靠。任务栏启用状态与显示位置分开保存，嵌入失败回退浮窗并允许重建。根据两个显示面的实际可见性暂停或恢复行情刷新，各自保留页码。
+- **窗口与设置**　更改窗口标志时保留几何、可见性、计时器与鼠标穿透，避免抢焦点。设置布局沿用 Designer 的单栏滚动、说明列宽和控件对齐，检查实际可达性与横向溢出。主题集中在 [style.py](stockwidget/ui/controls/style.py)，普通配置变化通过 `configuration_changed` 同步值，避免重复刷新整页。
 
-### 分支命名
+## 验证与报告
 
-- `main` 保存稳定业务代码，`codes-data` 仅发布代码列表。业务开发从 `main` 创建独立分支，验证后合并回 `main`。
-- 分支使用 `<type>/<description>`。类型沿用下方提交类型；发布准备使用 `release/<version>`，线上紧急修复使用 `hotfix/<description>`。
-- 描述使用简短的小写英文，单词以 `-` 连接，可包含数字或 Issue 编号；一个分支聚焦一个任务。例如 `feat/history-chart`、`fix/taskbar-drag`、`docs/git-conventions`、`release/2.1.0`。
+- 优先覆盖行为与错误恢复，复用 [tests/support.py](tests/support.py) 的夹具。存储改动检查[迁移、回滚及重启](tests/core/test_storage_migration.py)。窗口改动检查[拖动、取消及双开](tests/ui/test_position.py)，设置页检查[布局与控件可达性](tests/ui/test_settings_layout.py)。绘制改动检查实际输出、可读性及缩放效果。
+- 离屏测试验证 Qt 行为。改动原生操作时，在对应平台另跑下表用例。Linux 系统依赖与 Xvfb 步骤见 [test.yml](.github/workflows/test.yml)。打包改动按平台工作流检查产物架构，macOS 还要核验包内原生库的最低系统版本。
+- 报告实际运行的范围、失败和跳过项。疑似既有失败用同环境的基线提交复核。分别说明离屏、原生桌面、高 DPI 与真实网络的验证范围。
 
-### 提交说明
-
-- 标题格式为 `<type>(<scope>): <subject>`，`scope` 可省略，用模块名表示范围，如 `taskbar`、`quotes`、`settings`。
-- 常用类型：`feat` 新功能、`fix` 问题修复、`docs` 文档、`refactor` 重构、`perf` 性能、`test` 测试；格式调整用 `style`，构建 / 依赖 / 工具维护用 `chore`，自动化流程用 `ci`，回退提交用 `revert`。
-- `subject` 优先使用中文，说明实际完成的改动，尽量不超过 50 个字符，结尾不加标点；避免“更新代码”“修复问题”等笼统描述。
-- 简单变更只写标题。复杂变更在空行后补充正文，说明修改原因、关键改动、影响。需要时再用尾注关联 Issue（如 `Closes #123`）或说明不兼容变更（`BREAKING CHANGE: ...`）。
-- 每次提交聚焦一个目的，说明与本次差异一致，不混入无关修改。例如 `docs(agents): 补充分支命名与提交说明规范`。
+| 平台 | 原生验证示例（已激活虚拟环境） |
+| --- | --- |
+| Windows 桌面（PowerShell） | 分别执行 `$env:QT_QPA_PLATFORM = "windows"`、`$env:STOCKWIDGET_TEST_WINDOWS = "1"`，然后执行 `python -m unittest tests.native.test_taskbar -v`。 |
+| macOS 桌面 | `QT_QPA_PLATFORM=cocoa STOCKWIDGET_TEST_MACOS=1 python -m unittest tests.native.test_macos_integration -v` |
+| Linux X11 | `QT_QPA_PLATFORM=xcb STOCKWIDGET_TEST_X11=1 xvfb-run -a python -m unittest tests.native.test_x11_integration -v` |
