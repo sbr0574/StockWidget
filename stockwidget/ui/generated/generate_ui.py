@@ -12,7 +12,7 @@ def main():
     parser.add_argument("forms", nargs="*", help="Optional form names, e.g. settings or metric_pool")
     parser.add_argument("--check", action="store_true", help="Check generated files without writing")
     args = parser.parse_args()
-    directory = Path(__file__).resolve().parents[1] / "stockwidget/ui/generated"
+    directory = Path(__file__).resolve().parent
     if find_spec("PySide6") is None:
         parser.error("找不到 PySide6，请在安装了项目依赖的 Python 环境中运行")
     # Invoke the installed console entry point with this interpreter. A moved
