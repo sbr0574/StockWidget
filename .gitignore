@@ -1,3 +1,13 @@
 /*
+!/.gitignore
+!/resources/
+/resources/*
 !/resources/*.json
-!.gitignore
+!/scripts/
+# Only the updater and its dependencies are tracked. The server's update_codes.sh stays local.
+/scripts/*
+!/scripts/update_codes.py
+!/scripts/requirements.txt
+!/tests/
+/tests/*
+!/tests/test_*.py
