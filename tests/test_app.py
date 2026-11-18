@@ -8,7 +8,7 @@ import os
 import tempfile
 import unittest
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QColor, QIcon, QPalette, QPixmap
 from shiboken6 import delete
 import requests
@@ -19,7 +19,7 @@ from stockwidget.constants import CONFIG_FILE, CODE_LIST_FILES
 from stockwidget.data import update_check
 from stockwidget.ui.controls.style import ApplicationTheme, is_dark_theme, theme_palette
 
-from tests.support import QtTestCase
+from tests.support import QtTestCase, SettingsTestCase
 
 
 class ApplicationThemeTests(QtTestCase):
@@ -234,6 +234,36 @@ class AppCodeRefreshTests(unittest.TestCase):
         settings.refresh_data_state.assert_called_once_with()
         settings.refresh_code_search.assert_called_once_with()
         app._schedule_codes_refresh.assert_called_once_with(1800)
+
+
+class AppShutdownTests(SettingsTestCase):
+    def test_quote_menu_exit_closes_unfocused_settings(self):
+        dialog, window = self._make_dialog()
+        app = SimpleNamespace(tray=Mock(), save_now=Mock(), quit=self.qt_app.quit)
+        window.set_quit_callback(lambda: App.quit_app(app))
+        window.show()
+        dialog.show()
+        self.qt_app.processEvents()
+        window.activateWindow()
+        self.qt_app.processEvents()
+        self.assertTrue(dialog.isVisible())
+        self.assertFalse(dialog.isActiveWindow())
+
+        menu = window.build_context_menu()
+        timeout = QTimer()
+        timeout.setSingleShot(True)
+        timeout.timeout.connect(lambda: self.qt_app.exit(1))
+        try:
+            quit_action = next(action for action in menu.actions() if action.text() == "退出")
+            QTimer.singleShot(0, quit_action.trigger)
+            timeout.start(1000)
+            exit_code = self.qt_app.exec()
+            self.assertFalse(dialog.isVisible())
+            self.assertFalse(window.isVisible())
+            self.assertEqual(exit_code, 0)
+        finally:
+            timeout.stop()
+            delete(menu)
 
 
 class AppSavingTests(unittest.TestCase):

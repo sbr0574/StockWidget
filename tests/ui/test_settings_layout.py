@@ -39,7 +39,7 @@ class SettingsLayoutTests(SettingsTestCase):
         self.qt_app.processEvents()
         self.assertIsNone(dialog.windowHandle().transientParent())
         self.assertFalse(dialog.windowFlags() & Qt.WindowStaysOnTopHint)
-        window.hide_widget()
+        self.assertTrue(window.close())
         self.qt_app.processEvents()
         self.assertTrue(dialog.isVisible())
         dialog.showMinimized()

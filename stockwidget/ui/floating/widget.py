@@ -911,7 +911,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             menu.deleteLater()
 
     def closeEvent(self, event):
-        event.ignore()
+        # 接受关闭事件，让 Qt 退出时能继续关闭其他窗口。
+        event.accept()
         self.hide_widget()
 
     def showEvent(self, event):
