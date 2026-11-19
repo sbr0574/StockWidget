@@ -329,7 +329,7 @@ class SettingsDialog(QDialog):
             self._refresh_color_buttons()
             self._sync_opacity_settings()
 
-            self.ui.cmb_font.setCurrentText(self.win.font.family())
+            self.ui.cmb_font.setCurrentFont(self.win.font)
             self.ui.slider_font_size.setValue(self.win.font.pointSize())
             self.ui.label_current_font_size.setText(f"{self.win.font.pointSize()} pt")
             self.ui.slider_line_interval.setValue(self.win.line_extra_px)

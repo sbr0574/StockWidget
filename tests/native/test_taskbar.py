@@ -8,7 +8,7 @@ import sys
 import unittest
 
 from PySide6.QtCore import QPoint
-from PySide6.QtGui import QCursor
+from PySide6.QtGui import QCursor, QFontInfo
 from PySide6.QtTest import QTest
 from shiboken6 import delete
 
@@ -27,7 +27,11 @@ from tests.support import QtTestCase, SettingsTestCase
                      "Requires an opt-in Windows desktop session")
 class NativeSettingsWindowTests(SettingsTestCase):
     def test_taskbar_size_control_uses_real_geometry_and_preserves_font_family(self):
-        dialog, window = self._make_dialog(taskbar_enabled=True, display_mode="taskbar", taskbar_rows=1)
+        dialog, window = self._make_dialog(taskbar_enabled=True, display_mode="taskbar", taskbar_rows=1,
+                                           font_family="Microsoft YaHei")
+        self.assertEqual(QFontInfo(dialog.ui.cmb_font.currentFont()).family(),
+                         QFontInfo(window.font).family())
+        self.assertEqual(window.font.family(), "Microsoft YaHei")
         controller = TaskbarController(window, Mock())
         try:
             controller.apply_mode()

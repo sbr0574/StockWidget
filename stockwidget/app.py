@@ -51,6 +51,9 @@ class App(QApplication):
     save_state_changed = Signal()
 
     def __init__(self, argv):
+        if sys.platform == "win32":
+            # Keep small strokes grid-fitted with grayscale antialiasing in the Windows Qt backend.
+            os.environ.setdefault("QT_QPA_PLATFORM", "windows:fontengine=freetype")
         super().__init__(argv)
         sync_macos_dock_icon()
         self.app_version = APP_VERSION
