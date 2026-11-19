@@ -570,7 +570,6 @@ class Ui_HistoryDialog(object):
         self.btn_intraday.setAutoDefault(False)
         self.btn_intraday.setMinimumSize(QSize(28, 24))
         self.btn_intraday.setMaximumSize(QSize(16777215, 24))
-        self.btn_intraday.setProperty(u"chartTab", True)
 
         self.toolbar_layout.addWidget(self.btn_intraday)
 
@@ -580,7 +579,6 @@ class Ui_HistoryDialog(object):
         self.btn_five_day.setAutoDefault(False)
         self.btn_five_day.setMinimumSize(QSize(28, 24))
         self.btn_five_day.setMaximumSize(QSize(16777215, 24))
-        self.btn_five_day.setProperty(u"chartTab", True)
 
         self.toolbar_layout.addWidget(self.btn_five_day)
 
@@ -590,7 +588,6 @@ class Ui_HistoryDialog(object):
         self.btn_daily.setAutoDefault(False)
         self.btn_daily.setMinimumSize(QSize(28, 24))
         self.btn_daily.setMaximumSize(QSize(16777215, 24))
-        self.btn_daily.setProperty(u"chartTab", True)
 
         self.toolbar_layout.addWidget(self.btn_daily)
 
@@ -776,6 +773,6 @@ class Ui_HistoryDialog(object):
         self.cb_ma20.setText(QCoreApplication.translate("HistoryDialog", u"MA20", None))
         self.cb_ma30.setText(QCoreApplication.translate("HistoryDialog", u"MA30", None))
         self.cb_ma60.setText(QCoreApplication.translate("HistoryDialog", u"MA60", None))
-        self.chart_readout.setText(QCoreApplication.translate("HistoryDialog", u"\u5747 \u2014  \u4ef7\u683c \u2014 (\u2014)  \u91cf \u2014", None))
+        self.chart_readout.setText(QCoreApplication.translate("HistoryDialog", u"\u4ef7\u683c \u2014 (\u2014)  \u5747 \u2014  \u91cf \u2014", None))
         pass
     # retranslateUi

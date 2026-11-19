@@ -4,7 +4,7 @@ import threading
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QTimer, QSignalBlocker, Signal
 from PySide6.QtGui import QColor, QCursor, QFontInfo, QFontMetrics, QPainter, QPalette
-from PySide6.QtWidgets import QApplication, QButtonGroup, QDialog, QToolTip, QWidget, QWidgetItem
+from PySide6.QtWidgets import QApplication, QAbstractButton, QButtonGroup, QDialog, QToolTip, QWidget, QWidgetItem
 
 from stockwidget.core.window_rules import adjacent_popup_position, best_screen
 from stockwidget.core.config_store import history_cache_dir
@@ -20,6 +20,7 @@ from stockwidget.ui.controls.style import apply_history_theme, is_dark_theme, na
 class HistoryDialog(QDialog):
     view_changed = Signal()
     dismissed = Signal()
+    hide_quotes_requested = Signal()
     pop_out = Signal()
     size_changed = Signal(str, object)
     options_changed = Signal(object)
@@ -27,7 +28,7 @@ class HistoryDialog(QDialog):
 
     def __init__(self, parent, display_mode="popup"):
         floating = display_mode == "popup"
-        flags = (Qt.Popup | Qt.FramelessWindowHint | Qt.NoDropShadowWindowHint if floating else
+        flags = (Qt.Tool | Qt.FramelessWindowHint | Qt.NoDropShadowWindowHint if floating else
                  Qt.Window | Qt.WindowTitleHint | Qt.WindowSystemMenuHint | Qt.WindowMinMaxButtonsHint | Qt.WindowCloseButtonHint)
         super().__init__(parent if floating else None, flags)
         self.display_mode = display_mode
@@ -36,12 +37,11 @@ class HistoryDialog(QDialog):
         self._preferred_size = None
         self._gesture = None
         self._drag_started = False
+        self._outside_grab = False
         self._native_resize_cursor = False
-        self._changing_flags = False
         self._book_enabled = False
         self._theme_palette = None
         self.setMouseTracking(True)
-        self.setAttribute(Qt.WA_NoMouseReplay, floating)
         self.setAttribute(Qt.WA_TranslucentBackground, floating)
         self.setModal(False)
         self.ui = Ui_HistoryDialog()
@@ -86,11 +86,13 @@ class HistoryDialog(QDialog):
         self._save_timer.setSingleShot(True)
         self._save_timer.setInterval(200)
         self._save_timer.timeout.connect(self.save_size)
-        for child in self.findChildren(QWidget):
-            child.installEventFilter(self)
 
     def set_chart_options(self, options, unit_mode):
         restoring, self._restoring = self._restoring, True
+        if self.display_mode == "popup" and self.pin_button.isChecked() != options.chart_popup_pinned:
+            with QSignalBlocker(self.pin_button):
+                self.pin_button.setChecked(options.chart_popup_pinned)
+            self._apply_pin(options.chart_popup_pinned)
         self.chart.set_options(options.chart_ma_periods, options.chart_average_enabled,
                                options.chart_volume_enabled, unit_mode)
         for control, checked in ((self.ui.cb_order_book, options.chart_order_book_enabled),
@@ -185,29 +187,31 @@ class HistoryDialog(QDialog):
     def _pin_changed(self, pinned):
         if self.display_mode != "popup":
             return
-        geometry, visible, opacity = self.geometry(), self.isVisible(), self.windowOpacity()
-        screen = self.screen()
-        restoring, self._restoring = self._restoring, True
-        self._changing_flags = True
-        try:
-            flags = Qt.Tool | Qt.WindowStaysOnTopHint if pinned else Qt.Popup
-            self.setWindowFlags(flags | Qt.FramelessWindowHint | Qt.NoDropShadowWindowHint)
-            self.winId()
-            if screen is not None:
-                self.windowHandle().setScreen(screen)
-            self.setGeometry(geometry)
-            if not is_wayland():
-                self.setWindowOpacity(opacity)
-            if visible:
-                self.show()
-                self.raise_()
-        finally:
-            self._changing_flags = False
-            self._restoring = restoring
+        self._apply_pin(pinned)
+        self.options_changed.emit({"chart_popup_pinned": pinned})
+
+    def _apply_pin(self, pinned):
+        hint = Qt.WindowStaysOnTopHint
+        flags = self.windowFlags()
+        # Keep the QWidget flags in sync and update its native window in place.
+        self.overrideWindowFlags(flags | hint if pinned else flags & ~hint)
+        if handle := self.windowHandle():
+            handle.setFlag(hint, pinned)
+        self._sync_outside_grab()
+
+    def _sync_outside_grab(self, *, closing=False):
+        # The Windows taskbar and X11 panels can receive clicks without taking focus.
+        handle = self.windowHandle()
+        grab = (not closing and not self.pin_button.isChecked() and handle is not None
+                and handle.isVisible() and QApplication.platformName() in ("windows", "xcb"))
+        if self._outside_grab != grab:
+            grabbed = handle.setMouseGrabEnabled(grab) if handle is not None else False
+            self._outside_grab = grab and grabbed
 
     def hideEvent(self, event):
-        if self._changing_flags:
-            return super().hideEvent(event)
+        if self.display_mode == "popup":
+            QApplication.instance().removeEventFilter(self)
+            self._sync_outside_grab(closing=True)
         self._gesture = None
         self._drag_started = False
         self._apply_cursor(Qt.ArrowCursor)
@@ -223,7 +227,11 @@ class HistoryDialog(QDialog):
         super().showEvent(event)
         self.layout().activate()
         self._elide_labels()
-        if self.display_mode == "window":
+        if self.display_mode == "popup":
+            QApplication.instance().installEventFilter(self)
+            # Wait until the platform window is visible before grabbing the mouse.
+            QTimer.singleShot(0, self, self._sync_outside_grab)
+        else:
             sync_macos_dock_icon()
 
     @property
@@ -352,20 +360,13 @@ class HistoryDialog(QDialog):
     def _sync_cursor(self):
         self._apply_cursor(self._edge_cursor(self._edges(self.mapFromGlobal(QCursor.pos()))))
 
-    def mousePressEvent(self, event):
-        point = self.mapFromGlobal(event.globalPosition().toPoint())
-        edges = self._edges(point)
-        movable = (self.display_mode == "popup" and self.rect().contains(point)
-                   and self.childAt(point) in (None, self.title_row, self.title))
-        if event.button() == Qt.LeftButton and (edges or movable):
-            if edges:
-                self._apply_cursor(self._edge_cursor(edges))
-            self.save_size()
-            self._gesture = edges, event.globalPosition().toPoint(), self.geometry()
-            self._drag_started = False
-            event.accept()
-        else:
-            super().mousePressEvent(event)
+    def _start_gesture(self, position):
+        edges = self._edges(self.mapFromGlobal(position))
+        if edges:
+            self._apply_cursor(self._edge_cursor(edges))
+        self.save_size()
+        self._gesture = edges, position, self.geometry()
+        self._drag_started = False
 
     def mouseMoveEvent(self, event):
         if self._gesture:
@@ -440,27 +441,46 @@ class HistoryDialog(QDialog):
             super().keyPressEvent(event)
 
     def eventFilter(self, obj, event):
-        # Popup delivery can retarget a border press to a child on the next
-        # move. Keep the whole gesture here, before chart/buttons consume it.
+        kind = event.type()
+        if kind == QEvent.ApplicationDeactivate and not self.pin_button.isChecked():
+            self.close()
+        if kind not in (QEvent.MouseButtonPress, QEvent.MouseButtonDblClick, QEvent.MouseButtonRelease,
+                        QEvent.MouseMove, QEvent.Enter, QEvent.KeyPress) or not isinstance(obj, QWidget):
+            return False
+        inside = obj.window() is self
+        if kind in (QEvent.MouseButtonPress, QEvent.MouseButtonDblClick):
+            position = event.globalPosition().toPoint()
+            point = self.mapFromGlobal(position)
+            if not inside or not self.rect().contains(point):
+                if not self.pin_button.isChecked():
+                    self.close()
+                    return True
+            elif event.button() == Qt.LeftButton and not isinstance(self.childAt(point), QAbstractButton):
+                if kind == QEvent.MouseButtonPress:
+                    self._start_gesture(position)
+                else:
+                    self.hide_quotes_requested.emit()
+                    self.close()
+                return True
+            return False
+        if not inside or obj is self:
+            return False
+        # Keep move and release with the same gesture across chart children.
         if self._gesture:
-            if event.type() == QEvent.MouseMove:
+            if kind == QEvent.MouseMove:
                 self.mouseMoveEvent(event)
                 return True
-            if event.type() == QEvent.MouseButtonRelease and event.button() == Qt.LeftButton:
+            if kind == QEvent.MouseButtonRelease and event.button() == Qt.LeftButton:
                 self.mouseReleaseEvent(event)
                 return True
-            if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Escape:
+            if kind == QEvent.KeyPress and event.key() == Qt.Key_Escape:
                 self.keyPressEvent(event)
                 return True
-        elif (event.type() in (QEvent.Enter, QEvent.MouseMove)
+        elif (kind in (QEvent.Enter, QEvent.MouseMove)
               and (self._native_resize_cursor or self.cursor().shape() != Qt.ArrowCursor)):
             # Child entry can bypass the dialog's border mouse move.
             self._apply_cursor(Qt.ArrowCursor)
-        elif (self.display_mode == "popup" and obj in (self.title_row, self.title)
-              and event.type() == QEvent.MouseButtonPress and event.button() == Qt.LeftButton):
-            self.mousePressEvent(event)
-            return event.isAccepted()
-        return super().eventFilter(obj, event)
+        return False
 
 
 class HistoryController(QObject):
@@ -545,8 +565,6 @@ class HistoryController(QObject):
             if previous:
                 previous.deleteLater()
         self.instrument = dict(instrument)
-        if not self.dialog.isVisible():
-            self.dialog.pin_button.setChecked(False)
         self.dialog.set_title(f"{instrument.get('name') or instrument.get('code')} · 行情图表")
         self._apply_theme()
         self._apply_chart_options()
@@ -558,6 +576,7 @@ class HistoryController(QObject):
         self.window.destroyed.connect(dialog.deleteLater)
         dialog.view_changed.connect(self._view_changed)
         dialog.dismissed.connect(self._closed)
+        dialog.hide_quotes_requested.connect(self.window.hide_widget)
         dialog.pop_out.connect(self._pop_out)
         dialog.size_changed.connect(self._save_size)
         dialog.options_changed.connect(lambda changes: self.window.set_view_options(**changes))

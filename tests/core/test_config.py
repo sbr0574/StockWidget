@@ -308,6 +308,7 @@ class PageMathTests(unittest.TestCase):
     def test_chart_sizes_migrate_presets_and_roundtrip_without_display_mode(self):
         legacy = ViewOptions.from_config({})
         self.assertTrue(legacy.chart_enabled)
+        self.assertFalse(legacy.chart_popup_pinned)
         self.assertEqual(legacy.chart_popup_size, [480, 340])
         for mode in ("window", "large", "medium", "small", "floating", None, "invalid", True):
             with self.subTest(mode=mode):
@@ -319,10 +320,12 @@ class PageMathTests(unittest.TestCase):
 
     def test_saved_chart_sizes_validate_and_override_legacy_preset(self):
         options = ViewOptions.from_config({"chart_popup_size": [530, 385], "chart_display_mode": "small",
-                                           "chart_window_size": [1030, 650], "chart_order_book_enabled": True})
+                                           "chart_window_size": [1030, 650], "chart_order_book_enabled": True,
+                                           "chart_popup_pinned": True})
         self.assertEqual(options.chart_popup_size, [530, 385])
         self.assertEqual(options.chart_window_size, [1030, 650])
         self.assertTrue(options.chart_order_book_enabled)
+        self.assertTrue(options.chart_popup_pinned)
         self.assertEqual(ViewOptions.from_config(options.to_config()), options)
         for invalid in (None, True, "large", [400], {"w": 400}):
             self.assertEqual(ViewOptions.from_config({"chart_popup_size": invalid}).chart_popup_size, [480, 340])

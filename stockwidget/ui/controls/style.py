@@ -236,13 +236,6 @@ QPushButton:checked:hover {{
 QPushButton:checked:pressed {{
     background-color: {selected_pressed_bg};
 }}
-QPushButton[chartTab="true"]:checked, QPushButton[chartTab="true"]:checked:hover {{
-    background-color: {color_hover_bg};
-    border: 1px solid transparent;
-}}
-QPushButton[chartTab="true"]:checked:pressed {{
-    background-color: {color_pressed_bg};
-}}
 QPushButton:disabled {{
     background-color: {color_disabled_bg};
     color: {color_disabled_text};
