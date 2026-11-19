@@ -56,9 +56,7 @@ git diff --check
 - 更改数据目录时保留源文件、备份目标已有数据，重启后切换。macOS 旧目录迁移优先保留新版数据，完整迁移或备份成功后才清理旧目录。写入失败合并提示，设置页与退出仍须可用。
 - **行情与缓存**　基本行情、历史和美股中文名称使用新浪，沪深北个股的内外盘使用腾讯快照。保留统计来源与时间，不用总量补差，不新增数据源配置项。沿用共享错误分类、代理与证书校验，只重试临时错误，错误提示不暴露原始 URL、凭据或异常栈。
 - 图表复用行情刷新，分钟和日 K 请求按标的、类别共享。关闭窗口或清理缓存后，迟到结果不得重开窗口或写回已清数据。历史缓存按事务写入，仅确认数据库损坏才重建，清缓存只影响历史数据。
-- **代码列表**　在服务器的 `codes-data` 检出目录执行 `python3.13 -m venv .venv` 和 `.venv/bin/python -m pip install -r scripts/requirements.txt`。将本地启动脚本复制到 `scripts/update_codes.sh`，再运行 `sh scripts/update_codes.sh`。启动脚本由 Git 忽略，使用 `flock` 防止同一工作树的更新重叠。发布使用服务器配置的 Git 提交身份和推送权限。
-- `codes-data` 的 `scripts/update_codes.py` 默认读写该分支的 `resources/`，可用 `CODES_OUTPUT_DIR` 指定临时目录。采用交易所官方名录，港股名称发布前转简体。分类或补充表失败时保留旧文件、记入状态清单，其余分类继续保存。更新器测试在数据分支根目录执行 `python -m unittest discover -s tests -v`，手动更新工作流也在发布前执行这些测试。
-- 在 `codes-data` 分支的 `resources/index_cn.json` 和 `resources/index_global.json` 手工维护指数及 `last_update`，更新脚本只读。新增国内指数须核对官方身份及新浪实时报价。海外指数的 `timezone` 随证券元数据传递，缺失时不猜测日 K 交易日期。
+- **代码列表**　由服务器定期更新在 `codes-data` 分支中，该分支保持独立，手动工作流为备用更新方法。运行分支中的 `scripts/update_codes.py`，代码列表默认写在该分支的 `resources/`，可用 `CODES_OUTPUT_DIR` 指定临时目录。列表来源采用交易所官方名录。分类或补充表失败时保留旧文件、记入状态清单，其余分类继续保存。更新器测试在数据分支根目录执行 `python -m unittest discover -s tests -v`。`index_cn.json` 和 `index_global.json` 国内外指数由手工维护，更新脚本只读。海外指数的 `timezone` 随证券元数据传递，缺失时不猜测日 K 交易日期。
 - **拖动与可见性**　浮窗新增可见区域接入 `register_drag_region()`。两种显示面复用拖动与显隐入口，越过拖动阈值后不触发单击，松开后才做边界检查，Esc 恢复拖动前状态。贴边收起时保存完整几何。
 - 双开时任务栏固定，浮窗经过任务栏不停靠。任务栏启用状态与显示位置分开保存，嵌入失败回退浮窗并允许重建。根据两个显示面的实际可见性暂停或恢复行情刷新，各自保留页码。
 - **窗口与设置**　更改窗口标志时保留几何、可见性、计时器与鼠标穿透，避免抢焦点。设置布局沿用 Designer 的单栏滚动、说明列宽和控件对齐，检查实际可达性与横向溢出。主题集中在 [style.py](stockwidget/ui/controls/style.py)，普通配置变化通过 `configuration_changed` 同步值，避免重复刷新整页。
