@@ -85,11 +85,7 @@ class MiniChartOption(QPushButton):
             paint_amplitude_axis(painter, QRect(chart_left, top + row_height, chart_width, row_height * 3), _LIMITS)
         x = left
         painter.setPen(self.palette().color(QPalette.Text))
-        title_font = self.font()
-        title_font.setBold(True)
-        painter.setFont(title_font)
         painter.drawText(QRect(left, 6, self.width() - left * 2, 20), Qt.AlignCenter, self.text())
-        painter.setFont(self.font())
         for column, width in enumerate(widths):
             alignment = Qt.AlignRight if column >= 2 else Qt.AlignCenter if column == 1 else Qt.AlignLeft
             painter.drawText(QRect(x + 2, top, width - 4, row_height), alignment | Qt.AlignVCenter,

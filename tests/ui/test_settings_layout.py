@@ -86,6 +86,12 @@ class SettingsLayoutTests(SettingsTestCase):
             dialog.ui.settings_pages.setCurrentWidget(page)
             self.qt_app.processEvents()
             self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
+        for title, control in ((dialog.ui.chart_enabled_title, dialog.ui.cb_chart_enabled),
+                               (dialog.ui.cb_auto_hide_title, dialog.ui.cb_auto_hide),
+                               (dialog.ui.cb_unicolor_title, dialog.ui.cb_unicolor)):
+            with self.subTest(setting=title.objectName()):
+                self.assertEqual(title.height(), 28)
+                self.assertLessEqual(abs(title.geometry().center().y() - control.geometry().center().y()), 1)
         dialog.ui.cmb_name_length.setCurrentIndex(dialog.ui.cmb_name_length.findData(0))
         self.assertEqual(window.current_config()["name_length"], 0)
         window.set_name_length(-1)

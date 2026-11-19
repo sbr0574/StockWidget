@@ -6,7 +6,7 @@ import tempfile
 import time
 
 from PySide6.QtCore import QEvent, QPoint, QPointF, QSize, Qt
-from PySide6.QtGui import QColor, QIcon, QPalette, QPixmap, QTextDocument, QKeySequence, QWheelEvent
+from PySide6.QtGui import QColor, QFont, QIcon, QPalette, QPixmap, QTextDocument, QKeySequence, QWheelEvent
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QScrollArea, QGroupBox, QSlider
 
@@ -192,7 +192,6 @@ class SettingsDialogTests(SettingsTestCase):
                 editor = self._start_code_editor(dialog)
                 controls = (
                     dialog.ui.btn_add, dialog.ui.cb_auto_start, dialog.ui.sb_interval,
-                    dialog.ui.label_interval, dialog.ui.sb_interval,
                     dialog.ui.cmb_font, dialog.ui.keyseq_hide,
                     dialog.ui.list_codes, dialog.ui.list_codes.horizontalHeader(),
                     dialog.metric_pool.displayed_pool, editor,
@@ -208,6 +207,10 @@ class SettingsDialogTests(SettingsTestCase):
                     for control in controls:
                         with self.subTest(control=control.objectName() or type(control).__name__):
                             self.assertEqual(control.font().pixelSize(), 12)
+                    for title in (dialog.ui.label_interval, dialog.ui.label_font, dialog.metric_pool.available_label):
+                        self.assertEqual(title.font().pixelSize(), 13)
+                        self.assertEqual(title.font().weight(), QFont.Weight.Normal)
+                    self.assertEqual(dialog.metric_pool.ui.available_description.font().pixelSize(), 12)
                     for control in (dialog.ui.label_about_info, dialog.ui.label_version_state,
                                     dialog.ui.label_data_state, dialog.ui.btn_open_cache_dir):
                         with self.subTest(about_control=control.objectName()):

@@ -316,15 +316,14 @@ QLabel#shortcuts_title, QLabel#floating_title, QLabel#taskbar_title, QLabel#abou
     font-size: 20px;
     font-weight: 600;
 }}
-QLabel[settingTitle="true"] {{
-    font-weight: 600;
-}}
-QLabel#label_interval {{
-    font-weight: 700;
+QLabel[settingTitle="true"], QCheckBox[settingTitle="true"] {{
+    font-size: 13px;
+    font-weight: normal;
 }}
 QLabel[settingDescription="true"] {{
     color: {description};
     font-size: 12px;
+    font-weight: normal;
 }}
 QLabel[quoteCaption="true"] {{
     color: {description};

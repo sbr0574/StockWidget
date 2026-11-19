@@ -31,11 +31,8 @@ class Ui_MetricPool(object):
         self.metricPoolLayout.setContentsMargins(0, 0, 0, 0)
         self.available_label = QLabel(metric_pool)
         self.available_label.setObjectName(u"available_label")
-        self.available_label.setMinimumSize(QSize(0, 26))
-        self.available_label.setMaximumSize(QSize(16777215, 26))
-        font = QFont()
-        font.setBold(True)
-        self.available_label.setFont(font)
+        self.available_label.setMinimumSize(QSize(0, 28))
+        self.available_label.setMaximumSize(QSize(16777215, 28))
         self.available_label.setProperty(u"settingTitle", True)
 
         self.metricPoolLayout.addWidget(self.available_label)
@@ -62,9 +59,8 @@ class Ui_MetricPool(object):
 
         self.displayed_label = QLabel(metric_pool)
         self.displayed_label.setObjectName(u"displayed_label")
-        self.displayed_label.setMinimumSize(QSize(0, 26))
-        self.displayed_label.setMaximumSize(QSize(16777215, 26))
-        self.displayed_label.setFont(font)
+        self.displayed_label.setMinimumSize(QSize(0, 28))
+        self.displayed_label.setMaximumSize(QSize(16777215, 28))
         self.displayed_label.setProperty(u"settingTitle", True)
 
         self.metricPoolLayout.addWidget(self.displayed_label)

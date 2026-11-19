@@ -251,6 +251,8 @@ class Ui_SettingDialog(object):
         self.label_interval = QLabel(self.refresh_interval_row)
         self.label_interval.setObjectName(u"label_interval")
         self.label_interval.setProperty(u"settingTitle", True)
+        self.label_interval.setMinimumHeight(28)
+        self.label_interval.setMaximumHeight(28)
 
         self.refresh_interval_row_layout.addWidget(self.label_interval, 0, 0, 1, 1)
 
@@ -276,6 +278,8 @@ class Ui_SettingDialog(object):
         self.chart_enabled_title = QLabel(self.chart_enabled_row)
         self.chart_enabled_title.setObjectName(u"chart_enabled_title")
         self.chart_enabled_title.setProperty(u"settingTitle", True)
+        self.chart_enabled_title.setMinimumHeight(28)
+        self.chart_enabled_title.setMaximumHeight(28)
 
         self.chart_enabled_layout.addWidget(self.chart_enabled_title, 0, 0, 1, 1)
 
@@ -319,8 +323,8 @@ class Ui_SettingDialog(object):
         self.cb_head_row_layout.setContentsMargins(0, 0, 0, 0)
         self.cb_head_title = QLabel(self.cb_head_row)
         self.cb_head_title.setObjectName(u"cb_head_title")
-        self.cb_head_title.setMinimumSize(QSize(0, 26))
-        self.cb_head_title.setMaximumSize(QSize(16777215, 26))
+        self.cb_head_title.setMinimumSize(QSize(0, 28))
+        self.cb_head_title.setMaximumSize(QSize(16777215, 28))
         self.cb_head_title.setProperty(u"settingTitle", True)
 
         self.cb_head_row_layout.addWidget(self.cb_head_title, 0, 0, 1, 1)
@@ -393,8 +397,8 @@ class Ui_SettingDialog(object):
         self.cb_code_visible_title = QLabel(self.cb_code_visible_row)
         self.cb_code_visible_title.setObjectName(u"cb_code_visible_title")
         self.cb_code_visible_title.setProperty(u"settingTitle", True)
-        self.cb_code_visible_title.setMinimumSize(QSize(0, 26))
-        self.cb_code_visible_title.setMaximumSize(QSize(16777215, 26))
+        self.cb_code_visible_title.setMinimumSize(QSize(0, 28))
+        self.cb_code_visible_title.setMaximumSize(QSize(16777215, 28))
 
         self.cb_code_visible_row_layout.addWidget(self.cb_code_visible_title, 0, 0, 1, 1)
 
@@ -420,8 +424,8 @@ class Ui_SettingDialog(object):
         self.cb_type_visible_title = QLabel(self.cb_type_visible_row)
         self.cb_type_visible_title.setObjectName(u"cb_type_visible_title")
         self.cb_type_visible_title.setProperty(u"settingTitle", True)
-        self.cb_type_visible_title.setMinimumSize(QSize(0, 26))
-        self.cb_type_visible_title.setMaximumSize(QSize(16777215, 26))
+        self.cb_type_visible_title.setMinimumSize(QSize(0, 28))
+        self.cb_type_visible_title.setMaximumSize(QSize(16777215, 28))
 
         self.cb_type_visible_row_layout.addWidget(self.cb_type_visible_title, 0, 0, 1, 1)
 
@@ -476,6 +480,8 @@ class Ui_SettingDialog(object):
         self.average_period_title = QLabel(self.average_period_row)
         self.average_period_title.setObjectName(u"average_period_title")
         self.average_period_title.setProperty(u"settingTitle", True)
+        self.average_period_title.setMinimumHeight(28)
+        self.average_period_title.setMaximumHeight(28)
 
         self.average_period_layout.addWidget(self.average_period_title, 0, 0, 1, 1)
 
@@ -504,6 +510,8 @@ class Ui_SettingDialog(object):
         self.mini_chart_title = QLabel(self.mini_chart_options)
         self.mini_chart_title.setObjectName(u"mini_chart_title")
         self.mini_chart_title.setProperty(u"settingTitle", True)
+        self.mini_chart_title.setMinimumHeight(28)
+        self.mini_chart_title.setMaximumHeight(28)
 
         self.mini_chart_layout.addWidget(self.mini_chart_title)
 
@@ -602,8 +610,8 @@ class Ui_SettingDialog(object):
         self.cb_auto_start_row_layout.setContentsMargins(0, 0, 0, 0)
         self.cb_auto_start_title = QLabel(self.cb_auto_start_row)
         self.cb_auto_start_title.setObjectName(u"cb_auto_start_title")
-        self.cb_auto_start_title.setMinimumSize(QSize(0, 26))
-        self.cb_auto_start_title.setMaximumSize(QSize(16777215, 26))
+        self.cb_auto_start_title.setMinimumSize(QSize(0, 28))
+        self.cb_auto_start_title.setMaximumSize(QSize(16777215, 28))
         self.cb_auto_start_title.setProperty(u"settingTitle", True)
 
         self.cb_auto_start_row_layout.addWidget(self.cb_auto_start_title, 0, 0, 1, 1)
@@ -625,7 +633,7 @@ class Ui_SettingDialog(object):
         self.gb_fcn.setSizePolicy(sizePolicy1)
         self.gb_fcn.setFlat(False)
         self.gb_fcnLayout = QVBoxLayout(self.gb_fcn)
-        self.gb_fcnLayout.setSpacing(14)
+        self.gb_fcnLayout.setSpacing(10)
         self.gb_fcnLayout.setObjectName(u"gb_fcnLayout")
         self.gb_fcnLayout.setContentsMargins(10, 15, 10, 10)
         self.cb_grid_row = QWidget(self.gb_fcn)
@@ -639,8 +647,8 @@ class Ui_SettingDialog(object):
         self.cb_grid_row_layout.setContentsMargins(0, 0, 0, 0)
         self.cb_grid_title = QLabel(self.cb_grid_row)
         self.cb_grid_title.setObjectName(u"cb_grid_title")
-        self.cb_grid_title.setMinimumSize(QSize(0, 26))
-        self.cb_grid_title.setMaximumSize(QSize(16777215, 26))
+        self.cb_grid_title.setMinimumSize(QSize(0, 28))
+        self.cb_grid_title.setMaximumSize(QSize(16777215, 28))
         self.cb_grid_title.setProperty(u"settingTitle", True)
 
         self.cb_grid_row_layout.addWidget(self.cb_grid_title, 0, 0, 1, 1)
@@ -666,8 +674,8 @@ class Ui_SettingDialog(object):
         self.cb_float_on_top_row_layout.setContentsMargins(0, 0, 0, 0)
         self.cb_float_on_top_title = QLabel(self.cb_float_on_top_row)
         self.cb_float_on_top_title.setObjectName(u"cb_float_on_top_title")
-        self.cb_float_on_top_title.setMinimumSize(QSize(0, 26))
-        self.cb_float_on_top_title.setMaximumSize(QSize(16777215, 26))
+        self.cb_float_on_top_title.setMinimumSize(QSize(0, 28))
+        self.cb_float_on_top_title.setMaximumSize(QSize(16777215, 28))
         self.cb_float_on_top_title.setProperty(u"settingTitle", True)
 
         self.cb_float_on_top_row_layout.addWidget(self.cb_float_on_top_title, 0, 0, 1, 1)
@@ -694,8 +702,8 @@ class Ui_SettingDialog(object):
         self.cb_force_top_row_layout.setContentsMargins(0, 0, 0, 0)
         self.cb_force_top_title = QLabel(self.cb_force_top_row)
         self.cb_force_top_title.setObjectName(u"cb_force_top_title")
-        self.cb_force_top_title.setMinimumSize(QSize(0, 26))
-        self.cb_force_top_title.setMaximumSize(QSize(16777215, 26))
+        self.cb_force_top_title.setMinimumSize(QSize(0, 28))
+        self.cb_force_top_title.setMaximumSize(QSize(16777215, 28))
         self.cb_force_top_title.setProperty(u"settingTitle", True)
 
         self.cb_force_top_row_layout.addWidget(self.cb_force_top_title, 0, 0, 1, 1)
@@ -721,8 +729,8 @@ class Ui_SettingDialog(object):
         self.cb_click_through_row_layout.setContentsMargins(0, 0, 0, 0)
         self.cb_click_through_title = QLabel(self.cb_click_through_row)
         self.cb_click_through_title.setObjectName(u"cb_click_through_title")
-        self.cb_click_through_title.setMinimumSize(QSize(0, 26))
-        self.cb_click_through_title.setMaximumSize(QSize(16777215, 26))
+        self.cb_click_through_title.setMinimumSize(QSize(0, 28))
+        self.cb_click_through_title.setMaximumSize(QSize(16777215, 28))
         self.cb_click_through_title.setProperty(u"settingTitle", True)
 
         self.cb_click_through_row_layout.addWidget(self.cb_click_through_title, 0, 0, 1, 1)
@@ -748,8 +756,8 @@ class Ui_SettingDialog(object):
         self.cb_boundary_check_row_layout.setContentsMargins(0, 0, 0, 0)
         self.cb_boundary_check_title = QLabel(self.cb_boundary_check_row)
         self.cb_boundary_check_title.setObjectName(u"cb_boundary_check_title")
-        self.cb_boundary_check_title.setMinimumSize(QSize(0, 26))
-        self.cb_boundary_check_title.setMaximumSize(QSize(16777215, 26))
+        self.cb_boundary_check_title.setMinimumSize(QSize(0, 28))
+        self.cb_boundary_check_title.setMaximumSize(QSize(16777215, 28))
         self.cb_boundary_check_title.setProperty(u"settingTitle", True)
 
         self.cb_boundary_check_row_layout.addWidget(self.cb_boundary_check_title, 0, 0, 1, 1)
@@ -776,8 +784,8 @@ class Ui_SettingDialog(object):
         self.cb_edge_hide_row_layout.setContentsMargins(0, 0, 0, 0)
         self.cb_edge_hide_title = QLabel(self.cb_edge_hide_row)
         self.cb_edge_hide_title.setObjectName(u"cb_edge_hide_title")
-        self.cb_edge_hide_title.setMinimumSize(QSize(0, 26))
-        self.cb_edge_hide_title.setMaximumSize(QSize(16777215, 26))
+        self.cb_edge_hide_title.setMinimumSize(QSize(0, 28))
+        self.cb_edge_hide_title.setMaximumSize(QSize(16777215, 28))
         self.cb_edge_hide_title.setProperty(u"settingTitle", True)
 
         self.cb_edge_hide_row_layout.addWidget(self.cb_edge_hide_title, 0, 0, 1, 1)
@@ -807,7 +815,7 @@ class Ui_SettingDialog(object):
         self.float_split_settings_outer = QVBoxLayout(self.float_split_settings)
         self.float_split_settings_outer.setSpacing(5)
         self.float_split_settings_outer.setObjectName(u"float_split_settings_outer")
-        self.float_split_settings_outer.setContentsMargins(10, 15, 10, 5)
+        self.float_split_settings_outer.setContentsMargins(10, 15, 10, 10)
         self.float_split_settings_body = QWidget(self.float_split_settings)
         self.float_split_settings_body.setObjectName(u"float_split_settings_body")
         self.float_split_settings_layout = QHBoxLayout(self.float_split_settings_body)
@@ -825,8 +833,8 @@ class Ui_SettingDialog(object):
         self.float_split_separator_row_layout.setContentsMargins(0, 0, 0, 0)
         self.float_split_separator_title = QLabel(self.float_split_separator_row)
         self.float_split_separator_title.setObjectName(u"float_split_separator_title")
-        self.float_split_separator_title.setMinimumSize(QSize(0, 26))
-        self.float_split_separator_title.setMaximumSize(QSize(16777215, 26))
+        self.float_split_separator_title.setMinimumSize(QSize(0, 28))
+        self.float_split_separator_title.setMaximumSize(QSize(16777215, 28))
         self.float_split_separator_title.setProperty(u"settingTitle", True)
 
         self.float_split_separator_row_layout.addWidget(self.float_split_separator_title, 0, 0, 1, 1)
@@ -857,17 +865,18 @@ class Ui_SettingDialog(object):
         self.float_row_settings_outer = QVBoxLayout(self.float_row_settings)
         self.float_row_settings_outer.setSpacing(5)
         self.float_row_settings_outer.setObjectName(u"float_row_settings_outer")
-        self.float_row_settings_outer.setContentsMargins(10, 15, 10, 5)
+        self.float_row_settings_outer.setContentsMargins(10, 15, 10, 10)
         self.float_row_settings_body = QWidget(self.float_row_settings)
         self.float_row_settings_body.setObjectName(u"float_row_settings_body")
         self.float_row_settings_layout = QGridLayout(self.float_row_settings_body)
-        self.float_row_settings_layout.setSpacing(5)
+        self.float_row_settings_layout.setSpacing(10)
         self.float_row_settings_layout.setObjectName(u"float_row_settings_layout")
         self.float_row_settings_layout.setContentsMargins(0, 0, 0, 0)
         self.float_row_settings_layout_label_0 = QLabel(self.float_row_settings_body)
         self.float_row_settings_layout_label_0.setObjectName(u"float_row_settings_layout_label_0")
         self.float_row_settings_layout_label_0.setMinimumSize(QSize(0, 28))
         self.float_row_settings_layout_label_0.setMaximumSize(QSize(16777215, 28))
+        self.float_row_settings_layout_label_0.setProperty(u"settingTitle", True)
 
         self.float_row_settings_layout.addWidget(self.float_row_settings_layout_label_0, 0, 0, 1, 1)
 
@@ -893,8 +902,8 @@ class Ui_SettingDialog(object):
         self.float_paging_enabled_title = QLabel(self.float_paging_enabled_row)
         self.float_paging_enabled_title.setObjectName(u"float_paging_enabled_title")
         self.float_paging_enabled_title.setProperty(u"settingTitle", True)
-        self.float_paging_enabled_title.setMinimumSize(QSize(0, 26))
-        self.float_paging_enabled_title.setMaximumSize(QSize(16777215, 26))
+        self.float_paging_enabled_title.setMinimumSize(QSize(0, 28))
+        self.float_paging_enabled_title.setMaximumSize(QSize(16777215, 28))
 
         self.float_paging_enabled_row_layout.addWidget(self.float_paging_enabled_title, 0, 0, 1, 1)
 
@@ -918,6 +927,7 @@ class Ui_SettingDialog(object):
         self.float_page_mode.setObjectName(u"float_page_mode")
         self.float_page_mode.setMinimumSize(QSize(140, 28))
         self.float_page_mode.setMaximumSize(QSize(140, 28))
+        self.float_page_mode.setProperty(u"settingTitle", True)
 
         self.float_paging_settings_layout.addWidget(self.float_page_mode)
 
@@ -929,6 +939,7 @@ class Ui_SettingDialog(object):
         self.float_paging_settings_layout_label_1.setObjectName(u"float_paging_settings_layout_label_1")
         self.float_paging_settings_layout_label_1.setMinimumSize(QSize(52, 28))
         self.float_paging_settings_layout_label_1.setMaximumSize(QSize(52, 28))
+        self.float_paging_settings_layout_label_1.setProperty(u"settingTitle", True)
 
         self.float_paging_settings_layout.addWidget(self.float_paging_settings_layout_label_1)
 
@@ -960,9 +971,9 @@ class Ui_SettingDialog(object):
         self.gb_scheduled_hide.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.gb_scheduled_hide.setFlat(False)
         self.scheduledHideLayout = QVBoxLayout(self.gb_scheduled_hide)
-        self.scheduledHideLayout.setSpacing(5)
+        self.scheduledHideLayout.setSpacing(10)
         self.scheduledHideLayout.setObjectName(u"scheduledHideLayout")
-        self.scheduledHideLayout.setContentsMargins(10, 15, 10, 5)
+        self.scheduledHideLayout.setContentsMargins(10, 15, 10, 10)
         self.label_hide_status = QLabel(self.gb_scheduled_hide)
         self.label_hide_status.setObjectName(u"label_hide_status")
         self.label_hide_status.setMinimumSize(QSize(310, 18))
@@ -984,8 +995,8 @@ class Ui_SettingDialog(object):
         self.cb_auto_hide_row_layout.setContentsMargins(0, 0, 0, 0)
         self.cb_auto_hide_title = QLabel(self.cb_auto_hide_row)
         self.cb_auto_hide_title.setObjectName(u"cb_auto_hide_title")
-        self.cb_auto_hide_title.setMinimumSize(QSize(0, 26))
-        self.cb_auto_hide_title.setMaximumSize(QSize(16777215, 26))
+        self.cb_auto_hide_title.setMinimumSize(QSize(0, 28))
+        self.cb_auto_hide_title.setMaximumSize(QSize(16777215, 28))
         self.cb_auto_hide_title.setProperty(u"settingTitle", True)
 
         self.cb_auto_hide_row_layout.addWidget(self.cb_auto_hide_title, 0, 0, 1, 1)
@@ -1005,18 +1016,21 @@ class Ui_SettingDialog(object):
         self.cb_auto_hide.setMinimumSize(QSize(44, 26))
         self.cb_auto_hide.setMaximumSize(QSize(44, 26))
 
-        self.cb_auto_hide_row_layout.addWidget(self.cb_auto_hide, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.cb_auto_hide_row_layout.addWidget(self.cb_auto_hide, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.scheduledHideLayout.addWidget(self.cb_auto_hide_row)
 
+        self.scheduledHideCaptionLayout = QVBoxLayout()
+        self.scheduledHideCaptionLayout.setSpacing(5)
+        self.scheduledHideCaptionLayout.setObjectName(u"scheduledHideCaptionLayout")
         self.label_scheduled_title = QLabel(self.gb_scheduled_hide)
         self.label_scheduled_title.setObjectName(u"label_scheduled_title")
         self.label_scheduled_title.setProperty(u"settingTitle", True)
         self.label_scheduled_title.setMinimumSize(QSize(0, 28))
         self.label_scheduled_title.setMaximumSize(QSize(16777215, 28))
 
-        self.scheduledHideLayout.addWidget(self.label_scheduled_title)
+        self.scheduledHideCaptionLayout.addWidget(self.label_scheduled_title)
 
         self.label_scheduled_description = QLabel(self.gb_scheduled_hide)
         self.label_scheduled_description.setObjectName(u"label_scheduled_description")
@@ -1025,7 +1039,10 @@ class Ui_SettingDialog(object):
         self.label_scheduled_description.setMinimumSize(QSize(310, 0))
         self.label_scheduled_description.setMaximumSize(QSize(310, 16777215))
 
-        self.scheduledHideLayout.addWidget(self.label_scheduled_description)
+        self.scheduledHideCaptionLayout.addWidget(self.label_scheduled_description)
+
+
+        self.scheduledHideLayout.addLayout(self.scheduledHideCaptionLayout)
 
         self.scheduledHideControls = QHBoxLayout()
         self.scheduledHideControls.setSpacing(10)
@@ -1124,7 +1141,7 @@ class Ui_SettingDialog(object):
         self.btn_data_directory.setMinimumSize(QSize(110, 28))
         self.btn_data_directory.setMaximumSize(QSize(110, 28))
 
-        self.data_directory_choice_row_layout.addWidget(self.btn_data_directory, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.data_directory_choice_row_layout.addWidget(self.btn_data_directory, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.data_directory_settings_layout.addWidget(self.data_directory_choice_row)
@@ -1224,6 +1241,7 @@ class Ui_SettingDialog(object):
         self.cb_hotkey_hide.setObjectName(u"cb_hotkey_hide")
         self.cb_hotkey_hide.setMinimumSize(QSize(160, 28))
         self.cb_hotkey_hide.setMaximumSize(QSize(160, 28))
+        self.cb_hotkey_hide.setProperty(u"settingTitle", True)
 
         self.gb_hotkeysLayout.addWidget(self.cb_hotkey_hide, 0, 0, 1, 1, Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
@@ -1245,6 +1263,7 @@ class Ui_SettingDialog(object):
         self.cb_hotkey_click_through.setObjectName(u"cb_hotkey_click_through")
         self.cb_hotkey_click_through.setMinimumSize(QSize(160, 28))
         self.cb_hotkey_click_through.setMaximumSize(QSize(160, 28))
+        self.cb_hotkey_click_through.setProperty(u"settingTitle", True)
 
         self.gb_hotkeysLayout.addWidget(self.cb_hotkey_click_through, 1, 0, 1, 1, Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
@@ -1361,6 +1380,7 @@ class Ui_SettingDialog(object):
         self.label_font.setObjectName(u"label_font")
         self.label_font.setMinimumSize(QSize(140, 28))
         self.label_font.setMaximumSize(QSize(140, 28))
+        self.label_font.setProperty(u"settingTitle", True)
 
         self.gb_textLayout.addWidget(self.label_font, 0, 0, 1, 1)
 
@@ -1375,6 +1395,7 @@ class Ui_SettingDialog(object):
         self.label_font_size.setObjectName(u"label_font_size")
         self.label_font_size.setMinimumSize(QSize(140, 28))
         self.label_font_size.setMaximumSize(QSize(140, 28))
+        self.label_font_size.setProperty(u"settingTitle", True)
 
         self.gb_textLayout.addWidget(self.label_font_size, 1, 0, 1, 1)
 
@@ -1401,6 +1422,7 @@ class Ui_SettingDialog(object):
         self.label_line_interval.setObjectName(u"label_line_interval")
         self.label_line_interval.setMinimumSize(QSize(140, 28))
         self.label_line_interval.setMaximumSize(QSize(140, 28))
+        self.label_line_interval.setProperty(u"settingTitle", True)
 
         self.gb_textLayout.addWidget(self.label_line_interval, 2, 0, 1, 1)
 
@@ -1432,7 +1454,7 @@ class Ui_SettingDialog(object):
         self.gb_color.setSizePolicy(sizePolicy1)
         self.gb_color.setFlat(False)
         self.gb_colorLayout = QVBoxLayout(self.gb_color)
-        self.gb_colorLayout.setSpacing(12)
+        self.gb_colorLayout.setSpacing(10)
         self.gb_colorLayout.setObjectName(u"gb_colorLayout")
         self.gb_colorLayout.setContentsMargins(10, 15, 10, 10)
         self.btn_fg_color_row = QWidget(self.gb_color)
@@ -1506,8 +1528,8 @@ class Ui_SettingDialog(object):
         self.cb_unicolor_row_layout.setContentsMargins(0, 0, 0, 0)
         self.cb_unicolor_title = QLabel(self.cb_unicolor_row)
         self.cb_unicolor_title.setObjectName(u"cb_unicolor_title")
-        self.cb_unicolor_title.setMinimumSize(QSize(0, 26))
-        self.cb_unicolor_title.setMaximumSize(QSize(16777215, 26))
+        self.cb_unicolor_title.setMinimumSize(QSize(0, 28))
+        self.cb_unicolor_title.setMaximumSize(QSize(16777215, 28))
         self.cb_unicolor_title.setProperty(u"settingTitle", True)
 
         self.cb_unicolor_row_layout.addWidget(self.cb_unicolor_title, 0, 0, 1, 1)
@@ -1528,7 +1550,7 @@ class Ui_SettingDialog(object):
         self.cb_unicolor.setMinimumSize(QSize(44, 26))
         self.cb_unicolor.setMaximumSize(QSize(44, 26))
 
-        self.cb_unicolor_row_layout.addWidget(self.cb_unicolor, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.cb_unicolor_row_layout.addWidget(self.cb_unicolor, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.gb_colorLayout.addWidget(self.cb_unicolor_row)
@@ -1640,6 +1662,7 @@ class Ui_SettingDialog(object):
         self.label_bg.setObjectName(u"label_bg")
         self.label_bg.setMinimumSize(QSize(140, 28))
         self.label_bg.setMaximumSize(QSize(140, 28))
+        self.label_bg.setProperty(u"settingTitle", True)
 
         self.gb_opacityLayout.addWidget(self.label_bg, 0, 0, 1, 1)
 
@@ -1666,6 +1689,7 @@ class Ui_SettingDialog(object):
         self.label_all.setObjectName(u"label_all")
         self.label_all.setMinimumSize(QSize(140, 28))
         self.label_all.setMaximumSize(QSize(140, 28))
+        self.label_all.setProperty(u"settingTitle", True)
 
         self.gb_opacityLayout.addWidget(self.label_all, 1, 0, 1, 1)
 
@@ -1698,6 +1722,8 @@ class Ui_SettingDialog(object):
         self.chart_sync_opacity_title = QLabel(self.chart_sync_opacity_row)
         self.chart_sync_opacity_title.setObjectName(u"chart_sync_opacity_title")
         self.chart_sync_opacity_title.setProperty(u"settingTitle", True)
+        self.chart_sync_opacity_title.setMinimumHeight(28)
+        self.chart_sync_opacity_title.setMaximumHeight(28)
 
         self.chart_sync_opacity_layout.addWidget(self.chart_sync_opacity_title, 0, 0, 1, 1)
 
@@ -1713,6 +1739,7 @@ class Ui_SettingDialog(object):
         self.label_chart_bg.setObjectName(u"label_chart_bg")
         self.label_chart_bg.setMinimumSize(QSize(140, 28))
         self.label_chart_bg.setMaximumSize(QSize(140, 28))
+        self.label_chart_bg.setProperty(u"settingTitle", True)
 
         self.gb_opacityLayout.addWidget(self.label_chart_bg, 3, 0, 1, 1)
 
@@ -1739,6 +1766,7 @@ class Ui_SettingDialog(object):
         self.label_chart_all.setObjectName(u"label_chart_all")
         self.label_chart_all.setMinimumSize(QSize(140, 28))
         self.label_chart_all.setMaximumSize(QSize(140, 28))
+        self.label_chart_all.setProperty(u"settingTitle", True)
 
         self.gb_opacityLayout.addWidget(self.label_chart_all, 4, 0, 1, 1)
 
@@ -1898,7 +1926,7 @@ class Ui_SettingDialog(object):
         sizePolicy2.setHeightForWidth(self.taskbar_settings.sizePolicy().hasHeightForWidth())
         self.taskbar_settings.setSizePolicy(sizePolicy2)
         self.taskbar_settings_outer = QVBoxLayout(self.taskbar_settings)
-        self.taskbar_settings_outer.setSpacing(14)
+        self.taskbar_settings_outer.setSpacing(10)
         self.taskbar_settings_outer.setObjectName(u"taskbar_settings_outer")
         self.taskbar_settings_outer.setContentsMargins(0, 0, 0, 0)
         self.taskbar_enabled_row = QWidget(self.taskbar_settings)
@@ -1912,8 +1940,8 @@ class Ui_SettingDialog(object):
         self.taskbar_enabled_row_layout.setContentsMargins(0, 0, 0, 0)
         self.taskbar_enabled_title = QLabel(self.taskbar_enabled_row)
         self.taskbar_enabled_title.setObjectName(u"taskbar_enabled_title")
-        self.taskbar_enabled_title.setMinimumSize(QSize(0, 26))
-        self.taskbar_enabled_title.setMaximumSize(QSize(16777215, 26))
+        self.taskbar_enabled_title.setMinimumSize(QSize(0, 28))
+        self.taskbar_enabled_title.setMaximumSize(QSize(16777215, 28))
         self.taskbar_enabled_title.setProperty(u"settingTitle", True)
 
         self.taskbar_enabled_row_layout.addWidget(self.taskbar_enabled_title, 0, 0, 1, 1)
@@ -1933,7 +1961,7 @@ class Ui_SettingDialog(object):
         self.taskbar_enabled.setMinimumSize(QSize(44, 26))
         self.taskbar_enabled.setMaximumSize(QSize(44, 26))
 
-        self.taskbar_enabled_row_layout.addWidget(self.taskbar_enabled, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.taskbar_enabled_row_layout.addWidget(self.taskbar_enabled, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.taskbar_settings_outer.addWidget(self.taskbar_enabled_row)
@@ -1955,8 +1983,8 @@ class Ui_SettingDialog(object):
         self.taskbar_dual_open_row_layout.setContentsMargins(0, 0, 0, 0)
         self.taskbar_dual_open_title = QLabel(self.taskbar_dual_open_row)
         self.taskbar_dual_open_title.setObjectName(u"taskbar_dual_open_title")
-        self.taskbar_dual_open_title.setMinimumSize(QSize(0, 26))
-        self.taskbar_dual_open_title.setMaximumSize(QSize(16777215, 26))
+        self.taskbar_dual_open_title.setMinimumSize(QSize(0, 28))
+        self.taskbar_dual_open_title.setMaximumSize(QSize(16777215, 28))
         self.taskbar_dual_open_title.setProperty(u"settingTitle", True)
 
         self.taskbar_dual_open_row_layout.addWidget(self.taskbar_dual_open_title, 0, 0, 1, 1)
@@ -1976,7 +2004,7 @@ class Ui_SettingDialog(object):
         self.taskbar_dual_open.setMinimumSize(QSize(44, 26))
         self.taskbar_dual_open.setMaximumSize(QSize(44, 26))
 
-        self.taskbar_dual_open_row_layout.addWidget(self.taskbar_dual_open, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.taskbar_dual_open_row_layout.addWidget(self.taskbar_dual_open, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.taskbar_settings_layout.addWidget(self.taskbar_dual_open_row)
@@ -1988,13 +2016,13 @@ class Ui_SettingDialog(object):
         self.taskbar_style_settings.setSizePolicy(sizePolicy2)
         self.taskbar_style_settings.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.taskbar_style_settings_outer = QVBoxLayout(self.taskbar_style_settings)
-        self.taskbar_style_settings_outer.setSpacing(12)
+        self.taskbar_style_settings_outer.setSpacing(10)
         self.taskbar_style_settings_outer.setObjectName(u"taskbar_style_settings_outer")
         self.taskbar_style_settings_outer.setContentsMargins(10, 15, 10, 10)
         self.taskbar_style_settings_body = QWidget(self.taskbar_style_settings)
         self.taskbar_style_settings_body.setObjectName(u"taskbar_style_settings_body")
         self.taskbar_style_settings_layout = QVBoxLayout(self.taskbar_style_settings_body)
-        self.taskbar_style_settings_layout.setSpacing(12)
+        self.taskbar_style_settings_layout.setSpacing(10)
         self.taskbar_style_settings_layout.setObjectName(u"taskbar_style_settings_layout")
         self.taskbar_style_settings_layout.setContentsMargins(0, 0, 0, 0)
         self.taskbar_rows_row = QWidget(self.taskbar_style_settings_body)
@@ -2034,6 +2062,7 @@ class Ui_SettingDialog(object):
         self.taskbar_style_settings_layout_label_3.setObjectName(u"taskbar_style_settings_layout_label_3")
         self.taskbar_style_settings_layout_label_3.setMinimumSize(QSize(100, 28))
         self.taskbar_style_settings_layout_label_3.setMaximumSize(QSize(100, 28))
+        self.taskbar_style_settings_layout_label_3.setProperty(u"settingTitle", True)
 
         self.taskbarStyleValuesLayout.addWidget(self.taskbar_style_settings_layout_label_3, 1, 0, 1, 1)
 
@@ -2060,6 +2089,7 @@ class Ui_SettingDialog(object):
         self.taskbar_size_title.setObjectName(u"taskbar_size_title")
         self.taskbar_size_title.setMinimumSize(QSize(140, 28))
         self.taskbar_size_title.setMaximumSize(QSize(140, 28))
+        self.taskbar_size_title.setProperty(u"settingTitle", True)
 
         self.taskbarStyleValuesLayout.addWidget(self.taskbar_size_title, 0, 0, 1, 1)
 
@@ -2096,8 +2126,8 @@ class Ui_SettingDialog(object):
         self.taskbar_auto_color_row_layout.setContentsMargins(0, 0, 0, 0)
         self.taskbar_auto_color_title = QLabel(self.taskbar_auto_color_row)
         self.taskbar_auto_color_title.setObjectName(u"taskbar_auto_color_title")
-        self.taskbar_auto_color_title.setMinimumSize(QSize(0, 26))
-        self.taskbar_auto_color_title.setMaximumSize(QSize(16777215, 26))
+        self.taskbar_auto_color_title.setMinimumSize(QSize(0, 28))
+        self.taskbar_auto_color_title.setMaximumSize(QSize(16777215, 28))
         self.taskbar_auto_color_title.setProperty(u"settingTitle", True)
 
         self.taskbar_auto_color_row_layout.addWidget(self.taskbar_auto_color_title, 0, 0, 1, 1)
@@ -2118,7 +2148,7 @@ class Ui_SettingDialog(object):
         self.taskbar_auto_color.setMaximumSize(QSize(44, 26))
         self.taskbar_auto_color.setChecked(True)
 
-        self.taskbar_auto_color_row_layout.addWidget(self.taskbar_auto_color, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.taskbar_auto_color_row_layout.addWidget(self.taskbar_auto_color, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.taskbar_style_settings_layout.addWidget(self.taskbar_auto_color_row)
@@ -2158,7 +2188,7 @@ class Ui_SettingDialog(object):
         self.btn_taskbar_color.setMinimumSize(QSize(110, 28))
         self.btn_taskbar_color.setMaximumSize(QSize(110, 28))
 
-        self.btn_taskbar_color_row_layout.addWidget(self.btn_taskbar_color, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.btn_taskbar_color_row_layout.addWidget(self.btn_taskbar_color, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.taskbar_style_settings_layout.addWidget(self.btn_taskbar_color_row)
@@ -2201,7 +2231,7 @@ class Ui_SettingDialog(object):
         self.taskbar_offset.setMinimumSize(QSize(100, 28))
         self.taskbar_offset.setMaximumSize(QSize(100, 28))
 
-        self.taskbar_offset_row_layout.addWidget(self.taskbar_offset, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.taskbar_offset_row_layout.addWidget(self.taskbar_offset, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.taskbar_style_settings_outer.addWidget(self.taskbar_offset_row)
@@ -2216,7 +2246,7 @@ class Ui_SettingDialog(object):
         self.taskbar_metric_settings.setSizePolicy(sizePolicy2)
         self.taskbar_metric_settings.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.taskbar_metric_settings_outer = QVBoxLayout(self.taskbar_metric_settings)
-        self.taskbar_metric_settings_outer.setSpacing(12)
+        self.taskbar_metric_settings_outer.setSpacing(10)
         self.taskbar_metric_settings_outer.setObjectName(u"taskbar_metric_settings_outer")
         self.taskbar_metric_settings_outer.setContentsMargins(10, 15, 10, 10)
         self.taskbar_sync_metrics_row = QWidget(self.taskbar_metric_settings)
@@ -2230,8 +2260,8 @@ class Ui_SettingDialog(object):
         self.taskbar_sync_metrics_row_layout.setContentsMargins(0, 0, 0, 0)
         self.taskbar_sync_metrics_title = QLabel(self.taskbar_sync_metrics_row)
         self.taskbar_sync_metrics_title.setObjectName(u"taskbar_sync_metrics_title")
-        self.taskbar_sync_metrics_title.setMinimumSize(QSize(0, 26))
-        self.taskbar_sync_metrics_title.setMaximumSize(QSize(16777215, 26))
+        self.taskbar_sync_metrics_title.setMinimumSize(QSize(0, 28))
+        self.taskbar_sync_metrics_title.setMaximumSize(QSize(16777215, 28))
         self.taskbar_sync_metrics_title.setProperty(u"settingTitle", True)
 
         self.taskbar_sync_metrics_row_layout.addWidget(self.taskbar_sync_metrics_title, 0, 0, 1, 1)
@@ -2251,7 +2281,7 @@ class Ui_SettingDialog(object):
         self.taskbar_sync_metrics.setMinimumSize(QSize(44, 26))
         self.taskbar_sync_metrics.setMaximumSize(QSize(44, 26))
 
-        self.taskbar_sync_metrics_row_layout.addWidget(self.taskbar_sync_metrics, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.taskbar_sync_metrics_row_layout.addWidget(self.taskbar_sync_metrics, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.taskbar_metric_settings_outer.addWidget(self.taskbar_sync_metrics_row)
@@ -2259,7 +2289,7 @@ class Ui_SettingDialog(object):
         self.taskbar_metric_settings_body = QWidget(self.taskbar_metric_settings)
         self.taskbar_metric_settings_body.setObjectName(u"taskbar_metric_settings_body")
         self.taskbar_metric_settings_layout = QVBoxLayout(self.taskbar_metric_settings_body)
-        self.taskbar_metric_settings_layout.setSpacing(12)
+        self.taskbar_metric_settings_layout.setSpacing(10)
         self.taskbar_metric_settings_layout.setObjectName(u"taskbar_metric_settings_layout")
         self.taskbar_metric_settings_layout.setContentsMargins(0, 0, 0, 0)
         self.taskbar_metric_pool = MetricPoolWidget(self.taskbar_metric_settings_body)
@@ -2280,7 +2310,7 @@ class Ui_SettingDialog(object):
         self.taskbar_paging_settings.setSizePolicy(sizePolicy2)
         self.taskbar_paging_settings.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.taskbar_paging_settings_outer = QVBoxLayout(self.taskbar_paging_settings)
-        self.taskbar_paging_settings_outer.setSpacing(12)
+        self.taskbar_paging_settings_outer.setSpacing(10)
         self.taskbar_paging_settings_outer.setObjectName(u"taskbar_paging_settings_outer")
         self.taskbar_paging_settings_outer.setContentsMargins(10, 15, 10, 10)
         self.taskbar_sync_paging_row = QWidget(self.taskbar_paging_settings)
@@ -2294,8 +2324,8 @@ class Ui_SettingDialog(object):
         self.taskbar_sync_paging_row_layout.setContentsMargins(0, 0, 0, 0)
         self.taskbar_sync_paging_title = QLabel(self.taskbar_sync_paging_row)
         self.taskbar_sync_paging_title.setObjectName(u"taskbar_sync_paging_title")
-        self.taskbar_sync_paging_title.setMinimumSize(QSize(0, 26))
-        self.taskbar_sync_paging_title.setMaximumSize(QSize(16777215, 26))
+        self.taskbar_sync_paging_title.setMinimumSize(QSize(0, 28))
+        self.taskbar_sync_paging_title.setMaximumSize(QSize(16777215, 28))
         self.taskbar_sync_paging_title.setProperty(u"settingTitle", True)
 
         self.taskbar_sync_paging_row_layout.addWidget(self.taskbar_sync_paging_title, 0, 0, 1, 1)
@@ -2315,7 +2345,7 @@ class Ui_SettingDialog(object):
         self.taskbar_sync_paging.setMinimumSize(QSize(44, 26))
         self.taskbar_sync_paging.setMaximumSize(QSize(44, 26))
 
-        self.taskbar_sync_paging_row_layout.addWidget(self.taskbar_sync_paging, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.taskbar_sync_paging_row_layout.addWidget(self.taskbar_sync_paging, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.taskbar_paging_settings_outer.addWidget(self.taskbar_sync_paging_row)
@@ -2323,7 +2353,7 @@ class Ui_SettingDialog(object):
         self.taskbar_paging_settings_body = QWidget(self.taskbar_paging_settings)
         self.taskbar_paging_settings_body.setObjectName(u"taskbar_paging_settings_body")
         self.taskbar_paging_settings_layout = QVBoxLayout(self.taskbar_paging_settings_body)
-        self.taskbar_paging_settings_layout.setSpacing(12)
+        self.taskbar_paging_settings_layout.setSpacing(10)
         self.taskbar_paging_settings_layout.setObjectName(u"taskbar_paging_settings_layout")
         self.taskbar_paging_settings_layout.setContentsMargins(0, 0, 0, 0)
         self.taskbarPagingValuesLayout = QGridLayout()
@@ -2333,6 +2363,7 @@ class Ui_SettingDialog(object):
         self.taskbar_paging_settings_layout_label_0.setObjectName(u"taskbar_paging_settings_layout_label_0")
         self.taskbar_paging_settings_layout_label_0.setMinimumSize(QSize(100, 28))
         self.taskbar_paging_settings_layout_label_0.setMaximumSize(QSize(100, 28))
+        self.taskbar_paging_settings_layout_label_0.setProperty(u"settingTitle", True)
 
         self.taskbarPagingValuesLayout.addWidget(self.taskbar_paging_settings_layout_label_0, 0, 0, 1, 1)
 
@@ -2350,6 +2381,7 @@ class Ui_SettingDialog(object):
         self.taskbar_paging_settings_layout_label_1.setObjectName(u"taskbar_paging_settings_layout_label_1")
         self.taskbar_paging_settings_layout_label_1.setMinimumSize(QSize(100, 28))
         self.taskbar_paging_settings_layout_label_1.setMaximumSize(QSize(100, 28))
+        self.taskbar_paging_settings_layout_label_1.setProperty(u"settingTitle", True)
 
         self.taskbarPagingValuesLayout.addWidget(self.taskbar_paging_settings_layout_label_1, 1, 0, 1, 1)
 
@@ -2379,7 +2411,7 @@ class Ui_SettingDialog(object):
         self.taskbar_split_settings.setSizePolicy(sizePolicy2)
         self.taskbar_split_settings.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.taskbar_split_settings_outer = QVBoxLayout(self.taskbar_split_settings)
-        self.taskbar_split_settings_outer.setSpacing(12)
+        self.taskbar_split_settings_outer.setSpacing(10)
         self.taskbar_split_settings_outer.setObjectName(u"taskbar_split_settings_outer")
         self.taskbar_split_settings_outer.setContentsMargins(10, 15, 10, 10)
         self.taskbar_sync_split_row = QWidget(self.taskbar_split_settings)
@@ -2393,8 +2425,8 @@ class Ui_SettingDialog(object):
         self.taskbar_sync_split_row_layout.setContentsMargins(0, 0, 0, 0)
         self.taskbar_sync_split_title = QLabel(self.taskbar_sync_split_row)
         self.taskbar_sync_split_title.setObjectName(u"taskbar_sync_split_title")
-        self.taskbar_sync_split_title.setMinimumSize(QSize(0, 26))
-        self.taskbar_sync_split_title.setMaximumSize(QSize(16777215, 26))
+        self.taskbar_sync_split_title.setMinimumSize(QSize(0, 28))
+        self.taskbar_sync_split_title.setMaximumSize(QSize(16777215, 28))
         self.taskbar_sync_split_title.setProperty(u"settingTitle", True)
 
         self.taskbar_sync_split_row_layout.addWidget(self.taskbar_sync_split_title, 0, 0, 1, 1)
@@ -2414,7 +2446,7 @@ class Ui_SettingDialog(object):
         self.taskbar_sync_split.setMinimumSize(QSize(44, 26))
         self.taskbar_sync_split.setMaximumSize(QSize(44, 26))
 
-        self.taskbar_sync_split_row_layout.addWidget(self.taskbar_sync_split, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.taskbar_sync_split_row_layout.addWidget(self.taskbar_sync_split, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.taskbar_split_settings_outer.addWidget(self.taskbar_sync_split_row)
@@ -2422,7 +2454,7 @@ class Ui_SettingDialog(object):
         self.taskbar_split_settings_body = QWidget(self.taskbar_split_settings)
         self.taskbar_split_settings_body.setObjectName(u"taskbar_split_settings_body")
         self.taskbar_split_settings_layout = QVBoxLayout(self.taskbar_split_settings_body)
-        self.taskbar_split_settings_layout.setSpacing(12)
+        self.taskbar_split_settings_layout.setSpacing(10)
         self.taskbar_split_settings_layout.setObjectName(u"taskbar_split_settings_layout")
         self.taskbar_split_settings_layout.setContentsMargins(0, 0, 0, 0)
         self.taskbar_split_enabled_row = QWidget(self.taskbar_split_settings_body)
@@ -2436,8 +2468,8 @@ class Ui_SettingDialog(object):
         self.taskbar_split_enabled_row_layout.setContentsMargins(0, 0, 0, 0)
         self.taskbar_split_enabled_title = QLabel(self.taskbar_split_enabled_row)
         self.taskbar_split_enabled_title.setObjectName(u"taskbar_split_enabled_title")
-        self.taskbar_split_enabled_title.setMinimumSize(QSize(0, 26))
-        self.taskbar_split_enabled_title.setMaximumSize(QSize(16777215, 26))
+        self.taskbar_split_enabled_title.setMinimumSize(QSize(0, 28))
+        self.taskbar_split_enabled_title.setMaximumSize(QSize(16777215, 28))
         self.taskbar_split_enabled_title.setProperty(u"settingTitle", True)
 
         self.taskbar_split_enabled_row_layout.addWidget(self.taskbar_split_enabled_title, 0, 0, 1, 1)
@@ -2457,7 +2489,7 @@ class Ui_SettingDialog(object):
         self.taskbar_split_enabled.setMinimumSize(QSize(44, 26))
         self.taskbar_split_enabled.setMaximumSize(QSize(44, 26))
 
-        self.taskbar_split_enabled_row_layout.addWidget(self.taskbar_split_enabled, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.taskbar_split_enabled_row_layout.addWidget(self.taskbar_split_enabled, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.taskbar_split_settings_layout.addWidget(self.taskbar_split_enabled_row)
@@ -2473,8 +2505,8 @@ class Ui_SettingDialog(object):
         self.taskbar_split_separator_row_layout.setContentsMargins(0, 0, 0, 0)
         self.taskbar_split_separator_title = QLabel(self.taskbar_split_separator_row)
         self.taskbar_split_separator_title.setObjectName(u"taskbar_split_separator_title")
-        self.taskbar_split_separator_title.setMinimumSize(QSize(0, 26))
-        self.taskbar_split_separator_title.setMaximumSize(QSize(16777215, 26))
+        self.taskbar_split_separator_title.setMinimumSize(QSize(0, 28))
+        self.taskbar_split_separator_title.setMaximumSize(QSize(16777215, 28))
         self.taskbar_split_separator_title.setProperty(u"settingTitle", True)
 
         self.taskbar_split_separator_row_layout.addWidget(self.taskbar_split_separator_title, 0, 0, 1, 1)
@@ -2494,7 +2526,7 @@ class Ui_SettingDialog(object):
         self.taskbar_split_separator.setMinimumSize(QSize(44, 26))
         self.taskbar_split_separator.setMaximumSize(QSize(44, 26))
 
-        self.taskbar_split_separator_row_layout.addWidget(self.taskbar_split_separator, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.taskbar_split_separator_row_layout.addWidget(self.taskbar_split_separator, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.taskbar_split_settings_layout.addWidget(self.taskbar_split_separator_row)
@@ -2520,8 +2552,8 @@ class Ui_SettingDialog(object):
         self.cb_hide_tray_icon_title = QLabel(self.cb_hide_tray_icon_row)
         self.cb_hide_tray_icon_title.setObjectName(u"cb_hide_tray_icon_title")
         self.cb_hide_tray_icon_title.setProperty(u"settingTitle", True)
-        self.cb_hide_tray_icon_title.setMinimumSize(QSize(0, 26))
-        self.cb_hide_tray_icon_title.setMaximumSize(QSize(16777215, 26))
+        self.cb_hide_tray_icon_title.setMinimumSize(QSize(0, 28))
+        self.cb_hide_tray_icon_title.setMaximumSize(QSize(16777215, 28))
 
         self.cb_hide_tray_icon_row_layout.addWidget(self.cb_hide_tray_icon_title, 0, 0, 1, 1)
 
@@ -2540,7 +2572,7 @@ class Ui_SettingDialog(object):
         self.cb_hide_tray_icon.setMinimumSize(QSize(44, 26))
         self.cb_hide_tray_icon.setMaximumSize(QSize(44, 26))
 
-        self.cb_hide_tray_icon_row_layout.addWidget(self.cb_hide_tray_icon, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.cb_hide_tray_icon_row_layout.addWidget(self.cb_hide_tray_icon, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.taskbar_settings_outer.addWidget(self.cb_hide_tray_icon_row)

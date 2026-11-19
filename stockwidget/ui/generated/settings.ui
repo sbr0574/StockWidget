@@ -652,6 +652,12 @@
                    <property name="settingTitle" stdset="0">
                     <bool>true</bool>
                    </property>
+                   <property name="minimumHeight">
+                    <number>28</number>
+                   </property>
+                   <property name="maximumHeight">
+                    <number>28</number>
+                   </property>
                   </widget>
                  </item>
                  <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
@@ -710,6 +716,12 @@
                    </property>
                    <property name="text">
                     <string>允许通过单击浮窗显示行情图表</string>
+                   </property>
+                   <property name="minimumHeight">
+                    <number>28</number>
+                   </property>
+                   <property name="maximumHeight">
+                    <number>28</number>
                    </property>
                   </widget>
                  </item>
@@ -803,13 +815,13 @@
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="settingTitle" stdset="0">
@@ -1008,13 +1020,13 @@
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                   </widget>
@@ -1082,13 +1094,13 @@
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                   </widget>
@@ -1236,6 +1248,12 @@
                    <property name="buddy">
                     <cstring>cmb_average_period</cstring>
                    </property>
+                   <property name="minimumHeight">
+                    <number>28</number>
+                   </property>
+                   <property name="maximumHeight">
+                    <number>28</number>
+                   </property>
                   </widget>
                  </item>
                  <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
@@ -1312,6 +1330,12 @@
                    </property>
                    <property name="settingTitle" stdset="0">
                     <bool>true</bool>
+                   </property>
+                   <property name="minimumHeight">
+                    <number>28</number>
+                   </property>
+                   <property name="maximumHeight">
+                    <number>28</number>
                    </property>
                   </widget>
                  </item>
@@ -1569,13 +1593,13 @@
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
-                  <height>26</height>
+                  <height>28</height>
                  </size>
                 </property>
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
-                  <height>26</height>
+                  <height>28</height>
                  </size>
                 </property>
                 <property name="settingTitle" stdset="0">
@@ -1642,7 +1666,7 @@
                <number>10</number>
               </property>
               <property name="spacing">
-               <number>14</number>
+               <number>10</number>
               </property>
               <item>
                <widget class="QWidget" name="cb_grid_row">
@@ -1679,13 +1703,13 @@
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="settingTitle" stdset="0">
@@ -1756,13 +1780,13 @@
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="settingTitle" stdset="0">
@@ -1836,13 +1860,13 @@
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="settingTitle" stdset="0">
@@ -1916,13 +1940,13 @@
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="settingTitle" stdset="0">
@@ -1993,13 +2017,13 @@
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="settingTitle" stdset="0">
@@ -2073,13 +2097,13 @@
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="settingTitle" stdset="0">
@@ -2152,7 +2176,7 @@
                <number>10</number>
               </property>
               <property name="bottomMargin">
-               <number>5</number>
+               <number>10</number>
               </property>
               <property name="spacing">
                <number>5</number>
@@ -2213,13 +2237,13 @@
                       <property name="minimumSize">
                        <size>
                         <width>0</width>
-                        <height>26</height>
+                        <height>28</height>
                        </size>
                       </property>
                       <property name="maximumSize">
                        <size>
                         <width>16777215</width>
-                        <height>26</height>
+                        <height>28</height>
                        </size>
                       </property>
                       <property name="settingTitle" stdset="0">
@@ -2289,7 +2313,7 @@
                <number>10</number>
               </property>
               <property name="bottomMargin">
-               <number>5</number>
+               <number>10</number>
               </property>
               <property name="spacing">
                <number>5</number>
@@ -2313,7 +2337,7 @@
                   <number>0</number>
                  </property>
                  <property name="spacing">
-                  <number>5</number>
+                  <number>10</number>
                  </property>
                  <item row="0" column="0">
                   <widget class="QLabel" name="float_row_settings_layout_label_0">
@@ -2331,6 +2355,9 @@
                      <width>16777215</width>
                      <height>28</height>
                     </size>
+                   </property>
+                   <property name="settingTitle" stdset="0">
+                    <bool>true</bool>
                    </property>
                   </widget>
                  </item>
@@ -2400,13 +2427,13 @@
                       <property name="minimumSize">
                        <size>
                         <width>0</width>
-                        <height>26</height>
+                        <height>28</height>
                        </size>
                       </property>
                       <property name="maximumSize">
                        <size>
                         <width>16777215</width>
-                        <height>26</height>
+                        <height>28</height>
                        </size>
                       </property>
                      </widget>
@@ -2474,6 +2501,9 @@
                         <height>28</height>
                        </size>
                       </property>
+                      <property name="settingTitle" stdset="0">
+                       <bool>true</bool>
+                      </property>
                      </widget>
                     </item>
                     <item>
@@ -2505,6 +2535,9 @@
                         <width>52</width>
                         <height>28</height>
                        </size>
+                      </property>
+                      <property name="settingTitle" stdset="0">
+                       <bool>true</bool>
                       </property>
                      </widget>
                     </item>
@@ -2579,10 +2612,10 @@
                <number>10</number>
               </property>
               <property name="bottomMargin">
-               <number>5</number>
+               <number>10</number>
               </property>
               <property name="spacing">
-               <number>5</number>
+               <number>10</number>
               </property>
               <property name="topMargin">
                <number>15</number>
@@ -2650,13 +2683,13 @@
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="settingTitle" stdset="0">
@@ -2692,7 +2725,7 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="1" rowspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
+                 <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
                   <widget class="ToggleSwitch" name="cb_auto_hide">
                    <property name="text">
                     <string>自动识别</string>
@@ -2724,51 +2757,58 @@
                </widget>
               </item>
               <item>
-               <widget class="QLabel" name="label_scheduled_title">
-                <property name="text">
-                 <string>定时隐藏</string>
+               <layout class="QVBoxLayout" name="scheduledHideCaptionLayout">
+                <property name="spacing">
+                 <number>5</number>
                 </property>
-                <property name="settingTitle" stdset="0">
-                 <bool>true</bool>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>28</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>16777215</width>
-                  <height>28</height>
-                 </size>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="label_scheduled_description">
-                <property name="text">
-                 <string>每天在指定时间隐藏行情，最多设置三个时间。</string>
-                </property>
-                <property name="settingDescription" stdset="0">
-                 <bool>true</bool>
-                </property>
-                <property name="wordWrap">
-                 <bool>true</bool>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>310</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>310</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-               </widget>
+                <item>
+                 <widget class="QLabel" name="label_scheduled_title">
+                  <property name="text">
+                   <string>定时隐藏</string>
+                  </property>
+                  <property name="settingTitle" stdset="0">
+                   <bool>true</bool>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>28</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>28</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_scheduled_description">
+                  <property name="text">
+                   <string>每天在指定时间隐藏行情，最多设置三个时间。</string>
+                  </property>
+                  <property name="settingDescription" stdset="0">
+                   <bool>true</bool>
+                  </property>
+                  <property name="wordWrap">
+                   <bool>true</bool>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>310</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>310</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
               <item>
                <layout class="QHBoxLayout" name="scheduledHideControls">
@@ -3022,7 +3062,7 @@
                       </property>
                      </widget>
                     </item>
-                    <item row="0" column="1" rowspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
+                    <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
                      <widget class="QPushButton" name="btn_data_directory">
                       <property name="text">
                        <string>更改目录…</string>
@@ -3297,6 +3337,9 @@
                   <height>28</height>
                  </size>
                 </property>
+                <property name="settingTitle" stdset="0">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
               <item row="0" column="1">
@@ -3347,6 +3390,9 @@
                   <width>160</width>
                   <height>28</height>
                  </size>
+                </property>
+                <property name="settingTitle" stdset="0">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -3649,6 +3695,9 @@
                   <height>28</height>
                  </size>
                 </property>
+                <property name="settingTitle" stdset="0">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
               <item row="0" column="1" colspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
@@ -3683,6 +3732,9 @@
                   <width>140</width>
                   <height>28</height>
                  </size>
+                </property>
+                <property name="settingTitle" stdset="0">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -3752,6 +3804,9 @@
                   <width>140</width>
                   <height>28</height>
                  </size>
+                </property>
+                <property name="settingTitle" stdset="0">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -3836,7 +3891,7 @@
                <number>10</number>
               </property>
               <property name="spacing">
-               <number>12</number>
+               <number>10</number>
               </property>
               <item>
                <widget class="QWidget" name="btn_fg_color_row">
@@ -4039,13 +4094,13 @@
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="settingTitle" stdset="0">
@@ -4081,7 +4136,7 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="1" rowspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
+                 <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
                   <widget class="ToggleSwitch" name="cb_unicolor">
                    <property name="baseSize">
                     <size>
@@ -4417,6 +4472,9 @@
                 <property name="text">
                  <string>主浮窗背景</string>
                 </property>
+                <property name="settingTitle" stdset="0">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
               <item row="0" column="1" colspan="1">
@@ -4485,6 +4543,9 @@
                 </property>
                 <property name="text">
                  <string>主浮窗整体</string>
+                </property>
+                <property name="settingTitle" stdset="0">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -4567,6 +4628,12 @@
                    <property name="text">
                     <string>图表浮窗同步主浮窗不透明度</string>
                    </property>
+                   <property name="minimumHeight">
+                    <number>28</number>
+                   </property>
+                   <property name="maximumHeight">
+                    <number>28</number>
+                   </property>
                   </widget>
                  </item>
                  <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
@@ -4598,6 +4665,9 @@
                 </property>
                 <property name="text">
                  <string>图表浮窗背景</string>
+                </property>
+                <property name="settingTitle" stdset="0">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -4667,6 +4737,9 @@
                 </property>
                 <property name="text">
                  <string>图表浮窗整体</string>
+                </property>
+                <property name="settingTitle" stdset="0">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -5106,7 +5179,7 @@
                <number>0</number>
               </property>
               <property name="spacing">
-               <number>14</number>
+               <number>10</number>
               </property>
               <item>
                <widget class="QWidget" name="taskbar_enabled_row">
@@ -5143,13 +5216,13 @@
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="settingTitle" stdset="0">
@@ -5185,7 +5258,7 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="1" rowspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
+                 <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
                   <widget class="ToggleSwitch" name="taskbar_enabled">
                    <property name="minimumSize">
                     <size>
@@ -5269,13 +5342,13 @@
                       <property name="minimumSize">
                        <size>
                         <width>0</width>
-                        <height>26</height>
+                        <height>28</height>
                        </size>
                       </property>
                       <property name="maximumSize">
                        <size>
                         <width>16777215</width>
-                        <height>26</height>
+                        <height>28</height>
                        </size>
                       </property>
                       <property name="settingTitle" stdset="0">
@@ -5311,7 +5384,7 @@
                       </property>
                      </widget>
                     </item>
-                    <item row="0" column="1" rowspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
+                    <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
                      <widget class="ToggleSwitch" name="taskbar_dual_open">
                       <property name="text">
                        <string>允许浮窗与任务栏同时显示</string>
@@ -5370,7 +5443,7 @@
                      <number>10</number>
                     </property>
                     <property name="spacing">
-                     <number>12</number>
+                     <number>10</number>
                     </property>
                     <item>
                      <widget class="QWidget" name="taskbar_style_settings_body">
@@ -5388,7 +5461,7 @@
                         <number>0</number>
                        </property>
                        <property name="spacing">
-                        <number>12</number>
+                        <number>10</number>
                        </property>
                        <item>
                         <widget class="QWidget" name="taskbar_rows_row">
@@ -5492,6 +5565,9 @@
                              <height>28</height>
                             </size>
                            </property>
+                           <property name="settingTitle" stdset="0">
+                            <bool>true</bool>
+                           </property>
                           </widget>
                          </item>
                          <item row="1" column="1">
@@ -5563,6 +5639,9 @@
                              <width>140</width>
                              <height>28</height>
                             </size>
+                           </property>
+                           <property name="settingTitle" stdset="0">
+                            <bool>true</bool>
                            </property>
                           </widget>
                          </item>
@@ -5653,13 +5732,13 @@
                             <property name="minimumSize">
                              <size>
                               <width>0</width>
-                              <height>26</height>
+                              <height>28</height>
                              </size>
                             </property>
                             <property name="maximumSize">
                              <size>
                               <width>16777215</width>
-                              <height>26</height>
+                              <height>28</height>
                              </size>
                             </property>
                             <property name="settingTitle" stdset="0">
@@ -5695,7 +5774,7 @@
                             </property>
                            </widget>
                           </item>
-                          <item row="0" column="1" rowspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
+                          <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
                            <widget class="ToggleSwitch" name="taskbar_auto_color">
                             <property name="minimumSize">
                              <size>
@@ -5803,7 +5882,7 @@
                             </property>
                            </widget>
                           </item>
-                          <item row="0" column="1" rowspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
+                          <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
                            <widget class="QPushButton" name="btn_taskbar_color">
                             <property name="flat">
                              <bool>true</bool>
@@ -5917,7 +5996,7 @@
                          </property>
                         </widget>
                        </item>
-                       <item row="0" column="1" rowspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
+                       <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
                         <widget class="QSpinBox" name="taskbar_offset">
                          <property name="minimum">
                           <number>-2000</number>
@@ -5982,7 +6061,7 @@
                      <number>10</number>
                     </property>
                     <property name="spacing">
-                     <number>12</number>
+                     <number>10</number>
                     </property>
                     <item>
                      <widget class="QWidget" name="taskbar_sync_metrics_row">
@@ -6019,13 +6098,13 @@
                          <property name="minimumSize">
                           <size>
                            <width>0</width>
-                           <height>26</height>
+                           <height>28</height>
                           </size>
                          </property>
                          <property name="maximumSize">
                           <size>
                            <width>16777215</width>
-                           <height>26</height>
+                           <height>28</height>
                           </size>
                          </property>
                          <property name="settingTitle" stdset="0">
@@ -6061,7 +6140,7 @@
                          </property>
                         </widget>
                        </item>
-                       <item row="0" column="1" rowspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
+                       <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
                         <widget class="ToggleSwitch" name="taskbar_sync_metrics">
                          <property name="minimumSize">
                           <size>
@@ -6105,7 +6184,7 @@
                         <number>0</number>
                        </property>
                        <property name="spacing">
-                        <number>12</number>
+                        <number>10</number>
                        </property>
                        <item>
                         <widget class="MetricPoolWidget" name="taskbar_metric_pool">
@@ -6148,7 +6227,7 @@
                      <number>10</number>
                     </property>
                     <property name="spacing">
-                     <number>12</number>
+                     <number>10</number>
                     </property>
                     <item>
                      <widget class="QWidget" name="taskbar_sync_paging_row">
@@ -6185,13 +6264,13 @@
                          <property name="minimumSize">
                           <size>
                            <width>0</width>
-                           <height>26</height>
+                           <height>28</height>
                           </size>
                          </property>
                          <property name="maximumSize">
                           <size>
                            <width>16777215</width>
-                           <height>26</height>
+                           <height>28</height>
                           </size>
                          </property>
                          <property name="settingTitle" stdset="0">
@@ -6227,7 +6306,7 @@
                          </property>
                         </widget>
                        </item>
-                       <item row="0" column="1" rowspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
+                       <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
                         <widget class="ToggleSwitch" name="taskbar_sync_paging">
                          <property name="minimumSize">
                           <size>
@@ -6271,7 +6350,7 @@
                         <number>0</number>
                        </property>
                        <property name="spacing">
-                        <number>12</number>
+                        <number>10</number>
                        </property>
                        <item>
                         <layout class="QGridLayout" name="taskbarPagingValuesLayout">
@@ -6294,6 +6373,9 @@
                              <width>100</width>
                              <height>28</height>
                             </size>
+                           </property>
+                           <property name="settingTitle" stdset="0">
+                            <bool>true</bool>
                            </property>
                           </widget>
                          </item>
@@ -6344,6 +6426,9 @@
                              <width>100</width>
                              <height>28</height>
                             </size>
+                           </property>
+                           <property name="settingTitle" stdset="0">
+                            <bool>true</bool>
                            </property>
                           </widget>
                          </item>
@@ -6414,7 +6499,7 @@
                      <number>10</number>
                     </property>
                     <property name="spacing">
-                     <number>12</number>
+                     <number>10</number>
                     </property>
                     <item>
                      <widget class="QWidget" name="taskbar_sync_split_row">
@@ -6451,13 +6536,13 @@
                          <property name="minimumSize">
                           <size>
                            <width>0</width>
-                           <height>26</height>
+                           <height>28</height>
                           </size>
                          </property>
                          <property name="maximumSize">
                           <size>
                            <width>16777215</width>
-                           <height>26</height>
+                           <height>28</height>
                           </size>
                          </property>
                          <property name="settingTitle" stdset="0">
@@ -6493,7 +6578,7 @@
                          </property>
                         </widget>
                        </item>
-                       <item row="0" column="1" rowspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
+                       <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
                         <widget class="ToggleSwitch" name="taskbar_sync_split">
                          <property name="minimumSize">
                           <size>
@@ -6537,7 +6622,7 @@
                         <number>0</number>
                        </property>
                        <property name="spacing">
-                        <number>12</number>
+                        <number>10</number>
                        </property>
                        <item>
                         <widget class="QWidget" name="taskbar_split_enabled_row">
@@ -6574,13 +6659,13 @@
                             <property name="minimumSize">
                              <size>
                               <width>0</width>
-                              <height>26</height>
+                              <height>28</height>
                              </size>
                             </property>
                             <property name="maximumSize">
                              <size>
                               <width>16777215</width>
-                              <height>26</height>
+                              <height>28</height>
                              </size>
                             </property>
                             <property name="settingTitle" stdset="0">
@@ -6616,7 +6701,7 @@
                             </property>
                            </widget>
                           </item>
-                          <item row="0" column="1" rowspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
+                          <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
                            <widget class="ToggleSwitch" name="taskbar_split_enabled">
                             <property name="text">
                              <string>启用分栏</string>
@@ -6679,13 +6764,13 @@
                             <property name="minimumSize">
                              <size>
                               <width>0</width>
-                              <height>26</height>
+                              <height>28</height>
                              </size>
                             </property>
                             <property name="maximumSize">
                              <size>
                               <width>16777215</width>
-                              <height>26</height>
+                              <height>28</height>
                              </size>
                             </property>
                             <property name="settingTitle" stdset="0">
@@ -6721,7 +6806,7 @@
                             </property>
                            </widget>
                           </item>
-                          <item row="0" column="1" rowspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
+                          <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
                            <widget class="ToggleSwitch" name="taskbar_split_separator">
                             <property name="text">
                              <string>显示分隔线</string>
@@ -6796,13 +6881,13 @@
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
-                     <height>26</height>
+                     <height>28</height>
                     </size>
                    </property>
                   </widget>
@@ -6835,7 +6920,7 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="1" rowspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
+                 <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
                   <widget class="ToggleSwitch" name="cb_hide_tray_icon">
                    <property name="minimumSize">
                     <size>
