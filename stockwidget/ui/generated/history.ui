@@ -1242,9 +1242,6 @@
           <height>24</height>
          </size>
         </property>
-        <property name="chartTab" stdset="0">
-         <bool>true</bool>
-        </property>
        </widget>
       </item>
       <item>
@@ -1270,9 +1267,6 @@
           <height>24</height>
          </size>
         </property>
-        <property name="chartTab" stdset="0">
-         <bool>true</bool>
-        </property>
        </widget>
       </item>
       <item>
@@ -1297,9 +1291,6 @@
           <width>16777215</width>
           <height>24</height>
          </size>
-        </property>
-        <property name="chartTab" stdset="0">
-         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -1435,7 +1426,7 @@
       <bool>false</bool>
      </property>
      <property name="text">
-      <string>均 —  价格 — (—)  量 —</string>
+      <string>价格 — (—)  均 —  量 —</string>
      </property>
      <property name="textInteractionFlags">
       <set>Qt::TextInteractionFlag::TextSelectableByMouse</set>

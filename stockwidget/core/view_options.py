@@ -43,6 +43,7 @@ class ViewOptions:
     chart_sync_opacity: bool = True
     chart_bg_alpha_pct: int = 75
     chart_opacity_pct: int = 90
+    chart_popup_pinned: bool = False
     chart_popup_size: list[int] = field(default_factory=lambda: [480, 340])
     chart_window_size: list[int] = field(default_factory=lambda: [900, 560])
     chart_order_book_enabled: bool = False
@@ -133,7 +134,8 @@ class ViewOptions:
             result.taskbar_sync_paging = "taskbar_page_mode" not in cfg
         if not isinstance(result.taskbar_color, str):
             result.taskbar_color = defaults.taskbar_color
-        for key in ("chart_enabled", "chart_sync_opacity", "chart_average_enabled", "chart_volume_enabled", "chart_order_book_enabled", "hide_tray_icon",
+        for key in ("chart_enabled", "chart_sync_opacity", "chart_popup_pinned", "chart_average_enabled",
+                    "chart_volume_enabled", "chart_order_book_enabled", "hide_tray_icon",
                     "float_paging_enabled", "taskbar_enabled", "taskbar_sync_metrics",
                     "taskbar_sync_paging", "taskbar_auto_color", "taskbar_dual_open",
                     "float_split_enabled", "float_split_separator", "taskbar_sync_split",

@@ -5,15 +5,16 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 from PySide6.QtCore import QEvent, QPoint, QPointF, Qt
-from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPixmap, QTextDocument
+from PySide6.QtGui import QColor, QMouseEvent, QPainter, QTextDocument
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QStyle, QStyleOptionButton
+from PySide6.QtWidgets import QApplication
 
 from stockwidget.data.bars import Bar, BarResult
 from stockwidget.data.bar_cache import BarCache
 from stockwidget.data.bars import quote_moving_average, quote_volume_ratio
 from stockwidget.ui.controls.history_chart import HistoryChart, MA_COLORS
 from stockwidget.ui.controls.quote_view import DEFAULT_DOWN_COLOR, DEFAULT_UP_COLOR
+from stockwidget.ui.controls.style import accent_color
 from tests.data.test_bars import sample_bars
 from tests.ui.test_history import HistoryTestCase
 
@@ -179,6 +180,60 @@ class HistoryDetailsTests(HistoryTestCase):
         QTest.mouseRelease(popup.windowHandle(), Qt.LeftButton, pos=popup.mapFromGlobal(geometry.center()))
         self.assertEqual(popup.geometry(), geometry)
         self.assertTrue(popup.isVisible())
+
+    def test_chart_book_footer_and_blank_area_move_and_double_click_hide_both_windows(self):
+        _, window = self.make_window(chart_order_book_enabled=True)
+        for pinned in (False, True):
+            for region in ("chart", "order_book", "chart_readout", "margin"):
+                with self.subTest(pinned=pinned, region=region):
+                    window.set_widget_visible(True)
+                    window.history.open_row("float", 0)
+                    self.wait_ready(window)
+                    popup = window.history.dialog
+                    popup.pin_button.setChecked(pinned)
+                    bounds = popup.screen().availableGeometry()
+                    popup.move(bounds.topLeft())
+                    if region == "margin":
+                        start = QPoint(7, popup.height() // 2)
+                        self.assertIsNone(popup.childAt(start))
+                    else:
+                        child = getattr(popup.ui, region)
+                        self.assertTrue(child.isVisible())
+                        start = child.mapTo(popup, child.rect().center())
+                    original = popup.geometry()
+                    offset = QPoint(max(0, min(35, bounds.width() - original.width())),
+                                    max(0, min(25, bounds.height() - original.height())))
+                    handle = popup.windowHandle()
+                    QTest.mousePress(handle, Qt.LeftButton, pos=start)
+                    QTest.mouseMove(handle, start + offset)
+                    QTest.mouseRelease(handle, Qt.LeftButton, pos=start)
+                    self.assertEqual(popup.geometry(), original.translated(offset))
+                    QTest.mouseDClick(handle, Qt.LeftButton, pos=start)
+                    self.assertFalse(popup.isVisible())
+                    self.assertFalse(window.widget_visible)
+                    self.assertFalse(window.isVisible())
+
+    def test_chart_buttons_keep_their_own_gestures(self):
+        _, window = self.make_window()
+        window.history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = window.history.dialog
+        for pinned in (False, True):
+            for button in (popup.pin_button, popup.view_buttons["intraday"], popup.ui.cb_volume):
+                with self.subTest(pinned=pinned, button=button.objectName()):
+                    popup.pin_button.setChecked(pinned)
+                    original = popup.geometry()
+                    start = button.mapTo(popup, button.rect().center())
+                    finish = popup.chart.mapTo(popup, popup.chart.rect().center())
+                    handle = popup.windowHandle()
+                    QTest.mousePress(handle, Qt.LeftButton, pos=start)
+                    QTest.mouseMove(handle, finish)
+                    QTest.mouseRelease(handle, Qt.LeftButton, pos=finish)
+                    self.assertEqual(popup.geometry(), original)
+                    QTest.mouseDClick(handle, Qt.LeftButton, pos=start)
+                    self.assertTrue(popup.isVisible())
+                    self.assertTrue(window.widget_visible)
+                    self.assertEqual(popup.geometry(), original)
 
     def test_three_views_share_minimum_and_one_saved_popup_size_for_each_depth_preference(self):
         _, window = self.make_window(chart_enabled=True)
@@ -436,7 +491,7 @@ class HistoryDetailsTests(HistoryTestCase):
         self.assertEqual((popup.geometry(), chart.geometry(), popup.ui.chart_readout.geometry()), geometry)
         document = QTextDocument()
         document.setHtml(popup.ui.chart_readout.text())
-        self.assertEqual(document.toPlainText(), "均 10.00  价格 10.25 (+13.89%)  量 3")
+        self.assertEqual(document.toPlainText(), "价格 10.25 (+13.89%)  均 10.00  量 3")
         hovered = chart.grab().toImage()
         scale = hovered.devicePixelRatio()
         x, y = round(point.x() * scale), round(point.y() * scale)
@@ -516,40 +571,31 @@ class HistoryDetailsTests(HistoryTestCase):
             with patch("stockwidget.ui.controls.history_chart.QPainter", Recorder):
                 chart.grab()
             self.assertIn("10-22 09:35", texts)
-            self.assertEqual(chart.readout_text(), "均 11.00  价格 11.00 (+10.00%)  量 2")
+            self.assertEqual(chart.readout_text(), "价格 11.00 (+10.00%)  均 11.00  量 2")
         finally:
             delete(chart)
 
-    def test_panel_buttons_use_hover_for_selected_view_and_quote_columns_align(self):
+    def test_panel_buttons_use_pin_highlight_for_selected_view_and_quote_columns_align(self):
         _, window = self.make_window(chart_enabled=True)
         window.history.open_row("float", 0)
         self.wait_ready(window)
         popup = window.history.dialog
+        popup.pin_button.setChecked(True)
+
+        def top_pixel(button, y):
+            image = button.grab().toImage()
+            return image.pixelColor(image.width() // 2, round(y * image.devicePixelRatio()))
+
         for theme in ("light", "dark"):
             window.set_view_options(color_mode=theme)
-            self.app.processEvents()
-            active = popup.view_buttons["intraday"]
-            other = popup.view_buttons["five_day"]
-            def background(button, hover=False):
-                if hover:
-                    ratio = button.devicePixelRatioF()
-                    pixmap = QPixmap(round(button.width() * ratio), round(button.height() * ratio))
-                    pixmap.setDevicePixelRatio(ratio)
-                    pixmap.fill(button.palette().window().color())
-                    option = QStyleOptionButton()
-                    button.initStyleOption(option)
-                    option.state |= QStyle.State_MouseOver
-                    painter = QPainter(pixmap)
-                    button.style().drawControl(QStyle.CE_PushButton, option, painter, button)
-                    painter.end()
-                    image = pixmap.toImage()
-                else:
-                    image = button.grab().toImage()
-                scale = image.devicePixelRatio()
-                return image.pixelColor(round(button.width() / 2 * scale), round(3 * scale))
-            selected = background(active)
-            self.assertEqual(selected, background(other, hover=True))
-            close = background(popup.close_button)
+            pin_outline = top_pixel(popup.pin_button, 1)
+            self.assertEqual(pin_outline, accent_color())
+            for selected in popup.view_buttons:
+                popup.set_view(selected)
+                self.wait_ready(window)
+                for view, button in popup.view_buttons.items():
+                    self.assertEqual(top_pixel(button, 1) == pin_outline, view == selected)
+            close = top_pixel(popup.close_button, 3)
             self.assertGreater(close.red(), close.green())
             for button in (popup.close_button, popup.pop_out_button):
                 self.assertEqual(button.width(), button.height())

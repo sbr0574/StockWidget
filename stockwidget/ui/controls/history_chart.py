@@ -12,6 +12,7 @@ from stockwidget.data.bars import MA_PERIODS, five_minute_bars, five_minute_time
 
 
 MA_COLORS = ("#e3ac28", "#ba6ee0", "#2a9fd6", "#d97839", "#6fa84c")
+EMPTY_MINUTE_READOUT = "价格 — (—)  均 —  量 —"
 
 
 class HistoryChart(QWidget):
@@ -363,23 +364,24 @@ class HistoryChart(QWidget):
 
     def readout_text(self, i=None, *, rich=False):
         if not self.bars:
-            return ("开 —  高 —  低 —  收 —  量 —" if self.view == "daily" else "均 —  价格 — (—)  量 —")
+            return "开 —  高 —  低 —  收 —  量 —" if self.view == "daily" else EMPTY_MINUTE_READOUT
         if i is None:
             if self._cursor_pos is not None and self._hover is None and self._hover_slot is not None:
-                return "均 —  价格 — (—)  量 —"
+                return EMPTY_MINUTE_READOUT
             i = self._hover if self._hover is not None else len(self.bars) - 1
         bar = self.bars[i]
         if self.view != "daily":
             average = self.minute_averages[i]
             change = f"{(bar.close / self.reference_price - 1) * 100:+.2f}%" if self.reference_price else "—"
+            price = f"{self._price(bar.close)} ({change})"
             if rich:
                 def colored(text, value):
                     color = self._direction_color(value - self.reference_price if self.reference_price else 0)
                     return f'<span style="color:{color.name()}">{text}</span>'
-                return ("均 " + colored(self._price(average), average) + "&nbsp; 价格 " +
-                        colored(f"{self._price(bar.close)} ({change})", bar.close) +
+                return ("价格 " + colored(price, bar.close) +
+                        "&nbsp; 均 " + colored(self._price(average), average) +
                         f"&nbsp; 量 {self._volume(bar.volume)}")
-            return f"均 {self._price(average)}  价格 {self._price(bar.close)} ({change})  量 {self._volume(bar.volume)}"
+            return f"价格 {price}  均 {self._price(average)}  量 {self._volume(bar.volume)}"
         text = (f"开 {self._price(bar.open)}  高 {self._price(bar.high)}  "
                 f"低 {self._price(bar.low)}  收 {self._price(bar.close)}  量 {self._volume(bar.volume)}")
         averages = []
@@ -400,7 +402,7 @@ class HistoryChart(QWidget):
         volume = max((self._volume(bar.volume) for bar in self.bars), key=len)
         if self.view != "daily":
             change = max((f"{(bar.close / self.reference_price - 1) * 100:+.2f}%" for bar in self.bars), key=len) if self.reference_price else "—"
-            return f"均 {price}  价格 {price} ({change})  量 {volume}"
+            return f"价格 {price} ({change})  均 {price}  量 {volume}"
         text = f"开 {price}  高 {price}  低 {price}  收 {price}  量 {volume}"
         if self.periods:
             text += "\n" + "  ".join(f"MA{period}: {price}" for period in sorted(self.periods))

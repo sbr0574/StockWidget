@@ -12,7 +12,7 @@ import unittest
 
 from PySide6.QtCore import QEvent, QPoint, QPointF, QRect, Qt
 from PySide6.QtGui import QColor, QCursor, QIcon, QMouseEvent, QPalette, QPixmap
-from PySide6.QtTest import QTest
+from PySide6.QtTest import QSignalSpy, QTest
 from PySide6.QtWidgets import QApplication
 
 from stockwidget.data.bars import Bar, BarResult, history_day, parse_sina
@@ -80,10 +80,23 @@ class HistoryUITests(HistoryTestCase):
             history._busy = True
             popup = history.dialog
             geometry = popup.geometry()
-            popup.pin_button.click()
-            self.app.processEvents()
-            self.assertTrue(popup.isVisible())
-            self.assertEqual(popup.geometry(), geometry)
+            native_id, opacity = popup.winId(), popup.windowOpacity()
+            dismissed = QSignalSpy(popup.dismissed)
+            visibility = QSignalSpy(popup.windowHandle().visibleChanged)
+            pin_position = popup.pin_button.mapTo(popup, popup.pin_button.rect().center())
+            for pinned in (True, False, True):
+                with self.subTest(pinned=pinned):
+                    QTest.mouseClick(popup.windowHandle(), Qt.LeftButton, pos=pin_position)
+                    self.app.processEvents()
+                    self.assertEqual(popup.pin_button.isChecked(), pinned)
+                    self.assertEqual(window.current_config()["chart_popup_pinned"], pinned)
+                    self.assertEqual(bool(popup.windowHandle().flags() & Qt.WindowStaysOnTopHint), pinned)
+                    self.assertEqual(popup.winId(), native_id)
+                    self.assertEqual(popup.windowOpacity(), opacity)
+                    self.assertTrue(popup.isVisible())
+                    self.assertEqual(popup.geometry(), geometry)
+                    self.assertEqual(dismissed.count(), 0)
+                    self.assertEqual(visibility.count(), 0)
             self.assertEqual(history._generation, request[0])
             self.assertEqual(start.call_count, 1)
             history._accept((*request, BarResult(sample_bars(), "sina")))
@@ -93,6 +106,10 @@ class HistoryUITests(HistoryTestCase):
             QTest.keyClick(popup, Qt.Key_Escape)
             self.assertFalse(popup.isVisible())
             self.assertFalse(history.click_timer.isActive())
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        self.assertTrue(popup.isVisible())
+        self.assertTrue(popup.pin_button.isChecked())
 
     def test_pinning_does_not_bypass_shared_hide_and_discards_late_results(self):
         for hide in ("hide_widget", "toggle_win"):
@@ -331,7 +348,7 @@ class HistoryUITests(HistoryTestCase):
                             self.assertLess(high, price * 1.02)
                             self.assertTrue(chart._plot.top() < chart._reference_y < chart._plot.bottom())
                             self.assertNotIn("均价", chart.readout_text(0))
-                            self.assertTrue(chart.readout_text(0).startswith("均 "))
+                            self.assertRegex(chart.readout_text(0), r"^价格 .+  均 .+  量 ")
                             # The separator extends into the otherwise empty axis margin.
                             scale = image.devicePixelRatio()
                             y = round((chart._plot.bottom() + chart._volume_plot.top()) / 2 * scale)
@@ -547,6 +564,7 @@ class HistoryUITests(HistoryTestCase):
         window.history.open_row("float", 0)
         self.wait_ready(window)
         popup = window.history.dialog
+        popup.pin_button.click()
         popup.ui.cb_order_book.setChecked(True)
         popup.set_view("daily")
         self.wait_ready(window)
@@ -569,6 +587,7 @@ class HistoryUITests(HistoryTestCase):
         dialog.ui.cb_chart_enabled.setChecked(True)
         window.history.open_row("float", 0)
         self.assertTrue(window.history.dialog.ui.cb_order_book.isChecked())
+        self.assertTrue(window.history.dialog.pin_button.isChecked())
         window.reset_settings()
         self.assertTrue(dialog.ui.cb_chart_enabled.isChecked())
         self.assertFalse(window.current_config()["chart_order_book_enabled"])
@@ -596,6 +615,15 @@ class HistoryUITests(HistoryTestCase):
         self.assertIn("标的1", popup.title.text())
         QTest.keyClick(popup, Qt.Key_Escape)
         self.assertFalse(popup.isVisible())
+        window.history.open_row("float", 1)
+        QTest.mouseClick(window.windowHandle(), Qt.LeftButton, pos=window.rect().center())
+        self.assertFalse(popup.isVisible())
+        self.assertFalse(window.history.click_timer.isActive())
+        self.assertTrue(window.widget_visible)
+        window.history.open_row("float", 1)
+        self.app.sendEvent(self.app, QEvent(QEvent.ApplicationDeactivate))
+        self.assertFalse(popup.isVisible())
+        self.assertTrue(window.widget_visible)
         window.history.open_row("float", 1)
         QTest.mouseClick(popup.close_button, Qt.LeftButton)
         self.assertFalse(popup.isVisible())
@@ -811,6 +839,35 @@ class HistoryUITests(HistoryTestCase):
 @unittest.skipUnless(sys.platform == "win32" and os.environ.get("STOCKWIDGET_TEST_WINDOWS") == "1",
                      "Requires an opt-in Windows desktop session")
 class WindowsHistoryPopupTests(HistoryTestCase):
+    def test_native_outside_capture_tracks_pin_state_and_releases_on_dismissal(self):
+        from ctypes import c_ssize_t, wintypes as w
+
+        from stockwidget.platform.window import get_user32
+
+        _, window = self.make_window()
+        window.history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = window.history.dialog
+        user = get_user32()
+        user.GetCapture.restype = w.HWND
+        user.SendMessageW.argtypes = (w.HWND, w.UINT, w.WPARAM, w.LPARAM)
+        user.SendMessageW.restype = c_ssize_t
+        hwnd = int(popup.winId())
+        self.assertEqual(user.GetCapture(), hwnd)
+        popup.pin_button.click()
+        self.assertNotEqual(user.GetCapture(), hwnd)
+        popup.pin_button.click()
+        self.assertTrue(popup.isVisible())
+        self.assertEqual(user.GetCapture(), hwnd)
+        outside = -12 & 0xffff
+        position = (outside << 16) | outside
+        user.SendMessageW(hwnd, 0x0201, 1, position)  # WM_LBUTTONDOWN
+        user.SendMessageW(hwnd, 0x0202, 0, position)  # WM_LBUTTONUP
+        self.app.processEvents()
+        self.assertFalse(popup.isVisible())
+        self.assertNotEqual(user.GetCapture(), hwnd)
+        self.assertTrue(window.isVisible())
+
     def test_resize_cursor_restores_over_float_and_native_taskbar_without_closing_popup(self):
         import ctypes
         from ctypes import wintypes as w
@@ -937,8 +994,12 @@ class WindowsHistoryPopupTests(HistoryTestCase):
         window.history.open_row("float", 0)
         self.wait_ready(window)
         popup = window.history.dialog
+        self.assertTrue(popup.pin_button.isChecked())
+        popup.pin_button.click()
+        self.app.processEvents()
+        self.assertTrue(popup.isVisible())
         self.assertFalse(popup.pin_button.isChecked())
-        # Actual OS input exercises popup capture outside its native client area.
+        # Send actual OS input outside the chart's native client area.
         position = popup.mapFromGlobal(window.geometry().center())
         self.assertFalse(popup.rect().contains(position))
         QCursor.setPos(window.geometry().center())
