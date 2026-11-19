@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from PySide6.QtCore import QPoint, Qt
+from PySide6.QtWidgets import QWidget
 from shiboken6 import delete
 
 from stockwidget.ui.history import HistoryDialog
@@ -99,14 +100,15 @@ class SettingsLayoutTests(SettingsTestCase):
         dialog.ui.cb_chart_enabled.setChecked(False)
         self.assertFalse(window.view_options.chart_enabled)
 
-    def test_taskbar_offset_accepts_and_restores_negative_values(self):
+    def test_taskbar_settings_remain_accessible_without_an_offset_control(self):
         self.enable_windows_taskbar()
-        dialog, window = self._make_dialog(taskbar_enabled=True, taskbar_offset=-80)
-        self.assertEqual(dialog.ui.taskbar_offset.value(), -80)
-        dialog.ui.taskbar_offset.setValue(-120)
-        self.assertEqual(window.current_config()["taskbar_offset"], -120)
-        window.set_taskbar_offset(70)
-        self.assertEqual(dialog.ui.taskbar_offset.value(), 70)
+        dialog, _ = self._make_dialog(taskbar_enabled=True, taskbar_offset=-80)
+        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.taskbar)
+        dialog.show()
+        self.qt_app.processEvents()
+        self.assertIsNone(dialog.findChild(QWidget, "taskbar_offset_row"))
+        self.assertTrue(dialog.ui.btn_taskbar_color.isVisible())
+        self.assertEqual(dialog.ui.taskbar_scroll.horizontalScrollBar().maximum(), 0)
 
     def test_common_data_and_window_controls_are_reachable_without_scrolling(self):
         dialog, _window = self._make_dialog()

@@ -542,12 +542,78 @@ class WidgetPositionTests(unittest.TestCase):
 
 
 class TaskbarDragTests(PagingTestCase):
+    def test_float_docks_at_the_grab_point_and_saves_the_release_position(self):
+        controller = self.make_controller()
+        self.win.move(100, 100)
+        origin = self.win.pos()
+        self.win.begin_drag(origin + QPoint(35, 14))
+        self.over.return_value, self.pointer_x = 1, 430
+        self.win.move_drag(QPoint(430, 760))
+        self.assertEqual(self.native.present.call_args.kwargs["x"], 395)
+        self.assertIsNone(self.win.taskbar_x)
+        self.assertFalse(self.win.isVisible())
+
+        self.native.present.reset_mock()
+        self.native_mouse("move", 35, 20, QPoint(540, 760), 1)
+        self.native.move.assert_called_once_with(505, 2)
+        self.native.present.assert_not_called()
+        self.native_mouse("release", 45, 20, QPoint(550, 760), 1)
+        self.assertEqual(self.win.display_mode, "taskbar")
+        self.assertEqual(self.win.pos(), origin)
+        self.assertEqual(self.win.current_config()["taskbar_x"], 515)
+
+        controller.refresh()
+        self.assertEqual(self.native.present.call_args.kwargs["x"], 515)
+        restored = FloatLabel(self.win.current_config(), {})
+        try:
+            self.assertEqual(restored.taskbar_x, 515)
+        finally:
+            delete(restored)
+
+    def test_legacy_taskbar_offset_is_kept_until_a_horizontal_drag_commits(self):
+        controller = self.make_controller()
+        self.win._load_settings_config({**self.win.current_config(), "taskbar_offset": -150})
+        self.win.set_display_mode("taskbar")
+        start_x = min(1280, 900 + 150) - controller._frame.width()
+        self.assertEqual(self.native.present.call_args.kwargs["x"], start_x)
+        self.assertEqual(self.win.current_config()["taskbar_offset"], -150)
+        press = QPoint(start_x + 10, 760)
+        end = press - QPoint(80, 0)
+        self.native_mouse("press", 10, 20, press, 1)
+        self.native_mouse("move", 10, 20, end, 1)
+        self.assertEqual(self.win.current_config()["taskbar_offset"], -150)
+        self.native_mouse("release", 10, 20, end, 1)
+        self.assertEqual(self.win.current_config()["taskbar_x"], start_x - 80)
+        self.assertNotIn("taskbar_offset", self.win.current_config())
+
+    def test_dual_mode_taskbar_drag_is_horizontal_and_escape_restores_position(self):
+        controller = self.make_controller()
+        self.win.taskbar_x = 210
+        self.win.set_display_mode("both")
+        origin = self.win.pos()
+        press = QPoint(250, 760)
+        for kind, expected in (("cancel", 210), ("release", 360)):
+            with self.subTest(kind=kind):
+                self.native_mouse("press", 40, 20, press, 1)
+                end = press + QPoint(150, -90)
+                self.native_mouse("move", 40, -70, end)
+                self.native.move.assert_called_with(360, 2)
+                self.assertTrue(self.win.isVisible())
+                self.assertEqual(self.win.pos(), origin)
+                self.assertEqual(self.win.taskbar_x, 210)
+                self.native_mouse(kind, 40, -70, end)
+                self.assertTrue(controller._active)
+                self.assertEqual(self.win.display_mode, "both")
+                self.assertEqual(self.win.current_config()["taskbar_x"], expected)
+                self.assertEqual(self.native.present.call_args.kwargs["x"], expected)
+                self.assertFalse(controller.input_timer.isActive())
+
     def test_dropping_over_taskbar_without_a_final_move_cleans_the_input_handoff(self):
         controller = self.make_controller()
         start = self.win.pos() + QPoint(5, 5)
         self.win.begin_drag(start)
         self.win.move_drag(start + QPoint(100, 50))
-        self.over.return_value = True
+        self.over.return_value = 1
         self.win.finish_drag()
         self.assertEqual(self.win.display_mode, "taskbar")
         self.assertTrue(controller._active)
@@ -564,7 +630,7 @@ class TaskbarDragTests(PagingTestCase):
                 origin = self.win.pos()
                 start = origin + QPoint(5, 5)
                 self.over.reset_mock()
-                self.over.return_value = True
+                self.over.return_value = 1
                 self.win.begin_drag(start)
                 for delta in (QPoint(70, 30), QPoint(90, 650), QPoint(170, 50)):
                     self.win.move_drag(start + delta)
@@ -593,20 +659,20 @@ class TaskbarDragTests(PagingTestCase):
 
         with patch.object(self.win, "hide", side_effect=hide_with_capture_change):
             self.win.begin_drag(start)
-            self.over.return_value = True
+            self.over.return_value = 1
             self.win.move_drag(start + QPoint(30, 600))
             self.assertTrue(captured[0])
             for _ in range(3):
-                for over, point in ((False, start + QPoint(100, 50)), (True, start + QPoint(100, 600))):
-                    controller._dispatch_pointer("move", 100, 20, point, over)
+                for over, point in ((None, start + QPoint(100, 50)), (1, start + QPoint(100, 600))):
+                    self.native_mouse("move", 100, 20, point, over)
                     self.app.processEvents()
                     self.assertTrue(self.win._dragging)
                     self.assertTrue(self.win.widget_visible)
                     self.assertEqual(self.win.isVisible(), not over)
                     self.assertTrue(captured[0])
             point = start + QPoint(180, 50)
-            controller._dispatch_pointer("move", 100, 20, point, False)
-            controller._dispatch_pointer("release", 100, 20, point, False)
+            self.native_mouse("move", 100, 20, point)
+            self.native_mouse("release", 100, 20, point)
         self.assertEqual(self.win.pos(), point - QPoint(5, 5))
         self.assertEqual(self.win.display_mode, "float")
         self.assertIsNone(self.win._drag_pos)

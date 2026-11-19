@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QApplication
 
 from stockwidget.core.quote_presentation import BidAskCell, MiniChartCell
 from stockwidget.core.view_options import column_ranges, taskbar_content_height, taskbar_font_pixels
-from stockwidget.platform.taskbar import NativeTaskbarWindow, cursor_over_taskbar, find_taskbar
+from stockwidget.platform.taskbar import NativeTaskbarWindow, find_taskbar, taskbar_pointer
 from stockwidget.ui.controls.quote_view import bid_ask_width, paint_bid_ask, paint_pager, paint_quote_grid, pager_hit, pager_size
 from stockwidget.ui.controls.mini_chart import mini_chart_width, paint_amplitude_axis
 
@@ -165,13 +165,15 @@ class TaskbarController(QObject):
         self._active = False
         self._closed = False
         self._dragging = False
-        self._drag_over = False
-        self._pointer_over = None
+        self._drag_over = None
+        self._drag_screen_x = None
+        self._pointer_sample = None
         self._native_press = None
         self._dpi = 96
         self._pager_rect = QRect()
         self._hit_regions = []
         self._area = None
+        self._frame = QRect()
         self.timer = QTimer(self)
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.refresh)
@@ -190,9 +192,10 @@ class TaskbarController(QObject):
 
     @property
     def enabled(self):
-        return self.source.view_options.taskbar_enabled and self.source.widget_visible and (
-            self._drag_over if self._dragging
-            else self.source.display_mode != "float")
+        visible = self.source.display_mode != "float"
+        if self._dragging and not self.source.view_options.taskbar_dual_open:
+            visible = self._drag_over is not None
+        return self.source.view_options.taskbar_enabled and self.source.widget_visible and visible
 
     def _status(self, text):
         if self.source.taskbar_status != text:
@@ -240,6 +243,14 @@ class TaskbarController(QObject):
             self._refresh_pending = True
             QTimer.singleShot(0, self, self.refresh)
 
+    def _taskbar_left(self, area, width):
+        scale = area.dpi / 96
+        if self._dragging and self._drag_screen_x is not None:
+            return self._drag_screen_x - area.left - round(self._drag_grab_x * scale)
+        if self.source.taskbar_x is not None:
+            return round(self.source.taskbar_x * scale)
+        return area.right - width - round(self.source._legacy_taskbar_offset * scale)
+
     def refresh(self):
         self._refresh_pending = False
         if self._closed or not self.enabled:
@@ -248,8 +259,8 @@ class TaskbarController(QObject):
         try:
             if QApplication.platformName() != "windows":
                 raise OSError("任务栏显示需要 Windows 桌面会话")
-            target = self._drag_over if self._dragging and not isinstance(self._drag_over, bool) else None
-            area = find_taskbar(window=int(self.source.winId()), device_name=self.source.taskbar_screen, hwnd=target)
+            area = find_taskbar(window=int(self.source.winId()), device_name=self.source.taskbar_screen,
+                                hwnd=self._drag_over)
             if area is None:
                 raise OSError("等待 Windows 任务栏恢复")
             height = taskbar_content_height(area.height, area.dpi)
@@ -262,17 +273,25 @@ class TaskbarController(QObject):
             self._dpi = area.dpi
             if self.native is None:
                 self.native = NativeTaskbarWindow(self._native_pointer, self._context_menu)
-            self.native.present(area, image.width(), image.height(), bytes(image.constBits()),
-                                round(self.source.taskbar_offset * area.dpi / 96),
+            width = image.width()
+            x, y = area.position(width, height, self._taskbar_left(area, width))
+            self.native.present(area, width, height, bytes(image.constBits()), x=x,
                                 click_through=self.source.click_through)
-            if area.device_name:
+            if area.device_name and not self._dragging:
                 self.source.taskbar_screen = area.device_name
             self._area = area
+            self._frame.setRect(x, y, width, height)
             self._active = True
             page = self.source.quotes.get_page("taskbar")
             screen = area.device_name or "当前屏幕"
             self._status(f"已显示在 {screen} 任务栏 · 第 {page.index + 1}/{page.count} 页")
-            if not was_active and self.source.display_mode == "taskbar" and not self._dragging:
+            if self._drag_over is not None and self.source.isVisible():
+                self.native.release_pointer()
+                self.source.hide()
+                # Qt hiding releases capture; reacquire it after the handoff.
+                self.native.capture_pointer()
+                self.input_timer.start()
+            elif not was_active and self.source.display_mode == "taskbar" and not self._dragging:
                 self.source.hide()
         except (OSError, ValueError) as error:
             if self.native:
@@ -300,64 +319,58 @@ class TaskbarController(QObject):
     def _double_click(self, x, y):
         self.source.hide_widget()
 
+    def _sample_pointer(self):
+        return taskbar_pointer(hit_test=not self.source.view_options.taskbar_dual_open)
+
     def _native_pointer(self, kind, x, y):
         # Snapshot before queuing: the pointer can move again before Qt runs.
         position = QCursor.pos()
-        over = False if self.source.view_options.taskbar_dual_open else cursor_over_taskbar() or False
-        QTimer.singleShot(0, self, lambda: self._dispatch_pointer(kind, x, y, position, over))
+        pointer = self._sample_pointer()
+        QTimer.singleShot(0, self, lambda: self._dispatch_pointer(kind, x, y, position, pointer))
 
-    def _dispatch_pointer(self, kind, x, y, position, over):
+    def _dispatch_pointer(self, kind, x, y, position, pointer):
         if self._closed:
             return
-        fixed = self.source.view_options.taskbar_dual_open
-        self._pointer_over = over
+        self._pointer_sample = pointer
         try:
             if kind == "press":
-                self.input_timer.start()
-                self._native_press = (pager_hit(self._pager_rect, x, y), QPoint(position))
+                if not self._active or self.source.click_through:
+                    self._release_pointer()
+                    return
+                grab_x = x * 96 / self._dpi
+                self._native_press = (pager_hit(self._pager_rect, x, y), grab_x)
                 full = self.source.position_controller.full_geometry()
-                offset = QPoint(max(0, min(round(x * 96 / self._dpi), full.width() - 1)),
+                offset = QPoint(max(0, min(round(grab_x), full.width() - 1)),
                                 max(0, min(round(y * 96 / self._dpi), full.height() - 1)))
                 self.source.begin_drag(position, surface="taskbar", offset=offset)
-            elif kind == "move" and self._native_press is not None:
-                if fixed:
-                    if (position - self._native_press[1]).manhattanLength() >= QApplication.startDragDistance():
-                        self._native_press = None
-                else:
-                    self.source.move_drag(position)
-            elif kind in ("release", "cancel"):
-                self.input_timer.stop()
+                self.input_timer.start()
+            elif kind == "move" and self.input_timer.isActive():
+                self.source.move_drag(position)
+            elif kind in ("release", "cancel") and self.input_timer.isActive():
                 clicked = (kind == "release" and self._native_press is not None
-                           and (position - self._native_press[1]).manhattanLength() < QApplication.startDragDistance()
-                           and (fixed or (self.source._drag_pos is not None and not self.source._is_drag_position(position)))
+                           and self.source._drag_pos is not None and not self.source._is_drag_position(position)
                            and self._native_press[0] == pager_hit(self._pager_rect, x, y))
-                if fixed and self.native:
-                    self.native.release_pointer()
-                elif not fixed:
-                    self.source.finish_drag(kind == "release")
+                self.source.finish_drag(kind == "release", global_pos=position)
+                if self.input_timer.isActive():
+                    self._release_pointer()
                 if clicked:
                     self._click(x, y, position)
-                self._native_press = None
-                if not self._dragging:
-                    self.apply_mode()
             elif kind == "double_click":
-                self.input_timer.stop()
-                self._native_press = None
                 self._double_click(x, y)
         finally:
-            self._pointer_over = None
+            self._pointer_sample = None
 
     def drag_started(self):
-        if (not self.source.view_options.taskbar_enabled
-                or self.source.view_options.taskbar_dual_open
+        options = self.source.view_options
+        if (not options.taskbar_enabled
+                or (options.taskbar_dual_open and self.source._drag_surface == "float")
                 or QApplication.platformName() != "windows"):
             return
         self._dragging = True
-        self._drag_over = None  # force the first hover update, even outside the bar
-        self._drag_origin_mode = self.source.display_mode
-        self._drag_origin_screen = self.source.taskbar_screen
+        if self._active and not options.taskbar_dual_open:
+            self._drag_over = self._area.hwnd
+        self._drag_grab_x = self._native_press[1] if self._native_press is not None else self.source._drag_pos.x()
         self._drag_origin_position = self.source._drag_start_window_pos
-        self.drag_moved()
 
     def _poll_pointer(self):
         if self.native:
@@ -368,56 +381,70 @@ class TaskbarController(QObject):
     def drag_moved(self):
         if not self._dragging:
             return
-        over = (cursor_over_taskbar() or False) if self._pointer_over is None else self._pointer_over
-        if over == self._drag_over:
+        over, self._drag_screen_x = self._pointer_sample or self._sample_pointer()
+        if not self.source.view_options.taskbar_dual_open and over != self._drag_over:
+            self._preview_taskbar(over)
             return
+        if not self._active or self._drag_screen_x is None:
+            return
+        area, frame = self._area, self._frame
+        x, y = area.position(frame.width(), frame.height(), self._taskbar_left(area, frame.width()))
+        if x == frame.x():
+            return
+        try:
+            self.native.move(x, y)
+        except OSError:
+            self.refresh()
+        else:
+            frame.moveLeft(x)
+
+    def _preview_taskbar(self, over):
         self._drag_over = over
         self.source.taskbar_preview_active = bool(over)
         self.apply_mode()
-        if over and self._active:
-            if self.native:
-                self.native.release_pointer()
-            self.source.hide()
-            if self.native:
-                # Qt hiding releases capture; reacquire it after the handoff.
-                if self.source._drag_surface == "float":
-                    self._native_press = (0, QCursor.pos())
-                self.native.capture_pointer()
-                self.input_timer.start()
-        elif self.source.widget_visible:
-            # Showing a preview must not steal the native pointer capture.
-            previous = self.source.testAttribute(Qt.WA_ShowWithoutActivating)
-            self.source.setAttribute(Qt.WA_ShowWithoutActivating, True)
-            try:
-                self.source.show()
-                self.source.raise_()
-            finally:
-                self.source.setAttribute(Qt.WA_ShowWithoutActivating, previous)
+        if self._active or not self.source.widget_visible:
+            return
+        # Showing a preview must not steal the native pointer capture.
+        previous = self.source.testAttribute(Qt.WA_ShowWithoutActivating)
+        self.source.setAttribute(Qt.WA_ShowWithoutActivating, True)
+        try:
+            self.source.show()
+            self.source.raise_()
+        finally:
+            self.source.setAttribute(Qt.WA_ShowWithoutActivating, previous)
         self.source.sync_refresh_timer()
 
-    def drag_finished(self, accepted):
-        if self._dragging and accepted:
-            self.drag_moved()
+    def _release_pointer(self):
         self.input_timer.stop()
         self._native_press = None
         if self.native:
             self.native.release_pointer()
+
+    def drag_finished(self, accepted):
         if not self._dragging:
+            if self._native_press is not None:
+                self._release_pointer()
             return
-        docked = accepted and self._drag_over and self._active
-        self._dragging = self._drag_over = False
+        if accepted:
+            self.drag_moved()
+        self._release_pointer()
+        dual = self.source.view_options.taskbar_dual_open
+        docked = accepted and self._active and (dual or self._drag_over is not None)
+        if docked:
+            self.source.taskbar_x = self._frame.x() * 96 / self._area.dpi
+            if self._area.device_name:
+                self.source.taskbar_screen = self._area.device_name
+        self._dragging = False
+        self._drag_over = self._drag_screen_x = None
         self.source.taskbar_preview_active = False
-        if not accepted:
-            mode = self._drag_origin_mode
-            self.source.taskbar_screen = self._drag_origin_screen
-            self.source.move(self._drag_origin_position)
-        elif docked:
-            mode = "taskbar"
-            # Remember a usable position for a later drag out of the bar.
-            self.source.move(self._drag_origin_position)
-        else:
-            mode = "float"
-        self.source.set_display_mode(mode, taskbar_screen=self.source.taskbar_screen)
+        if accepted and not dual:
+            if docked:
+                # Remember a usable position for a later drag out of the bar.
+                self.source.move(self._drag_origin_position)
+            mode = "taskbar" if docked else "float"
+            if mode != self.source.display_mode:
+                self.source.set_display_mode(mode, taskbar_screen=self.source.taskbar_screen)
+                return
         self.apply_mode()
 
     def _context_menu(self):

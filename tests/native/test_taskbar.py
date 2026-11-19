@@ -14,7 +14,7 @@ from shiboken6 import delete
 
 from stockwidget.data.quotes import _new_entry
 from stockwidget.core.view_options import taskbar_content_height, taskbar_font_point_limit
-from stockwidget.platform.taskbar import NativeTaskbarWindow, TaskbarArea, _api, _taskbar_windows, cursor_over_taskbar, find_taskbar
+from stockwidget.platform.taskbar import NativeTaskbarWindow, TaskbarArea, _api, _taskbar_windows, find_taskbar, taskbar_pointer
 from stockwidget.app import App
 from stockwidget.ui.floating.presenter import QuotePresenter
 from stockwidget.ui.floating.taskbar import TaskbarController
@@ -201,6 +201,7 @@ class NativeTaskbarDragTests(QtTestCase):
         self.assertEqual(self.user.WindowFromPoint(w.POINT(point.x(), point.y())), hwnd)
         self.user.mouse_event(2, 0, 0, 0, 0)
         QTest.qWait(80)
+        return point
 
     def test_one_physical_drag_can_enter_leave_and_reenter_the_taskbar(self):
         self.press(int(self.source.winId()))
@@ -212,6 +213,14 @@ class NativeTaskbarDragTests(QtTestCase):
             self.assertFalse(self.source.isVisible())
             self.assertTrue(self.source._dragging)
             self.assertEqual(self.user.GetCapture(), self.controller.native.hwnd)
+            area = self.controller._area
+            hwnd = self.controller.native.hwnd
+            grab_x = round(self.source._drag_pos.x() * area.dpi / 96)
+            self.assertEqual(self.rect(hwnd).left, self.bar_point.x() - grab_x)
+            for dx in (40, 80):
+                target = self.bar_point + QPoint(dx, 0)
+                self.move_pointer(target)
+                self.assertEqual(self.rect(hwnd).left, target.x() - grab_x)
             self.move_pointer(self.outside)
             self.assertTrue(self.source.isVisible())
             self.assertTrue(self.source._dragging)
@@ -223,13 +232,19 @@ class NativeTaskbarDragTests(QtTestCase):
         self.assertIsNone(self.source._drag_pos)
         self.assertIsNone(self.user.GetCapture())
 
-    def test_dual_mode_fixes_the_taskbar_and_freely_drags_the_float_over_it(self):
+    def test_dual_mode_slides_taskbar_horizontally_and_keeps_float_drag_independent(self):
         self.source.set_display_mode("both")
         self.app.processEvents()
         native = self.controller.native
         parent, origin = native.parent, self.source.pos()
-        self.press(native.hwnd)
-        self.assertIsNone(self.source._drag_pos)
+        rect = self.rect(native.hwnd)
+        press = self.press(native.hwnd)
+        self.move_pointer(press - QPoint(80, 200))
+        moved = self.rect(native.hwnd)
+        self.assertEqual(moved.left, rect.left - 80)
+        self.assertEqual(moved.top, rect.top)
+        self.assertEqual(self.source.pos(), origin)
+        self.assertTrue(self.source.isVisible())
         points = [self.outside, self.bar_point]
         for hwnd in _taskbar_windows(self.user):
             if hwnd != parent:
@@ -237,7 +252,7 @@ class NativeTaskbarDragTests(QtTestCase):
                 points.append(QPoint((rect.left + rect.right) // 2, (rect.top + rect.bottom) // 2))
         for point in points:
             self.move_pointer(point)
-            self.assertFalse(self.controller._dragging)
+            self.assertTrue(self.controller._dragging)
             self.assertEqual(native.parent, parent)
         self.user.mouse_event(4, 0, 0, 0, 0)
         QTest.qWait(120)
@@ -288,6 +303,11 @@ class TaskbarMonitorTests(unittest.TestCase):
             return True
         self.user.GetWindowRect.side_effect = window_rect
         self.user.GetDpiForWindow.side_effect = lambda hwnd: 144 if hwnd == 200 else 96
+        def map_point(source, target, pointer, _count):
+            if source == 200 and target is None:
+                pointer._obj.x -= 1920
+            return pointer._obj.x
+        self.user.MapWindowPoints.side_effect = map_point
 
     def test_primary_secondary_and_removed_displays_choose_the_expected_taskbar(self):
         for kwargs, expected in (({}, 100), ({"window": 900}, 200),
@@ -299,6 +319,7 @@ class TaskbarMonitorTests(unittest.TestCase):
                 self.assertEqual(area.hwnd, expected)
                 self.assertEqual(area.dpi, 144 if expected == 200 else 96)
                 self.assertEqual(area.device_name, rf"\\.\DISPLAY{2 if expected == 200 else 1}")
+                self.assertEqual(area.left, -1920 if expected == 200 else 0)
                 self.assertGreater(area.right, 0)
                 self.assertLess(area.right, area.width)
         self.assertIsNone(find_taskbar(hwnd=999))
@@ -315,7 +336,8 @@ class TaskbarMonitorTests(unittest.TestCase):
                         pointer._obj.x, pointer._obj.y = position
                         return True
                     self.user.GetCursorPos.side_effect = cursor
-                    self.assertEqual(cursor_over_taskbar(), expected)
+                    self.assertEqual(taskbar_pointer(), (expected, position[0]))
+                    self.assertEqual(taskbar_pointer(hit_test=False), (None, position[0]))
 
     def test_reparent_preserves_the_existing_input_owner_and_pointer_capture(self):
         native = NativeTaskbarWindow.__new__(NativeTaskbarWindow)
@@ -382,7 +404,8 @@ class NativeMultiscreenTaskbarTests(QtTestCase):
                     (0x200, areas[target_index].hwnd, screens[target_index].geometry().topLeft() + QPoint(300, 300)),
                 ):
                     with patch("stockwidget.ui.floating.taskbar.QCursor.pos", return_value=position), \
-                            patch("stockwidget.ui.floating.taskbar.cursor_over_taskbar", return_value=bar):
+                            patch("stockwidget.ui.floating.taskbar.taskbar_pointer",
+                                  return_value=(bar, position.x())):
                         user.SendMessageW(hwnd, message, 1, (20 << 16) | 100)
                         self.app.processEvents()
                 self.assertEqual(controller.native.hwnd, hwnd)
@@ -390,9 +413,11 @@ class NativeMultiscreenTaskbarTests(QtTestCase):
                 self.assertEqual(user.GetCapture(), hwnd)
                 self.assertTrue(source._dragging)
                 self.assertFalse(source.isVisible())
-                self.assertEqual(source.taskbar_screen, areas[target_index].device_name)
+                self.assertEqual(source.taskbar_screen, previous_screen)
+                self.assertEqual(controller._area.device_name, areas[target_index].device_name)
                 with patch("stockwidget.ui.floating.taskbar.QCursor.pos", return_value=position), \
-                        patch("stockwidget.ui.floating.taskbar.cursor_over_taskbar", return_value=areas[target_index].hwnd):
+                        patch("stockwidget.ui.floating.taskbar.taskbar_pointer",
+                              return_value=(areas[target_index].hwnd, position.x())):
                     user.SendMessageW(hwnd, 0x202 if accepted else 0x100, 0 if accepted else 0x1B, (20 << 16) | 100)
                     self.app.processEvents()
                 self.assertIsNone(user.GetCapture())

@@ -22,10 +22,12 @@ class TaskbarArea:
     dpi: int = 96
     device_name: str = ""
     monitor_rect: tuple[int, int, int, int] | None = None
+    left: int = 0  # Client origin in physical screen coordinates.
 
-    def position(self, width, height, offset=0):
-        # Zero aligns before the notification area; signed offsets move left/right.
-        x = max(0, min(max(0, self.width - width), self.right - width - offset))
+    def position(self, width, height, x=None):
+        if x is None:
+            x = self.right - width
+        x = max(0, min(self.width - width, x))
         return x, max(0, (self.height - height) // 2)
 
 
@@ -163,22 +165,28 @@ def find_taskbar(*, window=None, device_name="", hwnd=None):
         right = point.x - 6 * dpi // 96
     info = _monitor_info(user, hwnd)
     monitor = info.monitor
+    origin = w.POINT()
+    user.MapWindowPoints(hwnd, None, ctypes.byref(origin), 1)
     return TaskbarArea(hwnd, width, height, max(0, right), dpi, info.device,
-                       (monitor.left, monitor.top, monitor.right - monitor.left, monitor.bottom - monitor.top))
+                       (monitor.left, monitor.top, monitor.right - monitor.left, monitor.bottom - monitor.top),
+                       left=origin.x)
 
 
-def cursor_over_taskbar():
-    """Return the bar HWND under the native pointer, or None outside all bars."""
+def taskbar_pointer(*, hit_test=True):
+    """Snapshot the bar HWND under the pointer and its physical screen x."""
     if sys.platform != "win32":
-        return None
+        return None, None
     user, _, _ = _api()
-    point, rect = w.POINT(), w.RECT()
-    if user.GetCursorPos(ctypes.byref(point)):
+    point = w.POINT()
+    if not user.GetCursorPos(ctypes.byref(point)):
+        return None, None
+    if hit_test:
+        rect = w.RECT()
         for hwnd in _taskbar_windows(user):
             if (user.GetWindowRect(hwnd, ctypes.byref(rect))
                     and rect.left <= point.x < rect.right and rect.top <= point.y < rect.bottom):
-                return hwnd
-    return None
+                return hwnd, point.x
+    return None, point.x
 
 
 class NativeTaskbarWindow:
@@ -223,14 +231,13 @@ class NativeTaskbarWindow:
                 return 3  # MA_NOACTIVATE
             if message == 0x201:  # WM_LBUTTONDOWN
                 self._pointer_down = True
-                self._last_pointer_position = (x, y)
+                self._last_pointer_position = None
                 self._ignore_release = False
                 self.user.SetCapture(hwnd)
                 self._on_pointer("press", x, y)
                 return 0
             if message == 0x200 and self._pointer_down:  # WM_MOUSEMOVE
                 if wp & 1:  # MK_LBUTTON; capture continues outside the taskbar
-                    self._last_pointer_position = (x, y)
                     self._on_pointer("move", x, y)
                 return 0
             if message == 0x202:  # WM_LBUTTONUP
@@ -297,16 +304,22 @@ class NativeTaskbarWindow:
             if previous:
                 self.user.SetThreadDpiAwarenessContext(previous)
 
-    def present(self, area, width, height, pixels, offset=0, *, click_through=False):
+    def present(self, area, width, height, pixels, *, x=None, click_through=False):
         self._attach(area)
         self.set_click_through(click_through)
-        x, y = area.position(width, height, offset)
+        x, y = area.position(width, height, x)
         if not self.user.SetWindowPos(self.hwnd, 0, x, y, width, height, 0x50):
             raise ctypes.WinError(ctypes.get_last_error())  # NOACTIVATE | SHOWWINDOW
         frame = (width, height, pixels)
         if frame != self._last_frame:
             self._upload(width, height, pixels)
             self._last_frame = frame
+
+    def move(self, x, y):
+        if not self.hwnd:
+            raise OSError("任务栏窗口已失效")
+        if not self.user.SetWindowPos(self.hwnd, None, x, y, 0, 0, 0x15):
+            raise ctypes.WinError(ctypes.get_last_error())  # NOSIZE | NOZORDER | NOACTIVATE
 
     def set_click_through(self, enabled):
         """Layered windows use WS_EX_TRANSPARENT to pass input across processes."""
@@ -396,21 +409,25 @@ class NativeTaskbarWindow:
         if not self._pointer_down or not self.hwnd:
             return None
         point = w.POINT()
-        if not self.user.GetCursorPos(ctypes.byref(point)) or not self.user.ScreenToClient(self.hwnd, ctypes.byref(point)):
+        if not self.user.GetCursorPos(ctypes.byref(point)):
             return None
-        position = (point.x, point.y)
+        # Client coordinates change as the window follows the pointer.
+        screen_position = (point.x, point.y)
         if self.user.GetAsyncKeyState(0x1B) & 0x8000:
             kind = "cancel"
         elif not self.user.GetAsyncKeyState(1) & 0x8000:
             kind = "release"
-        elif position != self._last_pointer_position:
-            self._last_pointer_position = position
-            return ("move", *position)
+        elif screen_position != self._last_pointer_position:
+            kind = "move"
         else:
             return None
-        self.release_pointer()
-        self._ignore_release = True  # do not dispatch a subsequent native up twice
-        return (kind, *position)
+        if not self.user.ScreenToClient(self.hwnd, ctypes.byref(point)):
+            return None
+        self._last_pointer_position = screen_position
+        if kind != "move":
+            self.release_pointer()
+            self._ignore_release = True  # do not dispatch a subsequent native up twice
+        return kind, point.x, point.y
 
     def close(self):
         self.release_pointer()

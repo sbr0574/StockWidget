@@ -790,12 +790,15 @@ class HistoryUITests(HistoryTestCase):
             rect, row, block = controller._hit_regions[0]
             local = rect.center()
             start = QPoint(500, 500)
-            with patch.object(controller, "apply_mode"), patch.object(window.history, "request_row") as request:
+            controller._active = True
+            with patch.object(QApplication, "platformName", return_value="offscreen"), \
+                    patch.object(window.history, "request_row") as request:
                 for movement, opens in ((QPoint(1, 1), True), (QPoint(50, 20), False)):
                     with self.subTest(movement=movement):
                         request.reset_mock()
-                        controller._dispatch_pointer("press", local.x(), local.y(), start, False)
-                        controller._dispatch_pointer("release", local.x(), local.y(), start + movement, False)
+                        controller._dispatch_pointer("press", local.x(), local.y(), start, (1, start.x()))
+                        end = start + movement
+                        controller._dispatch_pointer("release", local.x(), local.y(), end, (1, end.x()))
                         if opens:
                             request.assert_called_once_with("taskbar", row, block, global_pos=start + movement)
                         else:

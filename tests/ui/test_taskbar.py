@@ -216,25 +216,18 @@ class TaskbarTests(QtTestCase):
     def test_config_and_reset(self):
         with patch("stockwidget.ui.floating.widget.sys.platform", "win32"):
             self.window.set_display_mode("both")
-        self.window.set_taskbar_offset(150)
+        self.window.taskbar_x = 150.5
         self.assertEqual(self.window.current_config()["display_mode"], "both")
-        self.assertEqual(self.window.current_config()["taskbar_offset"], 150)
+        self.assertEqual(self.window.current_config()["taskbar_x"], 150.5)
         self.window.reset_settings()
         self.assertEqual(self.window.display_mode, "float")
-        self.assertEqual(self.window.taskbar_offset, 0)
+        self.assertIsNone(self.window.taskbar_x)
 
-    def test_signed_offset_moves_both_directions_and_clamps_to_taskbar(self):
+    def test_horizontal_position_defaults_to_tray_and_clamps_to_taskbar(self):
         area = TaskbarArea(1, 1280, 48, 1000)
-        for offset, expected in ((0, 840), (100, 740), (-100, 940), (-2000, 1120), (2000, 0)):
-            with self.subTest(offset=offset):
-                self.window.set_taskbar_offset(offset)
-                self.assertEqual(area.position(160, 40, self.window.taskbar_offset), (expected, 4))
-        self.window.set_taskbar_offset(-150)
-        restored = FloatLabel(self.window.current_config(), {})
-        try:
-            self.assertEqual(restored.taskbar_offset, -150)
-        finally:
-            delete(restored)
+        for x, expected in ((None, 840), (740, 740), (940, 940), (2000, 1120), (-2000, 0)):
+            with self.subTest(x=x):
+                self.assertEqual(area.position(160, 40, x), (expected, 4))
 
     def test_kline_and_empty_watchlist_render(self):
         self.window.visible_metrics = ["kline"]
@@ -351,10 +344,12 @@ class NativeTaskbarTests(QtTestCase):
         try:
             source.show()
             self.app.processEvents()
+            area = find_taskbar(window=int(source.winId()))
+            over = (area.hwnd, area.left + 400)
             self.enterContext(patch.object(NativeTaskbarWindow, "poll_pointer", return_value=None))
             start = source.pos() + QPoint(5, 5)
             source.begin_drag(start)
-            with patch("stockwidget.ui.floating.taskbar.cursor_over_taskbar", return_value=True):
+            with patch("stockwidget.ui.floating.taskbar.taskbar_pointer", return_value=over):
                 source.move_drag(start + QPoint(80, 80))
                 self.app.processEvents()
             self.assertTrue(controller._active, source.taskbar_status)
@@ -366,7 +361,7 @@ class NativeTaskbarTests(QtTestCase):
             user.SendMessageW.restype = ctypes.c_ssize_t
             xy = ((-250 & 0xffff) << 16) | 110
             with patch("stockwidget.ui.floating.taskbar.QCursor.pos", return_value=QPoint(300, 300)), \
-                 patch("stockwidget.ui.floating.taskbar.cursor_over_taskbar", return_value=False):
+                 patch("stockwidget.ui.floating.taskbar.taskbar_pointer", return_value=(None, 300)):
                 user.SendMessageW(hwnd, 0x200, 1, xy)
                 self.app.processEvents()
                 self.assertTrue(source.isVisible())
@@ -380,7 +375,7 @@ class NativeTaskbarTests(QtTestCase):
             self.assertIsNone(controller.native.hwnd)
             origin = source.pos()
             source.begin_drag(origin + QPoint(5, 5))
-            with patch("stockwidget.ui.floating.taskbar.cursor_over_taskbar", return_value=True):
+            with patch("stockwidget.ui.floating.taskbar.taskbar_pointer", return_value=over):
                 source.move_drag(origin + QPoint(90, 90))
                 self.app.processEvents()
                 self.assertFalse(source.isVisible())
@@ -416,13 +411,13 @@ class NativeTaskbarTests(QtTestCase):
             user.SendMessageW.restype = ctypes.c_ssize_t
             press = QPoint(700, 770)
             with patch("stockwidget.ui.floating.taskbar.QCursor.pos", return_value=press), \
-                 patch("stockwidget.ui.floating.taskbar.cursor_over_taskbar", return_value=True):
+                 patch("stockwidget.ui.floating.taskbar.taskbar_pointer", return_value=(controller.native.parent, 700)):
                 user.SendMessageW(hwnd, 0x201, 1, (20 << 16) | 100)
                 self.app.processEvents()
             self.assertEqual(user.GetCapture(), hwnd)
             outside = QPoint(710, 500)
             with patch("stockwidget.ui.floating.taskbar.QCursor.pos", return_value=outside), \
-                 patch("stockwidget.ui.floating.taskbar.cursor_over_taskbar", return_value=False):
+                 patch("stockwidget.ui.floating.taskbar.taskbar_pointer", return_value=(None, 710)):
                 xy = ((-250 & 0xffff) << 16) | 110
                 user.SendMessageW(hwnd, 0x200, 1, xy)
                 self.app.processEvents()
@@ -447,8 +442,9 @@ class NativeTaskbarTests(QtTestCase):
         import ctypes
         from ctypes import wintypes as w
 
-        with patch.object(QuotePresenter, "refresh"), patch("stockwidget.ui.floating.widget.GlobalHotkeyManager"):
-            source = FloatLabel({"pos": {"x": 100, "y": 100}, "taskbar_enabled": True, "taskbar_sync_paging": False}, {})
+        self.enterContext(patch.object(QuotePresenter, "refresh"))
+        self.enterContext(patch("stockwidget.ui.floating.widget.GlobalHotkeyManager"))
+        source = FloatLabel({"pos": {"x": 100, "y": 100}, "taskbar_enabled": True, "taskbar_sync_paging": False}, {})
         source._clear_message()
         source.quotes._last_full_rows = [{"名称": f"测试{i}", "现价": str(i), "涨幅": "0%"} for i in range(5)]
         source.quotes._last_color_roles = [{h: "text" for h in row} for row in source.quotes._last_full_rows]
@@ -510,11 +506,12 @@ class NativeTaskbarTests(QtTestCase):
         image = QImage(160, 40, QImage.Format_ARGB32_Premultiplied)
         image.fill(QColor(0, 0, 0, 1))
         try:
-            for offset, states in ((0, (False, True, False)), (-80, (True, False)), (80, (False,))):
+            start_x, _ = area.position(160, 40)
+            for left, states in ((None, (False, True, False)), (start_x + 80, (True, False)), (start_x - 80, (False,))):
                 for through in states:
-                    native.present(area, 160, 40, bytes(image.constBits()), offset, click_through=through)
+                    native.present(area, 160, 40, bytes(image.constBits()), x=left, click_through=through)
                     self.app.processEvents()
-                    x, y = area.position(160, 40, offset)
+                    x, y = area.position(160, 40, left)
                     hit = user.ChildWindowFromPointEx(area.hwnd, w.POINT(x + 80, y + 20), 0x7)
                     self.assertEqual(hit == native.hwnd, not through)
                 self.app.processEvents()
@@ -552,10 +549,21 @@ class NativeInputTests(unittest.TestCase):
         native._last_pointer_position = (100, 20)
         native.user = Mock()
         native.user.GetCapture.return_value = 1
-        native.user.GetCursorPos.side_effect = lambda pointer: (
-            setattr(pointer._obj, "x", 110), setattr(pointer._obj, "y", -150), True)[-1]
-        native.user.ScreenToClient.return_value = True
+        screen_x, window_x = 110, 0
+
+        def get_cursor(pointer):
+            pointer._obj.x, pointer._obj.y = screen_x, -150
+            return True
+
+        def to_client(_hwnd, pointer):
+            pointer._obj.x -= window_x
+            return True
+
+        native.user.GetCursorPos.side_effect = get_cursor
+        native.user.ScreenToClient.side_effect = to_client
         native.user.GetAsyncKeyState.side_effect = lambda key: 0x8000 if key == 1 else 0
+        self.assertEqual(native.poll_pointer(), ("move", 110, -150))
+        screen_x, window_x = 130, 20
         self.assertEqual(native.poll_pointer(), ("move", 110, -150))
         self.assertIsNone(native.poll_pointer())
         native.user.GetAsyncKeyState.return_value = 0
@@ -597,7 +605,7 @@ class NativeInputTests(unittest.TestCase):
 
 
 class DockingInteractionTests(PagingTestCase):
-    def test_fixed_taskbar_press_preserves_the_collapsed_float(self):
+    def test_dual_mode_taskbar_drag_preserves_the_collapsed_float(self):
         w = self.win
         controller = self.make_controller()
         w.move(80, 80)
@@ -611,12 +619,12 @@ class DockingInteractionTests(PagingTestCase):
             full = w.position_controller.full_geometry()
             controller._dpi = 192
             start = QPoint(400, screen.bottom())
-            controller._dispatch_pointer("press", 80, 10, start, True)
-            self.assertIsNone(w._drag_pos)
+            self.native_mouse("press", 80, 10, start, 1)
+            self.assertTrue(controller.input_timer.isActive())
             self.assertEqual(w.width(), 5)
             self.assertEqual(w.position_controller.full_geometry(), full)
-            controller._dispatch_pointer("move", 80, 10, start - QPoint(50, 50), False)
-            controller._dispatch_pointer("cancel", 80, 10, start, False)
+            self.native_mouse("move", 80, 10, start - QPoint(50, 50))
+            self.native_mouse("cancel", 80, 10, start)
             self.assertEqual(w.position_controller.full_geometry(), full)
             self.assertEqual(w.width(), 5)
             self.assertEqual(w.display_mode, "both")
@@ -654,7 +662,7 @@ class DockingInteractionTests(PagingTestCase):
         target, origin = self.win.table.viewport(), self.win.pos()
         start = target.mapToGlobal(QPoint(5, 5))
         self.over.reset_mock()
-        self.over.return_value = True
+        self.over.return_value = 1
         self.mouse(target, QEvent.MouseButtonPress, start, Qt.LeftButton, Qt.LeftButton)
         self.mouse(target, QEvent.MouseMove, start + QPoint(0, 600), Qt.NoButton, Qt.LeftButton)
         self.mouse(target, QEvent.MouseButtonRelease, start + QPoint(0, 600), Qt.LeftButton, Qt.NoButton)
@@ -690,7 +698,7 @@ class DockingInteractionTests(PagingTestCase):
         controller = self.make_controller()
         origin = self.win.pos()
         start = origin + QPoint(5, 5)
-        self.over.return_value = True
+        self.over.return_value = 1
         self.win.begin_drag(start)
         self.win.move_drag(start + QPoint(0, 200))
         self.assertTrue(controller._active)
@@ -728,7 +736,7 @@ class DockingInteractionTests(PagingTestCase):
         self.over.reset_mock()
         self.native.hide.reset_mock()
         self.mouse(target, QEvent.MouseButtonPress, start, Qt.LeftButton, Qt.LeftButton)
-        for delta, over in ((QPoint(90, 30), False), (QPoint(90, 650), True), (QPoint(200, 90), False)):
+        for delta, over in ((QPoint(90, 30), None), (QPoint(90, 650), 1), (QPoint(200, 90), None)):
             self.over.return_value = over
             self.mouse(target, QEvent.MouseMove, start + delta, Qt.NoButton, Qt.LeftButton)
             self.assertEqual(self.win.pos(), origin + delta)
@@ -757,14 +765,14 @@ class DockingInteractionTests(PagingTestCase):
         rect = controller._pager_rect
         press = QPoint(700, 760)
         outside = press - QPoint(0, 150)
-        controller._dispatch_pointer("press", rect.center().x(), rect.bottom() - 2, press, True)
-        controller._dispatch_pointer("move", rect.center().x(), -130, outside, False)
-        controller._dispatch_pointer("release", rect.center().x(), -130, outside, False)
+        self.native_mouse("press", rect.center().x(), rect.bottom() - 2, press, 1)
+        self.native_mouse("move", rect.center().x(), -130, outside)
+        self.native_mouse("release", rect.center().x(), -130, outside)
         self.assertEqual(self.win.quotes.taskbar_page, 0)
         self.assertEqual(self.win.display_mode, "float")
         self.assertTrue(self.win.isVisible())
 
-    def test_fixed_taskbar_keeps_clicks_but_suppresses_dragged_clicks(self):
+    def test_dual_mode_taskbar_keeps_clicks_but_suppresses_dragged_clicks(self):
         controller = self.make_controller()
         self.win.set_view_options(taskbar_page_mode="manual")
         self.win.set_display_mode("both")
@@ -773,12 +781,12 @@ class DockingInteractionTests(PagingTestCase):
         rect = controller._pager_rect
         self.native.hide.reset_mock()
         for kind in ("press", "release"):
-            controller._dispatch_pointer(kind, rect.center().x(), rect.bottom() - 2, press, True)
+            self.native_mouse(kind, rect.center().x(), rect.bottom() - 2, press, 1)
         self.assertEqual(self.win.quotes.taskbar_page, 1)
-        controller._dispatch_pointer("press", rect.center().x(), rect.bottom() - 2, press, True)
-        controller._dispatch_pointer("move", 110, -130, press - QPoint(0, 150), False)
-        controller._dispatch_pointer("move", rect.center().x(), rect.bottom() - 2, press, True)
-        controller._dispatch_pointer("release", rect.center().x(), rect.bottom() - 2, press, True)
+        self.native_mouse("press", rect.center().x(), rect.bottom() - 2, press, 1)
+        self.native_mouse("move", 110, -130, press - QPoint(0, 150))
+        self.native_mouse("move", rect.center().x(), rect.bottom() - 2, press, 1)
+        self.native_mouse("release", rect.center().x(), rect.bottom() - 2, press, 1)
         self.assertEqual(self.win.quotes.taskbar_page, 1)
         self.assertEqual(self.win.pos(), origin)
         self.assertIsNone(self.win._drag_pos)
@@ -813,28 +821,28 @@ class DockingInteractionTests(PagingTestCase):
         self.win.set_display_mode("taskbar")
         original = self.win.pos()
         press, outside = QPoint(700, 760), QPoint(710, 500)
-        controller._dispatch_pointer("press", 100, 15, press, True)
-        controller._dispatch_pointer("move", 110, -245, outside, False)
+        self.native_mouse("press", 100, 15, press, 1)
+        self.native_mouse("move", 110, -245, outside)
         self.assertTrue(self.win.isVisible())
         self.assertFalse(controller._active)
         self.assertEqual(self.win.pos(), outside - self.win._drag_pos)
-        controller._dispatch_pointer("cancel", 0, 0, outside, False)
+        self.native_mouse("cancel", 0, 0, outside)
         self.assertEqual(self.win.pos(), original)
         self.assertEqual(self.win.display_mode, "taskbar")
         self.assertTrue(controller._active)
         self.assertFalse(self.win.isVisible())
 
-        controller._dispatch_pointer("press", 100, 15, press, True)
-        controller._dispatch_pointer("move", 110, -245, outside, False)
-        controller._dispatch_pointer("move", 100, 15, press, True)
+        self.native_mouse("press", 100, 15, press, 1)
+        self.native_mouse("move", 110, -245, outside)
+        self.native_mouse("move", 100, 15, press, 1)
         self.assertTrue(controller._active)
-        controller._dispatch_pointer("release", 100, 15, press, True)
+        self.native_mouse("release", 100, 15, press, 1)
         self.assertEqual(self.win.display_mode, "taskbar")
         self.assertFalse(self.win.isVisible())
 
-        controller._dispatch_pointer("press", 100, 15, press, True)
-        controller._dispatch_pointer("move", 110, -245, outside, False)
-        controller._dispatch_pointer("release", 110, -245, outside, False)
+        self.native_mouse("press", 100, 15, press, 1)
+        self.native_mouse("move", 110, -245, outside)
+        self.native_mouse("release", 110, -245, outside)
         self.assertEqual(self.win.display_mode, "float")
         self.assertTrue(self.win.isVisible())
         self.assertFalse(controller._active)
@@ -846,15 +854,15 @@ class DockingInteractionTests(PagingTestCase):
         self.win.set_display_mode("taskbar")
         original = self.win.pos()
         press = QPoint(700, 760)
-        controller._dispatch_pointer("press", 100, 15, press, True)
-        controller._dispatch_pointer("move", 101, 15, press + QPoint(1, 0), True)
-        controller._dispatch_pointer("release", 101, 15, press + QPoint(1, 0), True)
+        self.native_mouse("press", 100, 15, press, 1)
+        self.native_mouse("move", 101, 15, press + QPoint(1, 0), 1)
+        self.native_mouse("release", 101, 15, press + QPoint(1, 0), 1)
         self.assertEqual(self.win.pos(), original)
         self.assertEqual(self.win.display_mode, "taskbar")
         rect = controller._pager_rect
-        controller._dispatch_pointer("press", rect.center().x(), rect.bottom() - 2, press, True)
-        controller._dispatch_pointer("move", rect.center().x() + 1, rect.bottom() - 2, press + QPoint(1, 0), True)
-        controller._dispatch_pointer("release", rect.center().x() + 1, rect.bottom() - 2, press + QPoint(1, 0), True)
+        self.native_mouse("press", rect.center().x(), rect.bottom() - 2, press, 1)
+        self.native_mouse("move", rect.center().x() + 1, rect.bottom() - 2, press + QPoint(1, 0), 1)
+        self.native_mouse("release", rect.center().x() + 1, rect.bottom() - 2, press + QPoint(1, 0), 1)
         self.assertEqual(self.win.quotes.taskbar_page, 1)
         self.assertEqual(self.win.display_mode, "taskbar")
         self.assertFalse(self.win.isVisible())
@@ -882,11 +890,12 @@ class DockingInteractionTests(PagingTestCase):
     def test_drag_preview_leave_and_commit(self):
         controller = self.make_controller()
         original = self.win.pos()
-        self.win._drag_start_window_pos = original
-        controller.drag_started()
+        start = original + QPoint(5, 5)
+        self.win.begin_drag(start)
+        self.win.move_drag(start + QPoint(50, 50))
         self.assertFalse(controller._active)
-        self.over.return_value = True
-        controller.drag_moved()
+        self.over.return_value = 1
+        self.win.move_drag(start + QPoint(50, 700))
         self.assertTrue(controller._active)
         self.assertFalse(self.win.isVisible())
         self.assertTrue(self.win.widget_visible)
@@ -894,15 +903,13 @@ class DockingInteractionTests(PagingTestCase):
         self.assertTrue(self.win.timer.isActive())
         self.native.capture_pointer.assert_called_once()
         self.assertEqual(self.win.display_mode, "float")
-        self.over.return_value = False
-        controller.drag_moved()
+        self.native_mouse("move", 50, -200, start + QPoint(100, 50))
         self.assertFalse(controller._active)
         self.assertTrue(self.win.isVisible())
         self.assertTrue(self.win.widget_visible)
-        self.over.return_value = True
-        controller.drag_moved()
-        self.win.move(40, 750)
-        controller.drag_finished(True)
+        target = start + QPoint(100, 700)
+        self.native_mouse("move", 50, 15, target, 1)
+        self.native_mouse("release", 50, 15, target, 1)
         self.assertEqual(self.win.display_mode, "taskbar")
         self.assertFalse(self.win.isVisible())
         self.assertEqual(self.win.pos(), original)
@@ -911,7 +918,7 @@ class DockingInteractionTests(PagingTestCase):
         controller = self.make_controller()
         origin = self.win.pos()
         self.win.begin_drag(origin + QPoint(5, 5))
-        self.over.return_value = True
+        self.over.return_value = 1
         self.win.move_drag(origin + QPoint(5, 500))
         self.assertTrue(self.win.taskbar_preview_active)
         self.win.set_view_options(taskbar_dual_open=True)
@@ -936,7 +943,7 @@ class DockingInteractionTests(PagingTestCase):
 
         start = target.mapToGlobal(QPoint(3, 3))
         mouse(QEvent.MouseButtonPress, start, Qt.LeftButton, Qt.LeftButton)
-        self.over.return_value = True
+        self.over.return_value = 1
         mouse(QEvent.MouseMove, start + QPoint(0, 100), Qt.NoButton, Qt.LeftButton)
         self.assertTrue(controller._active)
         self.assertFalse(self.win.isVisible())
@@ -957,10 +964,10 @@ class DockingInteractionTests(PagingTestCase):
     def test_failed_drag_attachment_never_hides_float(self):
         controller = self.make_controller()
         self.native.present.side_effect = OSError("模拟失败")
-        self.win._drag_start_window_pos = self.win.pos()
-        controller.drag_started()
-        self.over.return_value = True
-        controller.drag_moved()
-        controller.drag_finished(True)
+        self.over.return_value = 1
+        start = self.win.pos() + QPoint(5, 5)
+        self.win.begin_drag(start)
+        self.win.move_drag(start + QPoint(50, 700))
+        self.win.finish_drag()
         self.assertEqual(self.win.display_mode, "float")
         self.assertTrue(self.win.isVisible())

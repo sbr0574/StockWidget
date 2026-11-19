@@ -65,29 +65,36 @@ class MultiscreenDockingTests(PagingTestCase):
     def multiscreen_controller(self):
         controller = self.make_controller()
         areas = (TaskbarArea(1, 1920, 48, 1700, 96, PRIMARY),
-                 TaskbarArea(2, 2560, 72, 2300, 144, SECONDARY))
+                 TaskbarArea(2, 2560, 72, 2300, 144, SECONDARY, left=-2560))
         self.finder = self.enterContext(patch("stockwidget.ui.floating.taskbar.find_taskbar",
             side_effect=lambda **kw: areas[1] if kw["hwnd"] == 2 or kw["device_name"] == SECONDARY else areas[0]))
         return controller
 
     def gesture(self, controller, end="release"):
         press = QPoint(700, 760)
-        controller._dispatch_pointer("press", 100, 20, press, 1)
-        controller._dispatch_pointer("move", 150, 20, press + QPoint(200, 0), 2)
-        self.assertEqual(self.win.taskbar_screen, SECONDARY)
+        target = QPoint(-1727, 760)
+        self.native_mouse("press", 100, 20, press, 1)
+        self.native_mouse("move", 150, 20, target, 2, screen_x=-1310)
+        self.assertEqual(self.win.taskbar_screen, PRIMARY)
+        self.assertEqual(controller._area.device_name, SECONDARY)
         self.assertEqual(controller._dpi, 144)
+        self.assertEqual(self.native.present.call_args.kwargs["x"], 1100)
         self.assertTrue(controller._active)
-        controller._dispatch_pointer(end, 150, 20, press + QPoint(200, 0), 2)
+        self.native_mouse(end, 150, 20, target, 2, screen_x=-1310)
 
     def test_drag_between_taskbars_commits_the_target_display_and_escape_restores(self):
         controller = self.multiscreen_controller()
+        self.win.taskbar_x = 600
         self.win.set_display_mode("taskbar")
         self.gesture(controller, "cancel")
         self.assertEqual(self.win.taskbar_screen, PRIMARY)
+        self.assertEqual(self.native.present.call_args.kwargs["x"], 600)
         self.assertEqual(self.win.display_mode, "taskbar")
         self.assertFalse(controller.input_timer.isActive())
         self.gesture(controller)
         self.assertEqual(self.win.current_config()["taskbar_screen"], SECONDARY)
+        self.assertEqual(self.win.current_config()["taskbar_x"], 1100 * 96 / 144)
+        self.assertEqual(self.native.present.call_args.kwargs["x"], 1100)
         self.assertEqual(self.win.display_mode, "taskbar")
         self.assertFalse(self.win.isVisible())
 
@@ -98,9 +105,9 @@ class MultiscreenDockingTests(PagingTestCase):
         origin = self.win.pos()
         press = QPoint(700, 760)
         for end in ("release", "cancel"):
-            controller._dispatch_pointer("press", 100, 20, press, 1)
-            controller._dispatch_pointer("move", 150, 20, press + QPoint(200, 0), 2)
-            controller._dispatch_pointer(end, 150, 20, press + QPoint(200, 0), 2)
+            self.native_mouse("press", 100, 20, press, 1)
+            self.native_mouse("move", 150, 20, press + QPoint(200, 0), 2)
+            self.native_mouse(end, 150, 20, press + QPoint(200, 0), 2)
             self.assertEqual(self.win.pos(), origin)
             self.assertEqual(self.win.taskbar_screen, PRIMARY)
             self.assertEqual(controller._dpi, 96)

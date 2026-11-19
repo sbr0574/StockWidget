@@ -50,7 +50,6 @@ class SettingsDialogTests(SettingsTestCase):
             for opacity in (90, 80, 70):
                 dialog.taskbar_settings.style.opacity.setValue(opacity)
             dialog.taskbar_settings.rows.setValue(3)
-            dialog.taskbar_settings.offset.setValue(10)
             self.qt_app.processEvents()
             restyle.assert_not_called()
             self.assertEqual(window.view_options.taskbar_opacity_pct, 70)
@@ -577,9 +576,7 @@ class SettingsDialogTests(SettingsTestCase):
                 QTest.mouseClick(group.sync_toggle, Qt.LeftButton)
                 self.qt_app.processEvents()
                 self.assertTrue(group.body.isHidden())
-                self.assertTrue(dialog.taskbar_settings.offset.isVisible())
-                if group is dialog.taskbar_settings.style:
-                    self.assertFalse(dialog.taskbar_settings.rows.isVisible())
+                self.assertTrue(dialog.taskbar_settings.rows.isVisible())
                 QTest.mouseClick(group.sync_toggle, Qt.LeftButton)
                 self.qt_app.processEvents()
                 self.assertTrue(group.body.isVisible())
@@ -589,7 +586,6 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertEqual(style.opacity_label.text(), "43%")
         window.set_unicolor(False)
         dialog.taskbar_settings.rows.setValue(4)
-        dialog.taskbar_settings.offset.setValue(35)
         self.assertEqual(window.view_options.taskbar_opacity_pct, 43)
         self.assertFalse(window.get_taskbar_appearance()[3])
         self.assertEqual(window.view_options.taskbar_rows, 4)
@@ -598,8 +594,7 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertTrue(all(not group.isVisible() for group in groups))
         dialog.taskbar_settings.enabled.setChecked(True)
         self.assertTrue(all(group.body.isVisible() for group in groups))
-        self.assertEqual((style.opacity.value(), dialog.taskbar_settings.rows.value(),
-                          dialog.taskbar_settings.offset.value()), (43, 4, 35))
+        self.assertEqual((style.opacity.value(), dialog.taskbar_settings.rows.value()), (43, 4))
         self.assertFalse(window.get_taskbar_appearance()[3])
 
     def test_taskbar_automatic_color_locks_manual_color_and_preserves_shared_color_mode(self):

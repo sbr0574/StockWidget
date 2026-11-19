@@ -32,6 +32,7 @@ class DragBehaviorMixin:
         self._drag_pos = None
         self._drag_start_pos = None
         self._dragging = False
+        self._drag_moves_float = True
         self._system_moving = False
         self._pressed_header_section = -1
         self._pressed_region = None
@@ -39,15 +40,16 @@ class DragBehaviorMixin:
     # ----- 拖拽实现 -----
     def begin_drag(self, global_pos, *, surface="float", offset=None):
         """Shared pointer entry point for Qt and native taskbar adapters."""
-        if surface == "taskbar" and self.view_options.taskbar_dual_open:
-            return
-        self.position_controller.prepare_drag()
         self._reset_drag()
         self._drag_surface = surface
+        self._drag_moves_float = surface == "float" or not self.view_options.taskbar_dual_open
+        if self._drag_moves_float:
+            self.position_controller.prepare_drag()
         self._drag_start_pos = QPoint(global_pos)
         self._drag_start_window_pos = self.pos()
         self._drag_pos = QPoint(offset) if offset is not None else self._drag_start_pos - self.frameGeometry().topLeft()
-        self.setFocus(Qt.MouseFocusReason)
+        if surface == "float":
+            self.setFocus(Qt.MouseFocusReason)
 
     def _is_drag_position(self, global_pos):
         return self._dragging or (
@@ -57,7 +59,7 @@ class DragBehaviorMixin:
         )
 
     def move_drag(self, global_pos, *, left_pressed=True):
-        """超过系统拖动阈值后移动浮窗，避免单击时轻微抖动触发拖动。"""
+        """超过系统拖动阈值后开始移动，避免单击时轻微抖动触发拖动。"""
         if self._drag_pos is None or not left_pressed:
             return
         global_pos = QPoint(global_pos)
@@ -66,6 +68,9 @@ class DragBehaviorMixin:
         if not self._dragging:
             self._dragging = True
             self.drag_started.emit()
+        if not self._drag_moves_float:
+            self.drag_moved.emit()
+            return
         if self._wayland_drag:
             if self._system_moving:
                 return
@@ -78,15 +83,21 @@ class DragBehaviorMixin:
         self._ensure_on_top()
         self.drag_moved.emit()
 
-    def finish_drag(self, accepted=True):
+    def finish_drag(self, accepted=True, *, global_pos=None):
+        if accepted and global_pos is not None:
+            self.move_drag(global_pos)
         dragged = self._dragging
-        if dragged and not accepted:
+        moves_float = self._drag_moves_float
+        native_press = self._drag_pos is not None and self._drag_surface == "taskbar"
+        if moves_float and dragged and not accepted:
             self.move(self._drag_start_window_pos)
         self._reset_drag()
-        self._ensure_on_top()
-        if dragged:
+        if moves_float:
+            self._ensure_on_top()
+        if dragged or (native_press and not accepted):
             self.drag_finished.emit(accepted)
-        self.position_controller.finish_drag(accepted)
+        if moves_float:
+            self.position_controller.finish_drag(accepted)
         if dragged:
             self._notify_change()
 
@@ -99,8 +110,8 @@ class DragBehaviorMixin:
     def _drag_move(self, e):
         self.move_drag(e.globalPosition().toPoint(), left_pressed=bool(e.buttons() & Qt.LeftButton))
 
-    def _drag_release(self):
-        self.finish_drag()
+    def _drag_release(self, e):
+        self.finish_drag(global_pos=e.globalPosition().toPoint())
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape and self._dragging:
@@ -127,7 +138,7 @@ class DragBehaviorMixin:
 
     def mouseReleaseEvent(self, e):
         if e.button() == Qt.LeftButton:
-            self._drag_release()
+            self._drag_release(e)
 
     def mouseDoubleClickEvent(self, e):
         if e.button() == Qt.LeftButton:
@@ -156,7 +167,7 @@ class DragBehaviorMixin:
             click = self._drag_region_clicks.get(obj) if (
                 stationary and self._pressed_region is obj and obj.rect().contains(ev.position().toPoint())
             ) else None
-            self._drag_release()
+            self._drag_release(ev)
             if clicked:
                 self._clickable_header.sectionClicked.emit(section)
             if click is not None:

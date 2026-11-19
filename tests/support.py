@@ -165,6 +165,10 @@ class PagingTestCase(QtTestCase):
         event = QMouseEvent(kind, QPointF(local), QPointF(global_pos), button, buttons, Qt.NoModifier)
         QApplication.sendEvent(target, event)
 
+    def native_mouse(self, kind, x, y, position, bar=None, *, screen_x=None):
+        pointer = (bar, position.x() if screen_x is None else screen_x)
+        self.controller._dispatch_pointer(kind, x, y, position, pointer)
+
     def make_controller(self):
         self.enterContext(patch("stockwidget.ui.floating.taskbar.QApplication.platformName", return_value="windows"))
         self.enterContext(patch("stockwidget.ui.floating.widget.sys.platform", "win32"))
@@ -172,7 +176,10 @@ class PagingTestCase(QtTestCase):
         self.native = Mock()
         self.native.poll_pointer.return_value = None
         self.enterContext(patch("stockwidget.ui.floating.taskbar.NativeTaskbarWindow", return_value=self.native))
-        self.over = self.enterContext(patch("stockwidget.ui.floating.taskbar.cursor_over_taskbar", return_value=False))
+        self.over = Mock(return_value=None)
+        self.pointer_x = 800
+        self.enterContext(patch("stockwidget.ui.floating.taskbar.taskbar_pointer",
+                                side_effect=lambda *, hit_test: (self.over() if hit_test else None, self.pointer_x)))
         self.controller = TaskbarController(self.win, Mock())
         self.controller.apply_mode()
         return self.controller

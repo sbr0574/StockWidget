@@ -279,9 +279,7 @@ class TaskbarSettings(_SettingsGroup):
         self._publish(enabled=self._control(QCheckBox, "taskbar_enabled"),
                       dual=self._control(QCheckBox, "taskbar_dual_open"))
         self.dual.toggled.connect(lambda value: source.set_view_options(taskbar_dual_open=value))
-        self._publish(rows=self._value_control("taskbar_rows"),
-                      offset=self._control(QSpinBox, "taskbar_offset"))
-        self.offset.valueChanged.connect(source.set_taskbar_offset)
+        self._publish(rows=self._value_control("taskbar_rows"))
         self.bindings = []
         for name, kind in (("metrics", TaskbarMetricSettings), ("style", TaskbarStyleSettings),
                            ("paging", TaskbarPagingSettings), ("split", TaskbarSplitSettings)):
@@ -304,7 +302,6 @@ class TaskbarSettings(_SettingsGroup):
         self.body.setEnabled(source.view_options.taskbar_enabled)
         self.dual.setChecked(source.view_options.taskbar_dual_open)
         self.rows.setValue(source.view_options.taskbar_rows)
-        self.offset.setValue(source.taskbar_offset)
         self.group.setEnabled(sys.platform == "win32")
         self.enabled.setToolTip(source.taskbar_status)
         for binding in self.bindings:

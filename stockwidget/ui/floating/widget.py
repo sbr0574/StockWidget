@@ -270,10 +270,10 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.taskbar_screen = cfg.get("taskbar_screen", "") if isinstance(cfg.get("taskbar_screen", ""), str) else ""
         mode = cfg.get("display_mode", "float")
         self.display_mode = mode if sys.platform == "win32" and mode in ("float", "taskbar", "both") else "float"
-        try:
-            self.taskbar_offset = max(-2000, min(2000, int(cfg.get("taskbar_offset", 0))))
-        except (TypeError, ValueError):
-            self.taskbar_offset = 0
+        # 以 96 DPI 像素保存任务栏左侧距离，保留高 DPI 下的像素精度。
+        x = cfg.get("taskbar_x")
+        self.taskbar_x = x if type(x) in (int, float) and 0 <= x < 2**31 else None
+        self._legacy_taskbar_offset = bounded_int(cfg.get("taskbar_offset"), 0, -2000, 2000)
         self.view_options = ViewOptions.from_config(cfg, metrics=self.visible_metrics)
         if not self.view_options.taskbar_enabled:
             self.display_mode = "float"
@@ -295,6 +295,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.display_flags_changed.emit()
 
     def reset_settings(self):
+        if self._drag_pos is not None:
+            self.finish_drag(False)
         self._load_settings_config({key: getattr(self.view_options, key) for key in APPEARANCE_OPTION_KEYS})
         self.position_controller.recheck()
         self.position_options_changed.emit()
@@ -362,8 +364,10 @@ class FloatLabel(DragBehaviorMixin, QWidget):
                 "refresh_seconds", "hide_enabled", "scheduled_hide_enabled", "auto_hide_enabled",
                 "boundary_check_enabled", "edge_hide_enabled", "float_on_top", "force_top", "click_through",
                 "hotkey_enabled", "hotkey", "hotkey_click_through_enabled", "hotkey_click_through",
-                "start_on_boot", "display_mode", "taskbar_offset", "taskbar_screen",
+                "start_on_boot", "display_mode", "taskbar_x", "taskbar_screen",
             )},
+            **({"taskbar_offset": self._legacy_taskbar_offset}
+               if self.taskbar_x is None and self._legacy_taskbar_offset else {}),
             **self.view_options.to_config(),
             "pos": {"x": self.position_controller.full_geometry().x(),
                     "y": self.position_controller.full_geometry().y()},
@@ -732,6 +736,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             return
         if sys.platform != "win32" or not self.view_options.taskbar_enabled:
             mode = "float"
+        if mode != self.display_mode and self._drag_pos is not None:
+            self.finish_drag(False)
         if taskbar_screen is not None:
             self.taskbar_screen = taskbar_screen
         elif self.display_mode == "float" and mode != "float":
@@ -747,11 +753,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if was_hidden:
             self.widget_visibility_changed.emit()
         self.sync_refresh_timer()
-        self.taskbar_options_changed.emit()
-        self._notify_change()
-
-    def set_taskbar_offset(self, value):
-        self.taskbar_offset = max(-2000, min(2000, int(value)))
         self.taskbar_options_changed.emit()
         self._notify_change()
 
@@ -978,6 +979,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         visible = bool(visible)
         if visible == self.widget_visible:
             return
+        if not visible and self._drag_pos is not None:
+            self.finish_drag(False)
         self.widget_visible = visible
         if visible and self.display_mode != "taskbar":
             self.show()
@@ -991,7 +994,6 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self._notify_change()
 
     def hide_widget(self):
-        self.finish_drag(False)
         self.set_widget_visible(False)
 
     def toggle_win(self):

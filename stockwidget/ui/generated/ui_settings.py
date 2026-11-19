@@ -2196,46 +2196,6 @@ class Ui_SettingDialog(object):
 
         self.taskbar_style_settings_outer.addWidget(self.taskbar_style_settings_body)
 
-        self.taskbar_offset_row = QWidget(self.taskbar_style_settings)
-        self.taskbar_offset_row.setObjectName(u"taskbar_offset_row")
-        sizePolicy3.setHeightForWidth(self.taskbar_offset_row.sizePolicy().hasHeightForWidth())
-        self.taskbar_offset_row.setSizePolicy(sizePolicy3)
-        self.taskbar_offset_row_layout = QGridLayout(self.taskbar_offset_row)
-        self.taskbar_offset_row_layout.setSpacing(5)
-        self.taskbar_offset_row_layout.setObjectName(u"taskbar_offset_row_layout")
-        self.taskbar_offset_row_layout.setHorizontalSpacing(12)
-        self.taskbar_offset_row_layout.setContentsMargins(0, 0, 0, 0)
-        self.taskbarLimitsLayout_label_1 = QLabel(self.taskbar_offset_row)
-        self.taskbarLimitsLayout_label_1.setObjectName(u"taskbarLimitsLayout_label_1")
-        self.taskbarLimitsLayout_label_1.setMinimumSize(QSize(0, 28))
-        self.taskbarLimitsLayout_label_1.setMaximumSize(QSize(16777215, 28))
-        self.taskbarLimitsLayout_label_1.setProperty(u"settingTitle", True)
-
-        self.taskbar_offset_row_layout.addWidget(self.taskbarLimitsLayout_label_1, 0, 0, 1, 1)
-
-        self.taskbar_offset_description = QLabel(self.taskbar_offset_row)
-        self.taskbar_offset_description.setObjectName(u"taskbar_offset_description")
-        self.taskbar_offset_description.setWordWrap(True)
-        self.taskbar_offset_description.setProperty(u"settingDescription", True)
-        self.taskbar_offset_description.setMaximumSize(QSize(310, 16777215))
-        self.taskbar_offset_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.taskbar_offset_description.setMinimumSize(QSize(310, 0))
-
-        self.taskbar_offset_row_layout.addWidget(self.taskbar_offset_description, 1, 0, 1, 1)
-
-        self.taskbar_offset = QSpinBox(self.taskbar_offset_row)
-        self.taskbar_offset.setObjectName(u"taskbar_offset")
-        self.taskbar_offset.setMinimum(-2000)
-        self.taskbar_offset.setMaximum(2000)
-        self.taskbar_offset.setValue(0)
-        self.taskbar_offset.setMinimumSize(QSize(100, 28))
-        self.taskbar_offset.setMaximumSize(QSize(100, 28))
-
-        self.taskbar_offset_row_layout.addWidget(self.taskbar_offset, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
-
-
-        self.taskbar_style_settings_outer.addWidget(self.taskbar_offset_row)
-
 
         self.taskbar_settings_layout.addWidget(self.taskbar_style_settings)
 
@@ -3039,7 +2999,7 @@ class Ui_SettingDialog(object):
         self.taskbar_title.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u4efb\u52a1\u680f\u8bbe\u7f6e", None))
 #endif // QT_CONFIG(accessibility)
         self.taskbar_enabled_title.setText(QCoreApplication.translate("SettingDialog", u"\u4efb\u52a1\u680f\u884c\u60c5\u6a21\u5f0f", None))
-        self.taskbar_enabled_description.setText(QCoreApplication.translate("SettingDialog", u"\u5c06\u884c\u60c5\u6d6e\u7a97\u5d4c\u5165Windows\u4efb\u52a1\u680f\u4e2d\u663e\u793a\u3002", None))
+        self.taskbar_enabled_description.setText(QCoreApplication.translate("SettingDialog", u"\u5c06\u884c\u60c5\u5d4c\u5165 Windows \u4efb\u52a1\u680f\uff0c\u53ef\u6cbf\u4efb\u52a1\u680f\u5de6\u53f3\u62d6\u52a8\u3002", None))
         self.taskbar_enabled.setText(QCoreApplication.translate("SettingDialog", u"\u4efb\u52a1\u680f\u884c\u60c5\u6a21\u5f0f", None))
 #if QT_CONFIG(accessibility)
         self.taskbar_enabled.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u4efb\u52a1\u680f\u884c\u60c5\u6a21\u5f0f", None))
@@ -3081,9 +3041,6 @@ class Ui_SettingDialog(object):
         self.taskbar_color_caption.setText(QCoreApplication.translate("SettingDialog", u"\u6587\u5b57\u989c\u8272", None))
         self.btn_taskbar_color_description.setText(QCoreApplication.translate("SettingDialog", u"\u5173\u95ed\u81ea\u52a8\u6587\u5b57\u989c\u8272\u540e\uff0c\u53ef\u9009\u62e9\u4efb\u52a1\u680f\u6587\u5b57\u7684\u989c\u8272\u3002", None))
         self.btn_taskbar_color.setText(QCoreApplication.translate("SettingDialog", u"FFFFFF", None))
-        self.taskbarLimitsLayout_label_1.setText(QCoreApplication.translate("SettingDialog", u"\u504f\u79fb\u91cf", None))
-        self.taskbar_offset_description.setText(QCoreApplication.translate("SettingDialog", u"\u6b63\u503c\u5411\u5de6\u3001\u8d1f\u503c\u5411\u53f3\uff1b\u5411\u53f3\u53ef\u80fd\u8986\u76d6\u6258\u76d8\u533a\u57df\u3002", None))
-        self.taskbar_offset.setSuffix(QCoreApplication.translate("SettingDialog", u" px", None))
         self.taskbar_metric_settings.setTitle(QCoreApplication.translate("SettingDialog", u"\u6307\u6807", None))
         self.taskbar_sync_metrics_title.setText(QCoreApplication.translate("SettingDialog", u"\u540c\u6b65\u6d6e\u7a97\u6307\u6807", None))
         self.taskbar_sync_metrics_description.setText(QCoreApplication.translate("SettingDialog", u"\u8ddf\u968f\u6d6e\u7a97\u9009\u62e9\u7684\u663e\u793a\u6307\u6807\u53ca\u6392\u5217\u987a\u5e8f\u3002", None))
