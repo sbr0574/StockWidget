@@ -170,15 +170,33 @@ def build_quote_menu(source, surface="float"):
     _view_toggles(menu, source, surface)
 
     menu.addSeparator()
-    act_open_settings = QAction("设置…", menu)
-    if callable(source._open_settings_cb):
-        act_open_settings.triggered.connect(source._open_settings_cb)
-    else:
-        act_open_settings.setEnabled(False)
-    menu.addAction(act_open_settings)
+    _add_settings_action(menu, source)
 
     menu.addSeparator()
     menu.addAction(QAction("隐藏", menu, triggered=source.hide_widget))
     menu.addSeparator()
     menu.addAction(QAction("退出", menu, triggered=source._quit_cb or QApplication.instance().quit))
     return menu
+
+
+def build_history_menu(dialog):
+    menu = QMenu(dialog)
+    menu.setToolTipsVisible(False)
+    menu.addAction("关闭窗口", dialog.close)
+    menu.addAction("独立窗口打开").triggered.connect(dialog.pop_out)
+    pin = menu.addAction("固定")
+    pin.setCheckable(True)
+    pin.setChecked(dialog.pin_button.isChecked())
+    pin.toggled.connect(dialog.pin_button.setChecked)
+    _add_settings_action(menu, dialog.parentWidget(), "设置")
+    menu.addAction("隐藏所有浮窗").triggered.connect(dialog.hide_quotes_requested)
+    return menu
+
+
+def _add_settings_action(menu, source, text="设置…"):
+    action = menu.addAction(text)
+    callback = getattr(source, "_open_settings_cb", None)
+    if callable(callback):
+        action.triggered.connect(callback)
+    else:
+        action.setEnabled(False)

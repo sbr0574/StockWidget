@@ -3,7 +3,7 @@
 import threading
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QTimer, QSignalBlocker, Signal
-from PySide6.QtGui import QColor, QCursor, QFontInfo, QFontMetrics, QPainter, QPalette
+from PySide6.QtGui import QColor, QContextMenuEvent, QCursor, QFontInfo, QFontMetrics, QPainter, QPalette
 from PySide6.QtWidgets import QApplication, QAbstractButton, QButtonGroup, QDialog, QToolTip, QWidget, QWidgetItem
 
 from stockwidget.core.window_rules import adjacent_popup_position, best_screen
@@ -15,6 +15,7 @@ from stockwidget.platform.window import set_macos_cursor, set_windows_arrow_curs
 from stockwidget.ui.controls.history_chart import MA_COLORS
 from stockwidget.ui.generated.ui_history import Ui_HistoryDialog
 from stockwidget.ui.controls.style import apply_history_theme, is_dark_theme, navigation_arrow_icon, pin_icon, theme_palette
+from stockwidget.ui.menus import build_history_menu
 
 
 class HistoryDialog(QDialog):
@@ -38,6 +39,7 @@ class HistoryDialog(QDialog):
         self._gesture = None
         self._drag_started = False
         self._outside_grab = False
+        self._context_menu = None
         self._native_resize_cursor = False
         self._book_enabled = False
         self._theme_palette = None
@@ -92,7 +94,7 @@ class HistoryDialog(QDialog):
         if self.display_mode == "popup" and self.pin_button.isChecked() != options.chart_popup_pinned:
             with QSignalBlocker(self.pin_button):
                 self.pin_button.setChecked(options.chart_popup_pinned)
-            self._apply_pin(options.chart_popup_pinned)
+            self._sync_outside_grab()
         self.chart.set_options(options.chart_ma_periods, options.chart_average_enabled,
                                options.chart_volume_enabled, unit_mode)
         for control, checked in ((self.ui.cb_order_book, options.chart_order_book_enabled),
@@ -187,22 +189,14 @@ class HistoryDialog(QDialog):
     def _pin_changed(self, pinned):
         if self.display_mode != "popup":
             return
-        self._apply_pin(pinned)
-        self.options_changed.emit({"chart_popup_pinned": pinned})
-
-    def _apply_pin(self, pinned):
-        hint = Qt.WindowStaysOnTopHint
-        flags = self.windowFlags()
-        # Keep the QWidget flags in sync and update its native window in place.
-        self.overrideWindowFlags(flags | hint if pinned else flags & ~hint)
-        if handle := self.windowHandle():
-            handle.setFlag(hint, pinned)
         self._sync_outside_grab()
+        self.options_changed.emit({"chart_popup_pinned": pinned})
 
     def _sync_outside_grab(self, *, closing=False):
         # The Windows taskbar and X11 panels can receive clicks without taking focus.
         handle = self.windowHandle()
-        grab = (not closing and not self.pin_button.isChecked() and handle is not None
+        grab = (not closing and self.isVisible() and self._context_menu is None
+                and not self.pin_button.isChecked() and handle is not None
                 and handle.isVisible() and QApplication.platformName() in ("windows", "xcb"))
         if self._outside_grab != grab:
             grabbed = handle.setMouseGrabEnabled(grab) if handle is not None else False
@@ -212,6 +206,9 @@ class HistoryDialog(QDialog):
         if self.display_mode == "popup":
             QApplication.instance().removeEventFilter(self)
             self._sync_outside_grab(closing=True)
+            if menu := self._context_menu:
+                menu.setAttribute(Qt.WA_NoMouseReplay)
+                menu.close()
         self._gesture = None
         self._drag_started = False
         self._apply_cursor(Qt.ArrowCursor)
@@ -429,21 +426,47 @@ class HistoryDialog(QDialog):
             super().mouseReleaseEvent(event)
 
     def keyPressEvent(self, event):
-        if self._gesture and event.key() == Qt.Key_Escape:
+        if event.key() != Qt.Key_Escape:
+            return super().keyPressEvent(event)
+        if self._gesture:
             original = self._gesture[2]
             self._gesture = None
             self._drag_started = False
             self.setGeometry(original)
             self._sync_cursor()
             self.save_size()
-            event.accept()
-        else:
-            super().keyPressEvent(event)
+        elif self.display_mode != "popup" or not self.pin_button.isChecked():
+            return super().keyPressEvent(event)
+        event.accept()
+
+    def contextMenuEvent(self, event):
+        if self.display_mode != "popup":
+            return super().contextMenuEvent(event)
+        if not self.rect().contains(event.pos()):
+            event.ignore()
+            return
+        if self._context_menu is None:
+            menu = self._context_menu = build_history_menu(self)
+            menu.aboutToHide.connect(self._context_menu_hidden)
+            self._sync_outside_grab()
+            menu.popup(event.globalPos())
+        event.accept()
+
+    def _context_menu_hidden(self):
+        menu, self._context_menu = self._context_menu, None
+        menu.deleteLater()
+        # Qt releases the menu's mouse grab after emitting aboutToHide.
+        QTimer.singleShot(0, self, self._sync_outside_grab)
 
     def eventFilter(self, obj, event):
         kind = event.type()
         if kind == QEvent.ApplicationDeactivate and not self.pin_button.isChecked():
             self.close()
+        if (kind == QEvent.ContextMenu and obj is self.windowHandle()
+                and event.reason() == QContextMenuEvent.Mouse):
+            # After a menu closes, Qt can still have another window as its last mouse receiver.
+            self.contextMenuEvent(event)
+            return True
         if kind not in (QEvent.MouseButtonPress, QEvent.MouseButtonDblClick, QEvent.MouseButtonRelease,
                         QEvent.MouseMove, QEvent.Enter, QEvent.KeyPress) or not isinstance(obj, QWidget):
             return False
@@ -451,7 +474,11 @@ class HistoryDialog(QDialog):
         if kind in (QEvent.MouseButtonPress, QEvent.MouseButtonDblClick):
             position = event.globalPosition().toPoint()
             point = self.mapFromGlobal(position)
-            if not inside or not self.rect().contains(point):
+            over_chart = self.rect().contains(point)
+            if menu := self._context_menu:
+                if over_chart or menu.rect().contains(menu.mapFromGlobal(position)):
+                    return False
+            if not inside or not over_chart:
                 if not self.pin_button.isChecked():
                     self.close()
                     return True

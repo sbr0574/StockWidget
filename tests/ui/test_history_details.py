@@ -7,7 +7,7 @@ from unittest.mock import patch
 from PySide6.QtCore import QEvent, QPoint, QPointF, Qt
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QTextDocument
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMenu
 
 from stockwidget.data.bars import Bar, BarResult
 from stockwidget.data.bar_cache import BarCache
@@ -93,9 +93,15 @@ class HistoryDetailsTests(HistoryTestCase):
             for control in (popup.title, popup.chart, popup.close_button, popup.ui.cb_volume):
                 self.assertEqual(control.palette().windowText().color(), window.fg)
             self.assertEqual(popup.palette().window().color(), window.bg)
-            image = popup.grab().toImage()
-            self.assertEqual(image.pixelColor(0, 0).alpha(), 0)
-            self.assertEqual(image.pixelColor(round(image.width() / 2), 2).alpha(), window.bg.alpha())
+            for pinned in (False, True):
+                popup.pin_button.setChecked(pinned)
+                self.app.processEvents()
+                image = popup.grab().toImage()
+                width, height = image.width(), image.height()
+                self.assertEqual(image.pixelColor(0, 0).alpha(), 0)
+                for x, y in ((width // 2, 2), (width // 2, height - 3),
+                             (2, height // 2), (width - 3, height // 2)):
+                    self.assertEqual(image.pixelColor(x, y).alpha(), window.bg.alpha())
             for period, color in zip((5, 10, 20, 30, 60), MA_COLORS):
                 self.assertEqual(getattr(popup.ui, f"cb_ma{period}").palette().windowText().color(), QColor(color))
         popup.pop_out_button.click()
@@ -161,6 +167,8 @@ class HistoryDetailsTests(HistoryTestCase):
         popup.move(self.app.primaryScreen().availableGeometry().topLeft() + QPoint(20, 20))
         original = popup.geometry()
         start = popup.title.mapTo(popup, popup.title.rect().center())
+        QTest.mouseMove(popup.windowHandle(), start)
+        self.assertEqual(popup.title.cursor().shape(), Qt.ArrowCursor)
         finish_global = popup.mapToGlobal(start + QPoint(55, 35))
         QTest.mousePress(popup.windowHandle(), Qt.LeftButton, pos=start)
         QTest.mouseMove(popup.windowHandle(), start + QPoint(55, 35))
@@ -173,6 +181,7 @@ class HistoryDetailsTests(HistoryTestCase):
         self.wait_ready(window)
         history._quotes_updated()
         self.assertEqual(popup.geometry(), geometry)
+        popup.pin_button.setChecked(True)
         start = popup.title.mapTo(popup, popup.title.rect().center())
         QTest.mousePress(popup.windowHandle(), Qt.LeftButton, pos=start)
         QTest.mouseMove(popup.windowHandle(), start + QPoint(30, 10))
@@ -234,6 +243,102 @@ class HistoryDetailsTests(HistoryTestCase):
                     self.assertTrue(popup.isVisible())
                     self.assertTrue(window.widget_visible)
                     self.assertEqual(popup.geometry(), original)
+
+    def _open_chart_menu(self, popup):
+        point = popup.chart.mapTo(popup, popup.chart.rect().bottomRight() - QPoint(8, 8))
+        handle = popup.windowHandle()
+        QTest.mouseMove(handle, point)
+        QTest.mouseClick(handle, Qt.RightButton, pos=point)
+        self.app.processEvents()
+        menu = QApplication.activePopupWidget()
+        self.assertIsInstance(menu, QMenu)
+        self.assertIs(menu.parentWidget(), popup)
+        return menu
+
+    def _choose_chart_menu_action(self, menu, label):
+        action = next(action for action in menu.actions() if action.text() == label)
+        QTest.mouseClick(menu.windowHandle(), Qt.LeftButton, pos=menu.actionGeometry(action).center())
+        self.app.processEvents()
+        self.assertIsNone(QApplication.activePopupWidget())
+
+    def test_chart_context_menu_uses_shared_actions(self):
+        _, window = self.make_window()
+        history = window.history
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = history.dialog
+        with patch.object(window, "_open_settings_cb") as open_settings:
+            menu = self._open_chart_menu(popup)
+            self.assertEqual([action.text() for action in menu.actions()],
+                             ["关闭窗口", "独立窗口打开", "固定", "设置", "隐藏所有浮窗"])
+            self.assertFalse(menu.toolTipsVisible())
+            self._choose_chart_menu_action(menu, "设置")
+            open_settings.assert_called_once_with()
+        self.assertTrue(popup.isVisible())
+
+        menu = self._open_chart_menu(popup)
+        pin = next(action for action in menu.actions() if action.text() == "固定")
+        self.assertTrue(pin.isCheckable())
+        self.assertFalse(pin.isChecked())
+        self._choose_chart_menu_action(menu, "固定")
+        self.assertTrue(popup.pin_button.isChecked())
+        self.assertTrue(window.current_config()["chart_popup_pinned"])
+
+        menu = self._open_chart_menu(popup)
+        self.assertTrue(next(action for action in menu.actions() if action.text() == "固定").isChecked())
+        self._choose_chart_menu_action(menu, "固定")
+        self.assertFalse(popup.pin_button.isChecked())
+        self.assertTrue(popup.isVisible())
+        self._choose_chart_menu_action(self._open_chart_menu(popup), "固定")
+
+        self._choose_chart_menu_action(self._open_chart_menu(popup), "关闭窗口")
+        self.assertFalse(popup.isVisible())
+        self.assertTrue(window.isVisible())
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        self.assertTrue(popup.pin_button.isChecked())
+
+        self._choose_chart_menu_action(self._open_chart_menu(popup), "独立窗口打开")
+        self.wait_ready(window)
+        self.assertEqual(history.dialog.display_mode, "window")
+        self.assertTrue(history.dialog.isVisible())
+        self.assertTrue(window.isVisible())
+        history.dialog.close()
+
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        self._choose_chart_menu_action(self._open_chart_menu(history.dialog), "隐藏所有浮窗")
+        self.assertFalse(history.dialog.isVisible())
+        self.assertFalse(window.widget_visible)
+        self.assertFalse(window.isVisible())
+
+    def test_chart_context_menu_escape_and_outside_click_respect_pinning(self):
+        _, window = self.make_window()
+        bounds = window.screen().availableGeometry()
+        window.move(bounds.topLeft() + QPoint(10, 10))
+        window.history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = window.history.dialog
+        popup.move(bounds.right() - popup.width() + 1, bounds.top())
+        outside = QPoint(4, 4)
+        position = window.mapToGlobal(outside)
+        self.assertFalse(popup.rect().contains(popup.mapFromGlobal(position)))
+        for pinned in (True, False):
+            with self.subTest(pinned=pinned):
+                popup.pin_button.setChecked(pinned)
+                menu = self._open_chart_menu(popup)
+                QTest.keyClick(menu.windowHandle(), Qt.Key_Escape)
+                self.app.processEvents()
+                self.assertIsNone(QApplication.activePopupWidget())
+                self.assertTrue(popup.isVisible())
+
+                menu = self._open_chart_menu(popup)
+                self.assertFalse(menu.rect().contains(menu.mapFromGlobal(position)))
+                QTest.mouseClick(window.windowHandle(), Qt.LeftButton, pos=outside)
+                self.app.processEvents()
+                self.assertIsNone(QApplication.activePopupWidget())
+                self.assertEqual(popup.isVisible(), pinned)
+                self.assertTrue(window.isVisible())
 
     def test_three_views_share_minimum_and_one_saved_popup_size_for_each_depth_preference(self):
         _, window = self.make_window(chart_enabled=True)

@@ -71,7 +71,7 @@ class HistoryTestCase(SettingsTestCase):
 
 
 class HistoryUITests(HistoryTestCase):
-    def test_pinning_preserves_pending_result_and_geometry_and_escape_still_closes(self):
+    def test_pinning_preserves_pending_result_and_window_and_blocks_escape(self):
         _, window = self.make_window(chart_enabled=True)
         history = window.history
         with patch.object(history, "_start") as start:
@@ -81,6 +81,7 @@ class HistoryUITests(HistoryTestCase):
             popup = history.dialog
             geometry = popup.geometry()
             native_id, opacity = popup.winId(), popup.windowOpacity()
+            flags = popup.windowFlags(), popup.windowHandle().flags()
             dismissed = QSignalSpy(popup.dismissed)
             visibility = QSignalSpy(popup.windowHandle().visibleChanged)
             pin_position = popup.pin_button.mapTo(popup, popup.pin_button.rect().center())
@@ -90,7 +91,7 @@ class HistoryUITests(HistoryTestCase):
                     self.app.processEvents()
                     self.assertEqual(popup.pin_button.isChecked(), pinned)
                     self.assertEqual(window.current_config()["chart_popup_pinned"], pinned)
-                    self.assertEqual(bool(popup.windowHandle().flags() & Qt.WindowStaysOnTopHint), pinned)
+                    self.assertEqual((popup.windowFlags(), popup.windowHandle().flags()), flags)
                     self.assertEqual(popup.winId(), native_id)
                     self.assertEqual(popup.windowOpacity(), opacity)
                     self.assertTrue(popup.isVisible())
@@ -103,7 +104,10 @@ class HistoryUITests(HistoryTestCase):
             self.assertTrue(popup.chart.bars)
             history.request_row("float", 1)
             self.assertTrue(history.click_timer.isActive())
-            QTest.keyClick(popup, Qt.Key_Escape)
+            QTest.keyClick(popup.pin_button, Qt.Key_Escape)
+            self.assertTrue(popup.isVisible())
+            self.assertTrue(history.click_timer.isActive())
+            popup.close_button.click()
             self.assertFalse(popup.isVisible())
             self.assertFalse(history.click_timer.isActive())
         history.open_row("float", 0)
@@ -850,12 +854,22 @@ class WindowsHistoryPopupTests(HistoryTestCase):
         user.SendMessageW.argtypes = (w.HWND, w.UINT, w.WPARAM, w.LPARAM)
         user.SendMessageW.restype = c_ssize_t
         hwnd = int(popup.winId())
+        extended_style = user.GetWindowLongW(hwnd, -20)
         self.assertEqual(user.GetCapture(), hwnd)
         popup.pin_button.click()
         self.assertNotEqual(user.GetCapture(), hwnd)
+        self.assertEqual(user.GetWindowLongW(hwnd, -20), extended_style)
         popup.pin_button.click()
         self.assertTrue(popup.isVisible())
         self.assertEqual(user.GetCapture(), hwnd)
+        position = popup.chart.mapTo(popup, popup.chart.rect().center())
+        QTest.mouseClick(popup.windowHandle(), Qt.RightButton, pos=position)
+        menu = QApplication.activePopupWidget()
+        self.assertIsNotNone(menu)
+        self.assertIs(menu.parentWidget(), popup)
+        self.assertEqual(user.GetCapture(), int(menu.winId()))
+        QTest.keyClick(menu.windowHandle(), Qt.Key_Escape)
+        self.wait_until(lambda: user.GetCapture() == hwnd)
         outside = -12 & 0xffff
         position = (outside << 16) | outside
         user.SendMessageW(hwnd, 0x0201, 1, position)  # WM_LBUTTONDOWN
@@ -987,6 +1001,8 @@ class WindowsHistoryPopupTests(HistoryTestCase):
         self.assertTrue(popup.isVisible())
         QTest.keyClick(popup, Qt.Key_Escape)
         QTest.qWait(self.app.doubleClickInterval() + 30)
+        self.assertTrue(popup.isVisible())
+        popup.close_button.click()
         self.assertFalse(popup.isVisible())
         window.history.open_row("float", 0)
         self.wait_ready(window)
