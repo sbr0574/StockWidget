@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-18",
+  "last_update": "2026-11-19",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -941,10 +941,10 @@
       "code": "600141",
       "market": "sh",
       "type": "沪",
-      "name": "兴发集团",
+      "name": "XD兴发集",
       "name_en": "",
-      "py": "xingfajituan",
-      "abbr": "xfjt"
+      "py": "xdxingfaji",
+      "abbr": "xdxfj"
     },
     "sh600143": {
       "code": "600143",
@@ -6989,10 +6989,10 @@
       "code": "601083",
       "market": "sh",
       "type": "沪",
-      "name": "XD锦江航",
+      "name": "锦江航运",
       "name_en": "",
-      "py": "xdjinjianghang",
-      "abbr": "xdjjh"
+      "py": "jinjianghangyun",
+      "abbr": "jjhy"
     },
     "sh601086": {
       "code": "601086",
@@ -7457,10 +7457,10 @@
       "code": "601228",
       "market": "sh",
       "type": "沪",
-      "name": "XD广州港",
+      "name": "广州港",
       "name_en": "",
-      "py": "xdguangzhougang",
-      "abbr": "xdgzg"
+      "py": "guangzhougang",
+      "abbr": "gzg"
     },
     "sh601229": {
       "code": "601229",
@@ -7916,10 +7916,10 @@
       "code": "601611",
       "market": "sh",
       "type": "沪",
-      "name": "XD中国核",
+      "name": "中国核建",
       "name_en": "",
-      "py": "xdzhongguohe",
-      "abbr": "xdzgh"
+      "py": "zhongguohejian",
+      "abbr": "zghj"
     },
     "sh601615": {
       "code": "601615",
@@ -9113,10 +9113,10 @@
       "code": "603043",
       "market": "sh",
       "type": "沪",
-      "name": "广州酒家",
+      "name": "XD广州酒",
       "name_en": "",
-      "py": "guangzhoujiujia",
-      "abbr": "gzjj"
+      "py": "xdguangzhoujiu",
+      "abbr": "xdgzj"
     },
     "sh603045": {
       "code": "603045",
@@ -12218,10 +12218,10 @@
       "code": "603586",
       "market": "sh",
       "type": "沪",
-      "name": "XD金麒麟",
+      "name": "金麒麟",
       "name_en": "",
-      "py": "xdjinqilin",
-      "abbr": "xdjql"
+      "py": "jinqilin",
+      "abbr": "jql"
     },
     "sh603587": {
       "code": "603587",
@@ -12902,10 +12902,10 @@
       "code": "603709",
       "market": "sh",
       "type": "沪",
-      "name": "中源家居",
+      "name": "XD中源家",
       "name_en": "",
-      "py": "zhongyuanjiaju",
-      "abbr": "zyjj"
+      "py": "xdzhongyuanjia",
+      "abbr": "xdzyj"
     },
     "sh603711": {
       "code": "603711",
@@ -13559,10 +13559,10 @@
       "code": "603866",
       "market": "sh",
       "type": "沪",
-      "name": "桃李面包",
+      "name": "XD桃李面",
       "name_en": "",
-      "py": "taolimianbao",
-      "abbr": "tlmb"
+      "py": "xdtaolimian",
+      "abbr": "xdtlm"
     },
     "sh603867": {
       "code": "603867",
