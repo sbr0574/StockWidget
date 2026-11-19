@@ -172,7 +172,7 @@ def find_taskbar(*, window=None, device_name="", hwnd=None):
                        left=origin.x)
 
 
-def taskbar_pointer(*, hit_test=True):
+def taskbar_pointer():
     """Snapshot the bar HWND under the pointer and its physical screen x."""
     if sys.platform != "win32":
         return None, None
@@ -180,12 +180,11 @@ def taskbar_pointer(*, hit_test=True):
     point = w.POINT()
     if not user.GetCursorPos(ctypes.byref(point)):
         return None, None
-    if hit_test:
-        rect = w.RECT()
-        for hwnd in _taskbar_windows(user):
-            if (user.GetWindowRect(hwnd, ctypes.byref(rect))
-                    and rect.left <= point.x < rect.right and rect.top <= point.y < rect.bottom):
-                return hwnd, point.x
+    rect = w.RECT()
+    for hwnd in _taskbar_windows(user):
+        if (user.GetWindowRect(hwnd, ctypes.byref(rect))
+                and rect.left <= point.x < rect.right and rect.top <= point.y < rect.bottom):
+            return hwnd, point.x
     return None, point.x
 
 

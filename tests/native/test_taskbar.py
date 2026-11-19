@@ -232,35 +232,44 @@ class NativeTaskbarDragTests(QtTestCase):
         self.assertIsNone(self.source._drag_pos)
         self.assertIsNone(self.user.GetCapture())
 
-    def test_dual_mode_slides_taskbar_horizontally_and_keeps_float_drag_independent(self):
+    def test_dual_mode_moves_between_taskbars_and_keeps_float_drag_independent(self):
         self.source.set_display_mode("both")
         self.app.processEvents()
         native = self.controller.native
         parent, origin = native.parent, self.source.pos()
-        rect = self.rect(native.hwnd)
-        press = self.press(native.hwnd)
+        child = native.hwnd
+        rect = self.rect(child)
+        press = self.press(child)
         self.move_pointer(press - QPoint(80, 200))
         moved = self.rect(native.hwnd)
         self.assertEqual(moved.left, rect.left - 80)
         self.assertEqual(moved.top, rect.top)
         self.assertEqual(self.source.pos(), origin)
         self.assertTrue(self.source.isVisible())
-        points = [self.outside, self.bar_point]
+        points = [(self.outside, parent), (self.bar_point, parent)]
         for hwnd in _taskbar_windows(self.user):
             if hwnd != parent:
                 rect = self.rect(hwnd)
-                points.append(QPoint((rect.left + rect.right) // 2, (rect.top + rect.bottom) // 2))
-        for point in points:
+                center = QPoint((rect.left + rect.right) // 2, (rect.top + rect.bottom) // 2)
+                points.append((center, hwnd))
+        for point, bar in points:
             self.move_pointer(point)
             self.assertTrue(self.controller._dragging)
-            self.assertEqual(native.parent, parent)
+            self.assertEqual(native.hwnd, child)
+            self.assertEqual(self.user.GetParent(child), bar)
+            self.assertEqual(self.user.GetCapture(), child)
+            self.assertEqual(self.source.pos(), origin)
+            self.assertTrue(self.source.isVisible())
         self.user.mouse_event(4, 0, 0, 0, 0)
         QTest.qWait(120)
-        self.assertEqual(native.parent, parent)
+        destination = points[-1][1]
+        self.assertEqual(native.parent, destination)
+        self.assertEqual(self.source.taskbar_screen, self.controller._area.device_name)
+        self.assertIsNone(self.user.GetCapture())
         self.assertEqual(self.source.pos(), origin)
         self.assertIsNone(self.source._drag_pos)
         self.press(int(self.source.winId()))
-        for point in points:
+        for point, _bar in points:
             self.move_pointer(point)
             self.assertTrue(self.source.isVisible())
             self.assertTrue(self.source.widget_visible)
@@ -268,7 +277,7 @@ class NativeTaskbarDragTests(QtTestCase):
             self.assertFalse(self.controller._dragging)
             self.assertFalse(self.source.taskbar_preview_active)
             self.assertTrue(self.source.geometry().contains(QCursor.pos()))
-            self.assertEqual(native.parent, parent)
+            self.assertEqual(native.parent, destination)
         self.user.mouse_event(4, 0, 0, 0, 0)
         QTest.qWait(120)
         self.assertEqual(self.source.display_mode, "both")
@@ -337,7 +346,6 @@ class TaskbarMonitorTests(unittest.TestCase):
                         return True
                     self.user.GetCursorPos.side_effect = cursor
                     self.assertEqual(taskbar_pointer(), (expected, position[0]))
-                    self.assertEqual(taskbar_pointer(hit_test=False), (None, position[0]))
 
     def test_reparent_preserves_the_existing_input_owner_and_pointer_capture(self):
         native = NativeTaskbarWindow.__new__(NativeTaskbarWindow)

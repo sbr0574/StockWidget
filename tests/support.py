@@ -179,7 +179,7 @@ class PagingTestCase(QtTestCase):
         self.over = Mock(return_value=None)
         self.pointer_x = 800
         self.enterContext(patch("stockwidget.ui.floating.taskbar.taskbar_pointer",
-                                side_effect=lambda *, hit_test: (self.over() if hit_test else None, self.pointer_x)))
+                                side_effect=lambda: (self.over(), self.pointer_x)))
         self.controller = TaskbarController(self.win, Mock())
         self.controller.apply_mode()
         return self.controller
