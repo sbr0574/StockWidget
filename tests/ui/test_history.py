@@ -109,7 +109,7 @@ class HistoryUITests(HistoryTestCase):
                 history._accept((*request, BarResult(sample_bars(), "sina")))
                 self.assertFalse(popup.isVisible())
 
-    def test_chart_settings_use_common_description_colors_and_group_geometry(self):
+    def test_chart_setting_stays_aligned_in_light_and_dark_themes(self):
         dialog, window = self.make_window(chart_enabled=True)
         dialog.show()
         dialog.ui.settings_pages.setCurrentWidget(dialog.ui.data)
@@ -121,10 +121,9 @@ class HistoryUITests(HistoryTestCase):
             position = title.mapTo(group, QPoint())
             self.assertGreaterEqual(position.x(), 10)
             self.assertGreaterEqual(position.y(), 25)
-            common = dialog.ui.cb_head_description.palette().color(QPalette.WindowText)
-            for label in (dialog.ui.chart_enabled_description, dialog.ui.average_period_description):
-                self.assertEqual(label.palette().color(QPalette.WindowText), common)
-                self.assertEqual(label.width(), dialog.ui.cb_head_description.width())
+            toggle = dialog.ui.cb_chart_enabled
+            self.assertGreater(toggle.geometry().left(), title.geometry().right())
+            self.assertLessEqual(abs(toggle.geometry().center().y() - title.geometry().center().y()), 1)
             self.assertEqual(dialog.ui.data_scroll.horizontalScrollBar().maximum(), 0)
 
     def test_resizing_and_indicator_preferences_preserve_view_without_refetch(self):

@@ -32,9 +32,10 @@ class MiniChartSettingsTests(SettingsTestCase):
         group = dialog.ui.mini_chart_options
         dialog.ui.data_scroll.ensureWidgetVisible(group)
         self.qt_app.processEvents()
+        title_bottom = dialog.ui.mini_chart_title.geometry().bottom()
         for kind in ("kline", "trend", "amplitude"):
             preview = getattr(dialog.ui, f"btn_mini_{kind}")
-            self.assertGreaterEqual(preview.y(), 25)
+            self.assertGreater(preview.y(), title_bottom)
             bounds = preview.rect().translated(preview.mapTo(dialog.ui.gb_metric_options, QPoint()))
             self.assertLessEqual(bounds.bottom(), dialog.ui.gb_metric_options.height() - 10)
             self.assertTrue(dialog.ui.data_scroll.viewport().rect().contains(

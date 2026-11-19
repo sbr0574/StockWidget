@@ -69,6 +69,16 @@ class Ui_MetricPool(object):
 
         self.metricPoolLayout.addWidget(self.displayed_label)
 
+        self.displayed_description = QLabel(metric_pool)
+        self.displayed_description.setObjectName(u"displayed_description")
+        self.displayed_description.setWordWrap(True)
+        self.displayed_description.setProperty(u"settingDescription", True)
+        self.displayed_description.setMinimumSize(QSize(310, 0))
+        self.displayed_description.setMaximumSize(QSize(310, 16777215))
+        self.displayed_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
+
+        self.metricPoolLayout.addWidget(self.displayed_description)
+
         self.metric_displayed_pool = MetricListWidget(metric_pool)
         self.metric_displayed_pool.setObjectName(u"metric_displayed_pool")
         self.metric_displayed_pool.setMinimumSize(QSize(0, 56))
@@ -87,9 +97,10 @@ class Ui_MetricPool(object):
 
     def retranslateUi(self, metric_pool):
         self.available_label.setText(QCoreApplication.translate("MetricPool", u"\u53ef\u7528\u6307\u6807", None))
-        self.available_description.setText(QCoreApplication.translate("MetricPool", u"\u62d6\u52a8\u6216\u53cc\u51fb\u53ef\u7528\u6307\u6807\u6dfb\u52a0\uff1b\u62d6\u52a8\u5df2\u663e\u793a\u6307\u6807\u6392\u5e8f\uff0c\u53cc\u51fb\u6216\u62d6\u56de\u76ee\u5f55\u79fb\u9664\u3002", None))
+        self.available_description.setText(QCoreApplication.translate("MetricPool", u"\u53cc\u51fb\u6216\u62d6\u52a8\u6307\u6807\u5757\u81f3\u4e0b\u65b9\u5df2\u663e\u793a\u6307\u6807\u6c60\uff0c\u7070\u8272\u4e3a\u5df2\u6dfb\u52a0\u3002", None))
         self.metric_available_pool.setProperty(u"emptyText", QCoreApplication.translate("MetricPool", u"\u5df2\u5168\u90e8\u663e\u793a", None))
         self.displayed_label.setText(QCoreApplication.translate("MetricPool", u"\u5df2\u663e\u793a\u6307\u6807", None))
+        self.displayed_description.setText(QCoreApplication.translate("MetricPool", u"\u62d6\u52a8\u6307\u6807\u5757\u6392\u5e8f\uff0c\u53cc\u51fb\u6216\u62d6\u56de\u4e0a\u65b9\u4ee5\u53d6\u6d88\u663e\u793a\u3002", None))
         self.metric_displayed_pool.setProperty(u"emptyText", QCoreApplication.translate("MetricPool", u"\u62d6\u5165\u8981\u663e\u793a\u7684\u6307\u6807", None))
         pass
     # retranslateUi

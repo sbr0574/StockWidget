@@ -269,6 +269,7 @@ class SettingsDialog(QDialog):
         self.ui.keyseq_click_through.editingFinished.connect(self._on_click_through_hotkey_changed)
         self.ui.cb_auto_start.toggled.connect(self._on_start_on_boot_toggled)
         self.ui.cb_float_on_top.toggled.connect(self.win.set_float_on_top)
+        self.ui.cb_force_top_row.setToolTip(self.ui.cb_force_top.toolTip())
         self.ui.cb_force_top.toggled.connect(self.win.set_force_top)
         self.win.topmost_changed.connect(self._sync_topmost_from_win)
         self.ui.cb_click_through.toggled.connect(self.win.set_click_through)
@@ -364,12 +365,10 @@ class SettingsDialog(QDialog):
         description = "贴住屏幕边缘收起为窄条，移入时展开。"
         if needs_boundary:
             description += "需开启“保持在屏幕内”。"
-        self.ui.cb_edge_hide_description.setText(description)
         self.ui.cb_edge_hide.setAccessibleDescription(description)
         self.ui.cb_edge_hide.setToolTip(
             unsupported_tooltip("贴边收起") if not supported else
-            "请先开启“保持在屏幕内”" if needs_boundary and not self.win.boundary_check_enabled else
-            "贴住屏幕边缘时收起为窄条，鼠标移入展开。"
+            "请先开启“保持在屏幕内”" if needs_boundary and not self.win.boundary_check_enabled else ""
         )
 
     def _sync_hide_settings(self):
@@ -467,11 +466,6 @@ class SettingsDialog(QDialog):
         supported = force_top_supported()
         self.ui.cb_force_top_row.setVisible(supported)
         self.ui.cb_force_top.setEnabled(self.win.float_on_top and supported)
-        self.ui.cb_force_top.setToolTip(
-            unsupported_tooltip("强制置顶", suggest_x11=False) if not supported else
-            "请先启用浮窗置顶" if not self.win.float_on_top else
-            "每秒恢复浮窗置顶，避免被其他置顶窗口遮盖"
-        )
 
     def _setup_icon_choices(self):
         self.icon_buttons = {

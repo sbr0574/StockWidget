@@ -48,7 +48,7 @@
    <item>
     <widget class="QLabel" name="available_description">
      <property name="text">
-      <string>拖动或双击可用指标添加；拖动已显示指标排序，双击或拖回目录移除。</string>
+      <string>双击或拖动指标块至下方已显示指标池，灰色为已添加。</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -125,6 +125,34 @@
      </property>
      <property name="settingTitle" stdset="0">
       <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="displayed_description">
+     <property name="text">
+      <string>拖动指标块排序，双击或拖回上方以取消显示。</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="settingDescription" stdset="0">
+      <bool>true</bool>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>310</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>310</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
      </property>
     </widget>
    </item>

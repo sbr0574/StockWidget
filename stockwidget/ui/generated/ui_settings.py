@@ -254,16 +254,6 @@ class Ui_SettingDialog(object):
 
         self.refresh_interval_row_layout.addWidget(self.label_interval, 0, 0, 1, 1)
 
-        self.refresh_interval_description = QLabel(self.refresh_interval_row)
-        self.refresh_interval_description.setObjectName(u"refresh_interval_description")
-        self.refresh_interval_description.setMinimumSize(QSize(310, 0))
-        self.refresh_interval_description.setMaximumSize(QSize(310, 16777215))
-        self.refresh_interval_description.setWordWrap(True)
-        self.refresh_interval_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.refresh_interval_description.setProperty(u"settingDescription", True)
-
-        self.refresh_interval_row_layout.addWidget(self.refresh_interval_description, 1, 0, 1, 1)
-
         self.sb_interval = QSpinBox(self.refresh_interval_row)
         self.sb_interval.setObjectName(u"sb_interval")
         self.sb_interval.setMinimum(1)
@@ -271,7 +261,7 @@ class Ui_SettingDialog(object):
         self.sb_interval.setMinimumSize(QSize(100, 28))
         self.sb_interval.setMaximumSize(QSize(100, 28))
 
-        self.refresh_interval_row_layout.addWidget(self.sb_interval, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.refresh_interval_row_layout.addWidget(self.sb_interval, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.gb_data_settingLayout.addWidget(self.refresh_interval_row)
@@ -289,20 +279,10 @@ class Ui_SettingDialog(object):
 
         self.chart_enabled_layout.addWidget(self.chart_enabled_title, 0, 0, 1, 1)
 
-        self.chart_enabled_description = QLabel(self.chart_enabled_row)
-        self.chart_enabled_description.setObjectName(u"chart_enabled_description")
-        self.chart_enabled_description.setMinimumSize(QSize(310, 0))
-        self.chart_enabled_description.setMaximumSize(QSize(310, 16777215))
-        self.chart_enabled_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.chart_enabled_description.setProperty(u"settingDescription", True)
-        self.chart_enabled_description.setWordWrap(True)
-
-        self.chart_enabled_layout.addWidget(self.chart_enabled_description, 1, 0, 1, 1)
-
         self.cb_chart_enabled = ToggleSwitch(self.chart_enabled_row)
         self.cb_chart_enabled.setObjectName(u"cb_chart_enabled")
 
-        self.chart_enabled_layout.addWidget(self.cb_chart_enabled, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.chart_enabled_layout.addWidget(self.cb_chart_enabled, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.gb_data_settingLayout.addWidget(self.chart_enabled_row)
@@ -345,22 +325,12 @@ class Ui_SettingDialog(object):
 
         self.cb_head_row_layout.addWidget(self.cb_head_title, 0, 0, 1, 1)
 
-        self.cb_head_description = QLabel(self.cb_head_row)
-        self.cb_head_description.setObjectName(u"cb_head_description")
-        self.cb_head_description.setWordWrap(True)
-        self.cb_head_description.setProperty(u"settingDescription", True)
-        self.cb_head_description.setMaximumSize(QSize(310, 16777215))
-        self.cb_head_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.cb_head_description.setMinimumSize(QSize(310, 0))
-
-        self.cb_head_row_layout.addWidget(self.cb_head_description, 1, 0, 1, 1)
-
         self.cb_head = ToggleSwitch(self.cb_head_row)
         self.cb_head.setObjectName(u"cb_head")
         self.cb_head.setMinimumSize(QSize(44, 26))
         self.cb_head.setMaximumSize(QSize(44, 26))
 
-        self.cb_head_row_layout.addWidget(self.cb_head, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.cb_head_row_layout.addWidget(self.cb_head, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.gb_dataLayout.addWidget(self.cb_head_row)
@@ -395,16 +365,6 @@ class Ui_SettingDialog(object):
 
         self.cmb_name_length_row_layout.addWidget(self.cmb_name_length_title, 0, 0, 1, 1)
 
-        self.cmb_name_length_description = QLabel(self.cmb_name_length_row)
-        self.cmb_name_length_description.setObjectName(u"cmb_name_length_description")
-        self.cmb_name_length_description.setProperty(u"settingDescription", True)
-        self.cmb_name_length_description.setWordWrap(True)
-        self.cmb_name_length_description.setMaximumSize(QSize(310, 16777215))
-        self.cmb_name_length_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.cmb_name_length_description.setMinimumSize(QSize(310, 0))
-
-        self.cmb_name_length_row_layout.addWidget(self.cmb_name_length_description, 1, 0, 1, 1)
-
         self.cmb_name_length = QComboBox(self.cmb_name_length_row)
         self.cmb_name_length.addItem("")
         self.cmb_name_length.addItem("")
@@ -416,7 +376,7 @@ class Ui_SettingDialog(object):
         self.cmb_name_length.setMinimumSize(QSize(110, 28))
         self.cmb_name_length.setMaximumSize(QSize(110, 28))
 
-        self.cmb_name_length_row_layout.addWidget(self.cmb_name_length, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.cmb_name_length_row_layout.addWidget(self.cmb_name_length, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.metric_options_layout.addWidget(self.cmb_name_length_row)
@@ -438,22 +398,12 @@ class Ui_SettingDialog(object):
 
         self.cb_code_visible_row_layout.addWidget(self.cb_code_visible_title, 0, 0, 1, 1)
 
-        self.cb_code_visible_description = QLabel(self.cb_code_visible_row)
-        self.cb_code_visible_description.setObjectName(u"cb_code_visible_description")
-        self.cb_code_visible_description.setProperty(u"settingDescription", True)
-        self.cb_code_visible_description.setWordWrap(True)
-        self.cb_code_visible_description.setMaximumSize(QSize(310, 16777215))
-        self.cb_code_visible_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.cb_code_visible_description.setMinimumSize(QSize(310, 0))
-
-        self.cb_code_visible_row_layout.addWidget(self.cb_code_visible_description, 1, 0, 1, 1)
-
         self.cb_code_visible = ToggleSwitch(self.cb_code_visible_row)
         self.cb_code_visible.setObjectName(u"cb_code_visible")
         self.cb_code_visible.setMinimumSize(QSize(44, 26))
         self.cb_code_visible.setMaximumSize(QSize(44, 26))
 
-        self.cb_code_visible_row_layout.addWidget(self.cb_code_visible, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.cb_code_visible_row_layout.addWidget(self.cb_code_visible, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.metric_options_layout.addWidget(self.cb_code_visible_row)
@@ -475,22 +425,12 @@ class Ui_SettingDialog(object):
 
         self.cb_type_visible_row_layout.addWidget(self.cb_type_visible_title, 0, 0, 1, 1)
 
-        self.cb_type_visible_description = QLabel(self.cb_type_visible_row)
-        self.cb_type_visible_description.setObjectName(u"cb_type_visible_description")
-        self.cb_type_visible_description.setProperty(u"settingDescription", True)
-        self.cb_type_visible_description.setWordWrap(True)
-        self.cb_type_visible_description.setMaximumSize(QSize(310, 16777215))
-        self.cb_type_visible_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.cb_type_visible_description.setMinimumSize(QSize(310, 0))
-
-        self.cb_type_visible_row_layout.addWidget(self.cb_type_visible_description, 1, 0, 1, 1)
-
         self.cb_type_visible = ToggleSwitch(self.cb_type_visible_row)
         self.cb_type_visible.setObjectName(u"cb_type_visible")
         self.cb_type_visible.setMinimumSize(QSize(44, 26))
         self.cb_type_visible.setMaximumSize(QSize(44, 26))
 
-        self.cb_type_visible_row_layout.addWidget(self.cb_type_visible, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.cb_type_visible_row_layout.addWidget(self.cb_type_visible, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.metric_options_layout.addWidget(self.cb_type_visible_row)
@@ -512,25 +452,16 @@ class Ui_SettingDialog(object):
 
         self.cmb_unit_mode_row_layout.addWidget(self.cmb_unit_mode_title, 0, 0, 1, 1)
 
-        self.cmb_unit_mode_description = QLabel(self.cmb_unit_mode_row)
-        self.cmb_unit_mode_description.setObjectName(u"cmb_unit_mode_description")
-        self.cmb_unit_mode_description.setProperty(u"settingDescription", True)
-        self.cmb_unit_mode_description.setWordWrap(True)
-        self.cmb_unit_mode_description.setMaximumSize(QSize(310, 16777215))
-        self.cmb_unit_mode_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.cmb_unit_mode_description.setMinimumSize(QSize(310, 0))
-
-        self.cmb_unit_mode_row_layout.addWidget(self.cmb_unit_mode_description, 1, 0, 1, 1)
-
         self.cmb_unit_mode = QComboBox(self.cmb_unit_mode_row)
         self.cmb_unit_mode.addItem("")
         self.cmb_unit_mode.addItem("")
         self.cmb_unit_mode.addItem("")
         self.cmb_unit_mode.setObjectName(u"cmb_unit_mode")
         self.cmb_unit_mode.setMinimumSize(QSize(110, 28))
-        self.cmb_unit_mode.setMaximumSize(QSize(110, 28))
+        self.cmb_unit_mode.setMaximumSize(QSize(16777215, 28))
+        self.cmb_unit_mode.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
 
-        self.cmb_unit_mode_row_layout.addWidget(self.cmb_unit_mode, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.cmb_unit_mode_row_layout.addWidget(self.cmb_unit_mode, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.metric_options_layout.addWidget(self.cmb_unit_mode_row)
@@ -548,16 +479,6 @@ class Ui_SettingDialog(object):
 
         self.average_period_layout.addWidget(self.average_period_title, 0, 0, 1, 1)
 
-        self.average_period_description = QLabel(self.average_period_row)
-        self.average_period_description.setObjectName(u"average_period_description")
-        self.average_period_description.setWordWrap(True)
-        self.average_period_description.setMinimumSize(QSize(310, 0))
-        self.average_period_description.setMaximumSize(QSize(310, 16777215))
-        self.average_period_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.average_period_description.setProperty(u"settingDescription", True)
-
-        self.average_period_layout.addWidget(self.average_period_description, 1, 0, 1, 1)
-
         self.cmb_average_period = QComboBox(self.average_period_row)
         self.cmb_average_period.addItem("")
         self.cmb_average_period.addItem("")
@@ -569,7 +490,7 @@ class Ui_SettingDialog(object):
         self.cmb_average_period.setMinimumSize(QSize(110, 28))
         self.cmb_average_period.setMaximumSize(QSize(110, 28))
 
-        self.average_period_layout.addWidget(self.cmb_average_period, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.average_period_layout.addWidget(self.cmb_average_period, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.metric_options_layout.addWidget(self.average_period_row)
@@ -585,16 +506,6 @@ class Ui_SettingDialog(object):
         self.mini_chart_title.setProperty(u"settingTitle", True)
 
         self.mini_chart_layout.addWidget(self.mini_chart_title)
-
-        self.mini_chart_description = QLabel(self.mini_chart_options)
-        self.mini_chart_description.setObjectName(u"mini_chart_description")
-        self.mini_chart_description.setMinimumSize(QSize(310, 0))
-        self.mini_chart_description.setMaximumSize(QSize(310, 16777215))
-        self.mini_chart_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.mini_chart_description.setProperty(u"settingDescription", True)
-        self.mini_chart_description.setWordWrap(True)
-
-        self.mini_chart_layout.addWidget(self.mini_chart_description)
 
         self.mini_chart_types_layout = QHBoxLayout()
         self.mini_chart_types_layout.setSpacing(8)
@@ -697,22 +608,12 @@ class Ui_SettingDialog(object):
 
         self.cb_auto_start_row_layout.addWidget(self.cb_auto_start_title, 0, 0, 1, 1)
 
-        self.cb_auto_start_description = QLabel(self.cb_auto_start_row)
-        self.cb_auto_start_description.setObjectName(u"cb_auto_start_description")
-        self.cb_auto_start_description.setWordWrap(True)
-        self.cb_auto_start_description.setProperty(u"settingDescription", True)
-        self.cb_auto_start_description.setMaximumSize(QSize(310, 16777215))
-        self.cb_auto_start_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.cb_auto_start_description.setMinimumSize(QSize(310, 0))
-
-        self.cb_auto_start_row_layout.addWidget(self.cb_auto_start_description, 1, 0, 1, 1)
-
         self.cb_auto_start = ToggleSwitch(self.cb_auto_start_row)
         self.cb_auto_start.setObjectName(u"cb_auto_start")
         self.cb_auto_start.setMinimumSize(QSize(44, 26))
         self.cb_auto_start.setMaximumSize(QSize(44, 26))
 
-        self.cb_auto_start_row_layout.addWidget(self.cb_auto_start, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.cb_auto_start_row_layout.addWidget(self.cb_auto_start, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.generalContentLayout.addWidget(self.cb_auto_start_row)
@@ -744,22 +645,12 @@ class Ui_SettingDialog(object):
 
         self.cb_grid_row_layout.addWidget(self.cb_grid_title, 0, 0, 1, 1)
 
-        self.cb_grid_description = QLabel(self.cb_grid_row)
-        self.cb_grid_description.setObjectName(u"cb_grid_description")
-        self.cb_grid_description.setWordWrap(True)
-        self.cb_grid_description.setProperty(u"settingDescription", True)
-        self.cb_grid_description.setMaximumSize(QSize(310, 16777215))
-        self.cb_grid_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.cb_grid_description.setMinimumSize(QSize(310, 0))
-
-        self.cb_grid_row_layout.addWidget(self.cb_grid_description, 1, 0, 1, 1)
-
         self.cb_grid = ToggleSwitch(self.cb_grid_row)
         self.cb_grid.setObjectName(u"cb_grid")
         self.cb_grid.setMinimumSize(QSize(44, 26))
         self.cb_grid.setMaximumSize(QSize(44, 26))
 
-        self.cb_grid_row_layout.addWidget(self.cb_grid, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.cb_grid_row_layout.addWidget(self.cb_grid, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.gb_fcnLayout.addWidget(self.cb_grid_row)
@@ -781,23 +672,13 @@ class Ui_SettingDialog(object):
 
         self.cb_float_on_top_row_layout.addWidget(self.cb_float_on_top_title, 0, 0, 1, 1)
 
-        self.cb_float_on_top_description = QLabel(self.cb_float_on_top_row)
-        self.cb_float_on_top_description.setObjectName(u"cb_float_on_top_description")
-        self.cb_float_on_top_description.setWordWrap(True)
-        self.cb_float_on_top_description.setProperty(u"settingDescription", True)
-        self.cb_float_on_top_description.setMaximumSize(QSize(310, 16777215))
-        self.cb_float_on_top_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.cb_float_on_top_description.setMinimumSize(QSize(310, 0))
-
-        self.cb_float_on_top_row_layout.addWidget(self.cb_float_on_top_description, 1, 0, 1, 1)
-
         self.cb_float_on_top = ToggleSwitch(self.cb_float_on_top_row)
         self.cb_float_on_top.setObjectName(u"cb_float_on_top")
         self.cb_float_on_top.setChecked(True)
         self.cb_float_on_top.setMinimumSize(QSize(44, 26))
         self.cb_float_on_top.setMaximumSize(QSize(44, 26))
 
-        self.cb_float_on_top_row_layout.addWidget(self.cb_float_on_top, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.cb_float_on_top_row_layout.addWidget(self.cb_float_on_top, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.gb_fcnLayout.addWidget(self.cb_float_on_top_row)
@@ -819,22 +700,12 @@ class Ui_SettingDialog(object):
 
         self.cb_force_top_row_layout.addWidget(self.cb_force_top_title, 0, 0, 1, 1)
 
-        self.cb_force_top_description = QLabel(self.cb_force_top_row)
-        self.cb_force_top_description.setObjectName(u"cb_force_top_description")
-        self.cb_force_top_description.setWordWrap(True)
-        self.cb_force_top_description.setProperty(u"settingDescription", True)
-        self.cb_force_top_description.setMaximumSize(QSize(310, 16777215))
-        self.cb_force_top_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.cb_force_top_description.setMinimumSize(QSize(310, 0))
-
-        self.cb_force_top_row_layout.addWidget(self.cb_force_top_description, 1, 0, 1, 1)
-
         self.cb_force_top = ToggleSwitch(self.cb_force_top_row)
         self.cb_force_top.setObjectName(u"cb_force_top")
         self.cb_force_top.setMinimumSize(QSize(44, 26))
         self.cb_force_top.setMaximumSize(QSize(44, 26))
 
-        self.cb_force_top_row_layout.addWidget(self.cb_force_top, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.cb_force_top_row_layout.addWidget(self.cb_force_top, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.gb_fcnLayout.addWidget(self.cb_force_top_row)
@@ -856,22 +727,12 @@ class Ui_SettingDialog(object):
 
         self.cb_click_through_row_layout.addWidget(self.cb_click_through_title, 0, 0, 1, 1)
 
-        self.cb_click_through_description = QLabel(self.cb_click_through_row)
-        self.cb_click_through_description.setObjectName(u"cb_click_through_description")
-        self.cb_click_through_description.setWordWrap(True)
-        self.cb_click_through_description.setProperty(u"settingDescription", True)
-        self.cb_click_through_description.setMaximumSize(QSize(310, 16777215))
-        self.cb_click_through_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.cb_click_through_description.setMinimumSize(QSize(310, 0))
-
-        self.cb_click_through_row_layout.addWidget(self.cb_click_through_description, 1, 0, 1, 1)
-
         self.cb_click_through = ToggleSwitch(self.cb_click_through_row)
         self.cb_click_through.setObjectName(u"cb_click_through")
         self.cb_click_through.setMinimumSize(QSize(44, 26))
         self.cb_click_through.setMaximumSize(QSize(44, 26))
 
-        self.cb_click_through_row_layout.addWidget(self.cb_click_through, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.cb_click_through_row_layout.addWidget(self.cb_click_through, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.gb_fcnLayout.addWidget(self.cb_click_through_row)
@@ -893,23 +754,13 @@ class Ui_SettingDialog(object):
 
         self.cb_boundary_check_row_layout.addWidget(self.cb_boundary_check_title, 0, 0, 1, 1)
 
-        self.cb_boundary_check_description = QLabel(self.cb_boundary_check_row)
-        self.cb_boundary_check_description.setObjectName(u"cb_boundary_check_description")
-        self.cb_boundary_check_description.setWordWrap(True)
-        self.cb_boundary_check_description.setProperty(u"settingDescription", True)
-        self.cb_boundary_check_description.setMaximumSize(QSize(310, 16777215))
-        self.cb_boundary_check_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.cb_boundary_check_description.setMinimumSize(QSize(310, 0))
-
-        self.cb_boundary_check_row_layout.addWidget(self.cb_boundary_check_description, 1, 0, 1, 1)
-
         self.cb_boundary_check = ToggleSwitch(self.cb_boundary_check_row)
         self.cb_boundary_check.setObjectName(u"cb_boundary_check")
         self.cb_boundary_check.setChecked(False)
         self.cb_boundary_check.setMinimumSize(QSize(44, 26))
         self.cb_boundary_check.setMaximumSize(QSize(44, 26))
 
-        self.cb_boundary_check_row_layout.addWidget(self.cb_boundary_check, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.cb_boundary_check_row_layout.addWidget(self.cb_boundary_check, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.gb_fcnLayout.addWidget(self.cb_boundary_check_row)
@@ -931,16 +782,6 @@ class Ui_SettingDialog(object):
 
         self.cb_edge_hide_row_layout.addWidget(self.cb_edge_hide_title, 0, 0, 1, 1)
 
-        self.cb_edge_hide_description = QLabel(self.cb_edge_hide_row)
-        self.cb_edge_hide_description.setObjectName(u"cb_edge_hide_description")
-        self.cb_edge_hide_description.setWordWrap(True)
-        self.cb_edge_hide_description.setProperty(u"settingDescription", True)
-        self.cb_edge_hide_description.setMaximumSize(QSize(310, 16777215))
-        self.cb_edge_hide_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.cb_edge_hide_description.setMinimumSize(QSize(310, 0))
-
-        self.cb_edge_hide_row_layout.addWidget(self.cb_edge_hide_description, 1, 0, 1, 1)
-
         self.cb_edge_hide = ToggleSwitch(self.cb_edge_hide_row)
         self.cb_edge_hide.setObjectName(u"cb_edge_hide")
         self.cb_edge_hide.setChecked(False)
@@ -948,7 +789,7 @@ class Ui_SettingDialog(object):
         self.cb_edge_hide.setMinimumSize(QSize(44, 26))
         self.cb_edge_hide.setMaximumSize(QSize(44, 26))
 
-        self.cb_edge_hide_row_layout.addWidget(self.cb_edge_hide, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.cb_edge_hide_row_layout.addWidget(self.cb_edge_hide, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.gb_fcnLayout.addWidget(self.cb_edge_hide_row)
@@ -990,22 +831,12 @@ class Ui_SettingDialog(object):
 
         self.float_split_separator_row_layout.addWidget(self.float_split_separator_title, 0, 0, 1, 1)
 
-        self.float_split_separator_description = QLabel(self.float_split_separator_row)
-        self.float_split_separator_description.setObjectName(u"float_split_separator_description")
-        self.float_split_separator_description.setWordWrap(True)
-        self.float_split_separator_description.setProperty(u"settingDescription", True)
-        self.float_split_separator_description.setMaximumSize(QSize(310, 16777215))
-        self.float_split_separator_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.float_split_separator_description.setMinimumSize(QSize(310, 0))
-
-        self.float_split_separator_row_layout.addWidget(self.float_split_separator_description, 1, 0, 1, 1)
-
         self.float_split_separator = ToggleSwitch(self.float_split_separator_row)
         self.float_split_separator.setObjectName(u"float_split_separator")
         self.float_split_separator.setMinimumSize(QSize(44, 26))
         self.float_split_separator.setMaximumSize(QSize(44, 26))
 
-        self.float_split_separator_row_layout.addWidget(self.float_split_separator, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.float_split_separator_row_layout.addWidget(self.float_split_separator, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.float_split_settings_layout.addWidget(self.float_split_separator_row)
@@ -1067,22 +898,12 @@ class Ui_SettingDialog(object):
 
         self.float_paging_enabled_row_layout.addWidget(self.float_paging_enabled_title, 0, 0, 1, 1)
 
-        self.float_paging_enabled_description = QLabel(self.float_paging_enabled_row)
-        self.float_paging_enabled_description.setObjectName(u"float_paging_enabled_description")
-        self.float_paging_enabled_description.setProperty(u"settingDescription", True)
-        self.float_paging_enabled_description.setWordWrap(True)
-        self.float_paging_enabled_description.setMaximumSize(QSize(310, 16777215))
-        self.float_paging_enabled_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.float_paging_enabled_description.setMinimumSize(QSize(310, 0))
-
-        self.float_paging_enabled_row_layout.addWidget(self.float_paging_enabled_description, 1, 0, 1, 1)
-
         self.float_paging_enabled = ToggleSwitch(self.float_paging_enabled_row)
         self.float_paging_enabled.setObjectName(u"float_paging_enabled")
         self.float_paging_enabled.setMinimumSize(QSize(44, 26))
         self.float_paging_enabled.setMaximumSize(QSize(44, 26))
 
-        self.float_paging_enabled_row_layout.addWidget(self.float_paging_enabled, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.float_paging_enabled_row_layout.addWidget(self.float_paging_enabled, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.float_row_settings_layout.addWidget(self.float_paging_enabled_row, 1, 0, 1, 2)
@@ -1513,16 +1334,6 @@ class Ui_SettingDialog(object):
 
         self.cmb_color_mode_row_layout.addWidget(self.cmb_color_mode_title, 0, 0, 1, 1)
 
-        self.cmb_color_mode_description = QLabel(self.cmb_color_mode_row)
-        self.cmb_color_mode_description.setObjectName(u"cmb_color_mode_description")
-        self.cmb_color_mode_description.setProperty(u"settingDescription", True)
-        self.cmb_color_mode_description.setWordWrap(True)
-        self.cmb_color_mode_description.setMaximumSize(QSize(310, 16777215))
-        self.cmb_color_mode_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.cmb_color_mode_description.setMinimumSize(QSize(310, 0))
-
-        self.cmb_color_mode_row_layout.addWidget(self.cmb_color_mode_description, 1, 0, 1, 1)
-
         self.cmb_color_mode = QComboBox(self.cmb_color_mode_row)
         self.cmb_color_mode.addItem("")
         self.cmb_color_mode.addItem("")
@@ -1531,7 +1342,7 @@ class Ui_SettingDialog(object):
         self.cmb_color_mode.setMinimumSize(QSize(110, 28))
         self.cmb_color_mode.setMaximumSize(QSize(110, 28))
 
-        self.cmb_color_mode_row_layout.addWidget(self.cmb_color_mode, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.cmb_color_mode_row_layout.addWidget(self.cmb_color_mode, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.floatingContentLayout.addWidget(self.cmb_color_mode_row)
@@ -1641,16 +1452,6 @@ class Ui_SettingDialog(object):
 
         self.btn_fg_color_row_layout.addWidget(self.btn_fg_color_title, 0, 0, 1, 1)
 
-        self.btn_fg_color_description = QLabel(self.btn_fg_color_row)
-        self.btn_fg_color_description.setObjectName(u"btn_fg_color_description")
-        self.btn_fg_color_description.setWordWrap(True)
-        self.btn_fg_color_description.setProperty(u"settingDescription", True)
-        self.btn_fg_color_description.setMaximumSize(QSize(310, 16777215))
-        self.btn_fg_color_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.btn_fg_color_description.setMinimumSize(QSize(310, 0))
-
-        self.btn_fg_color_row_layout.addWidget(self.btn_fg_color_description, 1, 0, 1, 1)
-
         self.btn_fg_color = QPushButton(self.btn_fg_color_row)
         self.btn_fg_color.setObjectName(u"btn_fg_color")
         self.btn_fg_color.setIconSize(QSize(12, 12))
@@ -1659,7 +1460,7 @@ class Ui_SettingDialog(object):
         self.btn_fg_color.setMinimumSize(QSize(110, 28))
         self.btn_fg_color.setMaximumSize(QSize(110, 28))
 
-        self.btn_fg_color_row_layout.addWidget(self.btn_fg_color, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.btn_fg_color_row_layout.addWidget(self.btn_fg_color, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.gb_colorLayout.addWidget(self.btn_fg_color_row)
@@ -1681,16 +1482,6 @@ class Ui_SettingDialog(object):
 
         self.btn_bg_color_row_layout.addWidget(self.btn_bg_color_title, 0, 0, 1, 1)
 
-        self.btn_bg_color_description = QLabel(self.btn_bg_color_row)
-        self.btn_bg_color_description.setObjectName(u"btn_bg_color_description")
-        self.btn_bg_color_description.setWordWrap(True)
-        self.btn_bg_color_description.setProperty(u"settingDescription", True)
-        self.btn_bg_color_description.setMaximumSize(QSize(310, 16777215))
-        self.btn_bg_color_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.btn_bg_color_description.setMinimumSize(QSize(310, 0))
-
-        self.btn_bg_color_row_layout.addWidget(self.btn_bg_color_description, 1, 0, 1, 1)
-
         self.btn_bg_color = QPushButton(self.btn_bg_color_row)
         self.btn_bg_color.setObjectName(u"btn_bg_color")
         self.btn_bg_color.setIconSize(QSize(12, 12))
@@ -1699,7 +1490,7 @@ class Ui_SettingDialog(object):
         self.btn_bg_color.setMinimumSize(QSize(110, 28))
         self.btn_bg_color.setMaximumSize(QSize(110, 28))
 
-        self.btn_bg_color_row_layout.addWidget(self.btn_bg_color, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.btn_bg_color_row_layout.addWidget(self.btn_bg_color, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.gb_colorLayout.addWidget(self.btn_bg_color_row)
@@ -1759,16 +1550,6 @@ class Ui_SettingDialog(object):
 
         self.btn_up_color_row_layout.addWidget(self.btn_up_color_title, 0, 0, 1, 1)
 
-        self.btn_up_color_description = QLabel(self.btn_up_color_row)
-        self.btn_up_color_description.setObjectName(u"btn_up_color_description")
-        self.btn_up_color_description.setWordWrap(True)
-        self.btn_up_color_description.setProperty(u"settingDescription", True)
-        self.btn_up_color_description.setMaximumSize(QSize(310, 16777215))
-        self.btn_up_color_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.btn_up_color_description.setMinimumSize(QSize(310, 0))
-
-        self.btn_up_color_row_layout.addWidget(self.btn_up_color_description, 1, 0, 1, 1)
-
         self.btn_up_color = QPushButton(self.btn_up_color_row)
         self.btn_up_color.setObjectName(u"btn_up_color")
         self.btn_up_color.setIconSize(QSize(12, 12))
@@ -1777,7 +1558,7 @@ class Ui_SettingDialog(object):
         self.btn_up_color.setMinimumSize(QSize(110, 28))
         self.btn_up_color.setMaximumSize(QSize(110, 28))
 
-        self.btn_up_color_row_layout.addWidget(self.btn_up_color, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.btn_up_color_row_layout.addWidget(self.btn_up_color, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.gb_colorLayout.addWidget(self.btn_up_color_row)
@@ -1799,16 +1580,6 @@ class Ui_SettingDialog(object):
 
         self.btn_down_color_row_layout.addWidget(self.btn_down_color_title, 0, 0, 1, 1)
 
-        self.btn_down_color_description = QLabel(self.btn_down_color_row)
-        self.btn_down_color_description.setObjectName(u"btn_down_color_description")
-        self.btn_down_color_description.setWordWrap(True)
-        self.btn_down_color_description.setProperty(u"settingDescription", True)
-        self.btn_down_color_description.setMaximumSize(QSize(310, 16777215))
-        self.btn_down_color_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.btn_down_color_description.setMinimumSize(QSize(310, 0))
-
-        self.btn_down_color_row_layout.addWidget(self.btn_down_color_description, 1, 0, 1, 1)
-
         self.btn_down_color = QPushButton(self.btn_down_color_row)
         self.btn_down_color.setObjectName(u"btn_down_color")
         self.btn_down_color.setIconSize(QSize(12, 12))
@@ -1817,7 +1588,7 @@ class Ui_SettingDialog(object):
         self.btn_down_color.setMinimumSize(QSize(110, 28))
         self.btn_down_color.setMaximumSize(QSize(110, 28))
 
-        self.btn_down_color_row_layout.addWidget(self.btn_down_color, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.btn_down_color_row_layout.addWidget(self.btn_down_color, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.gb_colorLayout.addWidget(self.btn_down_color_row)
@@ -1839,16 +1610,6 @@ class Ui_SettingDialog(object):
 
         self.btn_neutral_color_row_layout.addWidget(self.btn_neutral_color_title, 0, 0, 1, 1)
 
-        self.btn_neutral_color_description = QLabel(self.btn_neutral_color_row)
-        self.btn_neutral_color_description.setObjectName(u"btn_neutral_color_description")
-        self.btn_neutral_color_description.setWordWrap(True)
-        self.btn_neutral_color_description.setProperty(u"settingDescription", True)
-        self.btn_neutral_color_description.setMaximumSize(QSize(310, 16777215))
-        self.btn_neutral_color_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.btn_neutral_color_description.setMinimumSize(QSize(310, 0))
-
-        self.btn_neutral_color_row_layout.addWidget(self.btn_neutral_color_description, 1, 0, 1, 1)
-
         self.btn_neutral_color = QPushButton(self.btn_neutral_color_row)
         self.btn_neutral_color.setObjectName(u"btn_neutral_color")
         self.btn_neutral_color.setIconSize(QSize(12, 12))
@@ -1857,7 +1618,7 @@ class Ui_SettingDialog(object):
         self.btn_neutral_color.setMinimumSize(QSize(110, 28))
         self.btn_neutral_color.setMaximumSize(QSize(110, 28))
 
-        self.btn_neutral_color_row_layout.addWidget(self.btn_neutral_color, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.btn_neutral_color_row_layout.addWidget(self.btn_neutral_color, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.gb_colorLayout.addWidget(self.btn_neutral_color_row)
@@ -1940,20 +1701,10 @@ class Ui_SettingDialog(object):
 
         self.chart_sync_opacity_layout.addWidget(self.chart_sync_opacity_title, 0, 0, 1, 1)
 
-        self.chart_sync_opacity_description = QLabel(self.chart_sync_opacity_row)
-        self.chart_sync_opacity_description.setObjectName(u"chart_sync_opacity_description")
-        self.chart_sync_opacity_description.setMinimumSize(QSize(310, 0))
-        self.chart_sync_opacity_description.setMaximumSize(QSize(310, 16777215))
-        self.chart_sync_opacity_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.chart_sync_opacity_description.setProperty(u"settingDescription", True)
-        self.chart_sync_opacity_description.setWordWrap(True)
-
-        self.chart_sync_opacity_layout.addWidget(self.chart_sync_opacity_description, 1, 0, 1, 1)
-
         self.cb_chart_sync_opacity = ToggleSwitch(self.chart_sync_opacity_row)
         self.cb_chart_sync_opacity.setObjectName(u"cb_chart_sync_opacity")
 
-        self.chart_sync_opacity_layout.addWidget(self.cb_chart_sync_opacity, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.chart_sync_opacity_layout.addWidget(self.cb_chart_sync_opacity, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.gb_opacityLayout.addWidget(self.chart_sync_opacity_row, 2, 0, 1, 3)
@@ -2263,16 +2014,6 @@ class Ui_SettingDialog(object):
 
         self.taskbar_rows_row_layout.addWidget(self.taskbarLimitsLayout_label_0, 0, 0, 1, 1)
 
-        self.taskbar_rows_description = QLabel(self.taskbar_rows_row)
-        self.taskbar_rows_description.setObjectName(u"taskbar_rows_description")
-        self.taskbar_rows_description.setWordWrap(True)
-        self.taskbar_rows_description.setProperty(u"settingDescription", True)
-        self.taskbar_rows_description.setMaximumSize(QSize(310, 16777215))
-        self.taskbar_rows_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
-        self.taskbar_rows_description.setMinimumSize(QSize(310, 0))
-
-        self.taskbar_rows_row_layout.addWidget(self.taskbar_rows_description, 1, 0, 1, 1)
-
         self.taskbar_rows = QSpinBox(self.taskbar_rows_row)
         self.taskbar_rows.setObjectName(u"taskbar_rows")
         self.taskbar_rows.setMinimum(1)
@@ -2281,7 +2022,7 @@ class Ui_SettingDialog(object):
         self.taskbar_rows.setMinimumSize(QSize(100, 28))
         self.taskbar_rows.setMaximumSize(QSize(100, 28))
 
-        self.taskbar_rows_row_layout.addWidget(self.taskbar_rows, 0, 1, 2, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.taskbar_rows_row_layout.addWidget(self.taskbar_rows, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
         self.taskbar_style_settings_layout.addWidget(self.taskbar_rows_row)
@@ -2986,21 +2727,18 @@ class Ui_SettingDialog(object):
         self.data_title.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u6570\u636e\u8bbe\u7f6e", None))
 #endif // QT_CONFIG(accessibility)
         self.gb_data_setting.setTitle(QCoreApplication.translate("SettingDialog", u"\u884c\u60c5\u6570\u636e", None))
-        self.label_interval.setText(QCoreApplication.translate("SettingDialog", u"\u5237\u65b0\u95f4\u9694", None))
-        self.refresh_interval_description.setText(QCoreApplication.translate("SettingDialog", u"\u884c\u60c5\u6570\u636e\u7684\u5168\u5c40\u5237\u65b0\u95f4\u9694\uff0c\u8303\u56f41-60\u79d2", None))
+        self.label_interval.setText(QCoreApplication.translate("SettingDialog", u"\u6570\u636e\u5237\u65b0\u95f4\u9694", None))
         self.sb_interval.setSuffix(QCoreApplication.translate("SettingDialog", u" \u79d2", None))
-        self.chart_enabled_title.setText(QCoreApplication.translate("SettingDialog", u"\u70b9\u51fb\u663e\u793a\u884c\u60c5\u56fe\u8868", None))
-        self.chart_enabled_description.setText(QCoreApplication.translate("SettingDialog", u"\u5141\u8bb8\u901a\u8fc7\u5de6\u952e\u5355\u51fb\u6d6e\u7a97\u663e\u793a\u5206\u65f6\u3001K\u7ebf\u56fe", None))
+        self.chart_enabled_title.setText(QCoreApplication.translate("SettingDialog", u"\u5141\u8bb8\u901a\u8fc7\u5355\u51fb\u6d6e\u7a97\u663e\u793a\u884c\u60c5\u56fe\u8868", None))
 #if QT_CONFIG(tooltip)
         self.cb_chart_enabled.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5f00\u542f\u540e\uff0c\u6d6e\u7a97\u548c\u4efb\u52a1\u680f\u7684\u884c\u60c5\u884c\u5747\u53ef\u5355\u51fb\u6253\u5f00\u56fe\u8868\u3002\u62d6\u52a8\u53ca\u53cc\u51fb\u9690\u85cf\u4fdd\u6301\u539f\u6709\u64cd\u4f5c\uff1b\u5173\u95ed\u540e\u4e0d\u8bf7\u6c42\u6216\u663e\u793a\u56fe\u8868\u3002", None))
 #endif // QT_CONFIG(tooltip)
-        self.cb_chart_enabled.setText(QCoreApplication.translate("SettingDialog", u"\u70b9\u51fb\u663e\u793a\u884c\u60c5\u56fe\u8868", None))
+        self.cb_chart_enabled.setText(QCoreApplication.translate("SettingDialog", u"\u5141\u8bb8\u901a\u8fc7\u5355\u51fb\u6d6e\u7a97\u663e\u793a\u884c\u60c5\u56fe\u8868", None))
 #if QT_CONFIG(accessibility)
-        self.cb_chart_enabled.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u70b9\u51fb\u663e\u793a\u884c\u60c5\u56fe\u8868", None))
+        self.cb_chart_enabled.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u5141\u8bb8\u901a\u8fc7\u5355\u51fb\u6d6e\u7a97\u663e\u793a\u884c\u60c5\u56fe\u8868", None))
 #endif // QT_CONFIG(accessibility)
         self.gb_data.setTitle(QCoreApplication.translate("SettingDialog", u"\u6307\u6807\u663e\u793a", None))
         self.cb_head_title.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u8868\u5934", None))
-        self.cb_head_description.setText(QCoreApplication.translate("SettingDialog", u"\u5728\u884c\u60c5\u9876\u90e8\u663e\u793a\u6307\u6807\u540d\u79f0\uff0c\u652f\u6301\u7684\u8868\u5934\u53ef\u5355\u51fb\u6392\u5e8f\u3002", None))
         self.cb_head.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u8868\u5934", None))
 #if QT_CONFIG(accessibility)
         self.cb_head.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u8868\u5934", None))
@@ -3009,8 +2747,7 @@ class Ui_SettingDialog(object):
         self.cb_head.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u5728\u884c\u60c5\u9876\u90e8\u663e\u793a\u6307\u6807\u540d\u79f0\uff0c\u652f\u6301\u7684\u8868\u5934\u53ef\u5355\u51fb\u6392\u5e8f\u3002", None))
 #endif // QT_CONFIG(accessibility)
         self.gb_metric_options.setTitle(QCoreApplication.translate("SettingDialog", u"\u6307\u6807\u8bbe\u7f6e", None))
-        self.cmb_name_length_title.setText(QCoreApplication.translate("SettingDialog", u"\u540d\u79f0\u5b57\u6570", None))
-        self.cmb_name_length_description.setText(QCoreApplication.translate("SettingDialog", u"\u9009\u62e9\u8bc1\u5238\u540d\u79f0\u663e\u793a\u7684\u5b57\u6570", None))
+        self.cmb_name_length_title.setText(QCoreApplication.translate("SettingDialog", u"\u540d\u79f0\u7684\u663e\u793a\u5b57\u6570", None))
         self.cmb_name_length.setItemText(0, QCoreApplication.translate("SettingDialog", u"\u4e0d\u663e\u793a", None))
         self.cmb_name_length.setItemText(1, QCoreApplication.translate("SettingDialog", u"\u5b8c\u6574\u663e\u793a", None))
         self.cmb_name_length.setItemText(2, QCoreApplication.translate("SettingDialog", u"1\u4e2a\u5b57", None))
@@ -3018,32 +2755,22 @@ class Ui_SettingDialog(object):
         self.cmb_name_length.setItemText(4, QCoreApplication.translate("SettingDialog", u"3\u4e2a\u5b57", None))
         self.cmb_name_length.setItemText(5, QCoreApplication.translate("SettingDialog", u"4\u4e2a\u5b57", None))
 
-        self.cb_code_visible_title.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u4ee3\u7801", None))
-        self.cb_code_visible_description.setText(QCoreApplication.translate("SettingDialog", u"\u5728\u540d\u79f0\u65c1\u663e\u793a\u8bc1\u5238\u4ee3\u7801\u3002", None))
-        self.cb_code_visible.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u4ee3\u7801", None))
+        self.cb_code_visible_title.setText(QCoreApplication.translate("SettingDialog", u"\u5728\u540d\u79f0\u524d\u663e\u793a\u8bc1\u5238\u4ee3\u7801", None))
+        self.cb_code_visible.setText(QCoreApplication.translate("SettingDialog", u"\u5728\u540d\u79f0\u524d\u663e\u793a\u8bc1\u5238\u4ee3\u7801", None))
 #if QT_CONFIG(accessibility)
-        self.cb_code_visible.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u4ee3\u7801", None))
+        self.cb_code_visible.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u5728\u540d\u79f0\u524d\u663e\u793a\u8bc1\u5238\u4ee3\u7801", None))
 #endif // QT_CONFIG(accessibility)
+        self.cb_type_visible_title.setText(QCoreApplication.translate("SettingDialog", u"\u5728\u540d\u79f0\u524d\u663e\u793a\u8bc1\u5238\u7684\u5e02\u573a\u7c7b\u578b", None))
+        self.cb_type_visible.setText(QCoreApplication.translate("SettingDialog", u"\u5728\u540d\u79f0\u524d\u663e\u793a\u8bc1\u5238\u7684\u5e02\u573a\u7c7b\u578b", None))
 #if QT_CONFIG(accessibility)
-        self.cb_code_visible.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u5728\u540d\u79f0\u65c1\u663e\u793a\u8bc1\u5238\u4ee3\u7801\u3002", None))
+        self.cb_type_visible.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u5728\u540d\u79f0\u524d\u663e\u793a\u8bc1\u5238\u7684\u5e02\u573a\u7c7b\u578b", None))
 #endif // QT_CONFIG(accessibility)
-        self.cb_type_visible_title.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u7c7b\u578b", None))
-        self.cb_type_visible_description.setText(QCoreApplication.translate("SettingDialog", u"\u5728\u540d\u79f0\u65c1\u663e\u793a\u8bc1\u5238\u7684\u5e02\u573a\u7c7b\u578b\u3002", None))
-        self.cb_type_visible.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u7c7b\u578b", None))
-#if QT_CONFIG(accessibility)
-        self.cb_type_visible.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u7c7b\u578b", None))
-#endif // QT_CONFIG(accessibility)
-#if QT_CONFIG(accessibility)
-        self.cb_type_visible.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u5728\u540d\u79f0\u65c1\u663e\u793a\u8bc1\u5238\u7684\u5e02\u573a\u7c7b\u578b\u3002", None))
-#endif // QT_CONFIG(accessibility)
-        self.cmb_unit_mode_title.setText(QCoreApplication.translate("SettingDialog", u"\u6570\u503c\u5355\u4f4d", None))
-        self.cmb_unit_mode_description.setText(QCoreApplication.translate("SettingDialog", u"\u6210\u4ea4\u91cf\u548c\u6210\u4ea4\u989d\u7684\u5355\u4f4d\uff1b\u81ea\u52a8\u65f6\u6309\u5e02\u573a\u9009\u62e9\u4e2d\u6587\u6216\u82f1\u6587\u3002", None))
-        self.cmb_unit_mode.setItemText(0, QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8", None))
-        self.cmb_unit_mode.setItemText(1, QCoreApplication.translate("SettingDialog", u"\u4e2d\u6587", None))
-        self.cmb_unit_mode.setItemText(2, QCoreApplication.translate("SettingDialog", u"\u82f1\u6587", None))
+        self.cmb_unit_mode_title.setText(QCoreApplication.translate("SettingDialog", u"\u6210\u4ea4\u91cf\u548c\u6210\u4ea4\u989d\u7684\u6570\u503c\u5355\u4f4d", None))
+        self.cmb_unit_mode.setItemText(0, QCoreApplication.translate("SettingDialog", u"\u6309\u5e02\u573a\u5730\u533a\u81ea\u52a8\u9009\u62e9", None))
+        self.cmb_unit_mode.setItemText(1, QCoreApplication.translate("SettingDialog", u"\u4e2d\u6587\uff08\u4e07/\u4ebf/\u4e07\u4ebf\uff09", None))
+        self.cmb_unit_mode.setItemText(2, QCoreApplication.translate("SettingDialog", u"\u82f1\u6587\uff08K/M/B\uff09", None))
 
-        self.average_period_title.setText(QCoreApplication.translate("SettingDialog", u"\u5747\u503c\u6307\u6807", None))
-        self.average_period_description.setText(QCoreApplication.translate("SettingDialog", u"\u9009\u62e9\u884c\u60c5\u8868\u683c\u4e2d\u5747\u503c\u6307\u6807\u4f7f\u7528\u7684\u5468\u671f\u3002", None))
+        self.average_period_title.setText(QCoreApplication.translate("SettingDialog", u"\u5747\u503c\u7c7b\u578b", None))
         self.cmb_average_period.setItemText(0, QCoreApplication.translate("SettingDialog", u"\u5f53\u65e5\u5747\u503c", None))
         self.cmb_average_period.setItemText(1, QCoreApplication.translate("SettingDialog", u"MA5", None))
         self.cmb_average_period.setItemText(2, QCoreApplication.translate("SettingDialog", u"MA10", None))
@@ -3051,8 +2778,7 @@ class Ui_SettingDialog(object):
         self.cmb_average_period.setItemText(4, QCoreApplication.translate("SettingDialog", u"MA30", None))
         self.cmb_average_period.setItemText(5, QCoreApplication.translate("SettingDialog", u"MA60", None))
 
-        self.mini_chart_title.setText(QCoreApplication.translate("SettingDialog", u"\u8ff7\u4f60\u56fe", None))
-        self.mini_chart_description.setText(QCoreApplication.translate("SettingDialog", u"\u5728\u4e0a\u65b9\u6307\u6807\u4e2d\u6dfb\u52a0\u201c\u8ff7\u4f60\u56fe\u201d\uff0c\u70b9\u51fb\u4e0b\u65b9\u9884\u89c8\u9009\u62e9\u6837\u5f0f\u3002", None))
+        self.mini_chart_title.setText(QCoreApplication.translate("SettingDialog", u"\u8ff7\u4f60\u56fe\u6837\u5f0f", None))
         self.btn_mini_kline.setText(QCoreApplication.translate("SettingDialog", u"\u65e5K\u7ebf", None))
 #if QT_CONFIG(tooltip)
         self.btn_mini_kline.setToolTip(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u5f53\u65e5\u5f00\u76d8\u3001\u73b0\u4ef7\u3001\u6700\u9ad8\u548c\u6700\u4f4e\u4ef7\uff0c\u5e76\u6807\u51fa\u6628\u6536\u4f4d\u7f6e\u3002", None))
@@ -3079,7 +2805,6 @@ class Ui_SettingDialog(object):
         self.general_title.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u5e38\u89c4\u8bbe\u7f6e", None))
 #endif // QT_CONFIG(accessibility)
         self.cb_auto_start_title.setText(QCoreApplication.translate("SettingDialog", u"\u5f00\u673a\u542f\u52a8", None))
-        self.cb_auto_start_description.setText(QCoreApplication.translate("SettingDialog", u"\u767b\u5f55\u7cfb\u7edf\u540e\u81ea\u52a8\u542f\u52a8 StockWidget\u3002", None))
         self.cb_auto_start.setText(QCoreApplication.translate("SettingDialog", u"\u5f00\u673a\u542f\u52a8", None))
 #if QT_CONFIG(accessibility)
         self.cb_auto_start.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u5f00\u673a\u542f\u52a8", None))
@@ -3089,7 +2814,6 @@ class Ui_SettingDialog(object):
 #endif // QT_CONFIG(accessibility)
         self.gb_fcn.setTitle(QCoreApplication.translate("SettingDialog", u"\u7a97\u53e3\u884c\u4e3a", None))
         self.cb_grid_title.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u7f51\u683c", None))
-        self.cb_grid_description.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u8868\u683c\u7f51\u683c\u3001\u8868\u5934\u5206\u9694\u4e0e\u5706\u89d2\u8fb9\u6846\u3002", None))
         self.cb_grid.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u7f51\u683c", None))
 #if QT_CONFIG(accessibility)
         self.cb_grid.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u7f51\u683c", None))
@@ -3097,29 +2821,26 @@ class Ui_SettingDialog(object):
 #if QT_CONFIG(accessibility)
         self.cb_grid.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u8868\u683c\u7f51\u683c\u3001\u8868\u5934\u5206\u9694\u4e0e\u5706\u89d2\u8fb9\u6846\u3002", None))
 #endif // QT_CONFIG(accessibility)
-        self.cb_float_on_top_title.setText(QCoreApplication.translate("SettingDialog", u"\u6d6e\u7a97\u7f6e\u9876", None))
-        self.cb_float_on_top_description.setText(QCoreApplication.translate("SettingDialog", u"\u4f7f\u6d6e\u7a97\u4fdd\u6301\u5728\u666e\u901a\u7a97\u53e3\u4e0a\u65b9\u3002", None))
-        self.cb_float_on_top.setText(QCoreApplication.translate("SettingDialog", u"\u6d6e\u7a97\u7f6e\u9876", None))
-#if QT_CONFIG(tooltip)
-        self.cb_float_on_top.setToolTip(QCoreApplication.translate("SettingDialog", u"\u8ba9\u6d6e\u7a97\u4fdd\u6301\u5728\u666e\u901a\u7a97\u53e3\u4e0a\u65b9\uff1b\u5173\u95ed\u540e\u53ef\u88ab\u5176\u4ed6\u7a97\u53e3\u906e\u76d6\uff0c\u5e76\u5173\u95ed\u5f3a\u5236\u7f6e\u9876", None))
-#endif // QT_CONFIG(tooltip)
+        self.cb_float_on_top_title.setText(QCoreApplication.translate("SettingDialog", u"\u4fdd\u6301\u6d6e\u7a97\u7f6e\u9876", None))
+        self.cb_float_on_top.setText(QCoreApplication.translate("SettingDialog", u"\u4fdd\u6301\u6d6e\u7a97\u7f6e\u9876", None))
 #if QT_CONFIG(accessibility)
-        self.cb_float_on_top.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u6d6e\u7a97\u7f6e\u9876", None))
+        self.cb_float_on_top.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u4fdd\u6301\u6d6e\u7a97\u7f6e\u9876", None))
 #endif // QT_CONFIG(accessibility)
 #if QT_CONFIG(accessibility)
         self.cb_float_on_top.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u4f7f\u6d6e\u7a97\u4fdd\u6301\u5728\u666e\u901a\u7a97\u53e3\u4e0a\u65b9\u3002", None))
 #endif // QT_CONFIG(accessibility)
-        self.cb_force_top_title.setText(QCoreApplication.translate("SettingDialog", u"\u5f3a\u5236\u7f6e\u9876", None))
-        self.cb_force_top_description.setText(QCoreApplication.translate("SettingDialog", u"\u589e\u5f3a\u7f6e\u9876\u6548\u679c\uff0c\u4ec5 Windows \u53ef\u7528\uff1b\u9700\u5148\u5f00\u542f\u6d6e\u7a97\u7f6e\u9876\u3002", None))
-        self.cb_force_top.setText(QCoreApplication.translate("SettingDialog", u"\u5f3a\u5236\u7f6e\u9876", None))
+        self.cb_force_top_title.setText(QCoreApplication.translate("SettingDialog", u"\u589e\u5f3a\u7f6e\u9876\u6548\u679c", None))
+#if QT_CONFIG(tooltip)
+        self.cb_force_top.setToolTip(QCoreApplication.translate("SettingDialog", u"\u9047\u5230\u7f6e\u9876\u51b2\u7a81\u65f6\u542f\u7528\uff0c\u9700\u5148\u5f00\u542f\u6d6e\u7a97\u7f6e\u9876", None))
+#endif // QT_CONFIG(tooltip)
+        self.cb_force_top.setText(QCoreApplication.translate("SettingDialog", u"\u589e\u5f3a\u7f6e\u9876\u6548\u679c", None))
 #if QT_CONFIG(accessibility)
-        self.cb_force_top.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u5f3a\u5236\u7f6e\u9876", None))
+        self.cb_force_top.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u589e\u5f3a\u7f6e\u9876\u6548\u679c", None))
 #endif // QT_CONFIG(accessibility)
 #if QT_CONFIG(accessibility)
-        self.cb_force_top.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u589e\u5f3a\u7f6e\u9876\u6548\u679c\uff0c\u4ec5 Windows \u53ef\u7528\uff1b\u9700\u5148\u5f00\u542f\u6d6e\u7a97\u7f6e\u9876\u3002", None))
+        self.cb_force_top.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u9047\u5230\u7f6e\u9876\u51b2\u7a81\u65f6\u542f\u7528\uff0c\u9700\u5148\u5f00\u542f\u6d6e\u7a97\u7f6e\u9876", None))
 #endif // QT_CONFIG(accessibility)
         self.cb_click_through_title.setText(QCoreApplication.translate("SettingDialog", u"\u9f20\u6807\u7a7f\u900f", None))
-        self.cb_click_through_description.setText(QCoreApplication.translate("SettingDialog", u"\u9f20\u6807\u64cd\u4f5c\u7a7f\u8fc7\u6d6e\u7a97\uff0c\u53ef\u4f7f\u7528\u6258\u76d8\u6216\u5feb\u6377\u952e\u6062\u590d\u3002", None))
         self.cb_click_through.setText(QCoreApplication.translate("SettingDialog", u"\u9f20\u6807\u7a7f\u900f", None))
 #if QT_CONFIG(accessibility)
         self.cb_click_through.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u9f20\u6807\u7a7f\u900f", None))
@@ -3128,11 +2849,7 @@ class Ui_SettingDialog(object):
         self.cb_click_through.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u9f20\u6807\u64cd\u4f5c\u7a7f\u8fc7\u6d6e\u7a97\uff0c\u53ef\u4f7f\u7528\u6258\u76d8\u6216\u5feb\u6377\u952e\u6062\u590d\u3002", None))
 #endif // QT_CONFIG(accessibility)
         self.cb_boundary_check_title.setText(QCoreApplication.translate("SettingDialog", u"\u4fdd\u6301\u5728\u5c4f\u5e55\u5185", None))
-        self.cb_boundary_check_description.setText(QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8\u8c03\u6574\u6d6e\u7a97\u4f4d\u7f6e\uff0c\u4fdd\u6301\u5728\u5c4f\u5e55\u5185\u5b8c\u6574\u663e\u793a", None))
         self.cb_boundary_check.setText(QCoreApplication.translate("SettingDialog", u"\u4fdd\u6301\u5728\u5c4f\u5e55\u5185", None))
-#if QT_CONFIG(tooltip)
-        self.cb_boundary_check.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5728\u5c4f\u5e55\u5185\u4fdd\u6301\u6d6e\u7a97\u5b8c\u6574\u663e\u793a\u3002\u542f\u7528\u540e\uff0c\u7a0b\u5e8f\u52a0\u8f7d\u3001\u677e\u5f00\u62d6\u52a8\u540e\u53ca\u5185\u5bb9\u5c3a\u5bf8\u53d8\u5316\u65f6\u81ea\u52a8\u8c03\u6574\u8d8a\u754c\u4f4d\u7f6e\uff1b\u5173\u95ed\u540e\u5141\u8bb8\u6d6e\u7a97\u90e8\u5206\u4f4d\u4e8e\u5c4f\u5e55\u5916\u3002", None))
-#endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(accessibility)
         self.cb_boundary_check.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u4fdd\u6301\u5728\u5c4f\u5e55\u5185", None))
 #endif // QT_CONFIG(accessibility)
@@ -3140,11 +2857,7 @@ class Ui_SettingDialog(object):
         self.cb_boundary_check.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u62d6\u52a8\u65f6\u53ef\u79fb\u51fa\u5c4f\u5e55\uff0c\u677e\u5f00\u540e\u5c06\u6d6e\u7a97\u8c03\u6574\u56de\u5c4f\u5e55\u5185\u3002", None))
 #endif // QT_CONFIG(accessibility)
         self.cb_edge_hide_title.setText(QCoreApplication.translate("SettingDialog", u"\u8d34\u8fb9\u6536\u8d77", None))
-        self.cb_edge_hide_description.setText(QCoreApplication.translate("SettingDialog", u"\u8d34\u4f4f\u5c4f\u5e55\u8fb9\u7f18\u6536\u8d77\u4e3a\u7a84\u6761\uff0c\u79fb\u5165\u65f6\u5c55\u5f00\u3002\u9700\u5f00\u542f\u201c\u4fdd\u6301\u5728\u5c4f\u5e55\u5185\u201d\u3002", None))
         self.cb_edge_hide.setText(QCoreApplication.translate("SettingDialog", u"\u8d34\u8fb9\u6536\u8d77", None))
-#if QT_CONFIG(tooltip)
-        self.cb_edge_hide.setToolTip(QCoreApplication.translate("SettingDialog", u"\u8d34\u4f4f\u5c4f\u5e55\u5de6\u3001\u4e0a\u3001\u53f3\u8fb9\u65f6\u6536\u8d77\u4e3a\u7a84\u6761\uff0c\u9f20\u6807\u79fb\u5165\u5c55\u5f00\uff1b\u5e95\u8fb9\u4e0d\u6536\u8d77\u3002", None))
-#endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(accessibility)
         self.cb_edge_hide.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u8d34\u8fb9\u6536\u8d77", None))
 #endif // QT_CONFIG(accessibility)
@@ -3152,11 +2865,7 @@ class Ui_SettingDialog(object):
         self.cb_edge_hide.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u8d34\u4f4f\u5c4f\u5e55\u5de6\u3001\u4e0a\u3001\u53f3\u4fa7\u65f6\u6536\u8d77\u4e3a\u7a84\u6761\uff0c\u79fb\u5165\u65f6\u5c55\u5f00\u3002", None))
 #endif // QT_CONFIG(accessibility)
         self.float_split_settings.setTitle(QCoreApplication.translate("SettingDialog", u"\u5206\u680f", None))
-#if QT_CONFIG(tooltip)
-        self.float_split_settings.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6309\u5f53\u524d\u9875\u5747\u5206\u4e3a\u5de6\u53f3\u4e24\u680f\uff1b\u5947\u6570\u65f6\u5de6\u680f\u591a\u4e00\u6761\u3002\u884c\u6570\u9650\u5236\u6309\u6bcf\u680f\u8ba1\u7b97\u3002", None))
-#endif // QT_CONFIG(tooltip)
         self.float_split_separator_title.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u5206\u9694\u7ebf", None))
-        self.float_split_separator_description.setText(QCoreApplication.translate("SettingDialog", u"\u5728\u5de6\u53f3\u4e24\u680f\u4e4b\u95f4\u663e\u793a\u5206\u9694\u7ebf\u3002", None))
         self.float_split_separator.setText(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u5206\u9694\u7ebf", None))
 #if QT_CONFIG(accessibility)
         self.float_split_separator.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u663e\u793a\u5206\u9694\u7ebf", None))
@@ -3167,11 +2876,7 @@ class Ui_SettingDialog(object):
         self.float_row_settings.setTitle(QCoreApplication.translate("SettingDialog", u"\u9650\u5236\u884c\u6570", None))
         self.float_row_settings_layout_label_0.setText(QCoreApplication.translate("SettingDialog", u"\u6700\u5927\u884c\u6570", None))
         self.float_max_rows.setSuffix(QCoreApplication.translate("SettingDialog", u" \u884c", None))
-#if QT_CONFIG(tooltip)
-        self.float_max_rows.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6bcf\u680f\u6700\u591a\u663e\u793a\u7684\u884c\u6570\uff1b\u5206\u680f\u65f6\u6bcf\u9875\u6700\u591a\u663e\u793a\u4e24\u500d\u6570\u91cf\u7684\u6807\u7684\u3002", None))
-#endif // QT_CONFIG(tooltip)
         self.float_paging_enabled_title.setText(QCoreApplication.translate("SettingDialog", u"\u7ffb\u9875", None))
-        self.float_paging_enabled_description.setText(QCoreApplication.translate("SettingDialog", u"\u5f00\u542f\u540e\u53ef\u4f7f\u7528\u624b\u52a8\u7ffb\u9875\uff1b\u81ea\u52a8\u7ffb\u9875\u53ef\u6309\u95f4\u9694\u5faa\u73af\u3002", None))
         self.float_paging_enabled.setText(QCoreApplication.translate("SettingDialog", u"\u7ffb\u9875", None))
 #if QT_CONFIG(accessibility)
         self.float_paging_enabled.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u7ffb\u9875", None))
@@ -3180,13 +2885,7 @@ class Ui_SettingDialog(object):
         self.float_paging_enabled.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u5f00\u542f\u540e\u53ef\u4f7f\u7528\u624b\u52a8\u7ffb\u9875\uff1b\u81ea\u52a8\u7ffb\u9875\u53ef\u6309\u95f4\u9694\u5faa\u73af\u3002", None))
 #endif // QT_CONFIG(accessibility)
         self.float_page_mode.setText(QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8\u7ffb\u9875", None))
-#if QT_CONFIG(tooltip)
-        self.float_page_mode.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6309\u8bbe\u5b9a\u95f4\u9694\u81ea\u52a8\u7ffb\u9875\uff1b\u53d6\u6d88\u52fe\u9009\u540e\u53ef\u4f7f\u7528\u6d6e\u7a97\u7bad\u5934\u624b\u52a8\u7ffb\u9875\u3002", None))
-#endif // QT_CONFIG(tooltip)
         self.float_paging_settings_layout_label_1.setText(QCoreApplication.translate("SettingDialog", u"\u95f4\u9694\uff1a", None))
-#if QT_CONFIG(tooltip)
-        self.float_page_interval.setToolTip(QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8\u7ffb\u9875\u7684\u95f4\u9694\uff0c\u5355\u4f4d\u4e3a\u79d2\uff1b\u5f00\u542f\u81ea\u52a8\u7ffb\u9875\u540e\u53ef\u8c03\u6574\u3002", None))
-#endif // QT_CONFIG(tooltip)
         self.float_page_interval.setSuffix(QCoreApplication.translate("SettingDialog", u" \u79d2", None))
         self.gb_scheduled_hide.setTitle(QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8\u9690\u85cf", None))
 #if QT_CONFIG(tooltip)
@@ -3194,7 +2893,7 @@ class Ui_SettingDialog(object):
 #endif // QT_CONFIG(tooltip)
         self.label_hide_status.setText(QCoreApplication.translate("SettingDialog", u"\u7a0b\u5e8f\u672a\u542f\u7528\u81ea\u52a8\u9690\u85cf", None))
         self.cb_auto_hide_title.setText(QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8\u8bc6\u522b", None))
-        self.cb_auto_hide_description.setText(QCoreApplication.translate("SettingDialog", u"\u5168\u90e8\u52fe\u9009\u6807\u7684\u7684\u884c\u60c5\u5747\u8d85\u8fc7 30 \u79d2\u672a\u66f4\u65b0\u65f6\uff0c\u81ea\u52a8\u9690\u85cf\u884c\u60c5\u7ec4\u4ef6\u3002", None))
+        self.cb_auto_hide_description.setText(QCoreApplication.translate("SettingDialog", u"\u884c\u60c5\u8d8530\u79d2\u65e0\u66f4\u65b0\u65f6\u81ea\u52a8\u9690\u85cf\u884c\u60c5\u7ec4\u4ef6", None))
         self.cb_auto_hide.setText(QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8\u8bc6\u522b", None))
 #if QT_CONFIG(tooltip)
         self.cb_auto_hide.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5237\u65b0\u65f6\uff0c\u6240\u6709\u52fe\u9009\u6807\u7684\u7684\u884c\u60c5\u65f6\u95f4\u5747\u8d85\u8fc730\u79d2\u5219\u9690\u85cf\u6d6e\u7a97\u548c\u4efb\u52a1\u680f\u3002\u7f3a\u5931\u65f6\u95f4\u6216\u8bf7\u6c42\u5931\u8d25\u4e0d\u89e6\u53d1\u3002\u624b\u52a8\u547c\u51fa\u540e\u4f1a\u63d0\u793a\u5e76\u5012\u8ba1\u65f65\u79d2\uff1b\u65b0\u884c\u60c5\u5230\u8fbe\u4f1a\u53d6\u6d88\u5012\u8ba1\u65f6\u3002\u5b9a\u65f6\u9690\u85cf\u4ecd\u540c\u65f6\u751f\u6548\u3002", None))
@@ -3203,7 +2902,7 @@ class Ui_SettingDialog(object):
         self.cb_auto_hide.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u81ea\u52a8\u8bc6\u522b", None))
 #endif // QT_CONFIG(accessibility)
 #if QT_CONFIG(accessibility)
-        self.cb_auto_hide.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u5168\u90e8\u52fe\u9009\u6807\u7684\u7684\u884c\u60c5\u5747\u8d85\u8fc7 30 \u79d2\u672a\u66f4\u65b0\u65f6\uff0c\u81ea\u52a8\u9690\u85cf\u884c\u60c5\u7ec4\u4ef6\u3002", None))
+        self.cb_auto_hide.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u884c\u60c5\u8d8530\u79d2\u65e0\u66f4\u65b0\u65f6\u81ea\u52a8\u9690\u85cf\u884c\u60c5\u7ec4\u4ef6", None))
 #endif // QT_CONFIG(accessibility)
         self.label_scheduled_title.setText(QCoreApplication.translate("SettingDialog", u"\u5b9a\u65f6\u9690\u85cf", None))
         self.label_scheduled_description.setText(QCoreApplication.translate("SettingDialog", u"\u6bcf\u5929\u5728\u6307\u5b9a\u65f6\u95f4\u9690\u85cf\u884c\u60c5\uff0c\u6700\u591a\u8bbe\u7f6e\u4e09\u4e2a\u65f6\u95f4\u3002", None))
@@ -3217,7 +2916,7 @@ class Ui_SettingDialog(object):
 #endif // QT_CONFIG(tooltip)
         self.data_directory_settings.setTitle(QCoreApplication.translate("SettingDialog", u"\u6570\u636e\u4e0e\u7f13\u5b58\u76ee\u5f55", None))
         self.data_directory_choice_title.setText(QCoreApplication.translate("SettingDialog", u"\u4fdd\u5b58\u4f4d\u7f6e", None))
-        self.data_directory_choice_description.setText(QCoreApplication.translate("SettingDialog", u"\u914d\u7f6e\u3001\u81ea\u9009\u3001\u80a1\u7968\u4ee3\u7801\u5217\u8868\u548c\u56fe\u8868\u7f13\u5b58\u7edf\u4e00\u4fdd\u5b58\u3002\u4fee\u6539\u76ee\u5f55\u4f1a\u590d\u5236\u73b0\u6709\u6570\u636e\uff0c\u91cd\u542f\u540e\u751f\u6548\u3002", None))
+        self.data_directory_choice_description.setText(QCoreApplication.translate("SettingDialog", u"\u7a0b\u5e8f\u914d\u7f6e\u3001\u6570\u636e\u4e0e\u7f13\u5b58\u76ee\u5f55\uff0c\u4fee\u6539\u540e\u91cd\u542f\u7a0b\u5e8f\u751f\u6548\u3002", None))
         self.btn_data_directory.setText(QCoreApplication.translate("SettingDialog", u"\u66f4\u6539\u76ee\u5f55\u2026", None))
         self.data_directory_status.setText("")
         self.btn_open_cache_dir.setText(QCoreApplication.translate("SettingDialog", u"\u6253\u5f00\u6570\u636e\u76ee\u5f55", None))
@@ -3237,11 +2936,7 @@ class Ui_SettingDialog(object):
         self.floating_title.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u6d6e\u7a97\u8bbe\u7f6e", None))
 #endif // QT_CONFIG(accessibility)
         self.btn_reset_appearance.setText(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u9ed8\u8ba4\u5916\u89c2", None))
-#if QT_CONFIG(tooltip)
-        self.btn_reset_appearance.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u989c\u8272\u3001\u900f\u660e\u5ea6\u3001\u5b57\u4f53\u3001\u884c\u8ddd\u3001\u8868\u5934\u3001\u7f51\u683c\u548c\u56fe\u6807", None))
-#endif // QT_CONFIG(tooltip)
         self.cmb_color_mode_title.setText(QCoreApplication.translate("SettingDialog", u"\u989c\u8272\u6a21\u5f0f", None))
-        self.cmb_color_mode_description.setText(QCoreApplication.translate("SettingDialog", u"\u8bbe\u7f6e\u754c\u9762\u4e0e\u83dc\u5355\u4f7f\u7528\u7684\u989c\u8272\u6a21\u5f0f\u3002", None))
         self.cmb_color_mode.setItemText(0, QCoreApplication.translate("SettingDialog", u"\u8ddf\u968f\u7cfb\u7edf", None))
         self.cmb_color_mode.setItemText(1, QCoreApplication.translate("SettingDialog", u"\u6d45\u8272", None))
         self.cmb_color_mode.setItemText(2, QCoreApplication.translate("SettingDialog", u"\u6df1\u8272", None))
@@ -3254,10 +2949,8 @@ class Ui_SettingDialog(object):
         self.label_current_line_interval.setText(QCoreApplication.translate("SettingDialog", u"+0 px", None))
         self.gb_color.setTitle(QCoreApplication.translate("SettingDialog", u"\u989c\u8272", None))
         self.btn_fg_color_title.setText(QCoreApplication.translate("SettingDialog", u"\u6587\u5b57\u989c\u8272", None))
-        self.btn_fg_color_description.setText(QCoreApplication.translate("SettingDialog", u"\u7528\u4e8e\u666e\u901a\u6587\u5b57\u53ca\u7edf\u4e00\u989c\u8272\u6a21\u5f0f\u4e0b\u7684\u6307\u6807\u3002", None))
         self.btn_fg_color.setText(QCoreApplication.translate("SettingDialog", u"FFFFFF", None))
         self.btn_bg_color_title.setText(QCoreApplication.translate("SettingDialog", u"\u80cc\u666f\u989c\u8272", None))
-        self.btn_bg_color_description.setText(QCoreApplication.translate("SettingDialog", u"\u6d6e\u7a97\u9762\u677f\u7684\u5e95\u8272\uff1b\u900f\u660e\u7a0b\u5ea6\u7531\u4e0b\u65b9\u80cc\u666f\u4e0d\u900f\u660e\u5ea6\u63a7\u5236\u3002", None))
         self.btn_bg_color.setText(QCoreApplication.translate("SettingDialog", u"FFFFFF", None))
         self.cb_unicolor_title.setText(QCoreApplication.translate("SettingDialog", u"\u7edf\u4e00\u989c\u8272", None))
         self.cb_unicolor_description.setText(QCoreApplication.translate("SettingDialog", u"\u6240\u6709\u6307\u6807\u4f7f\u7528\u6587\u5b57\u989c\u8272\uff1b\u5173\u95ed\u540e\uff0c\u6309\u6da8\u8dcc\u5206\u522b\u7740\u8272\u3002", None))
@@ -3269,13 +2962,10 @@ class Ui_SettingDialog(object):
         self.cb_unicolor.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u6240\u6709\u6307\u6807\u4f7f\u7528\u6587\u5b57\u989c\u8272\uff1b\u5173\u95ed\u540e\uff0c\u6309\u6da8\u8dcc\u5206\u522b\u7740\u8272\u3002", None))
 #endif // QT_CONFIG(accessibility)
         self.btn_up_color_title.setText(QCoreApplication.translate("SettingDialog", u"\u4e0a\u6da8\u989c\u8272", None))
-        self.btn_up_color_description.setText(QCoreApplication.translate("SettingDialog", u"\u6309\u6da8\u8dcc\u7740\u8272\u65f6\uff0c\u7528\u4e8e\u4e0a\u6da8\u7684\u6307\u6807\u3002", None))
         self.btn_up_color.setText(QCoreApplication.translate("SettingDialog", u"FFFFFF", None))
         self.btn_down_color_title.setText(QCoreApplication.translate("SettingDialog", u"\u4e0b\u8dcc\u989c\u8272", None))
-        self.btn_down_color_description.setText(QCoreApplication.translate("SettingDialog", u"\u6309\u6da8\u8dcc\u7740\u8272\u65f6\uff0c\u7528\u4e8e\u4e0b\u8dcc\u7684\u6307\u6807\u3002", None))
         self.btn_down_color.setText(QCoreApplication.translate("SettingDialog", u"FFFFFF", None))
         self.btn_neutral_color_title.setText(QCoreApplication.translate("SettingDialog", u"\u4e2d\u6027\u989c\u8272", None))
-        self.btn_neutral_color_description.setText(QCoreApplication.translate("SettingDialog", u"\u6309\u6da8\u8dcc\u7740\u8272\u65f6\uff0c\u7528\u4e8e\u6301\u5e73\u53ca\u4e2d\u6027\u7684\u6307\u6807\u3002", None))
         self.btn_neutral_color.setText(QCoreApplication.translate("SettingDialog", u"FFFFFF", None))
         self.gb_opacity.setTitle(QCoreApplication.translate("SettingDialog", u"\u4e0d\u900f\u660e\u5ea6", None))
         self.label_bg.setText(QCoreApplication.translate("SettingDialog", u"\u4e3b\u6d6e\u7a97\u80cc\u666f", None))
@@ -3283,10 +2973,6 @@ class Ui_SettingDialog(object):
         self.label_all.setText(QCoreApplication.translate("SettingDialog", u"\u4e3b\u6d6e\u7a97\u6574\u4f53", None))
         self.label_all_alpha.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
         self.chart_sync_opacity_title.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u540c\u6b65\u4e3b\u6d6e\u7a97\u4e0d\u900f\u660e\u5ea6", None))
-        self.chart_sync_opacity_description.setText(QCoreApplication.translate("SettingDialog", u"\u5173\u95ed\u540e\u53ef\u5355\u72ec\u8bbe\u7f6e\u56fe\u8868\u6d6e\u7a97\u7684\u4e0d\u900f\u660e\u5ea6\u3002", None))
-#if QT_CONFIG(tooltip)
-        self.cb_chart_sync_opacity.setToolTip("")
-#endif // QT_CONFIG(tooltip)
         self.cb_chart_sync_opacity.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u540c\u6b65\u4e3b\u6d6e\u7a97\u4e0d\u900f\u660e\u5ea6", None))
 #if QT_CONFIG(accessibility)
         self.cb_chart_sync_opacity.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u540c\u6b65\u4e3b\u6d6e\u7a97\u4e0d\u900f\u660e\u5ea6", None))
@@ -3321,13 +3007,13 @@ class Ui_SettingDialog(object):
         self.taskbar_title.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u4efb\u52a1\u680f\u8bbe\u7f6e", None))
 #endif // QT_CONFIG(accessibility)
         self.taskbar_enabled_title.setText(QCoreApplication.translate("SettingDialog", u"\u4efb\u52a1\u680f\u884c\u60c5\u6a21\u5f0f", None))
-        self.taskbar_enabled_description.setText(QCoreApplication.translate("SettingDialog", u"\u5728Windows\u4efb\u52a1\u680f\u4e2d\u663e\u793a\u884c\u60c5\uff0c\u5f00\u542f\u540e\u7acb\u5373\u5207\u6362\uff1b\u4e5f\u53ef\u5c06\u6d6e\u7a97\u62d6\u81f3\u4efb\u52a1\u680f\u3002", None))
+        self.taskbar_enabled_description.setText(QCoreApplication.translate("SettingDialog", u"\u5c06\u884c\u60c5\u6d6e\u7a97\u5d4c\u5165Windows\u4efb\u52a1\u680f\u4e2d\u663e\u793a\u3002", None))
         self.taskbar_enabled.setText(QCoreApplication.translate("SettingDialog", u"\u4efb\u52a1\u680f\u884c\u60c5\u6a21\u5f0f", None))
 #if QT_CONFIG(accessibility)
         self.taskbar_enabled.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u4efb\u52a1\u680f\u884c\u60c5\u6a21\u5f0f", None))
 #endif // QT_CONFIG(accessibility)
 #if QT_CONFIG(accessibility)
-        self.taskbar_enabled.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u5728Windows\u4efb\u52a1\u680f\u4e2d\u663e\u793a\u884c\u60c5\uff0c\u5f00\u542f\u540e\u7acb\u5373\u5207\u6362\uff1b\u4e5f\u53ef\u5c06\u6d6e\u7a97\u62d6\u81f3\u4efb\u52a1\u680f\u3002", None))
+        self.taskbar_enabled.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u5c06\u884c\u60c5\u6d6e\u7a97\u5d4c\u5165Windows\u4efb\u52a1\u680f\u4e2d\u663e\u793a\u3002", None))
 #endif // QT_CONFIG(accessibility)
 #if QT_CONFIG(tooltip)
         self.taskbar_enabled.setToolTip(QCoreApplication.translate("SettingDialog", u"\u5f00\u542f\u540e\u7acb\u5373\u663e\u793a\u4efb\u52a1\u680f\u884c\u60c5\uff1b\u5173\u95ed\u540e\u6062\u590d\u6d6e\u7a97\uff0c\u5e76\u505c\u6b62\u4efb\u52a1\u680f\u663e\u793a\u3002", None))
@@ -3343,11 +3029,7 @@ class Ui_SettingDialog(object):
 #endif // QT_CONFIG(accessibility)
         self.taskbar_style_settings.setTitle(QCoreApplication.translate("SettingDialog", u"\u5916\u89c2", None))
         self.taskbarLimitsLayout_label_0.setText(QCoreApplication.translate("SettingDialog", u"\u884c\u6570\u9650\u5236", None))
-        self.taskbar_rows_description.setText(QCoreApplication.translate("SettingDialog", u"\u6bcf\u680f\u6700\u591a\u663e\u793a 1\u20134 \u884c\uff1b\u5206\u680f\u540e\u6bcf\u9875\u5bb9\u91cf\u52a0\u500d\u3002", None))
         self.taskbar_rows.setSuffix(QCoreApplication.translate("SettingDialog", u" \u884c", None))
-#if QT_CONFIG(tooltip)
-        self.taskbar_rows.setToolTip(QCoreApplication.translate("SettingDialog", u"\u6bcf\u680f\u6700\u591a\u663e\u793a\u7684\u884c\u6570\uff1b\u5206\u680f\u65f6\u6bcf\u9875\u6700\u591a\u663e\u793a\u4e24\u500d\u6570\u91cf\u7684\u6807\u7684\u3002", None))
-#endif // QT_CONFIG(tooltip)
         self.taskbar_style_settings_layout_label_3.setText(QCoreApplication.translate("SettingDialog", u"\u4e0d\u900f\u660e\u5ea6", None))
 #if QT_CONFIG(tooltip)
         self.taskbar_opacity_pct.setToolTip(QCoreApplication.translate("SettingDialog", u"\u4efb\u52a1\u680f\u6587\u5b57\u4e0d\u900f\u660e\u5ea6", None))
