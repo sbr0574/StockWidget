@@ -200,6 +200,9 @@ def build_quote_menu(source, surface="float"):
 
     if surface == "float":
         _add_opacity_menu(menu, source.opacity_pct, source.set_window_opacity_percent)
+    elif surface == "taskbar":
+        _add_opacity_menu(menu, source.view_options.taskbar_opacity_pct,
+                          lambda percent: source.set_view_options(taskbar_opacity_pct=percent))
 
     _view_toggles(menu, source, surface)
 

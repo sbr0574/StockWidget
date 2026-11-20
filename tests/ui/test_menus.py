@@ -138,7 +138,7 @@ class MenuBehaviorTests(PagingTestCase):
         self.assertFalse(self.win.current_config()["taskbar_auto_color"])
         self.assertFalse(self.win.get_taskbar_appearance()[3])
 
-    def test_float_menu_applies_and_checks_saved_opacity_presets(self):
+    def test_quote_menus_apply_and_check_opacity_for_their_own_surfaces(self):
         menu = actions(self.menu())["不透明度"].menu()
         self.assertEqual(list(actions(menu)), ["20%", "40%", "60%", "80%", "100%"])
         self.assertFalse(any(action.isChecked() for action in menu.actions()))
@@ -146,7 +146,15 @@ class MenuBehaviorTests(PagingTestCase):
         self.assertEqual(self.win.current_config()["opacity_pct"], 40)
         self.assertAlmostEqual(self.win.windowOpacity(), .4, delta=1/255)
         self.assertTrue(actions(actions(self.menu())["不透明度"].menu())["40%"].isChecked())
-        self.assertNotIn("不透明度", actions(self.menu("taskbar")))
+        self.assertEqual(self.win.view_options.taskbar_opacity_pct, 50)
+
+        taskbar = actions(self.menu("taskbar"))["不透明度"].menu()
+        self.assertEqual(list(actions(taskbar)), list(actions(menu)))
+        actions(taskbar)["80%"].trigger()
+        self.assertEqual(self.win.current_config()["taskbar_opacity_pct"], 80)
+        self.assertEqual(self.win.current_config()["opacity_pct"], 40)
+        reopened = actions(self.menu("taskbar"))["不透明度"].menu()
+        self.assertTrue(actions(reopened)["80%"].isChecked())
 
     def test_quit_item_is_red_on_all_quote_menus(self):
         tray = TrayIcon(QIcon(), "Test", on_toggle=self.win.toggle_win,
