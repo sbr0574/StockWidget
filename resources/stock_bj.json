@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-18",
+  "last_update": "2026-11-20",
   "codes": {
     "bj920000": {
       "code": "920000",
@@ -1058,10 +1058,10 @@
       "code": "920176",
       "market": "bj",
       "type": "京",
-      "name": "维琪科技",
+      "name": "XD维琪科",
       "name_en": "WINKEY",
-      "py": "weiqikeji",
-      "abbr": "wqkj"
+      "py": "xdweiqike",
+      "abbr": "xdwqk"
     },
     "bj920177": {
       "code": "920177",
@@ -1247,10 +1247,10 @@
       "code": "920201",
       "market": "bj",
       "type": "京",
-      "name": "百瑞吉",
+      "name": "XD百瑞吉",
       "name_en": "BIOREGEN",
-      "py": "bairuiji",
-      "abbr": "brj"
+      "py": "xdbairuiji",
+      "abbr": "xdbrj"
     },
     "bj920202": {
       "code": "920202",

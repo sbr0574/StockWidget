@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-19",
+  "last_update": "2026-11-20",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -9324,6 +9324,15 @@
       "name_en": "",
       "py": "kechuangzongzhizengqiangetfyifangda",
       "abbr": "kczzzqetfyfd"
+    },
+    "sh588560": {
+      "code": "588560",
+      "market": "sh",
+      "type": "基",
+      "name": "科创创业人工智能ETF华富",
+      "name_en": "",
+      "py": "kechuangchuangyerengongzhinengetfhuafu",
+      "abbr": "kccyrgznetfhf"
     },
     "sh588660": {
       "code": "588660",

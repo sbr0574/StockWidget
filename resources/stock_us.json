@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-18",
+  "last_update": "2026-11-20",
   "codes": {
     "usa": {
       "code": "a",
@@ -5866,6 +5866,15 @@
       "type": "美",
       "name": "Alto Neuroscience, Inc. Common Stock",
       "name_en": "Alto Neuroscience, Inc. Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usant": {
+      "code": "ant",
+      "market": "us",
+      "type": "美",
+      "name": "Anthropic, PBC - Class A Common Stock",
+      "name_en": "Anthropic, PBC - Class A Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -19909,6 +19918,15 @@
       "py": "",
       "abbr": ""
     },
+    "uscgbi": {
+      "code": "cgbi",
+      "market": "us",
+      "type": "美",
+      "name": "Capital Group Multi-Asset Income Builder ETF",
+      "name_en": "Capital Group Multi-Asset Income Builder ETF",
+      "py": "",
+      "abbr": ""
+    },
     "uscgbl": {
       "code": "cgbl",
       "market": "us",
@@ -20104,6 +20122,15 @@
       "type": "美",
       "name": "Capital Group International Equity ETF",
       "name_en": "Capital Group International Equity ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "uscgmi": {
+      "code": "cgmi",
+      "market": "us",
+      "type": "美",
+      "name": "Capital Group Multi-Asset Income ETF",
+      "name_en": "Capital Group Multi-Asset Income ETF",
       "py": "",
       "abbr": ""
     },
@@ -33526,6 +33553,15 @@
       "py": "",
       "abbr": ""
     },
+    "usenvxw": {
+      "code": "envxw",
+      "market": "us",
+      "type": "美",
+      "name": "Enovix Corporation - Warrants",
+      "name_en": "Enovix Corporation - Warrants",
+      "py": "",
+      "abbr": ""
+    },
     "usenzl": {
       "code": "enzl",
       "market": "us",
@@ -37027,6 +37063,33 @@
       "py": "",
       "abbr": ""
     },
+    "usfdgx": {
+      "code": "fdgx",
+      "market": "us",
+      "type": "美",
+      "name": "First Digital Acquisition Corp Ltd. - Class A Ordinary Shares",
+      "name_en": "First Digital Acquisition Corp Ltd. - Class A Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "usfdgxu": {
+      "code": "fdgxu",
+      "market": "us",
+      "type": "美",
+      "name": "First Digital Acquisition Corp Ltd. - Units",
+      "name_en": "First Digital Acquisition Corp Ltd. - Units",
+      "py": "",
+      "abbr": ""
+    },
+    "usfdgxw": {
+      "code": "fdgxw",
+      "market": "us",
+      "type": "美",
+      "name": "First Digital Acquisition Corp Ltd. - Warrants",
+      "name_en": "First Digital Acquisition Corp Ltd. - Warrants",
+      "py": "",
+      "abbr": ""
+    },
     "usfdhy": {
       "code": "fdhy",
       "market": "us",
@@ -39697,6 +39760,15 @@
       "type": "美",
       "name": "First Mid Bancshares, Inc. - Common Stock",
       "name_en": "First Mid Bancshares, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usfmbm": {
+      "code": "fmbm",
+      "market": "us",
+      "type": "美",
+      "name": "F&M Bank Corp. Common Stock",
+      "name_en": "F&M Bank Corp. Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -45064,15 +45136,6 @@
       "py": "huanqiumofei",
       "abbr": "hqmf"
     },
-    "usgmma": {
-      "code": "gmma",
-      "market": "us",
-      "type": "美",
-      "name": "GammaRoad Market Navigation ETF",
-      "name_en": "GammaRoad Market Navigation ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usgmmf": {
       "code": "gmmf",
       "market": "us",
@@ -45955,6 +46018,15 @@
       "py": "",
       "abbr": ""
     },
+    "usgqgg": {
+      "code": "gqgg",
+      "market": "us",
+      "type": "美",
+      "name": "GQG Global Equity ETF",
+      "name_en": "GQG Global Equity ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usgqgu": {
       "code": "gqgu",
       "market": "us",
@@ -46456,6 +46528,15 @@
       "type": "美",
       "name": "Goldman Sachs Small Cap Equity ETF",
       "name_en": "Goldman Sachs Small Cap Equity ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usgscz": {
+      "code": "gscz",
+      "market": "us",
+      "type": "美",
+      "name": "Goldman Sachs Securitized Income ETF",
+      "name_en": "Goldman Sachs Securitized Income ETF",
       "py": "",
       "abbr": ""
     },
@@ -56872,6 +56953,15 @@
       "py": "",
       "abbr": ""
     },
+    "usjall": {
+      "code": "jall",
+      "market": "us",
+      "type": "美",
+      "name": "JPMorgan All Country Research Enhanced Equity ETF",
+      "name_en": "JPMorgan All Country Research Enhanced Equity ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usjan": {
       "code": "jan",
       "market": "us",
@@ -60444,33 +60534,6 @@
       "name_en": "Koss Corporation - Common Stock",
       "py": "gaosidianzi",
       "abbr": "gsdz"
-    },
-    "uskoyn": {
-      "code": "koyn",
-      "market": "us",
-      "type": "美",
-      "name": "CSLM Digital Asset Acquisition Corp III - Class A Ordinary Shares",
-      "name_en": "CSLM Digital Asset Acquisition Corp III - Class A Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "uskoynu": {
-      "code": "koynu",
-      "market": "us",
-      "type": "美",
-      "name": "CSLM Digital Asset Acquisition Corp III - Units",
-      "name_en": "CSLM Digital Asset Acquisition Corp III - Units",
-      "py": "",
-      "abbr": ""
-    },
-    "uskoynw": {
-      "code": "koynw",
-      "market": "us",
-      "type": "美",
-      "name": "CSLM Digital Asset Acquisition Corp III - Warrants",
-      "name_en": "CSLM Digital Asset Acquisition Corp III - Warrants",
-      "py": "",
-      "abbr": ""
     },
     "uskpet": {
       "code": "kpet",
@@ -64564,15 +64627,6 @@
       "type": "美",
       "name": "Lexeo Therapeutics, Inc. - Common Stock",
       "name_en": "Lexeo Therapeutics, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "uslxfr": {
-      "code": "lxfr",
-      "market": "us",
-      "type": "美",
-      "name": "Luxfer Holdings PLC Ordinary Shares",
-      "name_en": "Luxfer Holdings PLC Ordinary Shares",
       "py": "",
       "abbr": ""
     },
@@ -93259,15 +93313,6 @@
       "py": "",
       "abbr": ""
     },
-    "ussckt": {
-      "code": "sckt",
-      "market": "us",
-      "type": "美",
-      "name": "Socket Mobile, Inc. - Common Stock",
-      "name_en": "Socket Mobile, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "usscl": {
       "code": "scl",
       "market": "us",
@@ -99631,15 +99676,6 @@
       "py": "",
       "abbr": ""
     },
-    "usssti": {
-      "code": "ssti",
-      "market": "us",
-      "type": "美",
-      "name": "SoundThinking, Inc. - Common Stock",
-      "name_en": "SoundThinking, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "ussstk": {
       "code": "sstk",
       "market": "us",
@@ -102931,6 +102967,15 @@
       "type": "美",
       "name": "Triumph Financial, Inc. Depositary Shares, Each Representing a 1/40th Interest in a Share of 7.125% Series C Fixed-Rate Non-Cumulative Perpetual Preferred Stock",
       "name_en": "Triumph Financial, Inc. Depositary Shares, Each Representing a 1/40th Interest in a Share of 7.125% Series C Fixed-Rate Non-Cumulative Perpetual Preferred Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "ustfix": {
+      "code": "tfix",
+      "market": "us",
+      "type": "美",
+      "name": "T. Rowe Price Capital Appreciation Fixed Income ETF",
+      "name_en": "T. Rowe Price Capital Appreciation Fixed Income ETF",
       "py": "",
       "abbr": ""
     },
@@ -107583,7 +107628,7 @@
       "market": "us",
       "type": "美",
       "name": "ProShares二倍做多20年+国债指数ETF",
-      "name_en": "ProShares Ultra 20+ Year Treasury",
+      "name_en": "ProShares Ultra 20 Year Treasury",
       "py": "proshareserbeizuoduo20nian+guozhaizhishuetf",
       "abbr": "prosharesebzd20n+gzzsetf"
     },

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-18",
+  "last_update": "2026-11-20",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -18406,6 +18406,15 @@
       "py": "quanshiguoji",
       "abbr": "qsgj"
     },
+    "hk02960": {
+      "code": "02960",
+      "market": "hk",
+      "type": "港",
+      "name": "谊和股份股权",
+      "name_en": "EASYHOLD GP RTS",
+      "py": "yihegufenguquan",
+      "abbr": "yhgfgq"
+    },
     "hk02962": {
       "code": "02962",
       "market": "hk",
@@ -20682,6 +20691,15 @@
       "name_en": "AGX HSDIV ENH",
       "py": "agxhengxizeng",
       "abbr": "agxhxz"
+    },
+    "hk03556": {
+      "code": "03556",
+      "market": "hk",
+      "type": "基",
+      "name": "高腾比特币",
+      "name_en": "GT BTC",
+      "py": "gaotengbitebi",
+      "abbr": "gtbtb"
     },
     "hk03559": {
       "code": "03559",
@@ -24684,7 +24702,7 @@
       "market": "hk",
       "type": "港",
       "name": "新华联合投资",
-      "name_en": "CU VENTURE-NEW",
+      "name_en": "CU VENTURE INV",
       "py": "xinhualianhetouzi",
       "abbr": "xhlhtz"
     },
@@ -25629,7 +25647,7 @@
       "market": "hk",
       "type": "港",
       "name": "浙江联合投资",
-      "name_en": "ZJ UNITED INV",
+      "name_en": "ZJ UNITED I-NEW",
       "py": "zhejianglianhetouzi",
       "abbr": "zjlhtz"
     },
@@ -26425,21 +26443,12 @@
       "py": "jinyeguojijituan",
       "abbr": "jygjjt"
     },
-    "hk08552": {
-      "code": "08552",
-      "market": "hk",
-      "type": "港",
-      "name": "新华联合投资",
-      "name_en": "CU VENTURE-OLD",
-      "py": "xinhualianhetouzi",
-      "abbr": "xhlhtz"
-    },
     "hk08557": {
       "code": "08557",
       "market": "hk",
       "type": "港",
       "name": "浙江联合投资",
-      "name_en": "ZJ UNITED INV",
+      "name_en": "ZJ UNITED I-OLD",
       "py": "zhejianglianhetouzi",
       "abbr": "zjlhtz"
     },
@@ -26451,6 +26460,15 @@
       "name_en": "OCEAN STAR TECH",
       "py": "hainaxingkongkeji",
       "abbr": "hnxkkj"
+    },
+    "hk08575": {
+      "code": "08575",
+      "market": "hk",
+      "type": "港",
+      "name": "浙江联合投资股权",
+      "name_en": "ZJ UNITED I RTS",
+      "py": "zhejianglianhetouziguquan",
+      "abbr": "zjlhtzgq"
     },
     "hk08601": {
       "code": "08601",
@@ -28557,6 +28575,15 @@
       "name_en": "AGX HSDIV ENH-U",
       "py": "agxhengxizeng-u",
       "abbr": "agxhxz-u"
+    },
+    "hk41556": {
+      "code": "41556",
+      "market": "hk",
+      "type": "基",
+      "name": "高腾比特币-U",
+      "name_en": "GT BTC-U",
+      "py": "gaotengbitebi-u",
+      "abbr": "gtbtb-u"
     },
     "hk41559": {
       "code": "41559",
