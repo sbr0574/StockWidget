@@ -11,6 +11,7 @@ from stockwidget.core.view_options import column_ranges, taskbar_content_height,
 from stockwidget.platform.taskbar import NativeTaskbarWindow, find_taskbar, taskbar_pointer
 from stockwidget.ui.controls.quote_view import bid_ask_width, paint_bid_ask, paint_pager, paint_quote_grid, pager_hit, pager_size
 from stockwidget.ui.controls.mini_chart import mini_chart_width, paint_amplitude_axis
+from stockwidget.ui.controls.style import accent_color
 
 
 def taskbar_message(source):
@@ -35,7 +36,7 @@ def taskbar_pager_rect(source, height, dpi):
     return QRect()
 
 
-def render_taskbar(source, height, dpi=96, max_width=480, hit_regions=None):
+def render_taskbar(source, height, dpi=96, max_width=480, hit_regions=None, *, opacity_override=None):
     """Render independent metrics/style at physical taskbar DPI."""
     scale = dpi / 96
     if hit_regions is not None:
@@ -44,6 +45,8 @@ def render_taskbar(source, height, dpi=96, max_width=480, hit_regions=None):
     options = source.view_options
     row_height = max(1, (height - 4) // options.taskbar_rows)
     appearance_font, color, opacity, _unicolor = source.get_taskbar_appearance()
+    if opacity_override is not None:
+        opacity = opacity_override
     font = QFont(appearance_font)
     font.setPixelSize(taskbar_font_pixels(height, dpi, options.taskbar_rows, font.pointSizeF()))
     fm = QFontMetrics(font)
@@ -184,6 +187,7 @@ class TaskbarController(QObject):
         source.widget_visibility_changed.connect(self.apply_mode)
         source.presentation_changed.connect(self.schedule_refresh)
         source.click_through_changed.connect(self.schedule_refresh)
+        source.position_controller.taskbar_location_changed.connect(self.schedule_refresh)
         source.drag_started.connect(self.drag_started)
         source.drag_moved.connect(self.drag_moved)
         source.drag_finished.connect(self.drag_finished)
@@ -228,16 +232,21 @@ class TaskbarController(QObject):
             self.timer.stop()
             if self.native:
                 self.native.hide()
-            self._active = False
+            self._set_inactive()
             self._status("已隐藏" if not self.source.widget_visible else "任务栏显示已关闭")
         if self._dragging:
             return
-        if not self.source.position_controller.locating:
-            if not self.source.widget_visible or (self.source.display_mode == "taskbar" and self._active):
-                self.source.hide()
-            else:
-                self.source.show()
+        if not self.source.widget_visible or (self.source.display_mode == "taskbar" and self._active):
+            self.source.hide()
+        else:
+            self.source.show()
         self.source.sync_refresh_timer()
+
+    def _set_inactive(self):
+        self._active = False
+        location = self.source.position_controller
+        if location.location_surface == "taskbar":
+            location.set_locating(False)
 
     def schedule_refresh(self):
         if not self._closed and self.enabled and not self._refresh_pending:
@@ -260,13 +269,22 @@ class TaskbarController(QObject):
         max_width = min(round(480 * area.dpi / 96), area.right)
         if max_width < 80 or height < 24:
             raise OSError("任务栏空间不足，请使用标准高度的横向任务栏")
-        image = render_taskbar(self.source, height, area.dpi, max_width, self._hit_regions)
+        locating = self.source.position_controller.location_surface == "taskbar"
+        image = render_taskbar(self.source, height, area.dpi, max_width, self._hit_regions,
+                               opacity_override=100 if locating else None)
+        width = image.width()
+        if locating:
+            scale = area.dpi / 96
+            painter = QPainter(image)
+            painter.scale(scale, scale)
+            border = QRectF(0, 0, width / scale, height / scale).adjusted(.5, .5, -.5, -.5)
+            paint_quote_grid(painter, border, accent_color())
+            painter.end()
         if self.native is None:
             self.native = NativeTaskbarWindow(self._native_pointer, self._context_menu)
-        width = image.width()
         x, y = area.position(width, height, self._taskbar_left(area, width))
         self.native.present(area, width, height, bytes(image.constBits()), x=x,
-                            click_through=self.source.click_through)
+                            click_through=self.source.click_through and not locating)
         self.source.set_taskbar_geometry(height, area.dpi)
         self._pager_rect = taskbar_pager_rect(self.source, height, area.dpi)
         self._dpi = area.dpi
@@ -309,7 +327,7 @@ class TaskbarController(QObject):
         except (OSError, ValueError) as error:
             if self.native:
                 self.native.hide()
-            self._active = False
+            self._set_inactive()
             status = f"{error}；暂用浮窗，将自动重试"
             if self.source.taskbar_status != status:
                 logging.getLogger(__name__).warning("%s", status)
@@ -343,6 +361,10 @@ class TaskbarController(QObject):
             return
         self._pointer_sample = pointer
         try:
+            if kind in ("press", "other_press"):
+                self.source.position_controller.dismiss_location_on_press("taskbar")
+            if kind == "other_press":
+                return
             if kind == "press":
                 if not self._active or self.source.click_through:
                     self._release_pointer()
@@ -471,6 +493,7 @@ class TaskbarController(QObject):
         self._closed = True
         self.timer.stop()
         self.input_timer.stop()
+        self._set_inactive()
         self.source.taskbar_preview_active = False
         if self.native:
             self.native.close()

@@ -3,7 +3,7 @@
 from unittest.mock import Mock, patch
 
 from PySide6.QtCore import QPoint, Qt
-from PySide6.QtGui import QColor, QIcon, QPalette
+from PySide6.QtGui import QColor, QIcon, QImage, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QStyleOptionMenuItem
 from shiboken6 import delete
@@ -222,24 +222,51 @@ class MenuBehaviorTests(PagingTestCase):
             delete(tray.contextMenu())
             delete(tray)
 
-    def test_location_preview_restores_hidden_float_and_taskbar_only_mode(self):
+    def test_tray_locates_the_taskbar_in_place_and_disables_location_when_hidden(self):
         controller = self.make_controller()
         self.win.set_display_mode("taskbar")
+        self.win.set_view_options(taskbar_opacity_pct=20)
+        self.app.processEvents()
         self.assertTrue(controller._active)
         self.assertFalse(self.win.isVisible())
         location = self.win.position_controller
-        for visible in (True, False):
-            self.win.set_widget_visible(visible)
+        tray = TrayIcon(QIcon(), "Test", on_toggle=self.win.toggle_win,
+                        on_open_settings=Mock(), on_quit=Mock(), source=self.win)
+        try:
+            menu = tray.contextMenu()
+            locate = actions(menu)["显示浮窗位置"]
+            self.assertTrue(locate.isEnabled())
             before = self.win.current_config()
-            location.set_locating(True)
-            self.assertTrue(self.win.isVisible())
-            self.assertEqual(self.win.widget_visible, visible)
-            controller.apply_mode()
-            self.assertTrue(self.win.isVisible())
-            location.set_locating(False)
+            original = self.native.present.call_args
+            locate.trigger()
+            self.app.processEvents()
+            self.assertEqual(location.location_surface, "taskbar")
             self.assertFalse(self.win.isVisible())
-            self.assertEqual(self.win.widget_visible, visible)
+            highlighted = self.native.present.call_args
+            self.assertEqual(highlighted.args[:3], original.args[:3])
+            self.assertEqual(highlighted.kwargs["x"], original.kwargs["x"])
             self.assertEqual(self.win.current_config(), before)
+            width, height, pixels = highlighted.args[1:]
+            image = QImage(pixels, width, height, QImage.Format_ARGB32_Premultiplied)
+            self.assertEqual(image.pixelColor(width // 2, 0), accent_color())
+
+            self.native_mouse("press", 4, 4, QPoint(600, 750), bar=1)
+            self.assertFalse(location.locating)
+            self.assertIsNotNone(self.win._drag_pos)
+            self.app.processEvents()
+            self.assertEqual(self.native.present.call_args.args, original.args)
+            self.native_mouse("cancel", 4, 4, QPoint(600, 750), bar=1)
+
+            self.win.hide_widget()
+            self.assertFalse(locate.isEnabled())
+            locate.trigger()
+            location.set_locating(True)
+            self.assertFalse(location.locating)
+            self.assertFalse(self.win.isVisible())
+            self.assertFalse(controller._active)
+        finally:
+            delete(tray.contextMenu())
+            delete(tray)
 
     def test_tray_visibility_label_and_split_follow_current_surface_each_time_it_opens(self):
         self.win.set_view_options(taskbar_sync_split=False, float_split_enabled=False,

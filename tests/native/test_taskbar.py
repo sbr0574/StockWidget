@@ -7,7 +7,7 @@ import os
 import sys
 import unittest
 
-from PySide6.QtCore import QPoint, Qt
+from PySide6.QtCore import QPoint, QRect, Qt
 from PySide6.QtGui import QCursor, QFontInfo
 from PySide6.QtTest import QTest
 from shiboken6 import delete
@@ -27,6 +27,42 @@ from tests.support import QtTestCase, SettingsTestCase
 @unittest.skipUnless(sys.platform == "win32" and os.environ.get("STOCKWIDGET_TEST_WINDOWS") == "1",
                      "Requires an opt-in Windows desktop session")
 class NativeSettingsWindowTests(SettingsTestCase):
+    def test_location_highlights_the_embedded_window_until_native_right_press(self):
+        from ctypes import wintypes
+
+        _, window = self._make_dialog(taskbar_enabled=True, display_mode="taskbar",
+                                      taskbar_opacity_pct=40, click_through=True)
+        controller = TaskbarController(window, Mock())
+        try:
+            controller.apply_mode()
+            self.assertTrue(controller._active, window.taskbar_status)
+            native = controller.native
+            hwnd = native.hwnd
+            original = native._last_frame
+            bounds = QRect(controller._frame)
+            locator = window.position_controller
+            locator.set_locating(True)
+            QTest.qWait(20)
+            self.assertEqual(locator.location_surface, "taskbar")
+            self.assertFalse(window.isVisible())
+            self.assertEqual(controller._frame, bounds)
+            self.assertEqual(native.hwnd, hwnd)
+            self.assertNotEqual(native._last_frame, original)
+            self.assertFalse(native.user.GetWindowLongW(hwnd, -20) & 0x20)
+
+            send = native.user.SendMessageW
+            send.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
+            send.restype = ctypes.c_ssize_t
+            send(hwnd, 0x204, 2, (4 << 16) | 4)  # WM_RBUTTONDOWN
+            QTest.qWait(20)
+            self.assertFalse(locator.locating)
+            self.assertEqual(native._last_frame, original)
+            self.assertTrue(native.user.GetWindowLongW(hwnd, -20) & 0x20)
+            self.assertEqual(window.view_options.taskbar_opacity_pct, 40)
+        finally:
+            controller.close()
+            delete(controller)
+
     def test_location_restores_native_click_through_and_opacity_on_press(self):
         _, window = self._make_dialog(click_through=True, opacity_pct=40)
         locator = window.position_controller

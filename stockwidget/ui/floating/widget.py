@@ -297,6 +297,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.display_flags_changed.emit()
 
     def reset_settings(self):
+        self.position_controller.set_locating(False)
         if self._drag_pos is not None:
             self.finish_drag(False)
         self._load_settings_config({key: getattr(self.view_options, key) for key in APPEARANCE_OPTION_KEYS})
@@ -697,7 +698,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     def _apply_window_opacity(self):
         if opacity_supported():
-            self.setWindowOpacity(1.0 if self.position_controller.locating else self.opacity_pct / 100.0)
+            locating_float = self.position_controller.location_surface == "float"
+            self.setWindowOpacity(1.0 if locating_float else self.opacity_pct / 100.0)
 
     def set_font_size(self, pt: int):
         pt = max(MIN_FONT_PT, min(MAX_FONT_PT, int(pt)))
@@ -815,7 +817,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.set_click_through(not self.click_through)
 
     def _float_click_through(self):
-        return self.click_through and not self.position_controller.locating
+        return self.click_through and self.position_controller.location_surface != "float"
 
     def _sync_click_through(self):
         self._apply_window_options()
@@ -943,8 +945,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
     def showEvent(self, event):
         super().showEvent(event)
-        if (not self._updating_topmost and not self.position_controller.locating
-                and self.display_mode != "taskbar" and not self.widget_visible):
+        if not self._updating_topmost and self.display_mode != "taskbar" and not self.widget_visible:
             self.widget_visible = True
             self.widget_visibility_changed.emit()
         self.quotes.sync_page_timers()
@@ -963,9 +964,9 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         super().hideEvent(event)
         if self._updating_topmost:
             return
-        preview = self.position_controller.location_preview
-        self.position_controller.set_locating(False)
-        if not preview and self.display_mode != "taskbar" and self.widget_visible and not self.taskbar_preview_active:
+        if self.position_controller.location_surface == "float":
+            self.position_controller.set_locating(False)
+        if self.display_mode != "taskbar" and self.widget_visible and not self.taskbar_preview_active:
             self.widget_visible = False
             self.widget_visibility_changed.emit()
         self.sync_refresh_timer()

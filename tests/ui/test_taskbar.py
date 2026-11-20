@@ -593,7 +593,13 @@ class NativeInputTests(unittest.TestCase):
         native.hwnd, native._pointer_down, native._ignore_release = 1, False, False
         native._last_frame = None
         native._on_pointer, native.user = Mock(), Mock()
+        native._on_context_menu = Mock()
         native.user.GetCapture.return_value = 1
+        native._wndproc(1, 0x204, 2, (20 << 16) | 100)
+        native._on_pointer.assert_called_once_with("other_press", 100, 20)
+        native.user.SetCapture.assert_not_called()
+        native._wndproc(1, 0x7B, 1, 0)
+        native._on_context_menu.assert_called_once_with()
         native._wndproc(1, 0x201, 1, (20 << 16) | 100)
         native.user.SetCapture.assert_called_once_with(1)
         native._wndproc(1, 0x200, 1, ((-100 & 0xffff) << 16) | 120)
@@ -601,7 +607,8 @@ class NativeInputTests(unittest.TestCase):
         native.user.DestroyWindow.assert_not_called()
         native._wndproc(1, 0x215, 0, 0)
         self.assertFalse(native._pointer_down)
-        self.assertEqual([call.args[0] for call in native._on_pointer.call_args_list], ["press", "move", "cancel"])
+        self.assertEqual([call.args[0] for call in native._on_pointer.call_args_list],
+                         ["other_press", "press", "move", "cancel"])
 
 
 class DockingInteractionTests(PagingTestCase):

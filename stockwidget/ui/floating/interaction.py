@@ -4,7 +4,7 @@ from datetime import datetime
 import math
 import time
 
-from PySide6.QtCore import QPoint, Qt, QEvent, QObject, QRect, QTimer
+from PySide6.QtCore import QPoint, Qt, QEvent, QObject, QRect, QTimer, Signal
 from PySide6.QtGui import QCursor, QScreen
 from PySide6.QtWidgets import QApplication, QFrame, QWidget
 
@@ -185,6 +185,7 @@ class DragBehaviorMixin:
 
 class PositionController(QObject):
     STRIP_SIZE = 5
+    taskbar_location_changed = Signal()
 
     def __init__(self, source):
         super().__init__(source)
@@ -196,8 +197,7 @@ class PositionController(QObject):
         self._restored = False
         self._drag_origin = None
         self._panel_origin = QPoint(source.panel.pos())
-        self.locating = False
-        self.location_preview = False
+        self.location_surface = None
         self._location_border = QFrame(source)
         self._location_border.setObjectName("float_location_border")
         self._location_border.setAttribute(Qt.WA_TransparentForMouseEvents)
@@ -207,7 +207,7 @@ class PositionController(QObject):
         self.hover_timer.timeout.connect(self.check_pointer)
         source.installEventFilter(self)
         app = QApplication.instance()
-        app.paletteChanged.connect(self._update_location_border)
+        app.paletteChanged.connect(self._update_location_color)
         app.screenAdded.connect(self._screen_added)
         app.screenRemoved.connect(self.recheck)
         for screen in app.screens():
@@ -220,44 +220,64 @@ class PositionController(QObject):
     def full_geometry(self):
         return QRect(self._full if self.collapsed else self.source.geometry())
 
-    def set_locating(self, enabled):
-        if enabled == self.locating:
-            return
+    @property
+    def locating(self):
+        return self.location_surface is not None
+
+    @property
+    def locatable_surface(self):
         source = self.source
-        self.locating = enabled
+        if not source.widget_visible:
+            return None
+        if source.display_mode == "taskbar" and source.taskbar_visible:
+            return "taskbar"
+        if source.isVisible() and not source.isMinimized():
+            return "float"
+        return "taskbar" if source.taskbar_visible else None
+
+    def set_locating(self, enabled):
+        surface = self.locatable_surface if enabled else None
+        if surface == self.location_surface:
+            return
+        previous, self.location_surface = self.location_surface, surface
+        if "float" in (previous, surface):
+            self._set_floating_location(surface == "float")
+        if "taskbar" in (previous, surface):
+            self.taskbar_location_changed.emit()
+
+    def _set_floating_location(self, enabled):
+        source = self.source
         if enabled:
-            self.location_preview = not source.isVisible()
             self.expand()
-            self._update_location_border()
+            self._update_location_color()
             self._location_border.setGeometry(source.rect())
             self._location_border.show()
             self._location_border.raise_()
         else:
             self._location_border.hide()
-            if self.location_preview:
-                source.hide()
-                self.location_preview = False
             QTimer.singleShot(0, self, self.recheck)
         source._apply_window_opacity()
         if source.click_through:
             source._sync_click_through()
         if enabled:
-            source.show()
             source.raise_()
             source.activateWindow()
 
-    def dismiss_location_on_press(self):
+    def dismiss_location_on_press(self, surface="float"):
         # A regular float keeps the same press for its existing drag gesture.
-        consume = self.locating and (self.location_preview or self.source.click_through)
+        if self.location_surface != surface:
+            return False
         self.set_locating(False)
-        return consume
+        return self.source.click_through
 
-    def _update_location_border(self, *_args):
-        if self.locating:
+    def _update_location_color(self, *_args):
+        if self.location_surface == "float":
             self._location_border.setStyleSheet(
                 f"QFrame#float_location_border {{ background: transparent; "
                 f"border: 2px solid {accent_color().name()}; border-radius: 6px; }}"
             )
+        elif self.location_surface == "taskbar":
+            self.taskbar_location_changed.emit()
 
     def _bounded(self, rect):
         if self._drag_origin is not None or not (self.source.boundary_check_enabled or self.source.edge_hide_enabled):
@@ -403,7 +423,7 @@ class PositionController(QObject):
     def check_pointer(self):
         source = self.source
         if (not self.edge or not source.isVisible() or not source.widget_visible
-                or self.locating or source._drag_pos is not None or source.taskbar_preview_active
+                or self.location_surface == "float" or source._drag_pos is not None or source.taskbar_preview_active
                 or QApplication.activePopupWidget() is not None):
             return
         # 原生鼠标坐标在高 DPI 边界转换时可能向外舍入一个逻辑像素。
@@ -457,7 +477,7 @@ class PositionController(QObject):
             QTimer.singleShot(0, self, self.recheck)
         elif kind == QEvent.Hide:
             self.hover_timer.stop()
-        elif kind == QEvent.Resize and self.locating:
+        elif kind == QEvent.Resize and self.location_surface == "float":
             self._location_border.setGeometry(self.source.rect())
         elif kind == QEvent.Move and not self._applying and not self.source._updating_topmost:
             if self.collapsed:

@@ -235,6 +235,8 @@ class NativeTaskbarWindow:
                 self.user.SetCapture(hwnd)
                 self._on_pointer("press", x, y)
                 return 0
+            if message in (0x204, 0x207, 0x20B):  # Right, middle and X button down
+                self._on_pointer("other_press", x, y)
             if message == 0x200 and self._pointer_down:  # WM_MOUSEMOVE
                 if wp & 1:  # MK_LBUTTON; capture continues outside the taskbar
                     self._on_pointer("move", x, y)

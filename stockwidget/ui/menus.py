@@ -105,14 +105,17 @@ class TrayIcon(QSystemTrayIcon):
         self._cocoa_menu = is_cocoa()
         if not self._cocoa_menu:
             self.setContextMenu(menu)
+        source.widget_visibility_changed.connect(self.sync_settings)
         self.sync_settings()
 
         self.activated.connect(self._on_activated)
 
     def sync_settings(self):
         self._visibility_action.setText("隐藏行情" if self._source.widget_visible else "显示行情")
+        location = self._source.position_controller
         with QSignalBlocker(self._locate_action):
-            self._locate_action.setChecked(self._source.position_controller.locating)
+            self._locate_action.setChecked(location.locating)
+            self._locate_action.setEnabled(location.locatable_surface is not None)
         _sync_toggles(self._toggles)
 
     def _on_activated(self, reason):
