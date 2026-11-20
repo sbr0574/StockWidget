@@ -20,12 +20,12 @@ from tests.ui.test_history import HistoryTestCase
 
 
 class HistoryDetailsTests(HistoryTestCase):
-    def test_popup_opacity_can_be_independent_and_is_preserved_when_syncing(self):
-        _, window = self.make_window(chart_enabled=True, chart_bg_alpha_pct=35, chart_opacity_pct=45)
+    def test_popup_keeps_its_latest_opacity_after_sync_is_turned_off(self):
+        _, window = self.make_window(chart_enabled=True, chart_sync_opacity=False,
+                                     chart_bg_alpha_pct=35, chart_opacity_pct=45)
         window.history.open_row("float", 0)
         self.wait_ready(window)
         popup = window.history.dialog
-        window.set_view_options(chart_sync_opacity=False)
         self.assertEqual(popup.palette().window().color().alpha(), round(35 * 2.55))
         self.assertAlmostEqual(popup.windowOpacity(), .45, delta=1/255)
         window.set_bg_alpha_percent(80)
@@ -41,8 +41,10 @@ class HistoryDetailsTests(HistoryTestCase):
         self.assertAlmostEqual(popup.windowOpacity(), .55, delta=1/255)
         window.position_controller.set_locating(False)
         window.set_view_options(chart_sync_opacity=False)
-        self.assertEqual(popup.palette().window().color().alpha(), round(35 * 2.55))
-        self.assertAlmostEqual(popup.windowOpacity(), .45, delta=1/255)
+        window.set_bg_alpha_percent(45)
+        window.set_window_opacity_percent(60)
+        self.assertEqual(popup.palette().window().color().alpha(), round(80 * 2.55))
+        self.assertAlmostEqual(popup.windowOpacity(), .55, delta=1/255)
 
     def test_auction_unmatched_volume_appears_at_second_level_without_a_price(self):
         _, window = self.make_window(chart_enabled=True)
@@ -340,12 +342,12 @@ class HistoryDetailsTests(HistoryTestCase):
         self._choose_chart_menu_action(submenu, "20%")
         self.assertTrue(popup.isVisible())
         self.assertFalse(window.view_options.chart_sync_opacity)
-        self.assertEqual(window.view_options.chart_bg_alpha_pct, 35)
+        self.assertEqual(window.view_options.chart_bg_alpha_pct, 75)
         self.assertAlmostEqual(popup.windowOpacity(), .2, delta=1/255)
         self._choose_chart_menu_action(open_opacity_menu(), "同步主浮窗")
         self.assertTrue(window.view_options.chart_sync_opacity)
         self.assertAlmostEqual(popup.windowOpacity(), .6, delta=1/255)
-        self.assertEqual(window.view_options.chart_opacity_pct, 20)
+        self.assertEqual(window.view_options.chart_opacity_pct, 60)
 
     def test_chart_context_menu_escape_and_outside_click_respect_pinning(self):
         _, window = self.make_window()

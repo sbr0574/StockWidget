@@ -275,6 +275,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         self.taskbar_x = x if type(x) in (int, float) and 0 <= x < 2**31 else None
         self._legacy_taskbar_offset = bounded_int(cfg.get("taskbar_offset"), 0, -2000, 2000)
         self.view_options = ViewOptions.from_config(cfg, metrics=self.visible_metrics)
+        self._sync_chart_opacity(self.view_options)
         if not self.view_options.taskbar_enabled:
             self.display_mode = "float"
         elif self.display_mode != "float":
@@ -285,6 +286,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         defaults = ViewOptions.from_config({})
         for key in APPEARANCE_OPTION_KEYS:
             setattr(self.view_options, key, getattr(defaults, key))
+        self._sync_chart_opacity(self.view_options)
         self.view_options_changed.emit()
         self._sync_colors_to_views()
         self.k_delegate.set_point_size(self.font.pointSize())
@@ -523,6 +525,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         previous = self.view_options
         old = previous.to_config()
         options = ViewOptions.from_config({**old, **{key: value for key, value in changes.items() if key in old}})
+        self._sync_chart_opacity(options)
         if options.to_config() == old:
             return
         if (old["taskbar_enabled"], old["taskbar_dual_open"]) != (
@@ -669,14 +672,25 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self.apply_style()
             self._notify_change()
 
+    @property
+    def bg_alpha_pct(self):
+        return round(self.bg.alpha() / 2.55)
+
+    def _sync_chart_opacity(self, options):
+        if options.chart_sync_opacity:
+            options.chart_bg_alpha_pct = self.bg_alpha_pct
+            options.chart_opacity_pct = self.opacity_pct
+
     def set_bg_alpha_percent(self, percent: int):
         p = max(MIN_BG_ALPHA_PCT, min(100, int(percent)))
         self.bg.setAlpha(int(round(p*2.55)))
+        self._sync_chart_opacity(self.view_options)
         self.apply_style()
         self._notify_change()
 
     def set_window_opacity_percent(self, percent: int):
         self.opacity_pct = max(MIN_OPACITY_PCT, min(100, int(percent)))
+        self._sync_chart_opacity(self.view_options)
         self._apply_window_opacity()
         self._defer_fit()
         self._notify_change()

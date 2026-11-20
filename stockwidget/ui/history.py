@@ -694,11 +694,8 @@ class HistoryController(QObject):
         colors = (QColor(self.window.fg), QColor(self.window.bg)) if floating else (None, None)
         opacity = 1.
         if floating:
-            if options.chart_sync_opacity:
-                opacity = self.window.opacity_pct / 100
-            else:
-                colors[1].setAlpha(round(options.chart_bg_alpha_pct * 2.55))
-                opacity = options.chart_opacity_pct / 100
+            colors[1].setAlpha(round(options.chart_bg_alpha_pct * 2.55))
+            opacity = options.chart_opacity_pct / 100
         theme = (palette, *colors, QColor(self.window.up_color), QColor(self.window.down_color),
                  QColor(self.window.neutral_color), opacity)
         if self.dialog._theme_palette == theme:

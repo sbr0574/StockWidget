@@ -294,15 +294,12 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 
 class PageMathTests(unittest.TestCase):
-    def test_chart_opacity_preferences_roundtrip_without_overwriting_independent_values(self):
+    def test_independent_chart_opacity_preferences_roundtrip(self):
         defaults = ViewOptions.from_config({})
         self.assertTrue(defaults.chart_enabled)
         self.assertTrue(defaults.chart_sync_opacity)
         options = ViewOptions.from_config({"chart_enabled": False, "chart_sync_opacity": False,
                                            "chart_bg_alpha_pct": 35, "chart_opacity_pct": 45})
-        synced = ViewOptions.from_config({**options.to_config(), "chart_sync_opacity": True})
-        self.assertEqual((synced.chart_bg_alpha_pct, synced.chart_opacity_pct), (35, 45))
-        self.assertFalse(ViewOptions.from_config(synced.to_config()).chart_enabled)
         self.assertEqual(ViewOptions.from_config(options.to_config()), options)
 
     def test_chart_sizes_migrate_presets_and_roundtrip_without_display_mode(self):

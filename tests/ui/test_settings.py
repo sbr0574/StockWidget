@@ -20,7 +20,7 @@ from tests.support import SettingsTestCase, SignalRecorder
 
 
 class SettingsDialogTests(SettingsTestCase):
-    def test_opacity_sliders_commit_on_release_and_preserve_chart_preferences_while_synced(self):
+    def test_opacity_sliders_commit_on_release_and_keep_synced_values_when_separated(self):
         dialog, window = self._make_dialog()
         chart_sliders = (dialog.ui.slider_chart_bg_alpha, dialog.ui.slider_chart_all_alpha)
         self.assertTrue(window.view_options.chart_sync_opacity)
@@ -41,13 +41,19 @@ class SettingsDialogTests(SettingsTestCase):
             self.assertEqual(read_value(), value)
         dialog.ui.cb_chart_sync_opacity.click()
         self.assertTrue(all(not slider.isHidden() and not slider.isEnabled() for slider in chart_sliders))
+        self.assertEqual((window.view_options.chart_bg_alpha_pct, window.view_options.chart_opacity_pct), (25, 65))
         window.set_bg_alpha_percent(80)
         window.set_window_opacity_percent(60)
         self.assertEqual(tuple(slider.value() for slider in chart_sliders), (80, 60))
         self.assertEqual((dialog.ui.label_chart_bg_alpha.text(), dialog.ui.label_chart_all_alpha.text()),
                          ("80%", "60%"))
+        config = window.current_config()
+        self.assertEqual((config["chart_bg_alpha_pct"], config["chart_opacity_pct"]), (80, 60))
         dialog.ui.cb_chart_sync_opacity.click()
-        self.assertEqual(tuple(slider.value() for slider in chart_sliders), (35, 45))
+        self.assertEqual(tuple(slider.value() for slider in chart_sliders), (80, 60))
+        window.set_bg_alpha_percent(20)
+        window.set_window_opacity_percent(30)
+        self.assertEqual(tuple(slider.value() for slider in chart_sliders), (80, 60))
 
     def test_taskbar_adjustments_do_not_restyle_pages_without_a_theme_change(self):
         self.enable_windows_taskbar()
@@ -381,12 +387,14 @@ class SettingsDialogTests(SettingsTestCase):
         app.save_now.assert_called()
 
     def test_reloading_settings_does_not_save_or_round_opacity(self):
-        dialog, window = self._make_dialog(bg={"r": 0, "g": 0, "b": 0, "a": 127})
+        dialog, window = self._make_dialog(bg={"r": 0, "g": 0, "b": 0, "a": 127}, opacity_pct=60,
+                                           chart_bg_alpha_pct=35, chart_opacity_pct=45)
         changes = Mock()
         window.set_on_change(changes)
         for _ in range(2):
             dialog._load_settings()
         self.assertEqual(window.bg.alpha(), 127)
+        self.assertEqual((window.view_options.chart_bg_alpha_pct, window.view_options.chart_opacity_pct), (50, 60))
         changes.assert_not_called()
 
     def test_float_topmost_checkbox_controls_force_top_and_stays_synced(self):

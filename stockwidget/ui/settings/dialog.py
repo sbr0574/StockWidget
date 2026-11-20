@@ -746,18 +746,14 @@ class SettingsDialog(QDialog):
     def _sync_opacity_settings(self):
         options = self.win.view_options
         sync = options.chart_sync_opacity
-        bg_alpha = round(self.win.bg.alpha() / 2.55)
-        opacity = self.win.opacity_pct
         self._set_checked_blocked(self.ui.cb_chart_sync_opacity, sync)
         self.ui.slider_chart_bg_alpha.setEnabled(not sync)
         self.ui.slider_chart_all_alpha.setEnabled(not sync and opacity_supported())
         for slider, label, value in (
-            (self.ui.slider_bg_alpha, self.ui.label_bg_alpha, bg_alpha),
-            (self.ui.slider_all_alpha, self.ui.label_all_alpha, opacity),
-            (self.ui.slider_chart_bg_alpha, self.ui.label_chart_bg_alpha,
-             bg_alpha if sync else options.chart_bg_alpha_pct),
-            (self.ui.slider_chart_all_alpha, self.ui.label_chart_all_alpha,
-             opacity if sync else options.chart_opacity_pct),
+            (self.ui.slider_bg_alpha, self.ui.label_bg_alpha, self.win.bg_alpha_pct),
+            (self.ui.slider_all_alpha, self.ui.label_all_alpha, self.win.opacity_pct),
+            (self.ui.slider_chart_bg_alpha, self.ui.label_chart_bg_alpha, options.chart_bg_alpha_pct),
+            (self.ui.slider_chart_all_alpha, self.ui.label_chart_all_alpha, options.chart_opacity_pct),
         ):
             if not slider.isSliderDown():
                 with QSignalBlocker(slider):
