@@ -7,7 +7,7 @@ import os
 import sys
 import unittest
 
-from PySide6.QtCore import QPoint
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QCursor, QFontInfo
 from PySide6.QtTest import QTest
 from shiboken6 import delete
@@ -15,6 +15,7 @@ from shiboken6 import delete
 from stockwidget.data.quotes import _new_entry
 from stockwidget.core.view_options import taskbar_content_height, taskbar_font_point_limit
 from stockwidget.platform.taskbar import NativeTaskbarWindow, TaskbarArea, _api, _taskbar_windows, find_taskbar, taskbar_pointer
+from stockwidget.platform.window import apply_click_through, get_user32
 from stockwidget.app import App
 from stockwidget.ui.floating.presenter import QuotePresenter
 from stockwidget.ui.floating.taskbar import TaskbarController
@@ -26,6 +27,30 @@ from tests.support import QtTestCase, SettingsTestCase
 @unittest.skipUnless(sys.platform == "win32" and os.environ.get("STOCKWIDGET_TEST_WINDOWS") == "1",
                      "Requires an opt-in Windows desktop session")
 class NativeSettingsWindowTests(SettingsTestCase):
+    def test_location_restores_native_click_through_and_opacity_on_press(self):
+        _, window = self._make_dialog(click_through=True, opacity_pct=40)
+        locator = window.position_controller
+        with patch("stockwidget.ui.floating.widget.apply_click_through", wraps=apply_click_through):
+            window.show()
+            self.app.processEvents()
+            user = get_user32()
+            hwnd = int(window.winId())
+            self.assertTrue(user.GetWindowLongW(hwnd, -20) & 0x20)
+            original = window.geometry()
+            locator.set_locating(True)
+            self.assertEqual(window.windowOpacity(), 1)
+            self.assertFalse(user.GetWindowLongW(hwnd, -20) & 0x20)
+            self.assertEqual(window.geometry(), original)
+            handle = window.windowHandle()
+            QTest.mousePress(handle, Qt.LeftButton, pos=window.rect().center())
+            try:
+                self.assertFalse(locator.locating)
+                self.assertTrue(user.GetWindowLongW(hwnd, -20) & 0x20)
+                self.assertAlmostEqual(window.windowOpacity(), .4, delta=1/255)
+                self.assertTrue(window.current_config()["click_through"])
+            finally:
+                QTest.mouseRelease(handle, Qt.LeftButton, pos=window.rect().center())
+
     def test_taskbar_size_control_uses_real_geometry_and_preserves_font_family(self):
         dialog, window = self._make_dialog(taskbar_enabled=True, display_mode="taskbar", taskbar_rows=1,
                                            font_family="Microsoft YaHei")

@@ -79,6 +79,22 @@ class WidgetPositionTests(unittest.TestCase):
                 window.finish_drag()
                 self.assertEqual(window.pos(), point - QPoint(100, 100))
 
+    def test_locating_expands_the_edge_strip_until_dismissed(self):
+        window = self.window(boundary_check_enabled=True, edge_hide_enabled=True)
+        window.move(self.edge_position(window, "left"))
+        controller = window.position_controller
+        controller.recheck()
+        self.assertTrue(controller.collapsed)
+        before = controller.full_geometry()
+        controller.set_locating(True)
+        controller.check_pointer()
+        self.assertFalse(controller.collapsed)
+        self.assertEqual(window.geometry(), before)
+        controller.set_locating(False)
+        self.app.processEvents()
+        self.assertTrue(controller.collapsed)
+        self.assertEqual(controller.full_geometry(), before)
+
     def test_boundary_on_clamps_startup_and_contents_growth(self):
         window = self.window(boundary_check_enabled=True,
                              pos={"x": self.screen.right() - 10, "y": self.screen.bottom() - 10})

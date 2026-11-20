@@ -9,13 +9,13 @@
 from functools import partial
 import sys
 
-from PySide6.QtCore import Qt, QSignalBlocker, QUrl
-from PySide6.QtGui import QAction, QActionGroup, QDesktopServices
+from PySide6.QtCore import QPoint, Qt, QSignalBlocker, QUrl
+from PySide6.QtGui import QAction, QActionGroup, QColor, QCursor, QDesktopServices, QPalette
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from stockwidget.core.quote_presentation import METRIC_SPECS, SORTABLE_HEADERS, metric_headers
 from stockwidget.data.update_check import project_links
-from stockwidget.platform.capabilities import click_through_supported, opacity_supported, tray_click_toggles
+from stockwidget.platform.capabilities import click_through_supported, is_cocoa, opacity_supported, tray_click_toggles
 
 
 def _sync_toggles(toggles):
@@ -52,6 +52,22 @@ def _view_toggles(menu, source, surface="float", *, include_taskbar=False):
     return toggles
 
 
+class _QuoteMenu(QMenu):
+    def add_quit_action(self, callback):
+        action = self.addAction("退出", callback)
+        action.setProperty("destructive", True)
+
+    def initStyleOption(self, option, action):
+        super().initStyleOption(option, action)
+        if action.property("destructive"):
+            palette = option.palette
+            dark = palette.color(QPalette.Window).lightness() < 128
+            red = QColor("#ff7676" if dark else "#b3261e")
+            for role in (QPalette.WindowText, QPalette.Text, QPalette.ButtonText, QPalette.HighlightedText):
+                palette.setColor(role, red)
+            option.palette = palette
+
+
 class TrayIcon(QSystemTrayIcon):
     """托盘图标 + 右键菜单 + 平台感知的点击行为。"""
 
@@ -64,9 +80,12 @@ class TrayIcon(QSystemTrayIcon):
 
         self.setToolTip(app_name)
 
-        menu = QMenu()
+        self._menu = menu = _QuoteMenu()
         self._visibility_action = QAction("显示行情", self, triggered=self._on_toggle)
         menu.addAction(self._visibility_action)
+        self._locate_action = QAction("显示浮窗位置", self, checkable=True)
+        self._locate_action.toggled.connect(source.position_controller.set_locating)
+        menu.addAction(self._locate_action)
         menu.addSeparator()
         self._toggles = _view_toggles(
             menu, source, lambda: "taskbar" if source.display_mode == "taskbar" else "float",
@@ -79,25 +98,34 @@ class TrayIcon(QSystemTrayIcon):
             menu.addAction(QAction(title, self, triggered=lambda _checked=False, link=key:
                                   QDesktopServices.openUrl(QUrl(project_links()[link]))))
         menu.addSeparator()
-        menu.addAction(QAction("退出", self, triggered=on_quit))
+        menu.add_quit_action(on_quit)
         menu.aboutToShow.connect(self.sync_settings)
-        self.setContextMenu(menu)
+        # AppKit's tray NSMenu renders its own colors. Use the same Qt menu
+        # on activation so its quit action can keep the application palette.
+        self._cocoa_menu = is_cocoa()
+        if not self._cocoa_menu:
+            self.setContextMenu(menu)
         self.sync_settings()
 
         self.activated.connect(self._on_activated)
 
     def sync_settings(self):
         self._visibility_action.setText("隐藏行情" if self._source.widget_visible else "显示行情")
+        with QSignalBlocker(self._locate_action):
+            self._locate_action.setChecked(self._source.position_controller.locating)
         _sync_toggles(self._toggles)
 
     def _on_activated(self, reason):
         # Windows 左键切换；macOS/Linux 单击即弹菜单，无切换逻辑
         if tray_click_toggles() and reason in (QSystemTrayIcon.Trigger, QSystemTrayIcon.DoubleClick):
             self._on_toggle()
+        elif self._cocoa_menu and reason in (QSystemTrayIcon.Trigger, QSystemTrayIcon.Context):
+            icon = self.geometry()
+            self._menu.popup(icon.bottomLeft() + QPoint(0, 1) if icon.isValid() else QCursor.pos())
 
 
 def build_quote_menu(source, surface="float"):
-    menu = QMenu(source)
+    menu = _QuoteMenu(source)
     sub_cols = QMenu("显示指标", menu)
     metrics = source.get_surface_metrics(surface)
     for spec in METRIC_SPECS:
@@ -178,7 +206,7 @@ def build_quote_menu(source, surface="float"):
     menu.addSeparator()
     menu.addAction(QAction("隐藏", menu, triggered=source.hide_widget))
     menu.addSeparator()
-    menu.addAction(QAction("退出", menu, triggered=source._quit_cb or QApplication.instance().quit))
+    menu.add_quit_action(source._quit_cb or QApplication.instance().quit)
     return menu
 
 

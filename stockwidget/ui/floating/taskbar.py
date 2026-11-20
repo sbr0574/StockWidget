@@ -232,10 +232,11 @@ class TaskbarController(QObject):
             self._status("已隐藏" if not self.source.widget_visible else "任务栏显示已关闭")
         if self._dragging:
             return
-        if not self.source.widget_visible or (self.source.display_mode == "taskbar" and self._active):
-            self.source.hide()
-        else:
-            self.source.show()
+        if not self.source.position_controller.locating:
+            if not self.source.widget_visible or (self.source.display_mode == "taskbar" and self._active):
+                self.source.hide()
+            else:
+                self.source.show()
         self.source.sync_refresh_timer()
 
     def schedule_refresh(self):

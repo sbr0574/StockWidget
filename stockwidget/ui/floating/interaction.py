@@ -6,11 +6,12 @@ import time
 
 from PySide6.QtCore import QPoint, Qt, QEvent, QObject, QRect, QTimer
 from PySide6.QtGui import QCursor, QScreen
-from PySide6.QtWidgets import QApplication, QWidget
+from PySide6.QtWidgets import QApplication, QFrame, QWidget
 
 from stockwidget.core.window_rules import (
     best_screen, clamp_point, all_quotes_stale, due_hide_times, resolve_restore_position,
 )
+from stockwidget.ui.controls.style import accent_color
 
 
 class DragBehaviorMixin:
@@ -130,6 +131,9 @@ class DragBehaviorMixin:
 
     # ----- 鼠标事件 -----
     def mousePressEvent(self, e):
+        if self.position_controller.dismiss_location_on_press():
+            e.accept()
+            return
         if e.button() == Qt.LeftButton:
             self._drag_press(e)
 
@@ -149,11 +153,14 @@ class DragBehaviorMixin:
         if ev.type() == QEvent.MouseButtonDblClick and ev.button() == Qt.LeftButton:
             self.mouseDoubleClickEvent(ev)
             return True
-        if ev.type() == QEvent.MouseButtonPress and ev.button() == Qt.LeftButton:
-            self._drag_press(ev)
-            self._pressed_region = obj
-            self._pressed_header_section = self._header_section_at(obj, ev)
-            return True
+        if ev.type() == QEvent.MouseButtonPress:
+            if self.position_controller.dismiss_location_on_press():
+                return True
+            if ev.button() == Qt.LeftButton:
+                self._drag_press(ev)
+                self._pressed_region = obj
+                self._pressed_header_section = self._header_section_at(obj, ev)
+                return True
         if ev.type() == QEvent.MouseMove and (ev.buttons() & Qt.LeftButton) and self._drag_pos is not None:
             self._drag_move(ev)
             return True
@@ -189,11 +196,18 @@ class PositionController(QObject):
         self._restored = False
         self._drag_origin = None
         self._panel_origin = QPoint(source.panel.pos())
+        self.locating = False
+        self.location_preview = False
+        self._location_border = QFrame(source)
+        self._location_border.setObjectName("float_location_border")
+        self._location_border.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self._location_border.hide()
         self.hover_timer = QTimer(self)
         self.hover_timer.setInterval(100)
         self.hover_timer.timeout.connect(self.check_pointer)
         source.installEventFilter(self)
         app = QApplication.instance()
+        app.paletteChanged.connect(self._update_location_border)
         app.screenAdded.connect(self._screen_added)
         app.screenRemoved.connect(self.recheck)
         for screen in app.screens():
@@ -205,6 +219,45 @@ class PositionController(QObject):
 
     def full_geometry(self):
         return QRect(self._full if self.collapsed else self.source.geometry())
+
+    def set_locating(self, enabled):
+        if enabled == self.locating:
+            return
+        source = self.source
+        self.locating = enabled
+        if enabled:
+            self.location_preview = not source.isVisible()
+            self.expand()
+            self._update_location_border()
+            self._location_border.setGeometry(source.rect())
+            self._location_border.show()
+            self._location_border.raise_()
+        else:
+            self._location_border.hide()
+            if self.location_preview:
+                source.hide()
+                self.location_preview = False
+            QTimer.singleShot(0, self, self.recheck)
+        source._apply_window_opacity()
+        if source.click_through:
+            source._sync_click_through()
+        if enabled:
+            source.show()
+            source.raise_()
+            source.activateWindow()
+
+    def dismiss_location_on_press(self):
+        # A regular float keeps the same press for its existing drag gesture.
+        consume = self.locating and (self.location_preview or self.source.click_through)
+        self.set_locating(False)
+        return consume
+
+    def _update_location_border(self, *_args):
+        if self.locating:
+            self._location_border.setStyleSheet(
+                f"QFrame#float_location_border {{ background: transparent; "
+                f"border: 2px solid {accent_color().name()}; border-radius: 6px; }}"
+            )
 
     def _bounded(self, rect):
         if self._drag_origin is not None or not (self.source.boundary_check_enabled or self.source.edge_hide_enabled):
@@ -350,7 +403,7 @@ class PositionController(QObject):
     def check_pointer(self):
         source = self.source
         if (not self.edge or not source.isVisible() or not source.widget_visible
-                or source._drag_pos is not None or source.taskbar_preview_active
+                or self.locating or source._drag_pos is not None or source.taskbar_preview_active
                 or QApplication.activePopupWidget() is not None):
             return
         # 原生鼠标坐标在高 DPI 边界转换时可能向外舍入一个逻辑像素。
@@ -404,6 +457,8 @@ class PositionController(QObject):
             QTimer.singleShot(0, self, self.recheck)
         elif kind == QEvent.Hide:
             self.hover_timer.stop()
+        elif kind == QEvent.Resize and self.locating:
+            self._location_border.setGeometry(self.source.rect())
         elif kind == QEvent.Move and not self._applying and not self.source._updating_topmost:
             if self.collapsed:
                 self._full.translate(self.source.pos() - self._strip_geometry().topLeft())

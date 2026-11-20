@@ -2,10 +2,13 @@
 
 from unittest.mock import Mock, patch
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QIcon
+from PySide6.QtCore import QPoint, Qt
+from PySide6.QtGui import QColor, QIcon, QPalette
+from PySide6.QtTest import QTest
+from PySide6.QtWidgets import QStyleOptionMenuItem
 from shiboken6 import delete
 
+from stockwidget.ui.controls.style import accent_color
 from stockwidget.ui.menus import TrayIcon
 from tests.support import PagingTestCase
 
@@ -144,6 +147,99 @@ class MenuBehaviorTests(PagingTestCase):
         self.assertAlmostEqual(self.win.windowOpacity(), .4, delta=1/255)
         self.assertTrue(actions(actions(self.menu())["不透明度"].menu())["40%"].isChecked())
         self.assertNotIn("不透明度", actions(self.menu("taskbar")))
+
+    def test_quit_item_is_red_on_all_quote_menus(self):
+        tray = TrayIcon(QIcon(), "Test", on_toggle=self.win.toggle_win,
+                        on_open_settings=Mock(), on_quit=Mock(), source=self.win)
+        try:
+            for menu in (tray.contextMenu(), self.menu(), self.menu("taskbar")):
+                for dark in (False, True):
+                    palette = menu.palette()
+                    palette.setColor(QPalette.Window, QColor("black" if dark else "white"))
+                    menu.setPalette(palette)
+                    item = QStyleOptionMenuItem()
+                    menu.initStyleOption(item, actions(menu)["退出"])
+                    color = item.palette.color(QPalette.Text)
+                    self.assertGreater(color.red(), color.green() + 50)
+        finally:
+            delete(tray.contextMenu())
+            delete(tray)
+
+    def test_cocoa_tray_opens_the_styled_menu_from_either_mouse_button(self):
+        with patch("stockwidget.ui.menus.is_cocoa", return_value=True), \
+                patch("stockwidget.ui.menus.tray_click_toggles", return_value=False):
+            toggle = Mock()
+            tray = TrayIcon(QIcon(), "Test", on_toggle=toggle, on_open_settings=Mock(),
+                            on_quit=Mock(), source=self.win)
+            try:
+                self.assertIsNone(tray.contextMenu())
+                with patch.object(tray._menu, "popup") as popup:
+                    tray.activated.emit(TrayIcon.Trigger)
+                    tray.activated.emit(TrayIcon.Context)
+                    self.assertEqual(popup.call_count, 2)
+                toggle.assert_not_called()
+            finally:
+                delete(tray._menu)
+                delete(tray)
+
+    def test_tray_location_stops_on_pointer_press_and_keeps_the_same_drag(self):
+        self.win.show()
+        self.win.set_window_opacity_percent(40)
+        self.app.processEvents()
+        tray = TrayIcon(QIcon(), "Test", on_toggle=self.win.toggle_win,
+                        on_open_settings=Mock(), on_quit=Mock(), source=self.win)
+        try:
+            menu = tray.contextMenu()
+            locate = actions(menu)["显示浮窗位置"]
+            before = self.win.current_config()
+            locate.trigger()
+            self.assertEqual(self.win.windowOpacity(), 1.0)
+            image = self.win.grab().toImage()
+            self.assertEqual(image.pixelColor(image.width() // 2, 1), accent_color())
+            self.assertEqual(self.win.current_config(), before)
+
+            menu.aboutToShow.emit()
+            self.assertTrue(locate.isChecked())
+            locate.trigger()
+            self.assertFalse(self.win.position_controller.locating)
+            self.assertAlmostEqual(self.win.windowOpacity(), .4, delta=1/255)
+
+            locate.trigger()
+            start = self.win.table.viewport().mapTo(self.win, QPoint(4, 4))
+            window_handle = self.win.windowHandle()
+            QTest.mousePress(window_handle, Qt.LeftButton, pos=start)
+            self.assertFalse(self.win.position_controller.locating)
+            self.assertAlmostEqual(self.win.windowOpacity(), .4, delta=1/255)
+            self.assertIsNotNone(self.win._drag_pos)
+            original = self.win.pos()
+            delta = QPoint(22, 20)
+            QTest.mouseMove(window_handle, start + delta)
+            self.assertEqual(self.win.pos(), original + delta)
+            QTest.mouseRelease(window_handle, Qt.LeftButton, pos=self.win.mapFromGlobal(original + start + delta))
+            menu.aboutToShow.emit()
+            self.assertFalse(locate.isChecked())
+        finally:
+            delete(tray.contextMenu())
+            delete(tray)
+
+    def test_location_preview_restores_hidden_float_and_taskbar_only_mode(self):
+        controller = self.make_controller()
+        self.win.set_display_mode("taskbar")
+        self.assertTrue(controller._active)
+        self.assertFalse(self.win.isVisible())
+        location = self.win.position_controller
+        for visible in (True, False):
+            self.win.set_widget_visible(visible)
+            before = self.win.current_config()
+            location.set_locating(True)
+            self.assertTrue(self.win.isVisible())
+            self.assertEqual(self.win.widget_visible, visible)
+            controller.apply_mode()
+            self.assertTrue(self.win.isVisible())
+            location.set_locating(False)
+            self.assertFalse(self.win.isVisible())
+            self.assertEqual(self.win.widget_visible, visible)
+            self.assertEqual(self.win.current_config(), before)
 
     def test_tray_visibility_label_and_split_follow_current_surface_each_time_it_opens(self):
         self.win.set_view_options(taskbar_sync_split=False, float_split_enabled=False,
