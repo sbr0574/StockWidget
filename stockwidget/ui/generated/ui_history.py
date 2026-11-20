@@ -41,7 +41,6 @@ class Ui_HistoryDialog(object):
         self.title_layout.setContentsMargins(0, 0, 0, 0)
         self.title = QLabel(self.title_row)
         self.title.setObjectName(u"title")
-        self.title.setCursor(QCursor(Qt.CursorShape.OpenHandCursor))
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
