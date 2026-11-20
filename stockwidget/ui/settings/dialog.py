@@ -406,8 +406,6 @@ class SettingsDialog(QDialog):
         duplicate = value in self.win.scheduled_hide_times
         self.ui.btn_add_hide_time.setEnabled(enabled
             and not full and not duplicate)
-        self.ui.btn_add_hide_time.setToolTip("最多设置3个时间，请先删除一个" if full else
-                                           "该时间已添加" if duplicate else "添加每日隐藏时间")
 
     def _add_hide_time(self):
         value = self.ui.hide_time_edit.time().toString("HH:mm")
@@ -567,17 +565,20 @@ class SettingsDialog(QDialog):
         self.watchlist_editor.refresh_code_search(self.win.codes_list)
 
     def eventFilter(self, obj, ev):
-        if ev.type() == QEvent.Wheel and isinstance(obj, (QSlider, QComboBox)) and self._widget_in_dialog(obj):
-            parent = obj.parentWidget()
-            while parent and not isinstance(parent, QScrollArea):
-                parent = parent.parentWidget()
-            if parent:
-                viewport = parent.viewport()
-                forwarded = QWheelEvent(viewport.mapFromGlobal(ev.globalPosition()), ev.globalPosition(),
-                                        ev.pixelDelta(), ev.angleDelta(), ev.buttons(), ev.modifiers(),
-                                        ev.phase(), ev.inverted(), ev.source())
-                QApplication.sendEvent(viewport, forwarded)
-            return True
+        if ev.type() == QEvent.Wheel and isinstance(obj, QWidget) and self._widget_in_dialog(obj):
+            schedule_controls = (self.ui.hide_time_edit, self.ui.list_hide_times)
+            if isinstance(obj, (QSlider, QComboBox)) or any(
+                    obj is control or control.isAncestorOf(obj) for control in schedule_controls):
+                parent = obj.parentWidget()
+                while parent and not isinstance(parent, QScrollArea):
+                    parent = parent.parentWidget()
+                if parent:
+                    viewport = parent.viewport()
+                    forwarded = QWheelEvent(viewport.mapFromGlobal(ev.globalPosition()), ev.globalPosition(),
+                                            ev.pixelDelta(), ev.angleDelta(), ev.buttons(), ev.modifiers(),
+                                            ev.phase(), ev.inverted(), ev.source())
+                    QApplication.sendEvent(viewport, forwarded)
+                return True
         if ev.type() == QEvent.MouseButtonPress:
             self._handle_outside_press(obj)
         return super().eventFilter(obj, ev)

@@ -2589,9 +2589,6 @@
              <property name="checked">
               <bool>false</bool>
              </property>
-             <property name="toolTip">
-              <string>总开关控制定时隐藏与自动识别。最多设置3个每日隐藏时间，按电脑本地时间执行；关闭时保留时间与自动识别选项。</string>
-             </property>
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                <horstretch>0</horstretch>
@@ -2730,9 +2727,6 @@
                    <property name="text">
                     <string>自动识别</string>
                    </property>
-                   <property name="toolTip">
-                    <string>刷新时，所有勾选标的的行情时间均超过30秒则隐藏浮窗和任务栏。缺失时间或请求失败不触发。手动呼出后会提示并倒计时5秒；新行情到达会取消倒计时。定时隐藏仍同时生效。</string>
-                   </property>
                    <property name="minimumSize">
                     <size>
                      <width>44</width>
@@ -2844,9 +2838,6 @@
                       <second>0</second>
                      </time>
                     </property>
-                    <property name="toolTip">
-                     <string>每日隐藏时间（24小时制）</string>
-                    </property>
                     <property name="minimumSize">
                      <size>
                       <width>110</width>
@@ -2901,9 +2892,6 @@
                   </property>
                   <property name="verticalScrollBarPolicy">
                    <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
-                  </property>
-                  <property name="toolTip">
-                   <string>单击选中时间后可删除，最多3个时间，每日重复。</string>
                   </property>
                   <property name="wrapping">
                    <bool>false</bool>
@@ -6565,34 +6553,6 @@
                             </property>
                            </widget>
                           </item>
-                          <item row="1" column="0">
-                           <widget class="QLabel" name="taskbar_split_enabled_description">
-                            <property name="text">
-                             <string>将当前页标的分为左右两栏，两栏共同翻页。</string>
-                            </property>
-                            <property name="wordWrap">
-                             <bool>true</bool>
-                            </property>
-                            <property name="settingDescription" stdset="0">
-                             <bool>true</bool>
-                            </property>
-                            <property name="maximumSize">
-                             <size>
-                              <width>310</width>
-                              <height>16777215</height>
-                             </size>
-                            </property>
-                            <property name="alignment">
-                             <set>Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>310</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                           </widget>
-                          </item>
                           <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
                            <widget class="ToggleSwitch" name="taskbar_split_enabled">
                             <property name="text">
@@ -6667,34 +6627,6 @@
                             </property>
                             <property name="settingTitle" stdset="0">
                              <bool>true</bool>
-                            </property>
-                           </widget>
-                          </item>
-                          <item row="1" column="0">
-                           <widget class="QLabel" name="taskbar_split_separator_description">
-                            <property name="text">
-                             <string>在左右两栏之间显示分隔线。</string>
-                            </property>
-                            <property name="wordWrap">
-                             <bool>true</bool>
-                            </property>
-                            <property name="settingDescription" stdset="0">
-                             <bool>true</bool>
-                            </property>
-                            <property name="maximumSize">
-                             <size>
-                              <width>310</width>
-                              <height>16777215</height>
-                             </size>
-                            </property>
-                            <property name="alignment">
-                             <set>Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>310</width>
-                              <height>0</height>
-                             </size>
                             </property>
                            </widget>
                           </item>

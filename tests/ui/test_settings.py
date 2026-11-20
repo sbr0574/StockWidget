@@ -8,7 +8,7 @@ import time
 from PySide6.QtCore import QEvent, QPoint, QPointF, QSize, Qt
 from PySide6.QtGui import QColor, QFont, QIcon, QPalette, QPixmap, QTextDocument, QKeySequence, QWheelEvent
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QScrollArea, QGroupBox, QSlider
+from PySide6.QtWidgets import QApplication, QScrollArea, QGroupBox, QSlider, QWidget
 
 from stockwidget.core.view_options import APPEARANCE_OPTION_KEYS
 from stockwidget.platform.hotkeys import HotkeyResult
@@ -149,6 +149,29 @@ class SettingsDialogTests(SettingsTestCase):
                     self.assertEqual(widget.palette().color(QPalette.WindowText).lightness() > 128, dark)
         dialog.ui.cmb_color_mode.setCurrentIndex(0)
         self.assertEqual(dialog.palette(), QApplication.palette())
+
+    def test_wheel_over_hide_schedule_scrolls_the_page_and_schedule_has_no_tooltips(self):
+        dialog, _ = self._make_dialog(hide_enabled=True, scheduled_hide_times=["15:00", "16:00"])
+        ui = dialog.ui
+        dialog.show()
+        ui.settings_pages.setCurrentWidget(ui.general)
+        time_edit, times = ui.hide_time_edit, ui.list_hide_times
+        time_edit.setFocus()
+        before = time_edit.time(), times.currentRow()
+        scroll = ui.general_scroll.verticalScrollBar()
+        for target in (time_edit, time_edit.lineEdit(), times.viewport()):
+            ui.general_scroll.ensureWidgetVisible(target)
+            self.qt_app.processEvents()
+            position = target.rect().center()
+            start = scroll.value()
+            delta = 120 if start == scroll.maximum() else -120
+            event = QWheelEvent(QPointF(position), QPointF(target.mapToGlobal(position)), QPoint(),
+                                QPoint(0, delta), Qt.NoButton, Qt.NoModifier, Qt.ScrollUpdate, False)
+            QApplication.sendEvent(target, event)
+            self.assertNotEqual(scroll.value(), start)
+            self.assertEqual((time_edit.time(), times.currentRow()), before)
+        group = ui.gb_scheduled_hide
+        self.assertFalse(any(control.toolTip() for control in (group, *group.findChildren(QWidget))))
 
     def test_hide_status_describes_the_active_conditions(self):
         dialog, window = self._make_dialog()
