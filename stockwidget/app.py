@@ -147,7 +147,7 @@ class App(QApplication):
 
     def _sync_application_options(self):
         options = self.win.view_options
-        self.theme.set_mode(options.color_mode)
+        self.theme.set_mode(options.color_mode, accent=None if options.accent_follow_system else options.accent_color)
         self.tray.setVisible(not (sys.platform == "win32" and options.hide_tray_icon))
 
     def open_settings(self):

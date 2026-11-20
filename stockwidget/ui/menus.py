@@ -10,12 +10,12 @@ from functools import partial
 import sys
 
 from PySide6.QtCore import Qt, QSignalBlocker, QUrl
-from PySide6.QtGui import QAction, QDesktopServices
+from PySide6.QtGui import QAction, QActionGroup, QDesktopServices
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from stockwidget.core.quote_presentation import METRIC_SPECS, SORTABLE_HEADERS, metric_headers
 from stockwidget.data.update_check import project_links
-from stockwidget.platform.capabilities import click_through_supported, tray_click_toggles
+from stockwidget.platform.capabilities import click_through_supported, opacity_supported, tray_click_toggles
 
 
 def _sync_toggles(toggles):
@@ -167,6 +167,9 @@ def build_quote_menu(source, surface="float"):
     act_color.toggled.connect(source.set_unicolor)
     menu.addAction(act_color)
 
+    if surface == "float":
+        _add_opacity_menu(menu, source.opacity_pct, source.set_window_opacity_percent)
+
     _view_toggles(menu, source, surface)
 
     menu.addSeparator()
@@ -182,15 +185,41 @@ def build_quote_menu(source, surface="float"):
 def build_history_menu(dialog):
     menu = QMenu(dialog)
     menu.setToolTipsVisible(False)
-    menu.addAction("关闭窗口", dialog.close)
+    menu.addAction("关闭图表窗口", dialog.close)
     menu.addAction("独立窗口打开").triggered.connect(dialog.pop_out)
     pin = menu.addAction("固定")
     pin.setCheckable(True)
     pin.setChecked(dialog.pin_button.isChecked())
     pin.toggled.connect(dialog.pin_button.setChecked)
-    _add_settings_action(menu, dialog.parentWidget(), "设置")
+    source = dialog.parentWidget()
+    options = getattr(source, "view_options", None)
+    if options is not None:
+        def set_opacity(percent):
+            changes = {"chart_sync_opacity": percent is None}
+            if percent is not None:
+                changes["chart_opacity_pct"] = percent
+            dialog.options_changed.emit(changes)
+
+        current = None if options.chart_sync_opacity else options.chart_opacity_pct
+        _add_opacity_menu(menu, current, set_opacity, can_sync=True)
+    _add_settings_action(menu, source, "设置")
     menu.addAction("隐藏所有浮窗").triggered.connect(dialog.hide_quotes_requested)
     return menu
+
+
+def _add_opacity_menu(menu, current, setter, *, can_sync=False):
+    submenu = menu.addMenu("不透明度")
+    group = QActionGroup(submenu)
+    presets = [(f"{percent}%", percent) for percent in (20, 40, 60, 80, 100)]
+    if can_sync:
+        presets.insert(0, ("同步主浮窗", None))
+    for label, percent in presets:
+        action = submenu.addAction(label)
+        action.setCheckable(True)
+        group.addAction(action)
+        action.setChecked(current == percent)
+        action.triggered.connect(lambda checked=False, percent=percent: setter(percent))
+    submenu.menuAction().setEnabled(opacity_supported())
 
 
 def _add_settings_action(menu, source, text="设置…"):

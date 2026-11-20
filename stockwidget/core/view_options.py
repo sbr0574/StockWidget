@@ -1,6 +1,7 @@
 """Validated view preferences and paging math, independent of Qt."""
 
 from dataclasses import asdict, dataclass, field
+import re
 
 from stockwidget.core.quote_presentation import DEFAULT_VISIBLE_METRICS, normalize_visible_metrics
 
@@ -11,7 +12,10 @@ MIN_OPACITY_PCT = 10
 MIN_FONT_PT = 5
 MAX_FONT_PT = 15
 TASKBAR_STYLE_KEYS = ("taskbar_color", "taskbar_auto_color", "taskbar_opacity_pct", "taskbar_font_size")
-APPEARANCE_OPTION_KEYS = ("color_mode", "chart_sync_opacity", "chart_bg_alpha_pct", "chart_opacity_pct", *TASKBAR_STYLE_KEYS)
+APPEARANCE_OPTION_KEYS = (
+    "color_mode", "accent_follow_system", "accent_color",
+    "chart_sync_opacity", "chart_bg_alpha_pct", "chart_opacity_pct", *TASKBAR_STYLE_KEYS,
+)
 
 
 def bounded_int(value, default, low, high):
@@ -52,6 +56,8 @@ class ViewOptions:
     chart_volume_enabled: bool = True
     average_period: int = 0
     color_mode: str = "system"
+    accent_follow_system: bool = True
+    accent_color: str = "#0078d4"
     hide_tray_icon: bool = False
     float_split_enabled: bool = False
     float_split_separator: bool = True
@@ -92,6 +98,9 @@ class ViewOptions:
                 setattr(result, key, getattr(defaults, key))
         if result.color_mode not in ("system", "light", "dark"):
             result.color_mode = "system"
+        accent = result.accent_color
+        result.accent_color = (accent.lower() if isinstance(accent, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", accent)
+                               else defaults.accent_color)
         if result.mini_chart_type not in ("kline", "trend", "amplitude"):
             result.mini_chart_type = "kline"
         # Old presets seed the initial size once; window mode is now opened
@@ -135,7 +144,7 @@ class ViewOptions:
         if not isinstance(result.taskbar_color, str):
             result.taskbar_color = defaults.taskbar_color
         for key in ("chart_enabled", "chart_sync_opacity", "chart_popup_pinned", "chart_average_enabled",
-                    "chart_volume_enabled", "chart_order_book_enabled", "hide_tray_icon",
+                    "chart_volume_enabled", "chart_order_book_enabled", "accent_follow_system", "hide_tray_icon",
                     "float_paging_enabled", "taskbar_enabled", "taskbar_sync_metrics",
                     "taskbar_sync_paging", "taskbar_auto_color", "taskbar_dual_open",
                     "float_split_enabled", "float_split_separator", "taskbar_sync_split",

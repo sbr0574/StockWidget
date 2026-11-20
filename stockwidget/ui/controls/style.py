@@ -45,19 +45,20 @@ class ApplicationTheme(QObject):
         self.app = app
         self.system_palette = QPalette(app.palette())
         self.mode = "system"
+        self.custom_accent = None
         self._applying = False
         app.paletteChanged.connect(self._system_palette_changed)
         QGuiApplication.styleHints().colorSchemeChanged.connect(self._system_scheme_changed)
 
-    def set_mode(self, mode):
-        if mode != self.mode:
-            self.mode = mode
+    def set_mode(self, mode, *, accent=None):
+        if (mode, accent) != (self.mode, self.custom_accent):
+            self.mode, self.custom_accent = mode, accent
             self._apply()
 
     def _system_palette_changed(self, palette):
         if not self._applying:
             self.system_palette = QPalette(palette)
-            if self.mode != "system":
+            if self.mode != "system" or self.custom_accent is not None:
                 self._apply()
 
     def _system_scheme_changed(self, *_args):
@@ -74,7 +75,16 @@ class ApplicationTheme(QObject):
             return
         self._applying = True
         try:
-            palette = self.system_palette if self.mode == "system" else theme_palette(self.mode == "dark", self.system_palette)
+            palette = (QPalette(self.system_palette) if self.mode == "system"
+                       else theme_palette(self.mode == "dark", self.system_palette))
+            if self.custom_accent is not None:
+                accent = QColor(self.custom_accent)
+                palette.setColor(QPalette.Accent, accent)
+                palette.setColor(QPalette.Highlight, accent)
+                rgb = (v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4
+                       for v in accent.getRgbF()[:3])
+                luminance = sum(v * weight for v, weight in zip(rgb, (0.2126, 0.7152, 0.0722)))
+                palette.setColor(QPalette.HighlightedText, QColor(Qt.black if luminance > 0.179 else Qt.white))
             self.app.setPalette(palette)
         finally:
             self._applying = False
@@ -157,7 +167,7 @@ def set_color_button(button, color: QColor, title: str):
     button.setText("  " + name)
     button.setToolTip(f"{title}: {name}")
     button.setAccessibleName(f"{title}: {name}")
-    button.setIcon(color_swatch_icon(color, button.devicePixelRatioF()))
+    button.setIcon(color_swatch_icon(QColor(name), button.devicePixelRatioF()))
 
 
 def build_settings_stylesheet(dark: bool, *, linux_fonts: bool = False, palette: QPalette | None = None,

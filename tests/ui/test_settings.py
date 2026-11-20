@@ -22,10 +22,12 @@ from tests.support import SettingsTestCase, SignalRecorder
 class SettingsDialogTests(SettingsTestCase):
     def test_opacity_sliders_commit_on_release_and_preserve_chart_preferences_while_synced(self):
         dialog, window = self._make_dialog()
+        chart_sliders = (dialog.ui.slider_chart_bg_alpha, dialog.ui.slider_chart_all_alpha)
         self.assertTrue(window.view_options.chart_sync_opacity)
-        self.assertTrue(dialog.ui.slider_chart_bg_alpha.isHidden())
+        self.assertTrue(all(not slider.isHidden() and not slider.isEnabled() for slider in chart_sliders))
+        self.assertEqual(tuple(slider.value() for slider in chart_sliders), (75, 90))
         dialog.ui.cb_chart_sync_opacity.click()
-        self.assertFalse(dialog.ui.slider_chart_bg_alpha.isHidden())
+        self.assertTrue(all(slider.isEnabled() for slider in chart_sliders))
         controls = ((dialog.ui.slider_bg_alpha, 25, lambda: round(window.bg.alpha() / 2.55)),
                     (dialog.ui.slider_all_alpha, 65, lambda: window.opacity_pct),
                     (dialog.ui.slider_chart_bg_alpha, 35, lambda: window.view_options.chart_bg_alpha_pct),
@@ -38,10 +40,14 @@ class SettingsDialogTests(SettingsTestCase):
             slider.setSliderDown(False)
             self.assertEqual(read_value(), value)
         dialog.ui.cb_chart_sync_opacity.click()
-        self.assertTrue(dialog.ui.slider_chart_bg_alpha.isHidden())
+        self.assertTrue(all(not slider.isHidden() and not slider.isEnabled() for slider in chart_sliders))
         window.set_bg_alpha_percent(80)
+        window.set_window_opacity_percent(60)
+        self.assertEqual(tuple(slider.value() for slider in chart_sliders), (80, 60))
+        self.assertEqual((dialog.ui.label_chart_bg_alpha.text(), dialog.ui.label_chart_all_alpha.text()),
+                         ("80%", "60%"))
         dialog.ui.cb_chart_sync_opacity.click()
-        self.assertEqual((dialog.ui.slider_chart_bg_alpha.value(), dialog.ui.slider_chart_all_alpha.value()), (35, 45))
+        self.assertEqual(tuple(slider.value() for slider in chart_sliders), (35, 45))
 
     def test_taskbar_adjustments_do_not_restyle_pages_without_a_theme_change(self):
         self.enable_windows_taskbar()
@@ -309,7 +315,7 @@ class SettingsDialogTests(SettingsTestCase):
             refresh_seconds=10, visible_metrics=["price"],
             hotkey="Ctrl+Alt+G",
 
-            taskbar_color="#aabbcc", color_mode="dark",
+            taskbar_color="#aabbcc", color_mode="dark", accent_follow_system=False, accent_color="#abcdef",
         )
         _, defaults = self._make_dialog()
         before = window.current_config()
@@ -338,6 +344,7 @@ class SettingsDialogTests(SettingsTestCase):
             start_on_boot=True, hotkey="Ctrl+Alt+G", hotkey_click_through="Ctrl+Alt+D",
             taskbar_rows=3, taskbar_page_mode="auto", taskbar_metrics=["price"],
             taskbar_color="#aabbcc", float_max_rows=4, color_mode="dark", hide_tray_icon=True,
+            accent_follow_system=False, accent_color="#345678",
         )
         _, defaults = self._make_dialog()
         before = window.current_config()
@@ -914,7 +921,7 @@ class SettingsDialogTests(SettingsTestCase):
                 self.assertIn("未能清理", tooltip.call_args.args[1])
                 self.assertEqual(dialog.ui.general_scroll.horizontalScrollBar().maximum(), 0)
 
-    def test_unicolor_defaults_on_and_controls_direction_colors(self):
+    def test_unicolor_defaults_on_and_direction_colors_remain_editable(self):
         dialog, window = self._make_dialog()
 
         self.assertTrue(window.unicolor)
@@ -924,9 +931,9 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertTrue(dialog.ui.cb_unicolor.isChecked())
         self.assertTrue(dialog.ui.btn_bg_color.isEnabled())
         self.assertTrue(dialog.ui.btn_fg_color.isEnabled())
-        self.assertFalse(dialog.ui.btn_up_color.isEnabled())
-        self.assertFalse(dialog.ui.btn_down_color.isEnabled())
-        self.assertFalse(dialog.ui.btn_neutral_color.isEnabled())
+        self.assertTrue(dialog.ui.btn_up_color.isEnabled())
+        self.assertTrue(dialog.ui.btn_down_color.isEnabled())
+        self.assertTrue(dialog.ui.btn_neutral_color.isEnabled())
 
         color_buttons = (
             (dialog.ui.btn_fg_color, "文字", window.fg),
@@ -940,6 +947,7 @@ class SettingsDialogTests(SettingsTestCase):
             image = button.icon().pixmap(button.iconSize()).toImage()
             center = image.pixelColor(image.width() // 2, image.height() // 2)
             self.assertEqual(center.name(), QColor(color).name())
+            self.assertEqual(center.alpha(), 255)
             self.assertEqual(image.pixelColor(0, 0).alpha(), 0)
 
         disabled_icon = dialog.ui.btn_up_color.icon().pixmap(
@@ -955,6 +963,9 @@ class SettingsDialogTests(SettingsTestCase):
             return_value=QColor("#123456"),
         ):
             dialog.ui.btn_fg_color.click()
+            dialog.ui.btn_up_color.click()
+        self.assertTrue(window.unicolor)
+        self.assertEqual(window.up_color.name(), "#123456")
         updated_icon = dialog.ui.btn_fg_color.icon().pixmap(dialog.ui.btn_fg_color.iconSize()).toImage()
         updated_center = updated_icon.pixelColor(
             updated_icon.width() // 2, updated_icon.height() // 2
@@ -974,6 +985,25 @@ class SettingsDialogTests(SettingsTestCase):
         self.assertEqual(config["up_color"], window.up_color.name())
         self.assertEqual(config["down_color"], window.down_color.name())
         self.assertEqual(config["neutral_color"], window.neutral_color.name())
+
+    def test_accent_controls_follow_system_or_restore_the_custom_color(self):
+        dialog, window = self._make_dialog(accent_color="#abcdef")
+        follow, button = dialog.ui.cb_accent_follow_system, dialog.ui.btn_accent_color
+        system_accent = self.qt_app.palette().color(QPalette.Accent).name().upper()
+        self.assertTrue(follow.isChecked())
+        self.assertFalse(button.isEnabled())
+        self.assertEqual(button.text().strip(), system_accent)
+        follow.click()
+        self.assertTrue(button.isEnabled())
+        self.assertEqual(button.text().strip(), "#ABCDEF")
+        with patch("stockwidget.ui.settings.dialog.QColorDialog.getColor", return_value=QColor("#102030")):
+            button.click()
+        self.assertEqual(window.current_config()["accent_color"], "#102030")
+        follow.click()
+        self.assertFalse(button.isEnabled())
+        self.assertEqual(button.text().strip(), system_accent)
+        follow.click()
+        self.assertEqual(button.text().strip(), "#102030")
 
     def test_github_check_does_not_block_dialog_thread(self):
         owner = type("Owner", (), {"github_check_finished": SignalRecorder()})()

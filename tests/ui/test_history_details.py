@@ -270,7 +270,7 @@ class HistoryDetailsTests(HistoryTestCase):
         with patch.object(window, "_open_settings_cb") as open_settings:
             menu = self._open_chart_menu(popup)
             self.assertEqual([action.text() for action in menu.actions()],
-                             ["关闭窗口", "独立窗口打开", "固定", "设置", "隐藏所有浮窗"])
+                             ["关闭图表窗口", "独立窗口打开", "固定", "不透明度", "设置", "隐藏所有浮窗"])
             self.assertFalse(menu.toolTipsVisible())
             self._choose_chart_menu_action(menu, "设置")
             open_settings.assert_called_once_with()
@@ -291,7 +291,7 @@ class HistoryDetailsTests(HistoryTestCase):
         self.assertTrue(popup.isVisible())
         self._choose_chart_menu_action(self._open_chart_menu(popup), "固定")
 
-        self._choose_chart_menu_action(self._open_chart_menu(popup), "关闭窗口")
+        self._choose_chart_menu_action(self._open_chart_menu(popup), "关闭图表窗口")
         self.assertFalse(popup.isVisible())
         self.assertTrue(window.isVisible())
         history.open_row("float", 0)
@@ -311,6 +311,35 @@ class HistoryDetailsTests(HistoryTestCase):
         self.assertFalse(history.dialog.isVisible())
         self.assertFalse(window.widget_visible)
         self.assertFalse(window.isVisible())
+
+    def test_chart_opacity_presets_work_in_an_unpinned_submenu_and_can_restore_sync(self):
+        _, window = self.make_window(opacity_pct=60, chart_bg_alpha_pct=35)
+        window.history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = window.history.dialog
+
+        def open_opacity_menu():
+            menu = self._open_chart_menu(popup)
+            action = next(item for item in menu.actions() if item.text() == "不透明度")
+            menu.setActiveAction(action)
+            QTest.keyClick(menu.windowHandle(), Qt.Key_Right)
+            self.app.processEvents()
+            self.assertIs(QApplication.activePopupWidget(), action.menu())
+            return action.menu()
+
+        submenu = open_opacity_menu()
+        self.assertEqual([action.text() for action in submenu.actions()],
+                         ["同步主浮窗", "20%", "40%", "60%", "80%", "100%"])
+        self.assertTrue(submenu.actions()[0].isChecked())
+        self._choose_chart_menu_action(submenu, "20%")
+        self.assertTrue(popup.isVisible())
+        self.assertFalse(window.view_options.chart_sync_opacity)
+        self.assertEqual(window.view_options.chart_bg_alpha_pct, 35)
+        self.assertAlmostEqual(popup.windowOpacity(), .2, delta=1/255)
+        self._choose_chart_menu_action(open_opacity_menu(), "同步主浮窗")
+        self.assertTrue(window.view_options.chart_sync_opacity)
+        self.assertAlmostEqual(popup.windowOpacity(), .6, delta=1/255)
+        self.assertEqual(window.view_options.chart_opacity_pct, 20)
 
     def test_chart_context_menu_escape_and_outside_click_respect_pinning(self):
         _, window = self.make_window()

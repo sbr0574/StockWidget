@@ -32,17 +32,22 @@ class ApplicationThemeTests(QtTestCase):
         try:
             light = theme_palette(False, original)
             app.setPalette(light)
-            theme.set_mode("dark")
+            custom = QColor("#ffcd00")
+            theme.set_mode("dark", accent=custom.name())
             self.assertLess(app.palette().color(QPalette.Window).lightness(), 128)
+            self.assertEqual(app.palette().color(QPalette.Accent), custom)
+            self.assertEqual(app.palette().color(QPalette.HighlightedText), QColor(Qt.black))
             with patch("stockwidget.ui.controls.style.QGuiApplication.styleHints") as hints:
                 hints.return_value.colorScheme.return_value = Qt.ColorScheme.Unknown
                 self.assertFalse(is_dark_theme())
                 dark = theme_palette(True, original)
                 dark.setColor(QPalette.Window, QColor("#18191a"))
+                dark.setColor(QPalette.Accent, QColor("#045cd9"))
                 app.setPalette(dark)
-                theme.set_mode("light")
+                theme.set_mode("light", accent=custom.name())
                 self.assertGreater(app.palette().color(QPalette.Window).lightness(), 128)
                 self.assertTrue(is_dark_theme())
+                self.assertEqual(app.palette().color(QPalette.Highlight), custom)
                 theme.set_mode("system")
                 self.assertEqual(app.palette(), dark)
         finally:

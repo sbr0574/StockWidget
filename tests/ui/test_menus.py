@@ -135,6 +135,16 @@ class MenuBehaviorTests(PagingTestCase):
         self.assertFalse(self.win.current_config()["taskbar_auto_color"])
         self.assertFalse(self.win.get_taskbar_appearance()[3])
 
+    def test_float_menu_applies_and_checks_saved_opacity_presets(self):
+        menu = actions(self.menu())["不透明度"].menu()
+        self.assertEqual(list(actions(menu)), ["20%", "40%", "60%", "80%", "100%"])
+        self.assertFalse(any(action.isChecked() for action in menu.actions()))
+        actions(menu)["40%"].trigger()
+        self.assertEqual(self.win.current_config()["opacity_pct"], 40)
+        self.assertAlmostEqual(self.win.windowOpacity(), .4, delta=1/255)
+        self.assertTrue(actions(actions(self.menu())["不透明度"].menu())["40%"].isChecked())
+        self.assertNotIn("不透明度", actions(self.menu("taskbar")))
+
     def test_tray_visibility_label_and_split_follow_current_surface_each_time_it_opens(self):
         self.win.set_view_options(taskbar_sync_split=False, float_split_enabled=False,
                                   taskbar_split_enabled=True)

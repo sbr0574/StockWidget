@@ -1517,6 +1517,64 @@ class Ui_SettingDialog(object):
 
         self.gb_colorLayout.addWidget(self.btn_bg_color_row)
 
+        self.cb_accent_follow_system_row = QWidget(self.gb_color)
+        self.cb_accent_follow_system_row.setObjectName(u"cb_accent_follow_system_row")
+        sizePolicy2.setHeightForWidth(self.cb_accent_follow_system_row.sizePolicy().hasHeightForWidth())
+        self.cb_accent_follow_system_row.setSizePolicy(sizePolicy2)
+        self.cb_accent_follow_system_row_layout = QGridLayout(self.cb_accent_follow_system_row)
+        self.cb_accent_follow_system_row_layout.setSpacing(5)
+        self.cb_accent_follow_system_row_layout.setObjectName(u"cb_accent_follow_system_row_layout")
+        self.cb_accent_follow_system_row_layout.setHorizontalSpacing(12)
+        self.cb_accent_follow_system_row_layout.setContentsMargins(0, 0, 0, 0)
+        self.cb_accent_follow_system_title = QLabel(self.cb_accent_follow_system_row)
+        self.cb_accent_follow_system_title.setObjectName(u"cb_accent_follow_system_title")
+        self.cb_accent_follow_system_title.setMinimumSize(QSize(0, 28))
+        self.cb_accent_follow_system_title.setMaximumSize(QSize(16777215, 28))
+        self.cb_accent_follow_system_title.setProperty(u"settingTitle", True)
+
+        self.cb_accent_follow_system_row_layout.addWidget(self.cb_accent_follow_system_title, 0, 0, 1, 1)
+
+        self.cb_accent_follow_system = ToggleSwitch(self.cb_accent_follow_system_row)
+        self.cb_accent_follow_system.setObjectName(u"cb_accent_follow_system")
+        self.cb_accent_follow_system.setBaseSize(QSize(0, 0))
+        self.cb_accent_follow_system.setMinimumSize(QSize(44, 26))
+        self.cb_accent_follow_system.setMaximumSize(QSize(44, 26))
+
+        self.cb_accent_follow_system_row_layout.addWidget(self.cb_accent_follow_system, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+
+        self.gb_colorLayout.addWidget(self.cb_accent_follow_system_row)
+
+        self.btn_accent_color_row = QWidget(self.gb_color)
+        self.btn_accent_color_row.setObjectName(u"btn_accent_color_row")
+        sizePolicy3.setHeightForWidth(self.btn_accent_color_row.sizePolicy().hasHeightForWidth())
+        self.btn_accent_color_row.setSizePolicy(sizePolicy3)
+        self.btn_accent_color_row_layout = QGridLayout(self.btn_accent_color_row)
+        self.btn_accent_color_row_layout.setSpacing(5)
+        self.btn_accent_color_row_layout.setObjectName(u"btn_accent_color_row_layout")
+        self.btn_accent_color_row_layout.setHorizontalSpacing(12)
+        self.btn_accent_color_row_layout.setContentsMargins(0, 0, 0, 0)
+        self.btn_accent_color_title = QLabel(self.btn_accent_color_row)
+        self.btn_accent_color_title.setObjectName(u"btn_accent_color_title")
+        self.btn_accent_color_title.setMinimumSize(QSize(0, 28))
+        self.btn_accent_color_title.setMaximumSize(QSize(16777215, 28))
+        self.btn_accent_color_title.setProperty(u"settingTitle", True)
+
+        self.btn_accent_color_row_layout.addWidget(self.btn_accent_color_title, 0, 0, 1, 1)
+
+        self.btn_accent_color = QPushButton(self.btn_accent_color_row)
+        self.btn_accent_color.setObjectName(u"btn_accent_color")
+        self.btn_accent_color.setIconSize(QSize(12, 12))
+        self.btn_accent_color.setAutoDefault(False)
+        self.btn_accent_color.setFlat(True)
+        self.btn_accent_color.setMinimumSize(QSize(110, 28))
+        self.btn_accent_color.setMaximumSize(QSize(110, 28))
+
+        self.btn_accent_color_row_layout.addWidget(self.btn_accent_color, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+
+        self.gb_colorLayout.addWidget(self.btn_accent_color_row)
+
         self.cb_unicolor_row = QWidget(self.gb_color)
         self.cb_unicolor_row.setObjectName(u"cb_unicolor_row")
         sizePolicy2.setHeightForWidth(self.cb_unicolor_row.sizePolicy().hasHeightForWidth())
@@ -2912,6 +2970,13 @@ class Ui_SettingDialog(object):
         self.btn_fg_color.setText(QCoreApplication.translate("SettingDialog", u"FFFFFF", None))
         self.btn_bg_color_title.setText(QCoreApplication.translate("SettingDialog", u"\u80cc\u666f\u989c\u8272", None))
         self.btn_bg_color.setText(QCoreApplication.translate("SettingDialog", u"FFFFFF", None))
+        self.cb_accent_follow_system_title.setText(QCoreApplication.translate("SettingDialog", u"\u5f3a\u8c03\u8272\u8ddf\u968f\u7cfb\u7edf\u4e3b\u9898", None))
+        self.cb_accent_follow_system.setText(QCoreApplication.translate("SettingDialog", u"\u5f3a\u8c03\u8272\u8ddf\u968f\u7cfb\u7edf\u4e3b\u9898", None))
+#if QT_CONFIG(accessibility)
+        self.cb_accent_follow_system.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u5f3a\u8c03\u8272\u8ddf\u968f\u7cfb\u7edf\u4e3b\u9898", None))
+#endif // QT_CONFIG(accessibility)
+        self.btn_accent_color_title.setText(QCoreApplication.translate("SettingDialog", u"\u5f3a\u8c03\u989c\u8272", None))
+        self.btn_accent_color.setText(QCoreApplication.translate("SettingDialog", u"#0078D4", None))
         self.cb_unicolor_title.setText(QCoreApplication.translate("SettingDialog", u"\u7edf\u4e00\u989c\u8272", None))
         self.cb_unicolor_description.setText(QCoreApplication.translate("SettingDialog", u"\u6240\u6709\u6307\u6807\u4f7f\u7528\u6587\u5b57\u989c\u8272\uff1b\u5173\u95ed\u540e\uff0c\u6309\u6da8\u8dcc\u5206\u522b\u7740\u8272\u3002", None))
         self.cb_unicolor.setText(QCoreApplication.translate("SettingDialog", u"\u7edf\u4e00\u989c\u8272", None))

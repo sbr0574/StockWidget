@@ -6,6 +6,16 @@ from stockwidget.core.view_options import ViewOptions
 
 
 class MiniChartOptionsTests(unittest.TestCase):
+    def test_accent_preference_defaults_to_system_and_validates_custom_color(self):
+        defaults = ViewOptions.from_config({})
+        self.assertTrue(defaults.accent_follow_system)
+        for invalid in ("red", "#xxyyzz", "#11223344", None):
+            self.assertEqual(ViewOptions.from_config({"accent_color": invalid}).accent_color, defaults.accent_color)
+        custom = ViewOptions.from_config({"accent_follow_system": False, "accent_color": "#ABCDEF"})
+        self.assertFalse(custom.accent_follow_system)
+        self.assertEqual(custom.accent_color, "#abcdef")
+        self.assertEqual(ViewOptions.from_config(custom.to_config()), custom)
+
     def test_average_period_roundtrip_and_invalid_values_use_intraday_mean(self):
         for period in (0, 5, 10, 20, 30, 60):
             with self.subTest(period=period):

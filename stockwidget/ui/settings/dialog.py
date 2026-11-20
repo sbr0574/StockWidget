@@ -39,6 +39,7 @@ from stockwidget.platform.hotkeys import HotkeyResult
 from stockwidget.platform.window import sync_macos_dock_icon
 from stockwidget.ui.controls.style import (
     LINUX_FONT_RULES,
+    accent_color,
     apply_settings_theme,
     is_dark_theme,
     set_color_button,
@@ -165,6 +166,7 @@ class SettingsDialog(QDialog):
             component.set_theme(dark)
         self._sync_mini_chart()
         self._refresh_color_buttons()
+        self._sync_accent_controls()
         navigation = self.ui.settings_navigation
         for index in range(navigation.count()):
             navigation.item(index).setIcon(settings_navigation_icon(index, self.devicePixelRatioF(), self.palette()))
@@ -176,10 +178,17 @@ class SettingsDialog(QDialog):
         self._clear_metric_selections()
 
     def _refresh_color_buttons(self):
-        """用无描边圆形图标展示五个颜色按钮的当前色值。"""
+        """用无描边圆形图标展示当前配色。"""
         for button, attr, title in self._color_buttons:
             color = QColor(getattr(self.win, attr))
             set_color_button(button, color, title)
+
+    def _sync_accent_controls(self):
+        options = self.win.view_options
+        self._set_checked_blocked(self.ui.cb_accent_follow_system, options.accent_follow_system)
+        self.ui.btn_accent_color.setEnabled(not options.accent_follow_system)
+        color = accent_color() if options.accent_follow_system else QColor(options.accent_color)
+        set_color_button(self.ui.btn_accent_color, color, "强调颜色")
 
     def _connect_controls(self):
         """连接设置控件与浮窗状态，静态控件统一从 self.ui 访问。"""
@@ -234,7 +243,10 @@ class SettingsDialog(QDialog):
         self.ui.btn_reset_appearance.clicked.connect(self._reset_appearance)
         self.ui.btn_reset_settings.clicked.connect(self._reset_settings)
 
-        self.ui.cb_unicolor.toggled.connect(self._on_unicolor_toggled)
+        self.ui.cb_unicolor.toggled.connect(self.win.set_unicolor)
+        self.ui.cb_accent_follow_system.toggled.connect(
+            lambda enabled: self.win.set_view_options(accent_follow_system=enabled))
+        self.ui.btn_accent_color.clicked.connect(self._pick_accent_color)
         color_setters = {
             "bg": self.win.set_bg_rgb_keep_alpha,
             "fg": self.win.set_fg_color,
@@ -243,7 +255,7 @@ class SettingsDialog(QDialog):
             "neutral_color": self.win.set_neutral_color,
         }
         for button, attr, title in self._color_buttons:
-            button.clicked.connect(partial(self._pick_color, attr, title, color_setters[attr]))
+            button.clicked.connect(partial(self._pick_surface_color, attr, title, color_setters[attr]))
         self.ui.slider_bg_alpha.valueChanged.connect(self.apply_bg_alpha)
         self.ui.slider_all_alpha.valueChanged.connect(self.apply_win_opacity)
         self.ui.cb_chart_sync_opacity.toggled.connect(
@@ -325,7 +337,6 @@ class SettingsDialog(QDialog):
             self._sync_common_options()
 
             self._set_checked_blocked(self.ui.cb_unicolor, self.win.unicolor)
-            self._update_direction_color_controls()
             self._refresh_color_buttons()
             self._sync_opacity_settings()
 
@@ -653,20 +664,6 @@ class SettingsDialog(QDialog):
                 self.setFocus()
 
 
-    def _update_direction_color_controls(self):
-        enabled = not self.win.unicolor
-        for widget in (
-            self.ui.btn_up_color,
-            self.ui.btn_down_color,
-            self.ui.btn_neutral_color,
-        ):
-            widget.setEnabled(enabled)
-
-    def _on_unicolor_toggled(self, checked: bool):
-        self.win.set_unicolor(bool(checked))
-        self._update_direction_color_controls()
-        self._refresh_color_buttons()
-
     def _sync_metric_options(self):
         controls = (self.ui.cmb_name_length, self.ui.cb_code_visible,
                     self.ui.cb_type_visible, self.ui.cmb_unit_mode)
@@ -687,6 +684,7 @@ class SettingsDialog(QDialog):
         with QSignalBlocker(self.ui.cmb_color_mode), QSignalBlocker(self.ui.cb_hide_tray_icon):
             self.ui.cmb_color_mode.setCurrentIndex(self.ui.cmb_color_mode.findData(self.win.view_options.color_mode))
             self.ui.cb_hide_tray_icon.setChecked(self.win.view_options.hide_tray_icon)
+        self._sync_accent_controls()
         if self.win.view_options.color_mode != getattr(self, "_applied_color_mode", None):
             self._apply_theme_stylesheet()
 
@@ -729,28 +727,42 @@ class SettingsDialog(QDialog):
             self.app.set_start_on_boot(bool(checked))
             self.app.save_now()
 
-    def _pick_color(self, attr, title, setter):
-        base = QColor(getattr(self.win, attr))
-        base.setAlpha(255)
-        color = QColorDialog.getColor(base, self, f"选择{title}")
+    def _pick_surface_color(self, attr, title, setter):
+        color = self._pick_color(getattr(self.win, attr), title)
         if color.isValid():
             setter(color)
             self._refresh_color_buttons()
 
+    def _pick_accent_color(self):
+        color = self._pick_color(self.win.view_options.accent_color, "强调颜色")
+        if color.isValid():
+            self.win.set_view_options(accent_color=color.name(QColor.HexRgb))
+
+    def _pick_color(self, color, title):
+        base = QColor(color)
+        base.setAlpha(255)
+        return QColorDialog.getColor(base, self, f"选择{title}")
+
     def _sync_opacity_settings(self):
         options = self.win.view_options
-        self._set_checked_blocked(self.ui.cb_chart_sync_opacity, options.chart_sync_opacity)
-        for slider, label, value in ((self.ui.slider_bg_alpha, self.ui.label_bg_alpha, round(self.win.bg.alpha() / 2.55)),
-                                     (self.ui.slider_all_alpha, self.ui.label_all_alpha, self.win.opacity_pct),
-                                     (self.ui.slider_chart_bg_alpha, self.ui.label_chart_bg_alpha, options.chart_bg_alpha_pct),
-                                     (self.ui.slider_chart_all_alpha, self.ui.label_chart_all_alpha, options.chart_opacity_pct)):
+        sync = options.chart_sync_opacity
+        bg_alpha = round(self.win.bg.alpha() / 2.55)
+        opacity = self.win.opacity_pct
+        self._set_checked_blocked(self.ui.cb_chart_sync_opacity, sync)
+        self.ui.slider_chart_bg_alpha.setEnabled(not sync)
+        self.ui.slider_chart_all_alpha.setEnabled(not sync and opacity_supported())
+        for slider, label, value in (
+            (self.ui.slider_bg_alpha, self.ui.label_bg_alpha, bg_alpha),
+            (self.ui.slider_all_alpha, self.ui.label_all_alpha, opacity),
+            (self.ui.slider_chart_bg_alpha, self.ui.label_chart_bg_alpha,
+             bg_alpha if sync else options.chart_bg_alpha_pct),
+            (self.ui.slider_chart_all_alpha, self.ui.label_chart_all_alpha,
+             opacity if sync else options.chart_opacity_pct),
+        ):
             if not slider.isSliderDown():
                 with QSignalBlocker(slider):
                     slider.setValue(value)
                 label.setText(f"{slider.value()}%")
-        for control in (self.ui.label_chart_bg, self.ui.slider_chart_bg_alpha, self.ui.label_chart_bg_alpha,
-                        self.ui.label_chart_all, self.ui.slider_chart_all_alpha, self.ui.label_chart_all_alpha):
-            control.setVisible(not options.chart_sync_opacity)
 
     def apply_bg_alpha(self, v: int):
         self.ui.label_bg_alpha.setText(f"{v}%")
@@ -785,7 +797,6 @@ class SettingsDialog(QDialog):
         self._set_checked_blocked(self.ui.cb_head, self.win.header_visible)
         self._set_checked_blocked(self.ui.cb_grid, self.win.grid_visible)
         self._set_checked_blocked(self.ui.cb_unicolor, self.win.unicolor)
-        self._update_direction_color_controls()
         self._refresh_color_buttons()
 
     def _on_hotkey_hide_enabled_toggled(self, checked: bool):

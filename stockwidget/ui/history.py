@@ -4,7 +4,7 @@ import threading
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QTimer, QSignalBlocker, Signal
 from PySide6.QtGui import QColor, QContextMenuEvent, QCursor, QFontInfo, QFontMetrics, QPainter, QPalette
-from PySide6.QtWidgets import QApplication, QAbstractButton, QButtonGroup, QDialog, QToolTip, QWidget, QWidgetItem
+from PySide6.QtWidgets import QApplication, QAbstractButton, QButtonGroup, QDialog, QMenu, QToolTip, QWidget, QWidgetItem
 
 from stockwidget.core.window_rules import adjacent_popup_position, best_screen
 from stockwidget.core.config_store import history_cache_dir
@@ -476,7 +476,9 @@ class HistoryDialog(QDialog):
             point = self.mapFromGlobal(position)
             over_chart = self.rect().contains(point)
             if menu := self._context_menu:
-                if over_chart or menu.rect().contains(menu.mapFromGlobal(position)):
+                if over_chart or any(
+                        popup.isVisible() and popup.rect().contains(popup.mapFromGlobal(position))
+                        for popup in (menu, *menu.findChildren(QMenu))):
                     return False
             if not inside or not over_chart:
                 if not self.pin_button.isChecked():
@@ -534,6 +536,7 @@ class HistoryController(QObject):
         self.result_ready.connect(self._accept)
         self.window.view_options_changed.connect(self._options_changed)
         self.window.configuration_changed.connect(self._apply_theme)
+        QApplication.instance().paletteChanged.connect(self._apply_theme)
         self.window.display_flags_changed.connect(self._apply_chart_options)
         self.window.quotes.quotes_updated.connect(self._quotes_updated)
         self.window.quotes.details_updated.connect(self._update_details)
@@ -683,15 +686,19 @@ class HistoryController(QObject):
     def _apply_theme(self):
         if self.dialog is None:
             return
-        mode = self.window.view_options.color_mode
+        options = self.window.view_options
+        mode = options.color_mode
         dark = mode == "dark" or (mode == "system" and is_dark_theme())
-        palette = theme_palette(dark, self.window.palette())
+        palette = theme_palette(dark, QApplication.palette())
         floating = self.dialog.display_mode == "popup"
         colors = (QColor(self.window.fg), QColor(self.window.bg)) if floating else (None, None)
-        opacity = self.window.windowOpacity() if floating else 1.
-        if floating and not self.window.view_options.chart_sync_opacity:
-            colors[1].setAlpha(round(self.window.view_options.chart_bg_alpha_pct * 2.55))
-            opacity = self.window.view_options.chart_opacity_pct / 100
+        opacity = 1.
+        if floating:
+            if options.chart_sync_opacity:
+                opacity = self.window.opacity_pct / 100
+            else:
+                colors[1].setAlpha(round(options.chart_bg_alpha_pct * 2.55))
+                opacity = options.chart_opacity_pct / 100
         theme = (palette, *colors, QColor(self.window.up_color), QColor(self.window.down_color),
                  QColor(self.window.neutral_color), opacity)
         if self.dialog._theme_palette == theme:
