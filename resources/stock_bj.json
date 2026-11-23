@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-20",
+  "last_update": "2026-11-23",
   "codes": {
     "bj920000": {
       "code": "920000",
@@ -432,6 +432,15 @@
       "name_en": "",
       "py": "kebaier",
       "abbr": "kbe"
+    },
+    "bj920067": {
+      "code": "920067",
+      "market": "bj",
+      "type": "京",
+      "name": "N华晟",
+      "name_en": "",
+      "py": "nhuacheng",
+      "abbr": "nhc"
     },
     "bj920068": {
       "code": "920068",
@@ -1058,10 +1067,10 @@
       "code": "920176",
       "market": "bj",
       "type": "京",
-      "name": "XD维琪科",
+      "name": "维琪科技",
       "name_en": "WINKEY",
-      "py": "xdweiqike",
-      "abbr": "xdwqk"
+      "py": "weiqikeji",
+      "abbr": "wqkj"
     },
     "bj920177": {
       "code": "920177",
@@ -1247,10 +1256,10 @@
       "code": "920201",
       "market": "bj",
       "type": "京",
-      "name": "XD百瑞吉",
+      "name": "百瑞吉",
       "name_en": "BIOREGEN",
-      "py": "xdbairuiji",
-      "abbr": "xdbrj"
+      "py": "bairuiji",
+      "abbr": "brj"
     },
     "bj920202": {
       "code": "920202",
@@ -3155,10 +3164,10 @@
       "code": "920976",
       "market": "bj",
       "type": "京",
-      "name": "视声智能",
+      "name": "XD视声智",
       "name_en": "GVS",
-      "py": "shishengzhineng",
-      "abbr": "sszn"
+      "py": "xdshishengzhi",
+      "abbr": "xdssz"
     },
     "bj920978": {
       "code": "920978",

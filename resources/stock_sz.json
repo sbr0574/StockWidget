@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-18",
+  "last_update": "2026-11-23",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -5819,10 +5819,10 @@
       "code": "002122",
       "market": "sz",
       "type": "深",
-      "name": "ST汇洲",
+      "name": "汇洲智能",
       "name_en": "",
-      "py": "sthuizhou",
-      "abbr": "sthz"
+      "py": "huizhouzhineng",
+      "abbr": "hzzn"
     },
     "sz002123": {
       "code": "002123",
@@ -16655,10 +16655,10 @@
       "code": "300351",
       "market": "sz",
       "type": "创",
-      "name": "永贵电器",
+      "name": "永贵智能",
       "name_en": "",
-      "py": "yongguidianqi",
-      "abbr": "ygdq"
+      "py": "yongguizhineng",
+      "abbr": "ygzn"
     },
     "sz300352": {
       "code": "300352",

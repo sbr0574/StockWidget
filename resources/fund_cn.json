@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-20",
+  "last_update": "2026-11-23",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -2714,10 +2714,10 @@
       "code": "512130",
       "market": "sh",
       "type": "基",
-      "name": "全指现金流ETF鹏华",
+      "name": "自由现金流ETF鹏华",
       "name_en": "",
-      "py": "quanzhixianjinliuetfpenghua",
-      "abbr": "qzxjletfph"
+      "py": "ziyouxianjinliuetfpenghua",
+      "abbr": "zyxjletfph"
     },
     "sh512140": {
       "code": "512140",
@@ -8857,6 +8857,87 @@
       "py": "800xianjinliuetffuguo",
       "abbr": "800xjletffg"
     },
+    "sh581000": {
+      "code": "581000",
+      "market": "sh",
+      "type": "基",
+      "name": "大盘成长主动ETF摩根",
+      "name_en": "",
+      "py": "dapanchengzhangzhudongetfmogen",
+      "abbr": "dpczzdetfmg"
+    },
+    "sh581010": {
+      "code": "581010",
+      "market": "sh",
+      "type": "基",
+      "name": "均衡智选主动ETF汇添富",
+      "name_en": "",
+      "py": "junhengzhixuanzhudongetfhuitianfu",
+      "abbr": "jhzxzdetfhtf"
+    },
+    "sh581020": {
+      "code": "581020",
+      "market": "sh",
+      "type": "基",
+      "name": "均衡主动ETF华安",
+      "name_en": "",
+      "py": "junhengzhudongetfhuaan",
+      "abbr": "jhzdetfha"
+    },
+    "sh581030": {
+      "code": "581030",
+      "market": "sh",
+      "type": "基",
+      "name": "质量主动ETF华夏",
+      "name_en": "",
+      "py": "zhiliangzhudongetfhuaxia",
+      "abbr": "zlzdetfhx"
+    },
+    "sh581050": {
+      "code": "581050",
+      "market": "sh",
+      "type": "基",
+      "name": "品质均衡主动ETF易方达",
+      "name_en": "",
+      "py": "pinzhijunhengzhudongetfyifangda",
+      "abbr": "pzjhzdetfyfd"
+    },
+    "sh581060": {
+      "code": "581060",
+      "market": "sh",
+      "type": "基",
+      "name": "景气均衡主动ETF永赢",
+      "name_en": "",
+      "py": "jingqijunhengzhudongetfyongying",
+      "abbr": "jqjhzdetfyy"
+    },
+    "sh581070": {
+      "code": "581070",
+      "market": "sh",
+      "type": "基",
+      "name": "红利主动ETF平安",
+      "name_en": "",
+      "py": "honglizhudongetfpingan",
+      "abbr": "hlzdetfpa"
+    },
+    "sh581080": {
+      "code": "581080",
+      "market": "sh",
+      "type": "基",
+      "name": "价值主动ETF招商",
+      "name_en": "",
+      "py": "jiazhizhudongetfzhaoshang",
+      "abbr": "jzzdetfzs"
+    },
+    "sh581090": {
+      "code": "581090",
+      "market": "sh",
+      "type": "基",
+      "name": "价值精选主动ETF华泰柏瑞",
+      "name_en": "",
+      "py": "jiazhijingxuanzhudongetfhuataibairui",
+      "abbr": "jzjxzdetfhtbr"
+    },
     "sh588000": {
       "code": "588000",
       "market": "sh",
@@ -10719,6 +10800,87 @@
       "name_en": "",
       "py": "chuangyebandianchietfyinhua",
       "abbr": "cybdcetfyh"
+    },
+    "sz158900": {
+      "code": "158900",
+      "market": "sz",
+      "type": "基",
+      "name": "均衡主动ETF南方",
+      "name_en": "",
+      "py": "junhengzhudongetfnanfang",
+      "abbr": "jhzdetfnf"
+    },
+    "sz158901": {
+      "code": "158901",
+      "market": "sz",
+      "type": "基",
+      "name": "价值优选主动ETF富国",
+      "name_en": "",
+      "py": "jiazhiyouxuanzhudongetffuguo",
+      "abbr": "jzyxzdetffg"
+    },
+    "sz158902": {
+      "code": "158902",
+      "market": "sz",
+      "type": "基",
+      "name": "红利智选主动ETF大成",
+      "name_en": "",
+      "py": "honglizhixuanzhudongetfdacheng",
+      "abbr": "hlzxzdetfdc"
+    },
+    "sz158903": {
+      "code": "158903",
+      "market": "sz",
+      "type": "基",
+      "name": "价值主动ETF鹏华",
+      "name_en": "",
+      "py": "jiazhizhudongetfpenghua",
+      "abbr": "jzzdetfph"
+    },
+    "sz158905": {
+      "code": "158905",
+      "market": "sz",
+      "type": "基",
+      "name": "红利主动ETF工银",
+      "name_en": "",
+      "py": "honglizhudongetfgongyin",
+      "abbr": "hlzdetfgy"
+    },
+    "sz158906": {
+      "code": "158906",
+      "market": "sz",
+      "type": "基",
+      "name": "均衡主动ETF华宝",
+      "name_en": "",
+      "py": "junhengzhudongetfhuabao",
+      "abbr": "jhzdetfhb"
+    },
+    "sz158907": {
+      "code": "158907",
+      "market": "sz",
+      "type": "基",
+      "name": "鑫汇均衡主动ETF国泰",
+      "name_en": "",
+      "py": "xinhuijunhengzhudongetfguotai",
+      "abbr": "xhjhzdetfgt"
+    },
+    "sz158908": {
+      "code": "158908",
+      "market": "sz",
+      "type": "基",
+      "name": "均衡量化主动ETF天弘",
+      "name_en": "",
+      "py": "junhenglianghuazhudongetftianhong",
+      "abbr": "jhlhzdetfth"
+    },
+    "sz158909": {
+      "code": "158909",
+      "market": "sz",
+      "type": "基",
+      "name": "均衡优选主动ETF建信",
+      "name_en": "",
+      "py": "junhengyouxuanzhudongetfjianxin",
+      "abbr": "jhyxzdetfjx"
     },
     "sz159001": {
       "code": "159001",

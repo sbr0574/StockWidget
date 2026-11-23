@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-20",
+  "last_update": "2026-11-23",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -8438,10 +8438,10 @@
       "code": "601888",
       "market": "sh",
       "type": "沪",
-      "name": "XD中国中",
+      "name": "中国中免",
       "name_en": "",
-      "py": "xdzhongguozhong",
-      "abbr": "xdzgz"
+      "py": "zhongguozhongmian",
+      "abbr": "zgzm"
     },
     "sh601890": {
       "code": "601890",
@@ -8735,10 +8735,10 @@
       "code": "601998",
       "market": "sh",
       "type": "沪",
-      "name": "XD中信银",
+      "name": "中信银行",
       "name_en": "",
-      "py": "xdzhongxinyin",
-      "abbr": "xdzxy"
+      "py": "zhongxinyinhang",
+      "abbr": "zxyh"
     },
     "sh601999": {
       "code": "601999",
@@ -9086,10 +9086,10 @@
       "code": "603040",
       "market": "sh",
       "type": "沪",
-      "name": "新坐标",
+      "name": "XD新坐标",
       "name_en": "",
-      "py": "xinzuobiao",
-      "abbr": "xzb"
+      "py": "xdxinzuobiao",
+      "abbr": "xdxzb"
     },
     "sh603041": {
       "code": "603041",
@@ -9986,10 +9986,10 @@
       "code": "603167",
       "market": "sh",
       "type": "沪",
-      "name": "XD渤海轮",
+      "name": "渤海轮渡",
       "name_en": "",
-      "py": "xdbohailun",
-      "abbr": "xdbhl"
+      "py": "bohailundu",
+      "abbr": "bhld"
     },
     "sh603168": {
       "code": "603168",
@@ -14027,10 +14027,10 @@
       "code": "603955",
       "market": "sh",
       "type": "沪",
-      "name": "大千生态",
+      "name": "灵动股份",
       "name_en": "",
-      "py": "daqianshengtai",
-      "abbr": "dqst"
+      "py": "lingdonggufen",
+      "abbr": "ldgf"
     },
     "sh603956": {
       "code": "603956",
@@ -16700,10 +16700,10 @@
       "code": "688179",
       "market": "sh",
       "type": "科",
-      "name": "XD阿拉丁",
+      "name": "阿拉丁",
       "name_en": "",
-      "py": "xdalading",
-      "abbr": "xdald"
+      "py": "alading",
+      "abbr": "ald"
     },
     "sh688180": {
       "code": "688180",

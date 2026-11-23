@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-20",
+  "last_update": "2026-11-23",
   "codes": {
     "usa": {
       "code": "a",
@@ -457,6 +457,15 @@
       "type": "美",
       "name": "Allied Gold Corporation Common Shares",
       "name_en": "Allied Gold Corporation Common Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "usaaud": {
+      "code": "aaud",
+      "market": "us",
+      "type": "美",
+      "name": "Alpha Architect US Equity 5 ETF",
+      "name_en": "Alpha Architect US Equity 5 ETF",
       "py": "",
       "abbr": ""
     },
@@ -5290,15 +5299,6 @@
       "type": "美",
       "name": "Amplitech Group, Inc. - Common Stock",
       "name_en": "Amplitech Group, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usampgz": {
-      "code": "ampgz",
-      "market": "us",
-      "type": "美",
-      "name": "Amplitech Group, Inc. - Series B Right",
-      "name_en": "Amplitech Group, Inc. - Series B Right",
       "py": "",
       "abbr": ""
     },
@@ -26152,6 +26152,15 @@
       "type": "美",
       "name": "Citizens Community Bancorp, Inc. - Common Stock",
       "name_en": "Citizens Community Bancorp, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usczzl": {
+      "code": "czzl",
+      "market": "us",
+      "type": "美",
+      "name": "Cizzle Brands Corporation - Common Stock",
+      "name_en": "Cizzle Brands Corporation - Common Stock",
       "py": "",
       "abbr": ""
     },
@@ -55720,6 +55729,15 @@
       "py": "",
       "abbr": ""
     },
+    "usismh": {
+      "code": "ismh",
+      "market": "us",
+      "type": "美",
+      "name": "xETFs International Semiconductor ETF",
+      "name_en": "xETFs International Semiconductor ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usisnr": {
       "code": "isnr",
       "market": "us",
@@ -58172,8 +58190,8 @@
       "code": "joet",
       "market": "us",
       "type": "美",
-      "name": "Virtus Terranova U.S. Quality Momentum ETF",
-      "name_en": "Virtus Terranova U.S. Quality Momentum ETF",
+      "name": "Virtus NYSE Terranova U.S. Quality Momentum ETF",
+      "name_en": "Virtus NYSE Terranova U.S. Quality Momentum ETF",
       "py": "",
       "abbr": ""
     },
@@ -66411,15 +66429,6 @@
       "name_en": "Bank of America Corporation Income Capital Obligation Notes initially due December 15, 2066",
       "py": "",
       "abbr": ""
-    },
-    "usmerc": {
-      "code": "merc",
-      "market": "us",
-      "type": "美",
-      "name": "美世国际",
-      "name_en": "Mercer International Inc. - Common Stock",
-      "py": "meishiguoji",
-      "abbr": "msgj"
     },
     "usmesh": {
       "code": "mesh",
@@ -77671,15 +77680,6 @@
       "py": "",
       "abbr": ""
     },
-    "usopay": {
-      "code": "opay",
-      "market": "us",
-      "type": "美",
-      "name": "OPay Limited American Depositary Shares, each representing ten Ordinary Shares",
-      "name_en": "OPay Limited American Depositary Shares, each representing ten Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
     "usopbk": {
       "code": "opbk",
       "market": "us",
@@ -77704,33 +77704,6 @@
       "type": "美",
       "name": "Opendoor Technologies Inc  - Common Stock",
       "name_en": "Opendoor Technologies Inc  - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "usopenl": {
-      "code": "openl",
-      "market": "us",
-      "type": "美",
-      "name": "Opendoor Technologies Inc  - Series A Warrants, each whole warrant exercisable to purchase one share of Common Stock at an exercise price of $13.00 per warrant",
-      "name_en": "Opendoor Technologies Inc  - Series A Warrants, each whole warrant exercisable to purchase one share of Common Stock at an exercise price of $13.00 per warrant",
-      "py": "",
-      "abbr": ""
-    },
-    "usopenw": {
-      "code": "openw",
-      "market": "us",
-      "type": "美",
-      "name": "Opendoor Technologies Inc  - Series K Warrants, each whole warrant exercisable to purchase one share of Common Stock at an exercise price of $9.00 per warrant",
-      "name_en": "Opendoor Technologies Inc  - Series K Warrants, each whole warrant exercisable to purchase one share of Common Stock at an exercise price of $9.00 per warrant",
-      "py": "",
-      "abbr": ""
-    },
-    "usopenz": {
-      "code": "openz",
-      "market": "us",
-      "type": "美",
-      "name": "Opendoor Technologies Inc  - Series Z Warrants, each whole warrant exercisable to purchase one share of Common Stock at an exercise price of $17.00 per warrant",
-      "name_en": "Opendoor Technologies Inc  - Series Z Warrants, each whole warrant exercisable to purchase one share of Common Stock at an exercise price of $17.00 per warrant",
       "py": "",
       "abbr": ""
     },
@@ -97732,6 +97705,15 @@
       "py": "",
       "abbr": ""
     },
+    "ussonn": {
+      "code": "sonn",
+      "market": "us",
+      "type": "美",
+      "name": "Southern Company (The) 2026 Series A Corporate Units",
+      "name_en": "Southern Company (The) 2026 Series A Corporate Units",
+      "py": "",
+      "abbr": ""
+    },
     "ussono": {
       "code": "sono",
       "market": "us",
@@ -109567,15 +109549,6 @@
       "py": "",
       "abbr": ""
     },
-    "usutz": {
-      "code": "utz",
-      "market": "us",
-      "type": "美",
-      "name": "Utz Brands Inc Class A Common Stock",
-      "name_en": "Utz Brands Inc Class A Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "usuup": {
       "code": "uup",
       "market": "us",
@@ -118222,6 +118195,15 @@
       "type": "美",
       "name": "Franklin ClearBridge Enhanced Income ETF",
       "name_en": "Franklin ClearBridge Enhanced Income ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usylds": {
+      "code": "ylds",
+      "market": "us",
+      "type": "美",
+      "name": "Harbor Arena Structured Income ETF",
+      "name_en": "Harbor Arena Structured Income ETF",
       "py": "",
       "abbr": ""
     },

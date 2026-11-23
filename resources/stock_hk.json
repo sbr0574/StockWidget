@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-20",
+  "last_update": "2026-11-23",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -1266,7 +1266,7 @@
       "market": "hk",
       "type": "港",
       "name": "IDT INT'L",
-      "name_en": "IDT INT'L",
+      "name_en": "IDT INT'L-500",
       "py": "",
       "abbr": ""
     },
@@ -16093,15 +16093,6 @@
       "py": "jingweitiandi",
       "abbr": "jwtd"
     },
-    "hk02479": {
-      "code": "02479",
-      "market": "hk",
-      "type": "港",
-      "name": "天聚地合",
-      "name_en": "TIANJUDIHE",
-      "py": "tianjudihe",
-      "abbr": "tjdh"
-    },
     "hk02480": {
       "code": "02480",
       "market": "hk",
@@ -17637,7 +17628,7 @@
       "market": "hk",
       "type": "港",
       "name": "深演智能",
-      "name_en": "DEEPZERO-NEW",
+      "name_en": "DEEPZERO",
       "py": "shenyanzhineng",
       "abbr": "syzn"
     },
@@ -18325,15 +18316,6 @@
       "py": "zijinkuangye",
       "abbr": "zjky"
     },
-    "hk02947": {
-      "code": "02947",
-      "market": "hk",
-      "type": "港",
-      "name": "深演智能",
-      "name_en": "DEEPZERO-OLD",
-      "py": "shenyanzhineng",
-      "abbr": "syzn"
-    },
     "hk02948": {
       "code": "02948",
       "market": "hk",
@@ -18423,6 +18405,24 @@
       "name_en": "FLOWING CLO RTS",
       "py": "feitianyundongguquan",
       "abbr": "ftydgq"
+    },
+    "hk02963": {
+      "code": "02963",
+      "market": "hk",
+      "type": "港",
+      "name": "应星控股",
+      "name_en": "STAR SHINE HLDG",
+      "py": "yingxingkonggu",
+      "abbr": "yxkg"
+    },
+    "hk02964": {
+      "code": "02964",
+      "market": "hk",
+      "type": "港",
+      "name": "IDT INT'L-18K",
+      "name_en": "IDT INT'L-18K",
+      "py": "",
+      "abbr": ""
     },
     "hk02982": {
       "code": "02982",
@@ -20682,6 +20682,15 @@
       "name_en": "A CSOP KOSPICC",
       "py": "ananfanghanguobeidui",
       "abbr": "anfhgbd"
+    },
+    "hk03551": {
+      "code": "03551",
+      "market": "hk",
+      "type": "基",
+      "name": "华夏人民币债",
+      "name_en": "CAM CNH BOND",
+      "py": "huaxiarenminbizhai",
+      "abbr": "hxrmbz"
     },
     "hk03555": {
       "code": "03555",
@@ -28567,6 +28576,15 @@
       "py": "xagxjindui-u",
       "abbr": "xagxjd-u"
     },
+    "hk41551": {
+      "code": "41551",
+      "market": "hk",
+      "type": "基",
+      "name": "华夏人民币债-U",
+      "name_en": "CAM CNH BOND-U",
+      "py": "huaxiarenminbizhai-u",
+      "abbr": "hxrmbz-u"
+    },
     "hk41555": {
       "code": "41555",
       "market": "hk",
@@ -29376,6 +29394,15 @@
       "name_en": "CAM INNODRUGS-R",
       "py": "huaxiachuangxinyao-r",
       "abbr": "hxcxy-r"
+    },
+    "hk83551": {
+      "code": "83551",
+      "market": "hk",
+      "type": "基",
+      "name": "华夏人民币债-R",
+      "name_en": "CAM CNH BOND-R",
+      "py": "huaxiarenminbizhai-r",
+      "abbr": "hxrmbz-r"
     },
     "hk83555": {
       "code": "83555",
