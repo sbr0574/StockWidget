@@ -4519,6 +4519,15 @@
       "py": "",
       "abbr": ""
     },
+    "usallz": {
+      "code": "allz",
+      "market": "us",
+      "type": "美",
+      "name": "Zacks All-Cap Core ETF",
+      "name_en": "Zacks All-Cap Core ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usalm": {
       "code": "alm",
       "market": "us",
@@ -5662,6 +5671,15 @@
       "py": "",
       "abbr": ""
     },
+    "usandd": {
+      "code": "andd",
+      "market": "us",
+      "type": "美",
+      "name": "Leverage Shares 2X Short Anthropic Daily ETF",
+      "name_en": "Leverage Shares 2X Short Anthropic Daily ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usande": {
       "code": "ande",
       "market": "us",
@@ -5869,6 +5887,15 @@
       "py": "",
       "abbr": ""
     },
+    "usanss": {
+      "code": "anss",
+      "market": "us",
+      "type": "美",
+      "name": "Leverage Shares 1X Short Anthropic Daily ETF",
+      "name_en": "Leverage Shares 1X Short Anthropic Daily ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usant": {
       "code": "ant",
       "market": "us",
@@ -5887,6 +5914,15 @@
       "py": "",
       "abbr": ""
     },
+    "usantt": {
+      "code": "antt",
+      "market": "us",
+      "type": "美",
+      "name": "Tradr 2X Long Anthropic Daily ETF",
+      "name_en": "Tradr 2X Long Anthropic Daily ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usantw": {
       "code": "antw",
       "market": "us",
@@ -5902,6 +5938,24 @@
       "type": "美",
       "name": "AN2 Therapeutics, Inc. - Common Stock",
       "name_en": "AN2 Therapeutics, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usantz": {
+      "code": "antz",
+      "market": "us",
+      "type": "美",
+      "name": "Tradr 2X Short Anthropic Daily ETF",
+      "name_en": "Tradr 2X Short Anthropic Daily ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usanuu": {
+      "code": "anuu",
+      "market": "us",
+      "type": "美",
+      "name": "Leverage Shares 2X Long Anthropic Daily ETF",
+      "name_en": "Leverage Shares 2X Long Anthropic Daily ETF",
       "py": "",
       "abbr": ""
     },
@@ -8245,6 +8299,15 @@
       "py": "",
       "abbr": ""
     },
+    "usathx": {
+      "code": "athx",
+      "market": "us",
+      "type": "美",
+      "name": "2x Anthropic ETF",
+      "name_en": "2x Anthropic ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usati": {
       "code": "ati",
       "market": "us",
@@ -9387,6 +9450,15 @@
       "name_en": "Avery Dennison Corporation Common Stock",
       "py": "aili",
       "abbr": "al"
+    },
+    "usavzo": {
+      "code": "avzo",
+      "market": "us",
+      "type": "美",
+      "name": "Avenzo Therapeutics, Inc. - Common Stock",
+      "name_en": "Avenzo Therapeutics, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
     },
     "usaway": {
       "code": "away",
@@ -13083,12 +13155,12 @@
       "market": "us",
       "type": "美",
       "name": "布鲁克菲尔德公共建设",
-      "name_en": "Brookfield Infrastructure Partners LP Limited Partnership Units",
+      "name_en": "Brookfield Infrastructure Partners Inc. Class A Subordinate Voting Shares",
       "py": "bulukefeierdegonggongjianshe",
       "abbr": "blkfedggjs"
     },
-    "usbip_a": {
-      "code": "bip_a",
+    "usbipf_a": {
+      "code": "bipf_a",
       "market": "us",
       "type": "美",
       "name": "Brookfield Infrastructure Partners LP 5.125% Class A Preferred Limited Partnership Units, Series 13",
@@ -13096,21 +13168,12 @@
       "py": "",
       "abbr": ""
     },
-    "usbip_b": {
-      "code": "bip_b",
+    "usbipf_b": {
+      "code": "bipf_b",
       "market": "us",
       "type": "美",
       "name": "Brookfield Infrastructure Partners LP 5.000% Class A Preferred Limited Partnership Units, Series 14",
       "name_en": "Brookfield Infrastructure Partners LP 5.000% Class A Preferred Limited Partnership Units, Series 14",
-      "py": "",
-      "abbr": ""
-    },
-    "usbipc": {
-      "code": "bipc",
-      "market": "us",
-      "type": "美",
-      "name": "Brookfield Infrastructure Corporation Brookfield Infrastructure Corporation",
-      "name_en": "Brookfield Infrastructure Corporation Brookfield Infrastructure Corporation",
       "py": "",
       "abbr": ""
     },
@@ -13498,33 +13561,6 @@
       "type": "美",
       "name": "BNY Mellon Global Infrastructure Income ETF",
       "name_en": "BNY Mellon Global Infrastructure Income ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "usbkha": {
-      "code": "bkha",
-      "market": "us",
-      "type": "美",
-      "name": "Black Hawk Acquisition Corporation - Class A Ordinary Shares",
-      "name_en": "Black Hawk Acquisition Corporation - Class A Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usbkhar": {
-      "code": "bkhar",
-      "market": "us",
-      "type": "美",
-      "name": "Black Hawk Acquisition Corporation - Rights",
-      "name_en": "Black Hawk Acquisition Corporation - Rights",
-      "py": "",
-      "abbr": ""
-    },
-    "usbkhau": {
-      "code": "bkhau",
-      "market": "us",
-      "type": "美",
-      "name": "Black Hawk Acquisition Corporation - Units",
-      "name_en": "Black Hawk Acquisition Corporation - Units",
       "py": "",
       "abbr": ""
     },
@@ -21322,6 +21358,15 @@
       "py": "",
       "abbr": ""
     },
+    "usclau": {
+      "code": "clau",
+      "market": "us",
+      "type": "美",
+      "name": "T-REX 2X Long Anthropic Daily Target ETF",
+      "name_en": "T-REX 2X Long Anthropic Daily Target ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usclb": {
       "code": "clb",
       "market": "us",
@@ -28504,6 +28549,15 @@
       "py": "globalxgaofenhongetf",
       "abbr": "globalxgfhetf"
     },
+    "usdiva": {
+      "code": "diva",
+      "market": "us",
+      "type": "美",
+      "name": "AB Equity Income ETF",
+      "name_en": "AB Equity Income ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usdivb": {
       "code": "divb",
       "market": "us",
@@ -35413,6 +35467,24 @@
       "type": "美",
       "name": "Evergy, Inc. - Common Stock",
       "name_en": "Evergy, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usevrl": {
+      "code": "evrl",
+      "market": "us",
+      "type": "美",
+      "name": "Everli Global Holdings - Class A Ordinary Shares",
+      "name_en": "Everli Global Holdings - Class A Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
+    "usevrlw": {
+      "code": "evrlw",
+      "market": "us",
+      "type": "美",
+      "name": "Everli Global Holdings - Warrant",
+      "name_en": "Everli Global Holdings - Warrant",
       "py": "",
       "abbr": ""
     },
@@ -43736,8 +43808,8 @@
       "code": "gfai",
       "market": "us",
       "type": "美",
-      "name": "Guardforce AI Co., Limited - Ordinary Shares",
-      "name_en": "Guardforce AI Co., Limited - Ordinary Shares",
+      "name": "Guardforce AI Co., Limited - Class A Ordinary Shares",
+      "name_en": "Guardforce AI Co., Limited - Class A Ordinary Shares",
       "py": "",
       "abbr": ""
     },
@@ -64872,33 +64944,6 @@
       "name_en": "Macerich Company (The) Common Stock",
       "py": "masailiqifangchan",
       "abbr": "mslqfc"
-    },
-    "usmaci": {
-      "code": "maci",
-      "market": "us",
-      "type": "美",
-      "name": "Melar Acquisition Corp. I - Class A Ordinary Shares",
-      "name_en": "Melar Acquisition Corp. I - Class A Ordinary Shares",
-      "py": "",
-      "abbr": ""
-    },
-    "usmaciu": {
-      "code": "maciu",
-      "market": "us",
-      "type": "美",
-      "name": "Melar Acquisition Corp. I - Unit",
-      "name_en": "Melar Acquisition Corp. I - Unit",
-      "py": "",
-      "abbr": ""
-    },
-    "usmaciw": {
-      "code": "maciw",
-      "market": "us",
-      "type": "美",
-      "name": "Melar Acquisition Corp. I - Warrant",
-      "name_en": "Melar Acquisition Corp. I - Warrant",
-      "py": "",
-      "abbr": ""
     },
     "usmade": {
       "code": "made",
@@ -89758,15 +89803,6 @@
       "py": "",
       "abbr": ""
     },
-    "usrkng": {
-      "code": "rkng",
-      "market": "us",
-      "type": "美",
-      "name": "Defiance Retail Kings ETF",
-      "name_en": "Defiance Retail Kings ETF",
-      "py": "",
-      "abbr": ""
-    },
     "usrksg": {
       "code": "rksg",
       "market": "us",
@@ -89892,15 +89928,6 @@
       "name_en": "State Street Multi-Asset Real Return ETF",
       "py": "spdrssgaduozichanhuibaokangtongzhangetf",
       "abbr": "spdrssgadzchbktzetf"
-    },
-    "usrlyb": {
-      "code": "rlyb",
-      "market": "us",
-      "type": "美",
-      "name": "Rallybio Corporation - Common Stock",
-      "name_en": "Rallybio Corporation - Common Stock",
-      "py": "",
-      "abbr": ""
     },
     "usrm": {
       "code": "rm",
@@ -99304,15 +99331,6 @@
       "type": "美",
       "name": "State Street Blackstone Senior Loan ETF",
       "name_en": "State Street Blackstone Senior Loan ETF",
-      "py": "",
-      "abbr": ""
-    },
-    "ussroi": {
-      "code": "sroi",
-      "market": "us",
-      "type": "美",
-      "name": "Calamos Antetokounmpo Global Sustainable Equities ETF",
-      "name_en": "Calamos Antetokounmpo Global Sustainable Equities ETF",
       "py": "",
       "abbr": ""
     },
@@ -110611,6 +110629,15 @@
       "py": "",
       "abbr": ""
     },
+    "usvesi": {
+      "code": "vesi",
+      "market": "us",
+      "type": "美",
+      "name": "Vesicor Therapeutics Holdings, Inc. - Class A Ordinary Shares",
+      "name_en": "Vesicor Therapeutics Holdings, Inc. - Class A Ordinary Shares",
+      "py": "",
+      "abbr": ""
+    },
     "usvet": {
       "code": "vet",
       "market": "us",
@@ -118639,6 +118666,15 @@
       "py": "banmajishu",
       "abbr": "bmjs"
     },
+    "uszcap": {
+      "code": "zcap",
+      "market": "us",
+      "type": "美",
+      "name": "Zacks Small-Cap Core ETF",
+      "name_en": "Zacks Small-Cap Core ETF",
+      "py": "",
+      "abbr": ""
+    },
     "uszcba": {
       "code": "zcba",
       "market": "us",
@@ -118771,6 +118807,15 @@
       "type": "美",
       "name": "Zacks Earnings Consistent Portfolio ETF",
       "name_en": "Zacks Earnings Consistent Portfolio ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "uszecx": {
+      "code": "zecx",
+      "market": "us",
+      "type": "美",
+      "name": "2x ZCSH ETF",
+      "name_en": "2x ZCSH ETF",
       "py": "",
       "abbr": ""
     },
