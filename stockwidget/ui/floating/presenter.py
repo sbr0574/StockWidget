@@ -23,7 +23,23 @@ from stockwidget.core.quote_presentation import (
 )
 from stockwidget.core.view_options import column_ranges, page_slice
 from stockwidget.core.window_rules import quote_timestamp
-from stockwidget.data.quotes import fetch_quote_result, request_quote_details
+from stockwidget.data.quotes import MARKET_BREADTH_KEY, fetch_quote_result, request_quote_details
+
+
+def _is_newer_breadth(previous, candidate) -> bool:
+    if previous is None:
+        return True
+    old_time = quote_timestamp(previous)
+    new_time = quote_timestamp(candidate)
+    if old_time is not None:
+        if new_time is None or new_time < old_time:
+            return False
+        if new_time > old_time:
+            return True
+    old_seq, new_seq = previous.get("seq"), candidate.get("seq")
+    if old_seq is not None and new_seq is not None and new_seq < old_seq:
+        return False
+    return True
 
 
 class QuotePresenter(QObject):
@@ -55,6 +71,7 @@ class QuotePresenter(QObject):
         self._detail_busy = False
         self._detail_values = {}
         self._fundamentals = {}
+        self._market_breadth = None
         self.page_timers = {}
         for surface in ("float", "taskbar"):
             timer = QTimer(self)
@@ -159,6 +176,18 @@ class QuotePresenter(QObject):
         self.set_detail_instrument(None)
         self._detail_values.clear()
         self._fundamentals.clear()
+        self._market_breadth = None
+
+    def market_breadth(self):
+        return dict(self._market_breadth) if self._market_breadth is not None else None
+
+    def _needs_market_breadth(self) -> bool:
+        history = getattr(self.window, "history", None)
+        return bool(history is not None and history.needs_market_breadth())
+
+    def sync_market_breadth(self, active: bool):
+        if not active:
+            self._market_breadth = None
 
     def set_detail_instrument(self, instrument):
         """One active detached chart; selection/close invalidates late results."""
@@ -397,16 +426,18 @@ class QuotePresenter(QObject):
             return
         if self._refresh_thread is not None and self._refresh_thread.is_alive():
             return
+        include_breadth = self._needs_market_breadth()
         self._refresh_thread = threading.Thread(
             target=self._fetch_worker,
-            args=(checked_codes, self._quote_generation),
+            args=(checked_codes, self._quote_generation, include_breadth),
             daemon=True,
         )
         self._refresh_thread.start()
 
-    def _fetch_worker(self, codes: dict, generation: int):
+    def _fetch_worker(self, codes: dict, generation: int, include_breadth: bool = False):
         """后台线程：执行网络请求，结果经 data_ready 信号回到主线程。"""
-        payload = fetch_quote_result(codes)
+        payload = (fetch_quote_result(codes, include_breadth=True)
+                   if include_breadth else fetch_quote_result(codes))
         try:
             self.data_ready.emit((*payload, generation))
         except RuntimeError:
@@ -451,6 +482,7 @@ class QuotePresenter(QObject):
         ok, data, error = payload[:3]
         if len(payload) > 3 and payload[3] != self._quote_generation:
             return
+        raw_breadth = data.get(MARKET_BREADTH_KEY) if ok and isinstance(data, dict) else None
         checked_codes = self.window.checked_codes
         if not checked_codes:
             ok, data = True, {}
@@ -486,6 +518,10 @@ class QuotePresenter(QObject):
             self.window._show_message("请在设置面板中添加自选股", is_error=True)
         self.project_rows(self._last_full_rows, self._last_color_roles, self._last_sort_values)
         self.window.hide_controller.quotes_refreshed(data)
+        if not self._needs_market_breadth():
+            self._market_breadth = None
+        elif isinstance(raw_breadth, dict) and _is_newer_breadth(self._market_breadth, raw_breadth):
+            self._market_breadth = dict(raw_breadth)
         self.quotes_updated.emit()
         self._refresh_details()
 

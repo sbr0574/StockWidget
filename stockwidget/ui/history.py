@@ -6,6 +6,7 @@ from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QTimer, QS
 from PySide6.QtGui import QColor, QContextMenuEvent, QCursor, QFontInfo, QFontMetrics, QPainter, QPalette
 from PySide6.QtWidgets import QApplication, QAbstractButton, QButtonGroup, QDialog, QMenu, QToolTip, QWidget, QWidgetItem
 
+from stockwidget.core.quote_presentation import is_cn_index
 from stockwidget.core.window_rules import adjacent_popup_position, best_screen
 from stockwidget.core.config_store import history_cache_dir
 from stockwidget.data.bar_cache import BarCache
@@ -42,6 +43,7 @@ class HistoryDialog(QDialog):
         self._context_menu = None
         self._native_resize_cursor = False
         self._book_enabled = False
+        self._breadth_mode = False
         self._theme_palette = None
         self.setMouseTracking(True)
         self.setAttribute(Qt.WA_TranslucentBackground, floating)
@@ -129,6 +131,21 @@ class HistoryDialog(QDialog):
         if changed and self._preferred_size is not None:
             self.resize(QSize(*self._preferred_size).expandedTo(self.minimumSize()).boundedTo(self.maximumSize()))
         self.layout().activate()
+        self._restoring = restoring
+
+    def set_breadth_mode(self, enabled):
+        restoring, self._restoring = self._restoring, True
+        breadth = bool(enabled)
+        changed = self._breadth_mode != breadth
+        self._breadth_mode = breadth
+        self.ui.cb_order_book.setText("涨跌分布" if breadth else "五档")
+        self.order_book.set_breadth_mode(breadth)
+        if changed:
+            self.ui.toolbar.updateGeometry()
+            self.update_size_limits()
+            if self._preferred_size is not None:
+                self.resize(QSize(*self._preferred_size).expandedTo(self.minimumSize()).boundedTo(self.maximumSize()))
+            self.layout().activate()
         self._restoring = restoring
 
     def update_size_limits(self, bounds=None):
@@ -632,8 +649,20 @@ class HistoryController(QObject):
         self.window.set_view_options(**{f"chart_{mode}_size": size})
 
     def _view_changed(self):
+        self.window.quotes.sync_market_breadth(self.needs_market_breadth())
         self._apply_chart_options()
         self.reload()
+
+    def needs_market_breadth(self) -> bool:
+        return bool(
+            self.window.widget_visible
+            and self.dialog is not None
+            and self.dialog.isVisible()
+            and not self.dialog.isMinimized()
+            and self.dialog.view == "intraday"
+            and self.window.view_options.chart_order_book_enabled
+            and is_cn_index(self.instrument)
+        )
 
     def _pop_out(self):
         if not self.dialog or self.dialog.display_mode != "popup":
@@ -660,7 +689,9 @@ class HistoryController(QObject):
     def _show(self):
         self._place_floating(restore=not self.dialog.isVisible())
         self.dialog.show()
+        self.window.quotes.sync_market_breadth(self.needs_market_breadth())
         self.window.quotes.set_detail_instrument(self.instrument if self.dialog.display_mode == "window" else None)
+        self._update_details()
         self.dialog.raise_()
         self.dialog.activateWindow()
 
@@ -720,12 +751,14 @@ class HistoryController(QObject):
             if self.dialog:
                 self.dialog.close()
         else:
+            self.window.quotes.sync_market_breadth(self.needs_market_breadth())
             self._apply_theme()
             self._apply_chart_options()
 
     def _apply_chart_options(self):
         if self.dialog:
             options = self.window.view_options
+            self.dialog.set_breadth_mode(is_cn_index(self.instrument))
             self.dialog.set_chart_options(options, self.window.unit_mode)
             self._update_details()
 
@@ -738,8 +771,12 @@ class HistoryController(QObject):
             self._navigate(1)
             return
         quote = self.window.quotes.quote_for(self.instrument)
-        self.dialog.order_book.set_quote(self.instrument, quote, self.window.unit_mode,
-                                         self.window.up_color, self.window.down_color)
+        breadth = self.window.quotes.market_breadth() if is_cn_index(self.instrument) else None
+        self.dialog.order_book.set_quote(
+            self.instrument, quote, self.window.unit_mode,
+            self.window.up_color, self.window.down_color,
+            market_breadth=breadth,
+        )
         if self.dialog.display_mode == "window":
             daily = self._series_for(self.instrument, "daily")
             ratio = None if daily.result.stale else quote_volume_ratio(daily.result.bars, quote, self.instrument)
@@ -756,6 +793,7 @@ class HistoryController(QObject):
         self._generation += 1
         self._pending = None
         self.window.quotes.set_detail_instrument(None)
+        self.window.quotes.sync_market_breadth(False)
 
     def invalidate_quotes(self):
         """Watchlist changes invalidate both consumers of history."""

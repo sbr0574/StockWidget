@@ -8,11 +8,11 @@ import unittest
 from shiboken6 import delete
 import requests
 
-from stockwidget.ui.floating.presenter import QuotePresenter
+from stockwidget.ui.floating.presenter import QuotePresenter, _is_newer_breadth
 from stockwidget.ui.floating.taskbar import taskbar_message, render_taskbar
 from stockwidget.ui.floating.widget import FloatLabel
 from stockwidget.ui.settings.dialog import SettingsDialog
-from stockwidget.data.quotes import _new_entry
+from stockwidget.data.quotes import MARKET_BREADTH_KEY, _new_entry
 
 from tests.support import QtTestCase, SettingsTestCase
 
@@ -111,6 +111,24 @@ class QuoteWorkerTests(unittest.TestCase):
             QuotePresenter._fetch_worker(SimpleNamespace(data_ready=signal), CODES, 3)
         fetch.assert_called_once_with(CODES)
         signal.emit.assert_called_once_with((True, data, None, 3))
+
+    def test_worker_requests_breadth_only_when_enabled(self):
+        signal = Mock()
+        breadth = {"seq": 10, "date": "2026-11-23", "time": "14:45:04", "buckets": (1,) * 11, "up": 5, "flat": 1, "down": 5, "total": 11}
+        data = {"sh600000": {"current_price": 9.48}, MARKET_BREADTH_KEY: breadth}
+        with patch("stockwidget.data.quotes.request_quote", return_value=data) as fetch:
+            QuotePresenter._fetch_worker(SimpleNamespace(data_ready=signal), CODES, 4, True)
+        fetch.assert_called_once_with(CODES, include_breadth=True)
+        signal.emit.assert_called_once_with((True, data, None, 4))
+
+    def test_breadth_freshness_guards_timestamp_and_sequence(self):
+        base = {"seq": 100, "date": "2026-11-23", "time": "14:45:04"}
+        self.assertTrue(_is_newer_breadth(None, base))
+        self.assertFalse(_is_newer_breadth(base, {"seq": 105, "date": "2026-11-23", "time": "14:45:00"}))
+        self.assertFalse(_is_newer_breadth(base, {"seq": 105, "date": "", "time": ""}))
+        self.assertFalse(_is_newer_breadth(base, {"seq": 99, "date": "2026-11-23", "time": "14:45:04"}))
+        self.assertTrue(_is_newer_breadth(base, {"seq": 101, "date": "2026-11-23", "time": "14:45:04"}))
+        self.assertTrue(_is_newer_breadth(base, {"seq": 90, "date": "2026-11-23", "time": "14:45:09"}))
 
 
 class RequestMessageIntegrationTests(QtTestCase):

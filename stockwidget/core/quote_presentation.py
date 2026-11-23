@@ -185,6 +185,31 @@ COLOR_ROLE_UP = "up"
 COLOR_ROLE_DOWN = "down"
 COLOR_ROLE_NEUTRAL = "neutral"
 
+CN_INDEX_MARKETS = frozenset({"sh", "sz", "bj"})
+MARKET_BREADTH_BUCKETS = (
+    (">10%", COLOR_ROLE_UP),
+    ("7~10%", COLOR_ROLE_UP),
+    ("5~7%", COLOR_ROLE_UP),
+    ("2~5%", COLOR_ROLE_UP),
+    ("0~2%", COLOR_ROLE_UP),
+    ("0%", COLOR_ROLE_NEUTRAL),
+    ("0~-2%", COLOR_ROLE_DOWN),
+    ("-2~-5%", COLOR_ROLE_DOWN),
+    ("-5~-7%", COLOR_ROLE_DOWN),
+    ("-7~-10%", COLOR_ROLE_DOWN),
+    ("<-10%", COLOR_ROLE_DOWN),
+)
+
+
+def is_cn_index(instrument) -> bool:
+    """Return True for domestic indices listed in index_cn.json."""
+    if not isinstance(instrument, Mapping):
+        return False
+    return (
+        str(instrument.get("market", "") or "").strip().lower() in CN_INDEX_MARKETS
+        and str(instrument.get("type", "") or "").strip() == "指"
+    )
+
 
 @dataclass(frozen=True)
 class BidAskCell:

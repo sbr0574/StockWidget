@@ -1,6 +1,8 @@
 """新浪行情解析和安全的网络错误分类。"""
 
 from http.client import RemoteDisconnected
+import json
+from pathlib import Path
 from unittest.mock import Mock, patch
 import socket
 import ssl
@@ -9,9 +11,10 @@ import unittest
 from urllib3.exceptions import MaxRetryError, NameResolutionError, ProtocolError, ProxyError
 import requests
 
+from stockwidget.core.quote_presentation import MARKET_BREADTH_BUCKETS, is_cn_index
 from stockwidget.data import quotes
 from stockwidget.data.network_errors import request_error_message
-from stockwidget.data.quotes import _sina_code
+from stockwidget.data.quotes import MARKET_BREADTH_KEY, _sina_code, parse_sina_market_breadth
 
 
 class ExplicitMarketMetadataTests(unittest.TestCase):
@@ -106,6 +109,101 @@ class SinaRequestFailureTests(unittest.TestCase):
             with self.assertRaises(requests.HTTPError) as caught:
                 quotes.request_quote({"sh600000": {"market": "sh", "code": "600000"}})
         self.assertIs(caught.exception.response, response)
+
+
+class SinaMarketBreadthTests(unittest.TestCase):
+    SAMPLE_ZDP = "4632536,2026-11-23,179,306,508,1931,1573,165,756,187,27,10,5,14:45:04"
+
+    def test_is_cn_index_matches_index_cn_json_and_excludes_other_categories(self):
+        root = Path(__file__).resolve().parents[2] / "resources" / "data"
+        cn_codes = json.loads((root / "index_cn.json").read_text(encoding="utf-8"))["codes"]
+        global_codes = json.loads((root / "index_global.json").read_text(encoding="utf-8"))["codes"]
+        self.assertTrue(cn_codes)
+        self.assertTrue(all(is_cn_index(item) for item in cn_codes.values()))
+        self.assertFalse(any(is_cn_index(item) for item in global_codes.values()))
+        for non_cn_index in (
+            {"market": "sh", "code": "600000", "type": "沪"},
+            {"market": "sz", "code": "000001", "type": "深"},
+            {"market": "bj", "code": "920000", "type": "京"},
+            {"market": "sh", "code": "510300", "type": "基"},
+            {"market": "sh", "code": "au0", "type": "期"},
+            None,
+            {},
+        ):
+            self.assertFalse(is_cn_index(non_cn_index))
+
+    def test_parse_sina_market_breadth_valid_and_invalid_payloads(self):
+        parsed = parse_sina_market_breadth(self.SAMPLE_ZDP.split(","))
+        self.assertIsNotNone(parsed)
+        self.assertEqual(parsed["seq"], 4632536)
+        self.assertEqual(parsed["date"], "2026-11-23")
+        self.assertEqual(parsed["time"], "14:45:04")
+        self.assertIsNotNone(parsed["timestamp"])
+        self.assertEqual(parsed["buckets"], (179, 306, 508, 1931, 1573, 165, 756, 187, 27, 10, 5))
+        self.assertEqual(len(parsed["buckets"]), len(MARKET_BREADTH_BUCKETS))
+        self.assertEqual((parsed["up"], parsed["flat"], parsed["down"], parsed["total"]), (4497, 165, 985, 5647))
+
+        zeros = parse_sina_market_breadth(["0", "2026-11-23", *(["0"] * 11), "09:15:00"])
+        self.assertEqual((zeros["up"], zeros["flat"], zeros["down"], zeros["total"]), (0, 0, 0, 0))
+
+        for bad in ([], ["4632536", "2026-11-23", "1"], ["1", "2026-11-23", "-1", *(["0"] * 10), "10:00:00"],
+                    ["1", "2026-11-23", "abc", *(["0"] * 10), "10:00:00"]):
+            self.assertIsNone(parse_sina_market_breadth(bad))
+
+    def test_request_quote_merges_zdp_updown_only_when_requested(self):
+        index_parts = ["上证指数", "3500", "3510", "3520", "3530", "3490", "0", "0", "100", "200"] + ["0"] * 20 + ["2026-11-23", "14:45:04"]
+        index_line = 'var hq_str_sh000001="' + ",".join(index_parts) + '";'
+        zdp_line = f'var hq_str_zdp_updown="{self.SAMPLE_ZDP}";'
+        instruments = {"sh000001": {"market": "sh", "code": "000001", "type": "指"}}
+
+        plain_resp = Mock(text=index_line)
+        with patch.object(quotes.requests, "get", return_value=plain_resp) as get_plain:
+            plain = quotes.request_quote(instruments)
+        self.assertNotIn("zdp_updown", get_plain.call_args.args[0])
+        self.assertNotIn(MARKET_BREADTH_KEY, plain)
+
+        merged_resp = Mock(text=index_line + "\n" + zdp_line)
+        with patch.object(quotes.requests, "get", return_value=merged_resp) as get_merged:
+            merged = quotes.request_quote(instruments, include_breadth=True)
+        self.assertTrue(get_merged.call_args.args[0].endswith("list=sh000001,zdp_updown"))
+        self.assertEqual(merged["sh000001"]["current_price"], 3520.0)
+        self.assertEqual(merged[MARKET_BREADTH_KEY]["buckets"], (179, 306, 508, 1931, 1573, 165, 756, 187, 27, 10, 5))
+
+        bad_zdp_resp = Mock(text=index_line + '\nvar hq_str_zdp_updown="";')
+        with patch.object(quotes.requests, "get", return_value=bad_zdp_resp):
+            partial = quotes.request_quote(instruments, include_breadth=True)
+        self.assertEqual(partial["sh000001"]["current_price"], 3520.0)
+        self.assertNotIn(MARKET_BREADTH_KEY, partial)
+
+        only_zdp_resp = Mock(text=zdp_line)
+        with patch.object(quotes.requests, "get", return_value=only_zdp_resp):
+            ok, payload, error = quotes.fetch_quote_result(instruments, include_breadth=True)
+        self.assertFalse(ok)
+        self.assertIsNone(payload)
+        self.assertIn("新浪", error)
+
+    def test_chunked_request_appends_zdp_updown_only_once(self):
+        instruments = {f"sh{600000 + i}": {"market": "sh", "code": str(600000 + i), "type": "沪"} for i in range(125)}
+        calls = []
+
+        def fake_get(url, **kwargs):
+            calls.append(url)
+            symbols = url.split("list=", 1)[1].split(",")
+            lines = []
+            for sym in symbols:
+                if sym == "zdp_updown":
+                    lines.append(f'var hq_str_zdp_updown="{self.SAMPLE_ZDP}";')
+                else:
+                    parts = ["股", "10", "10", "10", "10", "10", "0", "0", "100", "1000"] + ["0"] * 20 + ["2026-11-23", "14:45:04"]
+                    lines.append(f'var hq_str_{sym}="{",".join(parts)}";')
+            return Mock(text="\n".join(lines))
+
+        with patch.object(quotes.requests, "get", side_effect=fake_get):
+            data = quotes.request_quote(instruments, include_breadth=True)
+        self.assertEqual(len(calls), 2)
+        self.assertIn("zdp_updown", calls[0])
+        self.assertNotIn("zdp_updown", calls[1])
+        self.assertIn(MARKET_BREADTH_KEY, data)
 
 
 

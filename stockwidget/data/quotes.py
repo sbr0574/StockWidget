@@ -10,6 +10,8 @@ from stockwidget.data.network_errors import request_error_message
 # 新浪行情统一为价格、成交量额、买卖盘和北京时间字段。
 _SINA_HEADERS = {"Referer": "https://finance.sina.com.cn", "User-Agent": "Mozilla/5.0"}
 _Z5 = (0, 0, 0, 0, 0)   # 空五档（港美股/期货只有一档或无盘口）
+MARKET_BREADTH_SYMBOL = "zdp_updown"
+MARKET_BREADTH_KEY = "_market_breadth"
 
 
 def _optional_number(value):
@@ -325,7 +327,40 @@ def _parse_sina_global(parts: list) -> dict:
     )
 
 
-def request_quote(instruments: dict[str, dict]) -> dict:
+def parse_sina_market_breadth(parts: list) -> dict | None:
+    """解析新浪全市场 11 档涨跌分布（zdp_updown）。
+
+    字段顺序：0序号 1日期 2~6上涨五档(>10%,7~10%,5~7%,2~5%,0~2%)
+    7平盘(0%) 8~12下跌五档(0~-2%,-2~-5%,-5~-7%,-7~-10%,<-10%) 13时间。
+    """
+    if len(parts) < 14:
+        return None
+    buckets = []
+    for raw in parts[2:13]:
+        text = str(raw or "").strip()
+        if not text.isdigit():
+            return None
+        buckets.append(int(text))
+    seq_text = str(parts[0] or "").strip()
+    date = str(parts[1] or "").strip()
+    time_text = str(parts[13] or "").strip()
+    up = sum(buckets[:5])
+    flat = buckets[5]
+    down = sum(buckets[6:])
+    return {
+        "seq": int(seq_text) if seq_text.isdigit() else None,
+        "date": date,
+        "time": time_text,
+        "timestamp": quote_timestamp({"date": date, "time": time_text}),
+        "buckets": tuple(buckets),
+        "up": up,
+        "flat": flat,
+        "down": down,
+        "total": up + flat + down,
+    }
+
+
+def request_quote(instruments: dict[str, dict], *, include_breadth: bool = False) -> dict:
     """新浪财经实时行情。输入和输出均以代码表 key 为索引。"""
     data = {}
     if not instruments:
@@ -333,7 +368,11 @@ def request_quote(instruments: dict[str, dict]) -> dict:
     if len(instruments) > 120:
         items = list(instruments.items())
         for offset in range(0, len(items), 120):
-            data.update(request_quote(dict(items[offset:offset + 120])))
+            batch = dict(items[offset:offset + 120])
+            if include_breadth and offset == 0:
+                data.update(request_quote(batch, include_breadth=True))
+            else:
+                data.update(request_quote(batch))
         return data
     requested = {}
     labels = []
@@ -344,6 +383,8 @@ def request_quote(instruments: dict[str, dict]) -> dict:
             labels.append(label)
     if not requested:
         return {}
+    if include_breadth:
+        labels.append(MARKET_BREADTH_SYMBOL)
     url = "https://hq.sinajs.cn/list=" + ",".join(labels)
     response = requests.get(url, headers=_SINA_HEADERS, timeout=3)
     try:
@@ -364,6 +405,11 @@ def request_quote(instruments: dict[str, dict]) -> dict:
         if "hq_str_" not in key:
             continue
         sname = key.split("hq_str_", 1)[1].strip()
+        if include_breadth and sname.lower() == MARKET_BREADTH_SYMBOL:
+            breadth = parse_sina_market_breadth(parts)
+            if breadth is not None:
+                data[MARKET_BREADTH_KEY] = breadth
+            continue
         request_info = requested.get(sname.lower())
         if request_info is None:
             continue
@@ -393,11 +439,11 @@ def request_quote(instruments: dict[str, dict]) -> dict:
     return data
 
 
-def fetch_quote_result(codes: dict):
+def fetch_quote_result(codes: dict, *, include_breadth: bool = False):
     """Return (ok, quotes, safe_error) for consumers without Qt dependencies."""
     try:
-        data = request_quote(codes)
-        if codes and not data:
+        data = request_quote(codes, include_breadth=True) if include_breadth else request_quote(codes)
+        if codes and not any(key != MARKET_BREADTH_KEY for key in data):
             return False, None, "新浪：未返回有效行情"
         return True, data, None
     except requests.exceptions.RequestException as exc:
