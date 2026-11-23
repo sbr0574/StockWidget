@@ -15,7 +15,13 @@ from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from stockwidget.core.quote_presentation import METRIC_SPECS, SORTABLE_HEADERS, metric_headers
 from stockwidget.data.update_check import project_links
-from stockwidget.platform.capabilities import click_through_supported, is_cocoa, opacity_supported, tray_click_toggles
+from stockwidget.platform.capabilities import (
+    background_blur_supported,
+    click_through_supported,
+    is_cocoa,
+    opacity_supported,
+    tray_click_toggles,
+)
 
 
 def _sync_toggles(toggles):
@@ -199,8 +205,16 @@ def build_quote_menu(source, surface="float"):
     menu.addAction(act_color)
 
     if surface == "float":
-        _add_opacity_menu(menu, source.opacity_pct, source.set_window_opacity_percent,
-                          enabled=not getattr(source, "float_blur_active", False))
+        def set_float_opacity(value):
+            if value == "blur":
+                source.set_view_options(float_bg_blur=True)
+            else:
+                if source.view_options.float_bg_blur:
+                    source.set_view_options(float_bg_blur=False)
+                source.set_window_opacity_percent(value)
+
+        current = "blur" if getattr(source, "float_blur_active", False) else source.opacity_pct
+        _add_opacity_menu(menu, current, set_float_opacity, include_blur=True)
     elif surface == "taskbar":
         _add_opacity_menu(menu, source.view_options.taskbar_opacity_pct,
                           lambda percent: source.set_view_options(taskbar_opacity_pct=percent))
@@ -229,33 +243,52 @@ def build_history_menu(dialog):
     source = dialog.parentWidget()
     options = getattr(source, "view_options", None)
     if options is not None:
-        def set_opacity(percent):
-            changes = {"chart_sync_opacity": percent is None}
-            if percent is not None:
-                changes["chart_opacity_pct"] = percent
-            dialog.options_changed.emit(changes)
+        def set_opacity(value):
+            if value is None:
+                dialog.options_changed.emit({"chart_sync_opacity": True})
+            elif value == "blur":
+                dialog.options_changed.emit({"chart_sync_opacity": False, "chart_bg_blur": True})
+            else:
+                dialog.options_changed.emit({
+                    "chart_sync_opacity": False,
+                    "chart_bg_blur": False,
+                    "chart_opacity_pct": value,
+                })
 
-        current = None if options.chart_sync_opacity else options.chart_opacity_pct
-        _add_opacity_menu(menu, current, set_opacity, can_sync=True,
-                          enabled=not getattr(source, "chart_blur_active", False))
+        current = (None if options.chart_sync_opacity else
+                   "blur" if getattr(source, "chart_blur_active", False) else
+                   options.chart_opacity_pct)
+        _add_opacity_menu(menu, current, set_opacity, can_sync=True, include_blur=True)
     _add_settings_action(menu, source, "设置")
     menu.addAction("隐藏所有浮窗").triggered.connect(dialog.hide_quotes_requested)
     return menu
 
 
-def _add_opacity_menu(menu, current, setter, *, can_sync=False, enabled=True):
+def _add_opacity_menu(menu, current, setter, *, can_sync=False, include_blur=False):
     submenu = menu.addMenu("不透明度")
     group = QActionGroup(submenu)
+    opacity_ok = opacity_supported()
+    blur_ok = include_blur and background_blur_supported()
     presets = [(f"{percent}%", percent) for percent in (20, 40, 60, 80, 100)]
     if can_sync:
         presets.insert(0, ("同步主浮窗", None))
-    for label, percent in presets:
+    for label, value in presets:
         action = submenu.addAction(label)
         action.setCheckable(True)
         group.addAction(action)
-        action.setChecked(current == percent)
-        action.triggered.connect(lambda checked=False, percent=percent: setter(percent))
-    submenu.menuAction().setEnabled(opacity_supported() and enabled)
+        action.setChecked(current == value)
+        if value is not None:
+            action.setEnabled(opacity_ok)
+        action.triggered.connect(lambda checked=False, value=value: setter(value))
+    if include_blur:
+        submenu.addSeparator()
+        blur_action = submenu.addAction("背景模糊")
+        blur_action.setCheckable(True)
+        group.addAction(blur_action)
+        blur_action.setChecked(current == "blur")
+        blur_action.setEnabled(blur_ok)
+        blur_action.triggered.connect(lambda checked=False: setter("blur"))
+    submenu.menuAction().setEnabled(opacity_ok or blur_ok)
 
 
 def _add_settings_action(menu, source, text="设置…"):

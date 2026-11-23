@@ -65,14 +65,27 @@ class BackgroundBlurTests(SettingsTestCase):
             self.assertTrue(float_blur_call.call_args.args[1])
             self.assertTrue(chart_blur_call.call_args.args[1])
 
-            # Context menus disable overall opacity presets while blur is active; taskbar stays enabled.
+            # Context menus offer "背景模糊" mutually exclusive with opacity presets; taskbar omits blur.
             float_menu = window.build_context_menu("float")
             taskbar_menu = window.build_context_menu("taskbar")
             chart_menu = build_history_menu(popup)
             try:
-                self.assertFalse(_menu_actions(float_menu)["不透明度"].isEnabled())
-                self.assertTrue(_menu_actions(taskbar_menu)["不透明度"].isEnabled())
-                self.assertFalse(_menu_actions(chart_menu)["不透明度"].isEnabled())
+                float_opacity = _menu_actions(float_menu)["不透明度"]
+                self.assertTrue(float_opacity.isEnabled())
+                float_items = _menu_actions(float_opacity.menu())
+                self.assertEqual(list(float_items), ["20%", "40%", "60%", "80%", "100%", "背景模糊"])
+                self.assertTrue(float_items["背景模糊"].isChecked())
+                self.assertFalse(any(float_items[f"{p}%"].isChecked() for p in (20, 40, 60, 80, 100)))
+
+                taskbar_opacity = _menu_actions(taskbar_menu)["不透明度"]
+                self.assertTrue(taskbar_opacity.isEnabled())
+                self.assertNotIn("背景模糊", _menu_actions(taskbar_opacity.menu()))
+
+                chart_opacity = _menu_actions(chart_menu)["不透明度"]
+                self.assertTrue(chart_opacity.isEnabled())
+                chart_items = _menu_actions(chart_opacity.menu())
+                self.assertEqual(list(chart_items), ["同步主浮窗", "20%", "40%", "60%", "80%", "100%", "背景模糊"])
+                self.assertTrue(chart_items["同步主浮窗"].isChecked())
             finally:
                 for menu in (float_menu, taskbar_menu, chart_menu):
                     delete(menu)
@@ -84,29 +97,51 @@ class BackgroundBlurTests(SettingsTestCase):
             self.assertTrue(dialog.ui.cb_chart_blur.isEnabled())
             self.assertFalse(dialog.ui.slider_chart_all_alpha.isEnabled())
 
-            dialog.ui.cb_float_blur.click()
+            # Selecting an opacity preset in float context menu turns off float blur and applies opacity.
+            float_menu2 = window.build_context_menu("float")
+            try:
+                _menu_actions(_menu_actions(float_menu2)["不透明度"].menu())["60%"].trigger()
+            finally:
+                delete(float_menu2)
             self.qt_app.processEvents()
             self.assertFalse(window.view_options.float_bg_blur)
-            self.assertAlmostEqual(window.windowOpacity(), 0.70, delta=1 / 255)
+            self.assertEqual(window.opacity_pct, 60)
+            self.assertAlmostEqual(window.windowOpacity(), 0.60, delta=1 / 255)
             self.assertTrue(dialog.ui.slider_all_alpha.isEnabled())
             self.assertTrue(window.view_options.chart_bg_blur)
             self.assertEqual(popup.windowOpacity(), 1.0)
             self.assertFalse(dialog.ui.slider_chart_all_alpha.isEnabled())
 
-            dialog.ui.cb_chart_blur.click()
+            # Chart menu shows "背景模糊" checked when unsynced; picking "80%" turns off chart blur.
+            chart_menu2 = build_history_menu(popup)
+            try:
+                chart_items2 = _menu_actions(_menu_actions(chart_menu2)["不透明度"].menu())
+                self.assertTrue(chart_items2["背景模糊"].isChecked())
+                chart_items2["80%"].trigger()
+            finally:
+                delete(chart_menu2)
             self.qt_app.processEvents()
             self.assertFalse(window.view_options.chart_bg_blur)
-            self.assertAlmostEqual(popup.windowOpacity(), 0.70, delta=1 / 255)
+            self.assertEqual(window.view_options.chart_opacity_pct, 80)
+            self.assertAlmostEqual(popup.windowOpacity(), 0.80, delta=1 / 255)
             self.assertTrue(dialog.ui.slider_chart_all_alpha.isEnabled())
-            chart_menu_after = build_history_menu(popup)
+
+            # Picking "背景模糊" in float & chart menus re-enables blur.
+            float_menu3 = window.build_context_menu("float")
+            chart_menu3 = build_history_menu(popup)
             try:
-                self.assertTrue(_menu_actions(chart_menu_after)["不透明度"].isEnabled())
+                _menu_actions(_menu_actions(float_menu3)["不透明度"].menu())["背景模糊"].trigger()
+                _menu_actions(_menu_actions(chart_menu3)["不透明度"].menu())["背景模糊"].trigger()
             finally:
-                delete(chart_menu_after)
+                delete(float_menu3)
+                delete(chart_menu3)
+            self.qt_app.processEvents()
+            self.assertTrue(window.view_options.float_bg_blur)
+            self.assertTrue(window.view_options.chart_bg_blur)
+            self.assertEqual(window.windowOpacity(), 1.0)
+            self.assertEqual(popup.windowOpacity(), 1.0)
 
             # Detached window never requests blur even when popup blur is enabled.
-            dialog.ui.cb_chart_blur.click()
-            self.qt_app.processEvents()
             chart_blur_call.reset_mock()
             popup.pop_out_button.click()
             self.qt_app.processEvents()
@@ -159,12 +194,13 @@ class BackgroundBlurTests(SettingsTestCase):
             self.assertTrue(conflict_window.view_options.float_bg_blur)
             self.assertFalse(conflict_window.click_through)
 
-            # Reset appearance turns off both blur toggles and restores default opacity.
+            # Reset appearance restores default blur/sync settings:
+            # main float blur OFF, sync OFF, chart popup blur ON.
             dialog.ui.btn_reset_appearance.click()
             self.qt_app.processEvents()
             self.assertFalse(window.view_options.float_bg_blur)
-            self.assertFalse(window.view_options.chart_bg_blur)
-            self.assertTrue(window.view_options.chart_sync_opacity)
+            self.assertFalse(window.view_options.chart_sync_opacity)
+            self.assertTrue(window.view_options.chart_bg_blur)
 
     def test_platform_blur_capabilities_and_disabled_tooltips(self):
         with patch("sys.platform", "win32"):
@@ -191,15 +227,25 @@ class BackgroundBlurTests(SettingsTestCase):
                 patch("stockwidget.platform.capabilities._x11_kwin_blur_supported", return_value=True):
             self.assertTrue(capabilities.background_blur_supported())
 
-    def test_view_options_blur_defaults_and_windows_border_radius(self):
+    def test_view_options_blur_defaults_descriptions_and_windows_border_radius(self):
         defaults = ViewOptions.from_config({})
         self.assertFalse(defaults.float_bg_blur)
-        self.assertFalse(defaults.chart_bg_blur)
-        loaded = ViewOptions.from_config({"float_bg_blur": 1, "chart_bg_blur": True})
+        self.assertFalse(defaults.chart_sync_opacity)
+        self.assertTrue(defaults.chart_bg_blur)
+        loaded = ViewOptions.from_config({"float_bg_blur": 1, "chart_sync_opacity": True, "chart_bg_blur": False})
         self.assertTrue(loaded.float_bg_blur)
-        self.assertTrue(loaded.chart_bg_blur)
+        self.assertTrue(loaded.chart_sync_opacity)
+        self.assertFalse(loaded.chart_bg_blur)
+        dialog, window = self._make_dialog()
+        self.assertEqual(
+            dialog.ui.cb_float_blur_description.text(),
+            "开启背景模糊后，浮窗整体不透明度不可调整，鼠标穿透功能将被关闭。",
+        )
+        self.assertEqual(
+            dialog.ui.cb_chart_blur_description.text(),
+            "开启背景模糊后，图表浮窗整体不透明度不可调整。",
+        )
         if sys.platform == "win32":
-            _, window = self._make_dialog()
             self.assertIn("border-radius: 5px;", window.panel.styleSheet())
             window.set_view_options(float_bg_blur=True)
             self.assertIn("border-radius: 0px;", window.panel.styleSheet())

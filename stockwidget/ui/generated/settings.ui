@@ -4709,6 +4709,34 @@
                    </property>
                   </widget>
                  </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="cb_float_blur_description">
+                   <property name="text">
+                    <string>开启背景模糊后，浮窗整体不透明度不可调整，鼠标穿透功能将被关闭。</string>
+                   </property>
+                   <property name="wordWrap">
+                    <bool>true</bool>
+                   </property>
+                   <property name="settingDescription" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>310</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>310</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
                  <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
                   <widget class="ToggleSwitch" name="cb_float_blur">
                    <property name="baseSize">
@@ -4734,6 +4762,9 @@
                    </property>
                    <property name="accessibleName">
                     <string>主浮窗背景模糊</string>
+                   </property>
+                   <property name="accessibleDescription">
+                    <string>开启背景模糊后，浮窗整体不透明度不可调整，鼠标穿透功能将被关闭。</string>
                    </property>
                   </widget>
                  </item>
@@ -5020,6 +5051,34 @@
                    </property>
                   </widget>
                  </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="cb_chart_blur_description">
+                   <property name="text">
+                    <string>开启背景模糊后，图表浮窗整体不透明度不可调整。</string>
+                   </property>
+                   <property name="wordWrap">
+                    <bool>true</bool>
+                   </property>
+                   <property name="settingDescription" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>310</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>310</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
                  <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter">
                   <widget class="ToggleSwitch" name="cb_chart_blur">
                    <property name="baseSize">
@@ -5045,6 +5104,9 @@
                    </property>
                    <property name="accessibleName">
                     <string>图表浮窗背景模糊</string>
+                   </property>
+                   <property name="accessibleDescription">
+                    <string>开启背景模糊后，图表浮窗整体不透明度不可调整。</string>
                    </property>
                   </widget>
                  </item>

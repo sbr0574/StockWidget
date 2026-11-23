@@ -45,7 +45,8 @@ class StorageSettingsTests(SettingsTestCase):
         self.enable_windows_taskbar()
         dialog, window = self._make_dialog(taskbar_enabled=True, opacity_pct=0,
                                            bg={"r": 0, "g": 0, "b": 0, "a": 0},
-                                           chart_sync_opacity=False, chart_bg_alpha_pct=0,
+                                           chart_sync_opacity=False, chart_bg_blur=False,
+                                           chart_bg_alpha_pct=0,
                                            chart_opacity_pct=0, taskbar_opacity_pct=0)
         controls = ((dialog.ui.slider_bg_alpha, lambda: round(window.bg.alpha() / 2.55), 1),
                     (dialog.ui.slider_all_alpha, lambda: window.opacity_pct, 10),

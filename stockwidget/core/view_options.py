@@ -46,8 +46,8 @@ class ViewOptions:
     mini_chart_type: str = "kline"
     chart_enabled: bool = True
     float_bg_blur: bool = False
-    chart_sync_opacity: bool = True
-    chart_bg_blur: bool = False
+    chart_sync_opacity: bool = False
+    chart_bg_blur: bool = True
     chart_bg_alpha_pct: int = 75
     chart_opacity_pct: int = 90
     chart_popup_pinned: bool = False

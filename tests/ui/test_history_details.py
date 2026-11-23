@@ -21,7 +21,7 @@ from tests.ui.test_history import HistoryTestCase
 
 class HistoryDetailsTests(HistoryTestCase):
     def test_popup_keeps_its_latest_opacity_after_sync_is_turned_off(self):
-        _, window = self.make_window(chart_enabled=True, chart_sync_opacity=False,
+        _, window = self.make_window(chart_enabled=True, chart_sync_opacity=False, chart_bg_blur=False,
                                      chart_bg_alpha_pct=35, chart_opacity_pct=45)
         window.history.open_row("float", 0)
         self.wait_ready(window)
@@ -89,7 +89,7 @@ class HistoryDetailsTests(HistoryTestCase):
         chart.deleteLater()
 
     def test_popup_tracks_float_appearance_and_detached_window_keeps_its_theme(self):
-        _, window = self.make_window(chart_enabled=True, fg="#c4d8eb",
+        _, window = self.make_window(chart_enabled=True, chart_sync_opacity=True, fg="#c4d8eb",
                                      bg={"r": 12, "g": 23, "b": 34, "a": 220})
         window.history.open_row("float", 0)
         self.wait_ready(window)
@@ -321,7 +321,7 @@ class HistoryDetailsTests(HistoryTestCase):
         self.assertFalse(window.isVisible())
 
     def test_chart_opacity_presets_work_in_an_unpinned_submenu_and_can_restore_sync(self):
-        _, window = self.make_window(opacity_pct=60, chart_bg_alpha_pct=35)
+        _, window = self.make_window(opacity_pct=60, chart_sync_opacity=True, chart_bg_alpha_pct=35)
         window.history.open_row("float", 0)
         self.wait_ready(window)
         popup = window.history.dialog
@@ -336,12 +336,13 @@ class HistoryDetailsTests(HistoryTestCase):
             return action.menu()
 
         submenu = open_opacity_menu()
-        self.assertEqual([action.text() for action in submenu.actions()],
-                         ["同步主浮窗", "20%", "40%", "60%", "80%", "100%"])
+        self.assertEqual([action.text() for action in submenu.actions() if not action.isSeparator()],
+                         ["同步主浮窗", "20%", "40%", "60%", "80%", "100%", "背景模糊"])
         self.assertTrue(submenu.actions()[0].isChecked())
         self._choose_chart_menu_action(submenu, "20%")
         self.assertTrue(popup.isVisible())
         self.assertFalse(window.view_options.chart_sync_opacity)
+        self.assertFalse(window.view_options.chart_bg_blur)
         self.assertEqual(window.view_options.chart_bg_alpha_pct, 75)
         self.assertAlmostEqual(popup.windowOpacity(), .2, delta=1/255)
         self._choose_chart_menu_action(open_opacity_menu(), "同步主浮窗")

@@ -1,9 +1,9 @@
 """系统调色板、设置页样式与颜色预览图标，供自绘控件共用。"""
 
 from PySide6.QtCore import QByteArray, QObject, QRectF, Qt
-from PySide6.QtGui import QColor, QFont, QFontInfo, QFontMetrics, QGuiApplication, QPalette, QIcon, QPainter, QPixmap
+from PySide6.QtGui import QColor, QFont, QFontInfo, QFontMetrics, QGuiApplication, QPalette, QPen, QIcon, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
-from PySide6.QtWidgets import QApplication, QCheckBox, QGroupBox, QRadioButton, QWidget
+from PySide6.QtWidgets import QApplication, QCheckBox, QGroupBox, QProxyStyle, QRadioButton, QStyle, QWidget
 
 from stockwidget.ui.controls.settings_widgets import FilledCheckBox
 
@@ -202,8 +202,6 @@ QGroupBox::title {{
     description = "rgba(255, 255, 255, 0.55)" if dark else "rgba(0, 0, 0, 0.52)"
     slider_track = "rgba(255, 255, 255, 0.20)" if dark else "rgba(0, 0, 0, 0.18)"
     slider_disabled = "rgba(255, 255, 255, 0.28)" if dark else "rgba(0, 0, 0, 0.24)"
-    radio_border = "rgba(255, 255, 255, 0.45)" if dark else "rgba(0, 0, 0, 0.38)"
-    radio_dot = (palette or QApplication.palette()).color(QPalette.HighlightedText).name()
     if dark:
         header_bg, header_line = "rgba(255, 255, 255, 0.10)", "rgba(255, 255, 255, 0.30)"
         empty_hint = "rgba(255, 255, 255, 0.28)"
@@ -323,29 +321,9 @@ QLabel#shortcuts_title, QLabel#floating_title, QLabel#taskbar_title, QLabel#abou
     font-size: 20px;
     font-weight: 600;
 }}
-QLabel[settingTitle="true"], QCheckBox[settingTitle="true"], QRadioButton {{
+QLabel[settingTitle="true"], QCheckBox[settingTitle="true"] {{
     font-size: 13px;
     font-weight: normal;
-}}
-QRadioButton {{
-    spacing: 6px;
-}}
-QRadioButton::indicator {{
-    width: 12px;
-    height: 12px;
-    border-radius: 8px;
-    border: 2px solid {radio_border};
-    background: transparent;
-}}
-QRadioButton::indicator:hover {{
-    border-color: {accent_color().name()};
-}}
-QRadioButton::indicator:checked {{
-    width: 6px;
-    height: 6px;
-    border-radius: 8px;
-    border: 5px solid {accent_color().name()};
-    background: {radio_dot};
 }}
 QLabel[settingDescription="true"] {{
     color: {description};
@@ -420,6 +398,51 @@ QLabel#empty_watchlist_hint {{
 """
 
 
+class _Windows11RadioStyle(QProxyStyle):
+    """Fix Qt 6.11 windows11 QStyle missing inner dot on native QRadioButton."""
+
+    def drawPrimitive(self, element, option, painter, widget=None):
+        if element != QStyle.PrimitiveElement.PE_IndicatorRadioButton:
+            return super().drawPrimitive(element, option, painter, widget)
+        rect = QRectF(option.rect)
+        diameter = min(rect.width(), rect.height(), 18.0)
+        circle = QRectF(
+            rect.center().x() - diameter / 2,
+            rect.center().y() - diameter / 2,
+            diameter,
+            diameter,
+        )
+        enabled = bool(option.state & QStyle.StateFlag.State_Enabled)
+        checked = bool(option.state & QStyle.StateFlag.State_On)
+        hovered = bool(option.state & QStyle.StateFlag.State_MouseOver)
+        dark = option.palette.color(QPalette.ColorRole.Window).lightness() < 128
+
+        painter.save()
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        if not enabled:
+            painter.setOpacity(0.45)
+        if checked:
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(accent_color())
+            painter.drawEllipse(circle)
+            dot_d = diameter * (0.50 if hovered else 0.44)
+            dot = QRectF(
+                circle.center().x() - dot_d / 2,
+                circle.center().y() - dot_d / 2,
+                dot_d,
+                dot_d,
+            )
+            painter.setBrush(option.palette.color(QPalette.ColorRole.HighlightedText))
+            painter.drawEllipse(dot)
+        else:
+            fill = QColor(255, 255, 255, 22 if hovered else 12) if dark else QColor(0, 0, 0, 14 if hovered else 6)
+            border = QColor(255, 255, 255, 165 if hovered else 125) if dark else QColor(0, 0, 0, 150 if hovered else 110)
+            painter.setBrush(fill)
+            painter.setPen(QPen(border, 1.0))
+            painter.drawEllipse(circle.adjusted(0.5, 0.5, -0.5, -0.5))
+        painter.restore()
+
+
 def apply_settings_theme(widget: QWidget, dark: bool, palette: QPalette, *,
                          linux_fonts: bool = False, macos_groups: bool = False,
                          extra_stylesheet: str = "") -> None:
@@ -446,7 +469,17 @@ def apply_settings_theme(widget: QWidget, dark: bool, palette: QPalette, *,
     widget.setStyleSheet(build_settings_stylesheet(dark, linux_fonts=linux_fonts, palette=palette,
                                                    macos_group_font=widget.font() if macos_groups else None)
                         + "\n" + extra_stylesheet)
+    app_style = QApplication.style()
+    win11_radio = None
+    if app_style is not None and app_style.objectName().lower() == "windows11":
+        win11_radio = getattr(widget, "_win11_radio_style", None)
+        if win11_radio is None:
+            win11_radio = _Windows11RadioStyle()
+            win11_radio.setParent(widget)
+            widget._win11_radio_style = win11_radio
     for control in widgets:
+        if win11_radio is not None and isinstance(control, QRadioButton) and control.style() is not win11_radio:
+            control.setStyle(win11_radio)
         control.setPalette(choice_palette if isinstance(control, (QRadioButton, QCheckBox)) else palette)
 
 

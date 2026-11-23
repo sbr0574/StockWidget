@@ -21,7 +21,7 @@ from tests.support import SettingsTestCase, SignalRecorder
 
 class SettingsDialogTests(SettingsTestCase):
     def test_opacity_sliders_commit_on_release_and_keep_synced_values_when_separated(self):
-        dialog, window = self._make_dialog()
+        dialog, window = self._make_dialog(chart_sync_opacity=True, chart_bg_blur=False)
         chart_sliders = (dialog.ui.slider_chart_bg_alpha, dialog.ui.slider_chart_all_alpha)
         self.assertTrue(window.view_options.chart_sync_opacity)
         self.assertTrue(all(not slider.isHidden() and not slider.isEnabled() for slider in chart_sliders))
@@ -157,7 +157,7 @@ class SettingsDialogTests(SettingsTestCase):
             button.click()
             self.assertEqual(window.view_options.color_mode, mode)
             for widget in (dialog, dialog.ui.floating_content, dialog.ui.gb_fcn,
-                           dialog.ui.cb_float_on_top_title, dialog.ui.btn_check_update):
+                           dialog.ui.cb_float_on_top_title, dialog.ui.rb_color_dark, dialog.ui.btn_check_update):
                 with self.subTest(mode=mode, control=widget.objectName()):
                     self.assertEqual(widget.palette().color(QPalette.Window).lightness() < 128, dark)
                     self.assertEqual(widget.palette().color(QPalette.WindowText).lightness() > 128, dark)
@@ -391,6 +391,7 @@ class SettingsDialogTests(SettingsTestCase):
 
     def test_reloading_settings_does_not_save_or_round_opacity(self):
         dialog, window = self._make_dialog(bg={"r": 0, "g": 0, "b": 0, "a": 127}, opacity_pct=60,
+                                           chart_sync_opacity=True,
                                            chart_bg_alpha_pct=35, chart_opacity_pct=45)
         changes = Mock()
         window.set_on_change(changes)

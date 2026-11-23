@@ -1759,6 +1759,16 @@ class Ui_SettingDialog(object):
 
         self.cb_float_blur_row_layout.addWidget(self.cb_float_blur_title, 0, 0, 1, 1)
 
+        self.cb_float_blur_description = QLabel(self.cb_float_blur_row)
+        self.cb_float_blur_description.setObjectName(u"cb_float_blur_description")
+        self.cb_float_blur_description.setWordWrap(True)
+        self.cb_float_blur_description.setProperty(u"settingDescription", True)
+        self.cb_float_blur_description.setMaximumSize(QSize(310, 16777215))
+        self.cb_float_blur_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
+        self.cb_float_blur_description.setMinimumSize(QSize(310, 0))
+
+        self.cb_float_blur_row_layout.addWidget(self.cb_float_blur_description, 1, 0, 1, 1)
+
         self.cb_float_blur = ToggleSwitch(self.cb_float_blur_row)
         self.cb_float_blur.setObjectName(u"cb_float_blur")
         self.cb_float_blur.setBaseSize(QSize(0, 0))
@@ -1874,6 +1884,16 @@ class Ui_SettingDialog(object):
         self.cb_chart_blur_title.setProperty(u"settingTitle", True)
 
         self.cb_chart_blur_row_layout.addWidget(self.cb_chart_blur_title, 0, 0, 1, 1)
+
+        self.cb_chart_blur_description = QLabel(self.cb_chart_blur_row)
+        self.cb_chart_blur_description.setObjectName(u"cb_chart_blur_description")
+        self.cb_chart_blur_description.setWordWrap(True)
+        self.cb_chart_blur_description.setProperty(u"settingDescription", True)
+        self.cb_chart_blur_description.setMaximumSize(QSize(310, 16777215))
+        self.cb_chart_blur_description.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
+        self.cb_chart_blur_description.setMinimumSize(QSize(310, 0))
+
+        self.cb_chart_blur_row_layout.addWidget(self.cb_chart_blur_description, 1, 0, 1, 1)
 
         self.cb_chart_blur = ToggleSwitch(self.cb_chart_blur_row)
         self.cb_chart_blur.setObjectName(u"cb_chart_blur")
@@ -3092,9 +3112,13 @@ class Ui_SettingDialog(object):
         self.btn_bg_color_title.setText(QCoreApplication.translate("SettingDialog", u"\u80cc\u666f\u989c\u8272", None))
         self.btn_bg_color.setText(QCoreApplication.translate("SettingDialog", u"FFFFFF", None))
         self.cb_float_blur_title.setText(QCoreApplication.translate("SettingDialog", u"\u4e3b\u6d6e\u7a97\u80cc\u666f\u6a21\u7cca", None))
+        self.cb_float_blur_description.setText(QCoreApplication.translate("SettingDialog", u"\u5f00\u542f\u80cc\u666f\u6a21\u7cca\u540e\uff0c\u6d6e\u7a97\u6574\u4f53\u4e0d\u900f\u660e\u5ea6\u4e0d\u53ef\u8c03\u6574\uff0c\u9f20\u6807\u7a7f\u900f\u529f\u80fd\u5c06\u88ab\u5173\u95ed\u3002", None))
         self.cb_float_blur.setText(QCoreApplication.translate("SettingDialog", u"\u4e3b\u6d6e\u7a97\u80cc\u666f\u6a21\u7cca", None))
 #if QT_CONFIG(accessibility)
         self.cb_float_blur.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u4e3b\u6d6e\u7a97\u80cc\u666f\u6a21\u7cca", None))
+#endif // QT_CONFIG(accessibility)
+#if QT_CONFIG(accessibility)
+        self.cb_float_blur.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u5f00\u542f\u80cc\u666f\u6a21\u7cca\u540e\uff0c\u6d6e\u7a97\u6574\u4f53\u4e0d\u900f\u660e\u5ea6\u4e0d\u53ef\u8c03\u6574\uff0c\u9f20\u6807\u7a7f\u900f\u529f\u80fd\u5c06\u88ab\u5173\u95ed\u3002", None))
 #endif // QT_CONFIG(accessibility)
         self.label_bg.setText(QCoreApplication.translate("SettingDialog", u"\u4e3b\u6d6e\u7a97\u80cc\u666f\u4e0d\u900f\u660e\u5ea6", None))
         self.label_bg_alpha.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
@@ -3106,9 +3130,13 @@ class Ui_SettingDialog(object):
         self.cb_chart_sync_opacity.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u6837\u5f0f\u540c\u6b65", None))
 #endif // QT_CONFIG(accessibility)
         self.cb_chart_blur_title.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u80cc\u666f\u6a21\u7cca", None))
+        self.cb_chart_blur_description.setText(QCoreApplication.translate("SettingDialog", u"\u5f00\u542f\u80cc\u666f\u6a21\u7cca\u540e\uff0c\u56fe\u8868\u6d6e\u7a97\u6574\u4f53\u4e0d\u900f\u660e\u5ea6\u4e0d\u53ef\u8c03\u6574\u3002", None))
         self.cb_chart_blur.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u80cc\u666f\u6a21\u7cca", None))
 #if QT_CONFIG(accessibility)
         self.cb_chart_blur.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u80cc\u666f\u6a21\u7cca", None))
+#endif // QT_CONFIG(accessibility)
+#if QT_CONFIG(accessibility)
+        self.cb_chart_blur.setAccessibleDescription(QCoreApplication.translate("SettingDialog", u"\u5f00\u542f\u80cc\u666f\u6a21\u7cca\u540e\uff0c\u56fe\u8868\u6d6e\u7a97\u6574\u4f53\u4e0d\u900f\u660e\u5ea6\u4e0d\u53ef\u8c03\u6574\u3002", None))
 #endif // QT_CONFIG(accessibility)
         self.label_chart_bg.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u80cc\u666f\u4e0d\u900f\u660e\u5ea6", None))
         self.label_chart_bg_alpha.setText(QCoreApplication.translate("SettingDialog", u"100%", None))

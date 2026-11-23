@@ -297,8 +297,11 @@ class PageMathTests(unittest.TestCase):
     def test_independent_chart_opacity_preferences_roundtrip(self):
         defaults = ViewOptions.from_config({})
         self.assertTrue(defaults.chart_enabled)
-        self.assertTrue(defaults.chart_sync_opacity)
-        options = ViewOptions.from_config({"chart_enabled": False, "chart_sync_opacity": False,
+        self.assertFalse(defaults.float_bg_blur)
+        self.assertFalse(defaults.chart_sync_opacity)
+        self.assertTrue(defaults.chart_bg_blur)
+        options = ViewOptions.from_config({"chart_enabled": False, "chart_sync_opacity": True,
+                                           "float_bg_blur": True, "chart_bg_blur": False,
                                            "chart_bg_alpha_pct": 35, "chart_opacity_pct": 45})
         self.assertEqual(ViewOptions.from_config(options.to_config()), options)
 

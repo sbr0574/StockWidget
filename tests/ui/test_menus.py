@@ -140,7 +140,7 @@ class MenuBehaviorTests(PagingTestCase):
 
     def test_quote_menus_apply_and_check_opacity_for_their_own_surfaces(self):
         menu = actions(self.menu())["不透明度"].menu()
-        self.assertEqual(list(actions(menu)), ["20%", "40%", "60%", "80%", "100%"])
+        self.assertEqual(list(actions(menu)), ["20%", "40%", "60%", "80%", "100%", "背景模糊"])
         self.assertFalse(any(action.isChecked() for action in menu.actions()))
         actions(menu)["40%"].trigger()
         self.assertEqual(self.win.current_config()["opacity_pct"], 40)
@@ -149,7 +149,7 @@ class MenuBehaviorTests(PagingTestCase):
         self.assertEqual(self.win.view_options.taskbar_opacity_pct, 50)
 
         taskbar = actions(self.menu("taskbar"))["不透明度"].menu()
-        self.assertEqual(list(actions(taskbar)), list(actions(menu)))
+        self.assertEqual(list(actions(taskbar)), ["20%", "40%", "60%", "80%", "100%"])
         actions(taskbar)["80%"].trigger()
         self.assertEqual(self.win.current_config()["taskbar_opacity_pct"], 80)
         self.assertEqual(self.win.current_config()["opacity_pct"], 40)
