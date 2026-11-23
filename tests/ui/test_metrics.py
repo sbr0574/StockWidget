@@ -515,7 +515,7 @@ class MetricSettingsTests(SettingsTestCase):
         self.assertIsNotNone(displayed.currentItem())
 
         # 点击设置页其他区域（空白处）→ 自选列表与指标池选中全部清除
-        dialog._handle_outside_press(dialog.ui.gb_color)
+        dialog._handle_outside_press(dialog.ui.gb_background)
         self.qt_app.processEvents()
 
         self.assertEqual(dialog.watchlist_editor.list_codes.currentRow(), -1)

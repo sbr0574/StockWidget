@@ -77,11 +77,24 @@ class SettingsLayoutTests(SettingsTestCase):
                                            dialog.ui.cb_type_visible, dialog.ui.cmb_unit_mode,
                                            dialog.ui.cmb_average_period, dialog.ui.mini_chart_options)),
             (dialog.ui.general, (dialog.ui.gb_fcn, dialog.ui.float_row_settings, dialog.ui.float_split_settings)),
-            (dialog.ui.floating, (dialog.ui.gb_text, dialog.ui.gb_color, dialog.ui.gb_opacity,
-                                  dialog.ui.gb_icon, dialog.ui.cmb_color_mode)),
+            (dialog.ui.floating, (dialog.ui.gb_theme, dialog.ui.gb_text, dialog.ui.gb_background, dialog.ui.gb_icon)),
+            (dialog.ui.gb_theme, (dialog.ui.rb_color_system, dialog.ui.rb_color_light, dialog.ui.rb_color_dark,
+                                  dialog.ui.cb_accent_follow_system, dialog.ui.btn_accent_color)),
+            (dialog.ui.gb_text, (dialog.ui.cmb_font, dialog.ui.slider_font_size, dialog.ui.slider_line_interval,
+                                 dialog.ui.btn_fg_color, dialog.ui.cb_unicolor, dialog.ui.btn_up_color,
+                                 dialog.ui.btn_down_color, dialog.ui.btn_neutral_color)),
+            (dialog.ui.gb_background, (dialog.ui.btn_bg_color, dialog.ui.cb_float_blur, dialog.ui.slider_bg_alpha,
+                                       dialog.ui.slider_all_alpha, dialog.ui.cb_chart_sync_opacity,
+                                       dialog.ui.cb_chart_blur, dialog.ui.slider_chart_bg_alpha,
+                                       dialog.ui.slider_chart_all_alpha)),
         ):
             for control in controls:
                 self.assertTrue(group.isAncestorOf(control))
+        dialog.ui.settings_pages.setCurrentWidget(dialog.ui.floating)
+        self.qt_app.processEvents()
+        self.assertLess(dialog.ui.gb_theme.geometry().bottom(), dialog.ui.gb_text.geometry().top())
+        self.assertLess(dialog.ui.gb_text.geometry().bottom(), dialog.ui.gb_background.geometry().top())
+        self.assertLess(dialog.ui.gb_background.geometry().bottom(), dialog.ui.gb_icon.geometry().top())
         for page, scroll in ((dialog.ui.data, dialog.ui.data_scroll), (dialog.ui.general, dialog.ui.general_scroll),
                              (dialog.ui.floating, dialog.ui.floating_scroll)):
             dialog.ui.settings_pages.setCurrentWidget(page)

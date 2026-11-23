@@ -19,9 +19,9 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComb
     QDialog, QFontComboBox, QFrame, QGridLayout,
     QGroupBox, QHBoxLayout, QHeaderView, QLabel,
     QLineEdit, QListView, QListWidget, QListWidgetItem,
-    QPushButton, QScrollArea, QSizePolicy, QSlider,
-    QSpacerItem, QSpinBox, QStackedWidget, QTableWidgetItem,
-    QTimeEdit, QVBoxLayout, QWidget)
+    QPushButton, QRadioButton, QScrollArea, QSizePolicy,
+    QSlider, QSpacerItem, QSpinBox, QStackedWidget,
+    QTableWidgetItem, QTimeEdit, QVBoxLayout, QWidget)
 
 from stockwidget.ui.controls.metrics import MetricPoolWidget
 from stockwidget.ui.controls.mini_chart_preview import MiniChartOption
@@ -1336,188 +1336,67 @@ class Ui_SettingDialog(object):
 
         self.floatingContentLayout.addLayout(self.appearanceHeaderLayout)
 
-        self.cmb_color_mode_row = QWidget(self.floating_content)
-        self.cmb_color_mode_row.setObjectName(u"cmb_color_mode_row")
-        sizePolicy3.setHeightForWidth(self.cmb_color_mode_row.sizePolicy().hasHeightForWidth())
-        self.cmb_color_mode_row.setSizePolicy(sizePolicy3)
-        self.cmb_color_mode_row_layout = QGridLayout(self.cmb_color_mode_row)
-        self.cmb_color_mode_row_layout.setSpacing(5)
-        self.cmb_color_mode_row_layout.setObjectName(u"cmb_color_mode_row_layout")
-        self.cmb_color_mode_row_layout.setHorizontalSpacing(12)
-        self.cmb_color_mode_row_layout.setContentsMargins(0, 0, 0, 0)
-        self.cmb_color_mode_title = QLabel(self.cmb_color_mode_row)
-        self.cmb_color_mode_title.setObjectName(u"cmb_color_mode_title")
-        self.cmb_color_mode_title.setProperty(u"settingTitle", True)
-        self.cmb_color_mode_title.setMinimumSize(QSize(0, 28))
-        self.cmb_color_mode_title.setMaximumSize(QSize(16777215, 28))
+        self.gb_theme = QGroupBox(self.floating_content)
+        self.gb_theme.setObjectName(u"gb_theme")
+        self.gb_theme.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        sizePolicy1.setHeightForWidth(self.gb_theme.sizePolicy().hasHeightForWidth())
+        self.gb_theme.setSizePolicy(sizePolicy1)
+        self.gb_theme.setFlat(False)
+        self.gb_themeLayout = QVBoxLayout(self.gb_theme)
+        self.gb_themeLayout.setSpacing(10)
+        self.gb_themeLayout.setObjectName(u"gb_themeLayout")
+        self.gb_themeLayout.setContentsMargins(10, 15, 10, 10)
+        self.color_mode_row = QWidget(self.gb_theme)
+        self.color_mode_row.setObjectName(u"color_mode_row")
+        sizePolicy3.setHeightForWidth(self.color_mode_row.sizePolicy().hasHeightForWidth())
+        self.color_mode_row.setSizePolicy(sizePolicy3)
+        self.color_mode_row_layout = QGridLayout(self.color_mode_row)
+        self.color_mode_row_layout.setSpacing(5)
+        self.color_mode_row_layout.setObjectName(u"color_mode_row_layout")
+        self.color_mode_row_layout.setHorizontalSpacing(12)
+        self.color_mode_row_layout.setContentsMargins(0, 0, 0, 0)
+        self.color_mode_title = QLabel(self.color_mode_row)
+        self.color_mode_title.setObjectName(u"color_mode_title")
+        self.color_mode_title.setProperty(u"settingTitle", True)
+        self.color_mode_title.setMinimumSize(QSize(0, 28))
+        self.color_mode_title.setMaximumSize(QSize(16777215, 28))
 
-        self.cmb_color_mode_row_layout.addWidget(self.cmb_color_mode_title, 0, 0, 1, 1)
+        self.color_mode_row_layout.addWidget(self.color_mode_title, 0, 0, 1, 1)
 
-        self.cmb_color_mode = QComboBox(self.cmb_color_mode_row)
-        self.cmb_color_mode.addItem("")
-        self.cmb_color_mode.addItem("")
-        self.cmb_color_mode.addItem("")
-        self.cmb_color_mode.setObjectName(u"cmb_color_mode")
-        self.cmb_color_mode.setMinimumSize(QSize(110, 28))
-        self.cmb_color_mode.setMaximumSize(QSize(110, 28))
+        self.color_mode_options = QWidget(self.color_mode_row)
+        self.color_mode_options.setObjectName(u"color_mode_options")
+        self.color_mode_options_layout = QHBoxLayout(self.color_mode_options)
+        self.color_mode_options_layout.setSpacing(14)
+        self.color_mode_options_layout.setObjectName(u"color_mode_options_layout")
+        self.color_mode_options_layout.setContentsMargins(0, 0, 0, 0)
+        self.rb_color_system = QRadioButton(self.color_mode_options)
+        self.rb_color_system.setObjectName(u"rb_color_system")
+        self.rb_color_system.setMinimumSize(QSize(0, 28))
+        self.rb_color_system.setMaximumSize(QSize(16777215, 28))
 
-        self.cmb_color_mode_row_layout.addWidget(self.cmb_color_mode, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.color_mode_options_layout.addWidget(self.rb_color_system)
 
+        self.rb_color_light = QRadioButton(self.color_mode_options)
+        self.rb_color_light.setObjectName(u"rb_color_light")
+        self.rb_color_light.setMinimumSize(QSize(0, 28))
+        self.rb_color_light.setMaximumSize(QSize(16777215, 28))
 
-        self.floatingContentLayout.addWidget(self.cmb_color_mode_row)
+        self.color_mode_options_layout.addWidget(self.rb_color_light)
 
-        self.gb_text = QGroupBox(self.floating_content)
-        self.gb_text.setObjectName(u"gb_text")
-        self.gb_text.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        sizePolicy1.setHeightForWidth(self.gb_text.sizePolicy().hasHeightForWidth())
-        self.gb_text.setSizePolicy(sizePolicy1)
-        self.gb_text.setFlat(False)
-        self.gb_textLayout = QGridLayout(self.gb_text)
-        self.gb_textLayout.setSpacing(10)
-        self.gb_textLayout.setObjectName(u"gb_textLayout")
-        self.gb_textLayout.setContentsMargins(10, 15, 10, 10)
-        self.label_font = QLabel(self.gb_text)
-        self.label_font.setObjectName(u"label_font")
-        self.label_font.setMinimumSize(QSize(140, 28))
-        self.label_font.setMaximumSize(QSize(140, 28))
-        self.label_font.setProperty(u"settingTitle", True)
+        self.rb_color_dark = QRadioButton(self.color_mode_options)
+        self.rb_color_dark.setObjectName(u"rb_color_dark")
+        self.rb_color_dark.setMinimumSize(QSize(0, 28))
+        self.rb_color_dark.setMaximumSize(QSize(16777215, 28))
 
-        self.gb_textLayout.addWidget(self.label_font, 0, 0, 1, 1)
-
-        self.cmb_font = QFontComboBox(self.gb_text)
-        self.cmb_font.setObjectName(u"cmb_font")
-        self.cmb_font.setMinimumSize(QSize(0, 28))
-        self.cmb_font.setMaximumSize(QSize(16777215, 28))
-
-        self.gb_textLayout.addWidget(self.cmb_font, 0, 1, 1, 2, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
-
-        self.label_font_size = QLabel(self.gb_text)
-        self.label_font_size.setObjectName(u"label_font_size")
-        self.label_font_size.setMinimumSize(QSize(140, 28))
-        self.label_font_size.setMaximumSize(QSize(140, 28))
-        self.label_font_size.setProperty(u"settingTitle", True)
-
-        self.gb_textLayout.addWidget(self.label_font_size, 1, 0, 1, 1)
-
-        self.slider_font_size = QSlider(self.gb_text)
-        self.slider_font_size.setObjectName(u"slider_font_size")
-        self.slider_font_size.setMinimum(5)
-        self.slider_font_size.setMaximum(15)
-        self.slider_font_size.setValue(10)
-        self.slider_font_size.setOrientation(Qt.Orientation.Horizontal)
-        self.slider_font_size.setMinimumSize(QSize(0, 28))
-        self.slider_font_size.setMaximumSize(QSize(16777215, 28))
-        self.slider_font_size.setTracking(False)
-
-        self.gb_textLayout.addWidget(self.slider_font_size, 1, 1, 1, 1)
-
-        self.label_current_font_size = QLabel(self.gb_text)
-        self.label_current_font_size.setObjectName(u"label_current_font_size")
-        self.label_current_font_size.setMinimumSize(QSize(60, 28))
-        self.label_current_font_size.setMaximumSize(QSize(60, 28))
-
-        self.gb_textLayout.addWidget(self.label_current_font_size, 1, 2, 1, 1)
-
-        self.label_line_interval = QLabel(self.gb_text)
-        self.label_line_interval.setObjectName(u"label_line_interval")
-        self.label_line_interval.setMinimumSize(QSize(140, 28))
-        self.label_line_interval.setMaximumSize(QSize(140, 28))
-        self.label_line_interval.setProperty(u"settingTitle", True)
-
-        self.gb_textLayout.addWidget(self.label_line_interval, 2, 0, 1, 1)
-
-        self.slider_line_interval = QSlider(self.gb_text)
-        self.slider_line_interval.setObjectName(u"slider_line_interval")
-        self.slider_line_interval.setMaximum(20)
-        self.slider_line_interval.setValue(3)
-        self.slider_line_interval.setOrientation(Qt.Orientation.Horizontal)
-        self.slider_line_interval.setMinimumSize(QSize(0, 28))
-        self.slider_line_interval.setMaximumSize(QSize(16777215, 28))
-        self.slider_line_interval.setTracking(False)
-
-        self.gb_textLayout.addWidget(self.slider_line_interval, 2, 1, 1, 1)
-
-        self.label_current_line_interval = QLabel(self.gb_text)
-        self.label_current_line_interval.setObjectName(u"label_current_line_interval")
-        self.label_current_line_interval.setMinimumSize(QSize(60, 28))
-        self.label_current_line_interval.setMaximumSize(QSize(60, 28))
-
-        self.gb_textLayout.addWidget(self.label_current_line_interval, 2, 2, 1, 1)
+        self.color_mode_options_layout.addWidget(self.rb_color_dark)
 
 
-        self.floatingContentLayout.addWidget(self.gb_text)
-
-        self.gb_color = QGroupBox(self.floating_content)
-        self.gb_color.setObjectName(u"gb_color")
-        self.gb_color.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        sizePolicy1.setHeightForWidth(self.gb_color.sizePolicy().hasHeightForWidth())
-        self.gb_color.setSizePolicy(sizePolicy1)
-        self.gb_color.setFlat(False)
-        self.gb_colorLayout = QVBoxLayout(self.gb_color)
-        self.gb_colorLayout.setSpacing(10)
-        self.gb_colorLayout.setObjectName(u"gb_colorLayout")
-        self.gb_colorLayout.setContentsMargins(10, 15, 10, 10)
-        self.btn_fg_color_row = QWidget(self.gb_color)
-        self.btn_fg_color_row.setObjectName(u"btn_fg_color_row")
-        sizePolicy3.setHeightForWidth(self.btn_fg_color_row.sizePolicy().hasHeightForWidth())
-        self.btn_fg_color_row.setSizePolicy(sizePolicy3)
-        self.btn_fg_color_row_layout = QGridLayout(self.btn_fg_color_row)
-        self.btn_fg_color_row_layout.setSpacing(5)
-        self.btn_fg_color_row_layout.setObjectName(u"btn_fg_color_row_layout")
-        self.btn_fg_color_row_layout.setHorizontalSpacing(12)
-        self.btn_fg_color_row_layout.setContentsMargins(0, 0, 0, 0)
-        self.btn_fg_color_title = QLabel(self.btn_fg_color_row)
-        self.btn_fg_color_title.setObjectName(u"btn_fg_color_title")
-        self.btn_fg_color_title.setMinimumSize(QSize(0, 28))
-        self.btn_fg_color_title.setMaximumSize(QSize(16777215, 28))
-        self.btn_fg_color_title.setProperty(u"settingTitle", True)
-
-        self.btn_fg_color_row_layout.addWidget(self.btn_fg_color_title, 0, 0, 1, 1)
-
-        self.btn_fg_color = QPushButton(self.btn_fg_color_row)
-        self.btn_fg_color.setObjectName(u"btn_fg_color")
-        self.btn_fg_color.setIconSize(QSize(12, 12))
-        self.btn_fg_color.setAutoDefault(False)
-        self.btn_fg_color.setFlat(True)
-        self.btn_fg_color.setMinimumSize(QSize(110, 28))
-        self.btn_fg_color.setMaximumSize(QSize(110, 28))
-
-        self.btn_fg_color_row_layout.addWidget(self.btn_fg_color, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+        self.color_mode_row_layout.addWidget(self.color_mode_options, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
-        self.gb_colorLayout.addWidget(self.btn_fg_color_row)
+        self.gb_themeLayout.addWidget(self.color_mode_row)
 
-        self.btn_bg_color_row = QWidget(self.gb_color)
-        self.btn_bg_color_row.setObjectName(u"btn_bg_color_row")
-        sizePolicy3.setHeightForWidth(self.btn_bg_color_row.sizePolicy().hasHeightForWidth())
-        self.btn_bg_color_row.setSizePolicy(sizePolicy3)
-        self.btn_bg_color_row_layout = QGridLayout(self.btn_bg_color_row)
-        self.btn_bg_color_row_layout.setSpacing(5)
-        self.btn_bg_color_row_layout.setObjectName(u"btn_bg_color_row_layout")
-        self.btn_bg_color_row_layout.setHorizontalSpacing(12)
-        self.btn_bg_color_row_layout.setContentsMargins(0, 0, 0, 0)
-        self.btn_bg_color_title = QLabel(self.btn_bg_color_row)
-        self.btn_bg_color_title.setObjectName(u"btn_bg_color_title")
-        self.btn_bg_color_title.setMinimumSize(QSize(0, 28))
-        self.btn_bg_color_title.setMaximumSize(QSize(16777215, 28))
-        self.btn_bg_color_title.setProperty(u"settingTitle", True)
-
-        self.btn_bg_color_row_layout.addWidget(self.btn_bg_color_title, 0, 0, 1, 1)
-
-        self.btn_bg_color = QPushButton(self.btn_bg_color_row)
-        self.btn_bg_color.setObjectName(u"btn_bg_color")
-        self.btn_bg_color.setIconSize(QSize(12, 12))
-        self.btn_bg_color.setAutoDefault(False)
-        self.btn_bg_color.setFlat(True)
-        self.btn_bg_color.setMinimumSize(QSize(110, 28))
-        self.btn_bg_color.setMaximumSize(QSize(110, 28))
-
-        self.btn_bg_color_row_layout.addWidget(self.btn_bg_color, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
-
-
-        self.gb_colorLayout.addWidget(self.btn_bg_color_row)
-
-        self.cb_accent_follow_system_row = QWidget(self.gb_color)
+        self.cb_accent_follow_system_row = QWidget(self.gb_theme)
         self.cb_accent_follow_system_row.setObjectName(u"cb_accent_follow_system_row")
         sizePolicy2.setHeightForWidth(self.cb_accent_follow_system_row.sizePolicy().hasHeightForWidth())
         self.cb_accent_follow_system_row.setSizePolicy(sizePolicy2)
@@ -1543,9 +1422,9 @@ class Ui_SettingDialog(object):
         self.cb_accent_follow_system_row_layout.addWidget(self.cb_accent_follow_system, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
-        self.gb_colorLayout.addWidget(self.cb_accent_follow_system_row)
+        self.gb_themeLayout.addWidget(self.cb_accent_follow_system_row)
 
-        self.btn_accent_color_row = QWidget(self.gb_color)
+        self.btn_accent_color_row = QWidget(self.gb_theme)
         self.btn_accent_color_row.setObjectName(u"btn_accent_color_row")
         sizePolicy3.setHeightForWidth(self.btn_accent_color_row.sizePolicy().hasHeightForWidth())
         self.btn_accent_color_row.setSizePolicy(sizePolicy3)
@@ -1573,9 +1452,126 @@ class Ui_SettingDialog(object):
         self.btn_accent_color_row_layout.addWidget(self.btn_accent_color, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
-        self.gb_colorLayout.addWidget(self.btn_accent_color_row)
+        self.gb_themeLayout.addWidget(self.btn_accent_color_row)
 
-        self.cb_unicolor_row = QWidget(self.gb_color)
+
+        self.floatingContentLayout.addWidget(self.gb_theme)
+
+        self.gb_text = QGroupBox(self.floating_content)
+        self.gb_text.setObjectName(u"gb_text")
+        self.gb_text.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        sizePolicy1.setHeightForWidth(self.gb_text.sizePolicy().hasHeightForWidth())
+        self.gb_text.setSizePolicy(sizePolicy1)
+        self.gb_text.setFlat(False)
+        self.gb_textLayout = QVBoxLayout(self.gb_text)
+        self.gb_textLayout.setSpacing(10)
+        self.gb_textLayout.setObjectName(u"gb_textLayout")
+        self.gb_textLayout.setContentsMargins(10, 15, 10, 10)
+        self.text_typography_grid = QGridLayout()
+        self.text_typography_grid.setSpacing(10)
+        self.text_typography_grid.setObjectName(u"text_typography_grid")
+        self.label_font = QLabel(self.gb_text)
+        self.label_font.setObjectName(u"label_font")
+        self.label_font.setMinimumSize(QSize(150, 28))
+        self.label_font.setMaximumSize(QSize(150, 28))
+        self.label_font.setProperty(u"settingTitle", True)
+
+        self.text_typography_grid.addWidget(self.label_font, 0, 0, 1, 1)
+
+        self.cmb_font = QFontComboBox(self.gb_text)
+        self.cmb_font.setObjectName(u"cmb_font")
+        self.cmb_font.setMinimumSize(QSize(0, 28))
+        self.cmb_font.setMaximumSize(QSize(16777215, 28))
+
+        self.text_typography_grid.addWidget(self.cmb_font, 0, 1, 1, 2, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+        self.label_font_size = QLabel(self.gb_text)
+        self.label_font_size.setObjectName(u"label_font_size")
+        self.label_font_size.setMinimumSize(QSize(150, 28))
+        self.label_font_size.setMaximumSize(QSize(150, 28))
+        self.label_font_size.setProperty(u"settingTitle", True)
+
+        self.text_typography_grid.addWidget(self.label_font_size, 1, 0, 1, 1)
+
+        self.slider_font_size = QSlider(self.gb_text)
+        self.slider_font_size.setObjectName(u"slider_font_size")
+        self.slider_font_size.setMinimum(5)
+        self.slider_font_size.setMaximum(15)
+        self.slider_font_size.setValue(10)
+        self.slider_font_size.setOrientation(Qt.Orientation.Horizontal)
+        self.slider_font_size.setMinimumSize(QSize(0, 28))
+        self.slider_font_size.setMaximumSize(QSize(16777215, 28))
+        self.slider_font_size.setTracking(False)
+
+        self.text_typography_grid.addWidget(self.slider_font_size, 1, 1, 1, 1)
+
+        self.label_current_font_size = QLabel(self.gb_text)
+        self.label_current_font_size.setObjectName(u"label_current_font_size")
+        self.label_current_font_size.setMinimumSize(QSize(60, 28))
+        self.label_current_font_size.setMaximumSize(QSize(60, 28))
+
+        self.text_typography_grid.addWidget(self.label_current_font_size, 1, 2, 1, 1)
+
+        self.label_line_interval = QLabel(self.gb_text)
+        self.label_line_interval.setObjectName(u"label_line_interval")
+        self.label_line_interval.setMinimumSize(QSize(150, 28))
+        self.label_line_interval.setMaximumSize(QSize(150, 28))
+        self.label_line_interval.setProperty(u"settingTitle", True)
+
+        self.text_typography_grid.addWidget(self.label_line_interval, 2, 0, 1, 1)
+
+        self.slider_line_interval = QSlider(self.gb_text)
+        self.slider_line_interval.setObjectName(u"slider_line_interval")
+        self.slider_line_interval.setMaximum(20)
+        self.slider_line_interval.setValue(3)
+        self.slider_line_interval.setOrientation(Qt.Orientation.Horizontal)
+        self.slider_line_interval.setMinimumSize(QSize(0, 28))
+        self.slider_line_interval.setMaximumSize(QSize(16777215, 28))
+        self.slider_line_interval.setTracking(False)
+
+        self.text_typography_grid.addWidget(self.slider_line_interval, 2, 1, 1, 1)
+
+        self.label_current_line_interval = QLabel(self.gb_text)
+        self.label_current_line_interval.setObjectName(u"label_current_line_interval")
+        self.label_current_line_interval.setMinimumSize(QSize(60, 28))
+        self.label_current_line_interval.setMaximumSize(QSize(60, 28))
+
+        self.text_typography_grid.addWidget(self.label_current_line_interval, 2, 2, 1, 1)
+
+
+        self.gb_textLayout.addLayout(self.text_typography_grid)
+
+        self.btn_fg_color_row = QWidget(self.gb_text)
+        self.btn_fg_color_row.setObjectName(u"btn_fg_color_row")
+        sizePolicy3.setHeightForWidth(self.btn_fg_color_row.sizePolicy().hasHeightForWidth())
+        self.btn_fg_color_row.setSizePolicy(sizePolicy3)
+        self.btn_fg_color_row_layout = QGridLayout(self.btn_fg_color_row)
+        self.btn_fg_color_row_layout.setSpacing(5)
+        self.btn_fg_color_row_layout.setObjectName(u"btn_fg_color_row_layout")
+        self.btn_fg_color_row_layout.setHorizontalSpacing(12)
+        self.btn_fg_color_row_layout.setContentsMargins(0, 0, 0, 0)
+        self.btn_fg_color_title = QLabel(self.btn_fg_color_row)
+        self.btn_fg_color_title.setObjectName(u"btn_fg_color_title")
+        self.btn_fg_color_title.setMinimumSize(QSize(0, 28))
+        self.btn_fg_color_title.setMaximumSize(QSize(16777215, 28))
+        self.btn_fg_color_title.setProperty(u"settingTitle", True)
+
+        self.btn_fg_color_row_layout.addWidget(self.btn_fg_color_title, 0, 0, 1, 1)
+
+        self.btn_fg_color = QPushButton(self.btn_fg_color_row)
+        self.btn_fg_color.setObjectName(u"btn_fg_color")
+        self.btn_fg_color.setIconSize(QSize(12, 12))
+        self.btn_fg_color.setAutoDefault(False)
+        self.btn_fg_color.setFlat(True)
+        self.btn_fg_color.setMinimumSize(QSize(110, 28))
+        self.btn_fg_color.setMaximumSize(QSize(110, 28))
+
+        self.btn_fg_color_row_layout.addWidget(self.btn_fg_color, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+
+        self.gb_textLayout.addWidget(self.btn_fg_color_row)
+
+        self.cb_unicolor_row = QWidget(self.gb_text)
         self.cb_unicolor_row.setObjectName(u"cb_unicolor_row")
         sizePolicy2.setHeightForWidth(self.cb_unicolor_row.sizePolicy().hasHeightForWidth())
         self.cb_unicolor_row.setSizePolicy(sizePolicy2)
@@ -1611,9 +1607,9 @@ class Ui_SettingDialog(object):
         self.cb_unicolor_row_layout.addWidget(self.cb_unicolor, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
-        self.gb_colorLayout.addWidget(self.cb_unicolor_row)
+        self.gb_textLayout.addWidget(self.cb_unicolor_row)
 
-        self.btn_up_color_row = QWidget(self.gb_color)
+        self.btn_up_color_row = QWidget(self.gb_text)
         self.btn_up_color_row.setObjectName(u"btn_up_color_row")
         sizePolicy3.setHeightForWidth(self.btn_up_color_row.sizePolicy().hasHeightForWidth())
         self.btn_up_color_row.setSizePolicy(sizePolicy3)
@@ -1641,9 +1637,9 @@ class Ui_SettingDialog(object):
         self.btn_up_color_row_layout.addWidget(self.btn_up_color, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
-        self.gb_colorLayout.addWidget(self.btn_up_color_row)
+        self.gb_textLayout.addWidget(self.btn_up_color_row)
 
-        self.btn_down_color_row = QWidget(self.gb_color)
+        self.btn_down_color_row = QWidget(self.gb_text)
         self.btn_down_color_row.setObjectName(u"btn_down_color_row")
         sizePolicy3.setHeightForWidth(self.btn_down_color_row.sizePolicy().hasHeightForWidth())
         self.btn_down_color_row.setSizePolicy(sizePolicy3)
@@ -1671,9 +1667,9 @@ class Ui_SettingDialog(object):
         self.btn_down_color_row_layout.addWidget(self.btn_down_color, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
-        self.gb_colorLayout.addWidget(self.btn_down_color_row)
+        self.gb_textLayout.addWidget(self.btn_down_color_row)
 
-        self.btn_neutral_color_row = QWidget(self.gb_color)
+        self.btn_neutral_color_row = QWidget(self.gb_text)
         self.btn_neutral_color_row.setObjectName(u"btn_neutral_color_row")
         sizePolicy3.setHeightForWidth(self.btn_neutral_color_row.sizePolicy().hasHeightForWidth())
         self.btn_neutral_color_row.setSizePolicy(sizePolicy3)
@@ -1701,30 +1697,91 @@ class Ui_SettingDialog(object):
         self.btn_neutral_color_row_layout.addWidget(self.btn_neutral_color, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
-        self.gb_colorLayout.addWidget(self.btn_neutral_color_row)
+        self.gb_textLayout.addWidget(self.btn_neutral_color_row)
 
 
-        self.floatingContentLayout.addWidget(self.gb_color)
+        self.floatingContentLayout.addWidget(self.gb_text)
 
-        self.gb_opacity = QGroupBox(self.floating_content)
-        self.gb_opacity.setObjectName(u"gb_opacity")
-        self.gb_opacity.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        sizePolicy1.setHeightForWidth(self.gb_opacity.sizePolicy().hasHeightForWidth())
-        self.gb_opacity.setSizePolicy(sizePolicy1)
-        self.gb_opacity.setFlat(False)
-        self.gb_opacityLayout = QGridLayout(self.gb_opacity)
-        self.gb_opacityLayout.setSpacing(10)
-        self.gb_opacityLayout.setObjectName(u"gb_opacityLayout")
-        self.gb_opacityLayout.setContentsMargins(10, 15, 10, 10)
-        self.label_bg = QLabel(self.gb_opacity)
+        self.gb_background = QGroupBox(self.floating_content)
+        self.gb_background.setObjectName(u"gb_background")
+        self.gb_background.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        sizePolicy1.setHeightForWidth(self.gb_background.sizePolicy().hasHeightForWidth())
+        self.gb_background.setSizePolicy(sizePolicy1)
+        self.gb_background.setFlat(False)
+        self.gb_backgroundLayout = QVBoxLayout(self.gb_background)
+        self.gb_backgroundLayout.setSpacing(10)
+        self.gb_backgroundLayout.setObjectName(u"gb_backgroundLayout")
+        self.gb_backgroundLayout.setContentsMargins(10, 15, 10, 10)
+        self.btn_bg_color_row = QWidget(self.gb_background)
+        self.btn_bg_color_row.setObjectName(u"btn_bg_color_row")
+        sizePolicy3.setHeightForWidth(self.btn_bg_color_row.sizePolicy().hasHeightForWidth())
+        self.btn_bg_color_row.setSizePolicy(sizePolicy3)
+        self.btn_bg_color_row_layout = QGridLayout(self.btn_bg_color_row)
+        self.btn_bg_color_row_layout.setSpacing(5)
+        self.btn_bg_color_row_layout.setObjectName(u"btn_bg_color_row_layout")
+        self.btn_bg_color_row_layout.setHorizontalSpacing(12)
+        self.btn_bg_color_row_layout.setContentsMargins(0, 0, 0, 0)
+        self.btn_bg_color_title = QLabel(self.btn_bg_color_row)
+        self.btn_bg_color_title.setObjectName(u"btn_bg_color_title")
+        self.btn_bg_color_title.setMinimumSize(QSize(0, 28))
+        self.btn_bg_color_title.setMaximumSize(QSize(16777215, 28))
+        self.btn_bg_color_title.setProperty(u"settingTitle", True)
+
+        self.btn_bg_color_row_layout.addWidget(self.btn_bg_color_title, 0, 0, 1, 1)
+
+        self.btn_bg_color = QPushButton(self.btn_bg_color_row)
+        self.btn_bg_color.setObjectName(u"btn_bg_color")
+        self.btn_bg_color.setIconSize(QSize(12, 12))
+        self.btn_bg_color.setAutoDefault(False)
+        self.btn_bg_color.setFlat(True)
+        self.btn_bg_color.setMinimumSize(QSize(110, 28))
+        self.btn_bg_color.setMaximumSize(QSize(110, 28))
+
+        self.btn_bg_color_row_layout.addWidget(self.btn_bg_color, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+
+        self.gb_backgroundLayout.addWidget(self.btn_bg_color_row)
+
+        self.cb_float_blur_row = QWidget(self.gb_background)
+        self.cb_float_blur_row.setObjectName(u"cb_float_blur_row")
+        sizePolicy2.setHeightForWidth(self.cb_float_blur_row.sizePolicy().hasHeightForWidth())
+        self.cb_float_blur_row.setSizePolicy(sizePolicy2)
+        self.cb_float_blur_row_layout = QGridLayout(self.cb_float_blur_row)
+        self.cb_float_blur_row_layout.setSpacing(5)
+        self.cb_float_blur_row_layout.setObjectName(u"cb_float_blur_row_layout")
+        self.cb_float_blur_row_layout.setHorizontalSpacing(12)
+        self.cb_float_blur_row_layout.setContentsMargins(0, 0, 0, 0)
+        self.cb_float_blur_title = QLabel(self.cb_float_blur_row)
+        self.cb_float_blur_title.setObjectName(u"cb_float_blur_title")
+        self.cb_float_blur_title.setMinimumSize(QSize(0, 28))
+        self.cb_float_blur_title.setMaximumSize(QSize(16777215, 28))
+        self.cb_float_blur_title.setProperty(u"settingTitle", True)
+
+        self.cb_float_blur_row_layout.addWidget(self.cb_float_blur_title, 0, 0, 1, 1)
+
+        self.cb_float_blur = ToggleSwitch(self.cb_float_blur_row)
+        self.cb_float_blur.setObjectName(u"cb_float_blur")
+        self.cb_float_blur.setBaseSize(QSize(0, 0))
+        self.cb_float_blur.setMinimumSize(QSize(44, 26))
+        self.cb_float_blur.setMaximumSize(QSize(44, 26))
+
+        self.cb_float_blur_row_layout.addWidget(self.cb_float_blur, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+
+        self.gb_backgroundLayout.addWidget(self.cb_float_blur_row)
+
+        self.float_opacity_grid = QGridLayout()
+        self.float_opacity_grid.setSpacing(10)
+        self.float_opacity_grid.setObjectName(u"float_opacity_grid")
+        self.label_bg = QLabel(self.gb_background)
         self.label_bg.setObjectName(u"label_bg")
-        self.label_bg.setMinimumSize(QSize(140, 28))
-        self.label_bg.setMaximumSize(QSize(140, 28))
+        self.label_bg.setMinimumSize(QSize(150, 28))
+        self.label_bg.setMaximumSize(QSize(150, 28))
         self.label_bg.setProperty(u"settingTitle", True)
 
-        self.gb_opacityLayout.addWidget(self.label_bg, 0, 0, 1, 1)
+        self.float_opacity_grid.addWidget(self.label_bg, 0, 0, 1, 1)
 
-        self.slider_bg_alpha = QSlider(self.gb_opacity)
+        self.slider_bg_alpha = QSlider(self.gb_background)
         self.slider_bg_alpha.setObjectName(u"slider_bg_alpha")
         self.slider_bg_alpha.setMinimum(1)
         self.slider_bg_alpha.setMaximum(100)
@@ -1734,24 +1791,24 @@ class Ui_SettingDialog(object):
         self.slider_bg_alpha.setMaximumSize(QSize(16777215, 28))
         self.slider_bg_alpha.setTracking(False)
 
-        self.gb_opacityLayout.addWidget(self.slider_bg_alpha, 0, 1, 1, 1)
+        self.float_opacity_grid.addWidget(self.slider_bg_alpha, 0, 1, 1, 1)
 
-        self.label_bg_alpha = QLabel(self.gb_opacity)
+        self.label_bg_alpha = QLabel(self.gb_background)
         self.label_bg_alpha.setObjectName(u"label_bg_alpha")
         self.label_bg_alpha.setMinimumSize(QSize(60, 28))
         self.label_bg_alpha.setMaximumSize(QSize(60, 28))
 
-        self.gb_opacityLayout.addWidget(self.label_bg_alpha, 0, 2, 1, 1)
+        self.float_opacity_grid.addWidget(self.label_bg_alpha, 0, 2, 1, 1)
 
-        self.label_all = QLabel(self.gb_opacity)
+        self.label_all = QLabel(self.gb_background)
         self.label_all.setObjectName(u"label_all")
-        self.label_all.setMinimumSize(QSize(140, 28))
-        self.label_all.setMaximumSize(QSize(140, 28))
+        self.label_all.setMinimumSize(QSize(150, 28))
+        self.label_all.setMaximumSize(QSize(150, 28))
         self.label_all.setProperty(u"settingTitle", True)
 
-        self.gb_opacityLayout.addWidget(self.label_all, 1, 0, 1, 1)
+        self.float_opacity_grid.addWidget(self.label_all, 1, 0, 1, 1)
 
-        self.slider_all_alpha = QSlider(self.gb_opacity)
+        self.slider_all_alpha = QSlider(self.gb_background)
         self.slider_all_alpha.setObjectName(u"slider_all_alpha")
         self.slider_all_alpha.setMinimum(10)
         self.slider_all_alpha.setMaximum(100)
@@ -1761,47 +1818,86 @@ class Ui_SettingDialog(object):
         self.slider_all_alpha.setMaximumSize(QSize(16777215, 28))
         self.slider_all_alpha.setTracking(False)
 
-        self.gb_opacityLayout.addWidget(self.slider_all_alpha, 1, 1, 1, 1)
+        self.float_opacity_grid.addWidget(self.slider_all_alpha, 1, 1, 1, 1)
 
-        self.label_all_alpha = QLabel(self.gb_opacity)
+        self.label_all_alpha = QLabel(self.gb_background)
         self.label_all_alpha.setObjectName(u"label_all_alpha")
         self.label_all_alpha.setMinimumSize(QSize(60, 28))
         self.label_all_alpha.setMaximumSize(QSize(60, 28))
 
-        self.gb_opacityLayout.addWidget(self.label_all_alpha, 1, 2, 1, 1)
+        self.float_opacity_grid.addWidget(self.label_all_alpha, 1, 2, 1, 1)
 
-        self.chart_sync_opacity_row = QWidget(self.gb_opacity)
+
+        self.gb_backgroundLayout.addLayout(self.float_opacity_grid)
+
+        self.chart_sync_opacity_row = QWidget(self.gb_background)
         self.chart_sync_opacity_row.setObjectName(u"chart_sync_opacity_row")
+        sizePolicy2.setHeightForWidth(self.chart_sync_opacity_row.sizePolicy().hasHeightForWidth())
+        self.chart_sync_opacity_row.setSizePolicy(sizePolicy2)
         self.chart_sync_opacity_layout = QGridLayout(self.chart_sync_opacity_row)
+        self.chart_sync_opacity_layout.setSpacing(5)
         self.chart_sync_opacity_layout.setObjectName(u"chart_sync_opacity_layout")
-        self.chart_sync_opacity_layout.setHorizontalSpacing(10)
-        self.chart_sync_opacity_layout.setVerticalSpacing(5)
+        self.chart_sync_opacity_layout.setHorizontalSpacing(12)
         self.chart_sync_opacity_layout.setContentsMargins(0, 0, 0, 0)
         self.chart_sync_opacity_title = QLabel(self.chart_sync_opacity_row)
         self.chart_sync_opacity_title.setObjectName(u"chart_sync_opacity_title")
+        self.chart_sync_opacity_title.setMinimumSize(QSize(0, 28))
+        self.chart_sync_opacity_title.setMaximumSize(QSize(16777215, 28))
         self.chart_sync_opacity_title.setProperty(u"settingTitle", True)
-        self.chart_sync_opacity_title.setMinimumHeight(28)
-        self.chart_sync_opacity_title.setMaximumHeight(28)
 
         self.chart_sync_opacity_layout.addWidget(self.chart_sync_opacity_title, 0, 0, 1, 1)
 
         self.cb_chart_sync_opacity = ToggleSwitch(self.chart_sync_opacity_row)
         self.cb_chart_sync_opacity.setObjectName(u"cb_chart_sync_opacity")
+        self.cb_chart_sync_opacity.setBaseSize(QSize(0, 0))
+        self.cb_chart_sync_opacity.setMinimumSize(QSize(44, 26))
+        self.cb_chart_sync_opacity.setMaximumSize(QSize(44, 26))
 
         self.chart_sync_opacity_layout.addWidget(self.cb_chart_sync_opacity, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
 
 
-        self.gb_opacityLayout.addWidget(self.chart_sync_opacity_row, 2, 0, 1, 3)
+        self.gb_backgroundLayout.addWidget(self.chart_sync_opacity_row)
 
-        self.label_chart_bg = QLabel(self.gb_opacity)
+        self.cb_chart_blur_row = QWidget(self.gb_background)
+        self.cb_chart_blur_row.setObjectName(u"cb_chart_blur_row")
+        sizePolicy2.setHeightForWidth(self.cb_chart_blur_row.sizePolicy().hasHeightForWidth())
+        self.cb_chart_blur_row.setSizePolicy(sizePolicy2)
+        self.cb_chart_blur_row_layout = QGridLayout(self.cb_chart_blur_row)
+        self.cb_chart_blur_row_layout.setSpacing(5)
+        self.cb_chart_blur_row_layout.setObjectName(u"cb_chart_blur_row_layout")
+        self.cb_chart_blur_row_layout.setHorizontalSpacing(12)
+        self.cb_chart_blur_row_layout.setContentsMargins(0, 0, 0, 0)
+        self.cb_chart_blur_title = QLabel(self.cb_chart_blur_row)
+        self.cb_chart_blur_title.setObjectName(u"cb_chart_blur_title")
+        self.cb_chart_blur_title.setMinimumSize(QSize(0, 28))
+        self.cb_chart_blur_title.setMaximumSize(QSize(16777215, 28))
+        self.cb_chart_blur_title.setProperty(u"settingTitle", True)
+
+        self.cb_chart_blur_row_layout.addWidget(self.cb_chart_blur_title, 0, 0, 1, 1)
+
+        self.cb_chart_blur = ToggleSwitch(self.cb_chart_blur_row)
+        self.cb_chart_blur.setObjectName(u"cb_chart_blur")
+        self.cb_chart_blur.setBaseSize(QSize(0, 0))
+        self.cb_chart_blur.setMinimumSize(QSize(44, 26))
+        self.cb_chart_blur.setMaximumSize(QSize(44, 26))
+
+        self.cb_chart_blur_row_layout.addWidget(self.cb_chart_blur, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+
+        self.gb_backgroundLayout.addWidget(self.cb_chart_blur_row)
+
+        self.chart_opacity_grid = QGridLayout()
+        self.chart_opacity_grid.setSpacing(10)
+        self.chart_opacity_grid.setObjectName(u"chart_opacity_grid")
+        self.label_chart_bg = QLabel(self.gb_background)
         self.label_chart_bg.setObjectName(u"label_chart_bg")
-        self.label_chart_bg.setMinimumSize(QSize(140, 28))
-        self.label_chart_bg.setMaximumSize(QSize(140, 28))
+        self.label_chart_bg.setMinimumSize(QSize(150, 28))
+        self.label_chart_bg.setMaximumSize(QSize(150, 28))
         self.label_chart_bg.setProperty(u"settingTitle", True)
 
-        self.gb_opacityLayout.addWidget(self.label_chart_bg, 3, 0, 1, 1)
+        self.chart_opacity_grid.addWidget(self.label_chart_bg, 0, 0, 1, 1)
 
-        self.slider_chart_bg_alpha = QSlider(self.gb_opacity)
+        self.slider_chart_bg_alpha = QSlider(self.gb_background)
         self.slider_chart_bg_alpha.setObjectName(u"slider_chart_bg_alpha")
         self.slider_chart_bg_alpha.setMinimum(1)
         self.slider_chart_bg_alpha.setMaximum(100)
@@ -1811,24 +1907,24 @@ class Ui_SettingDialog(object):
         self.slider_chart_bg_alpha.setMaximumSize(QSize(16777215, 28))
         self.slider_chart_bg_alpha.setTracking(False)
 
-        self.gb_opacityLayout.addWidget(self.slider_chart_bg_alpha, 3, 1, 1, 1)
+        self.chart_opacity_grid.addWidget(self.slider_chart_bg_alpha, 0, 1, 1, 1)
 
-        self.label_chart_bg_alpha = QLabel(self.gb_opacity)
+        self.label_chart_bg_alpha = QLabel(self.gb_background)
         self.label_chart_bg_alpha.setObjectName(u"label_chart_bg_alpha")
         self.label_chart_bg_alpha.setMinimumSize(QSize(60, 28))
         self.label_chart_bg_alpha.setMaximumSize(QSize(60, 28))
 
-        self.gb_opacityLayout.addWidget(self.label_chart_bg_alpha, 3, 2, 1, 1)
+        self.chart_opacity_grid.addWidget(self.label_chart_bg_alpha, 0, 2, 1, 1)
 
-        self.label_chart_all = QLabel(self.gb_opacity)
+        self.label_chart_all = QLabel(self.gb_background)
         self.label_chart_all.setObjectName(u"label_chart_all")
-        self.label_chart_all.setMinimumSize(QSize(140, 28))
-        self.label_chart_all.setMaximumSize(QSize(140, 28))
+        self.label_chart_all.setMinimumSize(QSize(150, 28))
+        self.label_chart_all.setMaximumSize(QSize(150, 28))
         self.label_chart_all.setProperty(u"settingTitle", True)
 
-        self.gb_opacityLayout.addWidget(self.label_chart_all, 4, 0, 1, 1)
+        self.chart_opacity_grid.addWidget(self.label_chart_all, 1, 0, 1, 1)
 
-        self.slider_chart_all_alpha = QSlider(self.gb_opacity)
+        self.slider_chart_all_alpha = QSlider(self.gb_background)
         self.slider_chart_all_alpha.setObjectName(u"slider_chart_all_alpha")
         self.slider_chart_all_alpha.setMinimum(10)
         self.slider_chart_all_alpha.setMaximum(100)
@@ -1838,17 +1934,20 @@ class Ui_SettingDialog(object):
         self.slider_chart_all_alpha.setMaximumSize(QSize(16777215, 28))
         self.slider_chart_all_alpha.setTracking(False)
 
-        self.gb_opacityLayout.addWidget(self.slider_chart_all_alpha, 4, 1, 1, 1)
+        self.chart_opacity_grid.addWidget(self.slider_chart_all_alpha, 1, 1, 1, 1)
 
-        self.label_chart_all_alpha = QLabel(self.gb_opacity)
+        self.label_chart_all_alpha = QLabel(self.gb_background)
         self.label_chart_all_alpha.setObjectName(u"label_chart_all_alpha")
         self.label_chart_all_alpha.setMinimumSize(QSize(60, 28))
         self.label_chart_all_alpha.setMaximumSize(QSize(60, 28))
 
-        self.gb_opacityLayout.addWidget(self.label_chart_all_alpha, 4, 2, 1, 1)
+        self.chart_opacity_grid.addWidget(self.label_chart_all_alpha, 1, 2, 1, 1)
 
 
-        self.floatingContentLayout.addWidget(self.gb_opacity)
+        self.gb_backgroundLayout.addLayout(self.chart_opacity_grid)
+
+
+        self.floatingContentLayout.addWidget(self.gb_background)
 
         self.gb_icon = QGroupBox(self.floating_content)
         self.gb_icon.setObjectName(u"gb_icon")
@@ -2954,22 +3053,11 @@ class Ui_SettingDialog(object):
         self.floating_title.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u6d6e\u7a97\u8bbe\u7f6e", None))
 #endif // QT_CONFIG(accessibility)
         self.btn_reset_appearance.setText(QCoreApplication.translate("SettingDialog", u"\u6062\u590d\u9ed8\u8ba4\u5916\u89c2", None))
-        self.cmb_color_mode_title.setText(QCoreApplication.translate("SettingDialog", u"\u989c\u8272\u6a21\u5f0f", None))
-        self.cmb_color_mode.setItemText(0, QCoreApplication.translate("SettingDialog", u"\u8ddf\u968f\u7cfb\u7edf", None))
-        self.cmb_color_mode.setItemText(1, QCoreApplication.translate("SettingDialog", u"\u6d45\u8272", None))
-        self.cmb_color_mode.setItemText(2, QCoreApplication.translate("SettingDialog", u"\u6df1\u8272", None))
-
-        self.gb_text.setTitle(QCoreApplication.translate("SettingDialog", u"\u5b57\u4f53\u4e0e\u884c\u8ddd", None))
-        self.label_font.setText(QCoreApplication.translate("SettingDialog", u"\u5b57\u4f53\u6837\u5f0f\uff1a", None))
-        self.label_font_size.setText(QCoreApplication.translate("SettingDialog", u"\u5b57\u4f53\u5927\u5c0f\uff1a", None))
-        self.label_current_font_size.setText(QCoreApplication.translate("SettingDialog", u"00 pt", None))
-        self.label_line_interval.setText(QCoreApplication.translate("SettingDialog", u"\u884c\u95f4\u8ddd\uff1a", None))
-        self.label_current_line_interval.setText(QCoreApplication.translate("SettingDialog", u"+0 px", None))
-        self.gb_color.setTitle(QCoreApplication.translate("SettingDialog", u"\u989c\u8272", None))
-        self.btn_fg_color_title.setText(QCoreApplication.translate("SettingDialog", u"\u6587\u5b57\u989c\u8272", None))
-        self.btn_fg_color.setText(QCoreApplication.translate("SettingDialog", u"FFFFFF", None))
-        self.btn_bg_color_title.setText(QCoreApplication.translate("SettingDialog", u"\u80cc\u666f\u989c\u8272", None))
-        self.btn_bg_color.setText(QCoreApplication.translate("SettingDialog", u"FFFFFF", None))
+        self.gb_theme.setTitle(QCoreApplication.translate("SettingDialog", u"\u4e3b\u9898", None))
+        self.color_mode_title.setText(QCoreApplication.translate("SettingDialog", u"\u989c\u8272\u6a21\u5f0f", None))
+        self.rb_color_system.setText(QCoreApplication.translate("SettingDialog", u"\u8ddf\u968f\u7cfb\u7edf", None))
+        self.rb_color_light.setText(QCoreApplication.translate("SettingDialog", u"\u6d45\u8272", None))
+        self.rb_color_dark.setText(QCoreApplication.translate("SettingDialog", u"\u6df1\u8272", None))
         self.cb_accent_follow_system_title.setText(QCoreApplication.translate("SettingDialog", u"\u5f3a\u8c03\u8272\u8ddf\u968f\u7cfb\u7edf\u4e3b\u9898", None))
         self.cb_accent_follow_system.setText(QCoreApplication.translate("SettingDialog", u"\u5f3a\u8c03\u8272\u8ddf\u968f\u7cfb\u7edf\u4e3b\u9898", None))
 #if QT_CONFIG(accessibility)
@@ -2977,6 +3065,14 @@ class Ui_SettingDialog(object):
 #endif // QT_CONFIG(accessibility)
         self.btn_accent_color_title.setText(QCoreApplication.translate("SettingDialog", u"\u5f3a\u8c03\u989c\u8272", None))
         self.btn_accent_color.setText(QCoreApplication.translate("SettingDialog", u"#0078D4", None))
+        self.gb_text.setTitle(QCoreApplication.translate("SettingDialog", u"\u6587\u5b57", None))
+        self.label_font.setText(QCoreApplication.translate("SettingDialog", u"\u5b57\u4f53\u6837\u5f0f", None))
+        self.label_font_size.setText(QCoreApplication.translate("SettingDialog", u"\u5b57\u4f53\u5927\u5c0f", None))
+        self.label_current_font_size.setText(QCoreApplication.translate("SettingDialog", u"00 pt", None))
+        self.label_line_interval.setText(QCoreApplication.translate("SettingDialog", u"\u884c\u95f4\u8ddd", None))
+        self.label_current_line_interval.setText(QCoreApplication.translate("SettingDialog", u"+0 px", None))
+        self.btn_fg_color_title.setText(QCoreApplication.translate("SettingDialog", u"\u6587\u5b57\u989c\u8272", None))
+        self.btn_fg_color.setText(QCoreApplication.translate("SettingDialog", u"FFFFFF", None))
         self.cb_unicolor_title.setText(QCoreApplication.translate("SettingDialog", u"\u7edf\u4e00\u989c\u8272", None))
         self.cb_unicolor_description.setText(QCoreApplication.translate("SettingDialog", u"\u6240\u6709\u6307\u6807\u4f7f\u7528\u6587\u5b57\u989c\u8272\uff1b\u5173\u95ed\u540e\uff0c\u6309\u6da8\u8dcc\u5206\u522b\u7740\u8272\u3002", None))
         self.cb_unicolor.setText(QCoreApplication.translate("SettingDialog", u"\u7edf\u4e00\u989c\u8272", None))
@@ -2992,19 +3088,31 @@ class Ui_SettingDialog(object):
         self.btn_down_color.setText(QCoreApplication.translate("SettingDialog", u"FFFFFF", None))
         self.btn_neutral_color_title.setText(QCoreApplication.translate("SettingDialog", u"\u4e2d\u6027\u989c\u8272", None))
         self.btn_neutral_color.setText(QCoreApplication.translate("SettingDialog", u"FFFFFF", None))
-        self.gb_opacity.setTitle(QCoreApplication.translate("SettingDialog", u"\u4e0d\u900f\u660e\u5ea6", None))
-        self.label_bg.setText(QCoreApplication.translate("SettingDialog", u"\u4e3b\u6d6e\u7a97\u80cc\u666f", None))
-        self.label_bg_alpha.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
-        self.label_all.setText(QCoreApplication.translate("SettingDialog", u"\u4e3b\u6d6e\u7a97\u6574\u4f53", None))
-        self.label_all_alpha.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
-        self.chart_sync_opacity_title.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u540c\u6b65\u4e3b\u6d6e\u7a97\u4e0d\u900f\u660e\u5ea6", None))
-        self.cb_chart_sync_opacity.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u540c\u6b65\u4e3b\u6d6e\u7a97\u4e0d\u900f\u660e\u5ea6", None))
+        self.gb_background.setTitle(QCoreApplication.translate("SettingDialog", u"\u80cc\u666f", None))
+        self.btn_bg_color_title.setText(QCoreApplication.translate("SettingDialog", u"\u80cc\u666f\u989c\u8272", None))
+        self.btn_bg_color.setText(QCoreApplication.translate("SettingDialog", u"FFFFFF", None))
+        self.cb_float_blur_title.setText(QCoreApplication.translate("SettingDialog", u"\u4e3b\u6d6e\u7a97\u80cc\u666f\u6a21\u7cca", None))
+        self.cb_float_blur.setText(QCoreApplication.translate("SettingDialog", u"\u4e3b\u6d6e\u7a97\u80cc\u666f\u6a21\u7cca", None))
 #if QT_CONFIG(accessibility)
-        self.cb_chart_sync_opacity.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u540c\u6b65\u4e3b\u6d6e\u7a97\u4e0d\u900f\u660e\u5ea6", None))
+        self.cb_float_blur.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u4e3b\u6d6e\u7a97\u80cc\u666f\u6a21\u7cca", None))
 #endif // QT_CONFIG(accessibility)
-        self.label_chart_bg.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u80cc\u666f", None))
+        self.label_bg.setText(QCoreApplication.translate("SettingDialog", u"\u4e3b\u6d6e\u7a97\u80cc\u666f\u4e0d\u900f\u660e\u5ea6", None))
+        self.label_bg_alpha.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
+        self.label_all.setText(QCoreApplication.translate("SettingDialog", u"\u4e3b\u6d6e\u7a97\u6574\u4f53\u4e0d\u900f\u660e\u5ea6", None))
+        self.label_all_alpha.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
+        self.chart_sync_opacity_title.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u6837\u5f0f\u540c\u6b65", None))
+        self.cb_chart_sync_opacity.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u6837\u5f0f\u540c\u6b65", None))
+#if QT_CONFIG(accessibility)
+        self.cb_chart_sync_opacity.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u6837\u5f0f\u540c\u6b65", None))
+#endif // QT_CONFIG(accessibility)
+        self.cb_chart_blur_title.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u80cc\u666f\u6a21\u7cca", None))
+        self.cb_chart_blur.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u80cc\u666f\u6a21\u7cca", None))
+#if QT_CONFIG(accessibility)
+        self.cb_chart_blur.setAccessibleName(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u80cc\u666f\u6a21\u7cca", None))
+#endif // QT_CONFIG(accessibility)
+        self.label_chart_bg.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u80cc\u666f\u4e0d\u900f\u660e\u5ea6", None))
         self.label_chart_bg_alpha.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
-        self.label_chart_all.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u6574\u4f53", None))
+        self.label_chart_all.setText(QCoreApplication.translate("SettingDialog", u"\u56fe\u8868\u6d6e\u7a97\u6574\u4f53\u4e0d\u900f\u660e\u5ea6", None))
         self.label_chart_all_alpha.setText(QCoreApplication.translate("SettingDialog", u"100%", None))
         self.gb_icon.setTitle(QCoreApplication.translate("SettingDialog", u"\u56fe\u6807", None))
 #if QT_CONFIG(tooltip)

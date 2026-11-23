@@ -14,7 +14,8 @@ MAX_FONT_PT = 15
 TASKBAR_STYLE_KEYS = ("taskbar_color", "taskbar_auto_color", "taskbar_opacity_pct", "taskbar_font_size")
 APPEARANCE_OPTION_KEYS = (
     "color_mode", "accent_follow_system", "accent_color",
-    "chart_sync_opacity", "chart_bg_alpha_pct", "chart_opacity_pct", *TASKBAR_STYLE_KEYS,
+    "float_bg_blur", "chart_sync_opacity", "chart_bg_blur", "chart_bg_alpha_pct", "chart_opacity_pct",
+    *TASKBAR_STYLE_KEYS,
 )
 
 
@@ -44,7 +45,9 @@ def taskbar_font_point_limit(height, dpi, rows):
 class ViewOptions:
     mini_chart_type: str = "kline"
     chart_enabled: bool = True
+    float_bg_blur: bool = False
     chart_sync_opacity: bool = True
+    chart_bg_blur: bool = False
     chart_bg_alpha_pct: int = 75
     chart_opacity_pct: int = 90
     chart_popup_pinned: bool = False
@@ -143,10 +146,10 @@ class ViewOptions:
             result.taskbar_sync_paging = "taskbar_page_mode" not in cfg
         if not isinstance(result.taskbar_color, str):
             result.taskbar_color = defaults.taskbar_color
-        for key in ("chart_enabled", "chart_sync_opacity", "chart_popup_pinned", "chart_average_enabled",
-                    "chart_volume_enabled", "chart_order_book_enabled", "accent_follow_system", "hide_tray_icon",
-                    "float_paging_enabled", "taskbar_enabled", "taskbar_sync_metrics",
-                    "taskbar_sync_paging", "taskbar_auto_color", "taskbar_dual_open",
+        for key in ("chart_enabled", "float_bg_blur", "chart_sync_opacity", "chart_bg_blur", "chart_popup_pinned",
+                    "chart_average_enabled", "chart_volume_enabled", "chart_order_book_enabled",
+                    "accent_follow_system", "hide_tray_icon", "float_paging_enabled", "taskbar_enabled",
+                    "taskbar_sync_metrics", "taskbar_sync_paging", "taskbar_auto_color", "taskbar_dual_open",
                     "float_split_enabled", "float_split_separator", "taskbar_sync_split",
                     "taskbar_split_enabled", "taskbar_split_separator"):
             setattr(result, key, bool(getattr(result, key)))

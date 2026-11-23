@@ -439,6 +439,7 @@ class PositionController(QObject):
         self._full = self.source.geometry()
         self.collapsed = True
         self._apply(self._strip_geometry())
+        self.source._sync_background_blur()
         self.source.hide_controller.cancel_countdown()
         self.source.sync_refresh_timer()
 
@@ -449,6 +450,7 @@ class PositionController(QObject):
         self.collapsed = False
         self._full = None
         self._apply(rect)
+        self.source._sync_background_blur()
         self.source.sync_refresh_timer()
 
     def prepare_drag(self):

@@ -201,6 +201,9 @@ QGroupBox::title {{
     scrollbar = "rgba(255, 255, 255, 0.30)" if dark else "rgba(0, 0, 0, 0.25)"
     description = "rgba(255, 255, 255, 0.55)" if dark else "rgba(0, 0, 0, 0.52)"
     slider_track = "rgba(255, 255, 255, 0.20)" if dark else "rgba(0, 0, 0, 0.18)"
+    slider_disabled = "rgba(255, 255, 255, 0.28)" if dark else "rgba(0, 0, 0, 0.24)"
+    radio_border = "rgba(255, 255, 255, 0.45)" if dark else "rgba(0, 0, 0, 0.38)"
+    radio_dot = (palette or QApplication.palette()).color(QPalette.HighlightedText).name()
     if dark:
         header_bg, header_line = "rgba(255, 255, 255, 0.10)", "rgba(255, 255, 255, 0.30)"
         empty_hint = "rgba(255, 255, 255, 0.28)"
@@ -320,9 +323,29 @@ QLabel#shortcuts_title, QLabel#floating_title, QLabel#taskbar_title, QLabel#abou
     font-size: 20px;
     font-weight: 600;
 }}
-QLabel[settingTitle="true"], QCheckBox[settingTitle="true"] {{
+QLabel[settingTitle="true"], QCheckBox[settingTitle="true"], QRadioButton {{
     font-size: 13px;
     font-weight: normal;
+}}
+QRadioButton {{
+    spacing: 6px;
+}}
+QRadioButton::indicator {{
+    width: 12px;
+    height: 12px;
+    border-radius: 8px;
+    border: 2px solid {radio_border};
+    background: transparent;
+}}
+QRadioButton::indicator:hover {{
+    border-color: {accent_color().name()};
+}}
+QRadioButton::indicator:checked {{
+    width: 6px;
+    height: 6px;
+    border-radius: 8px;
+    border: 5px solid {accent_color().name()};
+    background: {radio_dot};
 }}
 QLabel[settingDescription="true"] {{
     color: {description};
@@ -357,7 +380,7 @@ QSlider::handle:horizontal {{
     background: {accent_color().name()};
 }}
 QSlider::handle:horizontal:disabled, QSlider::sub-page:horizontal:disabled {{
-    background: palette(mid);
+    background: {slider_disabled};
 }}
 QScrollArea {{
     border: none;

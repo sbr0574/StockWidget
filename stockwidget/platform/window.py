@@ -1,14 +1,16 @@
-"""浮窗原生能力：无激活置顶、鼠标穿透与光标。"""
+"""浮窗原生能力：无激活置顶、鼠标穿透、背景模糊与光标。"""
 
 from ctypes import wintypes
 from functools import lru_cache
 import ctypes
+import ctypes.util
 import logging
 import sys
+import weakref
 
 from PySide6.QtCore import Qt
 
-from stockwidget.platform.capabilities import is_cocoa, is_x11
+from stockwidget.platform.capabilities import is_cocoa, is_kde_x11, is_windows_11, is_x11
 
 
 def sync_macos_dock_icon():
@@ -203,3 +205,232 @@ def _click_through_windows(widget, enable: bool) -> None:
                             | SWP_NOACTIVATE | SWP_FRAMECHANGED)
     except Exception:
         pass
+
+
+class _ACCENT_POLICY(ctypes.Structure):
+    _fields_ = [
+        ("AccentState", ctypes.c_int),
+        ("AccentFlags", ctypes.c_int),
+        ("GradientColor", ctypes.c_uint32),
+        ("AnimationId", ctypes.c_int),
+    ]
+
+
+class _WINDOWCOMPOSITIONATTRIBDATA(ctypes.Structure):
+    _fields_ = [
+        ("Attribute", ctypes.c_int),
+        ("Data", ctypes.c_void_p),
+        ("SizeOfData", ctypes.c_size_t),
+    ]
+
+
+@lru_cache(maxsize=1)
+def _get_windows_blur_apis():
+    user32 = get_user32()
+    set_wca = user32.SetWindowCompositionAttribute
+    set_wca.argtypes = [wintypes.HWND, ctypes.POINTER(_WINDOWCOMPOSITIONATTRIBDATA)]
+    set_wca.restype = wintypes.BOOL
+    dwmapi = ctypes.WinDLL("dwmapi", use_last_error=True)
+    dwm_set_attr = dwmapi.DwmSetWindowAttribute
+    dwm_set_attr.argtypes = [wintypes.HWND, wintypes.DWORD, ctypes.c_void_p, wintypes.DWORD]
+    dwm_set_attr.restype = ctypes.c_long
+    return set_wca, dwm_set_attr
+
+
+def _apply_blur_windows(widget, enable: bool, corner_radius: int) -> bool:
+    from PySide6.QtWidgets import QApplication
+    app = QApplication.instance()
+    if app is None or app.platformName() != "windows":
+        return False
+    WCA_ACCENT_POLICY = 19
+    ACCENT_DISABLED = 0
+    ACCENT_ENABLE_BLURBEHIND = 3
+    DWMWA_WINDOW_CORNER_PREFERENCE = 33
+    DWMWCP_DONOTROUND = 1
+    DWMWCP_ROUND = 2
+    DWMWCP_ROUNDSMALL = 3
+    try:
+        hwnd = int(widget.winId())
+        set_wca, dwm_set_attr = _get_windows_blur_apis()
+        if is_windows_11():
+            pref = (DWMWCP_ROUNDSMALL if corner_radius <= 6 else DWMWCP_ROUND) if enable else DWMWCP_DONOTROUND
+            value = ctypes.c_int(pref)
+            dwm_set_attr(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ctypes.byref(value), ctypes.sizeof(value))
+        policy = _ACCENT_POLICY(ACCENT_ENABLE_BLURBEHIND if enable else ACCENT_DISABLED, 0, 0, 0)
+        data = _WINDOWCOMPOSITIONATTRIBDATA(
+            WCA_ACCENT_POLICY,
+            ctypes.cast(ctypes.pointer(policy), ctypes.c_void_p),
+            ctypes.sizeof(policy),
+        )
+        return bool(set_wca(hwnd, ctypes.byref(data)))
+    except Exception:
+        logging.getLogger(__name__).debug("Windows 背景模糊设置失败", exc_info=True)
+        return False
+
+
+class _NSPoint(ctypes.Structure):
+    _fields_ = [("x", ctypes.c_double), ("y", ctypes.c_double)]
+
+
+class _NSSize(ctypes.Structure):
+    _fields_ = [("width", ctypes.c_double), ("height", ctypes.c_double)]
+
+
+class _NSRect(ctypes.Structure):
+    _fields_ = [("origin", _NSPoint), ("size", _NSSize)]
+
+
+_MACOS_BLUR_VIEWS: weakref.WeakKeyDictionary = weakref.WeakKeyDictionary()
+
+
+@lru_cache(maxsize=1)
+def _macos_blur_bridge():
+    try:
+        objc = ctypes.CDLL(ctypes.util.find_library("objc"))
+        appkit = ctypes.CDLL(ctypes.util.find_library("AppKit"))
+        objc.objc_getClass.argtypes = [ctypes.c_char_p]
+        objc.objc_getClass.restype = ctypes.c_void_p
+        objc.sel_registerName.argtypes = [ctypes.c_char_p]
+        objc.sel_registerName.restype = ctypes.c_void_p
+        return {
+            "objc": objc,
+            "appkit": appkit,
+            "cls": objc.objc_getClass,
+            "sel": objc.sel_registerName,
+            "ptr": ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p)(("objc_msgSend", objc)),
+            "void": ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_void_p)(("objc_msgSend", objc)),
+            "void_long": ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_long)(("objc_msgSend", objc)),
+            "void_bool": ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_bool)(("objc_msgSend", objc)),
+            "void_double": ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_double)(("objc_msgSend", objc)),
+            "void_ptr": ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p)(("objc_msgSend", objc)),
+            "init_rect": ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, _NSRect)(("objc_msgSend", objc)),
+            "void_rect": ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_void_p, _NSRect)(("objc_msgSend", objc)),
+            "add_subview": ctypes.CFUNCTYPE(
+                None, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_long, ctypes.c_void_p,
+            )(("objc_msgSend", objc)),
+        }
+    except Exception:
+        logging.getLogger(__name__).debug("macOS 背景模糊桥接初始化失败", exc_info=True)
+        return None
+
+
+def _apply_blur_macos(widget, enable: bool, corner_radius: int, dark: bool) -> bool:
+    bridge = _macos_blur_bridge()
+    if bridge is None:
+        return False
+    NSVisualEffectBlendingModeBehindWindow = 0
+    NSVisualEffectStateActive = 1
+    NSVisualEffectMaterialPopover = 6
+    NSVisualEffectMaterialHUDWindow = 13
+    NSViewWidthAndHeightSizable = 18
+    NSWindowBelow = -1
+    try:
+        ns_view = ctypes.c_void_p(int(widget.winId()))
+        if not ns_view.value:
+            return False
+        sel = bridge["sel"]
+        ns_window = bridge["ptr"](ns_view, sel(b"window"))
+        superview = bridge["ptr"](ns_view, sel(b"superview"))
+        existing = _MACOS_BLUR_VIEWS.get(widget)
+        if not enable:
+            if existing:
+                bridge["void"](existing, sel(b"removeFromSuperview"))
+                bridge["void"](existing, sel(b"release"))
+                _MACOS_BLUR_VIEWS.pop(widget, None)
+            if ns_window:
+                bridge["void"](ns_window, sel(b"invalidateShadow"))
+            return True
+        if not ns_window or not superview:
+            return False
+        if existing and bridge["ptr"](existing, sel(b"superview")) != superview:
+            bridge["void"](existing, sel(b"removeFromSuperview"))
+            bridge["void"](existing, sel(b"release"))
+            _MACOS_BLUR_VIEWS.pop(widget, None)
+            existing = None
+        rect = _NSRect(_NSPoint(0.0, 0.0), _NSSize(float(max(1, widget.width())), float(max(1, widget.height()))))
+        if not existing:
+            effect_cls = bridge["cls"](b"NSVisualEffectView")
+            if not effect_cls:
+                return False
+            effect = bridge["ptr"](effect_cls, sel(b"alloc"))
+            effect = bridge["init_rect"](effect, sel(b"initWithFrame:"), rect)
+            if not effect:
+                return False
+            bridge["void_long"](effect, sel(b"setBlendingMode:"), NSVisualEffectBlendingModeBehindWindow)
+            bridge["void_long"](effect, sel(b"setState:"), NSVisualEffectStateActive)
+            bridge["void_long"](effect, sel(b"setAutoresizingMask:"), NSViewWidthAndHeightSizable)
+            bridge["void_bool"](effect, sel(b"setWantsLayer:"), True)
+            bridge["add_subview"](superview, sel(b"addSubview:positioned:relativeTo:"), effect, NSWindowBelow, ns_view)
+            _MACOS_BLUR_VIEWS[widget] = effect
+            existing = effect
+        else:
+            bridge["void_rect"](existing, sel(b"setFrame:"), rect)
+        material = NSVisualEffectMaterialHUDWindow if dark else NSVisualEffectMaterialPopover
+        bridge["void_long"](existing, sel(b"setMaterial:"), material)
+        layer = bridge["ptr"](existing, sel(b"layer"))
+        if layer:
+            bridge["void_double"](layer, sel(b"setCornerRadius:"), float(max(0, corner_radius)))
+            bridge["void_bool"](layer, sel(b"setMasksToBounds:"), True)
+        bridge["void_bool"](ns_window, sel(b"setOpaque:"), False)
+        clear = bridge["ptr"](bridge["cls"](b"NSColor"), sel(b"clearColor"))
+        if clear:
+            bridge["void_ptr"](ns_window, sel(b"setBackgroundColor:"), clear)
+        bridge["void"](ns_window, sel(b"invalidateShadow"))
+        return True
+    except Exception:
+        logging.getLogger(__name__).debug("macOS 背景模糊设置失败", exc_info=True)
+        return False
+
+
+def _apply_blur_kde_x11(widget, enable: bool) -> bool:
+    try:
+        lib_name = ctypes.util.find_library("X11") or "libX11.so.6"
+        x11 = ctypes.CDLL(lib_name)
+        x11.XOpenDisplay.argtypes = [ctypes.c_char_p]
+        x11.XOpenDisplay.restype = ctypes.c_void_p
+        x11.XCloseDisplay.argtypes = [ctypes.c_void_p]
+        x11.XCloseDisplay.restype = ctypes.c_int
+        x11.XInternAtom.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_int]
+        x11.XInternAtom.restype = ctypes.c_ulong
+        x11.XChangeProperty.argtypes = [
+            ctypes.c_void_p, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong,
+            ctypes.c_int, ctypes.c_int, ctypes.c_void_p, ctypes.c_int,
+        ]
+        x11.XChangeProperty.restype = ctypes.c_int
+        x11.XDeleteProperty.argtypes = [ctypes.c_void_p, ctypes.c_ulong, ctypes.c_ulong]
+        x11.XDeleteProperty.restype = ctypes.c_int
+        x11.XFlush.argtypes = [ctypes.c_void_p]
+        x11.XFlush.restype = ctypes.c_int
+        dpy = x11.XOpenDisplay(None)
+        if not dpy:
+            return False
+        try:
+            atom = x11.XInternAtom(dpy, b"_KDE_NET_WM_BLUR_BEHIND_REGION", 0)
+            if not atom:
+                return False
+            win_id = int(widget.winId())
+            if enable:
+                dummy = ctypes.c_ulong(0)
+                # 0-length CARDINAL property instructs KWin to blur the full window shape.
+                x11.XChangeProperty(dpy, win_id, atom, 6, 32, 0, ctypes.byref(dummy), 0)
+            else:
+                x11.XDeleteProperty(dpy, win_id, atom)
+            x11.XFlush(dpy)
+            return True
+        finally:
+            x11.XCloseDisplay(dpy)
+    except Exception:
+        logging.getLogger(__name__).debug("Linux KDE X11 背景模糊设置失败", exc_info=True)
+        return False
+
+
+def apply_background_blur(widget, enable: bool, *, corner_radius: int = 8, dark: bool = True) -> bool:
+    """为无边框浮窗应用或关闭系统原生背景模糊。"""
+    enable = bool(enable)
+    if sys.platform == "win32":
+        return _apply_blur_windows(widget, enable, corner_radius)
+    if is_cocoa():
+        return _apply_blur_macos(widget, enable, corner_radius, dark)
+    if sys.platform == "linux" and is_kde_x11():
+        return _apply_blur_kde_x11(widget, enable)
+    return False

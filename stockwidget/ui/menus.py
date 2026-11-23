@@ -199,7 +199,8 @@ def build_quote_menu(source, surface="float"):
     menu.addAction(act_color)
 
     if surface == "float":
-        _add_opacity_menu(menu, source.opacity_pct, source.set_window_opacity_percent)
+        _add_opacity_menu(menu, source.opacity_pct, source.set_window_opacity_percent,
+                          enabled=not getattr(source, "float_blur_active", False))
     elif surface == "taskbar":
         _add_opacity_menu(menu, source.view_options.taskbar_opacity_pct,
                           lambda percent: source.set_view_options(taskbar_opacity_pct=percent))
@@ -235,13 +236,14 @@ def build_history_menu(dialog):
             dialog.options_changed.emit(changes)
 
         current = None if options.chart_sync_opacity else options.chart_opacity_pct
-        _add_opacity_menu(menu, current, set_opacity, can_sync=True)
+        _add_opacity_menu(menu, current, set_opacity, can_sync=True,
+                          enabled=not getattr(source, "chart_blur_active", False))
     _add_settings_action(menu, source, "设置")
     menu.addAction("隐藏所有浮窗").triggered.connect(dialog.hide_quotes_requested)
     return menu
 
 
-def _add_opacity_menu(menu, current, setter, *, can_sync=False):
+def _add_opacity_menu(menu, current, setter, *, can_sync=False, enabled=True):
     submenu = menu.addMenu("不透明度")
     group = QActionGroup(submenu)
     presets = [(f"{percent}%", percent) for percent in (20, 40, 60, 80, 100)]
@@ -253,7 +255,7 @@ def _add_opacity_menu(menu, current, setter, *, can_sync=False):
         group.addAction(action)
         action.setChecked(current == percent)
         action.triggered.connect(lambda checked=False, percent=percent: setter(percent))
-    submenu.menuAction().setEnabled(opacity_supported())
+    submenu.menuAction().setEnabled(opacity_supported() and enabled)
 
 
 def _add_settings_action(menu, source, text="设置…"):

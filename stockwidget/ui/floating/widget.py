@@ -24,6 +24,7 @@ from stockwidget.platform.capabilities import (
     is_cocoa,
     hotkeys_supported,
     click_through_supported,
+    background_blur_supported,
     opacity_supported,
     force_top_supported,
     default_font_family,
@@ -31,7 +32,7 @@ from stockwidget.platform.capabilities import (
     edge_hide_supported,
 )
 from stockwidget.platform.hotkeys import GlobalHotkeyManager, HotkeyResult
-from stockwidget.platform.window import apply_click_through, ensure_topmost
+from stockwidget.platform.window import apply_background_blur, apply_click_through, ensure_topmost
 from stockwidget.ui.controls.quote_view import (
     DEFAULT_DOWN_COLOR,
     DEFAULT_NEUTRAL_COLOR,
@@ -113,6 +114,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             self.click_through = False
             # 鼠标穿透不可用时，其快捷键一并关闭，避免"按了没效果"
             self.hotkey_click_through_enabled = False
+        if self.float_blur_active and self.click_through:
+            self.click_through = False
         if not force_top_supported():
             self.force_top = False
         self.setWindowFlag(Qt.WindowTransparentForInput, (is_x11() or is_cocoa()) and self.click_through)
@@ -206,6 +209,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
 
         self.position_controller.restore_config(cfg.get("pos"))
         self.hide_controller = HideController(self)
+        self._sync_background_blur()
 
         # 定时刷新数据
         self.timer = QTimer(self)
@@ -413,10 +417,11 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         grid_color.setAlpha(80)
         for table in self.float_tables:
             table.set_grid_appearance(self.grid_visible, grid_color)
+        radius = 0 if (sys.platform == "win32" and self.float_blur_active) else 5
         self.panel.setStyleSheet(f"""
             QWidget#panel {{
                 background: rgba({r},{g},{b},{a});
-                border-radius: 5px;
+                border-radius: {radius}px;
             }}
             QTableView {{
                 background: transparent;
@@ -439,6 +444,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
                 color: {line_col};
             }}
         """)
+        self._sync_background_blur()
         self._defer_fit()
 
     def _apply_row_heights(self):
@@ -535,6 +541,13 @@ class FloatLabel(DragBehaviorMixin, QWidget):
             if old["taskbar_enabled"]:
                 self.finish_drag(False)
         self.view_options = options
+        if self.float_blur_active and self.click_through:
+            self.click_through = False
+            self._sync_click_through()
+            self.click_through_changed.emit(False)
+        if old["float_bg_blur"] != options.float_bg_blur:
+            self._apply_window_opacity()
+            self.apply_style()
         if not old["taskbar_enabled"] and options.taskbar_enabled:
             self.taskbar_screen = ""
         if not options.taskbar_enabled:
@@ -677,8 +690,22 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def bg_alpha_pct(self):
         return round(self.bg.alpha() / 2.55)
 
+    @property
+    def float_blur_active(self) -> bool:
+        return bool(self.view_options.float_bg_blur and background_blur_supported())
+
+    @property
+    def chart_blur_active(self) -> bool:
+        return bool(self.view_options.chart_bg_blur and background_blur_supported())
+
+    def _sync_background_blur(self):
+        collapsed = hasattr(self, "position_controller") and self.position_controller.collapsed
+        active = self.float_blur_active and not collapsed
+        apply_background_blur(self, active, corner_radius=5, dark=self.bg.lightness() < 128)
+
     def _sync_chart_opacity(self, options):
         if options.chart_sync_opacity:
+            options.chart_bg_blur = options.float_bg_blur
             options.chart_bg_alpha_pct = self.bg_alpha_pct
             options.chart_opacity_pct = self.opacity_pct
 
@@ -699,7 +726,8 @@ class FloatLabel(DragBehaviorMixin, QWidget):
     def _apply_window_opacity(self):
         if opacity_supported():
             locating_float = self.position_controller.location_surface == "float"
-            self.setWindowOpacity(1.0 if locating_float else self.opacity_pct / 100.0)
+            opacity = 1.0 if (locating_float or self.float_blur_active) else self.opacity_pct / 100.0
+            self.setWindowOpacity(opacity)
 
     def set_font_size(self, pt: int):
         pt = max(MIN_FONT_PT, min(MAX_FONT_PT, int(pt)))
@@ -808,6 +836,12 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if enable and self._drag_pos is not None:
             self.finish_drag(False)
         self.click_through = enable
+        if enable and self.view_options.float_bg_blur:
+            self.view_options.float_bg_blur = False
+            self._sync_chart_opacity(self.view_options)
+            self._apply_window_opacity()
+            self.apply_style()
+            self.view_options_changed.emit()
         self._sync_click_through()
         self._ensure_on_top()
         self.click_through_changed.emit(self.click_through)
@@ -844,6 +878,7 @@ class FloatLabel(DragBehaviorMixin, QWidget):
                 self.show()
                 if (is_x11() or is_cocoa()) and through:
                     apply_click_through(self, True)
+                self._sync_background_blur()
         finally:
             self.setAttribute(Qt.WA_ShowWithoutActivating, show_without_activating)
             self._updating_topmost = False
@@ -954,11 +989,17 @@ class FloatLabel(DragBehaviorMixin, QWidget):
         if self.force_top and self._keep_top_timer and not self._keep_top_timer.isActive():
             self._keep_top_timer.start()
         apply_click_through(self, self._float_click_through())
+        self._sync_background_blur()
         if (is_x11() or is_cocoa()) and self._float_click_through():
             # showEvent 先于原生映射 / 重建，呼出时在映射完成后恢复输入区域。
             QTimer.singleShot(0, self, lambda: apply_click_through(self, self._float_click_through()))
         self._defer_fit()
         self._ensure_on_top()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if is_cocoa() and self.float_blur_active:
+            self._sync_background_blur()
 
     def hideEvent(self, event):
         super().hideEvent(event)

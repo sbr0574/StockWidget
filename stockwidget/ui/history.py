@@ -1,5 +1,6 @@
 """Shared history window/popup and bounded asynchronous request lifecycle."""
 
+import sys
 import threading
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QTimer, QSignalBlocker, Signal
@@ -11,8 +12,8 @@ from stockwidget.core.window_rules import adjacent_popup_position, best_screen
 from stockwidget.core.config_store import history_cache_dir
 from stockwidget.data.bar_cache import BarCache
 from stockwidget.data.bars import MA_PERIODS, BarResult, HistorySeries, history_day, merge_quote, mini_trend_points, quote_moving_average, quote_volume_ratio, select_bars, trading_date
-from stockwidget.platform.capabilities import is_wayland
-from stockwidget.platform.window import set_macos_cursor, set_windows_arrow_cursor, sync_macos_dock_icon
+from stockwidget.platform.capabilities import is_cocoa, is_wayland
+from stockwidget.platform.window import apply_background_blur, set_macos_cursor, set_windows_arrow_cursor, sync_macos_dock_icon
 from stockwidget.ui.controls.history_chart import MA_COLORS
 from stockwidget.ui.generated.ui_history import Ui_HistoryDialog
 from stockwidget.ui.controls.style import apply_history_theme, is_dark_theme, navigation_arrow_icon, pin_icon, theme_palette
@@ -44,6 +45,8 @@ class HistoryDialog(QDialog):
         self._native_resize_cursor = False
         self._book_enabled = False
         self._breadth_mode = False
+        self._bg_blur = False
+        self._bg_dark = True
         self._theme_palette = None
         self.setMouseTracking(True)
         self.setAttribute(Qt.WA_TranslucentBackground, floating)
@@ -284,11 +287,20 @@ class HistoryDialog(QDialog):
         if self.display_mode == "window":
             sync_macos_dock_icon()
 
+    def set_background_blur(self, enabled: bool, *, dark: bool = True):
+        if self.display_mode != "popup":
+            return
+        self._bg_blur = bool(enabled)
+        self._bg_dark = bool(dark)
+        apply_background_blur(self, self._bg_blur, corner_radius=10, dark=self._bg_dark)
+        self.update()
+
     def showEvent(self, event):
         super().showEvent(event)
         self.layout().activate()
         self._elide_labels()
         if self.display_mode == "popup":
+            apply_background_blur(self, self._bg_blur, corner_radius=10, dark=self._bg_dark)
             QApplication.instance().installEventFilter(self)
             # Wait until the platform window is visible before grabbing the mouse.
             QTimer.singleShot(0, self, self._sync_outside_grab)
@@ -327,6 +339,8 @@ class HistoryDialog(QDialog):
         self.layout().activate()
         self._sync_readout_height()
         self._elide_labels()
+        if self.display_mode == "popup" and self._bg_blur and is_cocoa():
+            apply_background_blur(self, True, corner_radius=10, dark=self._bg_dark)
         if self.isVisible() and not self._restoring and not self.isMaximized() and not self.isMinimized():
             screen = QApplication.screenAt(self.frameGeometry().center()) or QApplication.primaryScreen()
             bounds, frame = screen.availableGeometry(), self.frameGeometry()
@@ -368,7 +382,10 @@ class HistoryDialog(QDialog):
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(Qt.NoPen)
         painter.setBrush(self.palette().window())
-        painter.drawRoundedRect(self.rect(), 10, 10)
+        if sys.platform == "win32" and self._bg_blur:
+            painter.fillRect(self.rect(), self.palette().window())
+        else:
+            painter.drawRoundedRect(self.rect(), 10, 10)
 
     def _set_navigation_icons(self):
         self.pin_button.setIcon(pin_icon(self.devicePixelRatioF(), self.palette()))
@@ -771,20 +788,23 @@ class HistoryController(QObject):
         palette = theme_palette(dark, QApplication.palette())
         floating = self.dialog.display_mode == "popup"
         colors = (QColor(self.window.fg), QColor(self.window.bg)) if floating else (None, None)
+        blur = floating and self.window.chart_blur_active
         opacity = 1.
         if floating:
             colors[1].setAlpha(round(options.chart_bg_alpha_pct * 2.55))
-            opacity = options.chart_opacity_pct / 100
+            opacity = 1. if blur else options.chart_opacity_pct / 100
         theme = (palette, *colors, QColor(self.window.up_color), QColor(self.window.down_color),
-                 QColor(self.window.neutral_color), opacity)
+                 QColor(self.window.neutral_color), opacity, blur)
         if self.dialog._theme_palette == theme:
             return
         if self.dialog._theme_palette is None or self.dialog._theme_palette[:3] != theme[:3]:
             apply_history_theme(self.dialog, dark, palette, *colors)
             self.dialog.update_size_limits()
         self.dialog._theme_palette = theme
-        if floating and not is_wayland():
-            self.dialog.setWindowOpacity(opacity)
+        if floating:
+            if not is_wayland():
+                self.dialog.setWindowOpacity(opacity)
+            self.dialog.set_background_blur(blur, dark=colors[1].lightness() < 128)
         self.dialog.chart.up_color = self.window.up_color
         self.dialog.chart.down_color = self.window.down_color
         self.dialog.chart.neutral_color = self.window.neutral_color if floating else None

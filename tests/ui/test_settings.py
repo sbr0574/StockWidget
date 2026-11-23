@@ -65,7 +65,7 @@ class SettingsDialogTests(SettingsTestCase):
             self.qt_app.processEvents()
             restyle.assert_not_called()
             self.assertEqual(window.view_options.taskbar_opacity_pct, 70)
-            dialog.ui.cmb_color_mode.setCurrentIndex(dialog.ui.cmb_color_mode.findData("dark"))
+            dialog.ui.rb_color_dark.click()
             self.assertEqual(restyle.call_count, 1)
             self.assertLess(dialog.palette().color(QPalette.Window).lightness(), 128)
 
@@ -151,15 +151,18 @@ class SettingsDialogTests(SettingsTestCase):
 
     def test_manual_color_mode_overrides_system_and_can_return_to_system(self):
         dialog, window = self._make_dialog()
-        for mode, dark in (("light", False), ("dark", True)):
-            dialog.ui.cmb_color_mode.setCurrentIndex(dialog.ui.cmb_color_mode.findData(mode))
+        self.assertTrue(dialog.ui.rb_color_system.isChecked())
+        for button, mode, dark in ((dialog.ui.rb_color_light, "light", False),
+                                   (dialog.ui.rb_color_dark, "dark", True)):
+            button.click()
             self.assertEqual(window.view_options.color_mode, mode)
             for widget in (dialog, dialog.ui.floating_content, dialog.ui.gb_fcn,
                            dialog.ui.cb_float_on_top_title, dialog.ui.btn_check_update):
                 with self.subTest(mode=mode, control=widget.objectName()):
                     self.assertEqual(widget.palette().color(QPalette.Window).lightness() < 128, dark)
                     self.assertEqual(widget.palette().color(QPalette.WindowText).lightness() > 128, dark)
-        dialog.ui.cmb_color_mode.setCurrentIndex(0)
+        dialog.ui.rb_color_system.click()
+        self.assertEqual(window.view_options.color_mode, "system")
         self.assertEqual(dialog.palette(), QApplication.palette())
 
     def test_wheel_over_hide_schedule_scrolls_the_page_and_schedule_has_no_tooltips(self):

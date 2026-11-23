@@ -19,6 +19,8 @@ Linux 的关键差异在于 X11 与 Wayland：
 本模块只做“探测/判断”，不包含原生实现：原生实现见 window.py / autostart.py。
 """
 
+import ctypes
+import ctypes.util
 import os
 import sys
 
@@ -69,6 +71,96 @@ def is_cocoa() -> bool:
     from PySide6.QtWidgets import QApplication
     app = QApplication.instance()
     return app is not None and app.platformName() == "cocoa"
+
+
+def is_windows_11() -> bool:
+    """Windows 11（Build 22000 及以上）支持 DWM 原生圆角裁剪。"""
+    if sys.platform != "win32":
+        return False
+    try:
+        return sys.getwindowsversion().build >= 22000
+    except AttributeError:
+        return False
+
+
+def _x11_kwin_blur_supported() -> bool | None:
+    """探测 X11 根窗口的 _NET_SUPPORTED 是否声明 _KDE_NET_WM_BLUR_BEHIND_REGION。"""
+    try:
+        lib_name = ctypes.util.find_library("X11") or "libX11.so.6"
+        x11 = ctypes.CDLL(lib_name)
+        x11.XOpenDisplay.argtypes = [ctypes.c_char_p]
+        x11.XOpenDisplay.restype = ctypes.c_void_p
+        x11.XCloseDisplay.argtypes = [ctypes.c_void_p]
+        x11.XCloseDisplay.restype = ctypes.c_int
+        x11.XDefaultRootWindow.argtypes = [ctypes.c_void_p]
+        x11.XDefaultRootWindow.restype = ctypes.c_ulong
+        x11.XInternAtom.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_int]
+        x11.XInternAtom.restype = ctypes.c_ulong
+        x11.XGetWindowProperty.argtypes = [
+            ctypes.c_void_p, ctypes.c_ulong, ctypes.c_ulong,
+            ctypes.c_long, ctypes.c_long, ctypes.c_int, ctypes.c_ulong,
+            ctypes.POINTER(ctypes.c_ulong), ctypes.POINTER(ctypes.c_int),
+            ctypes.POINTER(ctypes.c_ulong), ctypes.POINTER(ctypes.c_ulong),
+            ctypes.POINTER(ctypes.c_void_p),
+        ]
+        x11.XGetWindowProperty.restype = ctypes.c_int
+        x11.XFree.argtypes = [ctypes.c_void_p]
+        x11.XFree.restype = ctypes.c_int
+        dpy = x11.XOpenDisplay(None)
+        if not dpy:
+            return None
+        try:
+            blur_atom = x11.XInternAtom(dpy, b"_KDE_NET_WM_BLUR_BEHIND_REGION", 1)
+            if not blur_atom:
+                return False
+            supported_atom = x11.XInternAtom(dpy, b"_NET_SUPPORTED", 1)
+            if not supported_atom:
+                return None
+            root = x11.XDefaultRootWindow(dpy)
+            actual_type = ctypes.c_ulong()
+            actual_format = ctypes.c_int()
+            nitems = ctypes.c_ulong()
+            bytes_after = ctypes.c_ulong()
+            prop = ctypes.c_void_p()
+            status = x11.XGetWindowProperty(
+                dpy, root, supported_atom, 0, 4096, 0, 4,  # XA_ATOM = 4
+                ctypes.byref(actual_type), ctypes.byref(actual_format),
+                ctypes.byref(nitems), ctypes.byref(bytes_after), ctypes.byref(prop),
+            )
+            if status != 0 or not prop.value:
+                return None
+            try:
+                atoms = (ctypes.c_ulong * nitems.value).from_address(prop.value)
+                return any(atom == blur_atom for atom in atoms)
+            finally:
+                x11.XFree(prop)
+        finally:
+            x11.XCloseDisplay(dpy)
+    except Exception:
+        return None
+
+
+def is_kde_x11() -> bool:
+    """Linux X11 会话下是否运行在支持背景模糊的 KDE Plasma（KWin）桌面。"""
+    if sys.platform != "linux" or not is_x11():
+        return False
+    supported = _x11_kwin_blur_supported()
+    if supported is not None:
+        return supported
+    desktop = os.environ.get("XDG_CURRENT_DESKTOP", "").lower()
+    return "kde" in desktop or bool(os.environ.get("KDE_FULL_SESSION"))
+
+
+def background_blur_supported() -> bool:
+    """窗口背景模糊是否可用：Windows、macOS Cocoa 及 Linux KDE X11 支持。"""
+    system = sys.platform
+    if system == "win32":
+        return True
+    if system == "darwin":
+        return is_cocoa()
+    if system == "linux":
+        return is_kde_x11()
+    return False
 
 
 def hotkeys_supported() -> bool:
@@ -142,3 +234,12 @@ def unsupported_tooltip(feature: str, suggest_x11: bool = True) -> str:
     if st == "wayland" and suggest_x11:
         return f"{feature}:当前 Wayland 会话不支持，请切换到 Xorg（X11）会话后使用。"
     return f"{feature}:当前平台不支持该功能。"
+
+
+def background_blur_unsupported_tooltip() -> str:
+    """为不支持窗口背景模糊的桌面或会话生成中文提示。"""
+    if sys.platform == "linux":
+        if session_type() == "wayland":
+            return "背景模糊：当前 Wayland 会话不支持，请在 KDE Plasma 的 Xorg（X11）会话下使用。"
+        return "背景模糊：当前桌面环境不支持，仅 KDE Plasma（X11）支持背景模糊。"
+    return unsupported_tooltip("背景模糊", suggest_x11=False)

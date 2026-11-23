@@ -28,6 +28,8 @@ from stockwidget.data.update_check import get_update_info, github_available, pro
 from stockwidget.platform.capabilities import (
     hotkeys_supported,
     click_through_supported,
+    background_blur_supported,
+    background_blur_unsupported_tooltip,
     opacity_supported,
     force_top_supported,
     boundary_check_supported,
@@ -215,10 +217,16 @@ class SettingsDialog(QDialog):
             self.ui.cmb_name_length.setItemData(index, value)
         for index, value in enumerate(("auto", "cn", "en")):
             self.ui.cmb_unit_mode.setItemData(index, value)
-        for index, value in enumerate(("system", "light", "dark")):
-            self.ui.cmb_color_mode.setItemData(index, value)
-        self.ui.cmb_color_mode.currentIndexChanged.connect(
-            lambda _: self.win.set_view_options(color_mode=self.ui.cmb_color_mode.currentData()))
+        self._color_mode_buttons = {
+            "system": self.ui.rb_color_system,
+            "light": self.ui.rb_color_light,
+            "dark": self.ui.rb_color_dark,
+        }
+        self._color_mode_group = QButtonGroup(self)
+        for mode, button in self._color_mode_buttons.items():
+            self._color_mode_group.addButton(button)
+            button.toggled.connect(lambda checked, mode=mode: checked and
+                                   self.win.set_view_options(color_mode=mode))
         self.ui.cb_hide_tray_icon.toggled.connect(
             lambda hidden: self.win.set_view_options(hide_tray_icon=hidden))
         self.ui.cb_chart_enabled.toggled.connect(
@@ -256,10 +264,14 @@ class SettingsDialog(QDialog):
         }
         for button, attr, title in self._color_buttons:
             button.clicked.connect(partial(self._pick_surface_color, attr, title, color_setters[attr]))
+        self.ui.cb_float_blur.toggled.connect(
+            lambda enabled: self.win.set_view_options(float_bg_blur=enabled))
         self.ui.slider_bg_alpha.valueChanged.connect(self.apply_bg_alpha)
         self.ui.slider_all_alpha.valueChanged.connect(self.apply_win_opacity)
         self.ui.cb_chart_sync_opacity.toggled.connect(
             lambda enabled: self.win.set_view_options(chart_sync_opacity=enabled))
+        self.ui.cb_chart_blur.toggled.connect(
+            lambda enabled: self.win.set_view_options(chart_bg_blur=enabled))
         self.ui.slider_chart_bg_alpha.valueChanged.connect(
             lambda value: self.win.set_view_options(chart_bg_alpha_pct=value))
         self.ui.slider_chart_all_alpha.valueChanged.connect(
@@ -457,13 +469,7 @@ class SettingsDialog(QDialog):
             for w in (self.ui.cb_hotkey_click_through, self.ui.keyseq_click_through):
                 w.setEnabled(False)
                 w.setToolTip(unsupported_tooltip("鼠标穿透"))
-        if not opacity_supported():
-            # 整体不透明度滑块:Wayland 平台插件不支持设置窗口透明度
-            for w in (self.ui.slider_all_alpha, self.ui.label_all, self.ui.label_all_alpha,
-                      self.ui.slider_chart_all_alpha, self.ui.label_chart_all, self.ui.label_chart_all_alpha):
-                w.setEnabled(False)
-            self.ui.slider_all_alpha.setToolTip(unsupported_tooltip("整体不透明度"))
-            self.ui.slider_chart_all_alpha.setToolTip(unsupported_tooltip("整体不透明度"))
+        self._sync_opacity_settings()
         self._sync_topmost_from_win()
         if not start_on_boot_supported():
             self.ui.cb_auto_start.setEnabled(False)
@@ -681,10 +687,11 @@ class SettingsDialog(QDialog):
         with QSignalBlocker(self.ui.cmb_average_period):
             self.ui.cmb_average_period.setCurrentIndex(
                 self.ui.cmb_average_period.findData(self.win.view_options.average_period))
-        with QSignalBlocker(self.ui.cmb_color_mode), QSignalBlocker(self.ui.cb_hide_tray_icon):
-            self.ui.cmb_color_mode.setCurrentIndex(self.ui.cmb_color_mode.findData(self.win.view_options.color_mode))
+        self._select_button(self._color_mode_buttons, self.win.view_options.color_mode)
+        with QSignalBlocker(self.ui.cb_hide_tray_icon):
             self.ui.cb_hide_tray_icon.setChecked(self.win.view_options.hide_tray_icon)
         self._sync_accent_controls()
+        self._sync_opacity_settings()
         if self.win.view_options.color_mode != getattr(self, "_applied_color_mode", None):
             self._apply_theme_stylesheet()
 
@@ -746,9 +753,39 @@ class SettingsDialog(QDialog):
     def _sync_opacity_settings(self):
         options = self.win.view_options
         sync = options.chart_sync_opacity
+        blur_ok = background_blur_supported()
+        opacity_ok = opacity_supported()
+        float_blur = self.win.float_blur_active
+        chart_blur = self.win.chart_blur_active
+        blur_tip = "" if blur_ok else background_blur_unsupported_tooltip()
+
+        self._set_checked_blocked(self.ui.cb_float_blur, float_blur)
+        self.ui.cb_float_blur.setEnabled(blur_ok)
+        self.ui.cb_float_blur.setToolTip(blur_tip)
+
         self._set_checked_blocked(self.ui.cb_chart_sync_opacity, sync)
+        self._set_checked_blocked(self.ui.cb_chart_blur, chart_blur)
+        self.ui.cb_chart_blur.setEnabled(blur_ok and not sync)
+        self.ui.cb_chart_blur.setToolTip(blur_tip)
+
+        float_all_enabled = opacity_ok and not float_blur
+        for control in (self.ui.slider_all_alpha, self.ui.label_all, self.ui.label_all_alpha):
+            control.setEnabled(float_all_enabled)
+        self.ui.slider_all_alpha.setToolTip(
+            unsupported_tooltip("整体不透明度") if not opacity_ok else
+            "开启主浮窗背景模糊时，整体不透明度固定为 100%" if float_blur else ""
+        )
+
         self.ui.slider_chart_bg_alpha.setEnabled(not sync)
-        self.ui.slider_chart_all_alpha.setEnabled(not sync and opacity_supported())
+        chart_all_available = opacity_ok and not chart_blur
+        self.ui.slider_chart_all_alpha.setEnabled(not sync and chart_all_available)
+        for control in (self.ui.label_chart_all, self.ui.label_chart_all_alpha):
+            control.setEnabled(chart_all_available)
+        self.ui.slider_chart_all_alpha.setToolTip(
+            unsupported_tooltip("整体不透明度") if not opacity_ok else
+            "开启图表浮窗背景模糊时，整体不透明度固定为 100%" if chart_blur else ""
+        )
+
         for slider, label, value in (
             (self.ui.slider_bg_alpha, self.ui.label_bg_alpha, self.win.bg_alpha_pct),
             (self.ui.slider_all_alpha, self.ui.label_all_alpha, self.win.opacity_pct),
