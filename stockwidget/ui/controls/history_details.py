@@ -1,7 +1,7 @@
 """Live quote details shared by the chart popup and detached window."""
 
 from PySide6.QtCore import QEvent, QPointF, QRectF, Qt
-from PySide6.QtGui import QColor, QFontMetrics, QPainter, QPalette
+from PySide6.QtGui import QColor, QFontMetrics, QPainter, QPalette, QPen
 from PySide6.QtWidgets import QLabel, QWidget
 
 from stockwidget.core.quote_presentation import (
@@ -19,8 +19,24 @@ def _set_color(label, role, up, down):
     label.setPalette(palette)
 
 
+def _paint_card_surface(painter, rect, palette):
+    """Draw a clean rounded card surface with a soft hairline border."""
+    card = QRectF(rect).adjusted(0.5, 0.5, -0.5, -0.5)
+    painter.save()
+    painter.setRenderHint(QPainter.Antialiasing, True)
+    painter.setBrush(palette.base())
+    border = QColor(palette.mid().color())
+    painter.setPen(QPen(border, 1))
+    painter.drawRoundedRect(card, 10.0, 10.0)
+    painter.restore()
+
+
 class HistoryQuoteHeader(QWidget):
     """Consume the presenter's accepted quote; never issue a quote request."""
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        _paint_card_surface(painter, self.rect(), self.palette())
 
     def bind_fields(self):
         self.name = self.findChild(QLabel, "quote_name")
@@ -129,12 +145,19 @@ class OrderBookWidget(QWidget):
         bold_metrics = QFontMetrics(bold_font)
         label_width = max(metrics.horizontalAdvance(label) for label, _ in MARKET_BREADTH_BUCKETS)
         count_width = metrics.horizontalAdvance("9999")
-        summary_width = bold_metrics.horizontalAdvance("9999 / 9999 / 9999")
+        summary_width = bold_metrics.horizontalAdvance("涨9999/平999/跌9999")
         width = max(164, 20 + label_width + count_width + 12 + 48, 20 + summary_width)
         row_height = max(16, metrics.height() + 1)
         height = max(200, 12 + 4 + row_height * 12)
         self.setFixedWidth(width)
         self.setMinimumHeight(height)
+
+    @property
+    def breadth_summary_text(self) -> str:
+        if self.breadth_summary is None:
+            return "涨—/平—/跌—"
+        up, flat, down = self.breadth_summary
+        return f"涨{up}/平{flat}/跌{down}"
 
     def changeEvent(self, event):
         super().changeEvent(event)
@@ -239,21 +262,21 @@ class OrderBookWidget(QWidget):
         sep_color.setAlpha(150)
 
         if self.breadth_summary is not None:
-            up_text, flat_text, down_text = (str(value) for value in self.breadth_summary)
+            up_value, flat_value, down_value = self.breadth_summary
             segments = (
-                (up_text, self.up_color),
-                (" / ", sep_color),
-                (flat_text, flat_color),
-                (" / ", sep_color),
-                (down_text, self.down_color),
+                (f"涨{up_value}", self.up_color),
+                ("/", sep_color),
+                (f"平{flat_value}", flat_color),
+                ("/", sep_color),
+                (f"跌{down_value}", self.down_color),
             )
         else:
             segments = (
-                ("—", neutral),
-                (" / ", sep_color),
-                ("—", neutral),
-                (" / ", sep_color),
-                ("—", neutral),
+                ("涨—", neutral),
+                ("/", sep_color),
+                ("平—", neutral),
+                ("/", sep_color),
+                ("跌—", neutral),
             )
 
         base_font = painter.font()
@@ -262,9 +285,12 @@ class OrderBookWidget(QWidget):
         bold_metrics = QFontMetrics(bold_font)
         total_w = sum((bold_metrics if idx % 2 == 0 else metrics).horizontalAdvance(text)
                       for idx, (text, _) in enumerate(segments))
+        use_bold = total_w <= content_width
+        if not use_bold:
+            total_w = sum(metrics.horizontalAdvance(text) for text, _ in segments)
         x = margin + max(0.0, (content_width - total_w) / 2)
         for idx, (text, color) in enumerate(segments):
-            is_value = idx % 2 == 0
+            is_value = use_bold and idx % 2 == 0
             painter.setFont(bold_font if is_value else base_font)
             seg_w = (bold_metrics if is_value else metrics).horizontalAdvance(text)
             painter.setPen(color)
@@ -273,8 +299,8 @@ class OrderBookWidget(QWidget):
         painter.setFont(base_font)
 
         divider_y = header_y + line + header_gap / 2
-        divider = QColor(self.palette().mid().color())
-        divider.setAlpha(120)
+        divider = QColor(neutral)
+        divider.setAlpha(46 if not self.flat else 64)
         painter.setPen(divider)
         painter.drawLine(QPointF(margin, divider_y), QPointF(margin + content_width, divider_y))
 
@@ -300,11 +326,14 @@ class OrderBookWidget(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        if not self.flat:
-            painter.fillRect(self.rect(), self.palette().base())
         neutral = self.palette().text().color()
-        painter.setPen(self.palette().mid().color())
-        painter.drawLine(0, 0, 0, self.height())
+        if not self.flat:
+            _paint_card_surface(painter, self.rect(), self.palette())
+        else:
+            divider = QColor(neutral)
+            divider.setAlpha(60)
+            painter.setPen(divider)
+            painter.drawLine(QPointF(0.5, 6), QPointF(0.5, self.height() - 6))
         if self.breadth_mode:
             self._paint_breadth(painter, neutral)
             return

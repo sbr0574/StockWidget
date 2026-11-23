@@ -4,7 +4,7 @@ import threading
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QTimer, QSignalBlocker, Signal
 from PySide6.QtGui import QColor, QContextMenuEvent, QCursor, QFontInfo, QFontMetrics, QPainter, QPalette
-from PySide6.QtWidgets import QApplication, QAbstractButton, QButtonGroup, QDialog, QMenu, QToolTip, QWidget, QWidgetItem
+from PySide6.QtWidgets import QApplication, QAbstractButton, QButtonGroup, QDialog, QMenu, QSizePolicy, QToolTip, QWidget, QWidgetItem
 
 from stockwidget.core.quote_presentation import is_cn_index
 from stockwidget.core.window_rules import adjacent_popup_position, best_screen
@@ -65,11 +65,19 @@ class HistoryDialog(QDialog):
         self.chart.readout_changed.connect(self._update_readout)
         self.chart.readout_layout_changed.connect(self._sync_readout_height)
         self._title_text = self._status_text = ""
+        self._sync_fixed_row_heights()
+        if not floating:
+            self.ui.chart_layout.setContentsMargins(12, 10, 12, 10)
+            self.ui.chart_layout.setSpacing(8)
+            self.ui.content_layout.setSpacing(8)
+            self.ui.quote_header_layout.setContentsMargins(12, 8, 12, 8)
+            self.quote_header.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.title_row.setVisible(floating)
         self.quote_header.setVisible(not floating)
         self.order_book.hide()
         self.ui.ma_row.hide()
         self.status.hide()
+        self._sync_readout_height()
         self.view_group = QButtonGroup(self)
         self._view = "intraday"
         self.view_buttons = {view: getattr(self.ui, f"btn_{view}") for view in ("intraday", "five_day", "daily")}
@@ -148,15 +156,24 @@ class HistoryDialog(QDialog):
             self.layout().activate()
         self._restoring = restoring
 
+    def _sync_fixed_row_heights(self):
+        for row, floor in ((self.title_row, 26), (self.ui.toolbar, 24), (self.ui.ma_row, 22)):
+            row.ensurePolished()
+            height = max(floor, row.layout().minimumSize().height())
+            if row.minimumHeight() != height or row.maximumHeight() != height:
+                row.setFixedHeight(height)
+
     def update_size_limits(self, bounds=None):
+        self.ensurePolished()
+        self.status.ensurePolished()
+        self._sync_fixed_row_heights()
         screen = QApplication.screenAt(self.frameGeometry().center()) or QApplication.primaryScreen()
         bounds = bounds or screen.availableGeometry()
         # Reserve native title-bar/frame space for the detached window.
         frame = self.frameGeometry().size() - self.size() if self.isVisible() else QSize(16, 40)
-        maximum = bounds.size() if self.display_mode == "popup" else bounds.size() - frame
-        minimum = QSize(780, 400) if self.display_mode == "window" else QSize(300, 210)
-        if self._book_enabled:
-            minimum = minimum.expandedTo(QSize(460, 300))
+        screen_max = bounds.size() if self.display_mode == "popup" else bounds.size() - frame
+        base_min = QSize(780, 400) if self.display_mode == "window" else QSize(300, 210)
+        minimum = base_min.expandedTo(QSize(460, 300)) if self._book_enabled else QSize(base_min)
         if self.layout():
             layout = self.layout()
             self.ui.content_layout.invalidate()
@@ -167,19 +184,49 @@ class HistoryDialog(QDialog):
             horizontal = margins.left() + margins.right()
             # Use the same worst-case layout for every view, including hidden
             # MA controls/status and the saved depth preference on five-day/K.
+            extra_w = 0
             for row in (self.ui.ma_row, self.status):
                 hint = QWidgetItem(row).minimumSize()
                 if row.isHidden():
-                    hint = row.layout().minimumSize() if row.layout() else QSize(0, row.fontMetrics().height())
+                    if row.layout():
+                        hint = row.minimumSize().expandedTo(row.layout().minimumSize())
+                    else:
+                        hint = QSize(0, max(row.minimumHeight(), row.fontMetrics().height()))
+                extra_w = max(extra_w, hint.width() + horizontal)
                 content.setWidth(max(content.width(), hint.width() + horizontal))
                 if row.isHidden():
                     content.setHeight(content.height() + hint.height() + layout.spacing())
+            chart = self.ui.content_layout.minimumSize()
+            book_w = self.order_book.minimumWidth() + self.ui.content_layout.spacing()
             if self._book_enabled and self.order_book.isHidden():
-                chart = self.ui.content_layout.minimumSize()
-                content.setWidth(max(content.width(), chart.width() + self.order_book.minimumWidth()
-                                     + self.ui.content_layout.spacing() + horizontal))
-                content.setHeight(content.height() + max(0, self.order_book.minimumHeight() - chart.height()))
-            minimum = minimum.expandedTo(content)
+                content_with_book = QSize(
+                    max(content.width(), chart.width() + book_w + horizontal),
+                    content.height() + max(0, self.order_book.minimumHeight() - chart.height()),
+                )
+                content_without_book = QSize(content)
+            elif not self.order_book.isHidden():
+                content_with_book = QSize(content)
+                non_book_w = max(
+                    extra_w,
+                    self.title_row.minimumSizeHint().width() + horizontal if not self.title_row.isHidden() else 0,
+                    self.ui.toolbar.minimumSizeHint().width() + horizontal,
+                    self.chart.minimumWidth() + horizontal,
+                )
+                content_without_book = QSize(
+                    non_book_w,
+                    content.height() - max(0, self.order_book.minimumHeight() - self.chart.minimumHeight()),
+                )
+            else:
+                content_with_book = QSize(content)
+                content_without_book = QSize(content)
+            base_min = base_min.expandedTo(content_without_book)
+            minimum = minimum.expandedTo(content_with_book)
+        if self.display_mode == "popup":
+            # Cap popup size at ~2x its no-order-book minimum dimensions.
+            popup_cap = QSize(base_min.width() * 2, base_min.height() * 2)
+            maximum = popup_cap.boundedTo(screen_max).expandedTo(minimum).boundedTo(screen_max)
+        else:
+            maximum = screen_max
         maximum = maximum.expandedTo(QSize(200, 200))
         self.setMinimumSize(minimum.boundedTo(maximum))
         self.setMaximumSize(maximum)
@@ -300,7 +347,8 @@ class HistoryDialog(QDialog):
         metrics = QFontMetrics(self.font())
         width = max(metrics.horizontalAdvance(line) for line in lines) + 2
         # Fit whole rows in compact panels without changing font on hover.
-        scale = min(1, max(1, label.contentsRect().width() - 2) / width)
+        available = label.contentsRect().width() - 2
+        scale = min(1, available / width) if available > 20 else 1
         pixels = max(1, int(QFontInfo(self.font()).pixelSize() * scale))
         style = f"font-size: {pixels}px;"
         if label.styleSheet() != style:
@@ -733,6 +781,7 @@ class HistoryController(QObject):
             return
         if self.dialog._theme_palette is None or self.dialog._theme_palette[:3] != theme[:3]:
             apply_history_theme(self.dialog, dark, palette, *colors)
+            self.dialog.update_size_limits()
         self.dialog._theme_palette = theme
         if floating and not is_wayland():
             self.dialog.setWindowOpacity(opacity)
@@ -927,10 +976,13 @@ class HistoryController(QObject):
             self.dialog.chart.set_data((), self.dialog.view, self.instrument)
         if not series.needs_download(now):
             self._pending = None
+            self.dialog.chart.set_loading(False)
             self._render(series, view)
             self._start_next_background()
             return
-        self.dialog.set_status("更新中…" if self.dialog.chart.bars else "加载中…")
+        if not self.dialog.chart.bars:
+            self.dialog.chart.set_loading(True)
+            self.dialog.set_status("")
         if self._busy:
             self._pending = request  # At most one worker; latest selection wins.
         else:

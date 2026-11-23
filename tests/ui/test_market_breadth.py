@@ -5,12 +5,13 @@ from datetime import datetime, timedelta, timezone
 import tempfile
 from unittest.mock import Mock, patch
 
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QPalette
 
 from stockwidget.core.quote_presentation import MARKET_BREADTH_BUCKETS
 from stockwidget.data.bar_cache import BarCache
 from stockwidget.data.bars import Bar, BarResult
 from stockwidget.data.quotes import MARKET_BREADTH_KEY, _new_entry, parse_sina_market_breadth
+from stockwidget.ui.controls.history_chart import VOLUME_HEIGHT_RATIO
 from stockwidget.ui.floating.presenter import QuotePresenter
 from tests.data.test_bars import sample_bars
 from tests.ui.test_history import HistoryTestCase
@@ -92,6 +93,7 @@ class MarketBreadthTests(HistoryTestCase):
         self.assertFalse(popup.order_book.isHidden())
         self.assertTrue(popup.order_book.breadth_mode)
         self.assertIsNone(popup.order_book.breadth_summary)
+        self.assertEqual(popup.order_book.breadth_summary_text, "涨—/平—/跌—")
         self.assertEqual(
             [row[0] for row in popup.order_book.breadth_rows],
             [label for label, _ in MARKET_BREADTH_BUCKETS],
@@ -109,6 +111,7 @@ class MarketBreadthTests(HistoryTestCase):
         self.app.processEvents()
         self.assertNotIn(MARKET_BREADTH_KEY, window.quotes._latest_quotes)
         self.assertEqual(popup.order_book.breadth_summary, (4497, 165, 985))
+        self.assertEqual(popup.order_book.breadth_summary_text, "涨4497/平165/跌985")
         self.assertEqual(
             [int(row[1]) for row in popup.order_book.breadth_rows],
             list(SAMPLE_BREADTH["buckets"]),
@@ -264,3 +267,71 @@ class MarketBreadthTests(HistoryTestCase):
         self.app.processEvents()
         self.assertTrue(detached.rect().contains(detached.order_book.geometry()))
         self.assertLess(detached.order_book.geometry().bottom(), detached.ui.chart_readout.geometry().top())
+
+    def test_popup_max_size_chart_stability_dark_gridlines_and_fixed_volume_ratio(self):
+        _, window, _ = self.make_mixed_window(chart_enabled=True, chart_order_book_enabled=False, color_mode="dark")
+        history = window.history
+        history.open_row("float", 4)  # sh600000 stock
+        self.wait_ready(window)
+        popup = history.dialog
+        base_min = popup.minimumSize()
+        bounds = popup.screen().availableGeometry().size()
+        expected_max = base_min * 2
+        self.assertEqual(popup.maximumSize(), expected_max.boundedTo(bounds))
+
+        # Toggling order book keeps popup maximum size capped at ~2x no-book minimum.
+        popup.ui.cb_order_book.setChecked(True)
+        self.app.processEvents()
+        self.assertEqual(popup.maximumSize(), expected_max.boundedTo(bounds).expandedTo(popup.minimumSize()).boundedTo(bounds))
+
+        # Fixed top/bottom heights and zero chart height twitch during background reload.
+        chart_h = popup.chart.height()
+        title_h = popup.title_row.height()
+        toolbar_h = popup.ui.toolbar.height()
+        readout_h = popup.ui.chart_readout.height()
+        series = history._series_for(history.instrument, "intraday")
+        series.retry_after = 0
+        series.repair_needed = True
+        with patch.object(history, "_start"):
+            history.reload()
+            self.app.processEvents()
+            self.assertTrue(popup.status.isHidden())
+            self.assertEqual(popup.chart.height(), chart_h)
+            self.assertEqual(popup.title_row.height(), title_h)
+            self.assertEqual(popup.ui.toolbar.height(), toolbar_h)
+            self.assertEqual(popup.ui.chart_readout.height(), readout_h)
+        series.repair_needed = False
+
+        # Fixed upper/lower allocation ratio across chart sizes.
+        popup.pop_out_button.click()
+        self.wait_ready(window)
+        detached = history.dialog
+        ratios = []
+        for size in ((800, 440), (960, 560)):
+            detached.resize(*size)
+            self.app.processEvents()
+            detached.chart.grab()
+            upper = detached.chart._plot.height()
+            lower = detached.chart._volume_plot.height()
+            ratios.append(lower / (upper + lower))
+        for ratio in ratios:
+            self.assertAlmostEqual(ratio, VOLUME_HEIGHT_RATIO, delta=0.01)
+
+        # Dark-mode detached chart auxiliary gridlines are clearly visible against base surface.
+        chart_img = detached.chart.grab().toImage()
+        scale = chart_img.devicePixelRatio()
+        base = detached.chart.palette().color(QPalette.Base)
+        grid_y = round((detached.chart._plot.top() + detached.chart._plot.height() * 0.25) * scale)
+        sample_x = round((detached.chart._plot.left() + detached.chart._plot.width() * 0.6) * scale)
+        grid_colors = [chart_img.pixelColor(sample_x, row) for row in range(grid_y - 1, grid_y + 2)]
+        max_contrast = max(abs(c.red() - base.red()) + abs(c.green() - base.green()) + abs(c.blue() - base.blue())
+                           for c in grid_colors)
+        self.assertGreater(max_contrast, 30)
+
+        # Light-mode detached order book card has soft border (not harsh black) on its left edge.
+        window.set_view_options(color_mode="light")
+        self.app.processEvents()
+        book_img = detached.order_book.grab().toImage()
+        mid_y = round(detached.order_book.height() * 0.5 * book_img.devicePixelRatio())
+        edge_color = book_img.pixelColor(0, mid_y)
+        self.assertGreater(edge_color.lightness(), 180)

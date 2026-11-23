@@ -353,12 +353,18 @@ class HistoryUITests(HistoryTestCase):
                             self.assertTrue(chart._plot.top() < chart._reference_y < chart._plot.bottom())
                             self.assertNotIn("均价", chart.readout_text(0))
                             self.assertRegex(chart.readout_text(0), r"^价格 .+  均 .+  量 ")
-                            # The separator extends into the otherwise empty axis margin.
+                            # Upper and lower plots are closed independently with no middle separator
+                            # and no vertical gridlines crossing the gap between them.
                             scale = image.devicePixelRatio()
-                            y = round((chart._plot.bottom() + chart._volume_plot.top()) / 2 * scale)
+                            gap_y = round((chart._plot.bottom() + chart._volume_plot.top()) / 2 * scale)
+                            mid_x = round((chart._plot.left() + chart._plot.width() * 0.5) * scale)
                             background = chart.palette().color(QPalette.Base)
-                            self.assertTrue(any(image.pixelColor(round(2 * scale), row) != background
-                                                for row in range(y - 1, y + 2)))
+                            self.assertEqual(image.pixelColor(round(4 * scale), gap_y), background)
+                            self.assertEqual(image.pixelColor(round(chart._plot.left() * scale), gap_y), background)
+                            for border_y in (chart._plot.bottom(), chart._volume_plot.top(), chart._volume_plot.bottom()):
+                                py = round(border_y * scale)
+                                self.assertTrue(any(image.pixelColor(mid_x, row) != background
+                                                    for row in range(py - 1, py + 2)))
             chart.set_options([], True, False)
             chart.grab()
             self.assertTrue(chart._volume_plot.isEmpty())

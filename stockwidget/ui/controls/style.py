@@ -33,6 +33,7 @@ def theme_palette(dark: bool, base: QPalette) -> QPalette:
         palette.setColor(role, QColor(color))
     for role in (QPalette.WindowText, QPalette.Text, QPalette.ButtonText):
         palette.setColor(QPalette.Disabled, role, QColor("#888888"))
+    palette.setColor(QPalette.Mid, QColor("#3c4049" if dark else "#dfe3ea"))
     palette.setColor(QPalette.PlaceholderText, QColor("#aaaaaa" if dark else "#707070"))
     return palette
 
@@ -436,6 +437,15 @@ def apply_history_theme(widget, dark, palette, foreground=None, background=None)
             palette.setColor(role, foreground)
         for role in (QPalette.Window, QPalette.Base):
             palette.setColor(role, background)
+    else:
+        window, base, button, mid, placeholder = (
+            ("#181a1f", "#21242b", "#2a2e37", "#343944", "#9ca3af") if dark
+            else ("#f5f7fa", "#ffffff", "#ebeef3", "#dfe3ea", "#6b7280")
+        )
+        for role, color in ((QPalette.Window, window), (QPalette.Base, base),
+                            (QPalette.Button, button), (QPalette.Mid, mid),
+                            (QPalette.PlaceholderText, placeholder)):
+            palette.setColor(role, QColor(color))
     extra = "QPushButton:disabled { color: palette(button-text); }" if floating else ""
     apply_settings_theme(widget, dark, palette, extra_stylesheet=extra)
     for control, color in ma_colors:

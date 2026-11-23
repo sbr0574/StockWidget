@@ -13,6 +13,9 @@ from stockwidget.data.bars import MA_PERIODS, five_minute_bars, five_minute_time
 
 MA_COLORS = ("#e3ac28", "#ba6ee0", "#2a9fd6", "#d97839", "#6fa84c")
 EMPTY_MINUTE_READOUT = "价格 — (—)  均 —  量 —"
+VOLUME_GAP = 10
+VOLUME_HEIGHT_RATIO = 0.26
+CARD_RADIUS = 10.0
 
 
 class HistoryChart(QWidget):
@@ -37,6 +40,7 @@ class HistoryChart(QWidget):
         self.session_range = ()
         self.flat = False
         self.neutral_color = None
+        self._loading = False
         self.up_color, self.down_color = QColor("#ff4444"), QColor("#00b060")
         self._hover = None
         self._cursor_pos = None
@@ -49,7 +53,14 @@ class HistoryChart(QWidget):
         self._indices = {}
         self._day_ranges = ()
 
+    def set_loading(self, loading: bool):
+        loading = bool(loading)
+        if self._loading != loading:
+            self._loading = loading
+            self.update()
+
     def set_data(self, bars, view, instrument, *, reference_price=None, session_range=(), now=None):
+        self._loading = False
         if self.view != view or any(self.instrument.get(key) != instrument.get(key) for key in ("market", "code", "type")):
             self._cursor_pos = None
         self.view, self.instrument = view, instrument
@@ -153,11 +164,15 @@ class HistoryChart(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         palette = self.palette()
         if not self.flat:
-            painter.fillRect(self.rect(), palette.base())
+            card = QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
+            painter.setBrush(palette.base())
+            painter.setPen(QPen(palette.mid().color(), 1))
+            painter.drawRoundedRect(card, CARD_RADIUS, CARD_RADIUS)
+            painter.setBrush(Qt.NoBrush)
         self._reference_y = None
         if not self.bars:
             painter.setPen(palette.text().color())
-            painter.drawText(self.rect(), Qt.AlignCenter, "暂无可用历史数据")
+            painter.drawText(self.rect(), Qt.AlignCenter, "加载中…" if self._loading else "暂无可用历史数据")
             return
         low, high = self.price_range()
         reference = self.reference_price if self.view != "daily" else None
@@ -165,46 +180,56 @@ class HistoryChart(QWidget):
         labels = [self._price(price) for price in (low, high)]
         if self.show_volume:
             labels.append(self._volume(max_volume))
-        left = max(48, max(self.fontMetrics().horizontalAdvance(label) for label in labels) + 8)
+        card_pad = 4 if not self.flat else 0
+        left = max(48, max(self.fontMetrics().horizontalAdvance(label) for label in labels) + 8) + card_pad
         right = (max(self.fontMetrics().horizontalAdvance(self._percent(price))
-                     for price in (low, high, reference)) + 8 if reference else 12)
+                     for price in (low, high, reference)) + 8 if reference else 12) + card_pad
         label_height = self.fontMetrics().height() + 4
         height = max(1, self.height() - 44)
-        volume_gap = min(label_height + 4, max(5, height * .08))
-        volume_height = min(height / 2, max(12, height * .25)) if self.show_volume else 0
-        plot = self._plot = QRectF(left, 12, max(1, self.width() - left - right),
-                                  max(1, height - volume_height - volume_gap) if self.show_volume else height)
+        if self.show_volume:
+            volume_gap = min(VOLUME_GAP, max(4, height // 8))
+            usable = max(2, height - volume_gap)
+            volume_height = max(1.0, usable * VOLUME_HEIGHT_RATIO)
+            plot_height = max(1.0, usable - volume_height)
+        else:
+            volume_gap = 0
+            volume_height = 0.0
+            plot_height = float(height)
+        plot = self._plot = QRectF(left, 12, max(1, self.width() - left - right), plot_height)
         volume_rect = self._volume_plot = QRectF(plot.left(), plot.bottom() + volume_gap, plot.width(), volume_height)
         step = plot.width() / len(self._time_axis)
         x_at = lambda i: plot.left() + step * (self._positions[i] + .5)
         y_at = lambda price: plot.bottom() - (price - low) / (high - low) * plot.height()
         text_color = palette.text().color()
-        grid_color = palette.mid().color()
-        grid_color.setAlpha(80)
+        grid_color = QColor(text_color)
+        grid_color.setAlpha(56 if self.flat else 46)
+        frame_color = QColor(text_color)
+        frame_color.setAlpha(95 if self.flat else 82)
         reference_y = self._reference_y = y_at(reference) if reference else None
 
         def axis_label(price, y):
             painter.setPen(text_color)
-            painter.drawText(QRectF(0, y - label_height / 2, left - 8, label_height),
+            painter.drawText(QRectF(card_pad, y - label_height / 2, left - card_pad - 8, label_height),
                              Qt.AlignRight | Qt.AlignVCenter, self._price(price))
             if reference:
-                painter.drawText(QRectF(plot.right() + 4, y - label_height / 2, right - 4, label_height),
+                painter.drawText(QRectF(plot.right() + 4, y - label_height / 2, right - card_pad - 4, label_height),
                                  Qt.AlignLeft | Qt.AlignVCenter, self._percent(price))
 
-        painter.setPen(QPen(grid_color, 1))
         for i in range(5):
             fraction = i / 4
             y = plot.top() + plot.height() * fraction
+            painter.setPen(QPen(frame_color if i in {0, 4} else grid_color, 1))
             painter.drawLine(QPointF(plot.left(), y), QPointF(plot.right(), y))
             if plot.height() >= 4 * label_height or i in {0, 2, 4}:
                 axis_label(high - (high - low) * fraction, y)
-            painter.setPen(QPen(grid_color, 1))
         dates = [trading_date(bar, self.instrument) for bar in self.bars]
         boundaries = ([plot.left() + plot.width() * i / 4 for i in range(5)] if self.view == "intraday" else
                       [plot.left() + step * start for start, stop, day in self._day_ranges] + [plot.right()]
-                      if self.view == "five_day" else [])
-        for x in boundaries:
-            painter.drawLine(QPointF(x, plot.top()), QPointF(x, volume_rect.bottom() if self.show_volume else plot.bottom()))
+                      if self.view == "five_day" else [plot.left(), plot.right()])
+        for idx, x in enumerate(boundaries):
+            edge = idx == 0 or idx == len(boundaries) - 1
+            painter.setPen(QPen(frame_color if edge else grid_color, 1))
+            painter.drawLine(QPointF(x, plot.top()), QPointF(x, plot.bottom()))
         if reference_y is not None:
             zero_color = QColor(text_color)
             zero_color.setAlpha(150)
@@ -238,11 +263,12 @@ class HistoryChart(QWidget):
         painter.setPen(text_color)
         if self.show_volume:
             painter.setRenderHint(QPainter.Antialiasing, False)
-            separator = QColor(text_color)
-            separator.setAlpha(110)
-            painter.setPen(QPen(separator, 1))
-            separator_y = (plot.bottom() + volume_rect.top()) / 2
-            painter.drawLine(QPointF(0, separator_y), QPointF(self.width(), separator_y))
+            for idx, x in enumerate(boundaries):
+                edge = idx == 0 or idx == len(boundaries) - 1
+                painter.setPen(QPen(frame_color if edge else grid_color, 1))
+                painter.drawLine(QPointF(x, volume_rect.top()), QPointF(x, volume_rect.bottom()))
+            painter.setPen(QPen(frame_color, 1))
+            painter.drawLine(volume_rect.topLeft(), volume_rect.topRight())
             painter.drawLine(volume_rect.bottomLeft(), volume_rect.bottomRight())
             scale_volume = max(1, max_volume)
             ratio = self.devicePixelRatioF()
@@ -266,9 +292,10 @@ class HistoryChart(QWidget):
                                       (right_px - left_px - gap) / ratio, height / ratio)
                     painter.fillRect(rect, color)
             painter.setPen(text_color)
-            painter.drawText(QRectF(0, volume_rect.top(), left - 8, label_height), Qt.AlignRight, self._volume(max_volume))
+            painter.drawText(QRectF(card_pad, volume_rect.top(), left - card_pad - 8, label_height),
+                             Qt.AlignRight, self._volume(max_volume))
             if volume_rect.height() >= label_height * 2 + 4:
-                painter.drawText(QRectF(0, volume_rect.bottom() - label_height, left - 8, label_height),
+                painter.drawText(QRectF(card_pad, volume_rect.bottom() - label_height, left - card_pad - 8, label_height),
                                  Qt.AlignRight | Qt.AlignBottom, "0")
             painter.setRenderHint(QPainter.Antialiasing, True)
         painter.setPen(text_color)
@@ -417,26 +444,38 @@ class HistoryChart(QWidget):
             return
         color = self.palette().text().color() if self.flat else self.palette().highlight().color()
         painter.setPen(QPen(color, 1, Qt.DashLine))
-        painter.drawLine(QPointF(point.x(), plot.top()), QPointF(point.x(), volume.bottom() if self.show_volume else plot.bottom()))
+        painter.drawLine(QPointF(point.x(), plot.top()), QPointF(point.x(), plot.bottom()))
+        if self.show_volume:
+            painter.drawLine(QPointF(point.x(), volume.top()), QPointF(point.x(), volume.bottom()))
         painter.drawLine(QPointF(plot.left(), point.y()), QPointF(plot.right(), point.y()))
 
+        card_pad = 4 if not self.flat else 0
+
         def badge(rect, text):
-            painter.fillRect(rect, self.palette().base() if self.flat else color)
+            if self.flat:
+                painter.fillRect(rect, self.palette().base())
+            else:
+                painter.save()
+                painter.setPen(Qt.NoPen)
+                painter.setBrush(color)
+                painter.drawRoundedRect(rect, 4.0, 4.0)
+                painter.restore()
             painter.setPen(color if self.flat else self.palette().highlightedText().color())
             painter.drawText(rect, Qt.AlignCenter, text)
 
         if plot.contains(point):
             price = low + (plot.bottom() - point.y()) / plot.height() * (high - low)
-            badge(QRectF(0, point.y() - label_height / 2, left - 3, label_height), self._price(price))
+            badge(QRectF(card_pad, point.y() - label_height / 2, left - card_pad - 3, label_height), self._price(price))
             if self.reference_price and self.view != "daily":
-                badge(QRectF(plot.right() + 2, point.y() - label_height / 2, right - 2, label_height), self._percent(price))
+                badge(QRectF(plot.right() + 2, point.y() - label_height / 2, right - card_pad - 2, label_height),
+                      self._percent(price))
         else:
             value = (volume.bottom() - point.y()) / volume.height() * max(1, max_volume)
-            badge(QRectF(0, point.y() - label_height / 2, left - 3, label_height), self._volume(value))
+            badge(QRectF(card_pad, point.y() - label_height / 2, left - card_pad - 3, label_height), self._volume(value))
         stamp = self._time_axis[self._hover_slot]
         label = stamp[11:16] if self.view == "intraday" else stamp[5:16] if self.view == "five_day" else stamp[5:10]
         width = self.fontMetrics().horizontalAdvance(label) + 8
-        x = max(0, min(self.width() - width, point.x() - width / 2))
+        x = max(card_pad, min(self.width() - card_pad - width, point.x() - width / 2))
         badge(QRectF(x, self.height() - 28, width, 22), label)
 
     def leaveEvent(self, event):
