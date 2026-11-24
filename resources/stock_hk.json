@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-23",
+  "last_update": "2026-11-24",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -10247,10 +10247,10 @@
       "code": "01546",
       "market": "hk",
       "type": "港",
-      "name": "德莱建业",
-      "name_en": "THELLOY DEV",
-      "py": "delaijianye",
-      "abbr": "dljy"
+      "name": "裕和建业",
+      "name_en": "FORTUNE PEACE D",
+      "py": "yuhejianye",
+      "abbr": "yhjy"
     },
     "hk01547": {
       "code": "01547",
@@ -18342,15 +18342,6 @@
       "name_en": "GROWN UP GP-OLD",
       "py": "zhihuajituan",
       "abbr": "zhjt"
-    },
-    "hk02953": {
-      "code": "02953",
-      "market": "hk",
-      "type": "港",
-      "name": "辉煌明天股权",
-      "name_en": "BRIGHT FUT RTS",
-      "py": "huihuangmingtianguquan",
-      "abbr": "hhmtgq"
     },
     "hk02956": {
       "code": "02956",
@@ -28251,6 +28242,15 @@
       "name_en": "KINTOR PHARMA-B",
       "py": "kaituoyaoye-b",
       "abbr": "ktyy-b"
+    },
+    "hk09941": {
+      "code": "09941",
+      "market": "hk",
+      "type": "港",
+      "name": "先通医药-B",
+      "name_en": "SINOTAUPHARMA-B",
+      "py": "xiantongyiyao-b",
+      "abbr": "xtyy-b"
     },
     "hk09955": {
       "code": "09955",

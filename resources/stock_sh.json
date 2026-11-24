@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-23",
+  "last_update": "2026-11-24",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -2471,10 +2471,10 @@
       "code": "600369",
       "market": "sh",
       "type": "沪",
-      "name": "西南证券",
+      "name": "XD西南证",
       "name_en": "",
-      "py": "xinanzhengquan",
-      "abbr": "xnzq"
+      "py": "xdxinanzheng",
+      "abbr": "xdxnz"
     },
     "sh600370": {
       "code": "600370",
@@ -3047,10 +3047,10 @@
       "code": "600475",
       "market": "sh",
       "type": "沪",
-      "name": "华光环能",
+      "name": "XD华光环",
       "name_en": "",
-      "py": "huaguanghuanneng",
-      "abbr": "hghn"
+      "py": "xdhuaguanghuan",
+      "abbr": "xdhgh"
     },
     "sh600476": {
       "code": "600476",
@@ -9086,10 +9086,10 @@
       "code": "603040",
       "market": "sh",
       "type": "沪",
-      "name": "XD新坐标",
+      "name": "新坐标",
       "name_en": "",
-      "py": "xdxinzuobiao",
-      "abbr": "xdxzb"
+      "py": "xinzuobiao",
+      "abbr": "xzb"
     },
     "sh603041": {
       "code": "603041",

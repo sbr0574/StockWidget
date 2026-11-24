@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-23",
+  "last_update": "2026-11-24",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -6193,6 +6193,15 @@
       "py": "hengzhiganggutongetfboshi",
       "abbr": "hzggtetfbs"
     },
+    "sh526080": {
+      "code": "526080",
+      "market": "sh",
+      "type": "基",
+      "name": "恒生生物科技ETF东财",
+      "name_en": "",
+      "py": "hengshengshengwukejietfdongcai",
+      "abbr": "hsswkjetfdc"
+    },
     "sh526090": {
       "code": "526090",
       "market": "sh",
@@ -8190,6 +8199,15 @@
       "name_en": "",
       "py": "qichelingbujianetfhuaxia",
       "abbr": "qclbjetfhx"
+    },
+    "sh562710": {
+      "code": "562710",
+      "market": "sh",
+      "type": "基",
+      "name": "上证指数增强ETF鹏华",
+      "name_en": "",
+      "py": "shangzhengzhishuzengqiangetfpenghua",
+      "abbr": "szzszqetfph"
     },
     "sh562720": {
       "code": "562720",

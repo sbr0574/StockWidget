@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-23",
+  "last_update": "2026-11-24",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -3029,10 +3029,10 @@
       "code": "000892",
       "market": "sz",
       "type": "深",
-      "name": "欢瑞世纪",
+      "name": "ST欢瑞",
       "name_en": "",
-      "py": "huanruishiji",
-      "abbr": "hrsj"
+      "py": "sthuanrui",
+      "abbr": "sthr"
     },
     "sz000893": {
       "code": "000893",
@@ -12029,10 +12029,10 @@
       "code": "002872",
       "market": "sz",
       "type": "深",
-      "name": "ST天圣",
+      "name": "天圣制药",
       "name_en": "",
-      "py": "sttiansheng",
-      "abbr": "stts"
+      "py": "tianshengzhiyao",
+      "abbr": "tszy"
     },
     "sz002873": {
       "code": "002873",
@@ -17906,10 +17906,10 @@
       "code": "300500",
       "market": "sz",
       "type": "创",
-      "name": "启迪设计",
+      "name": "ST启设",
       "name_en": "",
-      "py": "qidisheji",
-      "abbr": "qdsj"
+      "py": "stqishe",
+      "abbr": "stqs"
     },
     "sz300501": {
       "code": "300501",

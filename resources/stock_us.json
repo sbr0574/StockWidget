@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-23",
+  "last_update": "2026-11-24",
   "codes": {
     "usa": {
       "code": "a",
@@ -3619,6 +3619,15 @@
       "py": "",
       "abbr": ""
     },
+    "usail": {
+      "code": "ail",
+      "market": "us",
+      "type": "美",
+      "name": "GraniteShares 2x Long Anthropic Daily ETF",
+      "name_en": "GraniteShares 2x Long Anthropic Daily ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usaim": {
       "code": "aim",
       "market": "us",
@@ -5887,6 +5896,15 @@
       "py": "",
       "abbr": ""
     },
+    "usans": {
+      "code": "ans",
+      "market": "us",
+      "type": "美",
+      "name": "GraniteShares 2x Short Anthropic Daily ETF",
+      "name_en": "GraniteShares 2x Short Anthropic Daily ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usanss": {
       "code": "anss",
       "market": "us",
@@ -5914,12 +5932,57 @@
       "py": "",
       "abbr": ""
     },
+    "usantc": {
+      "code": "antc",
+      "market": "us",
+      "type": "美",
+      "name": "Defiance 2X ANT Long Daily ETF",
+      "name_en": "Defiance 2X ANT Long Daily ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usantd": {
+      "code": "antd",
+      "market": "us",
+      "type": "美",
+      "name": "Direxion Daily Anthropic Bear 2X ETF",
+      "name_en": "Direxion Daily Anthropic Bear 2X ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usanto": {
+      "code": "anto",
+      "market": "us",
+      "type": "美",
+      "name": "Direxion Daily Anthropic Bull 2X ETF",
+      "name_en": "Direxion Daily Anthropic Bull 2X ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usantq": {
+      "code": "antq",
+      "market": "us",
+      "type": "美",
+      "name": "Defiance 2X ANT Short Daily ETF",
+      "name_en": "Defiance 2X ANT Short Daily ETF",
+      "py": "",
+      "abbr": ""
+    },
     "usantt": {
       "code": "antt",
       "market": "us",
       "type": "美",
       "name": "Tradr 2X Long Anthropic Daily ETF",
       "name_en": "Tradr 2X Long Anthropic Daily ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usantu": {
+      "code": "antu",
+      "market": "us",
+      "type": "美",
+      "name": "ProShares Ultra Anthropic",
+      "name_en": "ProShares Ultra Anthropic",
       "py": "",
       "abbr": ""
     },
@@ -5938,6 +6001,15 @@
       "type": "美",
       "name": "AN2 Therapeutics, Inc. - Common Stock",
       "name_en": "AN2 Therapeutics, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
+    "usanty": {
+      "code": "anty",
+      "market": "us",
+      "type": "美",
+      "name": "ProShares UltraShort Anthropic",
+      "name_en": "ProShares UltraShort Anthropic",
       "py": "",
       "abbr": ""
     },
@@ -21844,6 +21916,15 @@
       "py": "gaoleshi",
       "abbr": "gls"
     },
+    "usclyd": {
+      "code": "clyd",
+      "market": "us",
+      "type": "美",
+      "name": "Clywedog Therapeutics Holdings, Inc. - Common Stock",
+      "name_en": "Clywedog Therapeutics Holdings, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
     "usclym": {
       "code": "clym",
       "market": "us",
@@ -33415,6 +33496,15 @@
       "type": "美",
       "name": "iShares Enhanced Large Cap Core Active ETF",
       "name_en": "iShares Enhanced Large Cap Core Active ETF",
+      "py": "",
+      "abbr": ""
+    },
+    "usenhv": {
+      "code": "enhv",
+      "market": "us",
+      "type": "美",
+      "name": "iShares Enhanced Large Cap Value Active ETF",
+      "name_en": "iShares Enhanced Large Cap Value Active ETF",
       "py": "",
       "abbr": ""
     },
