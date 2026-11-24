@@ -442,40 +442,79 @@ class HistoryChart(QWidget):
         point = self._cursor_pos
         if not (plot.contains(point) or self.show_volume and volume.contains(point)):
             return
+        step = plot.width() / len(self._time_axis)
+        crosshair_x = plot.left() + step * (self._hover_slot + .5) if self.view == "daily" else point.x()
         color = self.palette().text().color() if self.flat else self.palette().highlight().color()
         painter.setPen(QPen(color, 1, Qt.DashLine))
-        painter.drawLine(QPointF(point.x(), plot.top()), QPointF(point.x(), plot.bottom()))
+        painter.drawLine(QPointF(crosshair_x, plot.top()), QPointF(crosshair_x, plot.bottom()))
         if self.show_volume:
-            painter.drawLine(QPointF(point.x(), volume.top()), QPointF(point.x(), volume.bottom()))
+            painter.drawLine(QPointF(crosshair_x, volume.top()), QPointF(crosshair_x, volume.bottom()))
+        tracked_price = None
+        tracked_y = None
+        if self.view != "daily" and self._hover is not None:
+            tracked_price = self.bars[self._hover].close
+            tracked_y = max(plot.top(), min(plot.bottom(), plot.bottom() - (tracked_price - low) / (high - low) * plot.height()))
+            if abs(tracked_y - point.y()) >= .5:
+                painter.drawLine(QPointF(plot.left(), tracked_y), QPointF(plot.right(), tracked_y))
         painter.drawLine(QPointF(plot.left(), point.y()), QPointF(plot.right(), point.y()))
 
         card_pad = 4 if not self.flat else 0
 
-        def badge(rect, text):
+        def badge(rect, text, *, border=None):
             if self.flat:
-                painter.fillRect(rect, self.palette().base())
+                bg = QColor(self.palette().base().color())
+                bg.setAlpha(255)
+                painter.fillRect(rect, bg)
+                if border is not None:
+                    painter.save()
+                    painter.setBrush(Qt.NoBrush)
+                    painter.setPen(QPen(border, 1))
+                    painter.drawRect(rect.adjusted(0.5, 0.5, -0.5, -0.5))
+                    painter.restore()
             else:
+                bg = QColor(color)
+                bg.setAlpha(255)
                 painter.save()
-                painter.setPen(Qt.NoPen)
-                painter.setBrush(color)
+                painter.setPen(QPen(border, 1) if border is not None else Qt.NoPen)
+                painter.setBrush(bg)
                 painter.drawRoundedRect(rect, 4.0, 4.0)
                 painter.restore()
             painter.setPen(color if self.flat else self.palette().highlightedText().color())
             painter.drawText(rect, Qt.AlignCenter, text)
 
+        def overlap_border(target_rect, other_rect):
+            if other_rect is None or not other_rect.intersects(target_rect) or abs(tracked_y - point.y()) < .5:
+                return None
+            if self.flat:
+                outline = QColor(color)
+                outline.setAlpha(120)
+                return outline
+            return self.palette().base().color()
+
+        tracked_left = None
+        if tracked_price is not None and tracked_y is not None:
+            tracked_left = QRectF(card_pad, tracked_y - label_height / 2, left - card_pad - 3, label_height)
+            badge(tracked_left, self._price(tracked_price))
+            if self.reference_price:
+                badge(QRectF(plot.right() + 2, tracked_y - label_height / 2, right - card_pad - 2, label_height),
+                      self._percent(tracked_price))
+
         if plot.contains(point):
             price = low + (plot.bottom() - point.y()) / plot.height() * (high - low)
-            badge(QRectF(card_pad, point.y() - label_height / 2, left - card_pad - 3, label_height), self._price(price))
+            cursor_left = QRectF(card_pad, point.y() - label_height / 2, left - card_pad - 3, label_height)
+            border = overlap_border(cursor_left, tracked_left)
+            badge(cursor_left, self._price(price), border=border)
             if self.reference_price and self.view != "daily":
                 badge(QRectF(plot.right() + 2, point.y() - label_height / 2, right - card_pad - 2, label_height),
-                      self._percent(price))
+                      self._percent(price), border=border)
         else:
             value = (volume.bottom() - point.y()) / volume.height() * max(1, max_volume)
-            badge(QRectF(card_pad, point.y() - label_height / 2, left - card_pad - 3, label_height), self._volume(value))
+            cursor_left = QRectF(card_pad, point.y() - label_height / 2, left - card_pad - 3, label_height)
+            badge(cursor_left, self._volume(value), border=overlap_border(cursor_left, tracked_left))
         stamp = self._time_axis[self._hover_slot]
         label = stamp[11:16] if self.view == "intraday" else stamp[5:16] if self.view == "five_day" else stamp[5:10]
         width = self.fontMetrics().horizontalAdvance(label) + 8
-        x = max(card_pad, min(self.width() - card_pad - width, point.x() - width / 2))
+        x = max(card_pad, min(self.width() - card_pad - width, crosshair_x - width / 2))
         badge(QRectF(x, self.height() - 28, width, 22), label)
 
     def leaveEvent(self, event):

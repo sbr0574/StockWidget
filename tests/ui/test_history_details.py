@@ -4,7 +4,7 @@ from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
-from PySide6.QtCore import QEvent, QPoint, QPointF, Qt
+from PySide6.QtCore import QEvent, QPoint, QPointF, QRectF, Qt
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QTextDocument
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QMenu
@@ -977,6 +977,114 @@ class HistoryDetailsTests(HistoryTestCase):
         book.set_quote(instrument, None, "cn", "red", "green")
         self.assertIsNone(book.buy_fraction)
         self.assertTrue(all(row[1:3] == ("—", "—") for row in book.rows))
+
+    def test_popup_crosshair_badges_are_opaque_and_track_minute_price_below_cursor_badge(self):
+        _, window = self.make_window(chart_enabled=True, chart_sync_opacity=False, chart_bg_blur=False,
+                                     chart_bg_alpha_pct=35, bg={"r": 12, "g": 23, "b": 34, "a": 90},
+                                     fg="#ffffff")
+        window.history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = window.history.dialog
+        popup.resize(520, 340)
+        self.app.processEvents()
+        chart = popup.chart
+        selected = next(i for i, bar in enumerate(chart.bars) if bar.time.endswith("09:40:00"))
+        bars = list(chart.bars)
+        bars[selected] = replace(bars[selected], close=11.0, volume=300, amount=3300)
+        for view in ("intraday", "five_day"):
+            with self.subTest(view=view):
+                chart.set_data(bars, view, window.history.instrument, reference_price=10,
+                               now=window.history.cache.clock())
+                self.app.processEvents()
+                chart.grab()
+                low, high = chart.price_range()
+                target = next(i for i, bar in enumerate(chart.bars) if abs(bar.close - 11.0) < 1e-6)
+                step = chart._plot.width() / len(chart._time_axis)
+                x = chart._plot.left() + step * (chart._positions[target] + .5)
+                tracked_y = chart._plot.bottom() - (11.0 - low) / (high - low) * chart._plot.height()
+                cursor_y = tracked_y + 4
+                point = QPointF(x, cursor_y)
+                event = QMouseEvent(QEvent.MouseMove, point, QPointF(chart.mapToGlobal(point.toPoint())),
+                                    Qt.NoButton, Qt.NoButton, Qt.NoModifier)
+                self.app.sendEvent(chart, event)
+                self.app.processEvents()
+
+                drawn_lines = []
+                drawn_texts = []
+                orig_draw_line = QPainter.drawLine
+                orig_draw_text = QPainter.drawText
+
+                def record_line(painter, *args):
+                    if len(args) == 2 and isinstance(args[0], QPointF) and isinstance(args[1], QPointF):
+                        if painter.pen().style() == Qt.DashLine:
+                            drawn_lines.append((args[0], args[1]))
+                    return orig_draw_line(painter, *args)
+
+                def record_text(painter, *args):
+                    if len(args) >= 3 and isinstance(args[0], QRectF) and isinstance(args[-1], str):
+                        drawn_texts.append((QRectF(args[0]), args[-1]))
+                    return orig_draw_text(painter, *args)
+
+                with patch.object(QPainter, "drawLine", record_line), patch.object(QPainter, "drawText", record_text):
+                    image = chart.grab().toImage()
+
+                horizontal_ys = [p1.y() for p1, p2 in drawn_lines if abs(p1.y() - p2.y()) < .1]
+                self.assertTrue(any(abs(y - tracked_y) < .6 for y in horizontal_ys))
+                self.assertTrue(any(abs(y - cursor_y) < .6 for y in horizontal_ys))
+
+                left_badges = [(rect, text) for rect, text in drawn_texts if rect.right() <= chart._plot.left()]
+                tracked_idx = next(idx for idx, (rect, text) in enumerate(left_badges)
+                                   if abs(rect.center().y() - tracked_y) < .6 and text == "11.00")
+                cursor_idx = next(idx for idx, (rect, text) in enumerate(left_badges)
+                                  if abs(rect.center().y() - cursor_y) < .6)
+                self.assertLess(tracked_idx, cursor_idx)
+
+                scale = image.devicePixelRatio()
+                cursor_rect = left_badges[cursor_idx][0]
+                self.assertEqual(image.pixelColor(round((cursor_rect.left() + 2) * scale),
+                                                  round((cursor_rect.top() + 2) * scale)).alpha(), 255)
+
+    def test_daily_crosshair_snaps_vertical_line_to_nearest_candle_center(self):
+        _, window = self.make_window(chart_enabled=True)
+        window.history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = window.history.dialog
+        popup.set_view("daily")
+        self.wait_ready(window)
+        popup.resize(520, 340)
+        self.app.processEvents()
+        chart = popup.chart
+        chart.grab()
+        step = chart._plot.width() / len(chart._time_axis)
+        target = 10
+        center_x = chart._plot.left() + step * (target + .5)
+        offset_x = center_x - step * .35
+        point = QPointF(offset_x, chart._plot.center().y())
+        event = QMouseEvent(QEvent.MouseMove, point, QPointF(chart.mapToGlobal(point.toPoint())),
+                            Qt.NoButton, Qt.NoButton, Qt.NoModifier)
+        self.app.sendEvent(chart, event)
+        self.app.processEvents()
+
+        dashed_lines = []
+        orig_draw_line = QPainter.drawLine
+
+        def record_line(painter, *args):
+            if len(args) == 2 and isinstance(args[0], QPointF) and isinstance(args[1], QPointF):
+                if painter.pen().style() == Qt.DashLine:
+                    dashed_lines.append((args[0], args[1]))
+            return orig_draw_line(painter, *args)
+
+        with patch.object(QPainter, "drawLine", record_line):
+            chart.grab()
+
+        vertical_xs = [p1.x() for p1, p2 in dashed_lines if abs(p1.x() - p2.x()) < .1]
+        horizontal_ys = [p1.y() for p1, p2 in dashed_lines if abs(p1.y() - p2.y()) < .1]
+        self.assertGreaterEqual(len(vertical_xs), 1)
+        for x in vertical_xs:
+            self.assertAlmostEqual(x, center_x, delta=.1)
+            self.assertGreater(abs(x - offset_x), 1.0)
+        self.assertEqual(len(horizontal_ys), 1)
+        self.assertAlmostEqual(horizontal_ys[0], point.y(), delta=.1)
 
 
 class QuoteHistoryMetricTests(HistoryTestCase):
