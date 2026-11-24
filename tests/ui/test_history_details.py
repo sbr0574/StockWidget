@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 from PySide6.QtCore import QEvent, QPoint, QPointF, QRectF, Qt
-from PySide6.QtGui import QColor, QMouseEvent, QPainter, QTextDocument
+from PySide6.QtGui import QColor, QFontMetrics, QMouseEvent, QPainter, QTextDocument
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QMenu
 
@@ -654,14 +654,21 @@ class HistoryDetailsTests(HistoryTestCase):
         popup.set_view("daily")
         self.wait_ready(window)
         readout = popup.ui.chart_readout.text().splitlines()
-        self.assertEqual(len(readout), 2)
+        self.assertEqual(len(readout), 1)
         self.assertIn("量 ", readout[0])
         self.assertNotIn("均", "".join(readout))
-        self.assertTrue(readout[1].startswith("MA5:"))
+        self.assertNotIn("MA5", readout[0])
+        self.assertEqual(popup.ui.chart_readout.height(), QFontMetrics(popup.font()).height() + 2)
+        expected_latest_ma = chart.ma_values()
+        for period in (5, 10, 20, 30, 60):
+            self.assertEqual(getattr(popup.ui, f"cb_ma{period}").subtext(), expected_latest_ma[period])
         chart.grab()
         point = chart._plot.center()
         event = QMouseEvent(QEvent.MouseMove, point, QPointF(chart.mapToGlobal(point.toPoint())), Qt.NoButton, Qt.NoButton, Qt.NoModifier)
         self.app.sendEvent(chart, event)
+        expected_hover_ma = chart.ma_values(chart._hover)
+        for period in (5, 10, 20, 30, 60):
+            self.assertEqual(getattr(popup.ui, f"cb_ma{period}").subtext(), expected_hover_ma[period])
         image = chart.grab().toImage()
         scale = image.devicePixelRatio()
         # Daily candles have only a left price scale, so no cropped percentage
@@ -778,6 +785,19 @@ class HistoryDetailsTests(HistoryTestCase):
         self.assertTrue(popup.ui.ma_row.isVisible())
         self.assertFalse(popup.ui.cb_order_book.isEnabled())
         calls = window.history.cache.get.call_count
+        expected_ma = popup.chart.ma_values()
+        for period, color in zip((5, 10, 20, 30, 60), MA_COLORS):
+            control = getattr(popup.ui, f"cb_ma{period}")
+            self.assertEqual(control.subtext(), expected_ma[period])
+            self.assertEqual(control.palette().windowText().color(), QColor(color))
+        # Clicking the MA value area below the label toggles the checkbox as one unit.
+        cb_ma60 = popup.ui.cb_ma60
+        self.assertTrue(cb_ma60.isChecked())
+        QTest.mouseClick(cb_ma60, Qt.LeftButton, pos=cb_ma60._subtext_rect().center())
+        self.assertFalse(cb_ma60.isChecked())
+        self.assertNotIn(60, popup.chart.periods)
+        self.assertEqual(cb_ma60.subtext(), expected_ma[60])
+        self.assertEqual(cb_ma60.palette().windowText().color(), QColor(MA_COLORS[4]))
         popup.ui.cb_ma60.setChecked(False)
         popup.ui.cb_average.setChecked(False)
         self.assertTrue(popup.ui.ma_row.isHidden())
@@ -786,13 +806,23 @@ class HistoryDetailsTests(HistoryTestCase):
         self.assertEqual(popup.chart.periods, {5, 10, 20, 30})
         self.assertTrue(popup.ui.ma_row.isVisible())
         for period, color in zip((5, 10, 20, 30, 60), MA_COLORS):
-            self.assertEqual(getattr(popup.ui, f"cb_ma{period}").palette().windowText().color(), QColor(color))
+            control = getattr(popup.ui, f"cb_ma{period}")
+            self.assertEqual(control.palette().windowText().color(), QColor(color))
+            self.assertEqual(control.subtext(), expected_ma[period])
         popup.ui.cb_volume.setChecked(False)
         self.assertFalse(window.current_config()["chart_volume_enabled"])
         self.assertEqual(window.history.cache.get.call_count, calls)
         self.assertEqual(popup.order_book.toolTip(), "")
         self.assertEqual(popup.quote_header.values["量比"].toolTip(), "")
         self.assertFalse(hasattr(settings.ui, "cb_chart_ma5"))
+        popup.pop_out_button.click()
+        self.wait_ready(window)
+        detached = window.history.dialog
+        self.assertEqual(detached.ui.chart_readout.height(), QFontMetrics(detached.font()).height() + 2)
+        self.assertEqual(len(detached.ui.chart_readout.text().splitlines()), 1)
+        self.assertFalse(detached.ui.cb_ma60.isChecked())
+        self.assertEqual(detached.ui.cb_ma60.subtext(), detached.chart.ma_values()[60])
+        self.assertEqual(detached.ui.cb_ma60.palette().windowText().color(), QColor(MA_COLORS[4]))
 
     def test_escape_cancels_a_border_resize_then_closes_popup(self):
         _, window = self.make_window(chart_enabled=True)

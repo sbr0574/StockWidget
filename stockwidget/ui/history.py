@@ -68,11 +68,14 @@ class HistoryDialog(QDialog):
         self.chart.readout_changed.connect(self._update_readout)
         self.chart.readout_layout_changed.connect(self._sync_readout_height)
         self._title_text = self._status_text = ""
+        for period in MA_PERIODS:
+            getattr(self.ui, f"cb_ma{period}").set_subtext("—")
         self._sync_fixed_row_heights()
         if not floating:
             self.ui.chart_layout.setContentsMargins(12, 10, 12, 10)
             self.ui.chart_layout.setSpacing(8)
             self.ui.content_layout.setSpacing(8)
+            self.ui.ma_layout.setSpacing(8)
             self.ui.quote_header_layout.setContentsMargins(12, 8, 12, 8)
             self.quote_header.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.title_row.setVisible(floating)
@@ -373,13 +376,16 @@ class HistoryDialog(QDialog):
                 font.setPointSizeF(max(1.0, base_font.pointSizeF() * scale))
         if label.font() != font:
             label.setFont(font)
-        height = metrics.height() * 2 + 2
+        height = metrics.height() + 2
         if label.minimumHeight() != height or label.maximumHeight() != height:
             label.setFixedHeight(height)
             self.update_size_limits()
 
     def _update_readout(self, text):
         self.ui.chart_readout.setText(self.chart.readout_text(rich=True) if self.display_mode == "popup" else text)
+        ma_values = self.chart.ma_values()
+        for period in MA_PERIODS:
+            getattr(self.ui, f"cb_ma{period}").set_subtext(ma_values[period])
 
     def paintEvent(self, event):
         if self.display_mode != "popup":
@@ -403,6 +409,7 @@ class HistoryDialog(QDialog):
         if event.type() in {QEvent.PaletteChange, QEvent.DevicePixelRatioChange} and hasattr(self, "chart"):
             self._set_navigation_icons()
         if event.type() in {QEvent.FontChange, QEvent.DevicePixelRatioChange} and hasattr(self, "chart"):
+            self._sync_fixed_row_heights()
             self._sync_readout_height()
 
     def moveEvent(self, event):

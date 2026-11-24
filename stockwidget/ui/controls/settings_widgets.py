@@ -1,7 +1,7 @@
 """Designer 设置控件：开关、共用勾选框、快捷键输入与状态、自定义图标选择。"""
 
 from PySide6.QtCore import QEvent, Qt, QRect, QRectF, QPointF, QSize, Signal
-from PySide6.QtGui import QColor, QPainter, QPainterPath, QPalette, QPen, QIcon
+from PySide6.QtGui import QColor, QFont, QFontInfo, QFontMetrics, QPainter, QPainterPath, QPalette, QPen, QIcon
 from PySide6.QtWidgets import (QApplication, QCheckBox, QStyleOptionButton, QKeySequenceEdit, QListWidget, QStyle,
                               QStyledItemDelegate, QStyleOptionViewItem, QWidget, QPushButton)
 
@@ -13,12 +13,45 @@ class FilledCheckBox(QCheckBox):
     _INDICATOR_TEXT_GAP = 3
     _HOVER_HORIZONTAL_PADDING = 4
     _HOVER_VERTICAL_PADDING = 3
+    _SUBTEXT_VERTICAL_PADDING = 2
+    _SUBTEXT_GAP = 1
 
     def __init__(self, text="", parent=None):
         if isinstance(text, QWidget):
             parent, text = text, ""
         super().__init__(text, parent)
+        self._subtext = None
         self.set_theme(False)
+
+    def subtext(self) -> str | None:
+        return self._subtext
+
+    def set_subtext(self, text: str | None):
+        value = None if text is None else str(text)
+        toggled_mode = (self._subtext is None) != (value is None)
+        if self._subtext == value:
+            return
+        self._subtext = value
+        if toggled_mode:
+            self.updateGeometry()
+        self.update()
+
+    def _subtext_font(self):
+        font = QFont(self.font())
+        pixel_size = QFontInfo(font).pixelSize()
+        if pixel_size > 0:
+            font.setPixelSize(max(9, pixel_size - 1))
+        elif font.pointSizeF() > 0:
+            font.setPointSizeF(max(7.5, font.pointSizeF() - 0.75))
+        return font
+
+    def _top_row_height(self):
+        return max(self._INDICATOR_SIZE, self.fontMetrics().height())
+
+    def hitButton(self, pos):
+        if self._subtext is not None:
+            return self.rect().contains(pos)
+        return super().hitButton(pos)
 
     def set_theme(self, dark: bool):
         from stockwidget.ui.controls.style import accent_color
@@ -44,6 +77,15 @@ class FilledCheckBox(QCheckBox):
             + self._INDICATOR_TEXT_GAP
             + metrics.horizontalAdvance(self.text())
         )
+        if self._subtext is not None:
+            sub_metrics = QFontMetrics(self._subtext_font())
+            height = (
+                2 * self._SUBTEXT_VERTICAL_PADDING
+                + self._top_row_height()
+                + self._SUBTEXT_GAP
+                + sub_metrics.height()
+            )
+            return QSize(width, height)
         height = (
             max(self._INDICATOR_SIZE, metrics.height())
             + 2 * self._HOVER_VERTICAL_PADDING
@@ -54,6 +96,14 @@ class FilledCheckBox(QCheckBox):
         return self.sizeHint()
 
     def _indicator_rect(self):
+        if self._subtext is not None:
+            top_height = self._top_row_height()
+            return QRect(
+                self._HOVER_HORIZONTAL_PADDING,
+                self._SUBTEXT_VERTICAL_PADDING + (top_height - self._INDICATOR_SIZE) // 2,
+                self._INDICATOR_SIZE,
+                self._INDICATOR_SIZE,
+            )
         return QRect(
             self._HOVER_HORIZONTAL_PADDING,
             (self.height() - self._INDICATOR_SIZE) // 2,
@@ -63,11 +113,27 @@ class FilledCheckBox(QCheckBox):
 
     def _text_rect(self, indicator: QRect):
         left = indicator.right() + 1 + self._INDICATOR_TEXT_GAP
+        if self._subtext is not None:
+            return QRect(
+                left,
+                self._SUBTEXT_VERTICAL_PADDING,
+                max(0, self.width() - self._HOVER_HORIZONTAL_PADDING - left),
+                self._top_row_height(),
+            )
         return QRect(
             left,
             0,
             max(0, self.width() - self._HOVER_HORIZONTAL_PADDING - left),
             self.height(),
+        )
+
+    def _subtext_rect(self):
+        top = self._SUBTEXT_VERTICAL_PADDING + self._top_row_height() + self._SUBTEXT_GAP
+        return QRect(
+            self._HOVER_HORIZONTAL_PADDING,
+            top,
+            max(0, self.width() - 2 * self._HOVER_HORIZONTAL_PADDING),
+            max(0, self.height() - self._SUBTEXT_VERTICAL_PADDING - top),
         )
 
     def paintEvent(self, event):
@@ -142,6 +208,30 @@ class FilledCheckBox(QCheckBox):
             option.text,
             QPalette.ColorRole.WindowText,
         )
+        if self._subtext is not None:
+            sub_rect = self._subtext_rect()
+            sub_font = self._subtext_font()
+            sub_metrics = QFontMetrics(sub_font)
+            text_width = sub_metrics.horizontalAdvance(self._subtext)
+            if sub_rect.width() > 4 and text_width > sub_rect.width():
+                scale = sub_rect.width() / text_width
+                sub_px = QFontInfo(sub_font).pixelSize()
+                if sub_px > 0:
+                    sub_font.setPixelSize(max(7, int(sub_px * scale)))
+                elif sub_font.pointSizeF() > 0:
+                    sub_font.setPointSizeF(max(6.0, sub_font.pointSizeF() * scale))
+            painter.setFont(sub_font)
+            style.drawItemText(
+                painter,
+                sub_rect,
+                Qt.AlignmentFlag.AlignHCenter
+                | Qt.AlignmentFlag.AlignVCenter
+                | Qt.TextFlag.TextSingleLine,
+                option.palette,
+                self.isEnabled(),
+                self._subtext,
+                QPalette.ColorRole.WindowText,
+            )
 
 
 class _HideTimeDelegate(QStyledItemDelegate):

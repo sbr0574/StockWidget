@@ -409,15 +409,22 @@ class HistoryChart(QWidget):
                         "&nbsp; 均 " + colored(self._price(average), average) +
                         f"&nbsp; 量 {self._volume(bar.volume)}")
             return f"价格 {price}  均 {self._price(average)}  量 {self._volume(bar.volume)}"
-        text = (f"开 {self._price(bar.open)}  高 {self._price(bar.high)}  "
+        return (f"开 {self._price(bar.open)}  高 {self._price(bar.high)}  "
                 f"低 {self._price(bar.low)}  收 {self._price(bar.close)}  量 {self._volume(bar.volume)}")
-        averages = []
-        for period in sorted(self.periods):
-            value = self.averages[period][i]
-            averages.append(f"MA{period}: {self._price(value) if value is not None else '—'}")
-        if averages:
-            text += "\n" + "  ".join(averages)
-        return text
+
+    def ma_values(self, i=None):
+        if self.view != "daily" or not self.bars:
+            return {period: "—" for period in MA_PERIODS}
+        if i is None:
+            if self._cursor_pos is not None and self._hover is None and self._hover_slot is not None:
+                return {period: "—" for period in MA_PERIODS}
+            i = self._hover if self._hover is not None else len(self.bars) - 1
+        values = {}
+        for period in MA_PERIODS:
+            series = self.averages.get(period, ())
+            value = series[i] if 0 <= i < len(series) else None
+            values[period] = self._price(value) if value is not None else "—"
+        return values
 
     def readout_size_sample(self):
         """Reserve footer space independently of which minute is hovered."""
@@ -430,10 +437,7 @@ class HistoryChart(QWidget):
         if self.view != "daily":
             change = max((f"{(bar.close / self.reference_price - 1) * 100:+.2f}%" for bar in self.bars), key=len) if self.reference_price else "—"
             return f"价格 {price} ({change})  均 {price}  量 {volume}"
-        text = f"开 {price}  高 {price}  低 {price}  收 {price}  量 {volume}"
-        if self.periods:
-            text += "\n" + "  ".join(f"MA{period}: {price}" for period in sorted(self.periods))
-        return text
+        return f"开 {price}  高 {price}  低 {price}  收 {price}  量 {volume}"
 
     def _draw_crosshair(self, painter, low, high, max_volume, left, right, label_height):
         if self._cursor_pos is None or self._hover_slot is None:
