@@ -98,7 +98,12 @@ class HistoryDetailsTests(HistoryTestCase):
             window.set_fg_color(QColor(foreground))
             window.set_bg_alpha_percent(round(alpha / 2.55))
             self.app.processEvents()
-            for control in (popup.title, popup.chart, popup.close_button, popup.ui.cb_volume):
+            for width in (300, 520):
+                popup.resize(width, popup.height())
+                self.app.processEvents()
+                self.assertEqual(popup.ui.chart_readout.styleSheet(), "")
+                self.assertEqual(popup.ui.chart_readout.palette().windowText().color(), window.fg)
+            for control in (popup.title, popup.chart, popup.close_button, popup.ui.cb_volume, popup.ui.chart_readout):
                 self.assertEqual(control.palette().windowText().color(), window.fg)
             self.assertEqual(popup.palette().window().color(), window.bg)
             for pinned in (False, True):

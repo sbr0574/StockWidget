@@ -4,7 +4,7 @@ import sys
 import threading
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QTimer, QSignalBlocker, Signal
-from PySide6.QtGui import QColor, QContextMenuEvent, QCursor, QFontInfo, QFontMetrics, QPainter, QPalette
+from PySide6.QtGui import QColor, QContextMenuEvent, QCursor, QFont, QFontInfo, QFontMetrics, QPainter, QPalette
 from PySide6.QtWidgets import QApplication, QAbstractButton, QButtonGroup, QDialog, QMenu, QSizePolicy, QToolTip, QWidget, QWidgetItem
 
 from stockwidget.core.quote_presentation import is_cn_index
@@ -358,15 +358,21 @@ class HistoryDialog(QDialog):
             return
         label = self.ui.chart_readout
         lines = self.chart.readout_size_sample().splitlines()
-        metrics = QFontMetrics(self.font())
+        base_font = self.font()
+        metrics = QFontMetrics(base_font)
         width = max(metrics.horizontalAdvance(line) for line in lines) + 2
         # Fit whole rows in compact panels without changing font on hover.
         available = label.contentsRect().width() - 2
         scale = min(1, available / width) if available > 20 else 1
-        pixels = max(1, int(QFontInfo(self.font()).pixelSize() * scale))
-        style = f"font-size: {pixels}px;"
-        if label.styleSheet() != style:
-            label.setStyleSheet(style)
+        font = QFont(base_font)
+        if scale < 1:
+            base_px = QFontInfo(base_font).pixelSize()
+            if base_px > 0:
+                font.setPixelSize(max(1, int(base_px * scale)))
+            elif base_font.pointSizeF() > 0:
+                font.setPointSizeF(max(1.0, base_font.pointSizeF() * scale))
+        if label.font() != font:
+            label.setFont(font)
         height = metrics.height() * 2 + 2
         if label.minimumHeight() != height or label.maximumHeight() != height:
             label.setFixedHeight(height)
@@ -396,6 +402,8 @@ class HistoryDialog(QDialog):
         super().changeEvent(event)
         if event.type() in {QEvent.PaletteChange, QEvent.DevicePixelRatioChange} and hasattr(self, "chart"):
             self._set_navigation_icons()
+        if event.type() in {QEvent.FontChange, QEvent.DevicePixelRatioChange} and hasattr(self, "chart"):
+            self._sync_readout_height()
 
     def moveEvent(self, event):
         super().moveEvent(event)
