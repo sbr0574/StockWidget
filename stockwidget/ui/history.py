@@ -178,7 +178,7 @@ class HistoryDialog(QDialog):
         # Reserve native title-bar/frame space for the detached window.
         frame = self.frameGeometry().size() - self.size() if self.isVisible() else QSize(16, 40)
         screen_max = bounds.size() if self.display_mode == "popup" else bounds.size() - frame
-        base_min = QSize(780, 400) if self.display_mode == "window" else QSize(300, 210)
+        base_min = QSize(640, 400) if self.display_mode == "window" else QSize(300, 210)
         minimum = base_min.expandedTo(QSize(460, 300)) if self._book_enabled else QSize(base_min)
         if self.layout():
             layout = self.layout()

@@ -143,7 +143,7 @@
    </item>
    <item>
     <widget class="HistoryQuoteHeader" name="quote_header">
-     <layout class="QHBoxLayout" name="quote_header_layout" stretch="0,0,1,1,1,1,1">
+    <layout class="QHBoxLayout" name="quote_header_layout" stretch="0,0,8,9,12,11">
       <property name="leftMargin">
        <number>0</number>
       </property>
@@ -154,7 +154,7 @@
        <number>0</number>
       </property>
       <property name="spacing">
-       <number>8</number>
+      <number>10</number>
       </property>
       <property name="bottomMargin">
        <number>6</number>
@@ -201,15 +201,27 @@
           </widget>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="quote_price_layout">
+          <widget class="QLabel" name="quote_current">
+           <property name="font">
+            <font>
+             <pointsize>18</pointsize>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>—</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="quote_changes_layout">
            <property name="spacing">
-            <number>10</number>
+           <number>6</number>
            </property>
            <item>
-            <widget class="QLabel" name="quote_current">
+            <widget class="QLabel" name="quote_change">
              <property name="font">
               <font>
-               <pointsize>18</pointsize>
                <bold>true</bold>
               </font>
              </property>
@@ -219,35 +231,16 @@
             </widget>
            </item>
            <item>
-            <layout class="QVBoxLayout" name="quote_changes_layout">
-             <property name="spacing">
-              <number>3</number>
+            <widget class="QLabel" name="quote_change_pct">
+             <property name="font">
+              <font>
+               <bold>true</bold>
+              </font>
              </property>
-             <item>
-              <widget class="QLabel" name="quote_change">
-               <property name="font">
-                <font>
-                 <bold>true</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>—</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="quote_change_pct">
-               <property name="font">
-                <font>
-                 <bold>true</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>—</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
+             <property name="text">
+              <string>—</string>
+             </property>
+            </widget>
            </item>
            <item>
             <spacer name="quote_price_space">
@@ -270,7 +263,7 @@
         </layout>
         <property name="minimumSize">
          <size>
-          <width>140</width>
+         <width>104</width>
           <height>0</height>
          </size>
         </property>
@@ -396,7 +389,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>40</width>
+            <width>54</width>
              <height>0</height>
             </size>
            </property>
@@ -433,7 +426,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>40</width>
+            <width>54</width>
              <height>0</height>
             </size>
            </property>
@@ -470,7 +463,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>40</width>
+            <width>54</width>
              <height>0</height>
             </size>
            </property>
@@ -507,7 +500,44 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>40</width>
+            <width>54</width>
+             <height>0</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="quote_average_caption">
+           <property name="text">
+            <string>均价</string>
+           </property>
+           <property name="settingDescription" stdset="0">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLabel" name="quote_average">
+           <property name="text">
+            <string>—</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Ignored" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="minimumSize">
+            <size>
+            <width>54</width>
              <height>0</height>
             </size>
            </property>
@@ -565,7 +595,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>40</width>
+            <width>54</width>
              <height>0</height>
             </size>
            </property>
@@ -602,7 +632,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>40</width>
+            <width>54</width>
              <height>0</height>
             </size>
            </property>
@@ -639,7 +669,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>40</width>
+            <width>54</width>
              <height>0</height>
             </size>
            </property>
@@ -676,145 +706,13 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>40</width>
+            <width>54</width>
              <height>0</height>
             </size>
            </property>
           </widget>
          </item>
-        </layout>
-       </widget>
-      </item>
-      <item>
-       <widget class="QWidget" name="quote_column_2">
-        <layout class="QGridLayout" name="quote_column_2_layout" columnstretch="0,1">
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <property name="spacing">
-          <number>4</number>
-         </property>
-         <item row="0" column="0">
-          <widget class="QLabel" name="quote_average_caption">
-           <property name="text">
-            <string>均价</string>
-           </property>
-           <property name="settingDescription" stdset="0">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="quote_average">
-           <property name="text">
-            <string>—</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
-           </property>
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Ignored" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="font">
-            <font>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>40</width>
-             <height>0</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="quote_turnover_caption">
-           <property name="text">
-            <string>换手率</string>
-           </property>
-           <property name="settingDescription" stdset="0">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLabel" name="quote_turnover">
-           <property name="text">
-            <string>—</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
-           </property>
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Ignored" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="font">
-            <font>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>40</width>
-             <height>0</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="quote_amplitude_caption">
-           <property name="text">
-            <string>振幅</string>
-           </property>
-           <property name="settingDescription" stdset="0">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QLabel" name="quote_amplitude">
-           <property name="text">
-            <string>—</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
-           </property>
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Ignored" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="font">
-            <font>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>40</width>
-             <height>0</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
+         <item row="4" column="0">
           <widget class="QLabel" name="quote_volume_ratio_caption">
            <property name="text">
             <string>量比</string>
@@ -824,7 +722,7 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="1">
+         <item row="4" column="1">
           <widget class="QLabel" name="quote_volume_ratio">
            <property name="text">
             <string>—</string>
@@ -845,7 +743,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>40</width>
+            <width>54</width>
              <height>0</height>
             </size>
            </property>
@@ -855,8 +753,8 @@
        </widget>
       </item>
       <item>
-       <widget class="QWidget" name="quote_column_3">
-        <layout class="QGridLayout" name="quote_column_3_layout" columnstretch="0,1">
+       <widget class="QWidget" name="quote_column_2">
+        <layout class="QGridLayout" name="quote_column_2_layout" columnstretch="0,1">
          <property name="leftMargin">
           <number>0</number>
          </property>
@@ -903,7 +801,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>40</width>
+            <width>46</width>
              <height>0</height>
             </size>
            </property>
@@ -940,7 +838,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>40</width>
+            <width>46</width>
              <height>0</height>
             </size>
            </property>
@@ -977,7 +875,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>40</width>
+            <width>46</width>
              <height>0</height>
             </size>
            </property>
@@ -1014,7 +912,44 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>40</width>
+            <width>46</width>
+             <height>0</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="quote_amplitude_caption">
+           <property name="text">
+            <string>振幅</string>
+           </property>
+           <property name="settingDescription" stdset="0">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLabel" name="quote_amplitude">
+           <property name="text">
+            <string>—</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Ignored" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="minimumSize">
+            <size>
+            <width>46</width>
              <height>0</height>
             </size>
            </property>
@@ -1024,8 +959,8 @@
        </widget>
       </item>
       <item>
-       <widget class="QWidget" name="quote_column_4">
-        <layout class="QGridLayout" name="quote_column_4_layout" columnstretch="0,1">
+       <widget class="QWidget" name="quote_column_3">
+        <layout class="QGridLayout" name="quote_column_3_layout" columnstretch="0,1">
          <property name="leftMargin">
           <number>0</number>
          </property>
@@ -1072,7 +1007,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>40</width>
+            <width>58</width>
              <height>0</height>
             </size>
            </property>
@@ -1109,7 +1044,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>40</width>
+            <width>58</width>
              <height>0</height>
             </size>
            </property>
@@ -1146,7 +1081,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>40</width>
+            <width>58</width>
              <height>0</height>
             </size>
            </property>
@@ -1183,7 +1118,44 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>40</width>
+            <width>58</width>
+             <height>0</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="quote_turnover_caption">
+           <property name="text">
+            <string>换手率</string>
+           </property>
+           <property name="settingDescription" stdset="0">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLabel" name="quote_turnover">
+           <property name="text">
+            <string>—</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Ignored" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="minimumSize">
+            <size>
+            <width>58</width>
              <height>0</height>
             </size>
            </property>

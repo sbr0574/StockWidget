@@ -499,20 +499,38 @@ class HistoryDetailsTests(HistoryTestCase):
             self.assertEqual(header.values["流通股"].text(), "50.00万")
             self.assertEqual(header.values["市盈（动）"].text(), "2.00")
             self.assertNotIn("每股收益", header.values)
-            for row, caption in enumerate(("市盈（静）", "市盈（动）", "市盈（TTM）", "市净率")):
-                self.assertEqual(history.dialog.ui.quote_column_3_layout.itemAtPosition(row, 0).widget().text(), caption)
+            expected_columns = (
+                ("高", "低", "开", "昨收", "均价"),
+                ("内盘", "外盘", "成交量", "成交额", "量比"),
+                ("市盈（静）", "市盈（动）", "市盈（TTM）", "市净率", "振幅"),
+                ("总市值", "总股本", "流通市值", "流通股", "换手率"),
+            )
+            self.assertFalse(hasattr(history.dialog.ui, "quote_column_4"))
+            for col, captions in enumerate(expected_columns):
+                layout = getattr(history.dialog.ui, f"quote_column_{col}_layout")
+                for row, caption in enumerate(captions):
+                    self.assertEqual(layout.itemAtPosition(row, 0).widget().text(), caption)
+            self.assertLessEqual(history.dialog.minimumWidth(), 660)
             for theme in ("light", "dark"):
                 window.set_view_options(color_mode=theme)
-                history.dialog.resize(780, 400)
+                history.dialog.resize(history.dialog.minimumSize())
                 self.app.processEvents()
-                for col in range(5):
+                current_geom = header.values["现价"].geometry()
+                change_geom = header.values["涨跌"].geometry()
+                pct_geom = header.values["涨幅"].geometry()
+                self.assertLess(current_geom.bottom(), change_geom.top())
+                self.assertLess(current_geom.bottom(), pct_geom.top())
+                self.assertLess(change_geom.right(), pct_geom.left())
+                self.assertLessEqual(abs(change_geom.center().y() - pct_geom.center().y()), 1)
+                for col, min_val_w in enumerate((54, 54, 46, 58)):
                     block = getattr(history.dialog.ui, f"quote_column_{col}")
-                    for row in range(4):
+                    for row in range(5):
                         caption = block.layout().itemAtPosition(row, 0).widget()
                         value = block.layout().itemAtPosition(row, 1).widget()
                         self.assertTrue(block.rect().contains(caption.geometry()))
                         self.assertTrue(block.rect().contains(value.geometry()))
                         self.assertLess(caption.geometry().right(), value.geometry().left())
+                        self.assertGreaterEqual(value.width(), min_val_w)
             quote = window.quotes._latest_quotes["sh600000"]
             window.quotes._refresh_details()
             self.assertEqual(request.call_count, 1)
