@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (QApplication, QDialog, QGridLayout, QHBoxLayout,
     QSpacerItem, QVBoxLayout, QWidget)
 
 from stockwidget.ui.controls.history_chart import HistoryChart
-from stockwidget.ui.controls.history_details import (HistoryQuoteHeader, OrderBookWidget)
+from stockwidget.ui.controls.history_details import (HistoryQuoteHeader, MarketOverviewWidget, OrderBookWidget)
 from stockwidget.ui.controls.settings_widgets import FilledCheckBox
 
 class Ui_HistoryDialog(object):
@@ -48,6 +48,15 @@ class Ui_HistoryDialog(object):
         self.title.setSizePolicy(sizePolicy)
 
         self.title_layout.addWidget(self.title)
+
+        self.overview_button = QPushButton(self.title_row)
+        self.overview_button.setObjectName(u"overview_button")
+        self.overview_button.setAutoDefault(False)
+        self.overview_button.setMinimumSize(QSize(26, 26))
+        self.overview_button.setMaximumSize(QSize(26, 26))
+        self.overview_button.setCheckable(True)
+
+        self.title_layout.addWidget(self.overview_button)
 
         self.pin_button = QPushButton(self.title_row)
         self.pin_button.setObjectName(u"pin_button")
@@ -642,12 +651,18 @@ class Ui_HistoryDialog(object):
 
         self.content_layout.addWidget(self.chart)
 
+        self.market_overview = MarketOverviewWidget(HistoryDialog)
+        self.market_overview.setObjectName(u"market_overview")
+
+        self.content_layout.addWidget(self.market_overview)
+
         self.order_book = OrderBookWidget(HistoryDialog)
         self.order_book.setObjectName(u"order_book")
 
         self.content_layout.addWidget(self.order_book)
 
         self.content_layout.setStretch(0, 1)
+        self.content_layout.setStretch(1, 1)
 
         self.chart_layout.addLayout(self.content_layout)
 
@@ -680,6 +695,10 @@ class Ui_HistoryDialog(object):
     # setupUi
 
     def retranslateUi(self, HistoryDialog):
+        self.overview_button.setText("")
+#if QT_CONFIG(accessibility)
+        self.overview_button.setAccessibleName(QCoreApplication.translate("HistoryDialog", u"\u5927\u76d8\u603b\u89c8", None))
+#endif // QT_CONFIG(accessibility)
         self.pin_button.setText("")
 #if QT_CONFIG(accessibility)
         self.pin_button.setAccessibleName(QCoreApplication.translate("HistoryDialog", u"\u56fa\u5b9a\u56fe\u8868", None))

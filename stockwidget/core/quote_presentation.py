@@ -162,6 +162,17 @@ def format_value(value: float, lot_size: int = 1, unit_cn: bool = True) -> str:
     return f"{value / 1e12:.2f}T"
 
 
+def format_signed_value(value: float, lot_size: int = 1, unit_cn: bool = True) -> str:
+    """带正负号格式化成交量/成交额等增减差值。"""
+    if not isinstance(value, (int, float)) or not math.isfinite(value):
+        return "—"
+    magnitude = abs(value)
+    if int(magnitude / lot_size) == 0:
+        return "0"
+    sign = "+" if value > 0 else "-"
+    return sign + format_value(magnitude, lot_size=lot_size, unit_cn=unit_cn)
+
+
 def volume_lot_size(security_type: str | None, market: str = "") -> int:
     return 100 if market in {"sh", "sz", "bj"} and security_type != "期" else 1
 
@@ -200,6 +211,28 @@ MARKET_BREADTH_BUCKETS = (
     ("<-10%", COLOR_ROLE_DOWN),
 )
 
+MARKET_OVERVIEW_INDICES = (
+    ("sh000001", {"code": "000001", "market": "sh", "type": "指", "name": "上证指数"}),
+    ("sz399001", {"code": "399001", "market": "sz", "type": "指", "name": "深证成指"}),
+    ("sh000300", {"code": "000300", "market": "sh", "type": "指", "name": "沪深300"}),
+    ("sh000680", {"code": "000680", "market": "sh", "type": "指", "name": "科创综指"}),
+    ("sz399006", {"code": "399006", "market": "sz", "type": "指", "name": "创业板指"}),
+    ("bj899050", {"code": "899050", "market": "bj", "type": "指", "name": "北证50"}),
+)
+
+# 沪深京全市场成交额口径：上证指数(沪市全市场) + 深证综指(深市全市场) + 北证50(北交所全市场)。
+# 注意：深证成指(sz399001)的分钟K线仅统计成分股成交额，因此统一以深证综指(sz399106)对齐实时与历史分钟基准。
+MARKET_TURNOVER_INDICES = (
+    ("sh000001", {"code": "000001", "market": "sh", "type": "指", "name": "上证指数"}),
+    ("sz399106", {"code": "399106", "market": "sz", "type": "指", "name": "深证综指"}),
+    ("bj899050", {"code": "899050", "market": "bj", "type": "指", "name": "北证50"}),
+)
+
+MARKET_OVERVIEW_QUOTES = {
+    key: dict(instrument)
+    for key, instrument in (*MARKET_OVERVIEW_INDICES, *MARKET_TURNOVER_INDICES)
+}
+
 
 def is_cn_index(instrument) -> bool:
     """Return True for domestic indices listed in index_cn.json."""
@@ -209,6 +242,192 @@ def is_cn_index(instrument) -> bool:
         str(instrument.get("market", "") or "").strip().lower() in CN_INDEX_MARKETS
         and str(instrument.get("type", "") or "").strip() == "指"
     )
+
+
+def format_overview_index(instrument: Mapping, quote: Mapping | None) -> dict:
+    """Format one index card for the market overview panel."""
+    name = str(instrument.get("name") or (quote or {}).get("name") or instrument.get("code") or "")
+    if not isinstance(quote, Mapping):
+        return {"name": name, "price": "—", "change": "—", "change_pct": "—", "role": COLOR_ROLE_TEXT}
+    precision = price_precision(instrument.get("type"), instrument.get("market", ""))
+    try:
+        current = float(quote.get("current_price") or 0)
+        prev_close = float(quote.get("prev_close") or 0)
+    except (TypeError, ValueError):
+        return {"name": name, "price": "—", "change": "—", "change_pct": "—", "role": COLOR_ROLE_TEXT}
+    if not (math.isfinite(current) and math.isfinite(prev_close)):
+        return {"name": name, "price": "—", "change": "—", "change_pct": "—", "role": COLOR_ROLE_TEXT}
+    if current == 0 and prev_close > 0:
+        current = prev_close
+    if current <= 0:
+        return {"name": name, "price": "—", "change": "—", "change_pct": "—", "role": COLOR_ROLE_TEXT}
+    price_text = f"{current:.{precision}f}"
+    if prev_close <= 0:
+        return {"name": name, "price": price_text, "change": "—", "change_pct": "—", "role": COLOR_ROLE_NEUTRAL}
+    change = current - prev_close
+    change_pct = (current / prev_close - 1) * 100
+    return {
+        "name": name,
+        "price": price_text,
+        "change": f"{change:+.{precision}f}",
+        "change_pct": f"{change_pct:+.2f}%",
+        "role": direction_color_role(change),
+    }
+
+
+def _parse_quote_date_clock(quote: Mapping | None):
+    if not isinstance(quote, Mapping):
+        return None, None
+    raw_date = str(quote.get("date") or "").strip().replace("/", "-")
+    raw_time = str(quote.get("time") or "").strip()
+    if len(raw_date) != 10 or raw_date[4] != "-" or raw_date[7] != "-":
+        return None, None
+    try:
+        year, month, day = int(raw_date[:4]), int(raw_date[5:7]), int(raw_date[8:10])
+        if not (1900 <= year <= 2200 and 1 <= month <= 12 and 1 <= day <= 31):
+            return None, None
+    except ValueError:
+        return None, None
+    clock = None
+    if len(raw_time) >= 8 and raw_time[2] == ":" and raw_time[5] == ":":
+        try:
+            hh, mm, ss = int(raw_time[:2]), int(raw_time[3:5]), int(raw_time[6:8])
+            if 0 <= hh <= 23 and 0 <= mm <= 59 and 0 <= ss <= 59:
+                clock = (hh, mm, ss)
+        except ValueError:
+            clock = None
+    return raw_date, clock
+
+
+def _bar_minute(bar) -> int | None:
+    stamp = str(getattr(bar, "time", "") or "")
+    if len(stamp) < 16 or stamp[13] != ":":
+        return None
+    try:
+        hh, mm = int(stamp[11:13]), int(stamp[14:16])
+        if 0 <= hh <= 23 and 0 <= mm <= 59:
+            return hh * 60 + mm
+    except ValueError:
+        return None
+    return None
+
+
+def _cumulative_amount_at_clock(day_bars: Sequence[tuple[int, float]], clock) -> float | None:
+    """Cumulative turnover on a completed CN trading day at wall clock (hh, mm, ss)."""
+    if clock is None or not day_bars:
+        return None
+    hh, mm, ss = clock
+    minutes = hh * 60 + mm + ss / 60.0
+    if minutes <= 570.0:  # At or before 09:30:00 continuous open.
+        return None
+    if minutes >= 900.0:  # At or after 15:00:00 close.
+        return sum(amount for _, amount in day_bars)
+    if 690.0 <= minutes <= 780.0:  # Lunch break 11:30:00 .. 13:00:00.
+        return sum(amount for bar_min, amount in day_bars if bar_min <= 690)
+    whole = int(minutes)
+    frac = minutes - whole
+    total = sum(amount for bar_min, amount in day_bars if bar_min <= whole)
+    if frac > 0:
+        next_minute = whole + 1
+        # Only interpolate inside an active continuous minute; never bridge breaks or closing auction.
+        if (571 <= next_minute <= 690) or (781 <= next_minute <= 898):
+            for bar_min, amount in day_bars:
+                if bar_min == next_minute:
+                    total += amount * frac
+                    break
+    return total
+
+
+def compute_market_turnover(
+    overview_quotes: Mapping | None,
+    turnover_bars: Mapping | None = None,
+) -> dict:
+    """Compute full A-share (SH + SZ + BJ) live turnover, yesterday total, and same-time delta.
+
+    Requires complete, same-date market quotes across sh000001, sz399106, and bj899050;
+    never fabricates missing markets or extrapolates partial history.
+    """
+    keys = tuple(key for key, _ in MARKET_TURNOVER_INDICES)
+    quotes = overview_quotes if isinstance(overview_quotes, Mapping) else {}
+    bars_map = turnover_bars if isinstance(turnover_bars, Mapping) else {}
+
+    parsed_live = {}
+    for key in keys:
+        quote = quotes.get(key)
+        date_str, clock = _parse_quote_date_clock(quote)
+        if date_str is None:
+            continue
+        try:
+            amt = float(quote.get("deals_amt"))
+        except (TypeError, ValueError):
+            continue
+        if not math.isfinite(amt) or amt < 0:
+            continue
+        parsed_live[key] = (date_str, clock, amt)
+
+    today_date = None
+    today_amount = None
+    if len(parsed_live) == len(keys):
+        dates = {entry[0] for entry in parsed_live.values()}
+        if len(dates) == 1:
+            today_date = next(iter(dates))
+            today_amount = sum(entry[2] for entry in parsed_live.values())
+
+    yesterday_amount = None
+    delta_amount = None
+    prev_date = None
+    if today_date is not None:
+        per_market_prev = {}
+        for key in keys:
+            bars = bars_map.get(key) or ()
+            grouped: dict[str, list[tuple[int, float]]] = {}
+            invalid_dates: set[str] = set()
+            for bar in bars:
+                stamp = str(getattr(bar, "time", "") or "")
+                if len(stamp) < 16:
+                    continue
+                bar_date = stamp[:10]
+                if bar_date >= today_date:
+                    continue
+                bar_min = _bar_minute(bar)
+                amt = getattr(bar, "amount", None)
+                if (bar_min is None or amt is None
+                        or not isinstance(amt, (int, float))
+                        or not math.isfinite(amt) or amt < 0):
+                    invalid_dates.add(bar_date)
+                    continue
+                grouped.setdefault(bar_date, []).append((bar_min, float(amt)))
+            valid_dates = [d for d in grouped if d not in invalid_dates and grouped[d]]
+            if not valid_dates:
+                break
+            latest_prev = max(valid_dates)
+            per_market_prev[key] = (latest_prev, grouped[latest_prev])
+
+        if len(per_market_prev) == len(keys):
+            prev_dates = {entry[0] for entry in per_market_prev.values()}
+            if len(prev_dates) == 1:
+                prev_date = next(iter(prev_dates))
+                yesterday_amount = sum(
+                    sum(amount for _, amount in per_market_prev[key][1])
+                    for key in keys
+                )
+                same_time_parts = []
+                for key in keys:
+                    part = _cumulative_amount_at_clock(per_market_prev[key][1], parsed_live[key][1])
+                    if part is None:
+                        same_time_parts = None
+                        break
+                    same_time_parts.append(part)
+                if same_time_parts is not None:
+                    delta_amount = today_amount - sum(same_time_parts)
+
+    return {
+        "today": today_amount,
+        "yesterday": yesterday_amount,
+        "delta": delta_amount,
+        "date": today_date,
+        "prev_date": prev_date,
+    }
 
 
 @dataclass(frozen=True)

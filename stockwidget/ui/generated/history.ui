@@ -58,6 +58,34 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="overview_button">
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>26</width>
+          <height>26</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>26</width>
+          <height>26</height>
+         </size>
+        </property>
+        <property name="text">
+         <string />
+        </property>
+        <property name="accessibleName">
+         <string>大盘总览</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="pin_button">
         <property name="autoDefault">
          <bool>false</bool>
@@ -1370,7 +1398,7 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="content_layout" stretch="1,0">
+    <layout class="QHBoxLayout" name="content_layout" stretch="1,1,0">
      <property name="spacing">
       <number>6</number>
      </property>
@@ -1383,6 +1411,9 @@
         </size>
        </property>
       </widget>
+     </item>
+     <item>
+      <widget class="MarketOverviewWidget" name="market_overview" />
      </item>
      <item>
       <widget class="OrderBookWidget" name="order_book" />
@@ -1434,6 +1465,11 @@
   </customwidget>
   <customwidget>
    <class>OrderBookWidget</class>
+   <extends>QWidget</extends>
+   <header>stockwidget.ui.controls.history_details</header>
+  </customwidget>
+  <customwidget>
+   <class>MarketOverviewWidget</class>
    <extends>QWidget</extends>
    <header>stockwidget.ui.controls.history_details</header>
   </customwidget>

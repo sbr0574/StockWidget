@@ -1,13 +1,16 @@
 """Live quote details shared by the chart popup and detached window."""
 
+import math
+
 from PySide6.QtCore import QEvent, QPointF, QRectF, Qt
-from PySide6.QtGui import QColor, QFontMetrics, QPainter, QPalette, QPen
+from PySide6.QtGui import QColor, QFont, QFontInfo, QFontMetrics, QPainter, QPalette, QPen
 from PySide6.QtWidgets import QLabel, QWidget
 
 from stockwidget.core.quote_presentation import (
-    COLOR_ROLE_DOWN, COLOR_ROLE_UP, MARKET_BREADTH_BUCKETS, QuoteDisplayOptions, direction_color_role,
-    format_quote, format_value, is_cn_index, price_precision, quote_detail_values,
-    should_use_english_units, volume_lot_size,
+    COLOR_ROLE_DOWN, COLOR_ROLE_NEUTRAL, COLOR_ROLE_UP, MARKET_BREADTH_BUCKETS,
+    MARKET_OVERVIEW_INDICES, QuoteDisplayOptions, compute_market_turnover, direction_color_role,
+    format_overview_index, format_quote, format_signed_value, format_value, is_cn_index,
+    price_precision, quote_detail_values, should_use_english_units, volume_lot_size,
 )
 from stockwidget.ui.controls.quote_view import DEFAULT_DOWN_COLOR, DEFAULT_UP_COLOR
 
@@ -145,7 +148,7 @@ class OrderBookWidget(QWidget):
         bold_metrics = QFontMetrics(bold_font)
         label_width = max(metrics.horizontalAdvance(label) for label, _ in MARKET_BREADTH_BUCKETS)
         count_width = metrics.horizontalAdvance("9999")
-        summary_width = bold_metrics.horizontalAdvance("涨9999/平999/跌9999")
+        summary_width = bold_metrics.horizontalAdvance("涨9999 平999 跌9999")
         width = max(164, 20 + label_width + count_width + 12 + 48, 20 + summary_width)
         row_height = max(16, metrics.height() + 1)
         height = max(200, 12 + 4 + row_height * 12)
@@ -155,19 +158,19 @@ class OrderBookWidget(QWidget):
     @property
     def breadth_summary_text(self) -> str:
         if self.breadth_summary is None:
-            return "涨—/平—/跌—"
+            return "涨— 平— 跌—"
         up, flat, down = self.breadth_summary
-        return f"涨{up}/平{flat}/跌{down}"
+        return f"涨{up} 平{flat} 跌{down}"
 
     def changeEvent(self, event):
         super().changeEvent(event)
         if self.breadth_mode and event.type() in {QEvent.FontChange, QEvent.DevicePixelRatioChange}:
             self._sync_size()
 
-    def set_quote(self, instrument, quote, unit_mode, up, down, *, market_breadth=None):
+    def set_quote(self, instrument, quote, unit_mode, up, down, *, market_breadth=None, force_breadth=False):
         quote = quote or {}
         self.up_color, self.down_color = QColor(up), QColor(down)
-        self.set_breadth_mode(is_cn_index(instrument))
+        self.set_breadth_mode(force_breadth or is_cn_index(instrument))
         if self.breadth_mode:
             self.rows = ()
             self.buy_fraction = None
@@ -227,10 +230,10 @@ class OrderBookWidget(QWidget):
         header_gap = 4
         line = (self.height() - 12 - header_gap) / 12
         label_w = max(metrics.horizontalAdvance(label) for label, _ in MARKET_BREADTH_BUCKETS)
-        count_w = max(
+        count_w = max((
             metrics.horizontalAdvance("9999"),
             *(metrics.horizontalAdvance(row[1]) for row in self.breadth_rows),
-        )
+        ))
         gap = 6
         bar_x = margin + label_w + gap
         bar_max_w = max(8.0, content_width - label_w - count_w - gap * 2)
@@ -258,24 +261,22 @@ class OrderBookWidget(QWidget):
         margin, content_width = geom["margin"], geom["content_width"]
         header_y, line, header_gap = geom["header_y"], geom["line"], geom["header_gap"]
         flat_color = self._flat_color(neutral)
-        sep_color = QColor(neutral)
-        sep_color.setAlpha(150)
 
         if self.breadth_summary is not None:
             up_value, flat_value, down_value = self.breadth_summary
             segments = (
                 (f"涨{up_value}", self.up_color),
-                ("/", sep_color),
+                (" ", neutral),
                 (f"平{flat_value}", flat_color),
-                ("/", sep_color),
+                (" ", neutral),
                 (f"跌{down_value}", self.down_color),
             )
         else:
             segments = (
                 ("涨—", neutral),
-                ("/", sep_color),
+                (" ", neutral),
                 ("平—", neutral),
-                ("/", sep_color),
+                (" ", neutral),
                 ("跌—", neutral),
             )
 
@@ -355,3 +356,237 @@ class OrderBookWidget(QWidget):
             split = track.width() * self.buy_fraction
             painter.fillRect(QRectF(track.left(), track.top(), split, track.height()), DEFAULT_UP_COLOR)
             painter.fillRect(QRectF(track.left() + split, track.top(), track.width() - split, track.height()), DEFAULT_DOWN_COLOR)
+
+
+def _scaled_font(base: QFont, factor: float, *, bold: bool = False) -> QFont:
+    font = QFont(base)
+    font.setBold(bold)
+    if base.pointSizeF() > 0:
+        font.setPointSizeF(max(6.0, base.pointSizeF() * factor))
+    elif base.pixelSize() > 0:
+        font.setPixelSize(max(8, round(base.pixelSize() * factor)))
+    else:
+        px = QFontInfo(base).pixelSize()
+        if px > 0:
+            font.setPixelSize(max(8, round(px * factor)))
+    return font
+
+
+def _fit_font(font: QFont, text: str, max_width: float) -> QFont:
+    metrics = QFontMetrics(font)
+    width = metrics.horizontalAdvance(text)
+    if width <= max_width or max_width <= 8:
+        return font
+    return _scaled_font(font, max(0.6, max_width / width), bold=font.bold())
+
+
+class MarketOverviewWidget(QWidget):
+    """Six CN benchmark index cards plus full-market turnover summary."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.flat = True
+        self.neutral_color = None
+        self.up_color, self.down_color = QColor(DEFAULT_UP_COLOR), QColor(DEFAULT_DOWN_COLOR)
+        self.index_cards = tuple(
+            (key, format_overview_index(instrument, None))
+            for key, instrument in MARKET_OVERVIEW_INDICES
+        )
+        self.turnover_values = {"today": None, "yesterday": None, "delta": None, "date": None, "prev_date": None}
+        self.turnover_items = (
+            ("今日实时", "—", ""),
+            ("昨日总额", "—", ""),
+            ("较上日此时", "—", ""),
+        )
+        self.setAccessibleName("大盘总览")
+        self._sync_size()
+
+    def _fonts(self):
+        base = self.font()
+        return {
+            "name": base,
+            "price": _scaled_font(base, 1.18, bold=True),
+            "change": _scaled_font(base, 0.94, bold=False),
+            "section": _scaled_font(base, 0.90, bold=False),
+            "value": _scaled_font(base, 1.0, bold=True),
+        }
+
+    def _sync_size(self):
+        fonts = self._fonts()
+        name_m = QFontMetrics(fonts["name"])
+        price_m = QFontMetrics(fonts["price"])
+        change_m = QFontMetrics(fonts["change"])
+        section_m = QFontMetrics(fonts["section"])
+        value_m = QFontMetrics(fonts["value"])
+
+        card_inner_w = max(
+            name_m.horizontalAdvance("上证指数"),
+            price_m.horizontalAdvance("10000.00"),
+            change_m.horizontalAdvance("-123.45") + 6 + change_m.horizontalAdvance("-10.00%"),
+        )
+        grid_min_w = (card_inner_w + 14) * 2 + 6
+        col_widths = (
+            max(section_m.horizontalAdvance("今日实时"), value_m.horizontalAdvance("9999.9亿")),
+            max(section_m.horizontalAdvance("昨日总额"), value_m.horizontalAdvance("1.99万亿")),
+            max(section_m.horizontalAdvance("较上日此时"), value_m.horizontalAdvance("-9999.9亿")),
+        )
+        turnover_min_w = max(section_m.horizontalAdvance("全市场成交额"), sum(col_widths) + 12) + 16
+        min_w = max(248, int(math.ceil(max(grid_min_w, turnover_min_w))))
+
+        card_min_h = name_m.height() + price_m.height() + change_m.height() + 12
+        turnover_h = 10 + section_m.height() + 3 + section_m.height() + 2 + value_m.height()
+        min_h = max(210, int(math.ceil(card_min_h * 3 + 12 + 6 + turnover_h)))
+        self.setMinimumSize(min_w, min_h)
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
+        if event.type() in {QEvent.FontChange, QEvent.DevicePixelRatioChange}:
+            self._sync_size()
+
+    def set_overview(self, overview_quotes, turnover_bars, unit_mode, up, down):
+        self.up_color, self.down_color = QColor(up), QColor(down)
+        quotes = overview_quotes or {}
+        self.index_cards = tuple(
+            (key, format_overview_index(instrument, quotes.get(key)))
+            for key, instrument in MARKET_OVERVIEW_INDICES
+        )
+        turnover = compute_market_turnover(quotes, turnover_bars)
+        self.turnover_values = turnover
+        unit_cn = not should_use_english_units(unit_mode, "sh")
+        today_text = (format_value(turnover["today"], 1, unit_cn=unit_cn)
+                      if turnover["today"] is not None else "—")
+        yesterday_text = (format_value(turnover["yesterday"], 1, unit_cn=unit_cn)
+                          if turnover["yesterday"] is not None else "—")
+        delta = turnover["delta"]
+        delta_text = format_signed_value(delta, 1, unit_cn=unit_cn) if delta is not None else "—"
+        delta_role = direction_color_role(delta) if delta is not None else ""
+        self.turnover_items = (
+            ("今日实时", today_text, ""),
+            ("昨日总额", yesterday_text, ""),
+            ("较上日此时", delta_text, delta_role),
+        )
+        self.update()
+
+    def _role_color(self, role, neutral):
+        if role == COLOR_ROLE_UP:
+            return self.up_color
+        if role == COLOR_ROLE_DOWN:
+            return self.down_color
+        if role == COLOR_ROLE_NEUTRAL:
+            if self.neutral_color is not None:
+                return QColor(self.neutral_color)
+            return self.palette().color(QPalette.PlaceholderText)
+        return neutral
+
+    def _layout_rects(self):
+        fonts = self._fonts()
+        section_m = QFontMetrics(fonts["section"])
+        value_m = QFontMetrics(fonts["value"])
+        gap = 6.0
+        turnover_h = float(10 + section_m.height() + 3 + section_m.height() + 2 + value_m.height())
+        width = float(self.width())
+        height = float(self.height())
+        grid_h = max(0.0, height - turnover_h - gap)
+        card_w = max(0.0, (width - gap) / 2.0)
+        card_h = max(0.0, (grid_h - gap * 2.0) / 3.0)
+        cards = tuple(
+            QRectF((idx % 2) * (card_w + gap), (idx // 2) * (card_h + gap), card_w, card_h)
+            for idx in range(len(MARKET_OVERVIEW_INDICES))
+        )
+        turnover_rect = QRectF(0.0, grid_h + gap, width, max(0.0, height - grid_h - gap))
+        return cards, turnover_rect
+
+    def _paint_tile(self, painter, rect, neutral):
+        if not self.flat:
+            _paint_card_surface(painter, rect, self.palette())
+            return
+        card = QRectF(rect).adjusted(0.5, 0.5, -0.5, -0.5)
+        fill = QColor(neutral)
+        fill.setAlpha(15)
+        border = QColor(neutral)
+        border.setAlpha(38)
+        painter.save()
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setBrush(fill)
+        painter.setPen(QPen(border, 1.0))
+        painter.drawRoundedRect(card, 8.0, 8.0)
+        painter.restore()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        neutral = self.palette().text().color()
+        muted = QColor(neutral)
+        muted.setAlpha(round(neutral.alpha() * 0.68))
+        fonts = self._fonts()
+        name_m = QFontMetrics(fonts["name"])
+        price_m = QFontMetrics(fonts["price"])
+        change_m = QFontMetrics(fonts["change"])
+        section_m = QFontMetrics(fonts["section"])
+        value_m = QFontMetrics(fonts["value"])
+
+        cards, turnover_rect = self._layout_rects()
+        for rect, (_key, item) in zip(cards, self.index_cards):
+            self._paint_tile(painter, rect, neutral)
+            inner = rect.adjusted(7.0, 5.0, -7.0, -5.0)
+            if inner.width() <= 4 or inner.height() <= 4:
+                continue
+            name_h = name_m.height()
+            price_h = price_m.height()
+            change_h = change_m.height()
+            slack = max(0.0, inner.height() - (name_h + price_h + change_h))
+            y_name = inner.top()
+            y_price = inner.top() + name_h + slack * 0.45
+            y_change = inner.bottom() - change_h
+
+            painter.setFont(fonts["name"])
+            painter.setPen(neutral)
+            elided_name = name_m.elidedText(item["name"], Qt.ElideRight, int(inner.width()))
+            painter.drawText(QRectF(inner.left(), y_name, inner.width(), name_h),
+                             Qt.AlignVCenter | Qt.AlignLeft, elided_name)
+
+            role_color = self._role_color(item["role"], neutral)
+            price_font = _fit_font(fonts["price"], item["price"], inner.width())
+            painter.setFont(price_font)
+            painter.setPen(role_color)
+            painter.drawText(QRectF(inner.left(), y_price, inner.width(), price_h),
+                             Qt.AlignVCenter | Qt.AlignLeft, item["price"])
+
+            change_font = fonts["change"]
+            combined_w = (change_m.horizontalAdvance(item["change"])
+                          + change_m.horizontalAdvance(item["change_pct"]) + 6)
+            if combined_w > inner.width() and inner.width() > 8:
+                change_font = _scaled_font(change_font, max(0.65, inner.width() / combined_w))
+            painter.setFont(change_font)
+            painter.setPen(role_color)
+            change_rect = QRectF(inner.left(), y_change, inner.width(), change_h)
+            painter.drawText(change_rect, Qt.AlignVCenter | Qt.AlignLeft, item["change"])
+            painter.drawText(change_rect, Qt.AlignVCenter | Qt.AlignRight, item["change_pct"])
+
+        self._paint_tile(painter, turnover_rect, neutral)
+        t_inner = turnover_rect.adjusted(8.0, 5.0, -8.0, -5.0)
+        if t_inner.width() <= 4 or t_inner.height() <= 4:
+            return
+        title_h = section_m.height()
+        caption_h = section_m.height()
+        value_h = value_m.height()
+
+        painter.setFont(fonts["section"])
+        painter.setPen(muted)
+        painter.drawText(QRectF(t_inner.left(), t_inner.top(), t_inner.width(), title_h),
+                         Qt.AlignVCenter | Qt.AlignLeft, "全市场成交额")
+
+        col_gap = 6.0
+        col_w = max(0.0, (t_inner.width() - col_gap * 2.0) / 3.0)
+        y_caption = t_inner.top() + title_h + 3.0
+        y_value = y_caption + caption_h + 2.0
+        for index, (caption, value_text, role) in enumerate(self.turnover_items):
+            cx = t_inner.left() + index * (col_w + col_gap)
+            painter.setFont(fonts["section"])
+            painter.setPen(muted)
+            painter.drawText(QRectF(cx, y_caption, col_w, caption_h),
+                             Qt.AlignVCenter | Qt.AlignLeft, caption)
+            val_font = _fit_font(fonts["value"], value_text, col_w)
+            painter.setFont(val_font)
+            painter.setPen(self._role_color(role, neutral))
+            painter.drawText(QRectF(cx, y_value, col_w, value_h),
+                             Qt.AlignVCenter | Qt.AlignLeft, value_text)

@@ -126,6 +126,10 @@ def pin_icon(device_pixel_ratio: float = 1.0, palette=None) -> QIcon:
     return _line_icon('M8 3h8M9 3v6l-3 3v2h12v-2l-3-3V3M12 14v7', 14, device_pixel_ratio, palette)
 
 
+def market_overview_icon(device_pixel_ratio: float = 1.0, palette=None) -> QIcon:
+    return _line_icon('M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z', 14, device_pixel_ratio, palette)
+
+
 def _line_icon(path, size, device_pixel_ratio, palette):
     color = (palette or QApplication.palette()).color(QPalette.ColorRole.WindowText).name()
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'

@@ -7,7 +7,7 @@ from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QTimer, QS
 from PySide6.QtGui import QColor, QContextMenuEvent, QCursor, QFont, QFontInfo, QFontMetrics, QPainter, QPalette
 from PySide6.QtWidgets import QApplication, QAbstractButton, QButtonGroup, QDialog, QMenu, QSizePolicy, QToolTip, QWidget, QWidgetItem
 
-from stockwidget.core.quote_presentation import is_cn_index
+from stockwidget.core.quote_presentation import MARKET_OVERVIEW_QUOTES, MARKET_TURNOVER_INDICES, is_cn_index
 from stockwidget.core.window_rules import adjacent_popup_position, best_screen
 from stockwidget.core.config_store import history_cache_dir
 from stockwidget.data.bar_cache import BarCache
@@ -16,7 +16,7 @@ from stockwidget.platform.capabilities import is_cocoa, is_wayland
 from stockwidget.platform.window import apply_background_blur, set_macos_cursor, set_windows_arrow_cursor, sync_macos_dock_icon
 from stockwidget.ui.controls.history_chart import MA_COLORS
 from stockwidget.ui.generated.ui_history import Ui_HistoryDialog
-from stockwidget.ui.controls.style import apply_history_theme, is_dark_theme, navigation_arrow_icon, pin_icon, theme_palette
+from stockwidget.ui.controls.style import apply_history_theme, is_dark_theme, market_overview_icon, navigation_arrow_icon, pin_icon, theme_palette
 from stockwidget.ui.menus import build_history_menu
 
 
@@ -28,6 +28,7 @@ class HistoryDialog(QDialog):
     size_changed = Signal(str, object)
     options_changed = Signal(object)
     instrument_changed = Signal(int)
+    overview_toggled = Signal(bool)
 
     def __init__(self, parent, display_mode="popup"):
         floating = display_mode == "popup"
@@ -40,11 +41,14 @@ class HistoryDialog(QDialog):
         self._preferred_size = None
         self._gesture = None
         self._drag_started = False
+        self._last_press_on_button = False
         self._outside_grab = False
         self._context_menu = None
         self._native_resize_cursor = False
         self._book_enabled = False
         self._breadth_mode = False
+        self._overview_mode = False
+        self._average_enabled = True
         self._bg_blur = False
         self._bg_dark = True
         self._theme_palette = None
@@ -53,7 +57,8 @@ class HistoryDialog(QDialog):
         self.setModal(False)
         self.ui = Ui_HistoryDialog()
         self.ui.setupUi(self)
-        for name in ("title_row", "title", "pin_button", "pop_out_button", "close_button", "quote_header", "chart", "order_book", "status"):
+        for name in ("title_row", "title", "overview_button", "pin_button", "pop_out_button", "close_button",
+                     "quote_header", "chart", "market_overview", "order_book", "status"):
             setattr(self, name, getattr(self.ui, name))
         self.quote_header.bind_fields()
         for name, direction in (("previous", -1), ("next", 1)):
@@ -61,10 +66,12 @@ class HistoryDialog(QDialog):
             button.setIconSize(QSize(14, 14))
             button.clicked.connect(lambda checked=False, direction=direction: self.instrument_changed.emit(direction))
         self._set_navigation_icons()
+        self.overview_button.setIconSize(QSize(14, 14))
+        self.overview_button.toggled.connect(self._overview_changed)
         self.pin_button.setIconSize(QSize(14, 14))
         self.pin_button.toggled.connect(self._pin_changed)
         self.setAttribute(Qt.WA_MacAlwaysShowToolWindow, floating)
-        self.chart.flat = self.order_book.flat = floating
+        self.chart.flat = self.order_book.flat = self.market_overview.flat = floating
         self.chart.readout_changed.connect(self._update_readout)
         self.chart.readout_layout_changed.connect(self._sync_readout_height)
         self._title_text = self._status_text = ""
@@ -80,6 +87,7 @@ class HistoryDialog(QDialog):
             self.quote_header.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.title_row.setVisible(floating)
         self.quote_header.setVisible(not floating)
+        self.market_overview.hide()
         self.order_book.hide()
         self.ui.ma_row.hide()
         self.status.hide()
@@ -125,7 +133,8 @@ class HistoryDialog(QDialog):
             palette = QPalette(self.palette())
             palette.setColor(QPalette.WindowText, QColor(color))
             control.setPalette(palette)
-        self.ui.ma_row.setVisible(self.view == "daily" and options.chart_average_enabled)
+        self._average_enabled = bool(options.chart_average_enabled)
+        self.ui.ma_row.setVisible(not self._overview_mode and self.view == "daily" and options.chart_average_enabled)
         self.ui.cb_order_book.setEnabled(self.view == "intraday")
         self.set_order_book(options.chart_order_book_enabled)
         self.update_size_limits()
@@ -136,13 +145,56 @@ class HistoryDialog(QDialog):
         self.options_changed.emit({"chart_ma_periods": [period for period in MA_PERIODS
                                                        if getattr(self.ui, f"cb_ma{period}").isChecked()]})
 
+    @property
+    def overview_mode(self) -> bool:
+        return self._overview_mode
+
+    def set_overview_mode(self, enabled: bool):
+        overview = bool(enabled) and self.display_mode == "popup"
+        if self.overview_button.isChecked() != overview:
+            with QSignalBlocker(self.overview_button):
+                self.overview_button.setChecked(overview)
+        if self._overview_mode == overview:
+            return
+        restoring, self._restoring = self._restoring, True
+        self._overview_mode = overview
+        if overview:
+            self.ui.toolbar.hide()
+            self.ui.ma_row.hide()
+            self.chart.hide()
+            self.ui.chart_readout.hide()
+            self.status.hide()
+            self.market_overview.show()
+            self.order_book.set_breadth_mode(True)
+            self.order_book.show()
+        else:
+            self.market_overview.hide()
+            self.ui.toolbar.show()
+            self.ui.ma_row.setVisible(self.view == "daily" and self._average_enabled)
+            self.chart.show()
+            self.ui.chart_readout.show()
+            self.status.setVisible(bool(self._status_text))
+            self.order_book.set_breadth_mode(self._breadth_mode)
+            self.order_book.setVisible(self._book_enabled and self.view == "intraday")
+        self.update_size_limits()
+        if self._preferred_size is not None:
+            self.resize(QSize(*self._preferred_size).expandedTo(self.minimumSize()).boundedTo(self.maximumSize()))
+        self.layout().activate()
+        self._restoring = restoring
+
+    def _overview_changed(self, checked):
+        if self.display_mode != "popup":
+            return
+        self.set_overview_mode(checked)
+        self.overview_toggled.emit(self._overview_mode)
+
     def set_order_book(self, enabled):
         restoring, self._restoring = self._restoring, True
         changed = self._book_enabled != bool(enabled)
         self._book_enabled = bool(enabled)
-        self.order_book.setVisible(self._book_enabled and self.view == "intraday")
+        self.order_book.setVisible(True if self._overview_mode else (self._book_enabled and self.view == "intraday"))
         self.update_size_limits()
-        if changed and self._preferred_size is not None:
+        if changed and not self._overview_mode and self._preferred_size is not None:
             self.resize(QSize(*self._preferred_size).expandedTo(self.minimumSize()).boundedTo(self.maximumSize()))
         self.layout().activate()
         self._restoring = restoring
@@ -153,11 +205,11 @@ class HistoryDialog(QDialog):
         changed = self._breadth_mode != breadth
         self._breadth_mode = breadth
         self.ui.cb_order_book.setText("涨跌分布" if breadth else "五档")
-        self.order_book.set_breadth_mode(breadth)
+        self.order_book.set_breadth_mode(True if self._overview_mode else breadth)
         if changed:
             self.ui.toolbar.updateGeometry()
             self.update_size_limits()
-            if self._preferred_size is not None:
+            if not self._overview_mode and self._preferred_size is not None:
                 self.resize(QSize(*self._preferred_size).expandedTo(self.minimumSize()).boundedTo(self.maximumSize()))
             self.layout().activate()
         self._restoring = restoring
@@ -179,7 +231,7 @@ class HistoryDialog(QDialog):
         frame = self.frameGeometry().size() - self.size() if self.isVisible() else QSize(16, 40)
         screen_max = bounds.size() if self.display_mode == "popup" else bounds.size() - frame
         base_min = QSize(640, 400) if self.display_mode == "window" else QSize(300, 210)
-        minimum = base_min.expandedTo(QSize(460, 300)) if self._book_enabled else QSize(base_min)
+        minimum = base_min.expandedTo(QSize(460, 300)) if (self._book_enabled or self._overview_mode) else QSize(base_min)
         if self.layout():
             layout = self.layout()
             self.ui.content_layout.invalidate()
@@ -188,45 +240,57 @@ class HistoryDialog(QDialog):
             content = layout.minimumSize()
             margins = layout.contentsMargins()
             horizontal = margins.left() + margins.right()
-            # Use the same worst-case layout for every view, including hidden
-            # MA controls/status and the saved depth preference on five-day/K.
-            extra_w = 0
-            for row in (self.ui.ma_row, self.status):
-                hint = QWidgetItem(row).minimumSize()
-                if row.isHidden():
-                    if row.layout():
-                        hint = row.minimumSize().expandedTo(row.layout().minimumSize())
-                    else:
-                        hint = QSize(0, max(row.minimumHeight(), row.fontMetrics().height()))
-                extra_w = max(extra_w, hint.width() + horizontal)
-                content.setWidth(max(content.width(), hint.width() + horizontal))
-                if row.isHidden():
-                    content.setHeight(content.height() + hint.height() + layout.spacing())
-            chart = self.ui.content_layout.minimumSize()
-            book_w = self.order_book.minimumWidth() + self.ui.content_layout.spacing()
-            if self._book_enabled and self.order_book.isHidden():
-                content_with_book = QSize(
-                    max(content.width(), chart.width() + book_w + horizontal),
-                    content.height() + max(0, self.order_book.minimumHeight() - chart.height()),
-                )
-                content_without_book = QSize(content)
-            elif not self.order_book.isHidden():
-                content_with_book = QSize(content)
-                non_book_w = max(
-                    extra_w,
-                    self.title_row.minimumSizeHint().width() + horizontal if not self.title_row.isHidden() else 0,
-                    self.ui.toolbar.minimumSizeHint().width() + horizontal,
-                    self.chart.minimumWidth() + horizontal,
-                )
-                content_without_book = QSize(
-                    non_book_w,
-                    content.height() - max(0, self.order_book.minimumHeight() - self.chart.minimumHeight()),
-                )
+            if self._overview_mode:
+                self.market_overview._sync_size()
+                self.order_book._sync_size()
+                self.ui.content_layout.invalidate()
+                layout.invalidate()
+                content = layout.minimumSize()
+                minimum = minimum.expandedTo(content)
+                base_min = base_min.expandedTo(QSize(
+                    self.market_overview.minimumWidth() + horizontal,
+                    content.height(),
+                ))
             else:
-                content_with_book = QSize(content)
-                content_without_book = QSize(content)
-            base_min = base_min.expandedTo(content_without_book)
-            minimum = minimum.expandedTo(content_with_book)
+                # Use the same worst-case layout for every view, including hidden
+                # MA controls/status and the saved depth preference on five-day/K.
+                extra_w = 0
+                for row in (self.ui.ma_row, self.status):
+                    hint = QWidgetItem(row).minimumSize()
+                    if row.isHidden():
+                        if row.layout():
+                            hint = row.minimumSize().expandedTo(row.layout().minimumSize())
+                        else:
+                            hint = QSize(0, max(row.minimumHeight(), row.fontMetrics().height()))
+                    extra_w = max(extra_w, hint.width() + horizontal)
+                    content.setWidth(max(content.width(), hint.width() + horizontal))
+                    if row.isHidden():
+                        content.setHeight(content.height() + hint.height() + layout.spacing())
+                chart = self.ui.content_layout.minimumSize()
+                book_w = self.order_book.minimumWidth() + self.ui.content_layout.spacing()
+                if self._book_enabled and self.order_book.isHidden():
+                    content_with_book = QSize(
+                        max(content.width(), chart.width() + book_w + horizontal),
+                        content.height() + max(0, self.order_book.minimumHeight() - chart.height()),
+                    )
+                    content_without_book = QSize(content)
+                elif not self.order_book.isHidden():
+                    content_with_book = QSize(content)
+                    non_book_w = max(
+                        extra_w,
+                        self.title_row.minimumSizeHint().width() + horizontal if not self.title_row.isHidden() else 0,
+                        self.ui.toolbar.minimumSizeHint().width() + horizontal,
+                        self.chart.minimumWidth() + horizontal,
+                    )
+                    content_without_book = QSize(
+                        non_book_w,
+                        content.height() - max(0, self.order_book.minimumHeight() - self.chart.minimumHeight()),
+                    )
+                else:
+                    content_with_book = QSize(content)
+                    content_without_book = QSize(content)
+                base_min = base_min.expandedTo(content_without_book)
+                minimum = minimum.expandedTo(content_with_book)
         if self.display_mode == "popup":
             # Cap popup size at ~2x its no-order-book minimum dimensions.
             popup_cap = QSize(base_min.width() * 2, base_min.height() * 2)
@@ -330,7 +394,7 @@ class HistoryDialog(QDialog):
 
     def set_status(self, text):
         self._status_text = text
-        self.status.setVisible(bool(text))
+        self.status.setVisible(bool(text) and not self._overview_mode)
         self._elide_labels()
 
     def _elide_labels(self):
@@ -400,6 +464,7 @@ class HistoryDialog(QDialog):
             painter.drawRoundedRect(self.rect(), 10, 10)
 
     def _set_navigation_icons(self):
+        self.overview_button.setIcon(market_overview_icon(self.devicePixelRatioF(), self.palette()))
         self.pin_button.setIcon(pin_icon(self.devicePixelRatioF(), self.palette()))
         for name, direction in (("previous", -1), ("next", 1)):
             getattr(self.ui, f"btn_{name}").setIcon(navigation_arrow_icon(direction, self.devicePixelRatioF(), self.palette()))
@@ -411,6 +476,8 @@ class HistoryDialog(QDialog):
         if event.type() in {QEvent.FontChange, QEvent.DevicePixelRatioChange} and hasattr(self, "chart"):
             self._sync_fixed_row_heights()
             self._sync_readout_height()
+            if self._overview_mode:
+                self.update_size_limits()
 
     def moveEvent(self, event):
         super().moveEvent(event)
@@ -581,13 +648,19 @@ class HistoryDialog(QDialog):
                 if not self.pin_button.isChecked():
                     self.close()
                     return True
-            elif event.button() == Qt.LeftButton and not isinstance(self.childAt(point), QAbstractButton):
+            elif event.button() == Qt.LeftButton:
+                over_button = isinstance(self.childAt(point), QAbstractButton)
                 if kind == QEvent.MouseButtonPress:
-                    self._start_gesture(position)
-                else:
+                    self._last_press_on_button = over_button
+                    if not over_button:
+                        self._start_gesture(position)
+                        return True
+                elif not over_button and not self._last_press_on_button:
                     self.hide_quotes_requested.emit()
                     self.close()
-                return True
+                    return True
+                else:
+                    return False
             return False
         if not inside or obj is self:
             return False
@@ -685,14 +758,25 @@ class HistoryController(QObject):
         if surface == "taskbar":
             self._taskbar_position = QPoint(global_pos if global_pos is not None else QCursor.pos())
 
+    def _sync_dialog_title(self):
+        if not self.dialog:
+            return
+        if self.dialog.overview_mode:
+            self.dialog.set_title("大盘总览")
+        elif self.instrument:
+            self.dialog.set_title(f"{self.instrument.get('name') or self.instrument.get('code')} · 行情图表")
+
     def _open(self, instrument):
         if self.dialog is None or (self.dialog.display_mode == "window" and not self.dialog.isVisible()):
             previous = self.dialog
             self.dialog = self._create_dialog("popup")
             if previous:
                 previous.deleteLater()
+        elif self.dialog.overview_mode:
+            self.dialog.set_overview_mode(False)
+            self.window.quotes.sync_market_overview(False)
         self.instrument = dict(instrument)
-        self.dialog.set_title(f"{instrument.get('name') or instrument.get('code')} · 行情图表")
+        self._sync_dialog_title()
         self._apply_theme()
         self._apply_chart_options()
         self._show()
@@ -708,6 +792,7 @@ class HistoryController(QObject):
         dialog.size_changed.connect(self._save_size)
         dialog.options_changed.connect(lambda changes: self.window.set_view_options(**changes))
         dialog.instrument_changed.connect(self._navigate)
+        dialog.overview_toggled.connect(self._overview_toggled)
         return dialog
 
     def _navigate(self, direction):
@@ -733,7 +818,18 @@ class HistoryController(QObject):
         self._apply_chart_options()
         self.reload()
 
+    def needs_market_overview(self) -> bool:
+        return bool(
+            self.window.widget_visible
+            and self.dialog is not None
+            and self.dialog.isVisible()
+            and not self.dialog.isMinimized()
+            and self.dialog.overview_mode
+        )
+
     def needs_market_breadth(self) -> bool:
+        if self.needs_market_overview():
+            return True
         return bool(
             self.window.widget_visible
             and self.dialog is not None
@@ -744,31 +840,53 @@ class HistoryController(QObject):
             and is_cn_index(self.instrument)
         )
 
+    def _overview_toggled(self, enabled):
+        if not self.dialog:
+            return
+        self._sync_dialog_title()
+        self.window.quotes.sync_market_overview(self.needs_market_overview())
+        self.window.quotes.sync_market_breadth(self.needs_market_breadth())
+        if enabled:
+            self._update_details()
+            self._start_next_background()
+            overview_quotes = self.window.quotes.market_overview_quotes()
+            if (len(overview_quotes) < len(MARKET_OVERVIEW_QUOTES)
+                    or self.window.quotes.market_breadth() is None):
+                self.window.quotes.refresh()
+        else:
+            self._apply_chart_options()
+            self.reload()
+
     def _pop_out(self):
         if not self.dialog or self.dialog.display_mode != "popup":
             return
         previous = self.dialog
+        was_overview = previous.overview_mode
         previous.save_size()
         # Separate native handles prevent queued Popup close/resize events from
         # affecting the detached window. Keep request generation and series.
         previous.dismissed.disconnect(self._closed)
         self.dialog = self._create_dialog("window")
         self.dialog.set_view(previous.view)
-        self.dialog.set_title(previous.windowTitle())
+        self._sync_dialog_title()
         self.dialog.set_status(previous._status_text)
         previous.close()
         previous.deleteLater()
+        self.window.quotes.sync_market_overview(False)
         self._apply_theme()
         self._apply_chart_options()
         self._show()
         series = self._series_for(self.instrument, self.dialog.view)
         if series.loaded_day is not None:
             self._render(series, self.dialog.view)
+        elif was_overview:
+            self.reload()
         self._start_next_background()
 
     def _show(self):
         self._place_floating(restore=not self.dialog.isVisible())
         self.dialog.show()
+        self.window.quotes.sync_market_overview(self.needs_market_overview())
         self.window.quotes.sync_market_breadth(self.needs_market_breadth())
         self.window.quotes.set_detail_instrument(self.instrument if self.dialog.display_mode == "window" else None)
         self._update_details()
@@ -824,6 +942,7 @@ class HistoryController(QObject):
         self.dialog.chart.down_color = self.window.down_color
         self.dialog.chart.neutral_color = self.window.neutral_color if floating else None
         self.dialog.order_book.neutral_color = self.window.neutral_color if floating else None
+        self.dialog.market_overview.neutral_color = self.window.neutral_color if floating else None
         self.dialog.chart._emit_readout()
         self.dialog.update()
         self._update_details()
@@ -835,6 +954,7 @@ class HistoryController(QObject):
             if self.dialog:
                 self.dialog.close()
         else:
+            self.window.quotes.sync_market_overview(self.needs_market_overview())
             self.window.quotes.sync_market_breadth(self.needs_market_breadth())
             self._apply_theme()
             self._apply_chart_options()
@@ -848,6 +968,24 @@ class HistoryController(QObject):
 
     def _update_details(self):
         if not self.dialog or not self.instrument:
+            return
+        if self.dialog.overview_mode:
+            breadth = self.window.quotes.market_breadth()
+            self.dialog.order_book.set_quote(
+                self.instrument, None, self.window.unit_mode,
+                self.window.up_color, self.window.down_color,
+                market_breadth=breadth, force_breadth=True,
+            )
+            overview_quotes = self.window.quotes.market_overview_quotes()
+            turnover_bars = {
+                key: self._series[series_key].result.bars
+                for key, inst in MARKET_TURNOVER_INDICES
+                if (series_key := self._key(inst, "intraday")) in self._series
+            }
+            self.dialog.market_overview.set_overview(
+                overview_quotes, turnover_bars, self.window.unit_mode,
+                self.window.up_color, self.window.down_color,
+            )
             return
         if (self.dialog.display_mode == "window" and self.dialog.isVisible()
                 and not any((entry.get("market"), entry.get("code")) == (self.instrument.get("market"), self.instrument.get("code"))
@@ -877,6 +1015,7 @@ class HistoryController(QObject):
         self._generation += 1
         self._pending = None
         self.window.quotes.set_detail_instrument(None)
+        self.window.quotes.sync_market_overview(False)
         self.window.quotes.sync_market_breadth(False)
 
     def invalidate_quotes(self):
@@ -906,6 +1045,9 @@ class HistoryController(QObject):
         if self.dialog:
             self.dialog.close()
             self.dialog.chart.set_data((), self.dialog.view, self.instrument or {})
+            self.dialog.market_overview.set_overview(
+                {}, {}, self.window.unit_mode, self.window.up_color, self.window.down_color
+            )
 
     @staticmethod
     def _key(instrument, view):
@@ -931,11 +1073,12 @@ class HistoryController(QObject):
                 series.update_quote(quote)
         if self.dialog and self.dialog.isVisible() and self.instrument:
             self._update_details()
-            series = self._series_for(self.instrument, self.dialog.view)
-            if series.loaded_day is not None:
-                self._render(series, self.dialog.view)
-            if not self._busy and series.needs_download(self.cache.clock()):
-                self.reload()
+            if not self.dialog.overview_mode:
+                series = self._series_for(self.instrument, self.dialog.view)
+                if series.loaded_day is not None:
+                    self._render(series, self.dialog.view)
+                if not self._busy and series.needs_download(self.cache.clock()):
+                    self.reload()
             self._start_next_background()
         self.window.quotes.reproject()
         self.schedule_history_refresh()
@@ -971,9 +1114,25 @@ class HistoryController(QObject):
                               for instrument in self.window.quotes.history_instruments(view).values()}
         self._start_next_background()
 
+    def _turnover_baseline_needed(self, instrument, now) -> bool:
+        day = history_day(instrument, now)
+        series = self._series.get(self._key(instrument, "intraday"))
+        if series is None:
+            return True
+        if series.loaded_day == day and series.result.bars:
+            return False
+        return now.timestamp() >= series.retry_after
+
     def _start_next_background(self):
         if self._busy:
             return
+        if self.needs_market_overview():
+            now = self.cache.clock()
+            for _key, instrument in MARKET_TURNOVER_INDICES:
+                if self._turnover_baseline_needed(instrument, now):
+                    self._start((self._generation, dict(instrument), "intraday",
+                                 history_day(instrument, now), False))
+                    return
         if (self.dialog and self.dialog.isVisible() and self.dialog.display_mode == "window"
                 and self.instrument and self.instrument.get("market") in {"sh", "sz", "bj"}
                 and self.instrument.get("type") not in {"期", "指"}):
@@ -997,7 +1156,8 @@ class HistoryController(QObject):
                 return
 
     def reload(self):
-        if not self.dialog or not self.dialog.isVisible() or not self.instrument or not self.window.view_options.chart_enabled:
+        if (not self.dialog or not self.dialog.isVisible() or not self.instrument
+                or not self.window.view_options.chart_enabled or self.dialog.overview_mode):
             return
         self._generation += 1
         view = self.dialog.view
@@ -1049,12 +1209,14 @@ class HistoryController(QObject):
             if self.dialog and self.dialog.isVisible():
                 self._update_details()
             if (generation == self._generation and self.dialog and self.dialog.isVisible() and self.instrument
+                    and not self.dialog.overview_mode
                     and self._key(instrument, view) == self._key(self.instrument, self.dialog.view)):
                 self._render(series, self.dialog.view)
             self.window.quotes.reproject()
         if self._pending is not None:
             pending, self._pending = self._pending, None
-            if pending[0] == self._generation and self.dialog and self.dialog.isVisible():
+            if (pending[0] == self._generation and self.dialog
+                    and self.dialog.isVisible() and not self.dialog.overview_mode):
                 # The completed worker may have loaded the same minute family
                 # while the user switched from intraday to five-day view.
                 self.reload()

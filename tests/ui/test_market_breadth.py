@@ -5,9 +5,11 @@ from datetime import datetime, timedelta, timezone
 import tempfile
 from unittest.mock import Mock, patch
 
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QColor, QPalette
+from PySide6.QtTest import QTest
 
-from stockwidget.core.quote_presentation import MARKET_BREADTH_BUCKETS
+from stockwidget.core.quote_presentation import MARKET_BREADTH_BUCKETS, MARKET_OVERVIEW_INDICES, MARKET_OVERVIEW_QUOTES
 from stockwidget.data.bar_cache import BarCache
 from stockwidget.data.bars import Bar, BarResult
 from stockwidget.data.quotes import MARKET_BREADTH_KEY, _new_entry, parse_sina_market_breadth
@@ -93,7 +95,7 @@ class MarketBreadthTests(HistoryTestCase):
         self.assertFalse(popup.order_book.isHidden())
         self.assertTrue(popup.order_book.breadth_mode)
         self.assertIsNone(popup.order_book.breadth_summary)
-        self.assertEqual(popup.order_book.breadth_summary_text, "涨—/平—/跌—")
+        self.assertEqual(popup.order_book.breadth_summary_text, "涨— 平— 跌—")
         self.assertEqual(
             [row[0] for row in popup.order_book.breadth_rows],
             [label for label, _ in MARKET_BREADTH_BUCKETS],
@@ -111,7 +113,7 @@ class MarketBreadthTests(HistoryTestCase):
         self.app.processEvents()
         self.assertNotIn(MARKET_BREADTH_KEY, window.quotes._latest_quotes)
         self.assertEqual(popup.order_book.breadth_summary, (4497, 165, 985))
-        self.assertEqual(popup.order_book.breadth_summary_text, "涨4497/平165/跌985")
+        self.assertEqual(popup.order_book.breadth_summary_text, "涨4497 平165 跌985")
         self.assertEqual(
             [int(row[1]) for row in popup.order_book.breadth_rows],
             list(SAMPLE_BREADTH["buckets"]),
@@ -335,3 +337,307 @@ class MarketBreadthTests(HistoryTestCase):
         mid_y = round(detached.order_book.height() * 0.5 * book_img.devicePixelRatio())
         edge_color = book_img.pixelColor(0, mid_y)
         self.assertGreater(edge_color.lightness(), 180)
+
+
+class MarketOverviewTests(HistoryTestCase):
+    @staticmethod
+    def _overview_payload(time_str="11:30:00", date="2026-11-25"):
+        specs = {
+            "sh000001": ("上证指数", 3522.59, 3548.37, 3512.66, 352_070_000_000.0),
+            "sz399001": ("深证成指", 10272.19, 10423.60, 10300.01, 410_980_000_000.0),
+            "sz399106": ("深证综指", 1940.08, 1965.43, 1949.22, 410_980_000_000.0),
+            "sh000300": ("沪深300", 3929.84, 3963.82, 3925.57, 212_610_000_000.0),
+            "sh000680": ("科创综指", 1369.21, 1400.63, 1420.13, 119_600_000_000.0),
+            "sz399006": ("创业板指", 2233.18, 2278.99, 2278.99, 204_620_000_000.0),
+            "bj899050": ("北证50", 782.74, 793.60, 782.97, 5_910_000_000.0),
+        }
+        return {
+            key: _new_entry(
+                name, opening, prev, current, max(opening, current), min(opening, current),
+                100000, amt, [0] * 5, [0] * 5, [0] * 5, [0] * 5, date, time_str,
+            )
+            for key, (name, opening, prev, current, amt) in specs.items()
+        }
+
+    @staticmethod
+    def _prev_day_minutes(per_min_by_key):
+        def build(per_min):
+            bars = []
+            for hour, start_m, end_m in ((9, 31, 60), (10, 0, 60), (11, 0, 31), (13, 1, 60), (14, 0, 59)):
+                for minute in range(start_m, end_m):
+                    bars.append(Bar(f"2026-11-24 {hour:02d}:{minute:02d}:00", 100, 100, 100, 100, 10, per_min))
+            bars.append(Bar("2026-11-24 15:00:00", 100, 100, 100, 100, 10, per_min * 2))
+            return tuple(bars)
+        return {key: build(val) for key, val in per_min_by_key.items()}
+
+    def make_stock_only_window(self, **settings):
+        codes = {
+            "sh600000": {"code": "600000", "market": "sh", "type": "沪", "name": "浦发银行"},
+            "sz000001": {"code": "000001", "market": "sz", "type": "深", "name": "平安银行"},
+        }
+        watchlist = {key: {**value, "checked": True} for key, value in codes.items()}
+        dialog, window = self._make_dialog(watchlist=watchlist, codes=codes, **settings)
+        data = {
+            key: _new_entry(
+                value["name"], 10.0, 9.9, 10.1, 10.2, 9.8, 1000, 100000,
+                [0] * 5, [0] * 5, [0] * 5, [0] * 5, "2026-11-25", "11:30:00",
+            )
+            for key, value in codes.items()
+        }
+        window.quotes.accept_result((True, data, None))
+
+        prev_bars = self._prev_day_minutes({
+            "sh000001": 3_500_000_000.0,   # full 8400亿, <=11:30 4200亿
+            "sz399106": 4_500_000_000.0,   # full 10800亿, <=11:30 5400亿
+            "bj899050": 100_000_000.0,     # full 240亿, <=11:30 120亿 -> full 1.94万亿, <=11:30 9720亿
+        })
+        stock_minutes = tuple(
+            Bar((datetime(2026, 11, 25, 9, 31) + timedelta(minutes=i)).isoformat(" "), 10, 10.2, 9.8, 10.1, 10, 1000, 10)
+            for i in range(30)
+        )
+        daily = sample_bars()
+
+        def fake_get(instrument, view, **kwargs):
+            key = f"{instrument.get('market', '')}{instrument.get('code', '')}"
+            if view == "daily":
+                return BarResult(daily, "sina")
+            if key in prev_bars:
+                return BarResult(prev_bars[key], "sina")
+            return BarResult(stock_minutes, "sina")
+
+        window.history.cache = BarCache(self.enterContext(tempfile.TemporaryDirectory()))
+        window.history.cache.get = Mock(side_effect=fake_get)
+        window.history.cache.clock = lambda: datetime(2026, 11, 25, 3, 30, tzinfo=timezone.utc)
+        window.show()
+        self.app.processEvents()
+        return dialog, window, data
+
+    def test_fourth_button_toggles_overview_fetches_six_indices_turnover_and_breadth_and_restores_state(self):
+        _, window, stock_data = self.make_stock_only_window(chart_enabled=True, chart_order_book_enabled=False)
+        history = window.history
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = history.dialog
+
+        # 4th button sits in top-right title_row before pin/pop_out/close.
+        buttons = [
+            popup.ui.title_layout.itemAt(i).widget()
+            for i in range(1, popup.ui.title_layout.count())
+        ]
+        self.assertEqual(buttons, [popup.overview_button, popup.pin_button, popup.pop_out_button, popup.close_button])
+        self.assertEqual(popup.overview_button.accessibleName(), "大盘总览")
+        self.assertFalse(popup.overview_mode)
+        self.assertTrue(popup.market_overview.isHidden())
+
+        # Switch to daily + shrink to small saved size so we also verify full state & preferred-size restoration.
+        popup.set_view("daily")
+        self.wait_ready(window)
+        popup.resize(340, 250)
+        self.app.processEvents()
+        popup.save_size()
+        saved_size = list(window.current_config()["chart_popup_size"])
+        self.assertFalse(popup.ui.ma_row.isHidden())
+        self.assertTrue(popup.order_book.isHidden())
+
+        # Click the 4th button -> enters 大盘总览 mode.
+        window.quotes.refresh.reset_mock()
+        popup.overview_button.click()
+        self.wait_ready(window)
+        self.assertTrue(popup.overview_mode)
+        self.assertTrue(history.needs_market_overview())
+        self.assertTrue(history.needs_market_breadth())
+        self.assertEqual(popup.windowTitle(), "大盘总览")
+        self.assertEqual(popup.title.text(), "大盘总览")
+        self.assertFalse(popup.market_overview.isHidden())
+        self.assertFalse(popup.order_book.isHidden())
+        self.assertTrue(popup.order_book.breadth_mode)
+        self.assertTrue(popup.chart.isHidden())
+        self.assertTrue(popup.ui.toolbar.isHidden())
+        self.assertTrue(popup.ui.ma_row.isHidden())
+        self.assertTrue(popup.ui.chart_readout.isHidden())
+        self.assertFalse(window.current_config()["chart_order_book_enabled"])
+        self.assertEqual(window.current_config()["chart_popup_size"], saved_size)
+        window.quotes.refresh.assert_called_once()
+
+        # Global refresh merges the 7 overview symbols + zdp_updown without altering watchlist.
+        with patch.object(window.quotes, "_fetch_worker") as worker:
+            _REAL_REFRESH(window.quotes)
+            window.quotes._refresh_thread.join(timeout=2)
+            req_codes, _gen, include_breadth = worker.call_args.args
+            self.assertTrue(include_breadth)
+            self.assertTrue(set(MARKET_OVERVIEW_QUOTES).issubset(req_codes))
+            self.assertIn("sh600000", req_codes)
+
+        # Deliver merged live quotes + breadth.
+        overview_quotes = self._overview_payload()
+        window.quotes.accept_result((True, {**stock_data, **overview_quotes, MARKET_BREADTH_KEY: SAMPLE_BREADTH}, None))
+        self.app.processEvents()
+
+        # Non-watchlist indices must not leak into _latest_quotes or main table.
+        self.assertEqual(set(window.quotes._latest_quotes), {"sh600000", "sz000001"})
+        self.assertEqual(window.model.rowCount(), 2)
+
+        # Verify all 6 index cards in exact order.
+        cards = popup.market_overview.index_cards
+        self.assertEqual([key for key, _ in cards], [key for key, _ in MARKET_OVERVIEW_INDICES])
+        self.assertEqual(
+            [item["name"] for _, item in cards],
+            ["上证指数", "深证成指", "沪深300", "科创综指", "创业板指", "北证50"],
+        )
+        by_key = dict(cards)
+        self.assertEqual(by_key["sh000001"]["price"], "3512.66")
+        self.assertEqual(by_key["sh000001"]["change"], "-35.71")
+        self.assertEqual(by_key["sh000001"]["change_pct"], "-1.01%")
+        self.assertEqual(by_key["sh000001"]["role"], "down")
+        self.assertEqual(by_key["sh000680"]["role"], "up")
+        self.assertEqual(by_key["sz399006"]["role"], "neutral")
+
+        # Verify full-market turnover values (today=7689.60亿, yesterday=1.94万亿, delta=7689.6-9720=-2030.40亿).
+        items = dict((cap, (val, role)) for cap, val, role in popup.market_overview.turnover_items)
+        self.assertEqual(items["今日实时"], ("7689.60亿", ""))
+        self.assertEqual(items["昨日总额"], ("1.94万亿", ""))
+        self.assertEqual(items["较上日此时"], ("-2030.40亿", "down"))
+
+        # Verify breadth header uses space separator (no "/").
+        self.assertEqual(popup.order_book.breadth_summary_text, "涨4497 平165 跌985")
+        self.assertNotIn("/", popup.order_book.breadth_summary_text)
+
+        # Subsequent quote tick does not re-download already-loaded turnover baseline bars.
+        calls_after_load = history.cache.get.call_count
+        window.quotes.accept_result((True, {**stock_data, **self._overview_payload("11:30:05"), MARKET_BREADTH_KEY: SAMPLE_BREADTH}, None))
+        self.wait_ready(window)
+        self.assertEqual(history.cache.get.call_count, calls_after_load)
+
+        # Unit mode switch updates turnover formatting without refetch.
+        window.set_unit_mode("en")
+        self.app.processEvents()
+        items_en = dict((cap, val) for cap, val, _ in popup.market_overview.turnover_items)
+        self.assertEqual(items_en["今日实时"], "768.96B")
+        self.assertEqual(items_en["昨日总额"], "1.94T")
+        self.assertEqual(items_en["较上日此时"], "-203.04B")
+        window.set_unit_mode("auto")
+        self.app.processEvents()
+
+        # Toggling overview OFF restores daily chart, MA row, hidden order book, original title & saved size.
+        popup.overview_button.click()
+        self.wait_ready(window)
+        self.assertFalse(popup.overview_mode)
+        self.assertFalse(history.needs_market_overview())
+        self.assertFalse(history.needs_market_breadth())
+        self.assertEqual(popup.windowTitle(), "浦发银行 · 行情图表")
+        self.assertTrue(popup.market_overview.isHidden())
+        self.assertFalse(popup.chart.isHidden())
+        self.assertFalse(popup.ui.toolbar.isHidden())
+        self.assertFalse(popup.ui.ma_row.isHidden())
+        self.assertFalse(popup.ui.chart_readout.isHidden())
+        self.assertTrue(popup.order_book.isHidden())
+        self.assertEqual(popup.ui.cb_order_book.text(), "五档")
+        self.assertEqual([popup.width(), popup.height()], saved_size)
+        self.assertEqual(window.current_config()["chart_popup_size"], saved_size)
+        self.assertEqual(window.quotes.market_overview_quotes(), {})
+        self.assertIsNone(window.quotes.market_breadth())
+
+    def test_overview_layout_rendering_navigation_popout_and_cleanup(self):
+        _, window, stock_data = self.make_stock_only_window(chart_enabled=True, chart_order_book_enabled=False)
+        history = window.history
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = history.dialog
+
+        popup.overview_button.click()
+        self.wait_ready(window)
+        window.quotes.accept_result((True, {**stock_data, **self._overview_payload(), MARKET_BREADTH_KEY: SAMPLE_BREADTH}, None))
+        self.app.processEvents()
+
+        # Minimum size layout fits all 6 non-overlapping index cards, turnover box, and right breadth cleanly.
+        for mode in ("dark", "light"):
+            with self.subTest(color_mode=mode):
+                window.set_view_options(color_mode=mode)
+                popup.resize(1, 1)
+                self.app.processEvents()
+                overview = popup.market_overview
+                book = popup.order_book
+                self.assertTrue(popup.rect().contains(overview.geometry()))
+                self.assertTrue(popup.rect().contains(book.geometry()))
+                self.assertLess(overview.geometry().right(), book.geometry().left())
+                cards, turnover_rect = overview._layout_rects()
+                self.assertEqual(len(cards), 6)
+                for rect in (*cards, turnover_rect):
+                    self.assertTrue(overview.rect().contains(rect.toAlignedRect()))
+                    self.assertGreater(rect.width(), 80)
+                    self.assertGreater(rect.height(), 40)
+                for i, first in enumerate(cards):
+                    for second in cards[i + 1:]:
+                        self.assertFalse(first.intersects(second))
+                    self.assertLess(first.bottom(), turnover_rect.top())
+                self.assertFalse(popup.grab().isNull())
+
+        # Dragging on market_overview moves popup; double-clicking hides both windows.
+        bounds = popup.screen().availableGeometry()
+        popup.move(bounds.topLeft())
+        start = popup.market_overview.mapTo(popup, popup.market_overview.rect().center())
+        original = popup.geometry()
+        offset = QPoint(30, 20)
+        handle = popup.windowHandle()
+        QTest.mousePress(handle, Qt.LeftButton, pos=start)
+        QTest.mouseMove(handle, start + offset)
+        QTest.mouseRelease(handle, Qt.LeftButton, pos=start)
+        self.assertEqual(popup.geometry(), original.translated(offset))
+
+        # Dragging on overview_button must not move popup; double-clicking it must not hide windows.
+        for pinned in (False, True):
+            with self.subTest(overview_button_pinned=pinned):
+                popup.pin_button.setChecked(pinned)
+                popup.set_overview_mode(False)
+                self.app.processEvents()
+                original = popup.geometry()
+                start = popup.overview_button.mapTo(popup, popup.overview_button.rect().center())
+                finish = popup.chart.mapTo(popup, popup.chart.rect().center())
+                QTest.mousePress(handle, Qt.LeftButton, pos=start)
+                QTest.mouseMove(handle, finish)
+                QTest.mouseRelease(handle, Qt.LeftButton, pos=finish)
+                self.assertEqual(popup.geometry(), original)
+                QTest.mouseDClick(handle, Qt.LeftButton, pos=start)
+                self.app.processEvents()
+                self.assertTrue(popup.isVisible())
+                self.assertTrue(window.widget_visible)
+                self.assertEqual(popup.pos(), original.topLeft())
+        popup.set_overview_mode(True)
+        self.app.processEvents()
+
+        # Clicking another watchlist row exits overview and shows that row's chart.
+        history.open_row("float", 1)
+        self.wait_ready(window)
+        self.assertFalse(popup.overview_mode)
+        self.assertFalse(popup.overview_button.isChecked())
+        self.assertEqual(popup.windowTitle(), "平安银行 · 行情图表")
+
+        # Popping out while in overview opens detached window in normal chart mode.
+        popup.overview_button.click()
+        self.wait_ready(window)
+        self.assertTrue(popup.overview_mode)
+        popup.pop_out_button.click()
+        self.wait_ready(window)
+        detached = history.dialog
+        self.assertEqual(detached.display_mode, "window")
+        self.assertFalse(detached.overview_mode)
+        self.assertEqual(detached.windowTitle(), "平安银行 · 行情图表")
+        self.assertFalse(history.needs_market_overview())
+        detached.close()
+
+        # Reopen, enter overview, then clear_cache discards overview state and closes popup.
+        history.open_row("float", 0)
+        self.wait_ready(window)
+        popup = history.dialog
+        popup.overview_button.click()
+        self.wait_ready(window)
+        window.quotes.accept_result((True, {**stock_data, **self._overview_payload(), MARKET_BREADTH_KEY: SAMPLE_BREADTH}, None))
+        self.assertTrue(history.clear_cache())
+        self.assertFalse(popup.isVisible())
+        self.assertEqual(window.quotes.market_overview_quotes(), {})
+        self.assertIsNone(window.quotes.market_breadth())
+
+        # Late quote result after closing must not repopulate overview quotes or breadth.
+        window.quotes.accept_result((True, {**stock_data, **self._overview_payload(), MARKET_BREADTH_KEY: SAMPLE_BREADTH}, None))
+        self.assertEqual(window.quotes.market_overview_quotes(), {})
+        self.assertIsNone(window.quotes.market_breadth())

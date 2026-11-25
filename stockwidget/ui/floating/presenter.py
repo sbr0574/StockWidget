@@ -11,6 +11,7 @@ import threading
 from PySide6.QtCore import QObject, Qt, QTimer, Signal
 
 from stockwidget.core.quote_presentation import (
+    MARKET_OVERVIEW_QUOTES,
     NAME_METRIC_ID,
     MiniChartCell,
     amplitude_limits,
@@ -72,6 +73,7 @@ class QuotePresenter(QObject):
         self._detail_values = {}
         self._fundamentals = {}
         self._market_breadth = None
+        self._overview_quotes = {}
         self.page_timers = {}
         for surface in ("float", "taskbar"):
             timer = QTimer(self)
@@ -177,6 +179,7 @@ class QuotePresenter(QObject):
         self._detail_values.clear()
         self._fundamentals.clear()
         self._market_breadth = None
+        self._overview_quotes.clear()
 
     def market_breadth(self):
         return dict(self._market_breadth) if self._market_breadth is not None else None
@@ -188,6 +191,34 @@ class QuotePresenter(QObject):
     def sync_market_breadth(self, active: bool):
         if not active:
             self._market_breadth = None
+
+    def _needs_market_overview(self) -> bool:
+        history = getattr(self.window, "history", None)
+        return bool(history is not None and history.needs_market_overview())
+
+    def sync_market_overview(self, active: bool):
+        if not active:
+            self._overview_quotes.clear()
+
+    def market_overview_quotes(self) -> dict:
+        """Return latest accepted quotes for the overview indices without leaking them into watchlist."""
+        merged = {}
+        for key in MARKET_OVERVIEW_QUOTES:
+            candidate = self._overview_quotes.get(key)
+            watched = self._latest_quotes.get(key)
+            if candidate is None:
+                if watched is not None:
+                    merged[key] = dict(watched)
+            elif watched is None:
+                merged[key] = dict(candidate)
+            else:
+                cand_time = quote_timestamp(candidate)
+                watch_time = quote_timestamp(watched)
+                if watch_time is not None and (cand_time is None or watch_time > cand_time):
+                    merged[key] = dict(watched)
+                else:
+                    merged[key] = dict(candidate)
+        return merged
 
     def set_detail_instrument(self, instrument):
         """One active detached chart; selection/close invalidates late results."""
@@ -427,9 +458,12 @@ class QuotePresenter(QObject):
         if self._refresh_thread is not None and self._refresh_thread.is_alive():
             return
         include_breadth = self._needs_market_breadth()
+        include_overview = self._needs_market_overview()
+        request_codes = ({**MARKET_OVERVIEW_QUOTES, **checked_codes}
+                         if include_overview else checked_codes)
         self._refresh_thread = threading.Thread(
             target=self._fetch_worker,
-            args=(checked_codes, self._quote_generation, include_breadth),
+            args=(request_codes, self._quote_generation, include_breadth),
             daemon=True,
         )
         self._refresh_thread.start()
@@ -483,6 +517,10 @@ class QuotePresenter(QObject):
         if len(payload) > 3 and payload[3] != self._quote_generation:
             return
         raw_breadth = data.get(MARKET_BREADTH_KEY) if ok and isinstance(data, dict) else None
+        raw_overview = (
+            {code: data[code] for code in MARKET_OVERVIEW_QUOTES if code in data}
+            if ok and isinstance(data, dict) else {}
+        )
         checked_codes = self.window.checked_codes
         if not checked_codes:
             ok, data = True, {}
@@ -522,6 +560,16 @@ class QuotePresenter(QObject):
             self._market_breadth = None
         elif isinstance(raw_breadth, dict) and _is_newer_breadth(self._market_breadth, raw_breadth):
             self._market_breadth = dict(raw_breadth)
+        if not self._needs_market_overview():
+            self._overview_quotes.clear()
+        else:
+            for code, quote in raw_overview.items():
+                old = self._overview_quotes.get(code)
+                old_time = quote_timestamp(old) if old is not None else None
+                new_time = quote_timestamp(quote)
+                if old_time is not None and (new_time is None or new_time < old_time):
+                    continue
+                self._overview_quotes[code] = dict(quote)
         self.quotes_updated.emit()
         self._refresh_details()
 

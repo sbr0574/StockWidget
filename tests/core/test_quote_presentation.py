@@ -5,6 +5,9 @@ import unittest
 
 from stockwidget.core.quote_presentation import (
     format_value,
+    format_signed_value,
+    format_overview_index,
+    compute_market_turnover,
     should_use_english_units,
     BidAskCell,
     QuoteDisplayOptions,
@@ -20,6 +23,7 @@ from stockwidget.core.quote_presentation import (
     normalize_visible_metrics,
     visible_metrics_from_config,
 )
+from stockwidget.data.bars import Bar
 
 
 class FormatterTests(unittest.TestCase):
@@ -265,3 +269,142 @@ class MetricLayoutTests(unittest.TestCase):
         self.assertTrue(flags["vol_visible"])
         self.assertTrue(flags["price_visible"])
         self.assertFalse(flags["amount_visible"])
+
+
+class MarketOverviewPresentationTests(unittest.TestCase):
+    def test_format_signed_value_handles_signs_zero_units_and_invalid(self):
+        cases = (
+            (350_000_000_000, True, "+3500.00亿"),
+            (-361_356_000_000, True, "-3613.56亿"),
+            (1_250_000_000_000, True, "+1.25万亿"),
+            (-1_250_000_000_000, False, "-1.25T"),
+            (250_000_000_000, False, "+250.00B"),
+            (0.0, True, "0"),
+            (0.4, True, "0"),
+            (float("nan"), True, "—"),
+            (float("inf"), True, "—"),
+        )
+        for value, unit_cn, expected in cases:
+            with self.subTest(value=value, unit_cn=unit_cn):
+                self.assertEqual(format_signed_value(value, unit_cn=unit_cn), expected)
+
+    def test_format_overview_index_handles_directions_preopen_and_missing(self):
+        inst = {"code": "000001", "market": "sh", "type": "指", "name": "上证指数"}
+        up = format_overview_index(inst, {"current_price": 3550.5, "prev_close": 3500.0})
+        self.assertEqual(up, {"name": "上证指数", "price": "3550.50", "change": "+50.50", "change_pct": "+1.44%", "role": COLOR_ROLE_UP})
+
+        down = format_overview_index(inst, {"current_price": 3450.0, "prev_close": 3500.0})
+        self.assertEqual(down, {"name": "上证指数", "price": "3450.00", "change": "-50.00", "change_pct": "-1.43%", "role": COLOR_ROLE_DOWN})
+
+        preopen = format_overview_index(inst, {"current_price": 0.0, "prev_close": 3500.0})
+        self.assertEqual(preopen, {"name": "上证指数", "price": "3500.00", "change": "+0.00", "change_pct": "+0.00%", "role": COLOR_ROLE_NEUTRAL})
+
+        no_prev = format_overview_index(inst, {"current_price": 3500.0, "prev_close": 0.0})
+        self.assertEqual(no_prev, {"name": "上证指数", "price": "3500.00", "change": "—", "change_pct": "—", "role": COLOR_ROLE_NEUTRAL})
+
+        missing = format_overview_index(inst, None)
+        self.assertEqual(missing, {"name": "上证指数", "price": "—", "change": "—", "change_pct": "—", "role": COLOR_ROLE_TEXT})
+
+    @staticmethod
+    def _sample_prev_bars(day: str, per_minute: float):
+        bars = []
+        for hour, start_m, end_m in ((9, 31, 60), (10, 0, 60), (11, 0, 31), (13, 1, 60), (14, 0, 59)):
+            for minute in range(start_m, end_m):
+                bars.append(Bar(f"{day} {hour:02d}:{minute:02d}:00", 100, 100, 100, 100, 10, per_minute))
+        # Closing auction bar at 15:00 (no 14:59 bar, matching Sina's domestic index feed).
+        bars.append(Bar(f"{day} 15:00:00", 100, 100, 100, 100, 10, per_minute * 2))
+        return tuple(bars)
+
+    def test_compute_market_turnover_intraday_lunch_auction_postclose_and_preopen(self):
+        # 239 bars: 120 morning + 118 afternoon (13:01..14:58) + 1 closing auction (2x per_minute) = 240 units.
+        bars = {
+            "sh000001": self._sample_prev_bars("2026-11-24", 3_000_000_000.0),   # 7200亿 full
+            "sz399106": self._sample_prev_bars("2026-11-24", 4_000_000_000.0),   # 9600亿 full
+            "bj899050": self._sample_prev_bars("2026-11-24", 100_000_000.0),     # 240亿 full -> total 17040亿
+        }
+        def quotes_at(time_str, amts, date="2026-11-25"):
+            return {
+                key: {"date": date, "time": time_str, "deals_amt": amt}
+                for key, amt in zip(("sh000001", "sz399106", "bj899050"), amts)
+            }
+
+        # Lunch break (11:30:55): exact morning 120 bars -> 120 * 7.1B = 852B = 8520亿
+        lunch = compute_market_turnover(quotes_at("11:30:55", (350e9, 410e9, 6e9)), bars)
+        self.assertAlmostEqual(lunch["today"], 766e9)
+        self.assertAlmostEqual(lunch["yesterday"], 240 * 7.1e9)
+        self.assertAlmostEqual(lunch["delta"], 766e9 - 120 * 7.1e9)
+
+        # Sub-minute interpolation (10:00:30): 30 completed bars (09:31..10:00) + 0.5 of 10:01 = 30.5 bars
+        mid = compute_market_turnover(quotes_at("10:00:30", (100e9, 130e9, 3.5e9)), bars)
+        self.assertAlmostEqual(mid["delta"], 233.5e9 - 30.5 * 7.1e9)
+
+        # Closing auction (14:59:30): frozen at 14:58 (238 bars), does not interpolate 15:00 closing burst
+        auction = compute_market_turnover(quotes_at("14:59:30", (700e9, 950e9, 24e9)), bars)
+        self.assertAlmostEqual(auction["delta"], 1674e9 - 238 * 7.1e9)
+
+        # Post-close (15:00:05): full previous day comparison (today - yesterday)
+        closed = compute_market_turnover(quotes_at("15:00:05", (800e9, 1000e9, 30e9)), bars)
+        self.assertAlmostEqual(closed["delta"], 1830e9 - 240 * 7.1e9)
+
+        # Pre-open (09:25:00): today & yesterday valid, delta is None until 09:30 continuous open
+        preopen = compute_market_turnover(quotes_at("09:25:00", (0.0, 0.0, 0.0)), bars)
+        self.assertEqual(preopen["today"], 0.0)
+        self.assertAlmostEqual(preopen["yesterday"], 240 * 7.1e9)
+        self.assertIsNone(preopen["delta"])
+
+        # Per-market independent clocks (e.g. SH at 10:00:00, SZ at 09:59:00, BJ at 09:58:00)
+        staggered = compute_market_turnover({
+            "sh000001": {"date": "2026-11-25", "time": "10:00:00", "deals_amt": 100e9},
+            "sz399106": {"date": "2026-11-25", "time": "09:59:00", "deals_amt": 120e9},
+            "bj899050": {"date": "2026-11-25", "time": "09:58:00", "deals_amt": 3e9},
+        }, bars)
+        expected_prev = 30 * 3e9 + 29 * 4e9 + 28 * 0.1e9
+        self.assertAlmostEqual(staggered["delta"], 223e9 - expected_prev)
+
+    def test_compute_market_turnover_rejects_partial_or_mismatched_dates(self):
+        bars = {
+            "sh000001": self._sample_prev_bars("2026-11-24", 1e9),
+            "sz399106": self._sample_prev_bars("2026-11-24", 1e9),
+            "bj899050": self._sample_prev_bars("2026-11-24", 1e9),
+        }
+        # Missing BJ quote -> never substitute partial sum
+        partial = compute_market_turnover({
+            "sh000001": {"date": "2026-11-25", "time": "11:30:00", "deals_amt": 300e9},
+            "sz399106": {"date": "2026-11-25", "time": "11:30:00", "deals_amt": 400e9},
+        }, bars)
+        self.assertIsNone(partial["today"])
+        self.assertIsNone(partial["yesterday"])
+        self.assertIsNone(partial["delta"])
+
+        # Mismatched exchange dates during morning reset -> reject live sum
+        mismatch = compute_market_turnover({
+            "sh000001": {"date": "2026-11-25", "time": "09:16:00", "deals_amt": 0.0},
+            "sz399106": {"date": "2026-11-25", "time": "09:16:00", "deals_amt": 0.0},
+            "bj899050": {"date": "2026-11-24", "time": "15:00:00", "deals_amt": 12e9},
+        }, bars)
+        self.assertIsNone(mismatch["today"])
+        self.assertIsNone(mismatch["delta"])
+
+        # Missing history bars -> today still valid, yesterday & delta stay None
+        live_only = compute_market_turnover({
+            "sh000001": {"date": "2026-11-25", "time": "11:30:00", "deals_amt": 300e9},
+            "sz399106": {"date": "2026-11-25", "time": "11:30:00", "deals_amt": 400e9},
+            "bj899050": {"date": "2026-11-25", "time": "11:30:00", "deals_amt": 6e9},
+        }, {"sh000001": bars["sh000001"]})
+        self.assertAlmostEqual(live_only["today"], 706e9)
+        self.assertIsNone(live_only["yesterday"])
+        self.assertIsNone(live_only["delta"])
+
+        # Bar with missing amount invalidates that previous date
+        broken_bars = {
+            **bars,
+            "bj899050": (*bars["bj899050"][:-1], Bar("2026-11-24 15:00:00", 100, 100, 100, 100, 10, None)),
+        }
+        broken = compute_market_turnover({
+            "sh000001": {"date": "2026-11-25", "time": "11:30:00", "deals_amt": 300e9},
+            "sz399106": {"date": "2026-11-25", "time": "11:30:00", "deals_amt": 400e9},
+            "bj899050": {"date": "2026-11-25", "time": "11:30:00", "deals_amt": 6e9},
+        }, broken_bars)
+        self.assertAlmostEqual(broken["today"], 706e9)
+        self.assertIsNone(broken["yesterday"])
+        self.assertIsNone(broken["delta"])
