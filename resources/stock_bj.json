@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-24",
+  "last_update": "2026-11-25",
   "codes": {
     "bj920000": {
       "code": "920000",
@@ -635,10 +635,10 @@
       "code": "920093",
       "market": "bj",
       "type": "京",
-      "name": "信胜科技",
+      "name": "XD信胜科",
       "name_en": "XINSHENG",
-      "py": "xinshengkeji",
-      "abbr": "xskj"
+      "py": "xdxinshengke",
+      "abbr": "xdxsk"
     },
     "bj920096": {
       "code": "920096",

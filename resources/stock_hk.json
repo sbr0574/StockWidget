@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-24",
+  "last_update": "2026-11-25",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -8385,7 +8385,7 @@
       "market": "hk",
       "type": "港",
       "name": "乐动机器人",
-      "name_en": "LDROBOT",
+      "name_en": "LDROBOT-100",
       "py": "ledongjiqiren",
       "abbr": "ldjqr"
     },
@@ -18415,6 +18415,15 @@
       "py": "",
       "abbr": ""
     },
+    "hk02965": {
+      "code": "02965",
+      "market": "hk",
+      "type": "港",
+      "name": "乐动机器人-二百",
+      "name_en": "LDROBOT-200",
+      "py": "ledongjiqiren-erbai",
+      "abbr": "ldjqr-eb"
+    },
     "hk02982": {
       "code": "02982",
       "market": "hk",
@@ -26469,6 +26478,15 @@
       "name_en": "ZJ UNITED I RTS",
       "py": "zhejianglianhetouziguquan",
       "abbr": "zjlhtzgq"
+    },
+    "hk08586": {
+      "code": "08586",
+      "market": "hk",
+      "type": "港",
+      "name": "华夏水务集团",
+      "name_en": "HUA XIA WATER",
+      "py": "huaxiashuiwujituan",
+      "abbr": "hxswjt"
     },
     "hk08601": {
       "code": "08601",

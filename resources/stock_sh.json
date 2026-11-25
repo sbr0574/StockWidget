@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-24",
+  "last_update": "2026-11-25",
   "codes": {
     "sh600000": {
       "code": "600000",
@@ -2471,10 +2471,10 @@
       "code": "600369",
       "market": "sh",
       "type": "沪",
-      "name": "XD西南证",
+      "name": "西南证券",
       "name_en": "",
-      "py": "xdxinanzheng",
-      "abbr": "xdxnz"
+      "py": "xinanzhengquan",
+      "abbr": "xnzq"
     },
     "sh600370": {
       "code": "600370",
@@ -3047,10 +3047,10 @@
       "code": "600475",
       "market": "sh",
       "type": "沪",
-      "name": "XD华光环",
+      "name": "华光环能",
       "name_en": "",
-      "py": "xdhuaguanghuan",
-      "abbr": "xdhgh"
+      "py": "huaguanghuanneng",
+      "abbr": "hghn"
     },
     "sh600476": {
       "code": "600476",
@@ -5189,10 +5189,10 @@
       "code": "600763",
       "market": "sh",
       "type": "沪",
-      "name": "通策医疗",
+      "name": "XD通策医",
       "name_en": "",
-      "py": "tongceyiliao",
-      "abbr": "tcyl"
+      "py": "xdtongceyi",
+      "abbr": "xdtcy"
     },
     "sh600764": {
       "code": "600764",
@@ -6224,10 +6224,10 @@
       "code": "600908",
       "market": "sh",
       "type": "沪",
-      "name": "无锡银行",
+      "name": "XD无锡银",
       "name_en": "",
-      "py": "wuxiyinhang",
-      "abbr": "wxyh"
+      "py": "xdwuxiyin",
+      "abbr": "xdwxy"
     },
     "sh600909": {
       "code": "600909",
@@ -6440,10 +6440,10 @@
       "code": "600962",
       "market": "sh",
       "type": "沪",
-      "name": "国投中鲁",
+      "name": "国投电子",
       "name_en": "",
-      "py": "guotouzhonglu",
-      "abbr": "gtzl"
+      "py": "guotoudianzi",
+      "abbr": "gtdz"
     },
     "sh600963": {
       "code": "600963",
@@ -6800,10 +6800,10 @@
       "code": "601009",
       "market": "sh",
       "type": "沪",
-      "name": "南京银行",
+      "name": "XD南京银",
       "name_en": "",
-      "py": "nanjingyinhang",
-      "abbr": "njyh"
+      "py": "xdnanjingyin",
+      "abbr": "xdnjy"
     },
     "sh601010": {
       "code": "601010",
@@ -9329,10 +9329,10 @@
       "code": "603073",
       "market": "sh",
       "type": "沪",
-      "name": "彩蝶实业",
+      "name": "XD彩蝶实",
       "name_en": "",
-      "py": "caidieshiye",
-      "abbr": "cdsy"
+      "py": "xdcaidieshi",
+      "abbr": "xdcds"
     },
     "sh603075": {
       "code": "603075",
@@ -12677,10 +12677,10 @@
       "code": "603676",
       "market": "sh",
       "type": "沪",
-      "name": "卫信康",
+      "name": "XD卫信康",
       "name_en": "",
-      "py": "weixinkang",
-      "abbr": "wxk"
+      "py": "xdweixinkang",
+      "abbr": "xdwxk"
     },
     "sh603677": {
       "code": "603677",

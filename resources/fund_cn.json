@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-24",
+  "last_update": "2026-11-25",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -1674,6 +1674,15 @@
       "name_en": "",
       "py": "huaanjinjiangshangyereit",
       "abbr": "hajjsyreit"
+    },
+    "sh508610": {
+      "code": "508610",
+      "market": "sh",
+      "type": "基",
+      "name": "广发新城吾悦商业REIT",
+      "name_en": "",
+      "py": "guangfaxinchengwuyueshangyereit",
+      "abbr": "gfxcwysyreit"
     },
     "sh510010": {
       "code": "510010",
