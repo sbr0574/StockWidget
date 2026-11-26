@@ -217,19 +217,24 @@ class MarketBreadthTests(HistoryTestCase):
         # Even when unchecked at minimum size, toolbar and all 6 top-right buttons fit inside popup.
         popup.resize(1, 1)
         self.app.processEvents()
-        for control in (*popup.view_buttons.values(), popup.ui.cb_average,
+        self.assertTrue(popup.ui.cb_average.isHidden())
+        for control in (*popup.view_buttons.values(),
                         popup.volume_button, popup.order_book_button, popup.overview_button,
                         popup.pin_button, popup.pop_out_button, popup.close_button):
             self.assertTrue(popup.rect().contains(control.mapTo(popup, control.rect().bottomRight())))
 
-        # Enable breadth and verify minimum layout fits all 12 rows without clipping.
+        # Enable breadth and verify minimum layout aligns left column with right breadth and compresses height.
         popup.order_book_button.click()
         self.app.processEvents()
         popup.resize(1, 1)
         self.app.processEvents()
         book = popup.order_book
         self.assertTrue(popup.rect().contains(book.geometry()))
-        self.assertLess(book.geometry().bottom(), popup.ui.chart_readout.geometry().top())
+        self.assertEqual(popup.ui.toolbar.geometry().top(), book.geometry().top())
+        self.assertEqual(popup.ui.chart_readout.geometry().bottom(), book.geometry().bottom())
+        self.assertLess(popup.chart.geometry().bottom(), popup.ui.chart_readout.geometry().top())
+        self.assertLess(popup.ui.chart_readout.geometry().right(), book.geometry().left())
+        self.assertLess(popup.minimumHeight(), 300)
         geom = book._breadth_geometry(book.fontMetrics())
         self.assertGreaterEqual(geom["line"], book.fontMetrics().height())
 
@@ -435,6 +440,7 @@ class MarketOverviewTests(HistoryTestCase):
         self.assertEqual(popup.windowTitle(), "浦发银行")
         self.assertEqual(popup.title.text(), "浦发银行")
         self.assertTrue(popup.ui.cb_volume.isHidden())
+        self.assertTrue(popup.ui.cb_average.isHidden())
         self.assertTrue(popup.ui.cb_order_book.isHidden())
         buttons = [
             popup.ui.title_layout.itemAt(i).widget()

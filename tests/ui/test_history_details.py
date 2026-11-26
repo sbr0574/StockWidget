@@ -242,7 +242,7 @@ class HistoryDetailsTests(HistoryTestCase):
         self.wait_ready(window)
         popup = window.history.dialog
         for pinned in (False, True):
-            for button in (popup.pin_button, popup.volume_button, popup.view_buttons["intraday"], popup.ui.cb_average):
+            for button in (popup.pin_button, popup.volume_button, popup.order_book_button, popup.view_buttons["intraday"]):
                 with self.subTest(pinned=pinned, button=button.objectName()):
                     popup.pin_button.setChecked(pinned)
                     original = popup.geometry()
@@ -283,19 +283,29 @@ class HistoryDetailsTests(HistoryTestCase):
         popup = history.dialog
         with patch.object(window, "_open_settings_cb") as open_settings:
             menu = self._open_chart_menu(popup)
-            self.assertEqual([action.text() for action in menu.actions()],
-                             ["关闭图表窗口", "独立窗口打开", "固定", "大盘总览", "成交量", "五档", "不透明度", "设置", "隐藏所有浮窗"])
+            self.assertEqual(
+                ["---" if action.isSeparator() else action.text() for action in menu.actions()],
+                ["关闭图表窗口", "独立窗口打开", "固定", "大盘总览", "成交量", "五档", "均线",
+                 "---", "不透明度", "设置", "隐藏所有浮窗"],
+            )
             self.assertFalse(menu.toolTipsVisible())
             self._choose_chart_menu_action(menu, "设置")
             open_settings.assert_called_once_with()
         self.assertTrue(popup.isVisible())
 
-        # Toggling volume, order book, and overview from context menu stays in sync with top-right buttons.
+        # Toggling volume, order book, average, and overview from context menu stays in sync.
         self._choose_chart_menu_action(self._open_chart_menu(popup), "成交量")
         self.assertFalse(popup.volume_button.isChecked())
         self.assertFalse(window.current_config()["chart_volume_enabled"])
         self._choose_chart_menu_action(self._open_chart_menu(popup), "成交量")
         self.assertTrue(popup.volume_button.isChecked())
+
+        self._choose_chart_menu_action(self._open_chart_menu(popup), "均线")
+        self.assertFalse(popup.chart.show_average)
+        self.assertFalse(window.current_config()["chart_average_enabled"])
+        self._choose_chart_menu_action(self._open_chart_menu(popup), "均线")
+        self.assertTrue(popup.chart.show_average)
+        self.assertTrue(window.current_config()["chart_average_enabled"])
 
         self._choose_chart_menu_action(self._open_chart_menu(popup), "五档")
         self.assertTrue(popup.order_book_button.isChecked())
@@ -308,6 +318,8 @@ class HistoryDetailsTests(HistoryTestCase):
         self.assertTrue(popup.overview_button.isChecked())
         menu = self._open_chart_menu(popup)
         self.assertIn("涨跌分布", [action.text() for action in menu.actions()])
+        avg_action = next(action for action in menu.actions() if action.text() == "均线")
+        self.assertFalse(avg_action.isEnabled())
         self._choose_chart_menu_action(menu, "大盘总览")
         self.assertFalse(popup.overview_mode)
 
@@ -816,8 +828,9 @@ class HistoryDetailsTests(HistoryTestCase):
         for button in popup.view_buttons.values():
             self.assertLessEqual(button.width(), button.fontMetrics().horizontalAdvance(button.text()) + 24)
         self.assertTrue(popup.ui.cb_volume.isHidden())
+        self.assertTrue(popup.ui.cb_average.isHidden())
         self.assertTrue(popup.ui.cb_order_book.isHidden())
-        for control in (*popup.view_buttons.values(), popup.ui.cb_average):
+        for control in popup.view_buttons.values():
             point = control.mapTo(popup, control.rect().bottomRight())
             self.assertTrue(popup.rect().contains(point))
             self.assertEqual(control.toolTip(), "")
@@ -949,8 +962,15 @@ class HistoryDetailsTests(HistoryTestCase):
         self.assertTrue(popup.rect().contains(popup.order_book.geometry()))
         self.assertGreaterEqual((popup.order_book.height() - 12) / 11, popup.order_book.fontMetrics().height())
         self.assertTrue(popup.rect().contains(popup.chart.geometry()))
-        self.assertLess(popup.order_book.geometry().bottom(), popup.ui.chart_readout.geometry().top())
+        # Left toolbar + chart + readout span the exact same vertical range as the right order book.
+        self.assertEqual(popup.ui.toolbar.geometry().top(), popup.order_book.geometry().top())
+        self.assertEqual(popup.ui.chart_readout.geometry().bottom(), popup.order_book.geometry().bottom())
+        self.assertLess(popup.ui.toolbar.geometry().bottom(), popup.chart.geometry().top())
         self.assertLess(popup.chart.geometry().bottom(), popup.ui.chart_readout.geometry().top())
+        self.assertLess(popup.ui.toolbar.geometry().right(), popup.order_book.geometry().left())
+        self.assertLess(popup.chart.geometry().right(), popup.order_book.geometry().left())
+        self.assertLess(popup.ui.chart_readout.geometry().right(), popup.order_book.geometry().left())
+        self.assertLess(popup.minimumHeight(), 300)
         self.assertGreaterEqual(popup.chart.width(), 200)
         popup.set_view("five_day")
         self.wait_ready(window)

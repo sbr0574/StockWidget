@@ -5,7 +5,9 @@ import threading
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QTimer, QSignalBlocker, Signal
 from PySide6.QtGui import QColor, QContextMenuEvent, QCursor, QFont, QFontInfo, QFontMetrics, QPainter, QPalette
-from PySide6.QtWidgets import QApplication, QAbstractButton, QButtonGroup, QDialog, QMenu, QSizePolicy, QToolTip, QWidget, QWidgetItem
+from PySide6.QtWidgets import (
+    QApplication, QAbstractButton, QButtonGroup, QDialog, QMenu, QSizePolicy, QToolTip, QVBoxLayout, QWidget, QWidgetItem,
+)
 
 from stockwidget.core.quote_presentation import MARKET_OVERVIEW_QUOTES, MARKET_TURNOVER_INDICES, is_cn_index
 from stockwidget.core.window_rules import adjacent_popup_position, best_screen
@@ -81,10 +83,28 @@ class HistoryDialog(QDialog):
         self._title_text = self._status_text = ""
         for period in MA_PERIODS:
             getattr(self.ui, f"cb_ma{period}").set_subtext("—")
+        self._left_layout = None
         if floating:
-            # Popup uses top-right icon buttons for volume and depth/breadth; detached window keeps checkboxes.
+            # Popup uses top-right buttons / context menu for volume, depth/breadth, and average;
+            # detached window keeps all toolbar checkboxes and its full-width layout unchanged.
             self.ui.cb_volume.hide()
+            self.ui.cb_average.hide()
             self.ui.cb_order_book.hide()
+            self.ui.chart_layout.removeWidget(self.ui.toolbar)
+            self.ui.chart_layout.removeWidget(self.ui.ma_row)
+            self.ui.chart_layout.removeWidget(self.ui.chart_readout)
+            self.ui.content_layout.removeWidget(self.chart)
+            self.ui.content_layout.removeWidget(self.market_overview)
+            self._left_layout = QVBoxLayout()
+            self._left_layout.setContentsMargins(0, 0, 0, 0)
+            self._left_layout.setSpacing(4)
+            self._left_layout.addWidget(self.ui.toolbar, 0)
+            self._left_layout.addWidget(self.ui.ma_row, 0)
+            self._left_layout.addWidget(self.chart, 1)
+            self._left_layout.addWidget(self.market_overview, 1)
+            self._left_layout.addWidget(self.ui.chart_readout, 0)
+            self.ui.content_layout.insertLayout(0, self._left_layout, 1)
+            self.ui.chart_layout.setStretch(self.ui.chart_layout.indexOf(self.ui.content_layout), 1)
         self._sync_fixed_row_heights()
         if not floating:
             self.ui.chart_layout.setContentsMargins(12, 10, 12, 10)
@@ -129,6 +149,7 @@ class HistoryDialog(QDialog):
         self.order_book_button.setToolTip(book_label)
         self.order_book_button.setAccessibleName(book_label)
         self.order_book_button.setEnabled(self._overview_mode or self.view == "intraday")
+        self.ui.cb_average.setEnabled(not self._overview_mode)
 
     def set_chart_options(self, options, unit_mode):
         restoring, self._restoring = self._restoring, True
@@ -206,6 +227,7 @@ class HistoryDialog(QDialog):
         if self._preferred_size is not None:
             self.resize(QSize(*self._preferred_size).expandedTo(self.minimumSize()).boundedTo(self.maximumSize()))
         self.layout().activate()
+        self._sync_readout_height()
         if self.display_mode == "popup":
             self._keep_within_screen()
         self._restoring = restoring
@@ -225,6 +247,7 @@ class HistoryDialog(QDialog):
         if changed and self._preferred_size is not None:
             self.resize(QSize(*self._preferred_size).expandedTo(self.minimumSize()).boundedTo(self.maximumSize()))
         self.layout().activate()
+        self._sync_readout_height()
         if self.display_mode == "popup":
             self._keep_within_screen()
         self._restoring = restoring
@@ -243,6 +266,7 @@ class HistoryDialog(QDialog):
             if not self._overview_mode and self._preferred_size is not None:
                 self.resize(QSize(*self._preferred_size).expandedTo(self.minimumSize()).boundedTo(self.maximumSize()))
             self.layout().activate()
+            self._sync_readout_height()
             if self.display_mode == "popup":
                 self._keep_within_screen()
         self._restoring = restoring
@@ -264,9 +288,11 @@ class HistoryDialog(QDialog):
         frame = self.frameGeometry().size() - self.size() if self.isVisible() else QSize(16, 40)
         screen_max = bounds.size() if self.display_mode == "popup" else bounds.size() - frame
         base_min = QSize(640, 400) if self.display_mode == "window" else QSize(300, 210)
-        minimum = base_min.expandedTo(QSize(460, 300)) if self._book_enabled else QSize(base_min)
+        minimum = base_min.expandedTo(QSize(460, base_min.height())) if self._book_enabled else QSize(base_min)
         if self.layout():
             layout = self.layout()
+            if self._left_layout is not None:
+                self._left_layout.invalidate()
             self.ui.content_layout.invalidate()
             self.ui.ma_layout.invalidate()
             layout.invalidate()
@@ -276,6 +302,8 @@ class HistoryDialog(QDialog):
             if self._overview_mode:
                 self.market_overview._sync_size()
                 self.order_book._sync_size()
+                if self._left_layout is not None:
+                    self._left_layout.invalidate()
                 self.ui.content_layout.invalidate()
                 layout.invalidate()
                 content = layout.minimumSize()
@@ -284,6 +312,38 @@ class HistoryDialog(QDialog):
                     self.market_overview.minimumWidth() + horizontal,
                     content.height(),
                 ))
+            elif self.display_mode == "popup":
+                # Popup places toolbar, MA row, chart and readout inside _left_layout
+                # alongside order_book so left total height equals right depth/breadth height.
+                # Keep one worst-case minimum across intraday / five-day / daily views.
+                self.ui.toolbar.layout().invalidate()
+                self.title_row.layout().invalidate()
+                vertical = margins.top() + margins.bottom()
+                v_gap = layout.spacing()
+                left_gap = self._left_layout.spacing()
+                title_min = self.title_row.minimumSize().expandedTo(self.title_row.layout().minimumSize())
+                toolbar_min = self.ui.toolbar.minimumSize().expandedTo(self.ui.toolbar.layout().minimumSize())
+                ma_min = self.ui.ma_row.minimumSize().expandedTo(self.ui.ma_row.layout().minimumSize())
+                chart_min = self.chart.minimumSize()
+                readout_h = max(self.ui.chart_readout.minimumHeight(), self.ui.chart_readout.sizeHint().height())
+                status_h = max(self.status.minimumHeight(), self.status.sizeHint().height(), self.status.fontMetrics().height())
+                left_intraday_w = max(toolbar_min.width(), chart_min.width())
+                left_daily_w = max(left_intraday_w, ma_min.width())
+                left_intraday_h = toolbar_min.height() + left_gap + chart_min.height() + left_gap + readout_h
+                left_daily_h = left_intraday_h + left_gap + ma_min.height()
+                overhead_h = vertical + title_min.height() + v_gap + v_gap + status_h
+                no_book_w = horizontal + max(title_min.width(), left_daily_w)
+                no_book_h = overhead_h + left_daily_h
+                content_without_book = QSize(no_book_w, no_book_h)
+                if self._book_enabled:
+                    book_w = self.order_book.minimumWidth() + self.ui.content_layout.spacing()
+                    with_book_w = max(no_book_w, horizontal + left_intraday_w + book_w)
+                    with_book_h = overhead_h + max(left_daily_h, self.order_book.minimumHeight())
+                    content_with_book = QSize(with_book_w, with_book_h).expandedTo(content)
+                else:
+                    content_with_book = QSize(content_without_book).expandedTo(content)
+                base_min = base_min.expandedTo(content_without_book)
+                minimum = minimum.expandedTo(content_with_book)
             else:
                 # Use the same worst-case layout for every view, including hidden
                 # MA controls/status and the saved depth preference on five-day/K.
