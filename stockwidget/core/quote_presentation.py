@@ -214,10 +214,13 @@ MARKET_BREADTH_BUCKETS = (
 MARKET_OVERVIEW_INDICES = (
     ("sh000001", {"code": "000001", "market": "sh", "type": "指", "name": "上证指数"}),
     ("sz399001", {"code": "399001", "market": "sz", "type": "指", "name": "深证成指"}),
-    ("sh000300", {"code": "000300", "market": "sh", "type": "指", "name": "沪深300"}),
-    ("sh000680", {"code": "000680", "market": "sh", "type": "指", "name": "科创综指"}),
     ("sz399006", {"code": "399006", "market": "sz", "type": "指", "name": "创业板指"}),
+    ("sh000680", {"code": "000680", "market": "sh", "type": "指", "name": "科创综指"}),
     ("bj899050", {"code": "899050", "market": "bj", "type": "指", "name": "北证50"}),
+    ("sh000016", {"code": "000016", "market": "sh", "type": "指", "name": "上证50"}),
+    ("sh000300", {"code": "000300", "market": "sh", "type": "指", "name": "沪深300"}),
+    ("sh000905", {"code": "000905", "market": "sh", "type": "指", "name": "中证500"}),
+    ("sh000852", {"code": "000852", "market": "sh", "type": "指", "name": "中证1000"}),
 )
 
 # 沪深京全市场成交额口径：上证指数(沪市全市场) + 深证综指(深市全市场) + 北证50(北交所全市场)。

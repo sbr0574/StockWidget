@@ -236,10 +236,17 @@ def build_history_menu(dialog):
     menu.setToolTipsVisible(False)
     menu.addAction("关闭图表窗口", dialog.close)
     menu.addAction("独立窗口打开").triggered.connect(dialog.pop_out)
-    pin = menu.addAction("固定")
-    pin.setCheckable(True)
-    pin.setChecked(dialog.pin_button.isChecked())
-    pin.toggled.connect(dialog.pin_button.setChecked)
+    for label, button in (
+        ("固定", dialog.pin_button),
+        ("大盘总览", dialog.overview_button),
+        ("成交量", dialog.volume_button),
+        (dialog.order_book_button.toolTip() or "五档", dialog.order_book_button),
+    ):
+        action = menu.addAction(label)
+        action.setCheckable(True)
+        action.setChecked(button.isChecked())
+        action.setEnabled(button.isEnabled())
+        action.toggled.connect(button.setChecked)
     source = dialog.parentWidget()
     options = getattr(source, "view_options", None)
     if options is not None:

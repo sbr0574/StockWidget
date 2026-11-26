@@ -103,7 +103,8 @@ class HistoryDetailsTests(HistoryTestCase):
                 self.app.processEvents()
                 self.assertEqual(popup.ui.chart_readout.styleSheet(), "")
                 self.assertEqual(popup.ui.chart_readout.palette().windowText().color(), window.fg)
-            for control in (popup.title, popup.chart, popup.close_button, popup.ui.cb_volume, popup.ui.chart_readout):
+            for control in (popup.title, popup.chart, popup.close_button, popup.volume_button,
+                            popup.order_book_button, popup.ui.cb_average, popup.ui.chart_readout):
                 self.assertEqual(control.palette().windowText().color(), window.fg)
             self.assertEqual(popup.palette().window().color(), window.bg)
             for pinned in (False, True):
@@ -241,7 +242,7 @@ class HistoryDetailsTests(HistoryTestCase):
         self.wait_ready(window)
         popup = window.history.dialog
         for pinned in (False, True):
-            for button in (popup.pin_button, popup.view_buttons["intraday"], popup.ui.cb_volume):
+            for button in (popup.pin_button, popup.volume_button, popup.view_buttons["intraday"], popup.ui.cb_average):
                 with self.subTest(pinned=pinned, button=button.objectName()):
                     popup.pin_button.setChecked(pinned)
                     original = popup.geometry()
@@ -283,11 +284,32 @@ class HistoryDetailsTests(HistoryTestCase):
         with patch.object(window, "_open_settings_cb") as open_settings:
             menu = self._open_chart_menu(popup)
             self.assertEqual([action.text() for action in menu.actions()],
-                             ["关闭图表窗口", "独立窗口打开", "固定", "不透明度", "设置", "隐藏所有浮窗"])
+                             ["关闭图表窗口", "独立窗口打开", "固定", "大盘总览", "成交量", "五档", "不透明度", "设置", "隐藏所有浮窗"])
             self.assertFalse(menu.toolTipsVisible())
             self._choose_chart_menu_action(menu, "设置")
             open_settings.assert_called_once_with()
         self.assertTrue(popup.isVisible())
+
+        # Toggling volume, order book, and overview from context menu stays in sync with top-right buttons.
+        self._choose_chart_menu_action(self._open_chart_menu(popup), "成交量")
+        self.assertFalse(popup.volume_button.isChecked())
+        self.assertFalse(window.current_config()["chart_volume_enabled"])
+        self._choose_chart_menu_action(self._open_chart_menu(popup), "成交量")
+        self.assertTrue(popup.volume_button.isChecked())
+
+        self._choose_chart_menu_action(self._open_chart_menu(popup), "五档")
+        self.assertTrue(popup.order_book_button.isChecked())
+        self.assertTrue(window.current_config()["chart_order_book_enabled"])
+        self._choose_chart_menu_action(self._open_chart_menu(popup), "五档")
+        self.assertFalse(popup.order_book_button.isChecked())
+
+        self._choose_chart_menu_action(self._open_chart_menu(popup), "大盘总览")
+        self.assertTrue(popup.overview_mode)
+        self.assertTrue(popup.overview_button.isChecked())
+        menu = self._open_chart_menu(popup)
+        self.assertIn("涨跌分布", [action.text() for action in menu.actions()])
+        self._choose_chart_menu_action(menu, "大盘总览")
+        self.assertFalse(popup.overview_mode)
 
         menu = self._open_chart_menu(popup)
         pin = next(action for action in menu.actions() if action.text() == "固定")
@@ -793,14 +815,28 @@ class HistoryDetailsTests(HistoryTestCase):
         self.assertLess(popup.height(), 260)
         for button in popup.view_buttons.values():
             self.assertLessEqual(button.width(), button.fontMetrics().horizontalAdvance(button.text()) + 24)
-        for control in (*popup.view_buttons.values(), popup.ui.cb_volume, popup.ui.cb_average, popup.ui.cb_order_book):
+        self.assertTrue(popup.ui.cb_volume.isHidden())
+        self.assertTrue(popup.ui.cb_order_book.isHidden())
+        for control in (*popup.view_buttons.values(), popup.ui.cb_average):
             point = control.mapTo(popup, control.rect().bottomRight())
             self.assertTrue(popup.rect().contains(point))
             self.assertEqual(control.toolTip(), "")
+        for button, tip in (
+            (popup.volume_button, "成交量"),
+            (popup.order_book_button, "五档"),
+            (popup.overview_button, "大盘总览"),
+            (popup.pin_button, "固定图表"),
+            (popup.pop_out_button, "打开独立窗口"),
+            (popup.close_button, "关闭图表"),
+        ):
+            self.assertTrue(button.isVisible())
+            self.assertEqual(button.toolTip(), tip)
+            self.assertTrue(popup.rect().contains(button.mapTo(popup, button.rect().bottomRight())))
         self.assertTrue(popup.ui.ma_row.isHidden())
         popup.set_view("daily")
         self.wait_ready(window)
         self.assertTrue(popup.ui.ma_row.isVisible())
+        self.assertFalse(popup.order_book_button.isEnabled())
         self.assertFalse(popup.ui.cb_order_book.isEnabled())
         calls = window.history.cache.get.call_count
         expected_ma = popup.chart.ma_values()
@@ -827,7 +863,7 @@ class HistoryDetailsTests(HistoryTestCase):
             control = getattr(popup.ui, f"cb_ma{period}")
             self.assertEqual(control.palette().windowText().color(), QColor(color))
             self.assertEqual(control.subtext(), expected_ma[period])
-        popup.ui.cb_volume.setChecked(False)
+        popup.volume_button.setChecked(False)
         self.assertFalse(window.current_config()["chart_volume_enabled"])
         self.assertEqual(window.history.cache.get.call_count, calls)
         self.assertEqual(popup.order_book.toolTip(), "")
@@ -836,6 +872,9 @@ class HistoryDetailsTests(HistoryTestCase):
         popup.pop_out_button.click()
         self.wait_ready(window)
         detached = window.history.dialog
+        self.assertTrue(detached.ui.cb_volume.isVisible())
+        self.assertTrue(detached.ui.cb_average.isVisible())
+        self.assertTrue(detached.ui.cb_order_book.isVisible())
         self.assertEqual(detached.ui.chart_readout.height(), QFontMetrics(detached.font()).height() + 2)
         self.assertEqual(len(detached.ui.chart_readout.text().splitlines()), 1)
         self.assertFalse(detached.ui.cb_ma60.isChecked())
@@ -904,7 +943,7 @@ class HistoryDetailsTests(HistoryTestCase):
         self.assertTrue(bounds.contains(popup.geometry()))
         popup.resize(1, 1)
         self.assertEqual(popup.size(), popup.minimumSize())
-        popup.ui.cb_order_book.setChecked(True)
+        popup.order_book_button.setChecked(True)
         self.app.processEvents()
         self.assertFalse(popup.order_book.isHidden())
         self.assertTrue(popup.rect().contains(popup.order_book.geometry()))

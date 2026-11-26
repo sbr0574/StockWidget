@@ -16,7 +16,10 @@ from stockwidget.platform.capabilities import is_cocoa, is_wayland
 from stockwidget.platform.window import apply_background_blur, set_macos_cursor, set_windows_arrow_cursor, sync_macos_dock_icon
 from stockwidget.ui.controls.history_chart import MA_COLORS
 from stockwidget.ui.generated.ui_history import Ui_HistoryDialog
-from stockwidget.ui.controls.style import apply_history_theme, is_dark_theme, market_overview_icon, navigation_arrow_icon, pin_icon, theme_palette
+from stockwidget.ui.controls.style import (
+    apply_history_theme, is_dark_theme, market_overview_icon, navigation_arrow_icon,
+    order_book_icon, pin_icon, theme_palette, volume_icon,
+)
 from stockwidget.ui.menus import build_history_menu
 
 
@@ -57,7 +60,8 @@ class HistoryDialog(QDialog):
         self.setModal(False)
         self.ui = Ui_HistoryDialog()
         self.ui.setupUi(self)
-        for name in ("title_row", "title", "overview_button", "pin_button", "pop_out_button", "close_button",
+        for name in ("title_row", "title", "volume_button", "order_book_button", "overview_button",
+                     "pin_button", "pop_out_button", "close_button",
                      "quote_header", "chart", "market_overview", "order_book", "status"):
             setattr(self, name, getattr(self.ui, name))
         self.quote_header.bind_fields()
@@ -66,9 +70,9 @@ class HistoryDialog(QDialog):
             button.setIconSize(QSize(14, 14))
             button.clicked.connect(lambda checked=False, direction=direction: self.instrument_changed.emit(direction))
         self._set_navigation_icons()
-        self.overview_button.setIconSize(QSize(14, 14))
+        for button in (self.volume_button, self.order_book_button, self.overview_button, self.pin_button):
+            button.setIconSize(QSize(14, 14))
         self.overview_button.toggled.connect(self._overview_changed)
-        self.pin_button.setIconSize(QSize(14, 14))
         self.pin_button.toggled.connect(self._pin_changed)
         self.setAttribute(Qt.WA_MacAlwaysShowToolWindow, floating)
         self.chart.flat = self.order_book.flat = self.market_overview.flat = floating
@@ -77,6 +81,10 @@ class HistoryDialog(QDialog):
         self._title_text = self._status_text = ""
         for period in MA_PERIODS:
             getattr(self.ui, f"cb_ma{period}").set_subtext("—")
+        if floating:
+            # Popup uses top-right icon buttons for volume and depth/breadth; detached window keeps checkboxes.
+            self.ui.cb_volume.hide()
+            self.ui.cb_order_book.hide()
         self._sync_fixed_row_heights()
         if not floating:
             self.ui.chart_layout.setContentsMargins(12, 10, 12, 10)
@@ -102,9 +110,12 @@ class HistoryDialog(QDialog):
         self.pop_out_button.clicked.connect(self.pop_out)
         self.close_button.clicked.connect(self.close)
         for control, key in ((self.ui.cb_order_book, "chart_order_book_enabled"),
+                             (self.order_book_button, "chart_order_book_enabled"),
                              (self.ui.cb_volume, "chart_volume_enabled"),
+                             (self.volume_button, "chart_volume_enabled"),
                              (self.ui.cb_average, "chart_average_enabled")):
             control.toggled.connect(lambda checked, key=key: self.options_changed.emit({key: checked}))
+        self._sync_top_buttons()
         for period in MA_PERIODS:
             getattr(self.ui, f"cb_ma{period}").toggled.connect(self._ma_changed)
         self.setWindowOpacity(.92 if floating else 1.)
@@ -112,6 +123,12 @@ class HistoryDialog(QDialog):
         self._save_timer.setSingleShot(True)
         self._save_timer.setInterval(200)
         self._save_timer.timeout.connect(self.save_size)
+
+    def _sync_top_buttons(self):
+        book_label = "涨跌分布" if (self._overview_mode or self._breadth_mode) else "五档"
+        self.order_book_button.setToolTip(book_label)
+        self.order_book_button.setAccessibleName(book_label)
+        self.order_book_button.setEnabled(self._overview_mode or self.view == "intraday")
 
     def set_chart_options(self, options, unit_mode):
         restoring, self._restoring = self._restoring, True
@@ -121,8 +138,11 @@ class HistoryDialog(QDialog):
             self._sync_outside_grab()
         self.chart.set_options(options.chart_ma_periods, options.chart_average_enabled,
                                options.chart_volume_enabled, unit_mode)
+        turnover_changed = self.market_overview.set_show_turnover(options.chart_volume_enabled)
         for control, checked in ((self.ui.cb_order_book, options.chart_order_book_enabled),
+                                 (self.order_book_button, options.chart_order_book_enabled),
                                  (self.ui.cb_volume, options.chart_volume_enabled),
+                                 (self.volume_button, options.chart_volume_enabled),
                                  (self.ui.cb_average, options.chart_average_enabled)):
             with QSignalBlocker(control):
                 control.setChecked(checked)
@@ -136,9 +156,14 @@ class HistoryDialog(QDialog):
         self._average_enabled = bool(options.chart_average_enabled)
         self.ui.ma_row.setVisible(not self._overview_mode and self.view == "daily" and options.chart_average_enabled)
         self.ui.cb_order_book.setEnabled(self.view == "intraday")
+        self._sync_top_buttons()
         self.set_order_book(options.chart_order_book_enabled)
         self.update_size_limits()
+        if turnover_changed and self._overview_mode and self._preferred_size is not None:
+            self.resize(QSize(*self._preferred_size).expandedTo(self.minimumSize()).boundedTo(self.maximumSize()))
         self.layout().activate()
+        if self.display_mode == "popup":
+            self._keep_within_screen()
         self._restoring = restoring
 
     def _ma_changed(self):
@@ -166,7 +191,7 @@ class HistoryDialog(QDialog):
             self.status.hide()
             self.market_overview.show()
             self.order_book.set_breadth_mode(True)
-            self.order_book.show()
+            self.order_book.setVisible(self._book_enabled)
         else:
             self.market_overview.hide()
             self.ui.toolbar.show()
@@ -176,10 +201,13 @@ class HistoryDialog(QDialog):
             self.status.setVisible(bool(self._status_text))
             self.order_book.set_breadth_mode(self._breadth_mode)
             self.order_book.setVisible(self._book_enabled and self.view == "intraday")
+        self._sync_top_buttons()
         self.update_size_limits()
         if self._preferred_size is not None:
             self.resize(QSize(*self._preferred_size).expandedTo(self.minimumSize()).boundedTo(self.maximumSize()))
         self.layout().activate()
+        if self.display_mode == "popup":
+            self._keep_within_screen()
         self._restoring = restoring
 
     def _overview_changed(self, checked):
@@ -192,11 +220,13 @@ class HistoryDialog(QDialog):
         restoring, self._restoring = self._restoring, True
         changed = self._book_enabled != bool(enabled)
         self._book_enabled = bool(enabled)
-        self.order_book.setVisible(True if self._overview_mode else (self._book_enabled and self.view == "intraday"))
+        self.order_book.setVisible(self._book_enabled if self._overview_mode else (self._book_enabled and self.view == "intraday"))
         self.update_size_limits()
-        if changed and not self._overview_mode and self._preferred_size is not None:
+        if changed and self._preferred_size is not None:
             self.resize(QSize(*self._preferred_size).expandedTo(self.minimumSize()).boundedTo(self.maximumSize()))
         self.layout().activate()
+        if self.display_mode == "popup":
+            self._keep_within_screen()
         self._restoring = restoring
 
     def set_breadth_mode(self, enabled):
@@ -205,6 +235,7 @@ class HistoryDialog(QDialog):
         changed = self._breadth_mode != breadth
         self._breadth_mode = breadth
         self.ui.cb_order_book.setText("涨跌分布" if breadth else "五档")
+        self._sync_top_buttons()
         self.order_book.set_breadth_mode(True if self._overview_mode else breadth)
         if changed:
             self.ui.toolbar.updateGeometry()
@@ -212,6 +243,8 @@ class HistoryDialog(QDialog):
             if not self._overview_mode and self._preferred_size is not None:
                 self.resize(QSize(*self._preferred_size).expandedTo(self.minimumSize()).boundedTo(self.maximumSize()))
             self.layout().activate()
+            if self.display_mode == "popup":
+                self._keep_within_screen()
         self._restoring = restoring
 
     def _sync_fixed_row_heights(self):
@@ -231,7 +264,7 @@ class HistoryDialog(QDialog):
         frame = self.frameGeometry().size() - self.size() if self.isVisible() else QSize(16, 40)
         screen_max = bounds.size() if self.display_mode == "popup" else bounds.size() - frame
         base_min = QSize(640, 400) if self.display_mode == "window" else QSize(300, 210)
-        minimum = base_min.expandedTo(QSize(460, 300)) if (self._book_enabled or self._overview_mode) else QSize(base_min)
+        minimum = base_min.expandedTo(QSize(460, 300)) if self._book_enabled else QSize(base_min)
         if self.layout():
             layout = self.layout()
             self.ui.content_layout.invalidate()
@@ -300,6 +333,22 @@ class HistoryDialog(QDialog):
         maximum = maximum.expandedTo(QSize(200, 200))
         self.setMinimumSize(minimum.boundedTo(maximum))
         self.setMaximumSize(maximum)
+
+    def _keep_within_screen(self):
+        if not self.isVisible() or self.isMaximized() or self.isMinimized() or self._gesture:
+            return
+        frame = self.frameGeometry()
+        bounds = best_screen(
+            *frame.getRect(),
+            [screen.availableGeometry().getRect() for screen in QApplication.screens()],
+        )
+        if not bounds:
+            return
+        area = QRect(*bounds)
+        x = max(area.left(), min(area.right() - frame.width() + 1, frame.left()))
+        y = max(area.top(), min(area.bottom() - frame.height() + 1, frame.top()))
+        if (x, y) != (frame.x(), frame.y()):
+            self.move(self.pos() + QPoint(x - frame.x(), y - frame.y()))
 
     def restore_size(self, size, bounds):
         self._restoring = True
@@ -385,6 +434,7 @@ class HistoryDialog(QDialog):
         if not checked:
             return
         self._view = next(view for view, candidate in self.view_buttons.items() if candidate is button)
+        self._sync_top_buttons()
         self.view_changed.emit()
 
     def set_title(self, text):
@@ -408,17 +458,14 @@ class HistoryDialog(QDialog):
         self._elide_labels()
         if self.display_mode == "popup" and self._bg_blur and is_cocoa():
             apply_background_blur(self, True, corner_radius=10, dark=self._bg_dark)
-        if self.isVisible() and not self._restoring and not self.isMaximized() and not self.isMinimized():
-            screen = QApplication.screenAt(self.frameGeometry().center()) or QApplication.primaryScreen()
-            bounds, frame = screen.availableGeometry(), self.frameGeometry()
-            x = max(bounds.left(), min(bounds.right() - frame.width() + 1, frame.left()))
-            y = max(bounds.top(), min(bounds.bottom() - frame.height() + 1, frame.top()))
-            if (x, y) != (frame.x(), frame.y()):
-                self.move(self.pos() + QPoint(x - frame.x(), y - frame.y()))
-            self._saved_size = [self.width(), self.height()]
-            self._preferred_size = list(self._saved_size)
-            if not self._gesture:
-                self._save_timer.start()
+        if self.isVisible() and not self.isMaximized() and not self.isMinimized():
+            if self.display_mode == "popup" or not self._restoring:
+                self._keep_within_screen()
+            if not self._restoring:
+                self._saved_size = [self.width(), self.height()]
+                self._preferred_size = list(self._saved_size)
+                if not self._gesture:
+                    self._save_timer.start()
 
     def _sync_readout_height(self):
         if not hasattr(self, "chart") or not hasattr(self.ui, "chart_readout"):
@@ -464,10 +511,13 @@ class HistoryDialog(QDialog):
             painter.drawRoundedRect(self.rect(), 10, 10)
 
     def _set_navigation_icons(self):
-        self.overview_button.setIcon(market_overview_icon(self.devicePixelRatioF(), self.palette()))
-        self.pin_button.setIcon(pin_icon(self.devicePixelRatioF(), self.palette()))
+        ratio, palette = self.devicePixelRatioF(), self.palette()
+        self.volume_button.setIcon(volume_icon(ratio, palette))
+        self.order_book_button.setIcon(order_book_icon(ratio, palette))
+        self.overview_button.setIcon(market_overview_icon(ratio, palette))
+        self.pin_button.setIcon(pin_icon(ratio, palette))
         for name, direction in (("previous", -1), ("next", 1)):
-            getattr(self.ui, f"btn_{name}").setIcon(navigation_arrow_icon(direction, self.devicePixelRatioF(), self.palette()))
+            getattr(self.ui, f"btn_{name}").setIcon(navigation_arrow_icon(direction, ratio, palette))
 
     def changeEvent(self, event):
         super().changeEvent(event)
@@ -764,7 +814,7 @@ class HistoryController(QObject):
         if self.dialog.overview_mode:
             self.dialog.set_title("大盘总览")
         elif self.instrument:
-            self.dialog.set_title(f"{self.instrument.get('name') or self.instrument.get('code')} · 行情图表")
+            self.dialog.set_title(str(self.instrument.get("name") or self.instrument.get("code") or ""))
 
     def _open(self, instrument):
         if self.dialog is None or (self.dialog.display_mode == "window" and not self.dialog.isVisible()):
@@ -828,17 +878,17 @@ class HistoryController(QObject):
         )
 
     def needs_market_breadth(self) -> bool:
-        if self.needs_market_overview():
-            return True
-        return bool(
+        if not (
             self.window.widget_visible
             and self.dialog is not None
             and self.dialog.isVisible()
             and not self.dialog.isMinimized()
-            and self.dialog.view == "intraday"
             and self.window.view_options.chart_order_book_enabled
-            and is_cn_index(self.instrument)
-        )
+        ):
+            return False
+        if self.dialog.overview_mode:
+            return True
+        return self.dialog.view == "intraday" and is_cn_index(self.instrument)
 
     def _overview_toggled(self, enabled):
         if not self.dialog:
@@ -851,7 +901,7 @@ class HistoryController(QObject):
             self._start_next_background()
             overview_quotes = self.window.quotes.market_overview_quotes()
             if (len(overview_quotes) < len(MARKET_OVERVIEW_QUOTES)
-                    or self.window.quotes.market_breadth() is None):
+                    or (self.needs_market_breadth() and self.window.quotes.market_breadth() is None)):
                 self.window.quotes.refresh()
         else:
             self._apply_chart_options()
@@ -958,6 +1008,10 @@ class HistoryController(QObject):
             self.window.quotes.sync_market_breadth(self.needs_market_breadth())
             self._apply_theme()
             self._apply_chart_options()
+            if self.needs_market_overview():
+                self._start_next_background()
+                if self.needs_market_breadth() and self.window.quotes.market_breadth() is None:
+                    self.window.quotes.refresh()
 
     def _apply_chart_options(self):
         if self.dialog:
@@ -1126,7 +1180,7 @@ class HistoryController(QObject):
     def _start_next_background(self):
         if self._busy:
             return
-        if self.needs_market_overview():
+        if self.needs_market_overview() and self.window.view_options.chart_volume_enabled:
             now = self.cache.clock()
             for _key, instrument in MARKET_TURNOVER_INDICES:
                 if self._turnover_baseline_needed(instrument, now):

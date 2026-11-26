@@ -130,19 +130,40 @@ def market_overview_icon(device_pixel_ratio: float = 1.0, palette=None) -> QIcon
     return _line_icon('M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z', 14, device_pixel_ratio, palette)
 
 
+def volume_icon(device_pixel_ratio: float = 1.0, palette=None) -> QIcon:
+    return _line_icon('M4 20h16M5.5 13h3v7h-3zM10.5 6h3v14h-3zM15.5 10h3v10h-3z', 14, device_pixel_ratio, palette)
+
+
+def order_book_icon(device_pixel_ratio: float = 1.0, palette=None) -> QIcon:
+    return _line_icon('M4 6h16M4 10h11M4 14h14M4 18h8', 14, device_pixel_ratio, palette)
+
+
 def _line_icon(path, size, device_pixel_ratio, palette):
-    color = (palette or QApplication.palette()).color(QPalette.ColorRole.WindowText).name()
-    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
-           f'<path d="{path}" fill="none" stroke="{color}" '
-           'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+    base = (palette or QApplication.palette()).color(QPalette.ColorRole.WindowText)
     ratio = max(1.0, float(device_pixel_ratio))
-    pixmap = QPixmap(round(size * ratio), round(size * ratio))
-    pixmap.setDevicePixelRatio(ratio)
-    pixmap.fill(Qt.GlobalColor.transparent)
-    painter = QPainter(pixmap)
-    QSvgRenderer(QByteArray(svg.encode())).render(painter, QRectF(0, 0, size, size))
-    painter.end()
-    return QIcon(pixmap)
+    pixel_size = round(size * ratio)
+
+    def render(opacity: float) -> QPixmap:
+        svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+               f'<path d="{path}" fill="none" stroke="{base.name()}" '
+               f'stroke-opacity="{opacity:.3f}" '
+               'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+        pixmap = QPixmap(pixel_size, pixel_size)
+        pixmap.setDevicePixelRatio(ratio)
+        pixmap.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(pixmap)
+        QSvgRenderer(QByteArray(svg.encode())).render(painter, QRectF(0, 0, size, size))
+        painter.end()
+        return pixmap
+
+    normal = render(base.alphaF())
+    disabled = render(base.alphaF() * 0.35)
+    icon = QIcon()
+    icon.addPixmap(normal, QIcon.Mode.Normal, QIcon.State.Off)
+    icon.addPixmap(normal, QIcon.Mode.Normal, QIcon.State.On)
+    icon.addPixmap(disabled, QIcon.Mode.Disabled, QIcon.State.Off)
+    icon.addPixmap(disabled, QIcon.Mode.Disabled, QIcon.State.On)
+    return icon
 
 
 def color_swatch_icon(color: QColor, device_pixel_ratio: float = 1.0) -> QIcon:
@@ -254,6 +275,7 @@ QPushButton:checked:pressed {{
 }}
 QPushButton:disabled {{
     background-color: {color_disabled_bg};
+    border: 1px solid transparent;
     color: {color_disabled_text};
 }}
 """

@@ -381,11 +381,12 @@ def _fit_font(font: QFont, text: str, max_width: float) -> QFont:
 
 
 class MarketOverviewWidget(QWidget):
-    """Six CN benchmark index cards plus full-market turnover summary."""
+    """Nine CN benchmark index cards (3x3) plus optional full-market turnover summary."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.flat = True
+        self.show_turnover = True
         self.neutral_color = None
         self.up_color, self.down_color = QColor(DEFAULT_UP_COLOR), QColor(DEFAULT_DOWN_COLOR)
         self.index_cards = tuple(
@@ -401,12 +402,21 @@ class MarketOverviewWidget(QWidget):
         self.setAccessibleName("大盘总览")
         self._sync_size()
 
+    def set_show_turnover(self, enabled: bool) -> bool:
+        show = bool(enabled)
+        if self.show_turnover == show:
+            return False
+        self.show_turnover = show
+        self._sync_size()
+        self.update()
+        return True
+
     def _fonts(self):
         base = self.font()
         return {
             "name": base,
-            "price": _scaled_font(base, 1.18, bold=True),
-            "change": _scaled_font(base, 0.94, bold=False),
+            "price": _scaled_font(base, 1.12, bold=True),
+            "change": _scaled_font(base, 0.90, bold=False),
             "section": _scaled_font(base, 0.90, bold=False),
             "value": _scaled_font(base, 1.0, bold=True),
         }
@@ -420,22 +430,26 @@ class MarketOverviewWidget(QWidget):
         value_m = QFontMetrics(fonts["value"])
 
         card_inner_w = max(
-            name_m.horizontalAdvance("上证指数"),
+            name_m.horizontalAdvance("中证1000"),
             price_m.horizontalAdvance("10000.00"),
-            change_m.horizontalAdvance("-123.45") + 6 + change_m.horizontalAdvance("-10.00%"),
+            change_m.horizontalAdvance("-123.45") + 4 + change_m.horizontalAdvance("-10.00%"),
         )
-        grid_min_w = (card_inner_w + 14) * 2 + 6
+        grid_min_w = (card_inner_w + 12) * 3 + 10
         col_widths = (
             max(section_m.horizontalAdvance("今日实时"), value_m.horizontalAdvance("9999.9亿")),
             max(section_m.horizontalAdvance("昨日总额"), value_m.horizontalAdvance("1.99万亿")),
             max(section_m.horizontalAdvance("较上日此时"), value_m.horizontalAdvance("-9999.9亿")),
         )
         turnover_min_w = max(section_m.horizontalAdvance("全市场成交额"), sum(col_widths) + 12) + 16
-        min_w = max(248, int(math.ceil(max(grid_min_w, turnover_min_w))))
+        min_w = max(300, int(math.ceil(max(grid_min_w, turnover_min_w if self.show_turnover else 0))))
 
-        card_min_h = name_m.height() + price_m.height() + change_m.height() + 12
-        turnover_h = 10 + section_m.height() + 3 + section_m.height() + 2 + value_m.height()
-        min_h = max(210, int(math.ceil(card_min_h * 3 + 12 + 6 + turnover_h)))
+        card_min_h = name_m.height() + price_m.height() + change_m.height() + 10
+        grid_min_h = card_min_h * 3 + 10
+        if self.show_turnover:
+            turnover_h = 10 + section_m.height() + 3 + section_m.height() + 2 + value_m.height()
+            min_h = max(210, int(math.ceil(grid_min_h + 6 + turnover_h)))
+        else:
+            min_h = max(170, int(math.ceil(grid_min_h)))
         self.setMinimumSize(min_w, min_h)
 
     def changeEvent(self, event):
@@ -482,18 +496,23 @@ class MarketOverviewWidget(QWidget):
         fonts = self._fonts()
         section_m = QFontMetrics(fonts["section"])
         value_m = QFontMetrics(fonts["value"])
-        gap = 6.0
-        turnover_h = float(10 + section_m.height() + 3 + section_m.height() + 2 + value_m.height())
+        card_gap = 5.0
+        section_gap = 6.0
         width = float(self.width())
         height = float(self.height())
-        grid_h = max(0.0, height - turnover_h - gap)
-        card_w = max(0.0, (width - gap) / 2.0)
-        card_h = max(0.0, (grid_h - gap * 2.0) / 3.0)
+        if self.show_turnover:
+            turnover_h = float(10 + section_m.height() + 3 + section_m.height() + 2 + value_m.height())
+            grid_h = max(0.0, height - turnover_h - section_gap)
+            turnover_rect = QRectF(0.0, grid_h + section_gap, width, max(0.0, height - grid_h - section_gap))
+        else:
+            grid_h = height
+            turnover_rect = QRectF()
+        card_w = max(0.0, (width - card_gap * 2.0) / 3.0)
+        card_h = max(0.0, (grid_h - card_gap * 2.0) / 3.0)
         cards = tuple(
-            QRectF((idx % 2) * (card_w + gap), (idx // 2) * (card_h + gap), card_w, card_h)
+            QRectF((idx % 3) * (card_w + card_gap), (idx // 3) * (card_h + card_gap), card_w, card_h)
             for idx in range(len(MARKET_OVERVIEW_INDICES))
         )
-        turnover_rect = QRectF(0.0, grid_h + gap, width, max(0.0, height - grid_h - gap))
         return cards, turnover_rect
 
     def _paint_tile(self, painter, rect, neutral):
@@ -527,7 +546,7 @@ class MarketOverviewWidget(QWidget):
         cards, turnover_rect = self._layout_rects()
         for rect, (_key, item) in zip(cards, self.index_cards):
             self._paint_tile(painter, rect, neutral)
-            inner = rect.adjusted(7.0, 5.0, -7.0, -5.0)
+            inner = rect.adjusted(6.0, 4.0, -6.0, -4.0)
             if inner.width() <= 4 or inner.height() <= 4:
                 continue
             name_h = name_m.height()
@@ -553,15 +572,17 @@ class MarketOverviewWidget(QWidget):
 
             change_font = fonts["change"]
             combined_w = (change_m.horizontalAdvance(item["change"])
-                          + change_m.horizontalAdvance(item["change_pct"]) + 6)
+                          + change_m.horizontalAdvance(item["change_pct"]) + 4)
             if combined_w > inner.width() and inner.width() > 8:
-                change_font = _scaled_font(change_font, max(0.65, inner.width() / combined_w))
+                change_font = _scaled_font(change_font, max(0.60, inner.width() / combined_w))
             painter.setFont(change_font)
             painter.setPen(role_color)
             change_rect = QRectF(inner.left(), y_change, inner.width(), change_h)
             painter.drawText(change_rect, Qt.AlignVCenter | Qt.AlignLeft, item["change"])
             painter.drawText(change_rect, Qt.AlignVCenter | Qt.AlignRight, item["change_pct"])
 
+        if not self.show_turnover or turnover_rect.isEmpty():
+            return
         self._paint_tile(painter, turnover_rect, neutral)
         t_inner = turnover_rect.adjusted(8.0, 5.0, -8.0, -5.0)
         if t_inner.width() <= 4 or t_inner.height() <= 4:

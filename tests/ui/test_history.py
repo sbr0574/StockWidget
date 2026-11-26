@@ -156,7 +156,7 @@ class HistoryUITests(HistoryTestCase):
         popup.set_view("daily")
         self.wait_ready(window)
         popup.ui.cb_average.setChecked(False)
-        popup.ui.cb_volume.setChecked(False)
+        popup.volume_button.setChecked(False)
         popup.ui.cb_ma60.setChecked(False)
         sizes = []
         for size in ((420, 300), (500, 360), (550, 400)):
@@ -578,7 +578,7 @@ class HistoryUITests(HistoryTestCase):
         self.wait_ready(window)
         popup = window.history.dialog
         popup.pin_button.click()
-        popup.ui.cb_order_book.setChecked(True)
+        popup.order_book_button.click()
         popup.set_view("daily")
         self.wait_ready(window)
         popup.ui.cb_ma60.setChecked(False)
@@ -599,7 +599,7 @@ class HistoryUITests(HistoryTestCase):
         self.assertTrue(window.current_config()["chart_order_book_enabled"])
         dialog.ui.cb_chart_enabled.setChecked(True)
         window.history.open_row("float", 0)
-        self.assertTrue(window.history.dialog.ui.cb_order_book.isChecked())
+        self.assertTrue(window.history.dialog.order_book_button.isChecked())
         self.assertTrue(window.history.dialog.pin_button.isChecked())
         window.reset_settings()
         self.assertTrue(dialog.ui.cb_chart_enabled.isChecked())
