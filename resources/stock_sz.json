@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-24",
+  "last_update": "2026-11-26",
   "codes": {
     "sz000001": {
       "code": "000001",
@@ -2678,10 +2678,10 @@
       "code": "000820",
       "market": "sz",
       "type": "深",
-      "name": "神雾节能",
+      "name": "ST节能",
       "name_en": "",
-      "py": "shenwujieneng",
-      "abbr": "swjn"
+      "py": "stjieneng",
+      "abbr": "stjn"
     },
     "sz000821": {
       "code": "000821",
@@ -17843,10 +17843,10 @@
       "code": "300492",
       "market": "sz",
       "type": "创",
-      "name": "华图山鼎",
+      "name": "华图科技",
       "name_en": "",
-      "py": "huatushanding",
-      "abbr": "htsd"
+      "py": "huatukeji",
+      "abbr": "htkj"
     },
     "sz300493": {
       "code": "300493",
@@ -19382,10 +19382,10 @@
       "code": "300670",
       "market": "sz",
       "type": "创",
-      "name": "大烨智能",
+      "name": "ST大烨",
       "name_en": "",
-      "py": "dayezhineng",
-      "abbr": "dyzn"
+      "py": "stdaye",
+      "abbr": "stdy"
     },
     "sz300671": {
       "code": "300671",

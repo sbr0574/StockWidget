@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-25",
+  "last_update": "2026-11-26",
   "codes": {
     "usa": {
       "code": "a",
@@ -12295,6 +12295,15 @@
       "py": "",
       "abbr": ""
     },
+    "usbflr": {
+      "code": "bflr",
+      "market": "us",
+      "type": "美",
+      "name": "BlueFlare, Inc. - Common Stock",
+      "name_en": "BlueFlare, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
     "usbflx": {
       "code": "bflx",
       "market": "us",
@@ -23571,6 +23580,15 @@
       "name_en": "China Pharma Holdings, Inc. Common Stock",
       "py": "zhongguoyiyaokongguyouxiangongsi",
       "abbr": "zgyykgyxgs"
+    },
+    "uscphy": {
+      "code": "cphy",
+      "market": "us",
+      "type": "美",
+      "name": "F/m Compoundr High Yield Bond ETF",
+      "name_en": "F/m Compoundr High Yield Bond ETF",
+      "py": "",
+      "abbr": ""
     },
     "uscpii": {
       "code": "cpii",
@@ -40248,15 +40266,6 @@
       "name_en": "MicroSectors FANG  Index 2X Leveraged ETNs due January 8, 2038",
       "py": "fang+zhishu2beizuoduo",
       "abbr": "fang+zs2bzd"
-    },
-    "usfngr": {
-      "code": "fngr",
-      "market": "us",
-      "type": "美",
-      "name": "FingerMotion, Inc. - common stock",
-      "name_en": "FingerMotion, Inc. - common stock",
-      "py": "",
-      "abbr": ""
     },
     "usfngs": {
       "code": "fngs",
@@ -79435,15 +79444,6 @@
       "py": "",
       "abbr": ""
     },
-    "uspasg": {
-      "code": "pasg",
-      "market": "us",
-      "type": "美",
-      "name": "Passage Bio, Inc. - Common Stock",
-      "name_en": "Passage Bio, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
     "uspasw": {
       "code": "pasw",
       "market": "us",
@@ -90217,6 +90217,15 @@
       "py": "",
       "abbr": ""
     },
+    "usrmtx": {
+      "code": "rmtx",
+      "market": "us",
+      "type": "美",
+      "name": "Remix Therapeutics, Inc. - Common Stock",
+      "name_en": "Remix Therapeutics, Inc. - Common Stock",
+      "py": "",
+      "abbr": ""
+    },
     "usrna": {
       "code": "rna",
       "market": "us",
@@ -92158,15 +92167,6 @@
       "type": "美",
       "name": "Safety Insurance Group, Inc. - Common Stock",
       "name_en": "Safety Insurance Group, Inc. - Common Stock",
-      "py": "",
-      "abbr": ""
-    },
-    "ussafx": {
-      "code": "safx",
-      "market": "us",
-      "type": "美",
-      "name": "XCF Global, Inc. - Class A Common Stock",
-      "name_en": "XCF Global, Inc. - Class A Common Stock",
       "py": "",
       "abbr": ""
     },

@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-25",
+  "last_update": "2026-11-26",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -11507,10 +11507,10 @@
       "code": "01735",
       "market": "hk",
       "type": "港",
-      "name": "中环新能源",
-      "name_en": "CENTRAL NEW EGY",
-      "py": "zhonghuanxinnengyuan",
-      "abbr": "zhxny"
+      "name": "中环智算",
+      "name_en": "CENTRAL AI",
+      "py": "zhonghuanzhisuan",
+      "abbr": "zhzs"
     },
     "hk01736": {
       "code": "01736",
@@ -12132,6 +12132,15 @@
       "name_en": "PM PACKAGING",
       "py": "jifengbaozhuang",
       "abbr": "jfbz"
+    },
+    "hk01821": {
+      "code": "01821",
+      "market": "hk",
+      "type": "港",
+      "name": "中旅港澳",
+      "name_en": "CTG HKM",
+      "py": "zhonglvgangao",
+      "abbr": "zlga"
     },
     "hk01822": {
       "code": "01822",
@@ -17745,7 +17754,7 @@
       "market": "hk",
       "type": "港",
       "name": "齐云山食品",
-      "name_en": "QIYUNSHAN FOOD",
+      "name_en": "QIYUNSHAN-100",
       "py": "qiyunshanshipin",
       "abbr": "qyssp"
     },
@@ -18423,6 +18432,15 @@
       "name_en": "LDROBOT-200",
       "py": "ledongjiqiren-erbai",
       "abbr": "ldjqr-eb"
+    },
+    "hk02972": {
+      "code": "02972",
+      "market": "hk",
+      "type": "港",
+      "name": "齐云山食品-五百",
+      "name_en": "QIYUNSHAN-500",
+      "py": "qiyunshanshipin-wubai",
+      "abbr": "qyssp-wb"
     },
     "hk02982": {
       "code": "02982",

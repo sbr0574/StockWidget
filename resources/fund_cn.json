@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-25",
+  "last_update": "2026-11-26",
   "codes": {
     "sh501001": {
       "code": "501001",
@@ -8663,10 +8663,10 @@
       "code": "563620",
       "market": "sh",
       "type": "基",
-      "name": "全指现金流ETF兴业",
+      "name": "现金流ETF兴业",
       "name_en": "",
-      "py": "quanzhixianjinliuetfxingye",
-      "abbr": "qzxjletfxy"
+      "py": "xianjinliuetfxingye",
+      "abbr": "xjletfxy"
     },
     "sh563630": {
       "code": "563630",
@@ -10827,6 +10827,15 @@
       "name_en": "",
       "py": "chuangyebandianchietfyinhua",
       "abbr": "cybdcetfyh"
+    },
+    "sz158088": {
+      "code": "158088",
+      "market": "sz",
+      "type": "基",
+      "name": "创业板电池ETF博时",
+      "name_en": "",
+      "py": "chuangyebandianchietfboshi",
+      "abbr": "cybdcetfbs"
     },
     "sz158900": {
       "code": "158900",

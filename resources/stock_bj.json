@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-25",
+  "last_update": "2026-11-26",
   "codes": {
     "bj920000": {
       "code": "920000",
@@ -635,10 +635,10 @@
       "code": "920093",
       "market": "bj",
       "type": "京",
-      "name": "XD信胜科",
+      "name": "信胜科技",
       "name_en": "XINSHENG",
-      "py": "xdxinshengke",
-      "abbr": "xdxsk"
+      "py": "xinshengkeji",
+      "abbr": "xskj"
     },
     "bj920096": {
       "code": "920096",
@@ -698,10 +698,10 @@
       "code": "920107",
       "market": "bj",
       "type": "京",
-      "name": "恒兴股份",
+      "name": "XD恒兴股",
       "name_en": "HANSON",
-      "py": "hengxinggufen",
-      "abbr": "hxgf"
+      "py": "xdhengxinggu",
+      "abbr": "xdhxg"
     },
     "bj920108": {
       "code": "920108",
