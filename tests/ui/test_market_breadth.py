@@ -611,27 +611,76 @@ class MarketOverviewTests(HistoryTestCase):
         self.app.processEvents()
 
         # Minimum size layout fits all 9 non-overlapping index cards (3x3), turnover box, and right breadth cleanly.
-        for mode in ("dark", "light"):
-            with self.subTest(color_mode=mode):
-                window.set_view_options(color_mode=mode)
-                popup.resize(1, 1)
-                self.app.processEvents()
-                overview = popup.market_overview
-                book = popup.order_book
-                self.assertTrue(popup.rect().contains(overview.geometry()))
-                self.assertTrue(popup.rect().contains(book.geometry()))
-                self.assertLess(overview.geometry().right(), book.geometry().left())
-                cards, turnover_rect = overview._layout_rects()
-                self.assertEqual(len(cards), 9)
-                for rect in (*cards, turnover_rect):
-                    self.assertTrue(overview.rect().contains(rect.toAlignedRect()))
-                    self.assertGreater(rect.width(), 70)
-                    self.assertGreater(rect.height(), 36)
-                for i, first in enumerate(cards):
-                    for second in cards[i + 1:]:
-                        self.assertFalse(first.intersects(second))
-                    self.assertLess(first.bottom(), turnover_rect.top())
-                self.assertFalse(popup.grab().isNull())
+        for book_enabled in (True, False):
+            window.set_view_options(chart_order_book_enabled=book_enabled, chart_volume_enabled=True)
+            self.app.processEvents()
+            for mode in ("dark", "light"):
+                with self.subTest(book_enabled=book_enabled, color_mode=mode):
+                    window.set_view_options(color_mode=mode)
+                    popup.resize(1, 1)
+                    self.app.processEvents()
+                    overview = popup.market_overview
+                    book = popup.order_book
+                    self.assertTrue(popup.rect().contains(overview.geometry()))
+                    if book_enabled:
+                        self.assertTrue(popup.rect().contains(book.geometry()))
+                        self.assertLess(overview.geometry().right(), book.geometry().left())
+                    else:
+                        self.assertTrue(book.isHidden())
+                    cards, turnover_rect = overview._layout_rects()
+                    self.assertEqual(len(cards), 9)
+                    for rect in (*cards, turnover_rect):
+                        self.assertTrue(overview.rect().contains(rect.toAlignedRect()))
+                        self.assertGreater(rect.width(), 70)
+                        self.assertGreater(rect.height(), 36)
+                    for i, first in enumerate(cards):
+                        for second in cards[i + 1:]:
+                            self.assertFalse(first.intersects(second))
+                        self.assertLess(first.bottom(), turnover_rect.top())
+                    self.assertFalse(popup.grab().isNull())
+        window.set_view_options(chart_order_book_enabled=True, chart_volume_enabled=True)
+        self.app.processEvents()
+
+        # Popup minimum/maximum sizes stay identical across stock, CN index, views, volume/MA toggles, and overview;
+        # only toggling the right depth/breadth panel changes the popup minimum size.
+        for book_enabled in (False, True):
+            window.set_view_options(chart_order_book_enabled=book_enabled, chart_volume_enabled=True, chart_average_enabled=True)
+            popup.set_overview_mode(False)
+            popup.set_breadth_mode(False)
+            popup.set_view("intraday")
+            self.app.processEvents()
+            popup.resize(1, 1)
+            self.app.processEvents()
+            expected_min = popup.minimumSize()
+            expected_max = popup.maximumSize()
+            expected_size = popup.size()
+            for overview_on, breadth_on, view, vol_on, avg_on in (
+                (False, False, "intraday", True, True),
+                (False, False, "intraday", False, False),
+                (False, False, "five_day", True, True),
+                (False, False, "daily", True, True),
+                (False, False, "daily", False, False),
+                (False, True, "intraday", True, True),
+                (False, True, "intraday", False, True),
+                (False, True, "daily", True, True),
+                (True, False, "intraday", True, True),
+                (True, False, "intraday", False, True),
+                (True, True, "intraday", True, False),
+            ):
+                with self.subTest(book=book_enabled, overview=overview_on, breadth=breadth_on,
+                                  view=view, vol=vol_on, avg=avg_on):
+                    window.set_view_options(chart_volume_enabled=vol_on, chart_average_enabled=avg_on)
+                    popup.set_overview_mode(overview_on)
+                    if not overview_on:
+                        popup.set_breadth_mode(breadth_on)
+                        popup.set_view(view)
+                    self.app.processEvents()
+                    self.assertEqual(popup.minimumSize(), expected_min)
+                    self.assertEqual(popup.maximumSize(), expected_max)
+                    self.assertEqual(popup.size(), expected_size)
+        window.set_view_options(chart_order_book_enabled=True, chart_volume_enabled=True, chart_average_enabled=True)
+        popup.set_overview_mode(True)
+        self.app.processEvents()
 
         # Content-driven size expansion near screen bottom-right edge must keep entire popup on screen.
         bounds = popup.screen().availableGeometry()

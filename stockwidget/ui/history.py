@@ -299,25 +299,18 @@ class HistoryDialog(QDialog):
             content = layout.minimumSize()
             margins = layout.contentsMargins()
             horizontal = margins.left() + margins.right()
-            if self._overview_mode:
+            if self.display_mode == "popup":
+                # Popup uses one unified minimum/maximum geometry across stock/index,
+                # intraday/five-day/daily, volume/average toggles, and market overview;
+                # only enabling/disabling the right depth/breadth panel changes minimum size.
                 self.market_overview._sync_size()
                 self.order_book._sync_size()
-                if self._left_layout is not None:
-                    self._left_layout.invalidate()
+                self._left_layout.invalidate()
                 self.ui.content_layout.invalidate()
-                layout.invalidate()
-                content = layout.minimumSize()
-                minimum = minimum.expandedTo(content)
-                base_min = base_min.expandedTo(QSize(
-                    self.market_overview.minimumWidth() + horizontal,
-                    content.height(),
-                ))
-            elif self.display_mode == "popup":
-                # Popup places toolbar, MA row, chart and readout inside _left_layout
-                # alongside order_book so left total height equals right depth/breadth height.
-                # Keep one worst-case minimum across intraday / five-day / daily views.
                 self.ui.toolbar.layout().invalidate()
                 self.title_row.layout().invalidate()
+                layout.invalidate()
+                content = layout.minimumSize()
                 vertical = margins.top() + margins.bottom()
                 v_gap = layout.spacing()
                 left_gap = self._left_layout.spacing()
@@ -325,28 +318,33 @@ class HistoryDialog(QDialog):
                 toolbar_min = self.ui.toolbar.minimumSize().expandedTo(self.ui.toolbar.layout().minimumSize())
                 ma_min = self.ui.ma_row.minimumSize().expandedTo(self.ui.ma_row.layout().minimumSize())
                 chart_min = self.chart.minimumSize()
+                overview_min = self.market_overview.minimumSize()
                 readout_h = max(self.ui.chart_readout.minimumHeight(), self.ui.chart_readout.sizeHint().height())
                 status_h = max(self.status.minimumHeight(), self.status.sizeHint().height(), self.status.fontMetrics().height())
-                left_intraday_w = max(toolbar_min.width(), chart_min.width())
+                book_min_w, book_min_h = self.order_book.unified_minimum_size()
+                left_intraday_w = max(toolbar_min.width(), chart_min.width(), overview_min.width())
                 left_daily_w = max(left_intraday_w, ma_min.width())
                 left_intraday_h = toolbar_min.height() + left_gap + chart_min.height() + left_gap + readout_h
-                left_daily_h = left_intraday_h + left_gap + ma_min.height()
+                left_daily_h = max(left_intraday_h + left_gap + ma_min.height(), overview_min.height())
                 overhead_h = vertical + title_min.height() + v_gap + v_gap + status_h
                 no_book_w = horizontal + max(title_min.width(), left_daily_w)
                 no_book_h = overhead_h + left_daily_h
                 content_without_book = QSize(no_book_w, no_book_h)
                 if self._book_enabled:
-                    book_w = self.order_book.minimumWidth() + self.ui.content_layout.spacing()
+                    book_w = book_min_w + self.ui.content_layout.spacing()
                     with_book_w = max(no_book_w, horizontal + left_intraday_w + book_w)
-                    with_book_h = overhead_h + max(left_daily_h, self.order_book.minimumHeight())
+                    with_book_h = overhead_h + max(left_daily_h, book_min_h)
                     content_with_book = QSize(with_book_w, with_book_h).expandedTo(content)
                 else:
                     content_with_book = QSize(content_without_book).expandedTo(content)
                 base_min = base_min.expandedTo(content_without_book)
                 minimum = minimum.expandedTo(content_with_book)
             else:
-                # Use the same worst-case layout for every view, including hidden
-                # MA controls/status and the saved depth preference on five-day/K.
+                # Detached window keeps toolbar/ma_row above and readout below content_layout.
+                self.order_book._sync_size()
+                self.ui.content_layout.invalidate()
+                layout.invalidate()
+                content = layout.minimumSize()
                 extra_w = 0
                 for row in (self.ui.ma_row, self.status):
                     hint = QWidgetItem(row).minimumSize()
