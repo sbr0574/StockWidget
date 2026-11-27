@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-26",
+  "last_update": "2026-11-27",
   "codes": {
     "bj920000": {
       "code": "920000",
@@ -527,10 +527,10 @@
       "code": "920080",
       "market": "bj",
       "type": "京",
-      "name": "奥美森",
+      "name": "XD奥美森",
       "name_en": "OMS",
-      "py": "aomeisen",
-      "abbr": "ams"
+      "py": "xdaomeisen",
+      "abbr": "xdams"
     },
     "bj920081": {
       "code": "920081",
@@ -698,10 +698,10 @@
       "code": "920107",
       "market": "bj",
       "type": "京",
-      "name": "XD恒兴股",
+      "name": "恒兴股份",
       "name_en": "HANSON",
-      "py": "xdhengxinggu",
-      "abbr": "xdhxg"
+      "py": "hengxinggufen",
+      "abbr": "hxgf"
     },
     "bj920108": {
       "code": "920108",
@@ -1085,10 +1085,10 @@
       "code": "920178",
       "market": "bj",
       "type": "京",
-      "name": "锐翔智能",
+      "name": "XD锐翔智",
       "name_en": "RUIXIANG INTELLIGENT",
-      "py": "ruixiangzhineng",
-      "abbr": "rxzn"
+      "py": "xdruixiangzhi",
+      "abbr": "xdrxz"
     },
     "bj920179": {
       "code": "920179",
@@ -2867,10 +2867,10 @@
       "code": "920837",
       "market": "bj",
       "type": "京",
-      "name": "华原股份",
+      "name": "XD华原股",
       "name_en": "WATYUAN",
-      "py": "huayuangufen",
-      "abbr": "hygf"
+      "py": "xdhuayuangu",
+      "abbr": "xdhyg"
     },
     "bj920839": {
       "code": "920839",

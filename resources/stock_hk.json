@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-11-26",
+  "last_update": "2026-11-27",
   "codes": {
     "hk00001": {
       "code": "00001",
@@ -2796,7 +2796,7 @@
       "market": "hk",
       "type": "港",
       "name": "权识国际",
-      "name_en": "AOM INT'L",
+      "name_en": "AOM INT'L-NEW",
       "py": "quanshiguoji",
       "abbr": "qsgj"
     },
@@ -18325,15 +18325,6 @@
       "py": "zijinkuangye",
       "abbr": "zjky"
     },
-    "hk02948": {
-      "code": "02948",
-      "market": "hk",
-      "type": "港",
-      "name": "天瑞汽车内饰",
-      "name_en": "TR INTERIOR-OLD",
-      "py": "tianruiqicheneishi",
-      "abbr": "trqcns"
-    },
     "hk02951": {
       "code": "02951",
       "market": "hk",
@@ -18384,7 +18375,7 @@
       "market": "hk",
       "type": "港",
       "name": "权识国际",
-      "name_en": "AOM INT'L",
+      "name_en": "AOM INT'L-OLD",
       "py": "quanshiguoji",
       "abbr": "qsgj"
     },
@@ -18396,15 +18387,6 @@
       "name_en": "EASYHOLD GP RTS",
       "py": "yihegufenguquan",
       "abbr": "yhgfgq"
-    },
-    "hk02962": {
-      "code": "02962",
-      "market": "hk",
-      "type": "港",
-      "name": "飞天云动股权",
-      "name_en": "FLOWING CLO RTS",
-      "py": "feitianyundongguquan",
-      "abbr": "ftydgq"
     },
     "hk02963": {
       "code": "02963",
@@ -18432,6 +18414,24 @@
       "name_en": "LDROBOT-200",
       "py": "ledongjiqiren-erbai",
       "abbr": "ldjqr-eb"
+    },
+    "hk02966": {
+      "code": "02966",
+      "market": "hk",
+      "type": "港",
+      "name": "亚证地产",
+      "name_en": "ASIASEC PPT",
+      "py": "yazhengdichan",
+      "abbr": "yzdc"
+    },
+    "hk02970": {
+      "code": "02970",
+      "market": "hk",
+      "type": "港",
+      "name": "中国铸晨81",
+      "name_en": "CH CASTSON 81",
+      "py": "zhongguozhuchen81",
+      "abbr": "zgzc81"
     },
     "hk02972": {
       "code": "02972",
@@ -22281,7 +22281,7 @@
       "market": "hk",
       "type": "港",
       "name": "天瑞汽车内饰",
-      "name_en": "TR INTERIOR-NEW",
+      "name_en": "TR INTERIORS",
       "py": "tianruiqicheneishi",
       "abbr": "trqcns"
     },
